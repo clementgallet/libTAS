@@ -61,6 +61,7 @@ private:
     QCheckBox* osdMessagesBox;
     QCheckBox* osdRamBox;
     QCheckBox* osdLuaBox;
+    QCheckBox* osdCrosshairBox;
     QCheckBox* osdEncodeBox;
 
     QComboBox *frameHorChoice;

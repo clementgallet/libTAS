@@ -3,6 +3,7 @@
 
 * Add a "Save as default" button for the Encode window (#507)
 * Revamp settings
+* Draw a crosshair on current pointer coordinates (#510)
 
 ### Changed
 
@@ -14,6 +15,7 @@
 * Fix OSD SDL2 renderer memory leak
 * Fix SDL_GameController functions as they raised the maximum number of buttons
 * Get game window size from SDL2 when possible (#513)
+* Set pixel buffer and pack row before reading pixels (#505)
 
 ## [1.4.4] - 2022-10-25
 ### Added

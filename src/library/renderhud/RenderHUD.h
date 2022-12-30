@@ -161,6 +161,9 @@ class RenderHUD
         /* Display lua drawings */
         void drawLua();
 
+        /* Display crosshair on current pointer position */
+        void drawCrosshair(const AllInputs& ai);
+
         /* Location offsets when displaying multiple texts on the same location */
         int offsets[9];
 

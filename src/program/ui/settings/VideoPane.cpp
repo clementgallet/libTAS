@@ -137,6 +137,7 @@ void VideoPane::initLayout()
     watchesVertChoice->addItem("Bottom", SharedConfig::OSD_BOTTOM);
 
     osdLuaBox = new QCheckBox(tr("Lua"));
+    osdCrosshairBox = new QCheckBox(tr("Crosshair"));
 
     osdEncodeBox = new QCheckBox(tr("OSD on video encode"));
 
@@ -153,7 +154,8 @@ void VideoPane::initLayout()
     osdLayout->addWidget(watchesHorChoice, 3, 1);
     osdLayout->addWidget(watchesVertChoice, 3, 2);
     osdLayout->addWidget(osdLuaBox, 4, 0);
-    osdLayout->addWidget(osdEncodeBox, 5, 0, 1, 3);
+    osdLayout->addWidget(osdCrosshairBox, 5, 0);
+    osdLayout->addWidget(osdEncodeBox, 6, 0, 1, 3);
     
     renderingBox = new QGroupBox(tr("Rendering"));
     QVBoxLayout* renderingLayout = new QVBoxLayout;
@@ -197,6 +199,7 @@ void VideoPane::initSignals()
     connect(watchesHorChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
     connect(watchesVertChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
     connect(osdLuaBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
+    connect(osdCrosshairBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
     connect(osdEncodeBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
 
     connect(rendSoftBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
@@ -249,6 +252,7 @@ void VideoPane::loadConfig()
     osdMessagesBox->setChecked(context->config.sc.osd & SharedConfig::OSD_MESSAGES);
     osdRamBox->setChecked(context->config.sc.osd & SharedConfig::OSD_RAMWATCHES);
     osdLuaBox->setChecked(context->config.sc.osd & SharedConfig::OSD_LUA);
+    osdCrosshairBox->setChecked(context->config.sc.osd & SharedConfig::OSD_CROSSHAIR);
     osdEncodeBox->setChecked(context->config.sc.osd_encode);
     
     int index;
@@ -318,6 +322,8 @@ void VideoPane::saveConfig()
         context->config.sc.osd |= SharedConfig::OSD_RAMWATCHES;
     if (osdLuaBox->isChecked())
         context->config.sc.osd |= SharedConfig::OSD_LUA;
+    if (osdCrosshairBox->isChecked())
+        context->config.sc.osd |= SharedConfig::OSD_CROSSHAIR;
         
     context->config.sc.osd_encode = osdEncodeBox->isChecked();
 

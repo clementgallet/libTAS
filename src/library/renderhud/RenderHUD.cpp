@@ -100,8 +100,8 @@ void RenderHUD::resetOffsets()
 
 void RenderHUD::drawFrame(uint64_t framecount)
 {
-    Color fg_color = {255, 255, 255, 0};
-    Color bg_color = {0, 0, 0, 0};
+    Color fg_color = {255, 255, 255, 255};
+    Color bg_color = {0, 0, 0, 255};
     std::string framestr = std::to_string(framecount);
     switch (shared_config.recording) {
     case SharedConfig::RECORDING_READ:
@@ -122,8 +122,8 @@ void RenderHUD::drawFrame(uint64_t framecount)
 
 void RenderHUD::drawNonDrawFrame(uint64_t nondraw_framecount)
 {
-    Color red_color = {255, 0, 0, 0};
-    Color bg_color = {0, 0, 0, 0};
+    Color red_color = {255, 0, 0, 255};
+    Color bg_color = {0, 0, 0, 255};
     std::string nondraw_framestr = std::to_string(nondraw_framecount);
 
     int x, y;
@@ -196,7 +196,7 @@ void RenderHUD::drawInputs(const AllInputs& ai, Color fg_color)
     }
 
     /* Render */
-    Color bg_color = {0, 0, 0, 0};
+    Color bg_color = {0, 0, 0, 255};
     std::string text = oss.str();
     if (!text.empty()) {
         int x, y;
@@ -216,8 +216,8 @@ void RenderHUD::insertMessage(const char* message)
 
 void RenderHUD::drawMessages()
 {
-    Color fg_color = {255, 255, 255, 0};
-    Color bg_color = {0, 0, 0, 0};
+    Color fg_color = {255, 255, 255, 255};
+    Color bg_color = {0, 0, 0, 255};
 
     TimeHolder message_timeout;
     message_timeout = {2, 0};
@@ -254,8 +254,8 @@ void RenderHUD::resetWatches()
 
 void RenderHUD::drawWatches()
 {
-    Color fg_color = {255, 255, 255, 0};
-    Color bg_color = {0, 0, 0, 0};
+    Color fg_color = {255, 255, 255, 255};
+    Color bg_color = {0, 0, 0, 255};
 
     for (auto iter = watches.begin(); iter != watches.end(); iter++) {
         int x, y;
@@ -281,6 +281,15 @@ void RenderHUD::drawLua()
     for (auto iter = lua_ellipses.begin(); iter != lua_ellipses.end(); iter++) {
         renderEllipse(iter->center_x, iter->center_y, iter->radius_x, iter->radius_y, iter->color);
     }
+}
+
+void RenderHUD::drawCrosshair(const AllInputs& ai)
+{
+    int size = 5;
+    renderRect(ai.pointer_x-1, ai.pointer_y-size-1, 3, 2*size+3, 0, {0, 0, 0, 255}, {0, 0, 0, 255});
+    renderRect(ai.pointer_x-size-1, ai.pointer_y-1, 2*size+3, 3, 0, {0, 0, 0, 255}, {0, 0, 0, 255});
+    renderLine(ai.pointer_x, ai.pointer_y-size, ai.pointer_x, ai.pointer_y+size, {255, 255, 255, 255});
+    renderLine(ai.pointer_x-size, ai.pointer_y, ai.pointer_x+size, ai.pointer_y, {255, 255, 255, 255});    
 }
 
 void RenderHUD::insertLuaText(int x, int y, std::string text, uint32_t fg_color, uint32_t bg_color)
@@ -376,8 +385,8 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         // hud.drawNonDrawFrame(nondraw_framecount);
     }
     if (shared_config.osd & SharedConfig::OSD_INPUTS) {
-        drawInputs(ai, {255, 255, 255, 0});
-        drawInputs(preview_ai, {160, 160, 160, 0});
+        drawInputs(ai, {255, 255, 255, 255});
+        drawInputs(preview_ai, {160, 160, 160, 255});
     }
 
     if (shared_config.osd & SharedConfig::OSD_MESSAGES)
@@ -389,6 +398,8 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
     if (shared_config.osd & SharedConfig::OSD_LUA)
         drawLua();
 
+    if (shared_config.osd & SharedConfig::OSD_CROSSHAIR)
+        drawCrosshair(ai);
 }
 
 }
