@@ -4,10 +4,10 @@
 * Add a "Save as default" button for the Encode window (#507)
 * Revamp settings
 * Draw a crosshair on current pointer coordinates (#510)
+* Add a timeout for waiting on Unity threads (#515)
 
 ### Changed
 
-* Make the conditions to be a Unity thread more strict (#515)
 * Remove code needing c++17, and add the c++11 compile flag (#516) 
 
 ### Fixed

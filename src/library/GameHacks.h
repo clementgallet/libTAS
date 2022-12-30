@@ -35,7 +35,7 @@ class GameHacks
         
         static void getExecutableMemory();
 
-        static bool isUnityLoadingThread(uintptr_t addr, std::ptrdiff_t routine_id);
+        static bool isUnityLoadingThread(uintptr_t addr);
 
         /* Regsiter that the game linked `libcoreclr.so` library */
         static void setCoreclr();
@@ -54,7 +54,6 @@ class GameHacks
         static uintptr_t executableBase;
         static uintptr_t executableEnd;
         static uintptr_t unityLoadingThreadAddr;
-        static std::ptrdiff_t unityLoadingThreadId;
 
         static bool coreclr;
         static pid_t finalizer_pid;

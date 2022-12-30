@@ -126,7 +126,15 @@ void ThreadSync::detWait()
             if (!thread->syncGo) {
                 shouldWait = true;
                 std::unique_lock<std::mutex> lock(detMutex);
-                detCond.wait(lock, [thread]{ return (thread->syncGo); });
+                bool ret;
+                /* Declare the following NATIVE, because std::condition_variable.wait_for()
+                 * eventually calls clock_gettime() to check for timeout, so it
+                 * must access the real clock time. */
+                NATIVECALL(ret = detCond.wait_for(lock, std::chrono::milliseconds(500), [thread]{ return (thread->syncGo); }));
+                if (!ret) {
+                    debuglogstdio(LCF_WARNING, "Timeout waiting for loading thread %d", thread->tid);
+                    thread->syncEnabled = false;
+                }
                 thread->syncGo = false;
             }
         }
