@@ -160,8 +160,12 @@ static bool skipDraw(float fps)
         case SharedConfig::FF_RENDER_ALL:
             return false;
         default:
-            break;            
+            break;
     }
+
+    /* Skipping frames in Vulkan currently results in softlock. */
+    if (game_info.video & GameInfo::VULKAN)
+        return false;
 
     unsigned int skip_freq = 1;
 
