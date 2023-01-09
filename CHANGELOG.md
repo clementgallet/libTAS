@@ -5,6 +5,7 @@
 * Revamp settings
 * Draw a crosshair on current pointer coordinates (#510)
 * Add a timeout for waiting on Unity threads (#515)
+* Add new SDL audio functions and update SDL_dynapi (#518)
 
 ### Changed
 
