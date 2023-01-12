@@ -127,3 +127,8 @@ void RamSearchModel::clear()
     memscanner.clear();
     endResetModel();
 }
+
+void RamSearchModel::stopSearch()
+{
+    memscanner.is_stopped = true;
+}

@@ -97,6 +97,11 @@ void MemScannerThread::first_region_scan()
             vfs.write((char*)chunk, 4096);
             new_memory_size += 4096;
             processed_memory_size += 4096;
+            
+            if (memscanner.is_stopped) {
+                finished = true;
+                return;                
+            }
         }
     }
     finished = true;
@@ -157,6 +162,11 @@ void MemScannerThread::first_address_scan()
                         new_memory_size += 4096*memscanner.value_type_size;
                         batch_index = 0;
                     }
+                }
+
+                if (memscanner.is_stopped) {
+                    finished = true;
+                    return;                
                 }
             }
         }
@@ -250,6 +260,11 @@ void MemScannerThread::next_scan_from_region()
                         new_memory_size += 4096*memscanner.value_type_size;
                         batch_index = 0;
                     }
+                }
+                
+                if (memscanner.is_stopped) {
+                    finished = true;
+                    return;                
                 }
             }
             
@@ -381,6 +396,11 @@ void MemScannerThread::next_scan_from_address()
                         new_memory_size += 4096*memscanner.value_type_size;
                         batch_index = 0;
                     }
+                }
+                
+                if (memscanner.is_stopped) {
+                    finished = true;
+                    return;                
                 }
             }
             

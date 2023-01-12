@@ -34,6 +34,7 @@
 #include "../Context.h"
 
 #include <limits>
+#include <thread>
 
 RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
@@ -58,7 +59,6 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
 
     watchCount = new QLabel();
     // watchCount->setHeight(searchProgress->height());
-    searchProgress->hide();
 
     QVBoxLayout *watchLayout = new QVBoxLayout;
     watchLayout->addWidget(ramSearchView);
@@ -147,12 +147,17 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     connect(searchButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotSearch);
     searchButton->setDisabled(true);
 
+    stopButton = new QPushButton(tr("Force Stop"));
+    connect(stopButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotStop);
+    stopButton->setDisabled(true);
+
     QPushButton *addButton = new QPushButton(tr("Add Watch"));
     connect(addButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotAdd);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox();
     buttonBox->addButton(newButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(searchButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(stopButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(addButton, QDialogButtonBox::ActionRole);
 
     /* Create the options layout */
@@ -179,6 +184,8 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     callTimer = new QTimer(this);
     callTimer->setSingleShot(true);
     connect(callTimer, &QTimer::timeout, this, &RamSearchWindow::update);
+    
+    isSearching = false;
 }
 
 void RamSearchWindow::update()
@@ -224,6 +231,9 @@ void RamSearchWindow::getCompareParameters(CompareType& compare_type, CompareOpe
 
 void RamSearchWindow::slotNew()
 {
+    if (isSearching)
+        return;
+        
     if (context->status != Context::ACTIVE)
         return;
     
@@ -234,13 +244,17 @@ void RamSearchWindow::slotNew()
         formatGroupBox->setDisabled(false);
         ramSearchModel->clear();
         watchCount->setText("");
+        searchProgress->reset();
         searchButton->setDisabled(true);
         return;
     }
 
+    isSearching = true;
+
     /* Disable buttons during the process */
     newButton->setDisabled(true);
     searchButton->setDisabled(true);
+    stopButton->setDisabled(false);
 
     /* Build the memory region flag variable */
     int memflags = 0;
@@ -251,6 +265,16 @@ void RamSearchWindow::slotNew()
     if (memExecBox->isChecked())
         memflags |= MemSection::MemNoExec;
 
+    searchProgress->reset();
+    searchProgress->setMaximum(ramSearchModel->predictScanCount(memflags));
+
+    /* Start the actual scan search on a thread */
+    std::thread t(&RamSearchWindow::threadedNew, this, memflags);
+    t.detach();
+}
+
+void RamSearchWindow::threadedNew(int memflags)
+{
     /* Get the comparison parameters */
     CompareType compare_type;
     CompareOperator compare_operator;
@@ -260,15 +284,8 @@ void RamSearchWindow::slotNew()
 
     ramSearchModel->hex = (displayBox->currentIndex() == 1);
 
-    watchCount->hide();
-    searchProgress->show();
-    searchProgress->setMaximum(ramSearchModel->predictScanCount(memflags));
-
     /* Call the RamSearch new function using the right type */
     ramSearchModel->newWatches(memflags, typeBox->currentIndex(), compare_type, compare_operator, compare_value, different_value);
-
-    searchProgress->hide();
-    watchCount->show();
 
     /* Don't display values if too many results */
     if ((ramSearchModel->memscanner.display_scan_count() == 0) && (ramSearchModel->scanCount() != 0))
@@ -290,30 +307,41 @@ void RamSearchWindow::slotNew()
     
     newButton->setDisabled(false);
     searchButton->setDisabled(false);
+    stopButton->setDisabled(true);
+    
+    isSearching = false;
 }
 
 void RamSearchWindow::slotSearch()
 {
+    if (isSearching)
+        return;
+
+    isSearching = true;
+
     /* Disable buttons during the process */
     newButton->setDisabled(true);
     searchButton->setDisabled(true);
+    stopButton->setDisabled(false);
 
+    searchProgress->reset();
+    searchProgress->setMaximum(ramSearchModel->scanSize());
+
+    /* Start the actual scan search on a thread */
+    std::thread t(&RamSearchWindow::threadedSearch, this);
+    t.detach();
+}
+
+void RamSearchWindow::threadedSearch()
+{
     CompareType compare_type;
     CompareOperator compare_operator;
     double compare_value;
     double different_value;
     getCompareParameters(compare_type, compare_operator, compare_value, different_value);
 
-    searchProgress->setMaximum(ramSearchModel->scanSize());
-    watchCount->hide();
-    searchProgress->show();
-
     ramSearchModel->searchWatches(compare_type, compare_operator, compare_value, different_value);
 
-    /* Update address count */
-    searchProgress->hide();
-    watchCount->show();
-    
     /* Don't display values if too many results */
     if ((ramSearchModel->memscanner.display_scan_count() == 0) && (ramSearchModel->scanCount() != 0))
         watchCount->setText(QString("%1 addresses (results are not shown above %2)").arg(ramSearchModel->scanCount()).arg(ramSearchModel->memscanner.DISPLAY_THRESHOLD));
@@ -330,6 +358,9 @@ void RamSearchWindow::slotSearch()
     
     newButton->setDisabled(false);
     searchButton->setDisabled(false);
+    stopButton->setDisabled(true);
+
+    isSearching = false;
 }
 
 void RamSearchWindow::slotAdd()
@@ -353,4 +384,9 @@ void RamSearchWindow::slotAdd()
         mw->ramWatchWindow->editWindow->fill(ramSearchModel->address(row), typeBox->currentIndex());
         mw->ramWatchWindow->slotAdd();
     }
+}
+
+void RamSearchWindow::slotStop()
+{
+    ramSearchModel->stopSearch();
 }

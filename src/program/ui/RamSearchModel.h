@@ -74,6 +74,9 @@ public:
     /* Clear all scan results */
     void clear();
 
+    /* Force stop the search */
+    void stopSearch();
+
 private:
     Context *context;
 

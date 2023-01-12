@@ -82,6 +82,8 @@ class MemScanner : public QObject {
         double compare_value;
         double different_value;
         
+        bool is_stopped = false;
+        
     private:
         bool last_scan_was_region = true;
         uint64_t total_size = 0; // total size of the last scan (in bytes)

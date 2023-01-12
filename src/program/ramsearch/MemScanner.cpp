@@ -87,6 +87,8 @@ void MemScanner::first_scan(pid_t pid, int mem_flags, int type, CompareType ct, 
 
 void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv, double dv)
 {
+    is_stopped = false;
+
     compare_type = ct;
     compare_operator = co;
     compare_value = cv;
@@ -166,10 +168,10 @@ void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv,
      * state periodically to update the progress bar. So we check if all
      * scan threads have finished. */
     bool scan_finished = false;
+    uint64_t total_processed_size = 0;
     while (!scan_finished) { 
-        uint64_t total_processed_size = 0;
         scan_finished = true;
-        
+        total_processed_size = 0;
         for (const auto& ms : memscanners) {
             total_processed_size += ms.processed_memory_size;
             scan_finished &= ms.finished;
@@ -180,13 +182,24 @@ void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv,
 
     last_scan_was_region = (first && (compare_type == CompareType::Previous));
 
-    /* Wait for the thread to finish. TODO: be able to cancel it. */
+    /* Wait for the thread to finish. */
     total_size = 0;
+    total_processed_size = 0;
     for (int t = 0; t < thread_count; t++) {
         memscan_threads[t].join();
 
-        /* Compute total size */
+        /* Compute total size and processed size (for display) */
         total_size += memscanners[t].new_memory_size;
+        total_processed_size += memscanners[t].processed_memory_size;
+    }
+
+    /* If user requested a stop, skip the file merging and report as if
+     * we didn't find any result */
+    if (is_stopped) {
+        addresses.clear();
+        old_values.clear();
+        total_size = 0;
+        return;
     }
 
     /* Wait for each thread to finish and merge all individual files created
@@ -199,7 +212,11 @@ void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv,
     if (!last_scan_was_region) {
         oafs.open(addresses_path, std::ofstream::binary);
     }
-    
+
+    /* Reset progress bar to show progression of file merging */
+    emit signalProgress(0);
+    uint64_t cur_size = 0;
+
     for (int t = 0; t < thread_count; t++) {
         const MemScannerThread& mst = memscanners[t];
         
@@ -219,6 +236,17 @@ void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv,
         ovfs << ivfs.rdbuf();
         if (ivfs.tellg() != memscanners[t].new_memory_size)
             std::cerr << "Mismatch size between recorded (" << memscanners[t].new_memory_size << ") and file (" <<  ivfs.tellg() << ") sizes" << std::endl;
+        
+        if (is_stopped) {
+            addresses.clear();
+            old_values.clear();
+            total_size = 0;
+            return;
+        }
+
+        /* Some math to reuse progress bar that has the old size for total */
+        cur_size += memscanners[t].new_memory_size;
+        emit signalProgress(cur_size*total_processed_size/total_size);
     }
     
     /* If the total size is below threshold, load all data (except if region data) */

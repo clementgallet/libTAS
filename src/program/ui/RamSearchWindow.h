@@ -33,6 +33,7 @@
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QTimer>
 #include <memory>
+#include <atomic>
 
 #include "../ramsearch/CompareOperations.h"
 
@@ -80,6 +81,7 @@ private:
 
     QPushButton *newButton;
     QPushButton *searchButton;
+    QPushButton *stopButton;
     
     /* Timer to limit the number of update calls */
     QElapsedTimer* updateTimer;
@@ -87,12 +89,19 @@ private:
     /* Timer to trigger the update call */
     QTimer* callTimer;
 
+    std::atomic<bool> isSearching;
+
     void getCompareParameters(CompareType& compare_type, CompareOperator& compare_operator, double& compare_value, double& different_value);
+
+    /* Actual RAM search done in another thread */
+    void threadedNew(int memflags);
+    void threadedSearch();
 
 private slots:
     void slotNew();
     void slotSearch();
     void slotAdd();
+    void slotStop();
 
 };
 
