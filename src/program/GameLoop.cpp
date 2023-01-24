@@ -54,6 +54,7 @@
 #include <sys/wait.h> // waitpid
 // #include <X11/X.h>
 #include <stdint.h>
+#include <cstdlib>
 
 GameLoop::GameLoop(Context* c) : movie(MovieFile(c)), context(c)
 {
@@ -471,6 +472,25 @@ bool GameLoop::startFrameMessages()
             context->draw_frame = false;
             break;
 
+        case MSGB_SYMBOL_ADDRESS: {
+            std::string sym = receiveString();
+            
+            std::ostringstream cmd;
+            cmd << "readelf -Ws " << context->gamepath << " | grep Sleep | awk '{print $2}'";
+
+            FILE *addrstr = popen(cmd.str().c_str(), "r");
+            uint64_t addr = 0;
+            if (addrstr != NULL) {
+                std::array<char,17> buf;
+                if (fgets(buf.data(), buf.size(), addrstr) != nullptr) {
+                    addr = std::strtoull(buf.data(), nullptr, 16);
+                    std::cerr << "Asked for symbol " << sym << ", returns " << addr << std::endl;
+                }
+                pclose(addrstr);
+            }
+            sendData(&addr, sizeof(uint64_t));
+            break;
+        }
         case MSGB_QUIT:
             if (!context->interactive) {
                 /* Exit the program when game has exit */

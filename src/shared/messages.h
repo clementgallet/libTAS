@@ -305,6 +305,12 @@ enum {
      */
     MSGB_LUA_RESOLUTION,
 
+    /*
+     * Send the name of a symbol, to retreive its address in executable
+     * Argument: size_t (string length) then char[len]
+     */
+    MSGB_SYMBOL_ADDRESS,
+
 };
 
 #endif

@@ -22,6 +22,8 @@
 #include "logging.h"
 #include <sys/mman.h>
 #include <string.h>
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
 
 namespace libtas {
 
@@ -202,17 +204,23 @@ static int instruction_length(const unsigned char *func)
 
 void hook_patch(const char* name, const char* library, void* tramp_function, void* my_function)
 {
-    /* Find the path to the library */
-    std::string libpath = find_lib(library);
-
+    const char* libpathstr = NULL;
     void* handle;
-    if (libpath.empty()) {
-        debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not find %s path", library);
-        return;
+    
+    if (library) {
+        /* Find the path to the library */
+        std::string libpath = find_lib(library);
+        
+        if (libpath.empty()) {
+            debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not find %s path", library);
+            return;
+        }
+
+        libpathstr = libpath.c_str();
     }
 
     /* Open library */
-    NATIVECALL(handle = dlopen(libpath.c_str(), RTLD_LAZY));
+    NATIVECALL(handle = dlopen(libpathstr, RTLD_LAZY));
 
     if (!handle) {
         debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not load %s", library);
@@ -222,6 +230,27 @@ void hook_patch(const char* name, const char* library, void* tramp_function, voi
     /* Load function */
     void *orig_fun;
     NATIVECALL(orig_fun = dlsym(handle, name));
+
+    if (!orig_fun && !library) {
+        /* If the symbol was not found, and if looking into the executable,
+         * ask libtas program to get the symbol address from the program elf
+         * header (much slower). We can't look into our own memory, because
+         * the .symtab and .strtab sections of the executable are not loaded
+         * in memory by the loader.
+         * I don't really want to do it here, because it relies on spawning
+         * another process to run `readelf`.
+         */
+        sendMessage(MSGB_SYMBOL_ADDRESS);
+        std::string symstr(name);
+        sendString(symstr);
+
+        uint64_t addr;
+        receiveData(&addr, sizeof(uint64_t));
+        if (addr)
+            memcpy(&orig_fun, &addr, sizeof(void*));
+        else
+            return;
+    }
 
     if (!orig_fun) {
         debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not load %s", name);

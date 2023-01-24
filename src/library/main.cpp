@@ -39,7 +39,7 @@
 #include "steam/isteamuser.h" // SteamSetUserDataFolder
 #include "steam/isteamremotestorage/isteamremotestorage.h" // SteamSetRemoteStorageFolder
 #include "Stack.h"
-
+#include "monowrappers.h"
 
 extern char**environ;
 
@@ -189,6 +189,8 @@ void __attribute__((constructor)) init(void)
 
     /* Initialize sound parameters */
     audiocontext.init();
+
+    hook_mono();
 
     is_inited = true;
 }

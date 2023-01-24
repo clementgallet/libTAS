@@ -22,6 +22,7 @@ libtas_so_SOURCES = \
     logging.cpp \
     main.cpp \
     mallocwrappers.cpp \
+    monowrappers.cpp \
     NonDeterministicTimer.cpp \
     openglwrappers.cpp \
     pthreadwrappers.cpp \
