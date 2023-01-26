@@ -20,7 +20,7 @@
 #ifndef LIBTAS_OPENALC_H_INCL
 #define LIBTAS_OPENALC_H_INCL
 
-#include "../../global.h"
+#include "../../hook.h"
 
 /** 8-bit boolean */
 typedef char ALCboolean;

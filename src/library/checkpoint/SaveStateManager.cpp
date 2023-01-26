@@ -35,6 +35,7 @@
 #include "Checkpoint.h"
 #include "../timewrappers.h" // clock_gettime
 #include "../logging.h"
+#include "../global.h"
 #ifdef __linux__
 #include "../fileio/URandom.h"
 #include "../audio/AudioPlayerAlsa.h"
@@ -133,7 +134,7 @@ void SaveStateManager::initThreadFromChild(ThreadInfo* thread)
 
 int SaveStateManager::waitChild()
 {
-    if (!(shared_config.savestate_settings & SharedConfig::SS_FORK))
+    if (!(Global::shared_config.savestate_settings & SharedConfig::SS_FORK))
         return -1;
 
     int status;
@@ -157,7 +158,7 @@ int SaveStateManager::waitChild()
 
 bool SaveStateManager::stateReady(int slot)
 {
-    if (!(shared_config.savestate_settings & SharedConfig::SS_FORK))
+    if (!(Global::shared_config.savestate_settings & SharedConfig::SS_FORK))
         return true;
 
     if ((slot < 0) && (slot > 10)) {
@@ -169,7 +170,7 @@ bool SaveStateManager::stateReady(int slot)
 
 void SaveStateManager::stateStatus(int slot, bool dirty)
 {
-    if (shared_config.savestate_settings & SharedConfig::SS_FORK)
+    if (Global::shared_config.savestate_settings & SharedConfig::SS_FORK)
         state_dirty[slot] = dirty;
 }
 
@@ -559,12 +560,13 @@ void SaveStateManager::stopThisThread(int signum)
     }
 
     /* Checking that we run in our custom stack, using the address of a local variable */
-    stack_t altstack = current_thread->altstack;
-    if ((&altstack < altstack.ss_sp) ||
-        (&altstack >= (void*)((char*)altstack.ss_sp + altstack.ss_size))) {
-        debuglogstdio(LCF_CHECKPOINT | LCF_WARNING, "Thread suspend is not running on alternate stack");
-        debuglogstdio(LCF_CHECKPOINT | LCF_WARNING, "Local variable in %p and stack at %p", &altstack, altstack.ss_sp);
-    }
+    /* This check fails often but loading the state works, so I'm commenting this */
+    // stack_t altstack = current_thread->altstack;
+    // if ((&altstack < altstack.ss_sp) ||
+    //     (&altstack >= (void*)((char*)altstack.ss_sp + altstack.ss_size))) {
+    //     debuglogstdio(LCF_CHECKPOINT | LCF_WARNING, "Thread suspend is not running on alternate stack");
+    //     debuglogstdio(LCF_CHECKPOINT | LCF_WARNING, "Local variable in %p and stack at %p", &altstack, altstack.ss_sp);
+    // }
 
     /* Make sure we don't get called twice for same thread */
     if (ThreadManager::updateState(current_thread, ThreadInfo::ST_SUSPINPROG, ThreadInfo::ST_SIGNALED)) {

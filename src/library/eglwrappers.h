@@ -20,7 +20,7 @@
 #ifndef LIBTAS_EGLWRAPPERS_H_INCL
 #define LIBTAS_EGLWRAPPERS_H_INCL
 
-#include "global.h"
+#include "hook.h"
 #include <EGL/egl.h>
 
 namespace libtas {

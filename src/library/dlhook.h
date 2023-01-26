@@ -22,7 +22,7 @@
 
 #include <dlfcn.h>
 #include <string>
-#include "global.h"
+#include "hook.h"
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach-o/dyld.h>

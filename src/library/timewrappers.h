@@ -22,7 +22,7 @@
 
 #include <time.h>
 #include <unistd.h>
-#include "global.h"
+#include "hook.h"
 
 namespace libtas {
 

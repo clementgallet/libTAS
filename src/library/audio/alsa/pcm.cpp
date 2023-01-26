@@ -27,6 +27,7 @@
 #include "../../hook.h"
 #include "../../DeterministicTimer.h"
 #include "../../checkpoint/ThreadManager.h"
+#include "../../global.h"
 
 #include <stdint.h>
 
@@ -143,7 +144,7 @@ int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int
 
     DEBUGLOGCALL(LCF_SOUND);
 
-    if (shared_config.audio_disabled)
+    if (Global::shared_config.audio_disabled)
         return -1;
 
     if (stream != SND_PCM_STREAM_PLAYBACK) {
@@ -158,9 +159,9 @@ int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int
         block_mode = true;
     }
 
-    if (!(game_info.audio & GameInfo::ALSA)) {
-        game_info.audio |= GameInfo::ALSA;
-        game_info.tosend = true;
+    if (!(Global::game_info.audio & GameInfo::ALSA)) {
+        Global::game_info.audio |= GameInfo::ALSA;
+        Global::game_info.tosend = true;
     }
 
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
@@ -432,7 +433,7 @@ int snd_pcm_wait(snd_pcm_t *pcm, int timeout)
             TimeHolder delta_time = detTimer.getTicks();
             delta_time -= initial_time;
             delta_ms = delta_time.tv_sec * 1000 + delta_time.tv_nsec / 1000000;
-        } while (!is_exiting && (get_latency(pcm) >= buffer_size) && ((timeout < 0) || (delta_ms < timeout)));
+        } while (!Global::is_exiting && (get_latency(pcm) >= buffer_size) && ((timeout < 0) || (delta_ms < timeout)));
     }
 
     if ((buffer_size - get_latency(pcm)) > 0)
@@ -677,11 +678,11 @@ snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_ufr
      * all frames can be written. */
     if (block_mode) {
         struct timespec mssleep = {0, 1000*1000};
-        while (!is_exiting && ((get_latency(pcm) + static_cast<int>(size)) > buffer_size)) {
+        while (!Global::is_exiting && ((get_latency(pcm) + static_cast<int>(size)) > buffer_size)) {
             NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
         }
 
-        if (is_exiting) return 0;
+        if (Global::is_exiting) return 0;
     }
     else if (get_latency(pcm) >= buffer_size) {
         return -EAGAIN;

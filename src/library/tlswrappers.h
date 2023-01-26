@@ -21,7 +21,6 @@
 #define LIBTAS_TLS_H_INCL
 
 #include "hook.h"
-#include "global.h"
 #include <pthread.h> // pthread_key_t
 
 namespace libtas {

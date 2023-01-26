@@ -31,6 +31,7 @@
 #include "../isteamgamecoordinator.h"
 #include "../../logging.h"
 #include "../../hook.h"
+#include "../../global.h"
 
 namespace libtas {
 
@@ -87,7 +88,7 @@ struct ISteamClient *SteamClient(void)
 {
     DEBUGLOGCALL(LCF_STEAM);
 
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamClient, "steam_api");
         return orig::SteamClient();
     }

@@ -21,6 +21,7 @@
 #include "../../checkpoint/ThreadManager.h" // getThreadId()
 #include "../../logging.h"
 #include "../../hook.h"
+#include "../../global.h"
 #include "../AudioContext.h"
 #include "../AudioSource.h"
 #include "../AudioBuffer.h"
@@ -106,7 +107,7 @@ char * SDL_AudioDriverName(char *namebuf, int maxlen)
 /* Helper function for SDL_OpenAudio() and SDL_OpenAudioDevice() */
 static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obtained, int min_id)
 {
-    if (shared_config.audio_disabled)
+    if (Global::shared_config.audio_disabled)
         return -1;
 
     /* Look for the next available device. Id 1 is reserved for SDL_OpenAudio() device */
@@ -275,8 +276,8 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
     if (index != 0)
         return -1;
 
-    spec->freq = shared_config.audio_frequency;
-    switch (shared_config.audio_bitdepth) {
+    spec->freq = Global::shared_config.audio_frequency;
+    switch (Global::shared_config.audio_bitdepth) {
         case 8:
             spec->format = AUDIO_U8;
             break;
@@ -284,7 +285,7 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
             spec->format = AUDIO_S16LSB;
             break;
     }
-    spec->channels = shared_config.audio_channels;
+    spec->channels = Global::shared_config.audio_channels;
 
     return 0;
 }
@@ -299,8 +300,8 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
     if (name)
         *name = nullptr;
 
-    spec->freq = shared_config.audio_frequency;
-    switch (shared_config.audio_bitdepth) {
+    spec->freq = Global::shared_config.audio_frequency;
+    switch (Global::shared_config.audio_bitdepth) {
         case 8:
             spec->format = AUDIO_U8;
             break;
@@ -308,7 +309,7 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
             spec->format = AUDIO_S16LSB;
             break;
     }
-    spec->channels = shared_config.audio_channels;
+    spec->channels = Global::shared_config.audio_channels;
 
     return 0;
 }

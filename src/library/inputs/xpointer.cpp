@@ -25,6 +25,7 @@
 #include "../DeterministicTimer.h"
 #include "../xlib/XlibEventQueueList.h"
 #include "../xlib/xwindows.h" // x11::gameXWindows
+#include "../global.h"
 
 namespace libtas {
 
@@ -187,14 +188,14 @@ DEFINE_ORIG_POINTER(XWarpPointer)
         game_ai.pointer_y = dest_y;
     }
 
-    if (shared_config.mouse_prevent_warp) {
+    if (Global::shared_config.mouse_prevent_warp) {
         return 0; // Not sure what to return
     }
     
     /* When warping cursor, real and game cursor position are now synced.
      * When mouse is disabled, we consider that the user doesn't move the mouse,
      * so it is kept at the same position. */
-    if (shared_config.mouse_support) {
+    if (Global::shared_config.mouse_support) {
         if (dest_w == None) {
             /* Relative warp */
             old_ai.pointer_x += dest_x;

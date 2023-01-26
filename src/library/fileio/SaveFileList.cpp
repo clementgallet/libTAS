@@ -20,7 +20,7 @@
 #include "SaveFileList.h"
 
 #include "SaveFile.h"
-#include "../global.h" // shared_config
+#include "../global.h" // Global::shared_config
 #include "../GlobalState.h"
 #include "../logging.h"
 
@@ -96,7 +96,7 @@ bool isSaveFile(const char *file, int oflag)
 /* Detect save files (excluding the writeable flag), basically if the file is regular */
 bool isSaveFile(const char *file)
 {
-    if (!shared_config.prevent_savefiles)
+    if (!Global::shared_config.prevent_savefiles)
         return false;
 
     if (!file)
@@ -209,7 +209,7 @@ int removeSaveFile(const char *file)
     }
 
     /* If the file is not registered, create a removed savefile */
-    if (shared_config.prevent_savefiles) {
+    if (Global::shared_config.prevent_savefiles) {
         savefiles.emplace_front(new SaveFile(file));
         savefiles.front()->remove();
 

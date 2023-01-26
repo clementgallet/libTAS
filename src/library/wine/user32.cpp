@@ -25,6 +25,7 @@
 #include "../checkpoint/ThreadSync.h"
 #include "../inputs/winekeyboardlayout.h"
 #include "../inputs/inputs.h"
+#include "../../shared/SingleInput.h"
 
 namespace libtas {
 

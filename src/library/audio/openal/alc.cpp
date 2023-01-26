@@ -21,6 +21,7 @@
 #include "efx.h"
 #include "../AudioContext.h"
 #include "../../logging.h"
+#include "../../global.h"
 
 namespace libtas {
 
@@ -42,8 +43,8 @@ static ALCenum alcError = ALC_NO_ERROR;
 /* Override */ ALCdevice* alcOpenDevice(const ALCchar* devicename)
 {
     DEBUGLOGCALL(LCF_SOUND);
-    game_info.audio |= GameInfo::OPENAL;
-    game_info.tosend = true;
+    Global::game_info.audio |= GameInfo::OPENAL;
+    Global::game_info.tosend = true;
     return &dummyDevice;
 }
 
@@ -57,7 +58,7 @@ static ALCenum alcError = ALC_NO_ERROR;
 {
     DEBUGLOGCALL(LCF_SOUND);
 
-    if (shared_config.audio_disabled)
+    if (Global::shared_config.audio_disabled)
         return nullptr;
 
     if (dummyContext != -1) {
@@ -407,8 +408,8 @@ ALCcontext* myalcGetThreadContext(void)
 ALCdevice* myalcLoopbackOpenDeviceSOFT(const ALCchar *deviceName)
 {
     DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
-    game_info.audio |= GameInfo::OPENAL;
-    game_info.tosend = true;
+    Global::game_info.audio |= GameInfo::OPENAL;
+    Global::game_info.tosend = true;
     return &dummyDevice;
 }
 

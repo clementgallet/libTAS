@@ -28,6 +28,7 @@
 #include "xdisplay.h" // x11::gameDisplays
 #include "xwindows.h" // x11::gameXWindows
 #include "../../external/X11/XInput2.h"
+#include "../global.h"
 
 #include "xrandr.h"
 
@@ -100,7 +101,7 @@ static Bool isEventFiltered (XEvent *event) {
 
 void pushNativeXlibEvents(void)
 {
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return;
     }
 
@@ -111,7 +112,7 @@ void pushNativeXlibEvents(void)
 
 void pushNativeXlibEvents(Display *display)
 {
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return;
     }
 
@@ -130,7 +131,7 @@ void pushNativeXlibEvents(Display *display)
             /* Catch the close event */
             if (static_cast<Atom>(event.xclient.data.l[0]) == x11_atom(WM_DELETE_WINDOW)) {
                 debuglogstdio(LCF_EVENTS | LCF_WINDOW, "    caught a window close event");
-                is_exiting = true;
+                Global::is_exiting = true;
             }
 
             /* Catch a ping event */
@@ -163,7 +164,7 @@ int XNextEvent(Display *display, XEvent *event_return)
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XNextEvent);
         return orig::XNextEvent(display, event_return);
     }
@@ -193,7 +194,7 @@ int XPeekEvent(Display *display, XEvent *event_return)
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XPeekEvent);
         return orig::XPeekEvent(display, event_return);
     }
@@ -223,7 +224,7 @@ int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_retu
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XWindowEvent);
         return orig::XWindowEvent(display, w, event_mask, event_return);
     }
@@ -253,7 +254,7 @@ Bool XCheckWindowEvent(Display *display, Window w, long event_mask, XEvent *even
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XCheckWindowEvent);
         return orig::XCheckWindowEvent(display, w, event_mask, event_return);
     }
@@ -272,7 +273,7 @@ int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XMaskEvent);
         return orig::XMaskEvent(display, event_mask, event_return);
     }
@@ -302,7 +303,7 @@ Bool XCheckMaskEvent(Display *display, long event_mask, XEvent *event_return)
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XCheckMaskEvent);
         return orig::XCheckMaskEvent(display, event_mask, event_return);
     }
@@ -325,7 +326,7 @@ Bool XCheckTypedEvent(Display *display, int event_type, XEvent *event_return)
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XCheckTypedEvent);
         return orig::XCheckTypedEvent(display, event_type, event_return);
     }
@@ -348,7 +349,7 @@ Bool XCheckTypedWindowEvent(Display *display, Window w, int event_type, XEvent *
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XCheckTypedWindowEvent);
         return orig::XCheckTypedWindowEvent(display, w, event_type, event_return);
     }
@@ -371,7 +372,7 @@ int XEventsQueued(Display* display, int mode)
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XEventsQueued);
         return orig::XEventsQueued(display, mode);
     }
@@ -394,7 +395,7 @@ int XPending(Display *display)
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XPending);
         return orig::XPending(display);
     }
@@ -416,7 +417,7 @@ int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XIfEvent);
         return orig::XIfEvent(display, event_return, predicate, arg);
     }
@@ -446,7 +447,7 @@ Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Dis
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XCheckIfEvent);
         return orig::XCheckIfEvent(display, event_return, predicate, arg);
     }
@@ -480,8 +481,8 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
                 }
 
                 /* Resize the window to the screen or fake resolution */
-                if (shared_config.screen_width) {
-                    XResizeWindow(display, event_send->xclient.window, shared_config.screen_width, shared_config.screen_height);
+                if (Global::shared_config.screen_width) {
+                    XResizeWindow(display, event_send->xclient.window, Global::shared_config.screen_width, Global::shared_config.screen_height);
                 }
                 else {
                     /* Change the window size to monitor size */
@@ -527,7 +528,7 @@ int XFlush(Display *display)
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XFlush);
         return orig::XFlush(display);
     }
@@ -546,7 +547,7 @@ int XSync(Display *display, Bool discard)
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return orig::XSync(display, discard);
     }
 
@@ -564,7 +565,7 @@ Bool XGetEventData(Display* dpy, XGenericEventCookie* cookie)
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XGetEventData);
         return orig::XGetEventData(dpy, cookie);
     }
@@ -588,7 +589,7 @@ void XFreeEventData(Display* dpy, XGenericEventCookie* cookie)
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XFreeEventData);
         return orig::XFreeEventData(dpy, cookie);
     }

@@ -20,7 +20,6 @@
 #ifndef LIBTAS_MONOWRAPPERS_H_INCL
 #define LIBTAS_MONOWRAPPERS_H_INCL
 
-#include "global.h"
 #include <stddef.h>
 
 namespace libtas {

@@ -22,8 +22,6 @@
 
 #include <X11/X.h>
 
-#include "../global.h"
-
 namespace libtas {
 
 KeySym VKeyToXKeysym(int vkey);

@@ -20,7 +20,7 @@
 #ifndef LIBTAS_VULKANWRAPPERS_H_INCL
 #define LIBTAS_VULKANWRAPPERS_H_INCL
 
-#include "global.h"
+#include "hook.h"
 #include <cstddef>
 #include <vector>
 #include "../external/vulkan_core.h"

@@ -19,8 +19,9 @@
 
 #include "systemwrappers.h"
 #include "logging.h"
+#include "global.h"
 #include "GlobalState.h"
-#include "../shared/SharedConfig.h"
+// #include "../shared/SharedConfig.h"
 #include "backtrace.h"
 #include <execinfo.h>
 #ifdef __unix__
@@ -71,7 +72,7 @@ DEFINE_ORIG_POINTER(fork)
     DEBUGLOGCALL(LCF_SYSTEM);
 
     if (pid == 0) {
-        is_fork = true;
+        Global::is_fork = true;
 
 #ifdef __unix__
         /* Invalidate the previous connections to the X server */

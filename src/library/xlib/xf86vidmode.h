@@ -20,7 +20,7 @@
 #ifndef LIBTAS_XF86VIDMODE_H_INCL
 #define LIBTAS_XF86VIDMODE_H_INCL
 
-#include "../global.h"
+#include "../hook.h"
 #include "../../external/X11/xf86vmode.h"
 
 // #include <X11/Xlib.h>

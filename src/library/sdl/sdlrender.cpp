@@ -24,6 +24,7 @@
 #include "../frame.h"
 #include "../renderhud/RenderHUD_SDL2_renderer.h"
 #include "../ScreenCapture.h"
+#include "../global.h"
 
 namespace libtas {
 
@@ -49,7 +50,7 @@ DECLARE_ORIG_POINTER(SDL_RenderGetScale)
     if (flags & SDL_RENDERER_TARGETTEXTURE)
         debuglogstdio(LCF_SDL | LCF_WINDOW, "   flag SDL_RENDERER_TARGETTEXTURE");
 
-    game_info.video |=  GameInfo::SDL2_RENDERER;
+    Global::game_info.video |=  GameInfo::SDL2_RENDERER;
 
     SDL_Renderer* renderer = orig::SDL_CreateRenderer(window, index, flags);
 
@@ -65,7 +66,7 @@ DECLARE_ORIG_POINTER(SDL_RenderGetScale)
 
     ScreenCapture::fini();
 
-    game_info.video &= ~GameInfo::SDL2_RENDERER;
+    Global::game_info.video &= ~GameInfo::SDL2_RENDERER;
 
     orig::SDL_DestroyRenderer(renderer);
 }

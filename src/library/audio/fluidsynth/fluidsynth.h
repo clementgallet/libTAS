@@ -20,7 +20,7 @@
 #ifndef LIBTAS_FLUIDSYNTH_H_INCL
 #define LIBTAS_FLUIDSYNTH_H_INCL
 
-#include "../../global.h"
+#include "../../hook.h"
 
 namespace libtas {
 

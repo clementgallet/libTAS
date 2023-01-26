@@ -21,7 +21,7 @@
 #define LIBTAS_OPENALEFX_H_INCL
 
 #include "al.h"
-#include "../../global.h"
+#include "../../hook.h"
 
 #define ALC_EXT_EFX_NAME                         "ALC_EXT_EFX"
 

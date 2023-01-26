@@ -33,112 +33,98 @@
 #include <semaphore.h>
 
 namespace libtas {
-class ThreadManager {
-    static ThreadInfo* thread_list;
-    static thread_local ThreadInfo* current_thread;
+    
+namespace ThreadManager {
 
-    // static bool inited;
-    static pthread_t main_pthread_id;
+// Called from SDL_init, assumed to be main thread
+void init();
 
-    static pthread_mutex_t threadStateLock;
-    static pthread_mutex_t threadListLock;
+/* Get the pthread id */
+pthread_t getThreadId();
 
-    static bool is_child_fork;
+/* Get the thread tid */
+pid_t getThreadTid();
 
-    /* Offset of `tid` member in the hidden `pthread` structure */
-    static int offset_tid;
+/* Restore tid in all threads into their internal pthread structure */
+void restoreThreadTids();
 
+/* Set the main thread to this thread */
+void setMainThread();
 
-public:
-    // Called from SDL_init, assumed to be main thread
-    static void init();
+/* Check if this thread is main thread */
+bool isMainThread();
 
-    /* Get the pthread id */
-    static pthread_t getThreadId();
+/* Set the checkpoint thread to this thread */
+void setCheckpointThread();
 
-    /* Get the thread tid */
-    static pid_t getThreadTid();
+/* Create a new ThreadInfo struct from the parent thread*/
+ThreadInfo* getNewThread();
 
-    /* Restore tid in all threads into their internal pthread structure */
-    static void restoreThreadTids();
+/* Get the thread tid of another thread */
+pid_t getThreadTid(pthread_t pthread_id);
 
-    /* Set the main thread to this thread */
-    static void setMainThread();
+/* Get the ThreadInfo struct from the thread id, or null if not there */
+ThreadInfo* getThread(pthread_t pthread_id);
 
-    /* Check if this thread is main thread */
-    static bool isMainThread();
+/* Init the ThreadInfo by the parent thread with values passed in
+ * pthread_create, and return if the thread was recycled or not.
+ */
+bool initThreadFromParent(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from);
 
-    /* Set the checkpoint thread to this thread */
-    static void setCheckpointThread();
+/* Finish the initialization of the ThreadInfo struct by the child thread */
+void initThreadFromChild(ThreadInfo* thread);
 
-    /* Create a new ThreadInfo struct from the parent thread*/
-    static ThreadInfo* getNewThread();
+/* Update the ThreadInfo struct by the child thread */
+void update(ThreadInfo* thread);
 
-    /* Get the thread tid of another thread */
-    static pid_t getThreadTid(pthread_t pthread_id);
+/* Add a thread to the thread list */
+void addToList(ThreadInfo* thread);
 
-    /* Get the ThreadInfo struct from the thread id, or null if not there */
-    static ThreadInfo* getThread(pthread_t pthread_id);
+/* Get the thread list */
+ThreadInfo* getThreadList();
 
-    /* Init the ThreadInfo by the parent thread with values passed in
-     * pthread_create, and return if the thread was recycled or not.
-     */
-    static bool initThreadFromParent(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from);
+/* Are we a child process for state saving? */
+bool isChildFork();
 
-    /* Finish the initialization of the ThreadInfo struct by the child thread */
-    static void initThreadFromChild(ThreadInfo* thread);
+/* Set the child process state */
+void setChildFork();
 
-    /* Update the ThreadInfo struct by the child thread */
-    static void update(ThreadInfo* thread);
+/* Remove a thread from the list and add it to the free list */
+void threadIsDead(ThreadInfo *thread);
 
-    /* Add a thread to the thread list */
-    static void addToList(ThreadInfo* thread);
+/* Called when thread detach another thread */
+void threadDetach(pthread_t pthread_id);
 
-    /* Get the thread list */
-    static ThreadInfo* getThreadList() {
-        return thread_list;
-    }
+/* Called when thread reaches the end (by return or pthread_exit).
+ * Store the returned value.
+ */
+void threadExit(void* retval);
 
-    /* Are we a child process for state saving? */
-    static bool isChildFork();
+/* Deallocate all ThreadInfo structs from the free list */
+void deallocateThreads();
 
-    /* Set the child process state */
-    static void setChildFork();
+/* Safely try to change a ThreadInfo state and return if done */
+bool updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, ThreadInfo::ThreadState oldval);
 
-    /* Remove a thread from the list and add it to the free list */
-    static void threadIsDead(ThreadInfo *thread);
+/* Get the current thread */
+ThreadInfo *getCurrentThread();
 
-    /* Called when thread detach another thread */
-    static void threadDetach(pthread_t pthread_id);
+/* A function called from pthread_start() to fix current_thread
+ * after pthread_start() erases all thread_local variables.
+ */
+void setCurrentThread(ThreadInfo *thread);
 
-    /* Called when thread reaches the end (by return or pthread_exit).
-     * Store the returned value.
-     */
-    static void threadExit(void* retval);
+/* Lock or unlock the mutex when modifying the thread list */
+void lockList();
+void unlockList();
 
-    /* Deallocate all ThreadInfo structs from the free list */
-    static void deallocateThreads();
+/* Has the thread list changed during the current frame? */
+bool hasThreadListChanged();
 
-    /* Safely try to change a ThreadInfo state and return if done */
-    static bool updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, ThreadInfo::ThreadState oldval);
+/* Reset the state of thread list changed */
+void resetThreadListChanged();
 
-    /* Get the current thread */
-    static ThreadInfo *getCurrentThread() {
-        return current_thread;
-    }
-
-    /* A function called from pthread_start() to fix current_thread
-     * after pthread_start() erases all thread_local variables.
-     */
-    static void setCurrentThread(ThreadInfo *thread) {
-        current_thread = thread;
-    }
-
-    /* Lock or unlock the mutex when modifying the thread list */
-    static void lockList();
-    static void unlockList();
-
-};
+}
 }
 
 #endif

@@ -24,7 +24,7 @@
 #elif defined(__APPLE__) && defined(__MACH__)
 #include "AudioPlayerCoreAudio.h"
 #endif
-#include "../global.h" // shared_config
+#include "../global.h" // Global::shared_config
 
 #include <stdint.h>
 #include <unistd.h>
@@ -79,9 +79,9 @@ AudioContext::AudioContext(void)
 
 void AudioContext::init(void)
 {
-    outBitDepth = shared_config.audio_bitdepth;
-    outNbChannels = shared_config.audio_channels;
-    outFrequency = shared_config.audio_frequency;
+    outBitDepth = Global::shared_config.audio_bitdepth;
+    outNbChannels = Global::shared_config.audio_channels;
+    outFrequency = Global::shared_config.audio_frequency;
     outAlignSize = outNbChannels * outBitDepth / 8;
     isLoopback = false;
 }
@@ -258,7 +258,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
     
     mutex.unlock();
 
-    if (!audiocontext.isLoopback && !shared_config.audio_mute) {
+    if (!audiocontext.isLoopback && !Global::shared_config.audio_mute) {
         /* Play the music */
 #ifdef __linux__
         AudioPlayerAlsa::play(*this);

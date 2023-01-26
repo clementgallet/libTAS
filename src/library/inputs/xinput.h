@@ -20,7 +20,7 @@
 #ifndef LIBTAS_XINPUT_H_INCL
 #define LIBTAS_XINPUT_H_INCL
 
-#include "../global.h"
+#include "../hook.h"
 #include "../../external/X11/XInput2.h"
 
 namespace libtas {

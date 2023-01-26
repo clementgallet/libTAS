@@ -21,6 +21,7 @@
 
 #include "../logging.h"
 #include "../hook.h"
+#include "../global.h"
 #include "SaveFileList.h"
 #include "FileHandleList.h"
 #include "../GlobalState.h"
@@ -90,7 +91,7 @@ int open (const char *file, int oflag, ...)
         return orig::open(file, oflag, mode);
     }
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::open(file, oflag, mode);
 
     int fd = 0;
@@ -110,9 +111,9 @@ int open (const char *file, int oflag, ...)
             fd = SaveFileList::openSaveFile(file, O_RDWR | O_TRUNC);
 
             std::ostringstream datestr;
-            datestr << shared_config.initial_time_sec << ".";
+            datestr << Global::shared_config.initial_time_sec << ".";
             datestr << std::setfill ('0') << std::setw (2);
-            datestr << shared_config.initial_time_nsec / 10000000;
+            datestr << Global::shared_config.initial_time_nsec / 10000000;
 
             std::string s = datestr.str();
 
@@ -185,7 +186,7 @@ int open64 (const char *file, int oflag, ...)
         return orig::open64(file, oflag, mode);
     }
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::open64(file, oflag, mode);
 
     int fd = 0;
@@ -205,9 +206,9 @@ int open64 (const char *file, int oflag, ...)
             fd = SaveFileList::openSaveFile(file, O_RDWR | O_TRUNC);
 
             std::ostringstream datestr;
-            datestr << shared_config.initial_time_sec << ".";
+            datestr << Global::shared_config.initial_time_sec << ".";
             datestr << std::setfill ('0') << std::setw (2);
-            datestr << shared_config.initial_time_nsec / 10000000;
+            datestr << Global::shared_config.initial_time_nsec / 10000000;
 
             std::string s = datestr.str();
 
@@ -280,7 +281,7 @@ int openat (int dirfd, const char *file, int oflag, ...)
         return orig::openat(dirfd, file, oflag, mode);
     }
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::openat(dirfd, file, oflag, mode);
 
     int fd = 0;
@@ -328,7 +329,7 @@ int openat64 (int dirfd, const char *file, int oflag, ...)
         return orig::openat64(dirfd, file, oflag, mode);
     }
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::openat64(dirfd, file, oflag, mode);
 
     int fd = 0;
@@ -362,7 +363,7 @@ int creat (const char *file, mode_t mode)
         return orig::creat(file, mode);
     }
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::creat(file, mode);
 
     /* From creat() man page, creat() is just open() with flags
@@ -401,7 +402,7 @@ int creat64 (const char *file, mode_t mode)
         return orig::creat64(file, mode);
     }
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::creat64(file, mode);
 
     int oflag = O_CREAT|O_WRONLY|O_TRUNC;
@@ -431,7 +432,7 @@ int close (int fd)
 
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::close(fd);
 
 #ifdef __linux__
@@ -470,7 +471,7 @@ int access(const char *name, int type) __THROW
         return orig::access(name, type);
     }
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::access(name, type);
 
 #ifdef __linux__
@@ -511,7 +512,7 @@ int __xstat(int ver, const char *path, struct stat *buf) __THROW
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::__xstat(ver, path, buf);
 
 #ifdef __linux__
@@ -554,7 +555,7 @@ int __xstat64(int ver, const char *path, struct stat64 *buf) __THROW
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::__xstat64(ver, path, buf);
 
 #ifdef __linux__
@@ -597,7 +598,7 @@ int __lxstat(int ver, const char *path, struct stat *buf) __THROW
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::__lxstat(ver, path, buf);
 
 #ifdef __linux__
@@ -640,7 +641,7 @@ int __lxstat64(int ver, const char *path, struct stat64 *buf) __THROW
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::__lxstat64(ver, path, buf);
 
 #ifdef __linux__
@@ -711,7 +712,7 @@ int dup2 (int fd, int fd2) __THROW
     debuglogstdio(LCF_FILEIO, "%s call: %d -> %d", __func__, fd2, fd);
     LINK_NAMESPACE_GLOBAL(dup2);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::dup2(fd, fd2);
 
     if (fd2 == 2) {

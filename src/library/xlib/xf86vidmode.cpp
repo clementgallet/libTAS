@@ -21,6 +21,7 @@
 
 #include "../hook.h"
 #include "../logging.h"
+#include "../global.h"
 
 namespace libtas {
 
@@ -31,19 +32,19 @@ Bool XF86VidModeGetModeLine(Display* dpy, int screen, int* dotclock, XF86VidMode
 {
     DEBUGLOGCALL(LCF_WINDOW);
 
-    if (shared_config.screen_width) {
+    if (Global::shared_config.screen_width) {
         /* Fill the settings, using my monitor as reference, it
          * shouldn't matter really. */
-        modeline->hdisplay = shared_config.screen_height;
-        modeline->hsyncstart = shared_config.screen_height + 88;
-        modeline->hsyncend = shared_config.screen_height + 132;
-        modeline->htotal = shared_config.screen_height + 280;
+        modeline->hdisplay = Global::shared_config.screen_height;
+        modeline->hsyncstart = Global::shared_config.screen_height + 88;
+        modeline->hsyncend = Global::shared_config.screen_height + 132;
+        modeline->htotal = Global::shared_config.screen_height + 280;
         modeline->hskew = 0;
 
-        modeline->vdisplay = shared_config.screen_width;
-        modeline->vsyncstart = shared_config.screen_width + 4;
-        modeline->vsyncend = shared_config.screen_width + 9;
-        modeline->vtotal = shared_config.screen_width + 45;
+        modeline->vdisplay = Global::shared_config.screen_width;
+        modeline->vsyncstart = Global::shared_config.screen_width + 4;
+        modeline->vsyncend = Global::shared_config.screen_width + 9;
+        modeline->vtotal = Global::shared_config.screen_width + 45;
 
         modeline->flags = 5;
         modeline->privsize = 0;
@@ -59,7 +60,7 @@ Bool XF86VidModeGetAllModeLines(Display *dpy, int screen, int *modecount_return,
 {
     DEBUGLOGCALL(LCF_WINDOW);
 
-    if (shared_config.screen_width) {
+    if (Global::shared_config.screen_width) {
         /* If I understand correctly the doc, each individual XF86VidModeModeInfo
          * struct are not allocated, but the array is. So we make our
          * fake XF86VidModeModeInfo struct static, and allocate a 1-size array. */
@@ -72,16 +73,16 @@ Bool XF86VidModeGetAllModeLines(Display *dpy, int screen, int *modecount_return,
          * shouldn't matter really. */
         modeinfo.dotclock = 148500;
         
-        modeinfo.hdisplay = shared_config.screen_height;
-        modeinfo.hsyncstart = shared_config.screen_height + 88;
-        modeinfo.hsyncend = shared_config.screen_height + 132;
-        modeinfo.htotal = shared_config.screen_height + 280;
+        modeinfo.hdisplay = Global::shared_config.screen_height;
+        modeinfo.hsyncstart = Global::shared_config.screen_height + 88;
+        modeinfo.hsyncend = Global::shared_config.screen_height + 132;
+        modeinfo.htotal = Global::shared_config.screen_height + 280;
         modeinfo.hskew = 0;
 
-        modeinfo.vdisplay = shared_config.screen_width;
-        modeinfo.vsyncstart = shared_config.screen_width + 4;
-        modeinfo.vsyncend = shared_config.screen_width + 9;
-        modeinfo.vtotal = shared_config.screen_width + 45;
+        modeinfo.vdisplay = Global::shared_config.screen_width;
+        modeinfo.vsyncstart = Global::shared_config.screen_width + 4;
+        modeinfo.vsyncend = Global::shared_config.screen_width + 9;
+        modeinfo.vtotal = Global::shared_config.screen_width + 45;
 
         modeinfo.flags = 5;
         modeinfo.privsize = 0;

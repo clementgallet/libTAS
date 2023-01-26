@@ -21,7 +21,7 @@
 #include "logging.h"
 #include "checkpoint/ThreadManager.h"
 #include "DeterministicTimer.h"
-#include "hook.h"
+#include "global.h"
 
 #include <errno.h>
 
@@ -46,12 +46,12 @@ DEFINE_ORIG_POINTER(g_cond_wait_until)
     if (!ThreadManager::isMainThread())
         return orig::g_cond_wait_until(cond, mutex, end_time);
 
-    if (shared_config.wait_timeout == SharedConfig::WAIT_NATIVE)
+    if (Global::shared_config.wait_timeout == SharedConfig::WAIT_NATIVE)
         return orig::g_cond_wait_until(cond, mutex, end_time);
 
     TimeHolder now = detTimer.getTicks();
 
-    if (shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
+    if (Global::shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
         /* Wait for 0.1 sec, arbitrary */
         gint64 new_end_time = (static_cast<gint64>(now.tv_sec) * 1000000) + (now.tv_nsec / 1000) + 100*1000;
         gboolean ret = orig::g_cond_wait_until(cond, mutex, new_end_time);
@@ -59,8 +59,8 @@ DEFINE_ORIG_POINTER(g_cond_wait_until)
             return ret;
     }
 
-    if ((shared_config.wait_timeout == SharedConfig::WAIT_FULL_INFINITE) ||
-        (shared_config.wait_timeout == SharedConfig::WAIT_FINITE)) {
+    if ((Global::shared_config.wait_timeout == SharedConfig::WAIT_FULL_INFINITE) ||
+        (Global::shared_config.wait_timeout == SharedConfig::WAIT_FINITE)) {
         /* Transfer time to our deterministic timer */
         TimeHolder end;
         end.tv_sec = end_time / (1000*1000);
@@ -69,7 +69,7 @@ DEFINE_ORIG_POINTER(g_cond_wait_until)
         detTimer.addDelay(delay);
     }
 
-    if (shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
+    if (Global::shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
         /* Wait again for 0.1 sec, arbitrary */
         now = detTimer.getTicks();
         gint64 new_end_time = (static_cast<gint64>(now.tv_sec) * 1000000) + (now.tv_nsec / 1000) + 100*1000;

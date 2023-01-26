@@ -21,7 +21,7 @@
 #define LIBTAS_SDLMUTEX_H_INCL
 
 #include <SDL2/SDL.h>
-#include "../global.h"
+#include "../hook.h"
 
 namespace libtas {
 

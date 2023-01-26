@@ -20,7 +20,7 @@
 #ifndef LIBTAS_GLXWRAPPERS_H_INCL
 #define LIBTAS_GLXWRAPPERS_H_INCL
 
-#include "global.h"
+#include "hook.h"
 #define GL_GLEXT_PROTOTYPES
 // #include <GL/gl.h>
 #include <GL/glx.h>

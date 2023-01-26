@@ -347,7 +347,7 @@ static thread_local int origUsrMaskThread = 0;
     if (ret != -1) {
         if (oldmask) {
 #if defined(__APPLE__) && defined(__MACH__)
-            if (!is_inited) {
+            if (!Global::is_inited) {
                 if (origUsrMaskProcess & SaveStateManager::sigSuspend())
                     sigaddset(oldmask, SaveStateManager::sigSuspend());
                 if (origUsrMaskProcess & SaveStateManager::sigCheckpoint())
@@ -369,7 +369,7 @@ static thread_local int origUsrMaskThread = 0;
             if (sigismember(newmask, SaveStateManager::sigCheckpoint()) == 1) mask |= sigmask(SaveStateManager::sigCheckpoint());
 
 #if defined(__APPLE__) && defined(__MACH__)
-            if (!is_inited) {
+            if (!Global::is_inited) {
                 if (how == SIG_BLOCK)
                     origUsrMaskProcess |= mask;
                 if (how == SIG_UNBLOCK)

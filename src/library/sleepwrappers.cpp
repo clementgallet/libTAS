@@ -28,6 +28,7 @@
 #include "hook.h"
 #include "GameHacks.h"
 #include <execinfo.h>
+#include "global.h"
 
 namespace libtas {
 
@@ -43,7 +44,7 @@ static bool transfer_sleep(const struct timespec &ts)
     if (ts.tv_sec == 0 && ts.tv_nsec == 0)
         return false;
 
-    switch (shared_config.sleep_handling) {
+    switch (Global::shared_config.sleep_handling) {
         case SharedConfig::SLEEP_NEVER:
             return false;
         case SharedConfig::SLEEP_MAIN:
@@ -165,7 +166,7 @@ static bool transfer_sleep(const struct timespec &ts)
 
     DEBUGLOGCALL(LCF_SLEEP);
 
-    if (shared_config.game_specific_timing & SharedConfig::GC_TIMING_CELESTE) {
+    if (Global::shared_config.game_specific_timing & SharedConfig::GC_TIMING_CELESTE) {
         if (ThreadManager::isMainThread())
             detTimer.fakeAdvanceTimer({0, 1000000});
     }

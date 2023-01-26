@@ -23,15 +23,9 @@
 #include "../shared/SharedConfig.h"
 #include "../shared/GameInfo.h"
 
-/* Include this file in every source code that override functions of the game */
-
-#if __GNUC__ >= 4
-    #define OVERRIDE extern "C" __attribute__ ((visibility ("default")))
-#else
-    #define OVERRIDE extern "C"
-#endif
-
 namespace libtas {
+
+namespace Global {
 
     /* Configuration parameters that are shared between the program and the game */
     extern SharedConfig shared_config;
@@ -50,9 +44,7 @@ namespace libtas {
 
     /* Do we skip all rendering functions for the current frame */
     extern bool skipping_draw;
-
-    /* Past savestates are invalid when thread list has changed */
-    extern bool threadListChanged;
+}
 }
 
 #endif

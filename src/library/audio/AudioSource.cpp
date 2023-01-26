@@ -19,7 +19,7 @@
 
 #include "AudioSource.h"
 #include "../logging.h"
-#include "../global.h" // shared_config
+#include "../global.h" // Global::shared_config
 #include <stdlib.h>
 #include <stdint.h>
 #include "../DeterministicTimer.h" // detTimer.fakeAdvanceTimer()
@@ -181,10 +181,10 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     debuglogstdio(LCF_SOUND, "Start mixing source %d", id);
 
     bool skipMixing = (!audioConverter->isAvailable()) || 
-                        (!shared_config.av_dumping && 
-                            (shared_config.audio_mute ||
-                                (shared_config.fastforward && 
-                                    (shared_config.fastforward_mode & SharedConfig::FF_MIXING))));
+                        (!Global::shared_config.av_dumping && 
+                            (Global::shared_config.audio_mute ||
+                                (Global::shared_config.fastforward && 
+                                    (Global::shared_config.fastforward_mode & SharedConfig::FF_MIXING))));
 
     std::shared_ptr<AudioBuffer> curBuf = buffer_queue[queue_index];
 

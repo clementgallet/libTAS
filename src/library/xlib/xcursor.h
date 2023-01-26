@@ -20,7 +20,7 @@
 #ifndef LIBTAS_XCURSOR_H_INCL
 #define LIBTAS_XCURSOR_H_INCL
 
-#include "../global.h"
+#include "../hook.h"
 #include <X11/Xlib.h>
 
 namespace libtas {

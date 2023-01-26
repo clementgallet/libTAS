@@ -23,6 +23,7 @@
 #include "renderhud/RenderHUD.h"
 #include "ScreenCapture.h"
 #include "frame.h"
+#include "global.h"
 
 #include <string.h>
 
@@ -192,8 +193,8 @@ VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateI
         vk::device = *pDevice;
 
         /* We are officially using Vulkan now. Initialize screen capture */
-        game_info.video |= GameInfo::VULKAN;
-        game_info.tosend = true;
+        Global::game_info.video |= GameInfo::VULKAN;
+        Global::game_info.tosend = true;
 
         ScreenCapture::fini();
         ScreenCapture::init();

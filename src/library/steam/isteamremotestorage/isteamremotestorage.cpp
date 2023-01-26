@@ -27,6 +27,7 @@
 #include "../../logging.h"
 #include "../../hook.h"
 #include "../../Utils.h"
+#include "../../global.h"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -93,7 +94,7 @@ struct ISteamRemoteStorage *SteamRemoteStorage(void)
 {
     DEBUGLOGCALL(LCF_STEAM);
 
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamRemoteStorage, "steam_api");
         return orig::SteamRemoteStorage();
     }

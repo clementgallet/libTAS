@@ -20,7 +20,6 @@
 #ifndef LIBTAS_JSDEV_H_INCL
 #define LIBTAS_JSDEV_H_INCL
 
-#include "../global.h"
 #include <linux/joystick.h>
 
 namespace libtas {

@@ -26,7 +26,7 @@
 #include "sleepwrappers.h" // nanosleep
 #include "GlobalState.h"
 #include "renderhud/RenderHUD.h"
-#include "global.h" // shared_config
+#include "global.h" // Global::shared_config
 #include "BusyLoopDetection.h"
 
 #include <sched.h> // sched_yield()
@@ -76,7 +76,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
         return realtime;
     }
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME) {
         return nonDetTimer.getTicks(); // disable deterministic time
     }
 
@@ -106,8 +106,8 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
 
     int ticksExtra = 0;
 
-    int gettimes_threshold = mainT ? shared_config.main_gettimes_threshold[type]
-                          : shared_config.sec_gettimes_threshold[type];
+    int gettimes_threshold = mainT ? Global::shared_config.main_gettimes_threshold[type]
+                          : Global::shared_config.sec_gettimes_threshold[type];
 
     if (!insideFrameBoundary && /* Don't track if already inside a frame boundary */
         gettimes_threshold >= 0) {
@@ -160,7 +160,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
 {
     debuglogstdio(LCF_TIMESET | LCF_SLEEP, "%s call with delay %u.%010u sec", __func__, delayTicks.tv_sec, delayTicks.tv_nsec);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
         return nonDetTimer.addDelay(delayTicks);
 
     /* We don't handle wait if it is our own code calling this. */
@@ -180,14 +180,14 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
         ticks += delayTicks;
     }
 
-    if(!shared_config.fastforward)
+    if(!Global::shared_config.fastforward)
     {
         /* Sleep, because the caller would have yielded at least a little */
         NATIVECALL(sched_yield());
     }
 
     /* Don't trigger a non-draw frame when game is exiting */
-    if (is_exiting)
+    if (Global::is_exiting)
         return;
 
     /* We only allow the main thread to trigger a frame boundary! */
@@ -230,7 +230,7 @@ void DeterministicTimer::flushDelay()
 
 void DeterministicTimer::exitFrameBoundary()
 {
-    if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
         return nonDetTimer.exitFrameBoundary();
 
     DEBUGLOGCALL(LCF_TIMEGET);
@@ -250,8 +250,8 @@ void DeterministicTimer::exitFrameBoundary()
     /* If we are not fast forwarding, and not the first frame,
      * then we wait the delta amount of time.
      */
-    if (!(shared_config.fastforward && (shared_config.fastforward_mode & SharedConfig::FF_SLEEP))) {
-        TimeHolder desiredTime = lastEnterTime + baseTimeIncrement * shared_config.speed_divisor;
+    if (!(Global::shared_config.fastforward && (Global::shared_config.fastforward_mode & SharedConfig::FF_SLEEP))) {
+        TimeHolder desiredTime = lastEnterTime + baseTimeIncrement * Global::shared_config.speed_divisor;
 
         /* Call the real nanosleep function */
 #ifdef __unix__
@@ -274,15 +274,15 @@ void DeterministicTimer::exitFrameBoundary()
     }
 
     /* Update baseTimeIncrement if variable framerate */
-    if (shared_config.variable_framerate) {
+    if (Global::shared_config.variable_framerate) {
         TimeHolder newTimeIncrement;
-        newTimeIncrement.tv_sec = shared_config.framerate_den / shared_config.framerate_num;
-        newTimeIncrement.tv_nsec = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) / shared_config.framerate_num;
+        newTimeIncrement.tv_sec = Global::shared_config.framerate_den / Global::shared_config.framerate_num;
+        newTimeIncrement.tv_nsec = 1000000000 * (uint64_t)(Global::shared_config.framerate_den % Global::shared_config.framerate_num) / Global::shared_config.framerate_num;
 
         /* Check if we changed framerate, and reset fractional part if so. */
         if (newTimeIncrement != baseTimeIncrement) {
             baseTimeIncrement = newTimeIncrement;
-            fractional_increment = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) % shared_config.framerate_num;
+            fractional_increment = 1000000000 * (uint64_t)(Global::shared_config.framerate_den % Global::shared_config.framerate_num) % Global::shared_config.framerate_num;
             fractional_part = 0;
         }
     }
@@ -294,7 +294,7 @@ void DeterministicTimer::exitFrameBoundary()
 
 TimeHolder DeterministicTimer::enterFrameBoundary()
 {
-    if (shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
         return nonDetTimer.enterFrameBoundary();
 
     frame_mutex.lock();
@@ -311,10 +311,10 @@ TimeHolder DeterministicTimer::enterFrameBoundary()
     TimeHolder timeIncrement = baseTimeIncrement;
 
     fractional_part += fractional_increment;
-    while (fractional_part >= shared_config.framerate_num)
+    while (fractional_part >= Global::shared_config.framerate_num)
     {
         timeIncrement.tv_nsec++;
-        fractional_part -= shared_config.framerate_num;
+        fractional_part -= Global::shared_config.framerate_num;
     }
 
     /* If we have less delay than the length of a frame, we advance ticks by
@@ -341,10 +341,10 @@ void DeterministicTimer::fakeAdvanceTimer(struct timespec extraTicks) {
 void DeterministicTimer::fakeAdvanceTimerFrame() {
     TimeHolder timeIncrement = baseTimeIncrement;
     unsigned int fake_fractional_part = fractional_part + fractional_increment;
-    while (fake_fractional_part >= shared_config.framerate_num)
+    while (fake_fractional_part >= Global::shared_config.framerate_num)
     {
         timeIncrement.tv_nsec++;
-        fake_fractional_part -= shared_config.framerate_num;
+        fake_fractional_part -= Global::shared_config.framerate_num;
     }
 
     timeIncrement.tv_nsec+=1000000;
@@ -358,13 +358,13 @@ void DeterministicTimer::initialize(uint64_t initial_sec, uint64_t initial_nsec)
 {
     ticks = {initial_sec, initial_nsec};
     
-    realtime_delta = {shared_config.initial_time_sec, shared_config.initial_time_nsec};
+    realtime_delta = {Global::shared_config.initial_time_sec, Global::shared_config.initial_time_nsec};
     realtime_delta -= ticks;
 
-    if (shared_config.framerate_num > 0) {
-        baseTimeIncrement.tv_sec = shared_config.framerate_den / shared_config.framerate_num;
-        baseTimeIncrement.tv_nsec = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) / shared_config.framerate_num;
-        fractional_increment = 1000000000 * (uint64_t)(shared_config.framerate_den % shared_config.framerate_num) % shared_config.framerate_num;
+    if (Global::shared_config.framerate_num > 0) {
+        baseTimeIncrement.tv_sec = Global::shared_config.framerate_den / Global::shared_config.framerate_num;
+        baseTimeIncrement.tv_nsec = 1000000000 * (uint64_t)(Global::shared_config.framerate_den % Global::shared_config.framerate_num) / Global::shared_config.framerate_num;
+        fractional_increment = 1000000000 * (uint64_t)(Global::shared_config.framerate_den % Global::shared_config.framerate_num) % Global::shared_config.framerate_num;
         fractional_part = 0;
     }
 

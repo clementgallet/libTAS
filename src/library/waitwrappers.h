@@ -28,7 +28,7 @@
 #include <sys/epoll.h>
 #endif
 #include <poll.h>
-#include "global.h"
+#include "hook.h"
 
 namespace libtas {
 

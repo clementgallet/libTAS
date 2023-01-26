@@ -20,7 +20,7 @@
 #ifndef LIBTAS_CUBEB_H_INCL
 #define LIBTAS_CUBEB_H_INCL
 
-#include "../../global.h"
+#include "../../hook.h"
 #include "../../../external/cubeb.h"
 
 #include <stdint.h>

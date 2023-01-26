@@ -20,7 +20,7 @@
 #include "SDLEventQueue.h"
 #include "../logging.h"
 // #include <string.h>
-#include "../global.h" // game_info
+#include "../global.h" // Global::game_info
 
 namespace libtas {
 
@@ -29,9 +29,9 @@ SDLEventQueue sdlEventQueue;
 SDLEventQueue::~SDLEventQueue()
 {
     for (auto ev: eventQueue) {
-        if (game_info.video & GameInfo::SDL1)
+        if (Global::game_info.video & GameInfo::SDL1)
             delete static_cast<SDL1::SDL_Event*>(ev);
-        if (game_info.video & GameInfo::SDL2)
+        if (Global::game_info.video & GameInfo::SDL2)
             delete static_cast<SDL_Event*>(ev);
     }
 }
@@ -39,7 +39,7 @@ SDLEventQueue::~SDLEventQueue()
 void SDLEventQueue::init(void)
 {
     emptied = false;
-    if (game_info.video & GameInfo::SDL2) {
+    if (Global::game_info.video & GameInfo::SDL2) {
         /* Insert default filters */
         droppedEvents.insert(SDL_TEXTINPUT);
         droppedEvents.insert(SDL_TEXTEDITING);

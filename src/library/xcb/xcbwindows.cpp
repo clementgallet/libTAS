@@ -26,6 +26,7 @@
 #include "XcbEventQueueList.h"
 #include "XcbEventQueue.h"
 #include "../xlib/xwindows.h" // x11::gameXWindows
+#include "../global.h"
 
 namespace libtas {
 
@@ -70,9 +71,9 @@ xcb_create_window_checked (xcb_connection_t *c,
      * This change might break other games.
      */
     if (width != 1 || height != 1) {
-        game_info.keyboard |= GameInfo::XCBEVENTS;
-        game_info.mouse |= GameInfo::XCBEVENTS;
-        game_info.tosend = true;        
+        Global::game_info.keyboard |= GameInfo::XCBEVENTS;
+        Global::game_info.mouse |= GameInfo::XCBEVENTS;
+        Global::game_info.tosend = true;        
     }
 
     /* Add the mask in our event queue */
@@ -129,9 +130,9 @@ xcb_create_window (xcb_connection_t *c,
     debuglogstdio(LCF_KEYBOARD, "   selecting xcb keyboard events");
     debuglogstdio(LCF_MOUSE, "   selecting xcb mouse events");
     if (width != 1 || height != 1) {
-        game_info.keyboard |= GameInfo::XCBEVENTS;
-        game_info.mouse |= GameInfo::XCBEVENTS;
-        game_info.tosend = true;
+        Global::game_info.keyboard |= GameInfo::XCBEVENTS;
+        Global::game_info.mouse |= GameInfo::XCBEVENTS;
+        Global::game_info.tosend = true;
     }
 
     /* Add the mask in our event queue */
@@ -188,9 +189,9 @@ xcb_create_window_aux_checked (xcb_connection_t                     *c,
 
     debuglogstdio(LCF_KEYBOARD, "   selecting xcb keyboard events");
     debuglogstdio(LCF_MOUSE, "   selecting xcb mouse events");
-    game_info.keyboard |= GameInfo::XCBEVENTS;
-    game_info.mouse |= GameInfo::XCBEVENTS;
-    game_info.tosend = true;
+    Global::game_info.keyboard |= GameInfo::XCBEVENTS;
+    Global::game_info.mouse |= GameInfo::XCBEVENTS;
+    Global::game_info.tosend = true;
 
     /* Only save the Window identifier for top-level windows */
     xcb_screen_t *s = xcb_setup_roots_iterator (xcb_get_setup (c)).data;
@@ -226,9 +227,9 @@ xcb_create_window_aux (xcb_connection_t                     *c,
 
     debuglogstdio(LCF_KEYBOARD, "   selecting xcb keyboard events");
     debuglogstdio(LCF_MOUSE, "   selecting xcb mouse events");
-    game_info.keyboard |= GameInfo::XCBEVENTS;
-    game_info.mouse |= GameInfo::XCBEVENTS;
-    game_info.tosend = true;
+    Global::game_info.keyboard |= GameInfo::XCBEVENTS;
+    Global::game_info.mouse |= GameInfo::XCBEVENTS;
+    Global::game_info.tosend = true;
 
     /* Only save the Window identifier for top-level windows */
     xcb_screen_t *s = xcb_setup_roots_iterator (xcb_get_setup (c)).data;

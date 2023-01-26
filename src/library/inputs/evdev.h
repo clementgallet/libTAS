@@ -20,7 +20,6 @@
 #ifndef LIBTAS_EVDEV_H_INCL
 #define LIBTAS_EVDEV_H_INCL
 
-#include "../global.h"
 #include <linux/input.h>
 
 namespace libtas {

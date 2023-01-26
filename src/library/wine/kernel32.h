@@ -20,8 +20,6 @@
 #ifndef LIBTAS_WINEKERNEL32_H_INCLUDED
 #define LIBTAS_WINEKERNEL32_H_INCLUDED
 
-#include "global.h"
-
 namespace libtas {
 
 void hook_kernel32();

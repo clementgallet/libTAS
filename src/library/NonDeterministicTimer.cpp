@@ -20,7 +20,7 @@
 #include "NonDeterministicTimer.h"
 #include "logging.h"
 #include "frame.h"
-#include "global.h" // shared_config
+#include "global.h" // Global::shared_config
 #include "timewrappers.h" // clock_gettime
 #include "sleepwrappers.h" // nanosleep
 #include "checkpoint/ThreadManager.h"
@@ -63,7 +63,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
     /* Compute the difference from the last call */
     TimeHolder delta = realtime - lasttime;
 
-    if(shared_config.fastforward) { // fast-forward
+    if(Global::shared_config.fastforward) { // fast-forward
         delta = delta * 3; // arbitrary
     }
 
@@ -119,7 +119,7 @@ void NonDeterministicTimer::addDelay(struct timespec delayTicks)
 {
     DEBUGLOGCALL(LCF_SLEEP | LCF_FREQUENT);
 
-    if (shared_config.fastforward) {
+    if (Global::shared_config.fastforward) {
         delayTicks.tv_sec = 0;
         delayTicks.tv_nsec = 0;
     }

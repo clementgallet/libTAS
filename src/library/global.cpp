@@ -21,12 +21,11 @@
 
 namespace libtas {
 
-SharedConfig shared_config;
-GameInfo game_info;
-volatile bool is_inited = false;
-volatile bool is_exiting = false;
-volatile bool is_fork = false;
-bool skipping_draw = false;
-bool threadListChanged = false;
+SharedConfig Global::shared_config;
+GameInfo Global::game_info;
+volatile bool Global::is_inited = false;
+volatile bool Global::is_exiting = false;
+volatile bool Global::is_fork = false;
+bool Global::skipping_draw = false;
 
 }

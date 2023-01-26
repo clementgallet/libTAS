@@ -29,17 +29,18 @@
 #include <list>
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
+#include "global.h" // Global::shared_config
 
 namespace libtas {
 
 void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
 {
-    if ((shared_config.includeFlags & LCF_MAINTHREAD) &&
+    if ((Global::shared_config.includeFlags & LCF_MAINTHREAD) &&
         !ThreadManager::isMainThread())
         return;
 
-    if ((!(lcf & shared_config.includeFlags)  ||
-          (lcf & shared_config.excludeFlags)) &&
+    if ((!(lcf & Global::shared_config.includeFlags)  ||
+          (lcf & Global::shared_config.excludeFlags)) &&
          !(lcf & LCF_ALERT))
         return;
 
@@ -80,13 +81,13 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     size = strlen(s);
 
     pid_t tid;
-    if (is_fork)
+    if (Global::is_fork)
         /* For forked processes, the thread manager have wrong pid values (those of parent process) */
         NATIVECALL(tid = getpid());
     else
         tid = ThreadManager::getThreadTid();
 
-    snprintf(s + size, maxsize-size-1, "Thread %d %s ", tid, is_fork?"(fork)":(ThreadManager::isMainThread()?"(main)":""));
+    snprintf(s + size, maxsize-size-1, "Thread %d %s ", tid, Global::is_fork?"(fork)":(ThreadManager::isMainThread()?"(main)":""));
 
     size = strlen(s);
 

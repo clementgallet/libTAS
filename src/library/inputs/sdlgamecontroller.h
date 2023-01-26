@@ -22,7 +22,7 @@
 
 #include "sdljoystick.h"
 #include <SDL2/SDL.h>
-#include "../global.h"
+#include "../hook.h"
 
 namespace libtas {
 

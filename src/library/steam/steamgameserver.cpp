@@ -20,6 +20,7 @@
 #include "steamgameserver.h"
 #include "../logging.h"
 #include "../hook.h"
+#include "../global.h"
 
 namespace libtas {
 
@@ -45,7 +46,7 @@ DEFINE_ORIG_POINTER(SteamInternal_GameServer_Init)
 bool SteamGameServer_Init( uint32_t unIP, uint16_t usSteamPort, uint16_t usGamePort, uint16_t usQueryPort, EServerMode eServerMode, const char *pchVersionString )
 {
     DEBUGLOGCALL(LCF_STEAM);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServer_Init, "steam_api");
         return orig::SteamGameServer_Init(unIP, usSteamPort, usGamePort, usQueryPort, eServerMode, pchVersionString);
     }
@@ -56,7 +57,7 @@ bool SteamGameServer_Init( uint32_t unIP, uint16_t usSteamPort, uint16_t usGameP
 void SteamGameServer_Shutdown()
 {
     DEBUGLOGCALL(LCF_STEAM);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServer_Shutdown, "steam_api");
         return orig::SteamGameServer_Shutdown();
     }
@@ -65,7 +66,7 @@ void SteamGameServer_Shutdown()
 void SteamGameServer_RunCallbacks()
 {
     DEBUGLOGCALL(LCF_STEAM);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServer_RunCallbacks, "steam_api");
         return orig::SteamGameServer_RunCallbacks();
     }
@@ -74,7 +75,7 @@ void SteamGameServer_RunCallbacks()
 void SteamGameServer_ReleaseCurrentThreadMemory()
 {
     DEBUGLOGCALL(LCF_STEAM);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServer_ReleaseCurrentThreadMemory, "steam_api");
         return orig::SteamGameServer_ReleaseCurrentThreadMemory();
     }
@@ -83,7 +84,7 @@ void SteamGameServer_ReleaseCurrentThreadMemory()
 bool SteamGameServer_BSecure()
 {
     DEBUGLOGCALL(LCF_STEAM);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServer_BSecure, "steam_api");
         return orig::SteamGameServer_BSecure();
     }
@@ -93,7 +94,7 @@ bool SteamGameServer_BSecure()
 uint64_t SteamGameServer_GetSteamID()
 {
     DEBUGLOGCALL(LCF_STEAM);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServer_GetSteamID, "steam_api");
         return orig::SteamGameServer_GetSteamID();
     }
@@ -103,7 +104,7 @@ uint64_t SteamGameServer_GetSteamID()
 ISteamClient *SteamGameServerClient()
 {
     DEBUGLOGCALL(LCF_STEAM);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServerClient, "steam_api");
         return orig::SteamGameServerClient();
     }
@@ -115,7 +116,7 @@ ISteamClient *SteamGameServerClient()
 ISteamGameServer *SteamGameServer()
 {
     DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServer, "steam_api");
         return orig::SteamGameServer();
     }
@@ -127,7 +128,7 @@ ISteamGameServer *SteamGameServer()
 ISteamUtils *SteamGameServerUtils()
 {
     DEBUGLOGCALL(LCF_STEAM);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServerUtils, "steam_api");
         return orig::SteamGameServerUtils();
     }
@@ -139,7 +140,7 @@ ISteamUtils *SteamGameServerUtils()
 ISteamNetworking *SteamGameServerNetworking()
 {
     DEBUGLOGCALL(LCF_STEAM);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServerNetworking, "steam_api");
         return orig::SteamGameServerNetworking();
     }
@@ -151,7 +152,7 @@ ISteamNetworking *SteamGameServerNetworking()
 ISteamGameServerStats *SteamGameServerStats()
 {
     DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServerStats, "steam_api");
         return orig::SteamGameServerStats();
     }
@@ -162,7 +163,7 @@ ISteamGameServerStats *SteamGameServerStats()
 ISteamHTTP *SteamGameServerHTTP()
 {
     DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServerHTTP, "steam_api");
         return orig::SteamGameServerHTTP();
     }
@@ -174,7 +175,7 @@ ISteamHTTP *SteamGameServerHTTP()
 ISteamInventory *SteamGameServerInventory()
 {
     DEBUGLOGCALL(LCF_STEAM | LCF_TODO);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServerInventory, "steam_api");
         return orig::SteamGameServerInventory();
     }
@@ -185,7 +186,7 @@ ISteamInventory *SteamGameServerInventory()
 ISteamUGC *SteamGameServerUGC()
 {
     DEBUGLOGCALL(LCF_STEAM);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServerUGC, "steam_api");
         return orig::SteamGameServerUGC();
     }
@@ -197,7 +198,7 @@ ISteamUGC *SteamGameServerUGC()
 ISteamApps *SteamGameServerApps()
 {
     DEBUGLOGCALL(LCF_STEAM);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServerApps, "steam_api");
         return orig::SteamGameServerApps();
     }
@@ -209,7 +210,7 @@ ISteamApps *SteamGameServerApps()
 HSteamPipe SteamGameServer_GetHSteamPipe()
 {
     DEBUGLOGCALL(LCF_STEAM);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServer_GetHSteamPipe, "steam_api");
         return orig::SteamGameServer_GetHSteamPipe();
     }
@@ -219,7 +220,7 @@ HSteamPipe SteamGameServer_GetHSteamPipe()
 HSteamUser SteamGameServer_GetHSteamUser()
 {
     DEBUGLOGCALL(LCF_STEAM);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamGameServer_GetHSteamUser, "steam_api");
         return orig::SteamGameServer_GetHSteamUser();
     }
@@ -229,7 +230,7 @@ HSteamUser SteamGameServer_GetHSteamUser()
 bool SteamInternal_GameServer_Init( uint32_t unIP, uint16_t usPort, uint16_t usGamePort, uint16_t usQueryPort, EServerMode eServerMode, const char *pchVersionString )
 {
     DEBUGLOGCALL(LCF_STEAM);
-    if (!shared_config.virtual_steam) {
+    if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamInternal_GameServer_Init, "steam_api");
         return orig::SteamInternal_GameServer_Init(unIP, usPort, usGamePort, usQueryPort, eServerMode, pchVersionString);
     }

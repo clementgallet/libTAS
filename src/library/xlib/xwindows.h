@@ -20,7 +20,7 @@
 #ifndef LIBTAS_XWINDOWS_H_INCL
 #define LIBTAS_XWINDOWS_H_INCL
 
-#include "../global.h"
+#include "../hook.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h> // XSetWMName

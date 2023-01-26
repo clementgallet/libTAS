@@ -8,8 +8,6 @@
 #define LIBTAS_ISTEAMREMOTESTORAGE014_H_INCL
 
 #include <stdint.h>
-// #include <string>
-// #include "steamtypes.h"
 
 #include "isteamremotestorage.h"
 #define STEAMREMOTESTORAGE_INTERFACE_VERSION_014 "STEAMREMOTESTORAGE_INTERFACE_VERSION014"

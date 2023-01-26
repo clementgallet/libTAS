@@ -20,7 +20,7 @@
 #ifndef LIBTAS_XCBKEYBOARD_H_INCL
 #define LIBTAS_XCBKEYBOARD_H_INCL
 
-#include "../global.h"
+#include "../hook.h"
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>
 #include <xcb/xproto.h>

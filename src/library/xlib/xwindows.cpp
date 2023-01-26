@@ -33,6 +33,7 @@
 #include "../../external/mwm.h"
 #include "XlibEventQueueList.h"
 #include "xrandr.h"
+#include "../global.h"
 
 #include <vector>
 
@@ -83,7 +84,7 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
     /* Remove events we want to disable from the mask */
     if (valuemask & CWEventMask) {
         event_mask = attributes->event_mask;
-        if (!(shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
+        if (!(Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
             attributes->event_mask &= ~(KeyPressMask | KeyReleaseMask);
             attributes->event_mask &= ~(ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
         }
@@ -171,7 +172,7 @@ int XDestroyWindow(Display *display, Window w)
             /* Tells the program we don't have a window anymore to gather inputs */
             sendXWindow(0);
         }
-        else if (!is_exiting) {
+        else if (!Global::is_exiting) {
             /* Switch to the next game window */
             debuglogstdio(LCF_WINDOW, "   set game window to %d", x11::gameXWindows.front());
             sendXWindow(x11::gameXWindows.front());
@@ -288,7 +289,7 @@ int XSelectInput(Display *display, Window w, long event_mask)
     queue->setMask(w, event_mask);
 
     /* Remove events we want to disable from the mask */
-    if (!(shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
+    if (!(Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
         event_mask &= ~(KeyPressMask | KeyReleaseMask);
         event_mask &= ~(ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
     }
@@ -383,8 +384,8 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
                 }
 
                 /* Resize the window to the screen or fake resolution */
-                if (shared_config.screen_width) {
-                    XResizeWindow(display, w, shared_config.screen_width, shared_config.screen_height);
+                if (Global::shared_config.screen_width) {
+                    XResizeWindow(display, w, Global::shared_config.screen_width, Global::shared_config.screen_height);
                 }
                 else {
                     /* Change the window size to monitor size */
@@ -510,7 +511,7 @@ int XChangeWindowAttributes(Display *display, Window w, unsigned long valuemask,
         queue->setMask(w, attributes->event_mask);
 
         /* Remove events we want to disable from the mask */
-        if (!(shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
+        if (!(Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
             attributes->event_mask &= ~(KeyPressMask | KeyReleaseMask);
             attributes->event_mask &= ~(ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
         }

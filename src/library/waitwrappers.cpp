@@ -24,6 +24,7 @@
 #include "backtrace.h"
 #include "GlobalState.h"
 #include "hook.h"
+#include "global.h"
 #ifdef __linux__
 #include "audio/alsa/pcm.h"
 #endif
@@ -45,7 +46,7 @@ static bool transfer_sleep(const struct timespec &ts)
     if (ts.tv_sec == 0 && ts.tv_nsec == 0)
         return false;
 
-    switch (shared_config.sleep_handling) {
+    switch (Global::shared_config.sleep_handling) {
         case SharedConfig::SLEEP_NEVER:
             return false;
         case SharedConfig::SLEEP_MAIN:

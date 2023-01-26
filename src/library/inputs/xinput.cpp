@@ -21,6 +21,7 @@
 
 #include "../hook.h"
 #include "../logging.h"
+#include "../global.h"
 
 namespace libtas {
 
@@ -35,31 +36,31 @@ int XISelectEvents(Display* dpy, Window win, XIEventMask *masks, int num_masks)
 
     /* Only check if not using SDL */
     if (masks) {
-        if (!(game_info.keyboard & (GameInfo::SDL1 | GameInfo::SDL2))) {
+        if (!(Global::game_info.keyboard & (GameInfo::SDL1 | GameInfo::SDL2))) {
             if ((masks->mask_len >= XIMaskLen(XI_KeyPress)) && XIMaskIsSet(masks->mask, XI_KeyPress)) {
                 debuglogstdio(LCF_KEYBOARD, "   selecting XI keyboard events");
-                game_info.keyboard |= GameInfo::XIEVENTS;
-                game_info.tosend = true;
+                Global::game_info.keyboard |= GameInfo::XIEVENTS;
+                Global::game_info.tosend = true;
             }
             if ((masks->mask_len >= XIMaskLen(XI_RawKeyPress)) && XIMaskIsSet(masks->mask, XI_RawKeyPress)) {
                 debuglogstdio(LCF_KEYBOARD, "   selecting XI raw keyboard events");
-                game_info.keyboard |= GameInfo::XIRAWEVENTS;
-                game_info.tosend = true;
+                Global::game_info.keyboard |= GameInfo::XIRAWEVENTS;
+                Global::game_info.tosend = true;
             }
         }
 
-        if (!(game_info.mouse & (GameInfo::SDL1 | GameInfo::SDL2))) {
+        if (!(Global::game_info.mouse & (GameInfo::SDL1 | GameInfo::SDL2))) {
             if (((masks->mask_len >= XIMaskLen(XI_Motion)) && XIMaskIsSet(masks->mask, XI_Motion)) ||
                 ((masks->mask_len >= XIMaskLen(XI_ButtonPress)) && XIMaskIsSet(masks->mask, XI_ButtonPress))) {
                 debuglogstdio(LCF_MOUSE, "   selecting XI mouse events");
-                game_info.mouse |= GameInfo::XIEVENTS;
-                game_info.tosend = true;
+                Global::game_info.mouse |= GameInfo::XIEVENTS;
+                Global::game_info.tosend = true;
             }
             if (((masks->mask_len >= XIMaskLen(XI_RawMotion)) && XIMaskIsSet(masks->mask, XI_RawMotion)) ||
                 ((masks->mask_len >= XIMaskLen(XI_RawButtonPress)) && XIMaskIsSet(masks->mask, XI_RawButtonPress))) {
                 debuglogstdio(LCF_MOUSE, "   selecting XI raw mouse events");
-                game_info.mouse |= GameInfo::XIRAWEVENTS;
-                game_info.tosend = true;
+                Global::game_info.mouse |= GameInfo::XIRAWEVENTS;
+                Global::game_info.tosend = true;
             }
         }
     }

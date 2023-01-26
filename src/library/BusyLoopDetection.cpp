@@ -18,14 +18,11 @@
  */
 
 #include "BusyLoopDetection.h"
-// #include <sstream>
 #include "logging.h"
 #include "frame.h"
 #include "backtrace.h"
 #include "DeterministicTimer.h"
-//#include "../shared/SharedConfig.h"
-// #include "global.h" // game_info
-// #include <math.h>
+#include "global.h" // Global::game_info
 #include <execinfo.h>
 #include <map>
 #include "../shared/sockethelpers.h"
@@ -54,7 +51,7 @@ static uint64_t timecall_count;
 
 void BusyLoopDetection::reset()
 {
-    if (!shared_config.busyloop_detection)
+    if (!Global::shared_config.busyloop_detection)
         return;
 
     /* Remove any fake ticks cause by the busy loop detector */
@@ -82,7 +79,7 @@ void BusyLoopDetection::toHash(intptr_t addr)
 
 void BusyLoopDetection::increment(int type)
 {
-    if (!shared_config.busyloop_detection && !shared_config.time_trace)
+    if (!Global::shared_config.busyloop_detection && !Global::shared_config.time_trace)
         return;
     if (!ThreadManager::isMainThread())
         return;
@@ -157,7 +154,7 @@ void BusyLoopDetection::increment(int type)
             }
 
             /* Building stack trace string */
-            if (shared_config.time_trace) {
+            if (Global::shared_config.time_trace) {
                 oss << info.dli_fname;
 
                 if (info.dli_sname == NULL)
@@ -197,12 +194,12 @@ void BusyLoopDetection::increment(int type)
                 }
             }
         }
-        if (shared_config.time_trace) {
+        if (Global::shared_config.time_trace) {
             oss << "[" << addresses[cnt] << "]\n";
         }
     }
 
-    if (shared_config.time_trace) {
+    if (Global::shared_config.time_trace) {
         lockSocket();
         sendMessage(MSGB_GETTIME_BACKTRACE);
         sendData(&type, sizeof(int));
@@ -212,7 +209,7 @@ void BusyLoopDetection::increment(int type)
     }
     GlobalState::setNative(false);
 
-    if (hash == shared_config.busy_loop_hash) {
+    if (hash == Global::shared_config.busy_loop_hash) {
         timecall_count++;
 
         if (timecall_count == 10) {

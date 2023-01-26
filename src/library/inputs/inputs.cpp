@@ -66,7 +66,7 @@ void updateGameInputs()
 
     game_ai.pointer_mask = ai.pointer_mask;
 
-    for (int ji=0; ji<shared_config.nb_controllers; ji++) {
+    for (int ji=0; ji<Global::shared_config.nb_controllers; ji++) {
         for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
             game_ai.controller_axes[ji][axis] = ai.controller_axes[ji][axis];
         }

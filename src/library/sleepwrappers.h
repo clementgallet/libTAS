@@ -24,7 +24,7 @@
 #include <unistd.h>
 //#include <sys/signal.h>
 #include <SDL2/SDL.h>
-#include "global.h"
+#include "hook.h"
 
 namespace libtas {
 

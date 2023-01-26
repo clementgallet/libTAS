@@ -21,7 +21,6 @@
 #include <cstdlib>
 
 #include "logging.h"
-// #include "../dlhook.h"
 
 namespace libtas {
 

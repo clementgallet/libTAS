@@ -25,7 +25,7 @@
 #include "DeterministicTimer.h"
 #include "tlswrappers.h"
 #include "backtrace.h"
-#include "hook.h"
+#include "global.h"
 #include "timewrappers.h" // gettimeofday()
 #include "GameHacks.h"
 
@@ -137,7 +137,7 @@ static void *pthread_start(void *arg)
 
             debuglogstdio(LCF_THREAD, "End of thread code");
 
-            if (shared_config.recycle_threads) {
+            if (Global::shared_config.recycle_threads) {
 #ifdef __linux__
                 /* Because we recycle this thread, we must unset all TLS values
                  * and call destructors ourselves.  First, we unset the values
@@ -187,7 +187,7 @@ static void *pthread_start(void *arg)
             NATIVECALL(usleep(1));
 #endif
         }
-    } while (!thread->quit && shared_config.recycle_threads); /* Check if game is quitting */
+    } while (!thread->quit && Global::shared_config.recycle_threads); /* Check if game is quitting */
 
     return nullptr;
 }
@@ -253,7 +253,7 @@ static void *pthread_start(void *arg)
 
     debuglogstdio(LCF_THREAD, "Thread has exited.");
 
-    if (shared_config.recycle_threads) {
+    if (Global::shared_config.recycle_threads) {
         /* We need to jump to code after the end of the original thread routine */
         throw ThreadExitException();
 
@@ -288,7 +288,7 @@ static void *pthread_start(void *arg)
     }
 
     int ret = 0;
-    if (shared_config.recycle_threads) {
+    if (Global::shared_config.recycle_threads) {
         /* Wait for the thread to become zombie */
         while (thread->state != ThreadInfo::ST_ZOMBIE) {
             struct timespec mssleep = {0, 1000*1000};
@@ -329,7 +329,7 @@ static void *pthread_start(void *arg)
     }
 
     int ret = 0;
-    if (! shared_config.recycle_threads) {
+    if (! Global::shared_config.recycle_threads) {
         ret = orig::pthread_detach(pthread_id);
     }
 
@@ -362,7 +362,7 @@ static void *pthread_start(void *arg)
     }
 
     int ret = 0;
-    if (shared_config.recycle_threads) {
+    if (Global::shared_config.recycle_threads) {
         if (thread->state == ThreadInfo::ST_ZOMBIE) {
             if (retval) {
                 *retval = thread->retval;
@@ -418,7 +418,7 @@ static void *pthread_start(void *arg)
     }
 
     int ret = 0;
-    if (shared_config.recycle_threads) {
+    if (Global::shared_config.recycle_threads) {
         /* For now I'm lazy, so we just wait the amount of time and check joining */
         NATIVECALL(nanosleep(abstime, NULL));
 
@@ -480,7 +480,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (GlobalState::isNative())
         return orig::pthread_cond_wait(cond, mutex);
 
-    if (shared_config.game_specific_sync & SharedConfig::GC_SYNC_CELESTE) {
+    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_CELESTE) {
         ThreadSync::detSignal(false);
     }
 
@@ -539,10 +539,10 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         return ret;
     }
 
-    if (shared_config.wait_timeout == SharedConfig::WAIT_NATIVE)
+    if (Global::shared_config.wait_timeout == SharedConfig::WAIT_NATIVE)
         return orig::pthread_cond_timedwait(cond, mutex, &new_abstime);
 
-    if (shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
+    if (Global::shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
         /* Wait for 0.1 sec, arbitrary */
         TimeHolder delta_time;
         delta_time.tv_sec = 0;
@@ -553,9 +553,9 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
             return ret;
     }
 
-    if ((shared_config.wait_timeout == SharedConfig::WAIT_FULL_INFINITE) ||
-        (shared_config.wait_timeout == SharedConfig::WAIT_FINITE) ||
-        (shared_config.wait_timeout == SharedConfig::WAIT_FULL))
+    if ((Global::shared_config.wait_timeout == SharedConfig::WAIT_FULL_INFINITE) ||
+        (Global::shared_config.wait_timeout == SharedConfig::WAIT_FINITE) ||
+        (Global::shared_config.wait_timeout == SharedConfig::WAIT_FULL))
         {
         /* Transfer time to our deterministic timer */
         TimeHolder now = detTimer.getTicks();
@@ -563,7 +563,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         detTimer.addDelay(delay);
     }
 
-    if (shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
+    if (Global::shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
         /* Wait again for 0.1 sec, arbitrary */
 #ifdef __unix__
         NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &real_time));
@@ -580,8 +580,8 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         return orig::pthread_cond_timedwait(cond, mutex, &new_end_time);
     }
 
-    if ((shared_config.wait_timeout == SharedConfig::NO_WAIT) ||
-        (shared_config.wait_timeout == SharedConfig::WAIT_FULL)) {
+    if ((Global::shared_config.wait_timeout == SharedConfig::NO_WAIT) ||
+        (Global::shared_config.wait_timeout == SharedConfig::WAIT_FULL)) {
         return orig::pthread_cond_timedwait(cond, mutex, &real_time);
     }
 
@@ -765,7 +765,7 @@ int pthread_setname_np (const char *name)
 #endif
     }
     
-    if (shared_config.game_specific_sync & SharedConfig::GC_SYNC_CELESTE) {
+    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_CELESTE) {
         if ((strcmp(name, "OVERWORLD_LOADE") == 0) ||
             (strcmp(name, "LEVEL_LOADER") == 0) ||
             (strcmp(name, "USER_IO") == 0) ||

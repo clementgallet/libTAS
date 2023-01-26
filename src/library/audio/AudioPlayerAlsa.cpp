@@ -20,7 +20,7 @@
 #include "AudioPlayerAlsa.h"
 
 #include "../logging.h"
-#include "../global.h" // shared_config
+#include "../global.h" // Global::shared_config
 #include "../GlobalState.h"
 
 namespace libtas {
@@ -90,7 +90,7 @@ bool AudioPlayerAlsa::init(AudioContext& ac)
         return false;
     }
 
-    snd_pcm_uframes_t buffer_size = (shared_config.framerate_num>0)?(2*ac.outFrequency*shared_config.framerate_den/shared_config.framerate_num):(2*ac.outFrequency/30);
+    snd_pcm_uframes_t buffer_size = (Global::shared_config.framerate_num>0)?(2*ac.outFrequency*Global::shared_config.framerate_den/Global::shared_config.framerate_num):(2*ac.outFrequency/30);
     debuglogstdio(LCF_SOUND, "  Buffer size is %d", buffer_size);
     if (snd_pcm_hw_params_set_buffer_size_near(phandle, hw_params, &buffer_size) < 0) {
         debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_rate_near failed");
@@ -126,7 +126,7 @@ bool AudioPlayerAlsa::play(AudioContext& ac)
     if (status == STATUS_ERROR)
         return false;
 
-    if (shared_config.fastforward)
+    if (Global::shared_config.fastforward)
         return true;
 
     debuglogstdio(LCF_SOUND, "Play an audio frame");

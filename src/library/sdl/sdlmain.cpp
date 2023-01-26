@@ -21,6 +21,7 @@
 #include "../logging.h"
 #include "../hook.h"
 #include "sdlversion.h"
+#include "../global.h"
 
 namespace libtas {
 
@@ -73,19 +74,19 @@ static Uint32 init_flags = 0;
     if (flags & SDL_INIT_AUDIO) {
         debuglogstdio(LCF_SDL, "    SDL_AUDIO fake enabled.");
         SDL_AudioInit(nullptr);
-        game_info.audio = sdl_flag;
+        Global::game_info.audio = sdl_flag;
     }
 
     if (flags & SDL_INIT_VIDEO) {
         debuglogstdio(LCF_SDL, "    SDL_VIDEO enabled.");
-        game_info.video |= sdl_flag;
-        game_info.keyboard = sdl_flag;
-        game_info.mouse = sdl_flag;
+        Global::game_info.video |= sdl_flag;
+        Global::game_info.keyboard = sdl_flag;
+        Global::game_info.mouse = sdl_flag;
     }
 
     if (flags & SDL_INIT_JOYSTICK) {
         debuglogstdio(LCF_SDL, "    SDL_JOYSTICK fake enabled.");
-        game_info.joystick = sdl_flag;
+        Global::game_info.joystick = sdl_flag;
     }
 
     if (flags & SDL_INIT_HAPTIC)
@@ -93,13 +94,13 @@ static Uint32 init_flags = 0;
 
     if (flags & SDL_INIT_GAMECONTROLLER) {
         debuglogstdio(LCF_SDL, "    SDL_GAMECONTROLLER fake enabled.");
-        game_info.joystick = sdl_flag;
+        Global::game_info.joystick = sdl_flag;
     }
 
     if (flags & SDL_INIT_EVENTS)
         debuglogstdio(LCF_SDL, "    SDL_EVENTS enabled.");
 
-    game_info.tosend = true;
+    Global::game_info.tosend = true;
 
     /* Save the inited flags before modifying them */
     /* TODO: inited subsystem are refcounted! */

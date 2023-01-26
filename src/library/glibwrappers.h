@@ -20,7 +20,8 @@
 #ifndef LIBTAS_GLIB_H_INCL
 #define LIBTAS_GLIB_H_INCL
 
-#include "global.h"
+#include "hook.h"
+#include <cstdint>
 
 namespace libtas {
 

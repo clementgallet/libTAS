@@ -38,9 +38,6 @@
 # endif  /* __i386__ */
 #endif /* __stdcall */
 
-
-#include "global.h"
-
 namespace libtas {
 
 void hook_ntdll();

@@ -21,6 +21,7 @@
 
 #include "../hook.h"
 #include "../logging.h"
+#include "../global.h"
 
 namespace libtas {
 
@@ -30,14 +31,14 @@ XineramaScreenInfo *XineramaQueryScreens(Display *dpy, int *number)
 {
     DEBUGLOGCALL(LCF_WINDOW);
 
-    if (shared_config.screen_width) {
+    if (Global::shared_config.screen_width) {
         *number = 1;
         XineramaScreenInfo *info = static_cast<XineramaScreenInfo*>(malloc(sizeof(XineramaScreenInfo)));
         info->screen_number = 0;
         info->x_org = 0;
         info->y_org = 0;
-        info->width = shared_config.screen_width;
-        info->height = shared_config.screen_height;
+        info->width = Global::shared_config.screen_width;
+        info->height = Global::shared_config.screen_height;
         return info;
     }
     LINK_NAMESPACE_FULLNAME(XineramaQueryScreens, "libXinerama.so.1");

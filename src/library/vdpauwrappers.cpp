@@ -21,9 +21,10 @@
 
 #include "logging.h"
 #include "GlobalState.h"
-#include "../shared/SharedConfig.h"
+// #include "../shared/SharedConfig.h"
 #include "ScreenCapture.h"
 #include "frame.h"
+#include "global.h"
 #include "renderhud/RenderHUD_VDPAU.h"
 #include "DeterministicTimer.h"
 #include "backtrace.h"
@@ -103,8 +104,8 @@ VdpStatus VdpPresentationQueueCreate(VdpDevice device, VdpPresentationQueueTarge
 
     vdp::vdpDevice = device;
 
-    game_info.video |= GameInfo::VDPAU;
-    game_info.tosend = true;
+    Global::game_info.video |= GameInfo::VDPAU;
+    Global::game_info.tosend = true;
 
 #ifdef LIBTAS_ENABLE_HUD
     RenderHUD_VDPAU::setDevice(device);

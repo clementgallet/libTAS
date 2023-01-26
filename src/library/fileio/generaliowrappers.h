@@ -20,7 +20,7 @@
 #ifndef LIBTAS_GENERALIO_H_INCLUDED
 #define LIBTAS_GENERALIO_H_INCLUDED
 
-#include "../global.h"
+#include "../hook.h"
 #include <cstdio>
 
 namespace libtas {

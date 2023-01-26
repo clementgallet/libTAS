@@ -20,7 +20,7 @@
 #include "AudioPlayerCoreAudio.h"
 
 #include "../logging.h"
-#include "../global.h" // shared_config
+#include "../global.h" // Global::shared_config
 #include "../GlobalState.h"
 #include <algorithm>
 
@@ -96,7 +96,7 @@ bool AudioPlayerCoreAudio::init(AudioContext& ac)
     strdesc.mBytesPerPacket = strdesc.mBytesPerFrame * strdesc.mFramesPerPacket;
 
     /* Setup cyclic buffer */
-    int buffer_size = (2*ac.outFrequency*shared_config.framerate_den/shared_config.framerate_num);
+    int buffer_size = (2*ac.outFrequency*Global::shared_config.framerate_den/Global::shared_config.framerate_num);
 
     cyclicBuffer.data.resize(2*buffer_size*strdesc.mBytesPerFrame);
     cyclicBuffer.beg = 0;
@@ -173,7 +173,7 @@ bool AudioPlayerCoreAudio::play(AudioContext& ac)
     if (status == STATUS_ERROR)
         return false;
 
-    if (shared_config.fastforward)
+    if (Global::shared_config.fastforward)
         return true;
 
     debuglogstdio(LCF_SOUND, "Play an audio frame");

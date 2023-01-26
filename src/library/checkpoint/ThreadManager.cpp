@@ -35,25 +35,28 @@
 #include "AltStack.h"
 #include "ReservedMemory.h"
 #include "../fileio/FileHandleList.h"
+#include "../global.h"
 
 namespace libtas {
 
-ThreadInfo* ThreadManager::thread_list = nullptr;
-thread_local ThreadInfo* ThreadManager::current_thread = nullptr;
-pthread_t ThreadManager::main_pthread_id = 0;
-pthread_mutex_t ThreadManager::threadStateLock = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t ThreadManager::threadListLock = PTHREAD_MUTEX_INITIALIZER;
-bool ThreadManager::is_child_fork = false;
+static ThreadInfo* thread_list = nullptr;
+static thread_local ThreadInfo* current_thread = nullptr;
+static pthread_t main_pthread_id = 0;
+static pthread_mutex_t threadStateLock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t threadListLock = PTHREAD_MUTEX_INITIALIZER;
+static bool is_child_fork = false;
 
+/* Past savestates are invalid when thread list has changed */
+static bool threadListChanged = false;
+
+/* Offset of `tid` member in the hidden `pthread` structure */
 #ifdef __i386__
-int ThreadManager::offset_tid = 26;
+static int offset_tid = 26;
 #elif __x86_64__
-int ThreadManager::offset_tid = 180;
+static int offset_tid = 180;
 #else
-int ThreadManager::offset_tid = 0;
+static int offset_tid = 0;
 #endif
-
-
 
 void ThreadManager::init()
 {
@@ -97,7 +100,7 @@ pid_t ThreadManager::getThreadTid()
 {
     /* MacOS cannot access TLS at startup */
 #if defined(__APPLE__) && defined(__MACH__)
-    if (!is_inited)
+    if (!Global::is_inited)
         return 0;
 #endif
 
@@ -116,7 +119,7 @@ void ThreadManager::setMainThread()
     }
 
     if (main_pthread_id != pthread_id) {
-        if (!(shared_config.debug_state & SharedConfig::DEBUG_MAIN_FIRST_THREAD)) {
+        if (!(Global::shared_config.debug_state & SharedConfig::DEBUG_MAIN_FIRST_THREAD)) {
             /* Switching main thread */
             debuglogstdio(LCF_THREAD | LCF_WARNING, "Switching main thread from %d to %d", main_pthread_id, pthread_id);
             main_pthread_id = pthread_id;
@@ -291,6 +294,11 @@ void ThreadManager::addToList(ThreadInfo* thread)
     unlockList();
 }
 
+ThreadInfo* ThreadManager::getThreadList()
+{
+    return thread_list;
+}
+
 bool ThreadManager::isChildFork()
 {
     return is_child_fork;
@@ -333,7 +341,7 @@ void ThreadManager::threadDetach(pthread_t pthread_id)
         if (thread->state == ThreadInfo::ST_ZOMBIE) {
             debuglogstdio(LCF_THREAD, "Zombie thread %d is detached", thread->tid);
             MYASSERT(updateState(thread, ThreadInfo::ST_FREE, ThreadInfo::ST_ZOMBIE))
-            if (! shared_config.recycle_threads) {
+            if (! Global::shared_config.recycle_threads) {
                 threadIsDead(thread);
             }
         }
@@ -352,7 +360,7 @@ void ThreadManager::threadExit(void* retval)
     if (current_thread->detached) {
         debuglogstdio(LCF_THREAD, "Detached thread %d exited", current_thread->tid);
         MYASSERT(updateState(current_thread, ThreadInfo::ST_FREE, ThreadInfo::ST_ZOMBIE))
-        if (! shared_config.recycle_threads) {
+        if (! Global::shared_config.recycle_threads) {
             threadIsDead(current_thread);
         }
     }
@@ -400,6 +408,14 @@ bool ThreadManager::updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, 
     return res;
 }
 
+ThreadInfo *ThreadManager::getCurrentThread() {
+    return current_thread;
+}
+
+void ThreadManager::setCurrentThread(ThreadInfo *thread) {
+    current_thread = thread;
+}
+
 void ThreadManager::lockList()
 {
     MYASSERT(pthread_mutex_lock(&threadListLock) == 0)
@@ -410,5 +426,14 @@ void ThreadManager::unlockList()
     MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
 }
 
+bool ThreadManager::hasThreadListChanged()
+{
+    return threadListChanged;
+}
+
+void ThreadManager::resetThreadListChanged()
+{
+    threadListChanged = false;
+}
 
 }

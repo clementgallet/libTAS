@@ -20,7 +20,7 @@
 #ifndef LIBTAS_HOOKPATCH_H_INCLUDED
 #define LIBTAS_HOOKPATCH_H_INCLUDED
 
-#include "global.h"
+#include "logging.h"
 
 namespace libtas {
 

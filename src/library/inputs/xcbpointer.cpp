@@ -26,6 +26,7 @@
 #include "../../shared/AllInputs.h"
 #include "../hook.h"
 #include "../xlib/xwindows.h" // x11::gameXWindows
+#include "../global.h"
 
 namespace libtas {
 
@@ -120,13 +121,13 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
         game_ai.pointer_y = dst_y;
     }
 
-    if (shared_config.mouse_prevent_warp) {
+    if (Global::shared_config.mouse_prevent_warp) {
         xcb_void_cookie_t cookie{0};
         return cookie;        
     }
     
     /* When warping cursor, real and game cursor position are now synced */
-    if (shared_config.mouse_support) {
+    if (Global::shared_config.mouse_support) {
         if (dst_window == XCB_NONE) {
             /* Relative warp */
             old_ai.pointer_x += dst_x;
@@ -200,13 +201,13 @@ xcb_warp_pointer (xcb_connection_t *c,
         game_ai.pointer_y = dst_y;
     }
 
-    if (shared_config.mouse_prevent_warp) {
+    if (Global::shared_config.mouse_prevent_warp) {
         xcb_void_cookie_t cookie{0};
         return cookie;        
     }
     
     /* When warping cursor, real and game cursor position are now synced */
-    if (shared_config.mouse_support) {
+    if (Global::shared_config.mouse_support) {
         if (dst_window == XCB_NONE) {
             /* Relative warp */
             old_ai.pointer_x += dst_x;

@@ -19,7 +19,7 @@
 
 #include "SaveFile.h"
 
-#include "../global.h" // shared_config
+#include "../global.h" // Global::shared_config
 #include "../GlobalState.h"
 #include "../logging.h"
 #include "../Utils.h"
@@ -54,7 +54,7 @@ SaveFile::SaveFile(const char *file) {
 
 SaveFile::~SaveFile() {
     /* Save back data into the file */
-    if (shared_config.write_savefiles_on_exit && (fd != 0)) {
+    if (Global::shared_config.write_savefiles_on_exit && (fd != 0)) {
         debuglogstdio(LCF_FILEIO, "Save back into file %s", filename.c_str());
         GlobalNative gn;
         lseek(fd, 0, SEEK_SET);

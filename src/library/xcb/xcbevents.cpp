@@ -25,6 +25,7 @@
 #include "../xlib/xatom.h"
 #include "xcbconnection.h" // x11::gameConnections
 #include "../xlib/xwindows.h" // x11::gameXWindows
+#include "../global.h"
 
 #ifdef LIBTAS_HAS_XCB_RANDR
 #include <xcb/randr.h>
@@ -68,11 +69,11 @@ static bool isEventFiltered (xcb_generic_event_t *event) {
 
 void pushNativeXcbEvents(void)
 {
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return;
     }
 
-    if (!(game_info.keyboard & GameInfo::XCBEVENTS)) {
+    if (!(Global::game_info.keyboard & GameInfo::XCBEVENTS)) {
         return;
     }
 
@@ -83,11 +84,11 @@ void pushNativeXcbEvents(void)
 
 void pushNativeXcbEvents(xcb_connection_t *c)
 {
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return;
     }
 
-    if (!(game_info.keyboard & GameInfo::XCBEVENTS)) {
+    if (!(Global::game_info.keyboard & GameInfo::XCBEVENTS)) {
         return;
     }
 
@@ -103,7 +104,7 @@ void pushNativeXcbEvents(xcb_connection_t *c)
 
             if (static_cast<Atom>(client_event->data.data32[0]) == x11_atom(WM_DELETE_WINDOW)) {
                 debuglogstdio(LCF_EVENTS | LCF_WINDOW, "    caught a window close event");
-                is_exiting = true;
+                Global::is_exiting = true;
             }
 
             /* Catch a ping event */
@@ -137,12 +138,12 @@ xcb_generic_event_t *xcb_wait_for_event(xcb_connection_t *c)
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(xcb_wait_for_event);
         return orig::xcb_wait_for_event(c);
     }
 
-    if (!(game_info.keyboard & GameInfo::XCBEVENTS)) {
+    if (!(Global::game_info.keyboard & GameInfo::XCBEVENTS)) {
         LINK_NAMESPACE_GLOBAL(xcb_wait_for_event);
         return orig::xcb_wait_for_event(c);
     }
@@ -172,12 +173,12 @@ xcb_generic_event_t *xcb_poll_for_event(xcb_connection_t *c)
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(xcb_poll_for_event);
         return orig::xcb_poll_for_event(c);
     }
 
-    if (!(game_info.keyboard & GameInfo::XCBEVENTS)) {
+    if (!(Global::game_info.keyboard & GameInfo::XCBEVENTS)) {
         LINK_NAMESPACE_GLOBAL(xcb_poll_for_event);
         return orig::xcb_poll_for_event(c);
     }
@@ -218,8 +219,8 @@ xcb_send_event_checked (xcb_connection_t *c,
                 }
 
                 /* Resize the window to the screen or fake resolution */
-                if (shared_config.screen_width) {
-                    const static uint32_t values[] = { static_cast<uint32_t>(shared_config.screen_width), static_cast<uint32_t>(shared_config.screen_height) };
+                if (Global::shared_config.screen_width) {
+                    const static uint32_t values[] = { static_cast<uint32_t>(Global::shared_config.screen_width), static_cast<uint32_t>(Global::shared_config.screen_height) };
                     xcb_configure_window (c, client_event->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
                 }
                 else {
@@ -285,8 +286,8 @@ xcb_send_event (xcb_connection_t *c,
                 }
 
                 /* Resize the window to the screen or fake resolution */
-                if (shared_config.screen_width) {
-                    const static uint32_t values[] = { static_cast<uint32_t>(shared_config.screen_width), static_cast<uint32_t>(shared_config.screen_height) };
+                if (Global::shared_config.screen_width) {
+                    const static uint32_t values[] = { static_cast<uint32_t>(Global::shared_config.screen_width), static_cast<uint32_t>(Global::shared_config.screen_height) };
                     xcb_configure_window (c, client_event->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
                 }
                 else {
@@ -329,12 +330,12 @@ int xcb_flush(xcb_connection_t *c)
 
     DEBUGLOGCALL(LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(xcb_flush);
         return orig::xcb_flush(c);
     }
 
-    if (!(game_info.keyboard & GameInfo::XCBEVENTS)) {
+    if (!(Global::game_info.keyboard & GameInfo::XCBEVENTS)) {
         LINK_NAMESPACE_GLOBAL(xcb_flush);
         return orig::xcb_flush(c);
     }

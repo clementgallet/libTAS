@@ -18,14 +18,9 @@
  */
 
 #include "openglwrappers.h"
-#include "hook.h"
+#include "global.h"
 #include "logging.h"
-// #include "renderhud/RenderHUD_GL.h"
-// #include "ScreenCapture.h"
 #include "frame.h"
-// #include "xlib/xwindows.h" // x11::gameXWindows
-
-// #include <string.h>
 
 namespace libtas {
 
@@ -87,14 +82,14 @@ void NAME DECL\
 {\
     DEBUGLOGCALL(LCF_OGL);\
     LINK_NAMESPACE(NAME, "GL");\
-    if (!skipping_draw)\
+    if (!Global::skipping_draw)\
         return orig::NAME ARGS;\
 }\
 \
 void my##NAME DECL\
 {\
     DEBUGLOGCALL(LCF_OGL);\
-    if (!skipping_draw)\
+    if (!Global::skipping_draw)\
         return orig::NAME ARGS ;\
 }
 
@@ -181,7 +176,7 @@ GLFUNCSKIPDRAW(glDrawArraysEXT, (GLenum mode, GLint first, GLsizei count), (mode
 void myglBlitFramebuffer (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)
 {
     DEBUGLOGCALL(LCF_OGL);
-    if (!skipping_draw)
+    if (!Global::skipping_draw)
         return orig::glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 }
 
@@ -194,7 +189,7 @@ void glTexParameterf(GLenum target, GLenum pname, GLfloat param)
 void myglTexParameterf(GLenum target, GLenum pname, GLfloat param)
 {
     DEBUGLOGCALL(LCF_OGL);
-    if (shared_config.opengl_performance) {
+    if (Global::shared_config.opengl_performance) {
         switch (pname) {
             case GL_TEXTURE_MIN_FILTER:
                 if (param == GL_NEAREST) {}
@@ -226,7 +221,7 @@ void glTexParameteri(GLenum target, GLenum pname, GLfloat param)
 void myglTexParameteri(GLenum target, GLenum pname, GLint param)
 {
     DEBUGLOGCALL(LCF_OGL);
-    if (shared_config.opengl_performance) {
+    if (Global::shared_config.opengl_performance) {
         switch (pname) {
             case GL_TEXTURE_MIN_FILTER:
                 if (param == GL_NEAREST) {}
@@ -258,7 +253,7 @@ void glEnable(GLenum cap)
 void myglEnable(GLenum cap)
 {
     DEBUGLOGCALL(LCF_OGL);
-    if (shared_config.opengl_performance) {
+    if (Global::shared_config.opengl_performance) {
         switch (cap) {
             case GL_MULTISAMPLE:
             case GL_DITHER:

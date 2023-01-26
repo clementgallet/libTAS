@@ -21,7 +21,7 @@
 #define LIBTAS_SDLHAPTIC_H_INCL
 
 #include <SDL2/SDL.h>
-#include "../global.h"
+#include "../hook.h"
 #include "sdljoystick.h"
 
 namespace libtas {

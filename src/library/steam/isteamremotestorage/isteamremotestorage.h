@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <string>
 #include "../steamtypes.h"
-#include "../../global.h"
+#include "../../hook.h"
 
 namespace libtas {
 

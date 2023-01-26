@@ -22,6 +22,7 @@
 #include "../hook.h"
 #include "../logging.h"
 #include "xdisplay.h" // x11::gameDisplays
+#include "../global.h"
 
 #include <X11/Xlibint.h> // Xmalloc
 
@@ -46,7 +47,7 @@ static const char *mode_name = "libTAS fake XRR mode";
 XRRScreenResources *XRRGetScreenResources (Display *dpy, Window window)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    if (shared_config.screen_width) {
+    if (Global::shared_config.screen_width) {
         static XRRScreenResources sr;
         sr.ncrtc = 1;
         static RRCrtc sr_crtcs = 1;
@@ -59,17 +60,17 @@ XRRScreenResources *XRRGetScreenResources (Display *dpy, Window window)
         sr.nmode = 1;
         static XRRModeInfo sr_mode;
         sr_mode.id = 1;
-        sr_mode.width = shared_config.screen_width;
-        sr_mode.height = shared_config.screen_height;
+        sr_mode.width = Global::shared_config.screen_width;
+        sr_mode.height = Global::shared_config.screen_height;
 
-        sr_mode.hSyncStart = shared_config.screen_height + 88;
-        sr_mode.hSyncEnd = shared_config.screen_height + 132;
-        sr_mode.hTotal = shared_config.screen_height + 280;
-        sr_mode.vSyncStart = shared_config.screen_width + 4;
-        sr_mode.vSyncEnd = shared_config.screen_width + 9;
-        sr_mode.vTotal = shared_config.screen_width + 45;
+        sr_mode.hSyncStart = Global::shared_config.screen_height + 88;
+        sr_mode.hSyncEnd = Global::shared_config.screen_height + 132;
+        sr_mode.hTotal = Global::shared_config.screen_height + 280;
+        sr_mode.vSyncStart = Global::shared_config.screen_width + 4;
+        sr_mode.vSyncEnd = Global::shared_config.screen_width + 9;
+        sr_mode.vTotal = Global::shared_config.screen_width + 45;
         unsigned int dots = sr_mode.hTotal * sr_mode.vTotal;
-        sr_mode.dotClock = dots * shared_config.framerate_num / shared_config.framerate_den - dots / 2;
+        sr_mode.dotClock = dots * Global::shared_config.framerate_num / Global::shared_config.framerate_den - dots / 2;
         sr_mode.name = const_cast<char*>(mode_name);
         sr_mode.nameLength = strlen(mode_name);
 
@@ -83,7 +84,7 @@ XRRScreenResources *XRRGetScreenResources (Display *dpy, Window window)
     /* Replace the monitor refresh rate */
     for (int m = 0; m < sr->nmode; m++) {
         unsigned int dots = sr->modes[m].hTotal * sr->modes[m].vTotal;
-        sr->modes[m].dotClock = dots * shared_config.framerate_num / shared_config.framerate_den - dots / 2;
+        sr->modes[m].dotClock = dots * Global::shared_config.framerate_num / Global::shared_config.framerate_den - dots / 2;
     }
     return sr;
 }
@@ -97,7 +98,7 @@ XRRScreenResources *XRRGetScreenResourcesCurrent (Display *dpy, Window window)
 void XRRFreeScreenResources (XRRScreenResources *resources)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    if (!shared_config.screen_width) {
+    if (!Global::shared_config.screen_width) {
         LINK_NAMESPACE_FULLNAME(XRRFreeScreenResources, "libXrandr.so.2");
         return orig::XRRFreeScreenResources(resources);
     }
@@ -106,7 +107,7 @@ void XRRFreeScreenResources (XRRScreenResources *resources)
 XRROutputInfo *XRRGetOutputInfo (Display *dpy, XRRScreenResources *resources, RROutput output)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    if (shared_config.screen_width) {
+    if (Global::shared_config.screen_width) {
         static XRROutputInfo output_info;
         output_info.crtc = 1;
         output_info.name = const_cast<char*>(output_name);
@@ -126,7 +127,7 @@ XRROutputInfo *XRRGetOutputInfo (Display *dpy, XRRScreenResources *resources, RR
 void XRRFreeOutputInfo (XRROutputInfo *outputInfo)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    if (!shared_config.screen_width) {
+    if (!Global::shared_config.screen_width) {
         LINK_NAMESPACE_FULLNAME(XRRFreeOutputInfo, "libXrandr.so.2");
         return orig::XRRFreeOutputInfo(outputInfo);
     }
@@ -136,12 +137,12 @@ XRRCrtcInfo *XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc
 {
     DEBUGLOGCALL(LCF_WINDOW);
 
-    if (shared_config.screen_width) {
+    if (Global::shared_config.screen_width) {
         static XRRCrtcInfo crtcInfo;
         crtcInfo.x = 0;
         crtcInfo.y = 0;
-        crtcInfo.width = shared_config.screen_width;
-        crtcInfo.height = shared_config.screen_height;
+        crtcInfo.width = Global::shared_config.screen_width;
+        crtcInfo.height = Global::shared_config.screen_height;
         crtcInfo.mode = 1;
         crtcInfo.noutput = 1;
 
@@ -162,7 +163,7 @@ XRRCrtcInfo *XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc
 void XRRFreeCrtcInfo (XRRCrtcInfo *crtcInfo)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    if (!shared_config.screen_width) {
+    if (!Global::shared_config.screen_width) {
         LINK_NAMESPACE_FULLNAME(XRRFreeCrtcInfo, "libXrandr.so.2");
         return orig::XRRFreeCrtcInfo(crtcInfo);
     }
@@ -171,7 +172,7 @@ void XRRFreeCrtcInfo (XRRCrtcInfo *crtcInfo)
 Atom *XRRListOutputProperties (Display *dpy, RROutput output, int *nprop)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    if (!shared_config.screen_width) {
+    if (!Global::shared_config.screen_width) {
         LINK_NAMESPACE_FULLNAME(XRRListOutputProperties, "libXrandr.so.2");
         return orig::XRRListOutputProperties(dpy, output, nprop);
     }

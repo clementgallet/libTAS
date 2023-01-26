@@ -36,7 +36,7 @@ void GlobalState::setNative(bool state)
 {
     /* On MacOS, thread-local storage cannot be access while the library is being loaded. */
 #if defined(__APPLE__) && defined(__MACH__)
-    if (!is_inited) {
+    if (!Global::is_inited) {
         if (state)
             native_init++;
         else
@@ -54,7 +54,7 @@ void GlobalState::setNative(bool state)
 bool GlobalState::isNative()
 {
 #if defined(__APPLE__) && defined(__MACH__)
-    if (!is_inited)
+    if (!Global::is_inited)
         return (native_init > 0);
 #endif
 
@@ -64,7 +64,7 @@ bool GlobalState::isNative()
 void GlobalState::setOwnCode(bool state)
 {
 #if defined(__APPLE__) && defined(__MACH__)
-    if (!is_inited) {
+    if (!Global::is_inited) {
         if (state)
             owncode_init++;
         else
@@ -82,7 +82,7 @@ void GlobalState::setOwnCode(bool state)
 bool GlobalState::isOwnCode()
 {
 #if defined(__APPLE__) && defined(__MACH__)
-    if (!is_inited)
+    if (!Global::is_inited)
         return (owncode_init > 0);
 #endif
 
@@ -92,7 +92,7 @@ bool GlobalState::isOwnCode()
 void GlobalState::setNoLog(bool state)
 {
 #if defined(__APPLE__) && defined(__MACH__)
-    if (!is_inited) {
+    if (!Global::is_inited) {
         if (state)
             nolog_init++;
         else
@@ -110,7 +110,7 @@ void GlobalState::setNoLog(bool state)
 bool GlobalState::isNoLog()
 {
 #if defined(__APPLE__) && defined(__MACH__)
-    if (!is_inited)
+    if (!Global::is_inited)
         return (nolog_init > 0);
 #endif
 

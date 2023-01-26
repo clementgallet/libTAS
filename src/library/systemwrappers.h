@@ -22,7 +22,6 @@
 
 #include <unistd.h>
 #include "hook.h"
-#include "global.h"
 
 namespace libtas {
 

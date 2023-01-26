@@ -24,6 +24,7 @@
 #include "jsdev.h" // get_js_number
 #include "inputs.h" // game_ai
 #include "../../shared/SingleInput.h"
+#include "../global.h"
 #include <linux/joystick.h>
 #include <linux/input.h>
 #include <cstdarg>
@@ -62,7 +63,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == JSIOCGVERSION) {
         debuglogstdio(LCF_JOYSTICK, "ioctl access to JSIOCGVERSION on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         int* version = static_cast<int*>(argp);
@@ -78,7 +79,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
         int len = _IOC_SIZE(request);
         char* name = static_cast<char*>(argp);
         debuglogstdio(LCF_JOYSTICK, "ioctl access to JSIOCGNAME with len %d on fd %d", len, fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         strncpy(name, "Microsoft X-Box 360 pad", len);
@@ -87,7 +88,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == JSIOCGBUTTONS) {
         debuglogstdio(LCF_JOYSTICK, "ioctl access to JSIOCGBUTTONS on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         char* buttons = static_cast<char*>(argp);
@@ -97,7 +98,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == JSIOCGAXES) {
         debuglogstdio(LCF_JOYSTICK, "ioctl access to JSIOCGAXES on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         char* axes = static_cast<char*>(argp);
@@ -107,7 +108,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == JSIOCSCORR) {
         debuglogstdio(LCF_JOYSTICK | LCF_TODO, "ioctl access to JSIOCSCORR (not supported!) on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         return 0;
@@ -115,7 +116,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == JSIOCGCORR) {
         debuglogstdio(LCF_JOYSTICK | LCF_TODO, "ioctl access to JSIOCGCORR (not supported!) on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         return 0;
@@ -123,7 +124,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == EVIOCGVERSION) {
         debuglogstdio(LCF_JOYSTICK, "ioctl access to EVIOCGVERSION on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         int* version = static_cast<int*>(argp);
@@ -139,7 +140,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
     if (request == EVIOCGID) {
         debuglogstdio(LCF_JOYSTICK, "ioctl access to EVIOCGID on fd %d", fd);
 
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
 
@@ -165,7 +166,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
         int len = _IOC_SIZE(request);
         char* name = static_cast<char*>(argp);
         debuglogstdio(LCF_JOYSTICK, "ioctl access to EVIOCGNAME with len %d on fd %d", len, fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         strncpy(name, "Microsoft X-Box 360 pad", len);
@@ -184,7 +185,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
     if (_IOC_TYPE(request) == _IOC_TYPE(EVIOCGPHYS(0)) &&
         _IOC_NR(request) == _IOC_NR(EVIOCGPHYS(0))) {
         debuglogstdio(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCGPHYS (not supported) on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         return 0;
@@ -201,7 +202,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
     if (_IOC_TYPE(request) == _IOC_TYPE(EVIOCGUNIQ(0)) &&
         _IOC_NR(request) == _IOC_NR(EVIOCGUNIQ(0))) {
         debuglogstdio(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCGUNIQ (not supported) on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         return 0;
@@ -218,7 +219,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
     if (_IOC_TYPE(request) == _IOC_TYPE(EVIOCGPROP(0)) &&
         _IOC_NR(request) == _IOC_NR(EVIOCGPROP(0))) {
         debuglogstdio(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCGPROP (not supported) on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         return 0;
@@ -236,7 +237,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
         _IOC_NR(request) == _IOC_NR(EVIOCGKEY(0))) {
         debuglogstdio(LCF_JOYSTICK, "ioctl access to EVIOCGKEY on fd %d", fd);
 
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
 
@@ -282,7 +283,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
             if (_IOC_NR(request) == _IOC_NR(EVIOCGBIT(EV_SYN,0))) {
                 debuglogstdio(LCF_JOYSTICK, "ioctl access to EVIOCGBIT for event EV_SYN on fd %d", fd);
-                if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+                if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
                     return orig::ioctl(fd, request, argp);
                 }
                 CHECK_LEN_AND_SET_BIT(EV_SYN, bits, len);
@@ -297,7 +298,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
             if (_IOC_NR(request) == _IOC_NR(EVIOCGBIT(EV_KEY,0))) {
                 debuglogstdio(LCF_JOYSTICK, "ioctl access to EVIOCGBIT for event EV_KEY on fd %d", fd);
-                if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+                if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
                     return orig::ioctl(fd, request, argp);
                 }
                 for (int bi=0; bi<11; bi++) {
@@ -308,7 +309,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
             if (_IOC_NR(request) == _IOC_NR(EVIOCGBIT(EV_ABS,0))) {
                 debuglogstdio(LCF_JOYSTICK, "ioctl access to EVIOCGBIT for event EV_ABS on fd %d", fd);
-                if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+                if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
                     return orig::ioctl(fd, request, argp);
                 }
                 for (int axi=0; axi<AllInputs::MAXAXES; axi++) {
@@ -321,7 +322,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
             }
 
             debuglogstdio(LCF_JOYSTICK, "ioctl access to EVIOCGBIT for event %d on fd %d", _IOC_NR(request), fd);
-            if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+            if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
                 return orig::ioctl(fd, request, argp);
             }
             return 0;
@@ -336,7 +337,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
             _IOC_NR(request) < _IOC_NR(EVIOCGABS(ABS_MAX)) ) {
 
             debuglogstdio(LCF_JOYSTICK, "ioctl access to EVIOCGABS for axis %d on fd %d", _IOC_NR(request), fd);
-            if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+            if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
                 return orig::ioctl(fd, request, argp);
             }
             struct input_absinfo* absinfo = static_cast<struct input_absinfo*>(argp);
@@ -424,7 +425,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == EVIOCGREP) {
         debuglogstdio(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCGREP (not supported!) on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         return 0;
@@ -432,7 +433,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == EVIOCSREP) {
         debuglogstdio(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCSREP (not supported!) on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         return 0;
@@ -440,7 +441,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == EVIOCGKEYCODE) {
         debuglogstdio(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCGKEYCODE (not supported!) on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         return 0;
@@ -448,7 +449,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == EVIOCGKEYCODE_V2) {
         debuglogstdio(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCGKEYCODE_V2 (not supported!) on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         return 0;
@@ -456,7 +457,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == EVIOCSKEYCODE) {
         debuglogstdio(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCSKEYCODE (not supported!) on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         return 0;
@@ -464,7 +465,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == EVIOCSKEYCODE_V2) {
         debuglogstdio(LCF_JOYSTICK | LCF_TODO, "ioctl access to EVIOCSKEYCODE_V2 (not supported!) on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         return 0;
@@ -472,7 +473,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == EVIOCSFF) {
         debuglogstdio(LCF_JOYSTICK, "ioctl write with EVIOCSFF on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         return 0;
@@ -480,7 +481,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == EVIOCRMFF) {
         debuglogstdio(LCF_JOYSTICK, "ioctl write with EVIOCSFF on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         return 0;
@@ -488,7 +489,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == EVIOCGEFFECTS) {
         debuglogstdio(LCF_JOYSTICK, "ioctl access to EVIOCGEFFECTS on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         int* ne = static_cast<int*>(argp);
@@ -498,7 +499,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == EVIOCGRAB) {
         debuglogstdio(LCF_JOYSTICK, "ioctl write with EVIOCGRAB on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         return 0;
@@ -506,7 +507,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
 
     if (request == EVIOCREVOKE) {
         debuglogstdio(LCF_JOYSTICK, "ioctl write with EVIOCREVOKE on fd %d", fd);
-        if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+        if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
         return 0;

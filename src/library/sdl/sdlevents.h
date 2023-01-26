@@ -20,7 +20,7 @@
 #ifndef LIBTAS_SDLEVENTS_H_INCLUDED
 #define LIBTAS_SDLEVENTS_H_INCLUDED
 
-#include "../global.h"
+#include "../hook.h"
 #include "../../external/SDL1.h"
 #include <SDL2/SDL.h>
 

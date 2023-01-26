@@ -20,8 +20,6 @@
 #ifndef LIBTAS_INPUTEVENTS_H_INCL
 #define LIBTAS_INPUTEVENTS_H_INCL
 
-#include "../global.h"
-
 namespace libtas {
 
 /* Generate events of type SDL_KEYUP or KeyRelease */

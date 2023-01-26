@@ -20,7 +20,7 @@
 #ifndef LIBTAS_SIGNALWRAPPERS_H_INCL
 #define LIBTAS_SIGNALWRAPPERS_H_INCL
 
-#include "global.h"
+#include "hook.h"
 #include <signal.h> // for all signal structs
 #include <time.h> // for all signal structs
 

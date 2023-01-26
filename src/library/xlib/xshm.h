@@ -22,7 +22,7 @@
 
 #include "config.h"
 
-#include "../global.h"
+#include "../hook.h"
 #include "../../external/X11/XShm.h"
 
 namespace libtas {

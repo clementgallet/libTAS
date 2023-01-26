@@ -22,7 +22,6 @@
 
 // #include <unistd.h>
 #include "hook.h"
-#include "global.h"
 #include "../external/vdpau.h"
 #include "../external/vdpau_x11.h"
 

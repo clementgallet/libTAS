@@ -24,6 +24,14 @@
 
 namespace libtas {
 
+/* Include this file in every source code that override functions of the game */
+
+#if __GNUC__ >= 4
+    #define OVERRIDE extern "C" __attribute__ ((visibility ("default")))
+#else
+    #define OVERRIDE extern "C"
+#endif
+
 /* Get access to a function from a substring of the library name
  * For example, if we want to access to the SDL_Init() function:
  *   void (*SDL_Init_real)(void);

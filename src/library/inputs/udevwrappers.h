@@ -20,7 +20,7 @@
 #ifndef LIBTAS_UDEV_H_INCLUDED
 #define LIBTAS_UDEV_H_INCLUDED
 
-#include "../global.h"
+#include "../hook.h"
 #include <sys/types.h>
 
 struct udev;

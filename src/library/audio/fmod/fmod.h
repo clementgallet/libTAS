@@ -20,7 +20,7 @@
 #ifndef LIBTAS_FMOD_H_INCL
 #define LIBTAS_FMOD_H_INCL
 
-#include "../../global.h"
+#include "../../hook.h"
 
 namespace libtas {
 

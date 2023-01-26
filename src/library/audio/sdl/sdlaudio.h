@@ -20,7 +20,7 @@
 #ifndef LIBTAS_SDLAUDIO_H_INCL
 #define LIBTAS_SDLAUDIO_H_INCL
 
-#include "../../global.h"
+#include "../../hook.h"
 #include <SDL2/SDL.h>
 
 namespace libtas {

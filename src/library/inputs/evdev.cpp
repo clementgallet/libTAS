@@ -26,6 +26,7 @@
 #include "../fileio/FileHandleList.h"
 #include "../../shared/AllInputs.h"
 #include <unistd.h> /* write */
+#include "../global.h"
 
 namespace libtas {
 
@@ -40,7 +41,7 @@ int is_evdev(const char* source)
     if (ret != 1)
         return -1;
 
-    if (evnum < 0 || evnum >= shared_config.nb_controllers) {
+    if (evnum < 0 || evnum >= Global::shared_config.nb_controllers) {
         return 0;
     }
 
@@ -55,7 +56,7 @@ int open_evdev(const char* source, int flags)
     MYASSERT(ret == 1)
 
     /* Return -1 and set errno if we don't support this ev number */
-    if (evnum < 0 || evnum >= shared_config.nb_controllers) {
+    if (evnum < 0 || evnum >= Global::shared_config.nb_controllers) {
         errno = ENOENT;
         return -1;
     }
@@ -64,8 +65,8 @@ int open_evdev(const char* source, int flags)
 
     if (evdevfds[evnum].second++ == 0) {
         /* Register that we use EVDEV for joystick inputs */
-        game_info.joystick |= GameInfo::EVDEV;
-        game_info.tosend = true;
+        Global::game_info.joystick |= GameInfo::EVDEV;
+        Global::game_info.tosend = true;
 
         /* Create an unnamed pipe. */
         evdevfds[evnum].first = FileHandleList::createPipe(flags);

@@ -20,7 +20,7 @@
 #ifndef LIBTAS_DIR_H_INCLUDED
 #define LIBTAS_DIR_H_INCLUDED
 
-#include "../global.h"
+#include "../hook.h"
 #include <dirent.h>
 
 #ifndef __DARWIN_SUF_UNIX03

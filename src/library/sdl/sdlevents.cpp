@@ -25,6 +25,7 @@
 #include "../sleepwrappers.h"
 #include "../GlobalState.h"
 #include "../inputs/sdlkeyboard.h"
+#include "../global.h"
 
 namespace libtas {
 
@@ -112,7 +113,7 @@ static bool isBannedEvent(SDL1::SDL_Event *event)
 
 void pushNativeSDLEvents(void)
 {
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return;
     }
 
@@ -135,7 +136,7 @@ void pushNativeSDLEvents(void)
         SDL1::SDL_Event ev;
         while (orig::SDL_PeepEvents(reinterpret_cast<SDL_Event*>(&ev), 1, SDL_GETEVENT, SDL1::SDL_ALLEVENTS, 0)) {
             if (ev.type == SDL1::SDL_QUIT) {
-                is_exiting = true;
+                Global::is_exiting = true;
             }
             if (! isBannedEvent(&ev))
                 sdlEventQueue.insert(&ev);
@@ -146,7 +147,7 @@ void pushNativeSDLEvents(void)
         SDL_Event ev;
         while (orig::SDL_PeepEvents(&ev, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT)) {
             if (ev.type == SDL_QUIT) {
-                is_exiting = true;
+                Global::is_exiting = true;
             }
             if (! isBannedEvent(&ev))
                 sdlEventQueue.insert(&ev);
@@ -168,7 +169,7 @@ void pushNativeSDLEvents(void)
         NOLOGCALL(SDL_GetKeyboardState(nullptr));
     }
     
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_PumpEvents);
         return orig::SDL_PumpEvents();
     }
@@ -178,7 +179,7 @@ void pushNativeSDLEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_PeepEvents);
         return orig::SDL_PeepEvents(events, numevents, action, minType, maxType);
     }
@@ -248,7 +249,7 @@ void pushNativeSDLEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_PollEvent);
         int ret = orig::SDL_PollEvent(event);
         if (event && (ret == 1))
@@ -288,7 +289,7 @@ void pushNativeSDLEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_HasEvent);
         return orig::SDL_HasEvent(type);
     }
@@ -300,7 +301,7 @@ void pushNativeSDLEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_HasEvents);
         return orig::SDL_HasEvents(minType, maxType);
     }
@@ -314,7 +315,7 @@ void pushNativeSDLEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_FlushEvent);
         return orig::SDL_FlushEvent(type);
     }
@@ -326,7 +327,7 @@ void pushNativeSDLEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_FlushEvents);
         return orig::SDL_FlushEvents(minType, maxType);
     }
@@ -338,7 +339,7 @@ void pushNativeSDLEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_WaitEvent);
         return orig::SDL_WaitEvent(event);
     }
@@ -368,7 +369,7 @@ void pushNativeSDLEvents(void)
 {
     debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_TODO, "%s call with timeout %d", __func__, timeout);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_WaitEventTimeout);
         return orig::SDL_WaitEventTimeout(event, timeout);
     }
@@ -407,7 +408,7 @@ void pushNativeSDLEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_PushEvent);
         return orig::SDL_PushEvent(event);
     }
@@ -422,7 +423,7 @@ void pushNativeSDLEvents(void)
         int ret = sdlEventQueue.insert(ev1);
 
         if (ev1->type == SDL1::SDL_QUIT) {
-            is_exiting = true;
+            Global::is_exiting = true;
         }
 
         return ret; // success
@@ -434,7 +435,7 @@ void pushNativeSDLEvents(void)
     int ret = sdlEventQueue.insert(event);
 
     if (event->type == SDL_QUIT) {
-        is_exiting = true;
+        Global::is_exiting = true;
     }
 
     return ret;
@@ -444,7 +445,7 @@ void pushNativeSDLEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_SetEventFilter);
         return orig::SDL_SetEventFilter(filter, userdata);
     }
@@ -460,7 +461,7 @@ void pushNativeSDLEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_GetEventFilter);
         return orig::SDL_GetEventFilter(filter, userdata);
     }
@@ -484,7 +485,7 @@ void pushNativeSDLEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_AddEventWatch);
         return orig::SDL_AddEventWatch(filter, userdata);
     }
@@ -496,7 +497,7 @@ void pushNativeSDLEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_DelEventWatch);
         return orig::SDL_DelEventWatch(filter, userdata);
     }
@@ -508,7 +509,7 @@ void pushNativeSDLEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_FilterEvents);
         return orig::SDL_FilterEvents(filter, userdata);
     }
@@ -520,7 +521,7 @@ void pushNativeSDLEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_EventState);
         return orig::SDL_EventState(type, state);
     }
@@ -543,7 +544,7 @@ void pushNativeSDLEvents(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_TODO);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_RegisterEvents);
         return orig::SDL_RegisterEvents(numevents);
     }

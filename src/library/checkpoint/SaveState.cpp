@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "../../external/lz4.h"
+#include "../global.h"
 
 namespace libtas {
 
@@ -33,7 +34,7 @@ SaveState::SaveState(const char* pagemappath, const char* pagespath, int pagemap
 {
     queued_size = 0;
 
-    if (shared_config.savestate_settings & SharedConfig::SS_RAM) {
+    if (Global::shared_config.savestate_settings & SharedConfig::SS_RAM) {
         pmfd = pagemapfd;
         pfd = pagesfd;
         if (!pmfd) {
@@ -62,7 +63,7 @@ SaveState::SaveState(const char* pagemappath, const char* pagespath, int pagemap
 
 SaveState::~SaveState()
 {
-    if (!(shared_config.savestate_settings & SharedConfig::SS_RAM) && (pmfd > 0)) {
+    if (!(Global::shared_config.savestate_settings & SharedConfig::SS_RAM) && (pmfd > 0)) {
         NATIVECALL(close(pmfd));
         NATIVECALL(close(pfd));
     }

@@ -27,6 +27,7 @@
 #include "GameHacks.h"
 #include <execinfo.h>
 #include "hook.h"
+#include "global.h"
 
 namespace libtas {
 
@@ -126,7 +127,7 @@ DEFINE_ORIG_POINTER(clock_gettime)
     }
     debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %d.%09d", tp->tv_sec, tp->tv_nsec);
 
-    if (shared_config.game_specific_timing & SharedConfig::GC_TIMING_CELESTE) {
+    if (Global::shared_config.game_specific_timing & SharedConfig::GC_TIMING_CELESTE) {
         if (ThreadManager::isMainThread())
             detTimer.fakeAdvanceTimer({0, 0});
     }

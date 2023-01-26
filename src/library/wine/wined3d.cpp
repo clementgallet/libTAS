@@ -22,7 +22,7 @@
 #include "../hookpatch.h"
 #include "../logging.h"
 #include "../checkpoint/ThreadSync.h"
-// #include <sys/mman.h>
+#include "../global.h"
 
 namespace libtas {
 
@@ -50,7 +50,7 @@ static unsigned long __attribute__((noinline)) wined3d_resource_map(void *resour
 void* __stdcall wined3d_texture_get_resource(void *texture)
 {
     DEBUGLOGCALL(LCF_WINE);
-    if (shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) {
+    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) {
         ThreadSync::detSignal(true);
     }
     return orig::wined3d_texture_get_resource(texture);
@@ -60,7 +60,7 @@ unsigned long wined3d_swapchain_present(void *swapchain, const void *src_rect,
         const void *dst_rect, void *dst_window_override, unsigned int swap_interval, unsigned int flags)
 {
     DEBUGLOGCALL(LCF_WINE);
-    if (shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) {
+    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) {
         ThreadSync::detInit();
     }
     return orig::wined3d_swapchain_present(swapchain, src_rect, dst_rect, dst_window_override, swap_interval, flags);
@@ -70,7 +70,7 @@ unsigned long wined3d_resource_map(void *resource, unsigned int sub_resource_idx
         void *map_desc, const void *box, unsigned int flags)
 {
     DEBUGLOGCALL(LCF_WINE);
-    if (shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) {
+    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) {
         ThreadSync::detSignal(true);
     }
     return orig::wined3d_resource_map(resource, sub_resource_idx, map_desc, box, flags);
@@ -78,7 +78,7 @@ unsigned long wined3d_resource_map(void *resource, unsigned int sub_resource_idx
 
 void hook_wined3d()
 {
-    if (shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) {
+    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_WITNESS) {
         HOOK_PATCH_ORIG(wined3d_texture_get_resource, "wined3d.dll.so");
         HOOK_PATCH_ORIG(wined3d_swapchain_present, "wined3d.dll.so");
         HOOK_PATCH_ORIG(wined3d_resource_map, "wined3d.dll.so");

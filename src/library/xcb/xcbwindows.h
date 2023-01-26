@@ -20,7 +20,7 @@
 #ifndef LIBTAS_XCBWINDOWS_H_INCL
 #define LIBTAS_XCBWINDOWS_H_INCL
 
-#include "../global.h"
+#include "../hook.h"
 #include <xcb/xcb.h>
 
 namespace libtas {

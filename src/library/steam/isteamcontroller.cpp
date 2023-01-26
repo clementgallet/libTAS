@@ -21,6 +21,7 @@
 #include "../logging.h"
 #include "../inputs/inputs.h"
 #include "../../shared/SharedConfig.h"
+#include "../global.h"
 
 #include <string>
 #include <vector>
@@ -50,9 +51,9 @@ void ISteamController::RunFrame()
 int ISteamController::GetConnectedControllers( ControllerHandle_t *handlesOut )
 {
     DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
-    for (int i = 0; i < shared_config.nb_controllers; i++)
+    for (int i = 0; i < Global::shared_config.nb_controllers; i++)
         handlesOut[i] = i + 1;
-    return shared_config.nb_controllers;
+    return Global::shared_config.nb_controllers;
 }
 
 bool ISteamController::ShowBindingPanel( ControllerHandle_t controllerHandle )
@@ -75,17 +76,17 @@ ControllerActionSetHandle_t ISteamController::GetActionSetHandle( const char *ps
 void ISteamController::ActivateActionSet( ControllerHandle_t controllerHandle, ControllerActionSetHandle_t actionSetHandle )
 {
     DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
-    if (controllerHandle - 1 < ControllerHandle_t(shared_config.nb_controllers))
+    if (controllerHandle - 1 < ControllerHandle_t(Global::shared_config.nb_controllers))
         controllerActionSets[controllerHandle - 1] = actionSetHandle;
     else if (controllerHandle == STEAM_CONTROLLER_HANDLE_ALL_CONTROLLERS)
-        for (int i = 0; i < shared_config.nb_controllers; i++)
+        for (int i = 0; i < Global::shared_config.nb_controllers; i++)
             controllerActionSets[i] = actionSetHandle;
 }
 
 ControllerActionSetHandle_t ISteamController::GetCurrentActionSet( ControllerHandle_t controllerHandle )
 {
     DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
-    if (controllerHandle - 1 >= ControllerHandle_t(shared_config.nb_controllers))
+    if (controllerHandle - 1 >= ControllerHandle_t(Global::shared_config.nb_controllers))
         return 0;
     return controllerActionSets[controllerHandle - 1];
 }
@@ -104,7 +105,7 @@ ControllerDigitalActionData_t ISteamController::GetDigitalActionData( Controller
     ControllerDigitalActionData_t data;
     data.bState = false;
     data.bActive = false;
-    if (controllerHandle - 1 >= ControllerHandle_t(shared_config.nb_controllers) ||
+    if (controllerHandle - 1 >= ControllerHandle_t(Global::shared_config.nb_controllers) ||
         digitalActionHandle - 1 >= digitalActions.size())
         return data;
     std::string digitalAction(digitalActions[digitalActionHandle - 1]);
@@ -147,7 +148,7 @@ ControllerDigitalActionData_t ISteamController::GetDigitalActionData( Controller
 
 int ISteamController::GetDigitalActionOrigins( ControllerHandle_t controllerHandle, ControllerActionSetHandle_t actionSetHandle, ControllerDigitalActionHandle_t digitalActionHandle, EControllerActionOrigin *originsOut ) {
     DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
-    if (controllerHandle - 1 >= ControllerHandle_t(shared_config.nb_controllers) ||
+    if (controllerHandle - 1 >= ControllerHandle_t(Global::shared_config.nb_controllers) ||
         actionSetHandle - 1 >= actionSets.size() ||
         digitalActionHandle - 1 >= digitalActions.size())
         return 0;
@@ -203,7 +204,7 @@ ControllerAnalogActionData_t ISteamController::GetAnalogActionData( ControllerHa
     data.eMode = k_EControllerSourceMode_None;
     data.x = data.y = 0.0f;
     data.bActive = false;
-    if (controllerHandle - 1 >= ControllerHandle_t(shared_config.nb_controllers) ||
+    if (controllerHandle - 1 >= ControllerHandle_t(Global::shared_config.nb_controllers) ||
         analogActionHandle - 1 >= analogActions.size())
         return data;
     std::string analogAction(analogActions[analogActionHandle - 1]);
@@ -227,7 +228,7 @@ ControllerAnalogActionData_t ISteamController::GetAnalogActionData( ControllerHa
 
 int ISteamController::GetAnalogActionOrigins( ControllerHandle_t controllerHandle, ControllerActionSetHandle_t actionSetHandle, ControllerAnalogActionHandle_t analogActionHandle, EControllerActionOrigin *originsOut ) {
     DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
-    if (controllerHandle - 1 >= ControllerHandle_t(shared_config.nb_controllers) ||
+    if (controllerHandle - 1 >= ControllerHandle_t(Global::shared_config.nb_controllers) ||
         actionSetHandle  - 1 > actionSets.size() ||
         analogActionHandle - 1 >= analogActions.size())
         return 0;

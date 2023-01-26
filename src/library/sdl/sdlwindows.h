@@ -20,7 +20,7 @@
 #ifndef LIBTAS_SDLWINDOWS_H_INCL
 #define LIBTAS_SDLWINDOWS_H_INCL
 
-#include "../global.h"
+#include "../hook.h"
 #include "../../external/SDL1.h"
 #include <SDL2/SDL.h>
 

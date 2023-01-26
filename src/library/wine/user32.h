@@ -20,8 +20,6 @@
 #ifndef LIBTAS_WINEUSER32_H_INCLUDED
 #define LIBTAS_WINEUSER32_H_INCLUDED
 
-#include "global.h"
-
 namespace libtas {
 
 void hook_user32();

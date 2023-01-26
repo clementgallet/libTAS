@@ -20,7 +20,7 @@
 #ifndef LIBTAS_STEAMGAMESERVER_H_INCL
 #define LIBTAS_STEAMGAMESERVER_H_INCL
 
-#include "../global.h"
+#include "../hook.h"
 #include "isteamclient/isteamclient.h"
 #include "isteamuser.h"
 #include "isteamutils.h"

@@ -20,6 +20,7 @@
 #include "cubeb.h"
 #include "../../logging.h"
 #include "../../hook.h"
+#include "../../global.h"
 #include "../AudioContext.h"
 #include "../AudioSource.h"
 #include "../AudioBuffer.h"
@@ -54,7 +55,7 @@ int cubeb_get_min_latency(cubeb * context, cubeb_stream_params * params, uint32_
 {
     DEBUGLOGCALL(LCF_SOUND);
     if (latency_frames)
-        *latency_frames = shared_config.audio_frequency; // Not sure what to put here.
+        *latency_frames = Global::shared_config.audio_frequency; // Not sure what to put here.
     return CUBEB_OK;    
 }
 
@@ -62,7 +63,7 @@ int cubeb_get_preferred_sample_rate(cubeb * context, uint32_t * rate)
 {
     DEBUGLOGCALL(LCF_SOUND);
     if (rate)
-        *rate = shared_config.audio_frequency;
+        *rate = Global::shared_config.audio_frequency;
     return CUBEB_OK;    
 }
 

@@ -21,7 +21,7 @@
 #define LIBTAS_SDLDYNAPI_H_INCLUDED
 
 #include <SDL2/SDL.h>
-#include "../global.h"
+#include "../hook.h"
 
 namespace libtas {
 

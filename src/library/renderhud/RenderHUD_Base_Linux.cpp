@@ -22,7 +22,7 @@
 
 #include "../logging.h"
 #include "../hook.h"
-#include "../global.h" // shared_config
+#include "../global.h" // Global::shared_config
 #include <fontconfig/fontconfig.h>
 #include "SurfaceARGB.h"
 // #include <X11/keysym.h>
@@ -115,7 +115,7 @@ void RenderHUD_Base_Linux::initFonts()
         }
         else {
             debuglogstdio(LCF_WINDOW | LCF_ERROR, "We didn't find any regular TTF font !");
-            shared_config.osd = 0;
+            Global::shared_config.osd = 0;
         }
 
         if (fs) FcFontSetDestroy(fs);

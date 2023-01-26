@@ -20,6 +20,7 @@
 #include "sdldisplay.h"
 #include "../hook.h"
 #include "../logging.h"
+#include "../global.h"
 
 namespace libtas {
 
@@ -64,16 +65,16 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
     debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
     int ret = 0;
-    if (GlobalState::isNative() || !shared_config.screen_width) {
+    if (GlobalState::isNative() || !Global::shared_config.screen_width) {
         LINK_NAMESPACE_SDL2(SDL_GetDisplayBounds);
         ret = orig::SDL_GetDisplayBounds(displayIndex, rect);
 
     }
     else {
-        rect->x = displayIndex*shared_config.screen_width;
+        rect->x = displayIndex*Global::shared_config.screen_width;
         rect->y = 0;
-        rect->w = shared_config.screen_width;
-        rect->h = shared_config.screen_height;
+        rect->w = Global::shared_config.screen_width;
+        rect->h = Global::shared_config.screen_height;
     }
 
     debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns rect (%d,%d,%d,%d)", rect->x, rect->y, rect->w, rect->h);
@@ -109,7 +110,7 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
 
     int ret = 1;
 
-    if (GlobalState::isNative() || !shared_config.screen_width) {
+    if (GlobalState::isNative() || !Global::shared_config.screen_width) {
         LINK_NAMESPACE_SDL2(SDL_GetNumDisplayModes);
         ret = orig::SDL_GetNumDisplayModes(displayIndex);
     }
@@ -123,7 +124,7 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
     debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with index %d and mode %d", __func__, displayIndex, modeIndex);
 
     int ret = 0;
-    if (GlobalState::isNative() || !shared_config.screen_width) {
+    if (GlobalState::isNative() || !Global::shared_config.screen_width) {
         LINK_NAMESPACE_SDL2(SDL_GetDisplayMode);
         ret = orig::SDL_GetDisplayMode(displayIndex, modeIndex, mode);
     }
@@ -133,10 +134,10 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
         ret = orig::SDL_GetDesktopDisplayMode(displayIndex, mode);
 
         mode->format = SDL_PIXELFORMAT_RGB888;
-        mode->w = shared_config.screen_width;
-        mode->h = shared_config.screen_height;
+        mode->w = Global::shared_config.screen_width;
+        mode->h = Global::shared_config.screen_height;
     }
-    mode->refresh_rate = shared_config.framerate_num / shared_config.framerate_den;
+    mode->refresh_rate = Global::shared_config.framerate_num / Global::shared_config.framerate_den;
 
     debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
     return ret;
@@ -149,12 +150,12 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
 
     int ret = orig::SDL_GetDesktopDisplayMode(displayIndex, mode);
 
-    if (!GlobalState::isNative() && shared_config.screen_width) {
+    if (!GlobalState::isNative() && Global::shared_config.screen_width) {
         mode->format = SDL_PIXELFORMAT_RGB888;
-        mode->w = shared_config.screen_width;
-        mode->h = shared_config.screen_height;
+        mode->w = Global::shared_config.screen_width;
+        mode->h = Global::shared_config.screen_height;
     }
-    mode->refresh_rate = shared_config.framerate_num / shared_config.framerate_den;
+    mode->refresh_rate = Global::shared_config.framerate_num / Global::shared_config.framerate_den;
 
     debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
     return ret;
@@ -165,7 +166,7 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
     debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
     int ret = 0;
-    if (GlobalState::isNative() || !shared_config.screen_width) {
+    if (GlobalState::isNative() || !Global::shared_config.screen_width) {
         LINK_NAMESPACE_SDL2(SDL_GetCurrentDisplayMode);
         ret = orig::SDL_GetCurrentDisplayMode(displayIndex, mode);
     }
@@ -175,10 +176,10 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
         ret = orig::SDL_GetDesktopDisplayMode(displayIndex, mode);
 
         mode->format = SDL_PIXELFORMAT_RGB888;
-        mode->w = shared_config.screen_width;
-        mode->h = shared_config.screen_height;
+        mode->w = Global::shared_config.screen_width;
+        mode->h = Global::shared_config.screen_height;
     }
-    mode->refresh_rate = shared_config.framerate_num / shared_config.framerate_den;
+    mode->refresh_rate = Global::shared_config.framerate_num / Global::shared_config.framerate_den;
 
     debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
     return ret;
@@ -190,7 +191,7 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
     debuglogstdio(LCF_SDL | LCF_WINDOW, "   and mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
 
     SDL_DisplayMode *dm = nullptr;
-    if (GlobalState::isNative() || !shared_config.screen_width) {
+    if (GlobalState::isNative() || !Global::shared_config.screen_width) {
         LINK_NAMESPACE_SDL2(SDL_GetClosestDisplayMode);
         dm = orig::SDL_GetClosestDisplayMode(displayIndex, mode, closest);
     }
@@ -201,13 +202,13 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
 
         if (ret == 0) {
             closest->format = SDL_PIXELFORMAT_RGB888;
-            closest->w = shared_config.screen_width;
-            closest->h = shared_config.screen_height;
+            closest->w = Global::shared_config.screen_width;
+            closest->h = Global::shared_config.screen_height;
 
             dm = closest;
         }
     }
-    dm->refresh_rate = shared_config.framerate_num / shared_config.framerate_den;
+    dm->refresh_rate = Global::shared_config.framerate_num / Global::shared_config.framerate_den;
 
     return dm;
 }
@@ -217,7 +218,7 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
     debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with window %d", __func__, (void*)window);
 
     int ret = 0;
-    if (GlobalState::isNative() || !shared_config.screen_width) {
+    if (GlobalState::isNative() || !Global::shared_config.screen_width) {
         LINK_NAMESPACE_SDL2(SDL_GetWindowDisplayIndex);
         ret = orig::SDL_GetWindowDisplayIndex(window);
     }

@@ -24,6 +24,7 @@
 #include "SaveFileList.h"
 #include "FileHandleList.h"
 #include "../GlobalState.h"
+#include "../global.h"
 
 #ifdef __linux__
 #include "URandom.h"
@@ -48,7 +49,7 @@ FILE *fopen (const char *filename, const char *modes)
     else
         debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::fopen(filename, modes);
 
     FILE* f = nullptr;
@@ -69,9 +70,9 @@ FILE *fopen (const char *filename, const char *modes)
             f = SaveFileList::openSaveFile(filename, "w");
 
             std::ostringstream datestr;
-            datestr << shared_config.initial_time_sec << ".";
+            datestr << Global::shared_config.initial_time_sec << ".";
             datestr << std::setfill ('0') << std::setw (2);
-            datestr << shared_config.initial_time_nsec / 10000000;
+            datestr << Global::shared_config.initial_time_nsec / 10000000;
 
             std::string s = datestr.str();
 
@@ -115,7 +116,7 @@ FILE *fopen64 (const char *filename, const char *modes)
     else
         debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::fopen64(filename, modes);
 
     FILE* f = nullptr;
@@ -136,9 +137,9 @@ FILE *fopen64 (const char *filename, const char *modes)
             f = SaveFileList::openSaveFile(filename, "w");
 
             std::ostringstream datestr;
-            datestr << shared_config.initial_time_sec << ".";
+            datestr << Global::shared_config.initial_time_sec << ".";
             datestr << std::setfill ('0') << std::setw (2);
-            datestr << shared_config.initial_time_nsec / 10000000;
+            datestr << Global::shared_config.initial_time_nsec / 10000000;
 
             std::string s = datestr.str();
 
@@ -179,7 +180,7 @@ int fclose (FILE *stream)
 
     DEBUGLOGCALL(LCF_FILEIO);
 
-    if (shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::fclose(stream);
 
 #ifdef __linux__

@@ -21,7 +21,7 @@
 #include "../hook.h"
 #include "../logging.h"
 #include "../GlobalState.h"
-#include "../../shared/SharedConfig.h"
+// #include "../../shared/SharedConfig.h"
 #include "../ScreenCapture.h"
 #include "../frame.h"
 #include "../renderhud/RenderHUD_XShm.h"
@@ -30,6 +30,7 @@
 #include "../../shared/sockethelpers.h"
 #include "../../shared/messages.h"
 #include "xwindows.h" // x11::gameXWindows
+#include "../global.h"
 
 namespace libtas {
 
@@ -59,11 +60,11 @@ OVERRIDE Bool XShmPutImage(
     debuglogstdio(LCF_WINDOW, "%s called with drawable %d", __func__, d);
 
     /* Only handle the screen draw if no other rendering API is used */
-    if ((game_info.video & GameInfo::VDPAU) || (game_info.video & GameInfo::OPENGL))
+    if ((Global::game_info.video & GameInfo::VDPAU) || (Global::game_info.video & GameInfo::OPENGL))
         return orig::XShmPutImage(dpy, d, gc, image, src_x, src_y, dst_x, dst_y, src_width, src_height, send_event);
 
-    game_info.video |= GameInfo::XSHM;
-    game_info.tosend = true;
+    Global::game_info.video |= GameInfo::XSHM;
+    Global::game_info.tosend = true;
 
     x11::gameXImage = image;
 

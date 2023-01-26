@@ -20,7 +20,7 @@
 #ifndef LIBTAS_XKEYBOARD_H_INCL
 #define LIBTAS_XKEYBOARD_H_INCL
 
-#include "../global.h"
+#include "../hook.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
 

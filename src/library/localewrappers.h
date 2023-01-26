@@ -20,7 +20,7 @@
 #ifndef LIBTAS_LOCALE_H_INCL
 #define LIBTAS_LOCALE_H_INCL
 
-#include "global.h"
+#include "hook.h"
 #include <locale.h>
 
 namespace libtas {

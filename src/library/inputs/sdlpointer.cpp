@@ -25,6 +25,7 @@
 #include "../DeterministicTimer.h" // detTimer
 #include "../sdl/SDLEventQueue.h"
 #include "../sdl/sdlwindows.h" // sdl::gameSDLWindow
+#include "../global.h"
 
 namespace libtas {
 
@@ -114,7 +115,7 @@ void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
     game_ai.pointer_x = x;
     game_ai.pointer_y = y;
     
-    if (shared_config.mouse_prevent_warp) {
+    if (Global::shared_config.mouse_prevent_warp) {
         return;
     }
 
@@ -156,7 +157,7 @@ void SDL_WarpMouse(Uint16 x, Uint16 y)
     game_ai.pointer_x = x;
     game_ai.pointer_y = y;
     
-    if (shared_config.mouse_prevent_warp) {
+    if (Global::shared_config.mouse_prevent_warp) {
         return;
     }
 

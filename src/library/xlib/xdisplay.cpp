@@ -22,6 +22,7 @@
 #include "../logging.h"
 #include "xatom.h"
 #include "XlibEventQueueList.h"
+#include "../global.h"
 
 namespace libtas {
 
@@ -81,8 +82,8 @@ int XDisplayHeight(Display* display, int screen_number)
 {
     DEBUGLOGCALL(LCF_WINDOW);
 
-    if (shared_config.screen_height) {
-        return shared_config.screen_height;
+    if (Global::shared_config.screen_height) {
+        return Global::shared_config.screen_height;
     }
 
     LINK_NAMESPACE_GLOBAL(XDisplayHeight);
@@ -93,8 +94,8 @@ int XDisplayWidth(Display* display, int screen_number)
 {
     DEBUGLOGCALL(LCF_WINDOW);
 
-    if (shared_config.screen_width) {
-        return shared_config.screen_width;
+    if (Global::shared_config.screen_width) {
+        return Global::shared_config.screen_width;
     }
 
     LINK_NAMESPACE_GLOBAL(XDisplayWidth);

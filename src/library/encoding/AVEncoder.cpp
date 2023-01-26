@@ -22,7 +22,7 @@
 #include "../logging.h"
 #include "../ScreenCapture.h"
 #include "../audio/AudioContext.h"
-#include "../global.h" // shared_config
+#include "../global.h" // Global::shared_config
 #include "../GlobalState.h"
 #include "../../shared/sockethelpers.h"
 #include "../../shared/messages.h"
@@ -79,10 +79,10 @@ void AVEncoder::initMuxer() {
     const char* pixfmt = ScreenCapture::getPixelFormat();
 
     /* Initialize the muxer with either framerate or video framerate */
-    if (shared_config.variable_framerate)
-        nutMuxer = new NutMuxer(width, height, shared_config.video_framerate, 1, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
+    if (Global::shared_config.variable_framerate)
+        nutMuxer = new NutMuxer(width, height, Global::shared_config.video_framerate, 1, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
     else
-        nutMuxer = new NutMuxer(width, height, shared_config.framerate_num, shared_config.framerate_den, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
+        nutMuxer = new NutMuxer(width, height, Global::shared_config.framerate_num, Global::shared_config.framerate_den, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
 }
 
 void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
@@ -124,9 +124,9 @@ void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
     /* Number of frames to encode */
     int frames = 1;
 
-    if (shared_config.variable_framerate) {
+    if (Global::shared_config.variable_framerate) {
         /* We must send as many video frames to match the video framerate parameter */
-        frame_remainder += (frametime.tv_sec + ((double)frametime.tv_nsec) / 1000000000.0) * shared_config.video_framerate;
+        frame_remainder += (frametime.tv_sec + ((double)frametime.tv_nsec) / 1000000000.0) * Global::shared_config.video_framerate;
 
         frames = (int)(frame_remainder + 0.5);
         frame_remainder -= frames;

@@ -23,7 +23,7 @@
 #include "../../external/SDL1.h"
 #include <SDL2/SDL.h>
 #include "inputs.h"
-#include "../global.h"
+#include "../hook.h"
 // #include "../sdl/sdlwindows.h" // SDL_Window
 
 namespace libtas {

@@ -24,6 +24,7 @@
 #include "../sdl/SDLEventQueue.h"
 #include "../../shared/AllInputs.h"
 #include "../../shared/SharedConfig.h"
+#include "../global.h"
 #include <stdlib.h>
 
 namespace libtas {
@@ -32,7 +33,7 @@ namespace libtas {
 {
     DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
     /* For now, we declare one joystick */
-    return shared_config.nb_controllers;
+    return Global::shared_config.nb_controllers;
 }
 
 const char* joyname = "Microsoft X-Box 360 pad";
@@ -40,7 +41,7 @@ const char* joyname = "Microsoft X-Box 360 pad";
 /* Override */ const char *SDL_JoystickNameForIndex(int device_index)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
-    if (device_index < shared_config.nb_controllers)
+    if (device_index < Global::shared_config.nb_controllers)
         return joyname;
     return NULL;
 }
@@ -65,7 +66,7 @@ static bool isIdValid(SDL_Joystick* joy)
     if (joy == NULL)
         return false;
     int *joyid = reinterpret_cast<int*>(joy);
-    if ((*joyid < 0) || (*joyid >= MAX_SDLJOYS) || (*joyid >= shared_config.nb_controllers))
+    if ((*joyid < 0) || (*joyid >= MAX_SDLJOYS) || (*joyid >= Global::shared_config.nb_controllers))
         return false;
     return true;
 }
@@ -85,7 +86,7 @@ static bool isIdValidOpen(SDL_Joystick* joy)
     debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
     if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
         return NULL;
-    if (device_index >= shared_config.nb_controllers)
+    if (device_index >= Global::shared_config.nb_controllers)
         return NULL;
 
     /* Opening the joystick device */
@@ -103,7 +104,7 @@ static bool isIdValidOpen(SDL_Joystick* joy)
 
     if ((joyid < 0) || (joyid >= MAX_SDLJOYS))
         return NULL;
-    if (joyid >= shared_config.nb_controllers)
+    if (joyid >= Global::shared_config.nb_controllers)
         return NULL;
     if (joyids[joyid] == -1)
         /* Device not opened */
@@ -117,7 +118,7 @@ static bool isIdValidOpen(SDL_Joystick* joy)
     debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
     if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
         return 0;
-    if (device_index >= shared_config.nb_controllers)
+    if (device_index >= Global::shared_config.nb_controllers)
         return 0;
 
     return 0x045e; // vendor of the wired xbox360 controller
@@ -128,7 +129,7 @@ static bool isIdValidOpen(SDL_Joystick* joy)
     debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
     if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
         return 0;
-    if (device_index >= shared_config.nb_controllers)
+    if (device_index >= Global::shared_config.nb_controllers)
         return 0;
 
     return 0x028e; // product of the wired xbox360 controller
@@ -139,7 +140,7 @@ static bool isIdValidOpen(SDL_Joystick* joy)
     debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
     if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
         return 0;
-    if (device_index >= shared_config.nb_controllers)
+    if (device_index >= Global::shared_config.nb_controllers)
         return 0;
 
     return 0x0114; // product version of the wired xbox360 controller
@@ -150,7 +151,7 @@ static bool isIdValidOpen(SDL_Joystick* joy)
     debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
     if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
         return SDL_JOYSTICK_TYPE_UNKNOWN;
-    if (device_index >= shared_config.nb_controllers)
+    if (device_index >= Global::shared_config.nb_controllers)
         return SDL_JOYSTICK_TYPE_UNKNOWN;
 
     return SDL_JOYSTICK_TYPE_GAMECONTROLLER;
@@ -163,7 +164,7 @@ SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0
 /* Override */ SDL_JoystickGUID SDL_JoystickGetDeviceGUID(int device_index)
 {
     debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
-    if (device_index >= shared_config.nb_controllers)
+    if (device_index >= Global::shared_config.nb_controllers)
 	    return nullGUID;
 
     return xinputGUID;

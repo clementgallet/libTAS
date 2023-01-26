@@ -20,8 +20,8 @@
 #ifndef LIBTAS_MALLOC_H_INCL
 #define LIBTAS_MALLOC_H_INCL
 
-#include "global.h"
-#include <stddef.h>
+#include "hook.h"
+#include <cstddef>
 
 namespace libtas {
 

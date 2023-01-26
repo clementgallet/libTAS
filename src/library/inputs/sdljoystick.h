@@ -20,9 +20,8 @@
 #ifndef LIBTAS_SDLJOYSTICK_H_INCL
 #define LIBTAS_SDLJOYSTICK_H_INCL
 
-// #include "../../external/SDL.h"
 #include <SDL2/SDL.h>
-#include "../global.h"
+#include "../hook.h"
 
 namespace libtas {
 

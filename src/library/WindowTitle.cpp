@@ -21,7 +21,7 @@
 #include <sstream>
 #include "logging.h"
 #include "../shared/SharedConfig.h"
-#include "global.h" // game_info
+#include "global.h" // Global::game_info
 #include <math.h>
 
 namespace libtas {
@@ -53,9 +53,9 @@ void WindowTitle::update(float fps, float lfps)
     static bool last_fastforward = false;
     static bool last_dumping = false;
 
-    if (last_running == shared_config.running
-     && last_fastforward == shared_config.fastforward
-     && last_dumping == shared_config.av_dumping
+    if (last_running == Global::shared_config.running
+     && last_fastforward == Global::shared_config.fastforward
+     && last_dumping == Global::shared_config.av_dumping
      && fabsf(last_fps-fps) < 0.1
      && fabsf(last_lfps-lfps) < 0.1)
         return;
@@ -63,22 +63,22 @@ void WindowTitle::update(float fps, float lfps)
     std::ostringstream out;
     out << " (fps: " << std::fixed << std::setprecision(1) << fps;
     out << " - lfps: " << lfps << ") - status: ";
-    if (shared_config.running)
+    if (Global::shared_config.running)
         out << "running";
     else
         out << "paused";
-    if (shared_config.fastforward)
+    if (Global::shared_config.fastforward)
         out << " fastforward";
-    if (shared_config.av_dumping)
+    if (Global::shared_config.av_dumping)
         out << " dumping";
 
     std::string new_title = orig_title + out.str();
     NATIVECALL(set_title(new_title.c_str()));
 
     /* Store updated values */
-    last_running = shared_config.running;
-    last_fastforward = shared_config.fastforward;
-    last_dumping = shared_config.av_dumping;
+    last_running = Global::shared_config.running;
+    last_fastforward = Global::shared_config.fastforward;
+    last_dumping = Global::shared_config.av_dumping;
     last_fps = fps;
     last_lfps = lfps;
 }

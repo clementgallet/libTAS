@@ -23,7 +23,7 @@
 #include "../logging.h"
 #include "../hook.h"
 #include <sstream>
-#include "../global.h" // shared_config
+#include "../global.h" // Global::shared_config
 #include "../ScreenCapture.h"
 #include "../../external/keysymdesc.h"
 
@@ -103,10 +103,10 @@ void RenderHUD::drawFrame(uint64_t framecount)
     Color fg_color = {255, 255, 255, 255};
     Color bg_color = {0, 0, 0, 255};
     std::string framestr = std::to_string(framecount);
-    switch (shared_config.recording) {
+    switch (Global::shared_config.recording) {
     case SharedConfig::RECORDING_READ:
-        framestr.append("/").append(std::to_string(shared_config.movie_framecount));
-        if (framecount > shared_config.movie_framecount)
+        framestr.append("/").append(std::to_string(Global::shared_config.movie_framecount));
+        if (framecount > Global::shared_config.movie_framecount)
             framestr.append(" (Finished)");
         break;
     case SharedConfig::RECORDING_WRITE:
@@ -116,7 +116,7 @@ void RenderHUD::drawFrame(uint64_t framecount)
     }
 
     int x, y;
-    locationToCoords(shared_config.osd_frame_location, x, y);
+    locationToCoords(Global::shared_config.osd_frame_location, x, y);
     renderText(framestr.c_str(), fg_color, bg_color, x, y);
 }
 
@@ -127,7 +127,7 @@ void RenderHUD::drawNonDrawFrame(uint64_t nondraw_framecount)
     std::string nondraw_framestr = std::to_string(nondraw_framecount);
 
     int x, y;
-    locationToCoords(shared_config.osd_frame_location, x, y);
+    locationToCoords(Global::shared_config.osd_frame_location, x, y);
     renderText(nondraw_framestr.c_str(), red_color, bg_color, x, y);
 }
 
@@ -164,7 +164,7 @@ void RenderHUD::drawInputs(const AllInputs& ai, Color fg_color)
 #endif
 
     /* Mouse */
-    if (shared_config.mouse_support) {
+    if (Global::shared_config.mouse_support) {
         if (ai.pointer_x != -1) {
             oss << "[M " << ai.pointer_x << ":" << ai.pointer_y << ":";
             oss << ((ai.pointer_mode==SingleInput::POINTER_MODE_RELATIVE)?"R":"A");
@@ -183,7 +183,7 @@ void RenderHUD::drawInputs(const AllInputs& ai, Color fg_color)
     }
 
     /* Joystick */
-    for (int i=0; i<shared_config.nb_controllers; i++) {
+    for (int i=0; i<Global::shared_config.nb_controllers; i++) {
         for (int j=0; j<AllInputs::MAXAXES; j++) {
             if (ai.controller_axes[i][j] != 0)
                 oss << "[J" << i << " a" << j << ":" << ai.controller_axes[i][j] << "] ";
@@ -200,7 +200,7 @@ void RenderHUD::drawInputs(const AllInputs& ai, Color fg_color)
     std::string text = oss.str();
     if (!text.empty()) {
         int x, y;
-        locationToCoords(shared_config.osd_inputs_location, x, y);
+        locationToCoords(Global::shared_config.osd_inputs_location, x, y);
         renderText(text.c_str(), fg_color, bg_color, x, y);
     }
 }
@@ -235,7 +235,7 @@ void RenderHUD::drawMessages()
         }
         else {
             int x, y;
-            locationToCoords(shared_config.osd_messages_location, x, y);
+            locationToCoords(Global::shared_config.osd_messages_location, x, y);
             renderText(iter->first.c_str(), fg_color, bg_color, x, y);
             iter++;
         }
@@ -259,7 +259,7 @@ void RenderHUD::drawWatches()
 
     for (auto iter = watches.begin(); iter != watches.end(); iter++) {
         int x, y;
-        locationToCoords(shared_config.osd_ramwatches_location, x, y);
+        locationToCoords(Global::shared_config.osd_ramwatches_location, x, y);
         renderText(iter->c_str(), fg_color, bg_color, x, y);
     }
 }
@@ -380,25 +380,25 @@ void RenderHUD::resetLua()
 void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai)
 {
     resetOffsets();
-    if (shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
+    if (Global::shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
         drawFrame(framecount);
         // hud.drawNonDrawFrame(nondraw_framecount);
     }
-    if (shared_config.osd & SharedConfig::OSD_INPUTS) {
+    if (Global::shared_config.osd & SharedConfig::OSD_INPUTS) {
         drawInputs(ai, {255, 255, 255, 255});
         drawInputs(preview_ai, {160, 160, 160, 255});
     }
 
-    if (shared_config.osd & SharedConfig::OSD_MESSAGES)
+    if (Global::shared_config.osd & SharedConfig::OSD_MESSAGES)
         drawMessages();
 
-    if (shared_config.osd & SharedConfig::OSD_RAMWATCHES)
+    if (Global::shared_config.osd & SharedConfig::OSD_RAMWATCHES)
         drawWatches();
 
-    if (shared_config.osd & SharedConfig::OSD_LUA)
+    if (Global::shared_config.osd & SharedConfig::OSD_LUA)
         drawLua();
 
-    if (shared_config.osd & SharedConfig::OSD_CROSSHAIR)
+    if (Global::shared_config.osd & SharedConfig::OSD_CROSSHAIR)
         drawCrosshair(ai);
 }
 
