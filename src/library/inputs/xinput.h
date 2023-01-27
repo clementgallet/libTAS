@@ -29,6 +29,7 @@ extern int xinput_opcode;
 
 OVERRIDE int XISelectEvents(Display* dpy, Window win, XIEventMask *masks, int num_masks);
 OVERRIDE XIDeviceInfo* XIQueryDevice(Display* dpy, int deviceid, int* ndevices_return);
+OVERRIDE void XIFreeDeviceInfo( XIDeviceInfo *info);
 
 }
 

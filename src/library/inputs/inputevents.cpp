@@ -172,6 +172,8 @@ void generateKeyUpEvents(void)
                 dev->evtype = XI_KeyRelease;
                 dev->event = x11::gameXWindows.front();
                 dev->time = timestamp; // TODO: Wrong! timestamp is from X server start
+                dev->deviceid = 3;
+                dev->sourceid = 3;
                 NOLOGCALL(dev->detail = XKeysymToKeycode(nullptr, old_game_ai.keyboard[i]));
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (x11::gameDisplays[d]) {
@@ -332,6 +334,8 @@ void generateKeyDownEvents(void)
                 dev->evtype = XI_KeyPress;
                 dev->event = x11::gameXWindows.front();
                 dev->time = timestamp;
+                dev->deviceid = 3;
+                dev->sourceid = 3;
                 NOLOGCALL(dev->detail = XKeysymToKeycode(nullptr, game_ai.keyboard[i]));
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (x11::gameDisplays[d]) {
@@ -877,6 +881,8 @@ void generateMouseMotionEvents(void)
         dev->evtype = XI_Motion;
         dev->event = x11::gameXWindows.front();
         dev->time = timestamp;
+        dev->deviceid = 2;
+        dev->sourceid = 2;
         dev->event_x = game_ai.pointer_x;
         dev->event_y = game_ai.pointer_y;
         dev->root_x = dev->event_x;
@@ -1020,6 +1026,8 @@ void generateMouseButtonEvents(void)
                 event.xcookie.data = dev;
                 dev->event = x11::gameXWindows.front();
                 dev->time = timestamp;
+                dev->deviceid = 2;
+                dev->sourceid = 2;
                 dev->event_x = game_ai.pointer_x;
                 dev->event_y = game_ai.pointer_y;
                 dev->root_x = dev->event_x;
