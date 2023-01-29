@@ -22,6 +22,7 @@
 * Get game window size from SDL2 when possible (#513)
 * Set pixel buffer and pack row before reading pixels (#505)
 * Suspend sigaction for our checkpoint signals
+* Handle unusual and long memory section filenames
 
 ## [1.4.4] - 2022-10-25
 ### Added

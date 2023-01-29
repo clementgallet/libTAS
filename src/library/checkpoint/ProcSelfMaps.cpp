@@ -99,7 +99,7 @@ uintptr_t ProcSelfMaps::readHex()
 
 bool ProcSelfMaps::getNextArea(Area *area)
 {
-    ssize_t ret = pread(tmp_fd, line, 1024, off);
+    ssize_t ret = pread(tmp_fd, line, Area::FILENAMESIZE, off);
     if (ret < 1) {
         area->addr = nullptr;
         area->size = 0;
@@ -151,16 +151,30 @@ bool ProcSelfMaps::getNextArea(Area *area)
     }
 
     area->name[0] = '\0';
-    if (line[line_idx] == '/' || line[line_idx] == '[' || line[line_idx] == '(') {
-        // absolute pathname, or [stack], [vdso], etc.
-        size_t i = 0;
-        while (line[line_idx] != '\n') {
-            area->name[i++] = line[line_idx++];
-            MYASSERT(i < sizeof(area->name))
-        }
-        area->name[i] = '\0';
+    size_t i = 0;
+    while (line[line_idx] != '\n' && line_idx < Area::FILENAMESIZE) {
+        area->name[i++] = line[line_idx++];
     }
+    area->name[i] = '\0';
 
+    /* Check if we reached the end of the line */
+    while (line_idx == Area::FILENAMESIZE) {
+        debuglogstdio(LCF_CHECKPOINT | LCF_WARNING, "File path of memory section is too long");
+        off += Area::FILENAMESIZE;
+        ssize_t ret = pread(tmp_fd, line, Area::FILENAMESIZE, off);
+        if (ret < 1) {
+            area->addr = nullptr;
+            area->size = 0;
+            return false;        
+        }
+        line_idx = 0;
+
+        /* Parse the rest of the line without appening to the area file path */
+        while (line[line_idx] != '\n' && line_idx < Area::FILENAMESIZE) {
+            line_idx++;
+        }
+    }
+    
     MYASSERT(line[line_idx++] == '\n')
     off += line_idx;
 

@@ -42,8 +42,6 @@
 
 // #define DELETED_FILE_SUFFIX " (deleted)"
 
-#define FILENAMESIZE        1024
-
 namespace libtas {
 struct Area {
     enum PageFlag {
@@ -76,6 +74,11 @@ struct Area {
     ino_t inodenum;
     bool skip;
     off_t page_offset; // position of the first area page in the pages file (in bytes)
+    
+    enum {
+        FILENAMESIZE = 1024
+    };
+    
     char name[FILENAMESIZE];
 
     void print(const char* prefix) const;
