@@ -27,6 +27,7 @@
 #include <map>
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
+#include "checkpoint/ThreadManager.h" // isMainThread()
 #include <dlfcn.h>
 #include <sstream>
 #include <string.h>

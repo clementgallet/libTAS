@@ -21,13 +21,10 @@
 #define LIBTAS_LOGGING_H_INCL
 
 #include "../shared/lcf.h"
-#include "hook.h" // Global::shared_config
-#include "checkpoint/ThreadManager.h" // isMainThread()
 #include <string>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include "GlobalState.h"
 #include <cstdio>
 #include <string.h>
 

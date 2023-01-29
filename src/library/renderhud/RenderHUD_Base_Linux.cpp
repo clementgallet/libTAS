@@ -27,6 +27,7 @@
 #include "SurfaceARGB.h"
 // #include <X11/keysym.h>
 #include "../ScreenCapture.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

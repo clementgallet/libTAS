@@ -27,6 +27,7 @@
 #include "xlib/xwindows.h" // x11::gameXWindows
 #include "GameHacks.h"
 #include "global.h"
+#include "GlobalState.h"
 
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>

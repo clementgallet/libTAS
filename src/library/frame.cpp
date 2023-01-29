@@ -25,6 +25,7 @@
 #include "inputs/inputevents.h"
 #include "../shared/sockethelpers.h"
 #include "logging.h"
+#include "GlobalState.h"
 #include "DeterministicTimer.h"
 #include "encoding/AVEncoder.h"
 #include "sdl/sdlwindows.h"

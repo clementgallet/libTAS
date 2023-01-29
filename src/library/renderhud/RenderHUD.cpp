@@ -26,6 +26,7 @@
 #include "../global.h" // Global::shared_config
 #include "../ScreenCapture.h"
 #include "../../external/keysymdesc.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

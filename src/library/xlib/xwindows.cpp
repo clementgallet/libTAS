@@ -34,6 +34,7 @@
 #include "XlibEventQueueList.h"
 #include "xrandr.h"
 #include "../global.h"
+#include "../GlobalState.h"
 
 #include <vector>
 

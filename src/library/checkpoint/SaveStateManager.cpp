@@ -36,6 +36,7 @@
 #include "../timewrappers.h" // clock_gettime
 #include "../logging.h"
 #include "../global.h"
+#include "../GlobalState.h"
 #ifdef __linux__
 #include "../fileio/URandom.h"
 #include "../audio/AudioPlayerAlsa.h"

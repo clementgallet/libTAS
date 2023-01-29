@@ -20,6 +20,8 @@
  */
 
 #include "ThreadSync.h"
+#include "ThreadInfo.h"
+#include "ThreadManager.h"
 #include "../logging.h"
 #include <time.h> // nanosleep
 #include "../sleepwrappers.h"

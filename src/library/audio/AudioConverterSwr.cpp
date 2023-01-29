@@ -20,6 +20,7 @@
 #include "AudioConverterSwr.h"
 #include "../logging.h"
 #include "hook.h"
+#include "../GlobalState.h"
 #include <stdlib.h>
 #include <stdint.h>
 

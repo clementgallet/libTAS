@@ -23,6 +23,7 @@
 #include "steamapi.h"
 #include <dlfcn.h>
 #include "../global.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

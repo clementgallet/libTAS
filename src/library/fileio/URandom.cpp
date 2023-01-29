@@ -23,7 +23,9 @@
 #include "../logging.h"
 #include <fcntl.h>
 #include <unistd.h> // getpid()
+#include <signal.h>
 #include "../global.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

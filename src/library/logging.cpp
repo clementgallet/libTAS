@@ -30,6 +30,7 @@
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
 #include "global.h" // Global::shared_config
+#include "GlobalState.h"
 
 namespace libtas {
 

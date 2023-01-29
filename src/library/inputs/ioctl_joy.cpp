@@ -25,6 +25,7 @@
 #include "inputs.h" // game_ai
 #include "../../shared/SingleInput.h"
 #include "../global.h"
+#include "../GlobalState.h"
 #include <linux/joystick.h>
 #include <linux/input.h>
 #include <cstdarg>

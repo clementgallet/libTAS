@@ -41,6 +41,7 @@
 #include "steam/isteamremotestorage/isteamremotestorage.h" // SteamSetRemoteStorageFolder
 #include "Stack.h"
 #include "monowrappers.h"
+#include "GlobalState.h"
 
 extern char**environ;
 

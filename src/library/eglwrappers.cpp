@@ -26,6 +26,7 @@
 #include "ScreenCapture.h"
 #include "frame.h"
 #include "xlib/xwindows.h" // x11::gameXWindows
+#include "GlobalState.h"
 
 #include <string.h>
 

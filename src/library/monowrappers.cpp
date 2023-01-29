@@ -25,6 +25,8 @@
 #include "global.h"
 #include "DeterministicTimer.h"
 #include "global.h"
+#include "GlobalState.h"
+#include "checkpoint/ThreadManager.h" // isMainThread()
 
 namespace libtas {
 

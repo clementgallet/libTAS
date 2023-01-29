@@ -23,6 +23,7 @@
 #include "../shared/SharedConfig.h"
 #include "global.h" // Global::game_info
 #include <math.h>
+#include "GlobalState.h"
 
 namespace libtas {
 

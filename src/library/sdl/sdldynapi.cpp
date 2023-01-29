@@ -26,6 +26,7 @@
 #include "../logging.h"
 #include "../dlhook.h"
 #include "../hook.h"
+#include "../GlobalState.h"
 
 #include <dlfcn.h>
 

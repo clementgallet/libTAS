@@ -28,6 +28,7 @@
 #include <execinfo.h>
 #include "hook.h"
 #include "global.h"
+#include "checkpoint/ThreadManager.h" // isMainThread()
 
 namespace libtas {
 

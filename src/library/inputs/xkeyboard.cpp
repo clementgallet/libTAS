@@ -24,6 +24,7 @@
 #include <cstring> // memset
 #include "../../shared/AllInputs.h"
 #include "../xlib/xwindows.h" // x11::gameXWindows
+#include "../GlobalState.h"
 
 namespace libtas {
 

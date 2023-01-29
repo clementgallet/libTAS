@@ -26,6 +26,7 @@
 #include "../sdl/SDLEventQueue.h"
 #include "../sdl/sdlwindows.h" // sdl::gameSDLWindow
 #include "../global.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

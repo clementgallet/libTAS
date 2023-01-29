@@ -26,6 +26,7 @@
 #endif
 #include <dlfcn.h>
 #include "../global.h"
+#include "../GlobalState.h"
 
 #include "CCallbackManager.h"
 #include "isteamremotestorage/isteamremotestorage001.h"

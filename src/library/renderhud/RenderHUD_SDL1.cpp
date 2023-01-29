@@ -24,6 +24,7 @@
 #include "../../external/SDL1.h" // SDL1::SDL_Surface
 #include "../logging.h"
 #include "../hook.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

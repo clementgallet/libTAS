@@ -36,6 +36,7 @@
 #include "ReservedMemory.h"
 #include "../fileio/FileHandleList.h"
 #include "../global.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

@@ -24,6 +24,7 @@
 #include "ScreenCapture.h"
 #include "frame.h"
 #include "global.h"
+#include "GlobalState.h"
 
 #include <string.h>
 

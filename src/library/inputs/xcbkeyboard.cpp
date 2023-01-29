@@ -24,6 +24,7 @@
 // #include <X11/XKBlib.h>
 #include <cstring> // memset
 #include "../../shared/AllInputs.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

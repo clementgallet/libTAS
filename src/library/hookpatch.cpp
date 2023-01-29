@@ -24,6 +24,7 @@
 #include <string.h>
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
+#include "GlobalState.h"
 
 namespace libtas {
 

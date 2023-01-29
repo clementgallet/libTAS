@@ -26,6 +26,7 @@
 #include "xcbconnection.h" // x11::gameConnections
 #include "../xlib/xwindows.h" // x11::gameXWindows
 #include "../global.h"
+#include "../GlobalState.h"
 
 #ifdef LIBTAS_HAS_XCB_RANDR
 #include <xcb/randr.h>

@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include "../../external/lz4.h"
 #include "../global.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

@@ -25,6 +25,7 @@
 #include "../renderhud/RenderHUD_SDL2_renderer.h"
 #include "../ScreenCapture.h"
 #include "../global.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

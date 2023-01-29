@@ -24,6 +24,7 @@
 #include "../external/SDL1.h" // SDL_Surface
 #include "global.h"
 #include "encoding/AVEncoder.h"
+#include "GlobalState.h"
 
 #ifdef __unix__
 #include "xlib/xdisplay.h" // x11::gameDisplays

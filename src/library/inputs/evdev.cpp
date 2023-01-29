@@ -27,6 +27,7 @@
 #include "../../shared/AllInputs.h"
 #include <unistd.h> /* write */
 #include "../global.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

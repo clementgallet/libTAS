@@ -26,6 +26,7 @@
 #include "../logging.h"
 #include "../global.h"
 #include "MemArea.h"
+#include "../GlobalState.h"
 
 #ifdef __unix__
 #include "ProcSelfMaps.h"

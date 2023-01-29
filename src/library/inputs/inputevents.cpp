@@ -36,6 +36,7 @@
 #include "../sdl/SDLEventQueue.h"
 #include "../../external/SDL1.h"
 #include "../global.h" // Global::game_info
+#include "../GlobalState.h"
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 

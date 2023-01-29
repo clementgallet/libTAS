@@ -29,6 +29,7 @@
 #include "xwindows.h" // x11::gameXWindows
 #include "../../external/X11/XInput2.h"
 #include "../global.h"
+#include "../GlobalState.h"
 
 #include "xrandr.h"
 

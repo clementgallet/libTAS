@@ -25,6 +25,8 @@
 #include "AudioPlayerCoreAudio.h"
 #endif
 #include "../global.h" // Global::shared_config
+#include "../GlobalState.h"
+#include "../checkpoint/ThreadManager.h" // isMainThread()
 
 #include <stdint.h>
 #include <unistd.h>

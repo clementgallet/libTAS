@@ -40,6 +40,7 @@
 #endif
 #include "../checkpoint/ThreadManager.h"
 #include "../global.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

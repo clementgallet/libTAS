@@ -26,6 +26,7 @@
 #include "../xlib/XlibEventQueueList.h"
 #include "../xlib/xwindows.h" // x11::gameXWindows
 #include "../global.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

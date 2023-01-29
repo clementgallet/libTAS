@@ -22,6 +22,7 @@
 #include "FileHandle.h"
 #include "../logging.h"
 #include "../Utils.h"
+#include "../GlobalState.h"
 #ifdef __linux__
 #include "../inputs/evdev.h"
 #include "../inputs/jsdev.h"

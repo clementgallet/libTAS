@@ -23,6 +23,7 @@
 #include "../logging.h"
 #include "../hook.h"
 #include "../ScreenCapture.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

@@ -27,6 +27,7 @@
 #include "../Utils.h"
 #include <cstring>
 #include "ReservedMemory.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

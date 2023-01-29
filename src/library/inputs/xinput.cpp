@@ -22,6 +22,7 @@
 #include "../hook.h"
 #include "../logging.h"
 #include "../global.h"
+#include "../GlobalState.h"
 
 namespace libtas {
 

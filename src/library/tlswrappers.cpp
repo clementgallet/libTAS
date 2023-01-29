@@ -19,6 +19,7 @@
 
 #include "tlswrappers.h"
 #include "logging.h"
+#include "GlobalState.h"
 #include <map>
 
 namespace libtas {

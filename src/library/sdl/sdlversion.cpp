@@ -20,6 +20,7 @@
 #include "../hook.h"
 #include "../logging.h"
 #include <dlfcn.h>
+#include "../GlobalState.h"
 
 #include <SDL2/SDL.h> // SDL_version
 

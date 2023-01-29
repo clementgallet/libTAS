@@ -22,6 +22,7 @@
 #include "AltStack.h"
 #include "ReservedMemory.h"
 #include "../logging.h"
+#include "../GlobalState.h"
 #include <csignal>
 
 #define ONE_MB 1024 * 1024

@@ -21,6 +21,7 @@
 #include "logging.h"
 #include "hook.h"
 #include "global.h"
+#include "GlobalState.h"
 
 #include <cstring>
 

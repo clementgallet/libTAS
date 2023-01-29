@@ -21,6 +21,7 @@
 #include "../logging.h"
 // #include <string.h>
 #include "../global.h" // Global::game_info
+#include "../GlobalState.h"
 
 namespace libtas {
 
