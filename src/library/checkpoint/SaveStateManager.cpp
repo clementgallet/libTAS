@@ -428,16 +428,20 @@ void SaveStateManager::suspendThreads()
         numThreads = 0;
         ThreadInfo *next;
         for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = next) {
-            debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Signaling thread %d", thread->tid);
             next = thread->next;
             int ret;
 
             /* Do various things based on thread's state */
             switch (thread->state) {
-            case ThreadInfo::ST_RUNNING:
             case ThreadInfo::ST_ZOMBIE:
-            case ThreadInfo::ST_FREE:
+                /* Zombie threads don't need to be signaled, because as they are
+                 * detached by us from the beginning, the underlying linux thread
+                 * should have exited. We still need to save if threads are recycled */
+                break;
 
+            case ThreadInfo::ST_RUNNING:
+            case ThreadInfo::ST_ZOMBIE_RECYCLE:
+            case ThreadInfo::ST_IDLE:
                 /* Thread is running. Send it a signal so it will call stopthisthread.
                 * We will need to rescan (hopefully it will be suspended by then)
                 */
@@ -477,6 +481,7 @@ void SaveStateManager::suspendThreads()
                     // }
 
                     /* Send the suspend signal to the thread */
+                    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Signaling thread %d", thread->tid);
                     NATIVECALL(ret = pthread_kill(thread->pthread_id, sig_suspend_threads));
 
                     if (ret == 0) {
@@ -494,6 +499,7 @@ void SaveStateManager::suspendThreads()
                 NATIVECALL(ret = pthread_kill(thread->pthread_id, 0));
 
                 if (ret == 0) {
+                    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Waiting for thread %d to be suspended", thread->tid);
                     needrescan = true;
                 }
                 else {
@@ -512,15 +518,18 @@ void SaveStateManager::suspendThreads()
                 break;
 
             case ThreadInfo::ST_CKPNTHREAD:
+                /* This thread, don't signal ourself */
                 break;
 
-            // case ThreadInfo::ST_FAKEZOMBIE:
-            //     break;
-
             case ThreadInfo::ST_UNINITIALIZED:
+                /* Thread in the middle of being created (that should not
+                 * happen because of locks?), try again */
+                needrescan = true;
                 break;
 
             case ThreadInfo::ST_RECYCLED:
+                /* Thread in the middle of being recycled, try again */
+                needrescan = true;
                 break;
 
             default:

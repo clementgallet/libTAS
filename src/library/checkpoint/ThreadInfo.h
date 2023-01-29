@@ -45,11 +45,10 @@ struct ThreadInfo {
         ST_SUSPINPROG, // thread is in the middle of being suspended
         ST_SUSPENDED, // thread is suspended
         ST_ZOMBIE, // thread has returned but is not yet joined or detached
-        // ST_FAKEZOMBIE, // like ST_ZOMBIE except the actual thread no longer
-                       // exists. The thread has been joined by us during a
-                       // savestate, so we keep information including the
-                       // return value until the game does a join or detach.
-        ST_FREE, // thread that has finished its job and waiting for another
+        ST_ZOMBIE_RECYCLE, // like ST_ZOMBIE except that after detached by the
+                       // game, the thread will go to ST_IDLE, ready to be
+                       // reused.
+        ST_IDLE, // thread that has finished its job and waiting to be reused
         ST_RECYCLED, // thread that is about to be recycled
         ST_CKPNTHREAD, // thread that does the checkpoint
     };

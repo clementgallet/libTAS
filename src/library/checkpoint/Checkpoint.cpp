@@ -249,8 +249,8 @@ int Checkpoint::checkRestore()
     int n=0;
     for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
         if ((thread->state != ThreadInfo::ST_RUNNING) &&
-            (thread->state != ThreadInfo::ST_ZOMBIE) &&
-            (thread->state != ThreadInfo::ST_FREE))
+            (thread->state != ThreadInfo::ST_ZOMBIE_RECYCLE) &&
+            (thread->state != ThreadInfo::ST_IDLE))
             continue;
 
         int t;

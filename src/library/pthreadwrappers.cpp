@@ -28,6 +28,7 @@
 #include "global.h"
 #include "timewrappers.h" // gettimeofday()
 #include "GameHacks.h"
+#include "GlobalState.h"
 
 #include <errno.h>
 #include <unistd.h>
@@ -173,12 +174,6 @@ static void *pthread_start(void *arg)
 #endif
             }
             ThreadManager::threadExit(ret);
-
-            /* Thread is now in zombie state until it is detached */
-            // while (thread->state == ThreadInfo::ST_ZOMBIE) {
-            //     struct timespec mssleep = {0, 1000*1000};
-            //     NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
-            // }
         }
         else {
 #ifdef __linux__
@@ -189,13 +184,14 @@ static void *pthread_start(void *arg)
         }
     } while (!thread->quit && Global::shared_config.recycle_threads); /* Check if game is quitting */
 
-    return nullptr;
+    return thread->retval;
 }
 
 
 /* Override */ int pthread_create (pthread_t * tid_p, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) __THROW
 {
     LINK_NAMESPACE(pthread_create, "pthread");
+    LINK_NAMESPACE(pthread_detach, "pthread");
 
     if (GlobalState::isNative())
         return orig::pthread_create(tid_p, attr, start_routine, arg);
@@ -240,6 +236,9 @@ static void *pthread_start(void *arg)
         }
     }
 
+    /* Immediatly detach the thread. We don't want to deal with zombie threads,
+     * so we implement ourself the joinable state, and all threads are detached. */
+    orig::pthread_detach (*tid_p);
     ThreadSync::wrapperExecutionLockUnlock();
     return ret;
 }
@@ -288,15 +287,13 @@ static void *pthread_start(void *arg)
     }
 
     int ret = 0;
-    if (Global::shared_config.recycle_threads) {
-        /* Wait for the thread to become zombie */
-        while (thread->state != ThreadInfo::ST_ZOMBIE) {
-            struct timespec mssleep = {0, 1000*1000};
-            NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
-        }
+    /* Wait for the thread to become zombie */
+    while (thread->state != ThreadInfo::ST_ZOMBIE && thread->state != ThreadInfo::ST_ZOMBIE_RECYCLE) {
+        struct timespec mssleep = {0, 1000*1000};
+        NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
     }
-    else {
-        ret = orig::pthread_join(pthread_id, thread_return);
+    if (thread_return) {
+        *thread_return = thread->retval;
     }
 
     ThreadSync::wrapperExecutionLockLock();
@@ -328,14 +325,9 @@ static void *pthread_start(void *arg)
         return EINVAL;
     }
 
-    int ret = 0;
-    if (! Global::shared_config.recycle_threads) {
-        ret = orig::pthread_detach(pthread_id);
-    }
-
     ThreadManager::threadDetach(pthread_id);
     ThreadSync::wrapperExecutionLockUnlock();
-    return ret;
+    return 0;
 }
 
 /* Override */ int pthread_tryjoin_np(pthread_t pthread_id, void **retval) __THROW
@@ -362,24 +354,16 @@ static void *pthread_start(void *arg)
     }
 
     int ret = 0;
-    if (Global::shared_config.recycle_threads) {
-        if (thread->state == ThreadInfo::ST_ZOMBIE) {
-            if (retval) {
-                *retval = thread->retval;
-            }
-            ThreadManager::threadDetach(pthread_id);
+    if (thread->state == ThreadInfo::ST_ZOMBIE || thread->state == ThreadInfo::ST_ZOMBIE_RECYCLE) {
+        if (retval) {
+            *retval = thread->retval;
         }
-        else {
-            ret = EBUSY;
-        }
+        ThreadManager::threadDetach(pthread_id);
     }
     else {
-        ret = orig::pthread_tryjoin_np(pthread_id, retval);
-        if (ret == 0) {
-            ThreadManager::threadDetach(pthread_id);
-        }
+        ret = EBUSY;
     }
-
+    
     if (ret == 0)
         debuglogstdio(LCF_THREAD, "Joining thread successfully.");
     else
@@ -418,25 +402,18 @@ static void *pthread_start(void *arg)
     }
 
     int ret = 0;
-    if (Global::shared_config.recycle_threads) {
-        /* For now I'm lazy, so we just wait the amount of time and check joining */
-        NATIVECALL(nanosleep(abstime, NULL));
+    
+    /* For now I'm lazy, so we just wait the amount of time and check joining */
+    NATIVECALL(nanosleep(abstime, NULL));
 
-        if (thread->state == ThreadInfo::ST_ZOMBIE) {
-            if (retval) {
-                *retval = thread->retval;
-            }
-            ThreadManager::threadDetach(pthread_id);
+    if (thread->state == ThreadInfo::ST_ZOMBIE || thread->state == ThreadInfo::ST_ZOMBIE_RECYCLE) {
+        if (retval) {
+            *retval = thread->retval;
         }
-        else {
-            ret = ETIMEDOUT;
-        }
+        ThreadManager::threadDetach(pthread_id);
     }
     else {
-        ret = orig::pthread_timedjoin_np(pthread_id, retval, abstime);
-        if (ret == 0) {
-            ThreadManager::threadDetach(pthread_id);
-        }
+        ret = ETIMEDOUT;
     }
 
     if (ret == 0)
