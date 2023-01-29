@@ -101,6 +101,21 @@ OVERRIDE Uint16 SDL_JoystickGetDeviceProductVersion(int device_index);
 OVERRIDE SDL_JoystickType SDL_JoystickGetDeviceType(int device_index);
 
 /**
+ * Get the instance ID of a joystick.
+ *
+ * This can be called before any joysticks are opened. If the index is out of
+ * range, this function will return -1.
+ *
+ * \param device_index the index of the joystick to query (the N'th joystick
+ *                     on the system
+ * \returns the instance id of the selected joystick. If called on an invalid
+ *          index, this function returns zero
+ *
+ * \since This function is available since SDL 2.0.6.
+ */
+OVERRIDE SDL_JoystickID SDL_JoystickGetDeviceInstanceID(int device_index);
+
+/**
  *  Return the GUID for the joystick at this index
  */
 OVERRIDE SDL_JoystickGUID SDL_JoystickGetDeviceGUID(int device_index);

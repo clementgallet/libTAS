@@ -157,6 +157,16 @@ static bool isIdValidOpen(SDL_Joystick* joy)
     return SDL_JOYSTICK_TYPE_GAMECONTROLLER;
 }
 
+/* Override */ SDL_JoystickID SDL_JoystickGetDeviceInstanceID(int device_index)
+{
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
+    if (device_index < 0 || device_index >= MAX_SDLJOYS || device_index >= Global::shared_config.nb_controllers)
+        return -1;
+
+    /* This function can be called without the joystick been opened... */
+    return static_cast<SDL_JoystickID>(device_index);
+}
+
 /* Xbox 360 GUID */
 SDL_JoystickGUID xinputGUID = {{0x03,0x00,0x00,0x00,0x5e,0x04,0x00,0x00,0x8e,0x02,0x00,0x00,0x14,0x01,0x00,0x00}};
 SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}};

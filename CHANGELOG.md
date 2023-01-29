@@ -9,6 +9,7 @@
 * RAM search can be interrupted
 * Hook mono sleep function
 * Implement XIQueryDevice()
+* Implement SDL_JoystickGetDeviceInstanceID()
 
 ### Changed
 
