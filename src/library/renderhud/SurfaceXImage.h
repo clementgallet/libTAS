@@ -18,7 +18,6 @@
  */
 
 #include "config.h"
-#ifdef LIBTAS_ENABLE_HUD
 
 #ifndef LIBTAS_SURFACEXIMAGE_H_INCL
 #define LIBTAS_SURFACEXIMAGE_H_INCL
@@ -45,5 +44,4 @@ class SurfaceXImage
 
 }
 
-#endif
 #endif

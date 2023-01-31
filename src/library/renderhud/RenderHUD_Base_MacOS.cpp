@@ -18,7 +18,6 @@
  */
 
 #include "RenderHUD_Base_MacOS.h"
-#ifdef LIBTAS_ENABLE_HUD
 
 #include "../logging.h"
 #include "../hook.h"
@@ -127,5 +126,3 @@ void RenderHUD_Base_MacOS::renderText(const char* text, Color fg_color, Color bg
 }
 
 }
-
-#endif

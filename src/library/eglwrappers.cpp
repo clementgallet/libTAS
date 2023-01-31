@@ -356,14 +356,9 @@ EGLBoolean eglSwapBuffers( EGLDisplay dpy, EGLSurface surface )
     DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
 
     /* Start the frame boundary and pass the function to draw */
-#ifdef LIBTAS_ENABLE_HUD
-    // static RenderHUD_GL renderHUD;
     static RenderHUD_GL renderHUD;
     renderHUD.setGLES(bindAPI == EGL_OPENGL_ES_API);
     frameBoundary([&] () {orig::eglSwapBuffers(dpy, surface);}, renderHUD);
-#else
-    frameBoundary([&] () {orig::eglSwapBuffers(dpy, surface);});
-#endif
 
     return EGL_TRUE;
 }

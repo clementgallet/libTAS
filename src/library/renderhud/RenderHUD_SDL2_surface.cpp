@@ -18,7 +18,6 @@
  */
 
 #include "RenderHUD_SDL2_surface.h"
-#ifdef LIBTAS_ENABLE_HUD
 
 #include "../logging.h"
 #include "../hook.h"
@@ -53,5 +52,3 @@ void RenderHUD_SDL2_surface::renderSurface(std::unique_ptr<SurfaceARGB> surf, in
 }
 
 }
-
-#endif

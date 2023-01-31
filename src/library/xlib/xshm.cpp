@@ -99,12 +99,8 @@ OVERRIDE Bool XShmPutImage(
     ScreenCapture::resize(image->width, image->height);
 
     /* Start the frame boundary and pass the function to draw */
-#ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_XShm renderHUD;
     frameBoundary([&] () {orig::XShmPutImage(dpy, d, gc, image, src_x, src_y, dst_x, dst_y, src_width, src_height, send_event);}, renderHUD);
-#else
-    frameBoundary([&] () {orig::XShmPutImage(dpy, d, gc, image, src_x, src_y, dst_x, dst_y, src_width, src_height, send_event);});
-#endif
 
     return True;
     // return orig::XShmPutImage(dpy, d, gc, image, src_x, src_y, dst_x, dst_y, src_width, src_height, send_event);

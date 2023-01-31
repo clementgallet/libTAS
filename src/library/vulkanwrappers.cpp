@@ -303,7 +303,6 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
     orig::vkGetSwapchainImagesKHR(vk::device, vk::swapchain, &count, vk::swapchainImgs.data());
 
     /* Start the frame boundary and pass the function to draw */
-#ifdef LIBTAS_ENABLE_HUD
     static RenderHUD renderHUD;
     frameBoundary([&] () {
         static bool first = true;
@@ -327,9 +326,6 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
             orig::vkQueuePresentKHR(queue, &pi);
         }
     }, renderHUD);
-#else
-    frameBoundary([&] () {orig::vkQueuePresentKHR(queue, pPresentInfo);});
-#endif
 
     return VK_SUCCESS;
 }

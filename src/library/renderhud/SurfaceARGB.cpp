@@ -18,7 +18,6 @@
  */
 
 #include "SurfaceARGB.h"
-#ifdef LIBTAS_ENABLE_HUD
 
 #include "../logging.h"
 
@@ -237,5 +236,3 @@ uint32_t SurfaceARGB::colorToValue(Color color)
 
 
 }
-
-#endif

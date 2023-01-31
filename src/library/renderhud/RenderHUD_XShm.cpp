@@ -18,7 +18,6 @@
  */
 
 #include "RenderHUD_XShm.h"
-#ifdef LIBTAS_ENABLE_HUD
 
 #include "SurfaceARGB.h"
 #include "SurfaceXImage.h"
@@ -42,5 +41,3 @@ void RenderHUD_XShm::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int
 }
 
 }
-
-#endif

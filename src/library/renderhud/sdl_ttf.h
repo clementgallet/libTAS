@@ -34,7 +34,6 @@
 #ifdef __unix__
 #include "config.h"
 #endif
-#ifdef LIBTAS_ENABLE_HUD
 
 #include "SurfaceARGB.h"
 #include <memory>
@@ -186,5 +185,4 @@ int TTF_GetFontKerningSizeGlyphs(TTF_Font *font, uint16_t previous_ch, uint16_t 
 
 }
 
-#endif
 #endif /* _SDL_TTF_H */

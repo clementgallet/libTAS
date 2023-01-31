@@ -20,7 +20,6 @@
 #ifdef __unix__
 #include "config.h"
 #endif
-#ifdef LIBTAS_ENABLE_HUD
 
 #ifndef LIBTAS_RENDERHUD_H_INCL
 #define LIBTAS_RENDERHUD_H_INCL
@@ -236,5 +235,4 @@ class RenderHUD
 };
 }
 
-#endif
 #endif

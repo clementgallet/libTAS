@@ -26,8 +26,6 @@
 #include "RenderHUD_Base_MacOS.h"
 #endif
 
-#ifdef LIBTAS_ENABLE_HUD
-
 namespace libtas {
 #ifdef __unix__
 class RenderHUD_XShm : public RenderHUD_Base_Linux
@@ -40,5 +38,4 @@ class RenderHUD_XShm : public RenderHUD_Base_MacOS
 };
 }
 
-#endif
 #endif

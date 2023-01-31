@@ -82,13 +82,9 @@ DECLARE_ORIG_POINTER(SDL_RenderGetScale)
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
-#ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_SDL2_renderer renderHUD;
     renderHUD.setRenderer(renderer);
     frameBoundary([&] () {orig::SDL_RenderPresent(renderer);}, renderHUD);
-#else
-    frameBoundary([&] () {orig::SDL_RenderPresent(renderer);});
-#endif
 }
 
 static int logical_w = 0;

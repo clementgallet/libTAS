@@ -26,8 +26,6 @@
 #include "RenderHUD_Base_MacOS.h"
 #endif
 
-#ifdef LIBTAS_ENABLE_HUD
-
 #include <SDL2/SDL.h> // SDL_Renderer
 
 namespace libtas {
@@ -50,5 +48,4 @@ class RenderHUD_SDL2_renderer : public RenderHUD_Base_MacOS
 };
 }
 
-#endif
 #endif

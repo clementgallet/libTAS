@@ -20,7 +20,6 @@
 #ifdef __unix__
 #include "config.h"
 #endif
-#ifdef LIBTAS_ENABLE_HUD
 
 #ifndef LIBTAS_SURFACEARGB_H_INCL
 #define LIBTAS_SURFACEARGB_H_INCL
@@ -86,5 +85,4 @@ class SurfaceARGB
 
 }
 
-#endif
 #endif

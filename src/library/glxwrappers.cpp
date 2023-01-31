@@ -465,12 +465,8 @@ void glXSwapBuffers( Display *dpy, XID drawable )
     DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
 
     /* Start the frame boundary and pass the function to draw */
-#ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_GL renderHUD;
     frameBoundary([&] () {orig::glXSwapBuffers(dpy, drawable);}, renderHUD);
-#else
-    frameBoundary([&] () {orig::glXSwapBuffers(dpy, drawable);});
-#endif
 }
 
 static int swapInterval = 0;

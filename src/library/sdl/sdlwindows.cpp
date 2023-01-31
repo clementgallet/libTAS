@@ -83,12 +83,8 @@ static bool windowFullscreen = false;
     DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
-#ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_GL renderHUD_GL;
     frameBoundary([] () {orig::SDL_GL_SwapBuffers();}, renderHUD_GL);
-#else
-    frameBoundary([] () {orig::SDL_GL_SwapBuffers();});
-#endif
 }
 
 /* Override */ void SDL_GL_SwapWindow(SDL_Window* window)
@@ -101,12 +97,8 @@ static bool windowFullscreen = false;
     DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
-#ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_GL renderHUD_GL;
     frameBoundary([&] () {orig::SDL_GL_SwapWindow(window);}, renderHUD_GL);
-#else
-    frameBoundary([&] () {orig::SDL_GL_SwapWindow(window);});
-#endif
 }
 
 void* SDL_GL_CreateContext(SDL_Window *window)
@@ -147,10 +139,8 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
     LINK_NAMESPACE_SDL2(SDL_GL_DeleteContext);
 
-    #ifdef LIBTAS_ENABLE_HUD
-        /* Delete texture and fbo in the OSD */
-        RenderHUD_GL::fini();
-    #endif
+    /* Delete texture and fbo in the OSD */
+    RenderHUD_GL::fini();
 
     /* Games can destroy the GL context without closing the window. It still
      * invalidates GL objects, so we must close the screen capture. */
@@ -489,12 +479,8 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
-#ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_SDL1 renderHUD;
     frameBoundary([&] () {orig::SDL_Flip(screen);}, renderHUD);
-#else
-    frameBoundary([&] () {orig::SDL_Flip(screen);});
-#endif
 
     return 0;
 }
@@ -510,12 +496,8 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with %d rects", __func__, numrects);
 
     /* Start the frame boundary and pass the function to draw */
-#ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_SDL1 renderHUD;
     frameBoundary([&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, renderHUD);
-#else
-    frameBoundary([&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);});
-#endif
 }
 
 /* Override */ void SDL_UpdateRect(SDL1::SDL_Surface *screen, Sint32 x, Sint32 y, Uint32 w, Uint32 h)
@@ -528,12 +510,8 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with pos (%d,%d) and size (%u,%u)", __func__, x, y, w, h);
 
     /* Start the frame boundary and pass the function to draw */
-#ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_SDL1 renderHUD;
     frameBoundary([&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, renderHUD);
-#else
-    frameBoundary([&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);});
-#endif
 }
 
 /* Override */ SDL1::SDL_GrabMode SDL_WM_GrabInput(SDL1::SDL_GrabMode mode)
@@ -597,12 +575,8 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     ScreenCapture::init();
 
     /* Start the frame boundary and pass the function to draw */
-#ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_SDL2_surface renderHUD;
     frameBoundary([&] () {orig::SDL_UpdateWindowSurface(window);}, renderHUD);
-#else
-    frameBoundary([&] () {orig::SDL_UpdateWindowSurface(window);});
-#endif
 
     return 0;
 }
@@ -622,12 +596,8 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     ScreenCapture::init();
 
     /* Start the frame boundary and pass the function to draw */
-#ifdef LIBTAS_ENABLE_HUD
     static RenderHUD_SDL2_surface renderHUD;
     frameBoundary([&] () {orig::SDL_UpdateWindowSurface(window);}, renderHUD);
-#else
-    frameBoundary([&] () {orig::SDL_UpdateWindowSurface(window);});
-#endif
 
     return 0;
 }

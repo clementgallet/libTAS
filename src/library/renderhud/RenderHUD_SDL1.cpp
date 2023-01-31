@@ -18,7 +18,6 @@
  */
 
 #include "RenderHUD_SDL1.h"
-#ifdef LIBTAS_ENABLE_HUD
 
 #include <SDL2/SDL.h> // SDL_Rect
 #include "../../external/SDL1.h" // SDL1::SDL_Surface
@@ -70,5 +69,3 @@ void RenderHUD_SDL1::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int
 }
 
 }
-
-#endif

@@ -18,7 +18,6 @@
  */
 
 #include "RenderHUD.h"
-#ifdef LIBTAS_ENABLE_HUD
 
 #include "../logging.h"
 #include "../hook.h"
@@ -404,5 +403,3 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
 }
 
 }
-
-#endif

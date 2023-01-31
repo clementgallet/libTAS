@@ -67,11 +67,7 @@ static uint64_t nondraw_framecount = 0;
 /* Did we do at least one savestate? */
 static bool didASavestate = false;
 
-#ifdef LIBTAS_ENABLE_HUD
 static void receive_messages(std::function<void()> draw, RenderHUD& hud);
-#else
-static void receive_messages(std::function<void()> draw);
-#endif
 
 /* Compute real and logical fps */
 static void computeFPS(float& fps, float& lfps)
@@ -216,11 +212,7 @@ static void sendFrameCountTime()
     sendData(&ticks_val, sizeof(uint64_t));
 }
 
-#ifdef LIBTAS_ENABLE_HUD
 void frameBoundary(std::function<void()> draw, RenderHUD& hud)
-#else
-void frameBoundary(std::function<void()> draw)
-#endif
 {
     static float fps, lfps = 0;
 
@@ -329,10 +321,8 @@ void frameBoundary(std::function<void()> draw)
     sendMessage(MSGB_START_FRAMEBOUNDARY);
 
     /* Reset ramwatches and lua drawings */
-#ifdef LIBTAS_ENABLE_HUD
     RenderHUD::resetWatches();
     RenderHUD::resetLua();
-#endif
 
     /* Receive messages from the program */
     int message = receiveMessage();
@@ -343,9 +333,7 @@ void frameBoundary(std::function<void()> draw)
         {
             /* Get ramwatch from the program */
             std::string ramwatch = receiveString();
-#ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertWatch(ramwatch);
-#endif
             break;
         }
         case MSGN_LUA_RESOLUTION:
@@ -366,9 +354,7 @@ void frameBoundary(std::function<void()> draw)
             uint32_t fg, bg;
             receiveData(&fg, sizeof(uint32_t));
             receiveData(&bg, sizeof(uint32_t));
-#ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertLuaText(x, y, text, fg, bg);
-#endif
             break;
         }
         case MSGN_LUA_PIXEL:
@@ -378,9 +364,7 @@ void frameBoundary(std::function<void()> draw)
             receiveData(&y, sizeof(int));
             uint32_t color;
             receiveData(&color, sizeof(uint32_t));
-#ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertLuaPixel(x, y, color);
-#endif
             break;
         }
         case MSGN_LUA_RECT:
@@ -394,9 +378,7 @@ void frameBoundary(std::function<void()> draw)
             uint32_t outline, fill;
             receiveData(&outline, sizeof(uint32_t));
             receiveData(&fill, sizeof(uint32_t));
-#ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertLuaRect(x, y, w, h, thickness, outline, fill);
-#endif
             break;
         }
         case MSGN_LUA_LINE:
@@ -408,9 +390,7 @@ void frameBoundary(std::function<void()> draw)
             receiveData(&y1, sizeof(int));
             uint32_t color;
             receiveData(&color, sizeof(uint32_t));
-#ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertLuaLine(x0, y0, x1, y1, color);
-#endif
             break;
         }
         case MSGN_LUA_ELLIPSE:
@@ -422,9 +402,7 @@ void frameBoundary(std::function<void()> draw)
             receiveData(&radius_y, sizeof(int));
             uint32_t color;
             receiveData(&color, sizeof(uint32_t));
-#ifdef LIBTAS_ENABLE_HUD
             RenderHUD::insertLuaEllipse(center_x, center_y, radius_x, radius_y, color);
-#endif
             break;
         }
         }
@@ -442,13 +420,11 @@ void frameBoundary(std::function<void()> draw)
     /* If we want HUD to appear in encodes, we need to draw it before saving
      * the window surface/texture/etc. This has the small drawback that we
      * won't be able to remove HUD messages during that frame. */
-#ifdef LIBTAS_ENABLE_HUD
     if (!Global::skipping_draw && draw && Global::shared_config.osd_encode) {
         AllInputs preview_ai;
         preview_ai.emptyInputs();
         hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
     }
-#endif
 
     if (!Global::skipping_draw) {
         if (draw) {
@@ -479,13 +455,11 @@ void frameBoundary(std::function<void()> draw)
         }
     }
 
-#ifdef LIBTAS_ENABLE_HUD
     if (!Global::skipping_draw && draw && !Global::shared_config.osd_encode) {
         AllInputs preview_ai;
         preview_ai.emptyInputs();
         hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
     }
-#endif
 
     /* Actual draw command */
     if (!Global::skipping_draw && draw) {
@@ -494,11 +468,7 @@ void frameBoundary(std::function<void()> draw)
     }
 
     /* Receive messages from the program */
-#ifdef LIBTAS_ENABLE_HUD
-        receive_messages(draw, hud);
-#else
-        receive_messages(draw);
-#endif
+    receive_messages(draw, hud);
 
     /* No more socket messages here, unlocking the socket. */
     unlockSocket();
@@ -631,29 +601,19 @@ static void pushQuitEvent(void)
 }
 
 
-#ifdef LIBTAS_ENABLE_HUD
 static void screen_redraw(std::function<void()> draw, RenderHUD& hud, AllInputs preview_ai)
-#else
-static void screen_redraw(std::function<void()> draw, AllInputs preview_ai)
-#endif
 {
     if (!Global::skipping_draw && draw) {
         ScreenCapture::copySurfaceToScreen();
 
-#ifdef LIBTAS_ENABLE_HUD
         hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
-#endif
 
         GlobalNoLog gnl;
         NATIVECALL(draw());
     }
 }
 
-#ifdef LIBTAS_ENABLE_HUD
 static void receive_messages(std::function<void()> draw, RenderHUD& hud)
-#else
-static void receive_messages(std::function<void()> draw)
-#endif
 {
     AllInputs preview_ai;
     preview_ai.emptyInputs();
@@ -664,13 +624,11 @@ static void receive_messages(std::function<void()> draw)
     while (1) {
         int slot = SaveStateManager::waitChild();
         if (slot < 0) break;
-#ifdef LIBTAS_ENABLE_HUD
         std::string msg = "State ";
         msg += std::to_string(slot);
         msg += " saved";
         RenderHUD::insertMessage(msg.c_str());
         screen_redraw(draw, hud, preview_ai);
-#endif
     }
 
     while (1)
@@ -701,13 +659,11 @@ static void receive_messages(std::function<void()> draw)
             while (1) {
                 int slot = SaveStateManager::waitChild();
                 if (slot < 0) break;
-#ifdef LIBTAS_ENABLE_HUD
                 std::string msg = "State ";
                 msg += std::to_string(slot);
                 msg += " saved";
                 RenderHUD::insertMessage(msg.c_str());
                 screen_redraw(draw, hud, preview_ai);
-#endif
             }
         }
         int status;
@@ -746,20 +702,12 @@ static void receive_messages(std::function<void()> draw)
                 break;
 
             case MSGN_EXPOSE:
-#ifdef LIBTAS_ENABLE_HUD
                 screen_redraw(draw, hud, preview_ai);
-#else
-                screen_redraw(draw, preview_ai);
-#endif
                 break;
 
             case MSGN_PREVIEW_INPUTS:
                 receiveData(&preview_ai, sizeof(AllInputs));
-#ifdef LIBTAS_ENABLE_HUD
                 screen_redraw(draw, hud, preview_ai);
-#else
-                screen_redraw(draw, preview_ai);
-#endif
                 break;
 
             case MSGN_SAVESTATE_PATH:
@@ -810,18 +758,13 @@ static void receive_messages(std::function<void()> draw)
                     sendFrameCountTime();
 
                     /* Screen should have changed after loading */
-#ifdef LIBTAS_ENABLE_HUD
                     screen_redraw(draw, hud, preview_ai);
-#else
-                    screen_redraw(draw, preview_ai);
-#endif
                 }
                 else if (status == 0) {
                     /* Tell the program that the saving succeeded */
                     sendMessage(MSGB_SAVING_SUCCEEDED);
 
                     /* Print the successful message, unless we are saving in a fork */
-#ifdef LIBTAS_ENABLE_HUD
                     if (!(Global::shared_config.savestate_settings & SharedConfig::SS_FORK)) {
                         if (Global::shared_config.osd & SharedConfig::OSD_MESSAGES) {
                             std::string msg;
@@ -832,7 +775,6 @@ static void receive_messages(std::function<void()> draw)
                             screen_redraw(draw, hud, preview_ai);
                         }
                     }
-#endif
 
                 }
                 else {
@@ -866,10 +808,8 @@ static void receive_messages(std::function<void()> draw)
                 break;
 
             case MSGN_OSD_MSG:
-#ifdef LIBTAS_ENABLE_HUD
                 RenderHUD::insertMessage(receiveString().c_str());
                 screen_redraw(draw, hud, preview_ai);
-#endif
                 break;
 
             case MSGN_END_FRAMEBOUNDARY:

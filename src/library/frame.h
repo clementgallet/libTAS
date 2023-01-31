@@ -38,11 +38,7 @@ extern uint64_t framecount;
  * but can be called also by the timer when we need to advance time to avoid a
  * game softlock (game expect time to pass).
  */
-#ifdef LIBTAS_ENABLE_HUD
 void frameBoundary(std::function<void()> draw, RenderHUD& hud);
-#else
-void frameBoundary(std::function<void()> draw);
-#endif
 
 }
 

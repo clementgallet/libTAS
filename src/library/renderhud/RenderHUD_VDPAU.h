@@ -26,8 +26,6 @@
 #include "RenderHUD_Base_MacOS.h"
 #endif
 
-#ifdef LIBTAS_ENABLE_HUD
-
 #include "../vdpauwrappers.h"
 
 namespace libtas {
@@ -49,5 +47,4 @@ class RenderHUD_VDPAU : public RenderHUD_Base_MacOS
 };
 }
 
-#endif
 #endif

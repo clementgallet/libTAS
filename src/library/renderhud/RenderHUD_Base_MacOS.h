@@ -19,8 +19,6 @@
 
 #include "RenderHUD.h"
 
-#ifdef LIBTAS_ENABLE_HUD
-
 #ifndef LIBTAS_RENDERHUD_BASE_MACOS_H_INCL
 #define LIBTAS_RENDERHUD_BASE_MACOS_H_INCL
 
@@ -57,5 +55,4 @@ class RenderHUD_Base_MacOS : public RenderHUD
 };
 }
 
-#endif
 #endif

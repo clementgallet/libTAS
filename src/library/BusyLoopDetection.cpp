@@ -220,12 +220,8 @@ void BusyLoopDetection::increment(int type)
         if (timecall_count > 20) {
             debuglogstdio(LCF_TIMESET, "Still softlocking, advance one frame");
             std::function<void()> dummy_draw;
-#ifdef LIBTAS_ENABLE_HUD
             static RenderHUD dummy;
             frameBoundary(dummy_draw, dummy);
-#else
-            frameBoundary(dummy_draw);
-#endif
         }
     }
 }

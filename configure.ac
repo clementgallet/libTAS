@@ -15,7 +15,6 @@ AM_SILENT_RULES([yes])
 
 dnl **** Configure options ****
 
-AC_ARG_ENABLE([hud], AS_HELP_STRING([--disable-hud], [Disable the HUD]))
 AC_ARG_WITH([i386], AS_HELP_STRING([--with-i386],[Build libTAS with support for 32-bit executables]))
 AC_ARG_ENABLE([i386-lib], AS_HELP_STRING([--enable-i386-lib],[Build 32-bit version of libTAS library]))
 
@@ -118,12 +117,10 @@ AS_IF([test "x$have_libswresample" = "xyes"], [
     AC_SUBST(LIBSWRESAMPLE_CFLAGS)
 ])
 
-AS_IF([test "x$enable_hud" != "xno"], [
-    CPPFLAGS='-I/usr/include/freetype2'
-    AC_CHECK_HEADERS([fontconfig/fontconfig.h ft2build.h], [], [enable_hud=no])
-    AC_SEARCH_LIBS([FcInitLoadConfigAndFonts], [fontconfig], [], [enable_hud=no])
-    AC_SEARCH_LIBS([FT_Open_Face], [freetype], [], [enable_hud=no])
-])
+CPPFLAGS='-I/usr/include/freetype2'
+AC_CHECK_HEADERS([fontconfig/fontconfig.h ft2build.h], [], [AC_MSG_ERROR(The fontconfig and freetype headers are required!)])
+AC_SEARCH_LIBS([FcInitLoadConfigAndFonts], [fontconfig], [], [AC_MSG_ERROR(The fontconfig library is required!)])
+AC_SEARCH_LIBS([FT_Open_Face], [freetype], [], [AC_MSG_ERROR(The freetype library is required!)])
 
 LIBRARY_LIBS=$LIBS
 LIBS=
@@ -133,39 +130,32 @@ dnl **** Check for 32-bit libraries for libTAS library ****
 save_CXX="$CXX"
 
 case $host in
-  x86_64*|amd64*)
+    x86_64*|amd64*)
     if [test "x$with_i386" = "xyes"] || [test "x$enable_i386_lib" = "xyes"]
     then
 
-       AC_LANG_PUSH([C++])
-       CXX="$CXX -m32"
+        AC_LANG_PUSH([C++])
+        CXX="$CXX -m32"
 
-       dnl Look at different functions to avoid caching
-       AC_SEARCH_LIBS([dlclose], [dl dld])
-       AC_SEARCH_LIBS([XCloseDisplay], [X11], [], [AC_MSG_ERROR(The x11 library is required!)])
-       unset ac_cv_search_XGetXCBConnection
-       AC_SEARCH_LIBS([XGetXCBConnection], [X11-xcb], [], [AC_MSG_ERROR(The x11-xcb library is required!)])
-       AC_SEARCH_LIBS([pthread_exit], [pthread], [], [AC_MSG_ERROR(The pthread library is required!)])
-       AC_SEARCH_LIBS([snd_pcm_close], [asound], [], [AC_MSG_ERROR(The asound library is required!)])
+        dnl Look at different functions to avoid caching
+        AC_SEARCH_LIBS([dlclose], [dl dld])
+        AC_SEARCH_LIBS([XCloseDisplay], [X11], [], [AC_MSG_ERROR(The 32-bit x11 library is required!)])
+        unset ac_cv_search_XGetXCBConnection
+        AC_SEARCH_LIBS([XGetXCBConnection], [X11-xcb], [], [AC_MSG_ERROR(The 32-bit x11-xcb library is required!)])
+        AC_SEARCH_LIBS([pthread_exit], [pthread], [], [AC_MSG_ERROR(The 32-bit pthread library is required!)])
+        AC_SEARCH_LIBS([snd_pcm_close], [asound], [], [AC_MSG_ERROR(The 32-bit asound library is required!)])
 
-       AS_IF([test "x$enable_hud" != "xno"], [
-       	  AC_SEARCH_LIBS([FcConfigAppFontAddFile], [fontconfig], [], [enable_hud=no])
-       	  AC_SEARCH_LIBS([FT_Bitmap_Convert], [freetype], [], [enable_hud=no])
-       ])
+   	    AC_SEARCH_LIBS([FcConfigAppFontAddFile], [fontconfig], [], [AC_MSG_ERROR(The 32-bit fontconfig library is required!)])
+   	    AC_SEARCH_LIBS([FT_Bitmap_Convert], [freetype], [], [AC_MSG_ERROR(The 32-bit freetype library is required!)])
 
-       LIBRARY32_LIBS=$LIBS
-       LIBS=
+        LIBRARY32_LIBS=$LIBS
+        LIBS=
 
-       CXX="$save_CXX"
-       AC_LANG_POP([C++])
+        CXX="$save_CXX"
+        AC_LANG_POP([C++])
     fi
     ;;
 esac
-
-AS_IF([test "x$enable_hud" != "xno"], [
-   AC_DEFINE([LIBTAS_ENABLE_HUD], [1], [HUD is enabled])
-   AC_MSG_NOTICE([HUD is enabled])
-])
 
 dnl **** Export date and commit ****
 

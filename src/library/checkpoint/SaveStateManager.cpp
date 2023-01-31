@@ -666,9 +666,7 @@ void SaveStateManager::printError(int err)
 
     if (err < 0) {
         debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, errors[-err]);
-#ifdef LIBTAS_ENABLE_HUD
         RenderHUD::insertMessage(errors[-err]);
-#endif
     }
 }
 

@@ -26,8 +26,6 @@
 #include "RenderHUD_Base_MacOS.h"
 #endif
 
-#ifdef LIBTAS_ENABLE_HUD
-
 #define GL_GLEXT_PROTOTYPES
 #ifdef __unix__
 #include <GL/gl.h>
@@ -71,5 +69,4 @@ class RenderHUD_GL : public RenderHUD_Base_MacOS
 };
 }
 
-#endif
 #endif

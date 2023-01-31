@@ -18,7 +18,6 @@
  */
 
 #include "RenderHUD_Base_Linux.h"
-#ifdef LIBTAS_ENABLE_HUD
 
 #include "../logging.h"
 #include "../hook.h"
@@ -153,5 +152,3 @@ void RenderHUD_Base_Linux::renderText(const char* text, Color fg_color, Color bg
 }
 
 }
-
-#endif

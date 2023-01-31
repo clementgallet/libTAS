@@ -18,7 +18,6 @@
  */
 
 #include "RenderHUD.h"
-#ifdef LIBTAS_ENABLE_HUD
 
 #ifndef LIBTAS_RENDERHUD_BASE_LINUX_H_INCL
 #define LIBTAS_RENDERHUD_BASE_LINUX_H_INCL
@@ -59,5 +58,4 @@ class RenderHUD_Base_Linux : public RenderHUD
 };
 }
 
-#endif
 #endif

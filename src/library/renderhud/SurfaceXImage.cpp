@@ -18,7 +18,6 @@
  */
 
 #include "SurfaceXImage.h"
-#ifdef LIBTAS_ENABLE_HUD
 
 #include "../logging.h"
 
@@ -92,5 +91,3 @@ void SurfaceXImage::blit(const SurfaceARGB* src, int x, int y)
 }
 
 }
-
-#endif

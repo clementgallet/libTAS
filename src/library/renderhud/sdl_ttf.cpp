@@ -22,7 +22,6 @@
 /* Code modified by Clément Gallet */
 
 #include "sdl_ttf.h"
-#ifdef LIBTAS_ENABLE_HUD
 
 #include <math.h>
 #include <stdlib.h>
@@ -1734,5 +1733,3 @@ int TTF_GetFontKerningSizeGlyphs(TTF_Font *font, uint16_t previous_ch, uint16_t 
 }
 
 }
-
-#endif
