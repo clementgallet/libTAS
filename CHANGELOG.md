@@ -10,6 +10,7 @@
 * Hook mono sleep function
 * Implement XIQueryDevice()
 * Implement SDL_JoystickGetDeviceInstanceID()
+* Add a window for lua output
 
 ### Changed
 

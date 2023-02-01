@@ -22,6 +22,8 @@
 #include "Input.h"
 #include "Movie.h"
 #include "Memory.h"
+#include "Print.h"
+
 #include <iostream>
 extern "C" {
 #include <lua.h>
@@ -45,6 +47,8 @@ void Lua::Main::init(Context* context)
     Lua::Input::registerFunctions(lua_state);
     Lua::Memory::registerFunctions(lua_state);
     Lua::Movie::registerFunctions(lua_state, context);
+    
+    Lua::Print::init(lua_state);
 }
 
 void Lua::Main::exit()

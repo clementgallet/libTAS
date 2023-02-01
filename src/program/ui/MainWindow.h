@@ -61,7 +61,7 @@ class OsdWindow;
 class AnnotationsWindow;
 class AutoSaveWindow;
 class TimeTraceWindow;
-class CustomResolutionDialog;
+class LuaConsoleWindow;
 
 class MainWindow : public QMainWindow
 {
@@ -92,6 +92,7 @@ public:
     AnnotationsWindow* annotationsWindow;
     AutoSaveWindow* autoSaveWindow;
     TimeTraceWindow* timeTraceWindow;
+    LuaConsoleWindow* luaConsoleWindow;
 
     QList<QWidget*> disabledWidgetsOnStart;
     QList<QAction*> disabledActionsOnStart;

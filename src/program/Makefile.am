@@ -3,6 +3,7 @@ bin_PROGRAMS = libTAS
 libTAS_QTSOURCES = \
     GameEvents.h \
     GameLoop.h \
+    lua/Print.h \
     ramsearch/MemScanner.h \
     ui/AnnotationsWindow.h \
     ui/ControllerAxisWidget.h \
@@ -16,6 +17,7 @@ libTAS_QTSOURCES = \
     ui/InputEditorWindow.h \
     ui/InputWindow.h \
     ui/KeyPressedDialog.h \
+    ui/LuaConsoleWindow.h \
     ui/MainWindow.h \
     ui/PointerScanModel.h \
     ui/PointerScanWindow.h \
@@ -56,6 +58,7 @@ libTAS_SOURCES = \
     lua/Main.cpp \
     lua/Memory.cpp \
     lua/Movie.cpp \
+    lua/Print.cpp \
     movie/MovieFile.cpp \
     movie/MovieFileAnnotations.cpp \
     movie/MovieFileEditor.cpp \
@@ -74,6 +77,7 @@ libTAS_SOURCES = \
     ui/InputEditorWindow.cpp \
     ui/InputWindow.cpp \
     ui/KeyPressedDialog.cpp \
+    ui/LuaConsoleWindow.cpp \
     ui/MainWindow.cpp \
     ui/PointerScanModel.cpp \
     ui/PointerScanWindow.cpp \

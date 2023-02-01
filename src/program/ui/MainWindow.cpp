@@ -45,6 +45,7 @@
 #include "AnnotationsWindow.h"
 #include "TimeTraceWindow.h"
 #include "TimeTraceModel.h"
+#include "LuaConsoleWindow.h"
 #include "../movie/MovieFile.h"
 #include "ErrorChecking.h"
 #include "../../shared/version.h"
@@ -167,6 +168,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     inputEditorWindow = new InputEditorWindow(c, this);
     annotationsWindow = new AnnotationsWindow(c, this);
     timeTraceWindow = new TimeTraceWindow(c, this);
+    luaConsoleWindow = new LuaConsoleWindow(this);
 
     connect(gameLoop, &GameLoop::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
     connect(gameLoop->gameEvents, &GameEvents::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
@@ -656,6 +658,7 @@ void MainWindow::createMenus()
 
     luaMenu->addAction(tr("Execute Lua script..."), this, &MainWindow::slotLuaExecute);
     luaMenu->addAction(tr("Reset Lua VM"), this, [=](){Lua::Main::reset(context);});
+    luaMenu->addAction(tr("Lua Console..."), luaConsoleWindow, &LuaConsoleWindow::show);
 
     toolsMenu->addSeparator();
 
