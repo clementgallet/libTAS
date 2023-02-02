@@ -41,7 +41,7 @@ SettingsWindow::SettingsWindow(Context* c, QWidget *parent) : QDialog(parent), c
     /* Main mayout */
     QVBoxLayout* layout = new QVBoxLayout;
 
-    QTabWidget* tabWidget = new QTabWidget();
+    tabWidget = new QTabWidget();
     layout->addWidget(tabWidget);
 
     rp = new RuntimePane(c);
@@ -68,6 +68,48 @@ SettingsWindow::SettingsWindow(Context* c, QWidget *parent) : QDialog(parent), c
     layout->addWidget(closeBox);
 
     setLayout(layout);
+}
+
+void SettingsWindow::openRuntimeTab()
+{
+    tabWidget->setCurrentIndex(static_cast<int>(RuntimeTab));
+    exec();
+}
+
+void SettingsWindow::openMovieTab()
+{
+    tabWidget->setCurrentIndex(static_cast<int>(MovieTab));
+    exec();
+}
+
+void SettingsWindow::openInputTab()
+{
+    tabWidget->setCurrentIndex(static_cast<int>(InputTab));
+    exec();
+}
+
+void SettingsWindow::openAudioTab()
+{
+    tabWidget->setCurrentIndex(static_cast<int>(AudioTab));
+    exec();
+}
+
+void SettingsWindow::openVideoTab()
+{
+    tabWidget->setCurrentIndex(static_cast<int>(VideoTab));
+    exec();
+}
+
+void SettingsWindow::openDebugTab()
+{
+    tabWidget->setCurrentIndex(static_cast<int>(DebugTab));
+    exec();
+}
+
+void SettingsWindow::openGameSpecificTab()
+{
+    tabWidget->setCurrentIndex(static_cast<int>(GameSpecificTab));
+    exec();
 }
 
 void SettingsWindow::save()

@@ -17,6 +17,7 @@
 * Remove code needing c++17, and add the c++11 compile flag (#516)
 * Don't skip frames in Vulkan for now (#492)
 * Immediately detach all created threads, and handle joinable state manually
+* Settings has its own menu and opens the corresponding tab (#521)
 
 ### Fixed
 

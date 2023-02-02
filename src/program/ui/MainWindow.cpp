@@ -591,7 +591,16 @@ void MainWindow::createMenus()
     disabledActionsOnStart.append(action);
     action = fileMenu->addAction(tr("Executable Options..."), executableWindow, &ExecutableWindow::exec);
     disabledActionsOnStart.append(action);
-    fileMenu->addAction(tr("Settings..."), settingsWindow, &SettingsWindow::exec);
+
+    /* Settings Menu */
+    QMenu *settingsMenu = menuBar()->addMenu(tr("Settings"));
+    settingsMenu->addAction(tr("Runtime..."), settingsWindow, &SettingsWindow::openRuntimeTab);
+    settingsMenu->addAction(tr("Movie..."), settingsWindow, &SettingsWindow::openMovieTab);
+    settingsMenu->addAction(tr("Inputs..."), settingsWindow, &SettingsWindow::openInputTab);
+    settingsMenu->addAction(tr("Audio..."), settingsWindow, &SettingsWindow::openAudioTab);
+    settingsMenu->addAction(tr("Video..."), settingsWindow, &SettingsWindow::openVideoTab);
+    settingsMenu->addAction(tr("Debug..."), settingsWindow, &SettingsWindow::openDebugTab);
+    settingsMenu->addAction(tr("Game Specific..."), settingsWindow, &SettingsWindow::openGameSpecificTab);
 
     /* Movie Menu */
     QMenu *movieMenu = menuBar()->addMenu(tr("Movie"));

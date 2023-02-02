@@ -21,6 +21,7 @@
 #define LIBTAS_SETTINGSWINDOW_H_INCLUDED
 
 #include <QtWidgets/QDialog>
+#include <QtWidgets/QTabWidget>
 
 class Context;
 class RuntimePane;
@@ -41,7 +42,27 @@ public:
 
     Context *context;
     
+    enum TabIndex
+    {
+        RuntimeTab = 0,
+        MovieTab= 1,
+        InputTab = 2,
+        AudioTab = 3,
+        VideoTab = 4,
+        DebugTab = 5,
+        GameSpecificTab = 6,
+    };
+
+    void openRuntimeTab();
+    void openMovieTab();
+    void openInputTab();
+    void openAudioTab();
+    void openVideoTab();
+    void openDebugTab();
+    void openGameSpecificTab();
+
 private:
+    QTabWidget* tabWidget;
     RuntimePane* rp;
     MoviePane* mp;
     InputPane* ip;
