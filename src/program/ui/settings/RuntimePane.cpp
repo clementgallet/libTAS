@@ -126,14 +126,14 @@ void RuntimePane::initLayout()
     trackingQueryBox = new QCheckBox(tr("QueryPerformanceCounter()"));
 
     trackingLayout->addWidget(trackingTimeBox, 0, 0);
-    trackingLayout->addWidget(trackingGettimeofdayBox, 0, 1);
-    trackingLayout->addWidget(trackingClockBox, 1, 0);
-    trackingLayout->addWidget(trackingClockGettimeRBox, 1, 1);
-    trackingLayout->addWidget(trackingClockGettimeMBox, 2, 0);
-    trackingLayout->addWidget(trackingSDLTicksBox, 2, 1);
-    trackingLayout->addWidget(trackingSDLCounterBox, 3, 0);
-    trackingLayout->addWidget(trackingGetTicksBox, 3, 1);
-    trackingLayout->addWidget(trackingGetTicks64Box, 4, 0);
+    trackingLayout->addWidget(trackingGettimeofdayBox, 1, 0);
+    trackingLayout->addWidget(trackingClockBox, 2, 0);
+    trackingLayout->addWidget(trackingClockGettimeRBox, 3, 0);
+    trackingLayout->addWidget(trackingClockGettimeMBox, 4, 0);
+    trackingLayout->addWidget(trackingSDLTicksBox, 0, 1);
+    trackingLayout->addWidget(trackingSDLCounterBox, 1, 1);
+    trackingLayout->addWidget(trackingGetTicksBox, 2, 1);
+    trackingLayout->addWidget(trackingGetTicks64Box, 3, 1);
     trackingLayout->addWidget(trackingQueryBox, 4, 1);
 
     waitChoice = new ToolTipComboBox();
