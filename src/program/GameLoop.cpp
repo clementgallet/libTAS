@@ -476,7 +476,7 @@ bool GameLoop::startFrameMessages()
             std::string sym = receiveString();
             
             std::ostringstream cmd;
-            cmd << "readelf -Ws " << context->gamepath << " | grep Sleep | awk '{print $2}'";
+            cmd << "readelf -Ws " << context->gamepath << " | grep " << sym << " | awk '{print $2}'";
 
             FILE *addrstr = popen(cmd.str().c_str(), "r");
             uint64_t addr = 0;
@@ -541,7 +541,6 @@ void GameLoop::sleepSendPreview()
 
     /* Send a preview of inputs so that the game can display them
      * on the HUD */
-#ifdef LIBTAS_ENABLE_HUD
 
     /* Don't preview when reading inputs */
     if (context->config.sc.recording == SharedConfig::RECORDING_READ)
@@ -566,8 +565,6 @@ void GameLoop::sleepSendPreview()
         sendData(&preview_ai, sizeof(AllInputs));
         last_preview_ai = preview_ai;
     }
-
-#endif
 }
 
 
