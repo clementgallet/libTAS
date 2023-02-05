@@ -17,36 +17,32 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_LUAMAIN_H_INCLUDED
-#define LIBTAS_LUAMAIN_H_INCLUDED
-
-#include "../../shared/AllInputs.h"
-#include "../Context.h"
-
-#include <string>
+#include "LuaFunctionList.h"
 
 namespace Lua {
 
-namespace Main {
-
-    /* Init */
-    void init(Context* context);
-
-    /* Exit */
-    void exit();
-
-    /* Run a lua script */
-    void run(std::string filename);
-
-    /* Return the current executed filename */
-    const std::string& currentFile();
-
-    /* Reset the lua VM */
-    void reset(Context* context);
-
-    /* Call the lua function */
-    void callLua(const char* func);
-}
+void LuaFunctionList::add(lua_State *L, NamedLuaFunction::CallbackType t)
+{
+    functions.emplace_back(L, t);
 }
 
-#endif
+void LuaFunctionList::removeForFile(const std::string& file)
+{
+    functions.remove_if([&file](const NamedLuaFunction& nlf){ return 0 == file.compare(nlf.file); });
+}
+
+void LuaFunctionList::call(NamedLuaFunction::CallbackType c)
+{
+    for (auto& nlf : functions) {
+        if (nlf.type == c) {
+            nlf.call();
+        }
+    }
+}
+
+void LuaFunctionList::clear()
+{
+    functions.clear();
+}
+
+}

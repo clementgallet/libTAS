@@ -261,8 +261,37 @@ Returns 1 of the current frame is a draw frame, or 0 if not.
 
 ### Callbacks
 
-These functions, if defined in the lua script, are called at specific moments
-during the game execution. 
+#### callback.onStartup
+
+    None callback.onStartup(Function f)
+
+Registers `f` to be called when the game has started, before the end of the first frame.
+
+#### callback.onInput
+
+    None callback.onInput(Function f)
+
+Registers `f` to be called when input for the current frame is decided. Change the movie input if
+in recording mode. Not called when movie is in playback mode.
+
+#### callback.onFrame
+
+    None callback.onFrame(Function f)
+
+Registers `f` to be called after frame has completed.
+
+#### callback.onPaint
+
+    None callback.onPaint(Function f)
+
+Registers `f` to be called at the end of the frame before the screen rendering 
+is performed. All Gui functions must be executed inside this callback. To 
+include Lua draws in encodes, `Video > OSD > OSD on video encode` can be checked.
+
+### Callbacks (obsolete)
+
+The old callback method consists on defining functions with specific names above,
+which will be called at specific moments during the game execution.
 
 #### onStartup
 

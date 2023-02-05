@@ -36,7 +36,8 @@
 // #include "SaveState.h"
 #include "SaveStateList.h"
 #include "lua/Input.h"
-#include "lua/Main.h"
+#include "lua/Callbacks.h"
+#include "lua/NamedLuaFunction.h"
 #include "ramsearch/MemAccess.h"
 
 #include "../shared/sockethelpers.h"
@@ -70,7 +71,7 @@ void GameLoop::start()
     init();
     initProcessMessages();
 
-    Lua::Main::callLua("onStartup");
+    Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackStartup);
 
     while (1)
     {
@@ -140,7 +141,7 @@ void GameLoop::start()
             }
         }
 
-        Lua::Main::callLua("onFrame");
+        Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackFrame);
 
         endFrameMessages(ai);
 
@@ -526,7 +527,7 @@ bool GameLoop::startFrameMessages()
     }
 
     /* Execute the lua callback onPaint here */
-    Lua::Main::callLua("onPaint");
+    Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackPaint);
 
     sendMessage(MSGN_START_FRAMEBOUNDARY);
 
@@ -611,7 +612,7 @@ void GameLoop::processInputs(AllInputs &ai)
 
             /* Call lua onInput() here so that a script can modify inputs */
             Lua::Input::registerInputs(&ai);
-            Lua::Main::callLua("onInput");
+            Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackInput);
 
             if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
                 /* If the input editor is visible, we should keep future inputs.
@@ -724,7 +725,7 @@ void GameLoop::processInputs(AllInputs &ai)
 
             /* Call lua onInput() here so that a script can modify inputs */
             Lua::Input::registerInputs(&ai);
-            Lua::Main::callLua("onInput");
+            Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackInput);
 
             /* Update controller inputs if controller window is shown */
             emit showControllerInputs(ai);

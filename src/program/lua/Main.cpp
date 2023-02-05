@@ -23,6 +23,7 @@
 #include "Movie.h"
 #include "Memory.h"
 #include "Print.h"
+#include "Callbacks.h"
 
 #include <iostream>
 extern "C" {
@@ -47,19 +48,24 @@ void Lua::Main::init(Context* context)
     Lua::Input::registerFunctions(lua_state);
     Lua::Memory::registerFunctions(lua_state);
     Lua::Movie::registerFunctions(lua_state, context);
-    
+    Lua::Callbacks::registerFunctions(lua_state);
     Lua::Print::init(lua_state);
 }
 
 void Lua::Main::exit()
 {
+    Lua::Callbacks::clear();
+    
     if (lua_state)
         lua_close(lua_state);
     lua_state = nullptr;
 }
 
+std::string luaFile;
+
 void Lua::Main::run(std::string filename)
 {
+    luaFile = filename;
     int status = luaL_dofile(lua_state, filename.c_str());
     if (status != 0) {
         std::cerr << "Error " << status << " loading lua script " << filename << std::endl;
@@ -68,6 +74,37 @@ void Lua::Main::run(std::string filename)
     else {
         std::cout << "Loaded script " << filename << std::endl;        
     }
+    
+    /* Push old-style callback methods into new-style */
+    lua_getglobal(lua_state, "onStartup");
+    if (lua_isfunction(lua_state, -1))
+        Lua::Callbacks::onStartup(lua_state);
+    else
+        lua_pop(lua_state, 1);
+
+    lua_getglobal(lua_state, "onInput");
+    if (lua_isfunction(lua_state, -1))
+        Lua::Callbacks::onInput(lua_state);
+    else
+        lua_pop(lua_state, 1);
+
+    lua_getglobal(lua_state, "onFrame");
+    if (lua_isfunction(lua_state, -1))
+        Lua::Callbacks::onFrame(lua_state);
+    else
+        lua_pop(lua_state, 1);
+
+    lua_getglobal(lua_state, "onPaint");
+    if (lua_isfunction(lua_state, -1))
+        Lua::Callbacks::onPaint(lua_state);
+    else
+        lua_pop(lua_state, 1);
+
+}
+
+const std::string& Lua::Main::currentFile()
+{
+    return luaFile;
 }
 
 void Lua::Main::reset(Context* context)

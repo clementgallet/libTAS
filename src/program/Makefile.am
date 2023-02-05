@@ -53,7 +53,10 @@ libTAS_SOURCES = \
     SaveState.cpp \
     SaveStateList.cpp \
     utils.cpp \
+    lua/Callbacks.cpp \
     lua/Gui.cpp \
+    lua/LuaFunctionList.cpp \
+    lua/NamedLuaFunction.cpp \
     lua/Input.cpp \
     lua/Main.cpp \
     lua/Memory.cpp \

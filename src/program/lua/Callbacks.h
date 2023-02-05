@@ -17,35 +17,33 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_LUAMAIN_H_INCLUDED
-#define LIBTAS_LUAMAIN_H_INCLUDED
+#ifndef LIBTAS_LUACALLBACKS_H_INCLUDED
+#define LIBTAS_LUACALLBACKS_H_INCLUDED
 
-#include "../../shared/AllInputs.h"
-#include "../Context.h"
+#include "NamedLuaFunction.h"
 
-#include <string>
+extern "C" {
+#include <lua.h>
+}
 
 namespace Lua {
 
-namespace Main {
+namespace Callbacks {
 
-    /* Init */
-    void init(Context* context);
+    /* Register all functions */
+    void registerFunctions(lua_State *L);
+    
+    void clear();
 
-    /* Exit */
-    void exit();
+    int onStartup(lua_State *L);
 
-    /* Run a lua script */
-    void run(std::string filename);
+    int onInput(lua_State *L);
 
-    /* Return the current executed filename */
-    const std::string& currentFile();
+    int onFrame(lua_State *L);
 
-    /* Reset the lua VM */
-    void reset(Context* context);
-
-    /* Call the lua function */
-    void callLua(const char* func);
+    int onPaint(lua_State *L);
+    
+    void call(NamedLuaFunction::CallbackType type);
 }
 }
 
