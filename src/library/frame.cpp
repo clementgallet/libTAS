@@ -44,6 +44,7 @@
 #include "audio/AudioContext.h"
 #include "hook.h"
 #include "GameHacks.h"
+#include "PerfTimer.h"
 
 #ifdef __unix__
 #include "xlib/xevents.h"
@@ -214,6 +215,9 @@ static void sendFrameCountTime()
 
 void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 {
+    perfTimer.switchTimer(PerfTimer::FrameTimer);
+
+
     static float fps, lfps = 0;
 
     ThreadManager::setCheckpointThread();
@@ -238,9 +242,12 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         ThreadSync::detWait();
     }
     
+    perfTimer.switchTimer(PerfTimer::RenderTimer);
+
     if (GameHacks::isUnity()) {
         ThreadSync::detWait();        
     }
+    perfTimer.switchTimer(PerfTimer::FrameTimer);
 
     /* Update the deterministic timer, sleep if necessary */
     TimeHolder timeIncrement = detTimer.enterFrameBoundary();
@@ -464,7 +471,9 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     /* Actual draw command */
     if (!Global::skipping_draw && draw) {
         GlobalNoLog gnl;
+        perfTimer.switchTimer(PerfTimer::RenderTimer);
         NATIVECALL(draw());
+        perfTimer.switchTimer(PerfTimer::FrameTimer);
     }
 
     /* Receive messages from the program */
@@ -562,6 +571,11 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     Global::skipping_draw = skipDraw(fps);
 
     detTimer.exitFrameBoundary();
+
+    perfTimer.switchTimer(PerfTimer::GameTimer);
+    
+    // if ((framecount % 10000) == 9999)
+    //     perfTimer.print();
 }
 
 static void pushQuitEvent(void)
@@ -653,7 +667,13 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
             if (Global::is_exiting)
                 return;
             
-            NATIVECALL(usleep(1000));
+            /* We only sleep if the game is in fast-forward, so that we don't
+             * impact its performance. */
+            if (! Global::shared_config.fastforward) {
+                perfTimer.switchTimer(PerfTimer::IdleTimer);
+                NATIVECALL(usleep(100));
+                perfTimer.switchTimer(PerfTimer::FrameTimer);                
+            }
 
             /* Catch dead children spawned for state saving */
             while (1) {

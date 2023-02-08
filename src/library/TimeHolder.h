@@ -34,11 +34,15 @@ class TimeHolder : public timespec
 {
     public:
 
-        TimeHolder() {};
+        TimeHolder() {this->tv_sec = 0; this->tv_nsec = 0;};
         TimeHolder(const timespec& th)
         {
             this->tv_sec = th.tv_sec;
             this->tv_nsec = th.tv_nsec;
+        }
+
+        bool operator!() const {
+            return this->tv_sec == 0 && this->tv_nsec == 0;
         }
 
         bool operator!=(const timespec& th)

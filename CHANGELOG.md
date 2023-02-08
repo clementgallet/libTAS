@@ -12,6 +12,7 @@
 * Implement SDL_JoystickGetDeviceInstanceID()
 * Add a window for lua output
 * Manage lua scripts and change the callback system
+* Add a performance timer for monitoring
 
 ### Changed
 

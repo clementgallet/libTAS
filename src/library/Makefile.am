@@ -26,6 +26,7 @@ libtas_so_SOURCES = \
     NonDeterministicTimer.cpp \
     openglwrappers.cpp \
     pthreadwrappers.cpp \
+    PerfTimer.cpp \
     randomwrappers.cpp \
     ScreenCapture.cpp \
     signalwrappers.cpp \

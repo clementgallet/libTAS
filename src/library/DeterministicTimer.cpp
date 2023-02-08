@@ -28,6 +28,7 @@
 #include "renderhud/RenderHUD.h"
 #include "global.h" // Global::shared_config
 #include "BusyLoopDetection.h"
+#include "PerfTimer.h"
 
 #include <sched.h> // sched_yield()
 #include <stdint.h>
@@ -250,6 +251,7 @@ void DeterministicTimer::exitFrameBoundary()
         TimeHolder desiredTime = lastEnterTime + baseTimeIncrement * Global::shared_config.speed_divisor;
 
         /* Call the real nanosleep function */
+        perfTimer.switchTimer(PerfTimer::IdleTimer);
 #ifdef __unix__
         NATIVECALL(clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &desiredTime, NULL));
 #else
@@ -257,6 +259,7 @@ void DeterministicTimer::exitFrameBoundary()
         TimeHolder sleepTime = desiredTime - currentTime;
         NATIVECALL(nanosleep(&sleepTime, NULL));
 #endif
+        perfTimer.switchTimer(PerfTimer::FrameTimer);
         
         /* We assume that our sleep was perfect, so we save the desired time as our
          * current time, except if our current time was longer than the desired time.
