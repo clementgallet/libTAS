@@ -158,7 +158,7 @@ void ThreadSync::detWaitGlobal(int i)
 {
     debuglogstdio(LCF_THREAD, "Wait on global lock %d", i);
     std::unique_lock<std::mutex> lock(detMutex);
-    detCond.wait(lock, [i]{ return (syncGo[i]); });
+    NATIVECALL(detCond.wait(lock, [i]{ return (syncGo[i]); }));
     syncGo[i] = false;
     debuglogstdio(LCF_THREAD, "End Wait on global lock %d", i);
 }
@@ -174,7 +174,7 @@ void ThreadSync::detSignal(bool stop)
         current_thread->syncGo = true;
         current_thread->syncCount++;
     }
-    detCond.notify_all();
+    NATIVECALL(detCond.notify_all());
 
     if (stop)
         current_thread->syncEnabled = false;
@@ -187,7 +187,7 @@ void ThreadSync::detSignalGlobal(int i)
         std::lock_guard<std::mutex> lock(detMutex);
         syncGo[i] = true;
     }
-    detCond.notify_all();
+    NATIVECALL(detCond.notify_all());
 }
 
 }
