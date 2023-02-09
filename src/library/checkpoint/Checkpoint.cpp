@@ -277,6 +277,41 @@ int Checkpoint::checkRestore()
     return SaveStateManager::ESTATE_OK;
 }
 
+unsigned long read_canary()
+{
+    unsigned long val = 0;
+
+#ifdef __x86_64__
+    __asm__("movq %%fs:0x28, %0;"
+#elif __i386__
+    __asm__("movq %%fs:0x28, %0;"
+#elif __arm__
+    __asm__("ldr r0, =__stack_chk_guard; ldr r0, [r0]; mov %0, r0;"
+#endif
+        : "=r"(val)
+        :
+        :);
+
+    return val;
+}
+
+void printStack(void* caller_frame)
+{
+    debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "Print stack content around caller frame:");
+    uintptr_t cf = reinterpret_cast<uintptr_t>(caller_frame);
+    uintptr_t ad = cf - 0xa0;
+    unsigned long int* val = reinterpret_cast<unsigned long int*>(ad);
+    for (int i=0; i<40; i++) {
+        if (i==1 || i==29)
+            debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "--> %p: %016lx", ad, *val);
+        else
+            debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "    %p: %016lx", ad, *val);
+        ad += 8;
+        val++;        
+    }
+
+}
+
 void Checkpoint::handler(int signum)
 {
 #ifdef __unix__
@@ -292,6 +327,13 @@ void Checkpoint::handler(int signum)
 #endif
 
     if (SaveStateManager::isLoading()) {
+        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "Canary value: %lx", read_canary());
+        void* caller_frame = __builtin_frame_address(1);
+        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "Frame address of caller: %p", caller_frame);
+        
+        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "Stack content before loading");
+        printStack(caller_frame);
+
 #ifdef __unix__
         /* Before reading from the savestate, we must keep some values from
          * the connection to the X server, because they are used for checking
@@ -350,6 +392,9 @@ void Checkpoint::handler(int signum)
 
         /* We must restore the current stack frame from the savestate */
         AltStack::restoreStackFrame();
+
+        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "Stack content after loading");
+        printStack(caller_frame);        
     }
     else {
         /* Check that base savestate exists, otherwise save it */
