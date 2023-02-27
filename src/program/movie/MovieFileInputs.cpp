@@ -142,6 +142,7 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
         if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER2_ADDED_REMOVED)) input_stream.put('2');
         if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER3_ADDED_REMOVED)) input_stream.put('3');
         if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER4_ADDED_REMOVED)) input_stream.put('4');
+        if (inputs.flags & (1 << SingleInput::FLAG_FOCUS_UNFOCUS)) input_stream.put('F');
     }
 
     /* Write framerate inputs */
@@ -327,6 +328,7 @@ void MovieFileInputs::readFlagFrame(std::istringstream& input_string, AllInputs&
             case '2': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER2_ADDED_REMOVED); break;
             case '3': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER3_ADDED_REMOVED); break;
             case '4': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER4_ADDED_REMOVED); break;
+            case 'F': inputs.flags |= (1 << SingleInput::FLAG_FOCUS_UNFOCUS); break;
             /* Old unused flags */
             case 'I': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED); break;
             case 'L': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER2_ADDED_REMOVED); break;

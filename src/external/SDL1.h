@@ -631,6 +631,12 @@ namespace SDL1 {
     	SDL_GRAB_ON = 1,
     	SDL_GRAB_FULLSCREEN	/**< Used internally */
     } SDL_GrabMode;
+    
+    enum {
+        SDL_APPMOUSEFOCUS = 0x01,        /**< The app has mouse coverage */
+        SDL_APPINPUTFOCUS = 0x02,        /**< The app has input focus */
+        SDL_APPACTIVE = 0x04,        /**< The application is active */
+    };
 }
 
 #endif /* _SDL_h */

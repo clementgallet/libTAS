@@ -144,6 +144,9 @@ void RenderHUD::drawInputs(const AllInputs& ai, Color fg_color)
             oss << "[J" << i << " added/removed] ";
         }
     }
+    if (ai.flags & (1 << SingleInput::FLAG_FOCUS_UNFOCUS)) {
+        oss << "[Un/Focus] ";
+    }
 
     /* Keyboard */
 #ifdef __unix__

@@ -13,6 +13,7 @@
 * Add a window for lua output
 * Manage lua scripts and change the callback system
 * Add a performance timer for monitoring
+* Implement FocusIn/FocusOut inputs (#367)
 
 ### Changed
 

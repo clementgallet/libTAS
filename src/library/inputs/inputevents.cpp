@@ -61,7 +61,8 @@
 
 namespace libtas {
 
-void generateKeyUpEvents(void)
+/* Generate events of type SDL_KEYUP or KeyRelease */
+static void generateKeyUpEvents(void)
 {
     int i, j;
 
@@ -205,9 +206,8 @@ void generateKeyUpEvents(void)
     }
 }
 
-
 /* Generate pressed keyboard input events */
-void generateKeyDownEvents(void)
+static void generateKeyDownEvents(void)
 {
     int i,j;
 
@@ -367,7 +367,8 @@ void generateKeyDownEvents(void)
     }
 }
 
-void generateControllerAdded(void)
+/* Generate events indicating that a controller was plugged in */
+static void generateControllerAdded(void)
 {
     if (!(Global::game_info.joystick & GameInfo::SDL2))
         return;
@@ -434,7 +435,8 @@ void generateControllerAdded(void)
     }
 }
 
-void generateControllerEvents(void)
+/* Same as KeyUp/KeyDown functions but with controller events */
+static void generateControllerEvents(void)
 {
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
@@ -734,7 +736,8 @@ void generateControllerEvents(void)
     }
 }
 
-void generateMouseMotionEvents(void)
+/* Same as above with MouseMotion event */
+static void generateMouseMotionEvents(void)
 {
     struct timespec time = detTimer.getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
@@ -879,6 +882,7 @@ void generateMouseMotionEvents(void)
 #endif
 }
 
+/* Same as above with the MouseButton event */
 void generateMouseButtonEvents(void)
 {
     struct timespec time = detTimer.getTicks();
@@ -1050,6 +1054,96 @@ void generateMouseButtonEvents(void)
 #endif
         }
     }
+}
+
+/* Generate focus/unfocus event */
+static void generateFocusEvents(void)
+{
+    /* Keep here the status of window focus */
+    static bool win_focused = true;
+    
+    /* Check the focus flag */
+    if (!(game_ai.flags & (1<<SingleInput::FLAG_FOCUS_UNFOCUS)))
+        return;
+    
+    struct timespec time = detTimer.getTicks();
+    int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+
+    if (Global::game_info.keyboard & GameInfo::SDL2) {
+        SDL_Event event2;
+        event2.type = SDL_WINDOWEVENT;
+        if (win_focused) {
+            event2.window.event = SDL_WINDOWEVENT_FOCUS_LOST;
+            debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_WINDOW, "Generate SDL event SDL_WINDOWEVENT_FOCUS_LOST");
+        }
+        else {
+            event2.window.event = SDL_WINDOWEVENT_FOCUS_GAINED;
+            debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_WINDOW, "Generate SDL event SDL_WINDOWEVENT_FOCUS_GAINED");                        
+        }
+        event2.window.timestamp = timestamp;
+        event2.window.windowID = 1;
+        sdlEventQueue.insert(&event2);
+    }
+
+    if (Global::game_info.keyboard & GameInfo::SDL1) {
+        SDL1::SDL_Event event1;
+        event1.type = SDL1::SDL_ACTIVEEVENT;
+        event1.active.gain = !win_focused;
+        event1.active.state = SDL1::SDL_APPINPUTFOCUS;
+        debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_WINDOW, "Generate SDL event SDL_ACTIVEEVENT with state SDL_APPINPUTFOCUS to %d", event1.active.gain);
+        sdlEventQueue.insert(&event1);
+    }
+
+#ifdef __unix__
+    if ((Global::game_info.keyboard & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
+        XEvent event;
+        if (win_focused) {
+            event.type = FocusOut;
+            debuglogstdio(LCF_EVENTS | LCF_MOUSE, "Generate Xlib event FocusOut");
+        }
+        else {
+            event.type = FocusIn;
+            debuglogstdio(LCF_EVENTS | LCF_MOUSE, "Generate Xlib event FocusIn");            
+        }
+        event.xfocus.window = x11::gameXWindows.front();
+        event.xfocus.mode = NotifyNormal; // TODO
+        event.xfocus.send_event = 0;
+        event.xfocus.detail = NotifyDetailNone; // TODO
+        xlibEventQueueList.insert(&event);
+    }
+
+    if ((Global::game_info.keyboard & GameInfo::XCBEVENTS) && !x11::gameXWindows.empty()) {
+        
+        if (win_focused) {
+            xcb_focus_out_event_t event;
+            event.response_type = XCB_FOCUS_OUT;
+            debuglogstdio(LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_FOCUS_OUT");
+            event.event = x11::gameXWindows.front();
+            xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
+        }
+        else {
+            xcb_focus_in_event_t event;
+            event.response_type = XCB_FOCUS_IN;
+            debuglogstdio(LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_FOCUS_IN");
+            event.event = x11::gameXWindows.front();
+            xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
+        }
+    }
+#endif
+
+    /* Change state */
+    win_focused = !win_focused;
+}
+
+void generateInputEvents(void)
+{
+    generateKeyUpEvents();
+    generateKeyDownEvents();
+    generateControllerAdded();
+    generateControllerEvents();
+    generateMouseMotionEvents();
+    generateMouseButtonEvents();
+    generateFocusEvents();    
 }
 
 void syncControllerEvents()

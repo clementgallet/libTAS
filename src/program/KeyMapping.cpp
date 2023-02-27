@@ -88,6 +88,7 @@ KeyMapping::KeyMapping(void* c)
     input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER2_ADDED_REMOVED, "Joy2 Added/Removed"});
     input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER3_ADDED_REMOVED, "Joy3 Added/Removed"});
     input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER4_ADDED_REMOVED, "Joy4 Added/Removed"});
+    input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_FOCUS_UNFOCUS, "Focus/Unfocus window"});
 
     /* Add mouse button mapping */
     input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_B1, 1, "Mouse button 1"});

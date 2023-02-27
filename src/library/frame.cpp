@@ -532,12 +532,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 
     /* Push generated events. This must be done after getting the new inputs. */
     if (!(Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
-        generateKeyUpEvents();
-        generateKeyDownEvents();
-        generateControllerAdded();
-        generateControllerEvents();
-        generateMouseMotionEvents();
-        generateMouseButtonEvents();
+        generateInputEvents();
     }
 
 #ifdef __unix__

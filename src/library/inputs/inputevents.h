@@ -22,23 +22,8 @@
 
 namespace libtas {
 
-/* Generate events of type SDL_KEYUP or KeyRelease */
-void generateKeyUpEvents(void);
-
-/* Same as above but with events SDL_KEYDOWN or KeyPress */
-void generateKeyDownEvents(void);
-
-/* Generate events indicating that a controller was plugged in */
-void generateControllerAdded(void);
-
-/* Same as KeyUp/KeyDown functions but with controller events */
-void generateControllerEvents(void);
-
-/* Same as above with MouseMotion event */
-void generateMouseMotionEvents(void);
-
-/* Same as above with the MouseButton event */
-void generateMouseButtonEvents(void);
+/* Generate all input events */
+void generateInputEvents(void);
 
 /* Wait for evdev and jsdev to be read */
 void syncControllerEvents();

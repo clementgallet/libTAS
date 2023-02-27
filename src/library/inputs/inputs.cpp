@@ -86,6 +86,8 @@ void updateGameInputs()
             game_ai.pointer_y = clipping_y + clipping_h - 1;
     }
 
+    game_ai.flags = ai.flags;
+
     old_ai = ai;
 }
 
