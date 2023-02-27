@@ -397,61 +397,39 @@ void generateControllerAdded(void)
 
     if (!game_ai.flags) return;
 
-    int added_flags[4] = {
-        SingleInput::FLAG_CONTROLLER1_ADDED,
-        SingleInput::FLAG_CONTROLLER2_ADDED,
-        SingleInput::FLAG_CONTROLLER3_ADDED,
-        SingleInput::FLAG_CONTROLLER4_ADDED,
+    int changed_flags[4] = {
+        SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED,
+        SingleInput::FLAG_CONTROLLER2_ADDED_REMOVED,
+        SingleInput::FLAG_CONTROLLER3_ADDED_REMOVED,
+        SingleInput::FLAG_CONTROLLER4_ADDED_REMOVED,
     };
 
     for (int i=0; i<4; i++) {
-        if ((game_ai.flags & (1<<added_flags[i])) &&
+        if ((game_ai.flags & (1<<changed_flags[i])) &&
             (Global::shared_config.nb_controllers >= i)) {
+                
+            bool attached = mySDL_GameControllerIsAttached(i);
             SDL_Event ev;
-            ev.type = SDL_CONTROLLERDEVICEADDED;
+            ev.type = attached ? SDL_CONTROLLERDEVICEREMOVED : SDL_CONTROLLERDEVICEADDED;
             ev.cdevice.timestamp = timestamp;
             ev.cdevice.which = i;
             sdlEventQueue.insert(&ev);
-            debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_CONTROLLERDEVICEADDED with joy %d", i);
+            if (attached)
+                debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_CONTROLLERDEVICEREMOVED with joy %d", i);
+            else
+                debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_CONTROLLERDEVICEADDED with joy %d", i);
 
-            ev.type = SDL_JOYDEVICEADDED;
+            ev.type = attached ? SDL_JOYDEVICEADDED : SDL_JOYDEVICEREMOVED;
             ev.jdevice.timestamp = timestamp;
             ev.jdevice.which = i;
             sdlEventQueue.insert(&ev);
-            debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_JOYDEVICEADDED with joy %d", i);
-        }
-    }
-
-    int removed_flags[4] = {
-        SingleInput::FLAG_CONTROLLER1_REMOVED,
-        SingleInput::FLAG_CONTROLLER2_REMOVED,
-        SingleInput::FLAG_CONTROLLER3_REMOVED,
-        SingleInput::FLAG_CONTROLLER4_REMOVED,
-    };
-
-    for (int i=0; i<4; i++) {
-        if ((game_ai.flags & (1<<removed_flags[i])) &&
-            (Global::shared_config.nb_controllers >= i)) {
-            SDL_Event ev;
-            ev.type = SDL_CONTROLLERDEVICEREMOVED;
-            ev.cdevice.timestamp = timestamp;
-            ev.cdevice.which = i;
-            sdlEventQueue.insert(&ev);
-            debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_CONTROLLERDEVICEREMOVED with joy %d", i);
-
-            ev.type = SDL_JOYDEVICEREMOVED;
-            ev.jdevice.timestamp = timestamp;
-            ev.jdevice.which = i;
-            sdlEventQueue.insert(&ev);
-            debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_JOYDEVICEADDED with joy %d", i);
-
-            /* Disconnect connected joystick */
-            GlobalNoLog gnl;
-            while (SDL_GameControllerGetAttached(reinterpret_cast<SDL_GameController*>(&i)))
-                SDL_GameControllerClose(reinterpret_cast<SDL_GameController*>(&i));
-
-            while (SDL_JoystickGetAttached(reinterpret_cast<SDL_Joystick*>(&i)))
-                SDL_JoystickClose(reinterpret_cast<SDL_Joystick*>(&i));
+            if (attached)
+                debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_JOYDEVICEREMOVED with joy %d", i);
+            else
+                debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_JOYDEVICEADDED with joy %d", i);
+                
+            /* Change the state of controller */
+            mySDL_GameControllerChangeAttached(i);
         }
     }
 }

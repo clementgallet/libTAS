@@ -140,11 +140,8 @@ void RenderHUD::drawInputs(const AllInputs& ai, Color fg_color)
         oss << "[Restart] ";
     }
     for (int i=0; i<4; i++) {
-        if (ai.flags & (1 << (SingleInput::FLAG_CONTROLLER1_ADDED+i))) {
-            oss << "[J" << i << " added] ";
-        }
-        if (ai.flags & (1 << (SingleInput::FLAG_CONTROLLER1_REMOVED+i))) {
-            oss << "[J" << i << " removed] ";
+        if (ai.flags & (1 << (SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED+i))) {
+            oss << "[J" << i << " added/removed] ";
         }
     }
 

@@ -26,6 +26,11 @@
 
 namespace libtas {
 
+/* Own methods to gather or change the attached state */
+bool mySDL_GameControllerIsAttached(int index);
+
+void mySDL_GameControllerChangeAttached(int index);
+
 /**
  *  Is the joystick on this index supported by the game controller interface?
  */

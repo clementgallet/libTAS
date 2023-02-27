@@ -84,14 +84,10 @@ KeyMapping::KeyMapping(void* c)
 
     /* Add flags mapping */
     input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_RESTART, "Restart"});
-    input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER1_ADDED, "Joy1 Added"});
-    input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER2_ADDED, "Joy2 Added"});
-    input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER3_ADDED, "Joy3 Added"});
-    input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER4_ADDED, "Joy4 Added"});
-    input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER1_REMOVED, "Joy1 Removed"});
-    input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER2_REMOVED, "Joy2 Removed"});
-    input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER3_REMOVED, "Joy3 Removed"});
-    input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER4_REMOVED, "Joy4 Removed"});
+    input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED, "Joy1 Added/Removed"});
+    input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER2_ADDED_REMOVED, "Joy2 Added/Removed"});
+    input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER3_ADDED_REMOVED, "Joy3 Added/Removed"});
+    input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_CONTROLLER4_ADDED_REMOVED, "Joy4 Added/Removed"});
 
     /* Add mouse button mapping */
     input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_B1, 1, "Mouse button 1"});

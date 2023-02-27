@@ -20,6 +20,7 @@
 * Don't skip frames in Vulkan for now (#492)
 * Immediately detach all created threads, and handle joinable state manually
 * Settings has its own menu and opens the corresponding tab (#521)
+* Merge controller added/removed into single flag
 
 ### Fixed
 

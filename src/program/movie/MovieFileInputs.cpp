@@ -138,14 +138,10 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
         input_stream << '|';
         input_stream << 'F';
         if (inputs.flags & (1 << SingleInput::FLAG_RESTART)) input_stream.put('R');
-        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER1_ADDED)) input_stream.put('1');
-        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER2_ADDED)) input_stream.put('2');
-        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER3_ADDED)) input_stream.put('3');
-        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER4_ADDED)) input_stream.put('4');
-        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER1_REMOVED)) input_stream.put('I');
-        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER2_REMOVED)) input_stream.put('L');
-        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER3_REMOVED)) input_stream.put('U');
-        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER4_REMOVED)) input_stream.put('O');
+        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED)) input_stream.put('1');
+        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER2_ADDED_REMOVED)) input_stream.put('2');
+        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER3_ADDED_REMOVED)) input_stream.put('3');
+        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER4_ADDED_REMOVED)) input_stream.put('4');
     }
 
     /* Write framerate inputs */
@@ -327,14 +323,15 @@ void MovieFileInputs::readFlagFrame(std::istringstream& input_string, AllInputs&
     while (input_string && (d != '|')) {
         switch (d) {
             case 'R': inputs.flags |= (1 << SingleInput::FLAG_RESTART); break;
-            case '1': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER1_ADDED); break;
-            case '2': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER2_ADDED); break;
-            case '3': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER3_ADDED); break;
-            case '4': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER4_ADDED); break;
-            case 'I': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER1_REMOVED); break;
-            case 'L': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER2_REMOVED); break;
-            case 'U': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER3_REMOVED); break;
-            case 'O': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER4_REMOVED); break;
+            case '1': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED); break;
+            case '2': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER2_ADDED_REMOVED); break;
+            case '3': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER3_ADDED_REMOVED); break;
+            case '4': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER4_ADDED_REMOVED); break;
+            /* Old unused flags */
+            case 'I': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED); break;
+            case 'L': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER2_ADDED_REMOVED); break;
+            case 'U': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER3_ADDED_REMOVED); break;
+            case 'O': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER4_ADDED_REMOVED); break;
         }
         input_string >> d;
     }

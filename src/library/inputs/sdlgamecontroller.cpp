@@ -34,6 +34,30 @@ static int gcids[4] = {-1, -1, -1, -1};
 static int refids[4] = {0, 0, 0, 0}; // GC open/close is ref-counted
 static const char joy_name[] = "XInput Controller";
 
+/* We support game controllers being disconnected during gameplay */
+static bool attached[4] = {true, true, true, true}; // all controllers are attached
+                                                    // at startup
+
+bool mySDL_GameControllerIsAttached(int index)
+{
+    return attached[index];
+}
+
+void mySDL_GameControllerChangeAttached(int index)
+{
+    attached[index] = !attached[index];
+
+    if (!attached[index]) {
+        /* Disconnect connected joystick */
+        GlobalNoLog gnl;
+        if (SDL_GameControllerGetAttached(reinterpret_cast<SDL_GameController*>(&index)))
+        SDL_GameControllerClose(reinterpret_cast<SDL_GameController*>(&index));
+        
+        if (SDL_JoystickGetAttached(reinterpret_cast<SDL_Joystick*>(&index)))
+        SDL_JoystickClose(reinterpret_cast<SDL_Joystick*>(&index));
+    }
+}
+
 /* Override */ SDL_bool SDL_IsGameController(int joystick_index)
 {
     debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
@@ -47,6 +71,10 @@ static const char joy_name[] = "XInput Controller";
 {
     debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
     if (joystick_index < 0 || joystick_index >= Global::shared_config.nb_controllers)
+        return NULL;
+
+    /* Can't open detached game controller */
+    if (!attached[joystick_index])
         return NULL;
 
     /* Save the opening of the game controller */
