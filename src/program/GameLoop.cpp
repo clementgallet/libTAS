@@ -477,7 +477,7 @@ bool GameLoop::startFrameMessages()
             std::string sym = receiveString();
             
             std::ostringstream cmd;
-            cmd << "readelf -Ws " << context->gamepath << " | grep " << sym << " | awk '{print $2}'";
+            cmd << "readelf -Ws '" << context->gamepath << "' | grep " << sym << " | awk '{print $2}'";
 
             FILE *addrstr = popen(cmd.str().c_str(), "r");
             uint64_t addr = 0;
