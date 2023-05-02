@@ -277,7 +277,7 @@ int Checkpoint::checkRestore()
     return SaveStateManager::ESTATE_OK;
 }
 
-void Checkpoint::handler(int signum)
+void Checkpoint::handler(int signum, siginfo_t *info, void *ucontext)
 {
 #ifdef __unix__
     /* Check that we are using our alternate stack by looking at the address

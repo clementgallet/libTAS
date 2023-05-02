@@ -92,8 +92,8 @@ void SaveStateManager::initCheckpointThread()
 
     struct sigaction sigcheckpoint;
     sigfillset(&sigcheckpoint.sa_mask);
-    sigcheckpoint.sa_flags = SA_ONSTACK;
-    sigcheckpoint.sa_handler = Checkpoint::handler;
+    sigcheckpoint.sa_flags = SA_ONSTACK | SA_SIGINFO;
+    sigcheckpoint.sa_sigaction = Checkpoint::handler;
     {
         GlobalNative gn;
         MYASSERT(sigaction(sig_checkpoint, &sigcheckpoint, nullptr) == 0)
