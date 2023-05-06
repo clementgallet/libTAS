@@ -37,10 +37,12 @@ void GameSpecificPane::initLayout()
 {
     /* Timing settings */
     timingCeleste = new ToolTipCheckBox("Celeste");
+    timingArmaCwa = new ToolTipCheckBox("Arma Cold War Assault");
 
     timingGroupBox = new QGroupBox(tr("Timing settings"));
     QVBoxLayout *timingLayout = new QVBoxLayout;
     timingLayout->addWidget(timingCeleste);
+    timingLayout->addWidget(timingArmaCwa);
     timingGroupBox->setLayout(timingLayout);
 
     /* Sync settings */
@@ -66,6 +68,7 @@ void GameSpecificPane::initLayout()
 void GameSpecificPane::initSignals()
 {
     connect(timingCeleste, &QCheckBox::toggled, this, &GameSpecificPane::saveConfig);
+    connect(timingArmaCwa, &QCheckBox::toggled, this, &GameSpecificPane::saveConfig);
     connect(syncCeleste, &QCheckBox::toggled, this, &GameSpecificPane::saveConfig);
     connect(syncWitness, &QCheckBox::toggled, this, &GameSpecificPane::saveConfig);
 }
@@ -75,6 +78,10 @@ void GameSpecificPane::initToolTips()
     timingCeleste->setTitle("Celeste Timing");
     timingCeleste->setDescription("Fake advance the timer on <code>sched_yield()</code> "
     "calls so that the game does not softlock.");
+
+    timingArmaCwa->setTitle("Arma Cold War Assault Timing");
+    timingArmaCwa->setDescription("Set the thread named \"G.Main\" as the main thread. "
+    "This prevents a softlock as long as clock_gettime() monotonic time tracking is enabled.");
 
     syncCeleste->setTitle("Celeste Sync");
     syncCeleste->setDescription("Pause the main thread, waiting for threads with "
@@ -94,6 +101,7 @@ void GameSpecificPane::showEvent(QShowEvent *event)
 void GameSpecificPane::loadConfig()
 {
     timingCeleste->setChecked(context->config.sc.game_specific_timing & SharedConfig::GC_TIMING_CELESTE);
+    timingArmaCwa->setChecked(context->config.sc.game_specific_timing & SharedConfig::GC_TIMING_ARMA_CWA);
     syncCeleste->setChecked(context->config.sc.game_specific_sync & SharedConfig::GC_SYNC_CELESTE);
     syncWitness->setChecked(context->config.sc.game_specific_sync & SharedConfig::GC_SYNC_WITNESS);
 }
@@ -102,6 +110,7 @@ void GameSpecificPane::saveConfig()
 {
     context->config.sc.game_specific_timing = 0;
     context->config.sc.game_specific_timing |= timingCeleste->isChecked()? SharedConfig::GC_TIMING_CELESTE : 0;
+    context->config.sc.game_specific_timing |= timingArmaCwa->isChecked()? SharedConfig::GC_TIMING_ARMA_CWA : 0;
 
     context->config.sc.game_specific_sync = 0;
     context->config.sc.game_specific_sync |= syncCeleste->isChecked()? SharedConfig::GC_SYNC_CELESTE : 0;

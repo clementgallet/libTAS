@@ -247,6 +247,7 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     enum GameSpecificTiming
     {
         GC_TIMING_CELESTE = 0x01,
+        GC_TIMING_ARMA_CWA = 0x02,
     };
 
     /* Game-specific timing settings */

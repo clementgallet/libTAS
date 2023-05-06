@@ -51,6 +51,9 @@ void restoreThreadTids();
 /* Set the main thread to this thread */
 void setMainThread();
 
+/* Set the main thread to the provided thread */
+void setMainThread(pthread_t pthread_id);
+
 /* Check if this thread is main thread */
 bool isMainThread();
 

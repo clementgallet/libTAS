@@ -46,6 +46,7 @@ private:
     QGroupBox *syncGroupBox;
     
     ToolTipCheckBox *timingCeleste;
+    ToolTipCheckBox *timingArmaCwa;
     ToolTipCheckBox *syncCeleste;
     ToolTipCheckBox *syncWitness;
 
