@@ -293,6 +293,10 @@ typedef void ALvoid;
 #define AL_STREAMING                             0x1029
 #define AL_UNDETERMINED                          0x1030
 
+/** AL_SOFT_buffer_sub_data extension */
+#define AL_BYTE_RW_OFFSETS_SOFT                  0x1031
+#define AL_SAMPLE_RW_OFFSETS_SOFT                0x1032
+
 /** Buffer format specifier. */
 #define AL_FORMAT_MONO8                          0x1100
 #define AL_FORMAT_MONO16                         0x1101
@@ -533,6 +537,9 @@ OVERRIDE void alGetListenerfv(ALenum param, ALfloat *values);
 OVERRIDE void alGetListeneri(ALenum param, ALint *value);
 OVERRIDE void alGetListener3i(ALenum param, ALint *v1, ALint *v2, ALint *v3);
 OVERRIDE void alGetListeneriv(ALenum param, ALint *values);
+
+/** Override some protected OpenAL functions */
+void hook_openal();
 
 }
 

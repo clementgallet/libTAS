@@ -19,6 +19,7 @@
 
 #include "al.h"
 #include "efx.h"
+#include "../../hookpatch.h"
 #include "../../logging.h"
 #include "../AudioBuffer.h"
 #include "../AudioSource.h"
@@ -768,11 +769,24 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
             /* We fetch the buffer format of the source.
              * Normally, all buffers from a queue share the exact same format.
              */
+            *value = 0;
             if (! as->buffer_queue.empty()) {
                 ab = as->buffer_queue[0];
                 *value = static_cast<ALfloat>(as->getPosition()) * ab->alignSize;
                 debuglogstdio(LCF_SOUND, "  Get position of %f bytes", *value);
             }
+            break;
+        case AL_BYTE_RW_OFFSETS_SOFT:
+            value[0] = value[1] = 0;
+            if (! as->buffer_queue.empty()) {
+                ab = as->buffer_queue[0];
+                value[0] = value[1] = static_cast<ALfloat>(as->getPosition()) * ab->alignSize;
+                debuglogstdio(LCF_SOUND, "  Get position of %f bytes", *value);
+            }
+            break;
+        case AL_SAMPLE_RW_OFFSETS_SOFT:
+            value[0] = value[1] = static_cast<ALfloat>(as->getPosition());
+            debuglogstdio(LCF_SOUND, "  Get position of %d samples", *value);
             break;
         default:
             debuglogstdio(LCF_SOUND, "  Unknown param %d", param);
@@ -897,11 +911,24 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
             /* We fetch the buffer format of the source.
              * Normally, all buffers from a queue share the exact same format.
              */
+            *value = 0;
             if (! as->buffer_queue.empty()) {
                 ab = as->buffer_queue[0];
                 *value = as->getPosition() * ab->alignSize;
                 debuglogstdio(LCF_SOUND, "  Get position of %d bytes", *value);
             }
+            break;
+        case AL_BYTE_RW_OFFSETS_SOFT:
+            value[0] = value[1] = 0;
+            if (! as->buffer_queue.empty()) {
+                ab = as->buffer_queue[0];
+                value[0] = value[1] = as->getPosition() * ab->alignSize;
+                debuglogstdio(LCF_SOUND, "  Get position of %d bytes", *value);
+            }
+            break;
+        case AL_SAMPLE_RW_OFFSETS_SOFT:
+            value[0] = value[1] = static_cast<ALint>(as->getPosition());
+            debuglogstdio(LCF_SOUND, "  Get position of %d samples", *value);
             break;
         default:
             debuglogstdio(LCF_SOUND, "  Unknown param %d", param);
@@ -1168,6 +1195,103 @@ void alGetListeneriv(ALenum param, ALint *values)
 {
     DEBUGLOGCALL(LCF_SOUND);
     debuglogstdio(LCF_SOUND, "Operation not supported");
+}
+
+namespace orig {
+
+static unsigned int __attribute__((noinline)) alBufferSubDataSOFT(ALuint buffer, ALenum format, const ALvoid *data, ALsizei offset, ALsizei length)
+{
+    HOOK_PLACEHOLDER_RETURN_ZERO
+}
+
+}
+
+void alBufferSubDataSOFT(ALuint buffer, ALenum format, const ALvoid *data, ALsizei offset, ALsizei length)
+{
+    debuglogstdio(LCF_SOUND, "%s call - copy buffer sub data of format %d, length %d and offset %d into buffer %d", __func__, format, length, offset, buffer);
+
+    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
+    auto ab = audiocontext.getBuffer(buffer);
+    if (ab == nullptr) {
+        alSetError(AL_INVALID_VALUE);
+        return;
+    }
+
+    bool match;
+    switch(format) {
+        case AL_FORMAT_MONO8:
+            match = ab->format == AudioBuffer::SAMPLE_FMT_U8;
+            match &= ab->nbChannels == 1;
+            break;
+        case AL_FORMAT_MONO16:
+            match = ab->format == AudioBuffer::SAMPLE_FMT_S16;
+            match &= ab->nbChannels == 1;
+            break;
+        case AL_FORMAT_STEREO8:
+            match = ab->format == AudioBuffer::SAMPLE_FMT_U8;
+            match &= ab->nbChannels == 2;
+            break;
+        case AL_FORMAT_STEREO16:
+            match = ab->format == AudioBuffer::SAMPLE_FMT_S16;
+            match &= ab->nbChannels == 2;
+            break;
+        case AL_FORMAT_MONO_FLOAT32:
+            match = ab->format == AudioBuffer::SAMPLE_FMT_FLT;
+            match &= ab->nbChannels == 1;
+            break;
+        case AL_FORMAT_STEREO_FLOAT32:
+            match = ab->format == AudioBuffer::SAMPLE_FMT_FLT;
+            match &= ab->nbChannels == 2;
+            break;
+        case AL_FORMAT_MONO_DOUBLE_EXT:
+            match = ab->format == AudioBuffer::SAMPLE_FMT_DBL;
+            match &= ab->nbChannels == 1;
+            break;
+        case AL_FORMAT_STEREO_DOUBLE_EXT:
+            match = ab->format == AudioBuffer::SAMPLE_FMT_DBL;
+            match &= ab->nbChannels == 2;
+            break;
+        case AL_FORMAT_MONO_MSADPCM_SOFT:
+            match = ab->format == AudioBuffer::SAMPLE_FMT_MSADPCM;
+            match &= ab->nbChannels == 1;
+            break;
+        case AL_FORMAT_STEREO_MSADPCM_SOFT:
+            match = ab->format == AudioBuffer::SAMPLE_FMT_MSADPCM;
+            match &= ab->nbChannels == 2;
+            break;
+        default:
+            debuglogstdio(LCF_SOUND | LCF_ERROR, "Unsupported format: %d", format);
+            return;
+    }
+
+    if (!match) {
+        alSetError(AL_INVALID_ENUM);
+        return;
+    }
+
+    if (ab->format == AudioBuffer::SAMPLE_FMT_MSADPCM) {
+        if ((length % ab->blockSamples) != 0 || (offset % ab->blockSamples) != 0) {
+            alSetError(AL_INVALID_VALUE);
+            return;
+        }
+    }
+
+    uint8_t* samples = nullptr;
+    auto samplesAvail = ab->getSamples(samples, length / ab->alignSize, offset / ab->alignSize, ab->loop_point_end != 0); // not sure how to access looping here
+    if (samplesAvail * ab->alignSize != length) {
+        alSetError(AL_INVALID_VALUE);
+        return;
+    }
+
+    debuglogstdio(LCF_SOUND, "%s - do copy of length %d bytes", __func__, length);
+
+    memcpy(samples, data, length);
+}
+
+void hook_openal()
+{
+    HOOK_PATCH_ORIG(alBufferSubDataSOFT, nullptr);
 }
 
 }
