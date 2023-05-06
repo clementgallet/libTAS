@@ -81,6 +81,7 @@ static bool isBannedEvent(SDL_Event *event)
                 case SDL_WINDOWEVENT_ENTER:
                 case SDL_WINDOWEVENT_LEAVE:
                 case SDL_WINDOWEVENT_TAKE_FOCUS:
+                case SDL_WINDOWEVENT_SIZE_CHANGED:
                     return true;
                 default:
                     return false;
