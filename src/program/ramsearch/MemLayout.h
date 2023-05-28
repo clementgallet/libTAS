@@ -22,6 +22,7 @@
 
 #include <string>
 #include <fstream>
+#include <cstdint>
 #include "MemSection.h"
 
 /* Handle the layout of game memory */

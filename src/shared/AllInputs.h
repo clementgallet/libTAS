@@ -24,6 +24,7 @@
 
 #include <array>
 #include <set>
+#include <cstdint>
 
 /* Input structure that is filled by libTAS and send to the game every frame
  * Structure is inspired by SDL.

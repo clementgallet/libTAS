@@ -23,6 +23,7 @@
 #include <stddef.h>
 #include <sys/types.h>
 #include <string>
+#include <cstdint>
 
 /* Holds the base address for executable and each loaded library */
 namespace BaseAddresses {

@@ -22,6 +22,7 @@
 #include "logging.h"
 #include <sys/mman.h>
 #include <string.h>
+#include <cstdint>
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
 #include "GlobalState.h"
