@@ -23,6 +23,7 @@
 #include "SingleInput.h"
 
 #include <array>
+#include <cstdint>
 #include <set>
 
 /* Input structure that is filled by libTAS and send to the game every frame

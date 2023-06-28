@@ -21,6 +21,7 @@
 #include "dlhook.h"
 #include "logging.h"
 #include <sys/mman.h>
+#include <cstdint>
 #include <string.h>
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"

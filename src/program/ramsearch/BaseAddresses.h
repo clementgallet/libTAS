@@ -22,6 +22,7 @@
 
 #include <stddef.h>
 #include <sys/types.h>
+#include <cstdint>
 #include <string>
 
 /* Holds the base address for executable and each loaded library */

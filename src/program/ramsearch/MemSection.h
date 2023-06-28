@@ -20,6 +20,7 @@
 #ifndef LIBTAS_MEMSECTION_H_INCLUDED
 #define LIBTAS_MEMSECTION_H_INCLUDED
 
+#include <cstdint>
 #include <string>
 
 /* Store a section of the game memory */
