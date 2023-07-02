@@ -107,6 +107,8 @@ char * SDL_AudioDriverName(char *namebuf, int maxlen)
 /* Helper function for SDL_OpenAudio() and SDL_OpenAudioDevice() */
 static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obtained, int min_id)
 {
+    SDL_AudioSpec _obtained;
+
     if (Global::shared_config.audio_disabled)
         return -1;
 
@@ -121,10 +123,11 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
         return -1;
     }
 
-    if (obtained != NULL) {
-        memcpy(obtained, desired, sizeof(SDL_AudioSpec));
+    if (!obtained) {
+        obtained = &_obtained;
     }
 
+    memcpy(obtained, desired, sizeof(SDL_AudioSpec));
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     int bufferId = audiocontext.createBuffer();
