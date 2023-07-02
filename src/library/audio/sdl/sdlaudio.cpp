@@ -134,12 +134,12 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
     auto buffer = audiocontext.getBuffer(bufferId);
 
     /* Sanity check done by SDL */
-    if (!obtained->freq) obtained->freq = 22050;
+    if (desired->freq == 0) obtained->freq = 22050;
     buffer->frequency = obtained->freq;
     debuglogstdio(LCF_SDL | LCF_SOUND, "Frequency %d Hz", buffer->frequency);
 
     /* Sanity check done by SDL */
-    if (!obtained->format) obtained->format = AUDIO_S16LSB;
+    if (desired->format == 0) obtained->format = AUDIO_S16LSB;
 
     switch(obtained->format) {
         case AUDIO_U8:
@@ -159,7 +159,7 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
             return -1;
     }
     /* Sanity check done by SDL */
-    if (!obtained->channels) obtained->channels = 2;
+    if (desired->channels == 0) obtained->channels = 2;
     buffer->nbChannels = obtained->channels;
     debuglogstdio(LCF_SDL | LCF_SOUND, "Channels %d", buffer->nbChannels);
 
