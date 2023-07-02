@@ -122,7 +122,7 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
     }
 
     if (obtained != NULL) {
-        memmove(obtained, desired, sizeof(SDL_AudioSpec));
+        memcpy(obtained, desired, sizeof(SDL_AudioSpec));
     }
 
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
