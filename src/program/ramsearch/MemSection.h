@@ -21,6 +21,7 @@
 #define LIBTAS_MEMSECTION_H_INCLUDED
 
 #include <string>
+#include <cstdint>
 
 /* Store a section of the game memory */
 class MemSection {

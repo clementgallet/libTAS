@@ -20,10 +20,11 @@
 #ifndef LIBTAS_IRAMWATCHDETAILED_H_INCLUDED
 #define LIBTAS_IRAMWATCHDETAILED_H_INCLUDED
 
-// #include <cstdint>
 // #include <sys/types.h>
 #include <string>
 #include <vector>
+#include <cstdint>
+
 
 class IRamWatchDetailed {
 public:
