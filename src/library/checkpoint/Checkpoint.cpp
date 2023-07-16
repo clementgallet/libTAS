@@ -517,9 +517,6 @@ static void readAllAreas()
 
 static int reallocateArea(Area *saved_area, Area *current_area)
 {
-    saved_area->print("Restore");
-    current_area->print("Current");
-
     /* Do Areas start on the same address? */
     if ((saved_area->addr != nullptr) && (current_area->addr != nullptr) &&
         (saved_area->addr == current_area->addr)) {
@@ -689,6 +686,8 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
 
     if (saved_area.skip)
         return;
+
+    saved_area.print("Restore");
 
     /* Add write permission to the area */
     if (!(saved_area.prot & PROT_WRITE)) {
@@ -1036,7 +1035,6 @@ static void writeAllAreas(bool base)
 /* Write a memory area into the savestate. Returns the size of the area in bytes */
 static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state, bool base)
 {
-    area.print("Save");
     size_t area_size = 0;
 
     /* Save the position of the first area page in the pages file */
@@ -1050,6 +1048,8 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
 
     if (area.skip)
         return area_size;
+
+    area.print("Save");
 
     if (spmfd != -1) {
         /* Seek at the beginning of the area pagemap */
