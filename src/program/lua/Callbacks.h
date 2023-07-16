@@ -21,6 +21,7 @@
 #define LIBTAS_LUACALLBACKS_H_INCLUDED
 
 #include "NamedLuaFunction.h"
+#include "LuaFunctionList.h"
 
 extern "C" {
 #include <lua.h>
@@ -44,6 +45,8 @@ namespace Callbacks {
     int onPaint(lua_State *L);
     
     void call(NamedLuaFunction::CallbackType type);
+    
+    LuaFunctionList& getList();
 }
 }
 

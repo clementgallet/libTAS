@@ -29,7 +29,7 @@ extern "C" {
 
 namespace Lua {
 
-NamedLuaFunction::NamedLuaFunction(lua_State *L, CallbackType t) : type(t), file(Main::currentFile()), lua_state(L)
+NamedLuaFunction::NamedLuaFunction(lua_State *L, CallbackType t) : type(t), file(Main::currentFile()), active(true), lua_state(L)
 {
     function_ref = luaL_ref(lua_state, LUA_REGISTRYINDEX);
 }

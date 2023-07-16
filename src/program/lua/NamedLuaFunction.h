@@ -48,6 +48,7 @@ public:
     
     CallbackType type;
     const std::string& file;
+    bool active;
     
 private:
     lua_State *lua_state;

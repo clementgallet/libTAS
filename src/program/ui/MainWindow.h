@@ -236,7 +236,6 @@ private slots:
     void slotToggleEncode();
     void slotPauseMovie();
     void slotVariableFramerate(bool checked);
-    void slotLuaExecute();
     void slotRealTimeFormat();
 };
 

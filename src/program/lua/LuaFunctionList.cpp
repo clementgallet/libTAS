@@ -18,6 +18,8 @@
  */
 
 #include "LuaFunctionList.h"
+#include "Main.h"
+#include "../utils.h"
 
 namespace Lua {
 
@@ -26,23 +28,65 @@ void LuaFunctionList::add(lua_State *L, NamedLuaFunction::CallbackType t)
     functions.emplace_back(L, t);
 }
 
-void LuaFunctionList::removeForFile(const std::string& file)
+void LuaFunctionList::addFile(const std::string& file)
 {
+    if (fileSet.find(file) != fileSet.end())
+        return;
+        
+    fileSet.insert(file);
+    fileList.push_back(file);
+    fileNameList.push_back(fileFromPath(file));
+    fileEnabled.push_back(true);
+    Lua::Main::run(file);
+}
+
+void LuaFunctionList::removeForFile(int row)
+{
+    const std::string& file = fileList[row];    
     functions.remove_if([&file](const NamedLuaFunction& nlf){ return 0 == file.compare(nlf.file); });
+    fileSet.erase(file);
+    fileList.erase(fileList.begin() + row);
+    fileNameList.erase(fileNameList.begin() + row);
+    fileEnabled.erase(fileEnabled.begin() + row);
+}
+
+bool LuaFunctionList::activeState(int row) const
+{
+    return fileEnabled[row];
+}
+
+void LuaFunctionList::switchForFile(int row, bool active)
+{
+    fileEnabled[row] = active;
+    const std::string& file = fileList[row];
+    for (auto& nlf : functions) {
+        if (0 == file.compare(nlf.file)) {
+            nlf.active = active;
+        }
+    }
 }
 
 void LuaFunctionList::call(NamedLuaFunction::CallbackType c)
 {
     for (auto& nlf : functions) {
-        if (nlf.type == c) {
+        if (nlf.active && nlf.type == c) {
             nlf.call();
         }
     }
 }
 
+int LuaFunctionList::fileCount() const
+{
+    return fileSet.size();
+}
+
 void LuaFunctionList::clear()
 {
     functions.clear();
+    fileList.clear();
+    fileNameList.clear();
+    fileEnabled.clear();
+    fileSet.clear();
 }
 
 }

@@ -83,4 +83,9 @@ void Callbacks::call(NamedLuaFunction::CallbackType type)
     lfl.call(type);
 }
 
+LuaFunctionList& Callbacks::getList()
+{
+    return lfl;
+}
+
 }

@@ -20,21 +20,34 @@
 #ifndef LIBTAS_LUACONSOLEWINDOW_H_INCLUDED
 #define LIBTAS_LUACONSOLEWINDOW_H_INCLUDED
 
-#include <QtWidgets/QDialog>
+#include <QtWidgets/QMainWindow>
 #include <QtWidgets/QPlainTextEdit>
+#include <QtWidgets/QTableView>
 
-class LuaConsoleWindow : public QDialog {
+#include "LuaConsoleModel.h"
+
+/* Forward declaration */
+struct Context;
+
+class LuaConsoleWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    LuaConsoleWindow(QWidget *parent = Q_NULLPTR);
+    LuaConsoleWindow(Context *c, QWidget *parent = Q_NULLPTR);
 
 private:
+    Context *context;
     QPlainTextEdit *consoleText;
+    
+    QTableView* luaView;
+    LuaConsoleModel* luaModel;
     
 private slots:
     void slotAppend(QString qstr);
     void slotClear();
+    void addScript();
+    void removeScript();
+    void clearScripts();
 };
 
 #endif

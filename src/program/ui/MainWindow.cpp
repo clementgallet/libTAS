@@ -49,7 +49,6 @@
 #include "../movie/MovieFile.h"
 #include "ErrorChecking.h"
 #include "../../shared/version.h"
-#include "../lua/Main.h"
 #include "../utils.h"
 #include "../GameEvents.h"
 
@@ -168,7 +167,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     inputEditorWindow = new InputEditorWindow(c, this);
     annotationsWindow = new AnnotationsWindow(c, this);
     timeTraceWindow = new TimeTraceWindow(c, this);
-    luaConsoleWindow = new LuaConsoleWindow(this);
+    luaConsoleWindow = new LuaConsoleWindow(c, this);
 
     connect(gameLoop, &GameLoop::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
     connect(gameLoop->gameEvents, &GameEvents::inputsToBeChanged, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::beginModifyInputs);
@@ -663,11 +662,7 @@ void MainWindow::createMenus()
 
     toolsMenu->addSeparator();
 
-    QMenu *luaMenu = toolsMenu->addMenu(tr("Lua"));
-
-    luaMenu->addAction(tr("Execute Lua script..."), this, &MainWindow::slotLuaExecute);
-    luaMenu->addAction(tr("Reset Lua VM"), this, [=](){Lua::Main::reset(context);});
-    luaMenu->addAction(tr("Lua Console..."), luaConsoleWindow, &LuaConsoleWindow::show);
+    toolsMenu->addAction(tr("Lua Console..."), luaConsoleWindow, &LuaConsoleWindow::show);
 
     toolsMenu->addSeparator();
 
@@ -1324,15 +1319,6 @@ void MainWindow::slotVariableFramerate(bool checked)
 {
     context->config.sc.variable_framerate = checked;
     encodeWindow->update_config();
-}
-
-void MainWindow::slotLuaExecute()
-{
-    QString filename = QFileDialog::getOpenFileName(this, tr("Lua script"), context->gamepath.c_str());
-    if (filename.isNull())
-        return;
-
-    Lua::Main::run(filename.toStdString());
 }
 
 void MainWindow::slotRealTimeFormat()

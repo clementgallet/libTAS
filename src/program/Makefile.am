@@ -18,6 +18,7 @@ libTAS_QTSOURCES = \
     ui/InputWindow.h \
     ui/KeyPressedDialog.h \
     ui/LuaConsoleWindow.h \
+    ui/LuaConsoleModel.h \
     ui/MainWindow.h \
     ui/PointerScanModel.h \
     ui/PointerScanWindow.h \
@@ -81,6 +82,7 @@ libTAS_SOURCES = \
     ui/InputWindow.cpp \
     ui/KeyPressedDialog.cpp \
     ui/LuaConsoleWindow.cpp \
+    ui/LuaConsoleModel.cpp \
     ui/MainWindow.cpp \
     ui/PointerScanModel.cpp \
     ui/PointerScanWindow.cpp \

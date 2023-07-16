@@ -26,6 +26,8 @@ extern "C" {
 #include <lua.h>
 }
 #include <list>
+#include <vector>
+#include <set>
 #include <string>
 
 namespace Lua {
@@ -36,18 +38,35 @@ public:
     /* Add a named function from lua stack */
     void add(lua_State *L, NamedLuaFunction::CallbackType t);
 
+    /* Import a file */
+    void addFile(const std::string& file);
+
     /* Remove all callbacks from a file */
-    void removeForFile(const std::string& file);
+    void removeForFile(int row);
+
+    /* Get the active state */
+    bool activeState(int row) const;
+
+    /* Activate or deactivate all callbacks from a file */
+    void switchForFile(int row, bool active);
     
     /* Call all callbacks from a type */
     void call(NamedLuaFunction::CallbackType c);
     
+    /* Returns the number of registered lua files */
+    int fileCount() const;
+    
     /* Clear all callbacks */
     void clear();
+
+    std::vector<std::string> fileList;
+    std::vector<std::string> fileNameList;
+    std::vector<bool> fileEnabled;
+    std::set<std::string> fileSet;
     
 private:
     std::list<NamedLuaFunction> functions;
-    
+
 };
 }
 
