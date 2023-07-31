@@ -227,8 +227,8 @@ void InputEditorView::update()
         return;
 
     /* Enable autoscroll if current frame is not visible */
-    int toprow = rowAt(rect().top());
-    int bottomrow = rowAt(rect().bottom());
+    int toprow = verticalScrollBar()->value();
+    int bottomrow = toprow + verticalScrollBar()->pageStep();
     if ((context->framecount >= static_cast<unsigned int>(bottomrow)) || (context->framecount < static_cast<unsigned int>(toprow))) {
         autoScroll = true;
     }
