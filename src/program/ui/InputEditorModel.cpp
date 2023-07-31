@@ -358,6 +358,11 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
         if (value.toInt() == ai.getInput(si))
             return false;
 
+        /* Update the pause frame if we changed an earlier frame */
+        if ((context->pause_frame != 0) && (row < context->pause_frame)) {
+            context->pause_frame = row;
+        }
+
         /* Modifying the movie is only performed by the main thread */
         InputEvent ie;
         ie.framecount = row;
@@ -438,6 +443,11 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
         bool ret = rewind(row, true);
         if (!ret)
             return false;
+    }
+
+    /* Update the pause frame if we changed an earlier frame */
+    if ((context->pause_frame != 0) && (row < context->pause_frame)) {
+        context->pause_frame = row;
     }
 
     /* Modifying the movie is only performed by the main thread */
