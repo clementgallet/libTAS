@@ -26,7 +26,6 @@
 #include <sys/mman.h>
 #include "../Utils.h"
 #include <cstring>
-#include "ReservedMemory.h"
 #include "../GlobalState.h"
 
 namespace libtas {
@@ -37,7 +36,7 @@ ProcSelfMaps::ProcSelfMaps() : off(0)
     int fd;
     NATIVECALL(fd = open("/proc/self/maps", O_RDONLY));
     MYASSERT(fd != -1);
-    NATIVECALL(tmp_fd = open("/tmp", O_RDWR | O_TMPFILE, 0666));
+    NATIVECALL(tmp_fd = open("/tmp/libtas-maps", O_RDWR | O_CREAT | O_TRUNC, 0666));
     MYASSERT(tmp_fd != -1);
     
     ssize_t sz = 1;
