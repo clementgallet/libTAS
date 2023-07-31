@@ -33,6 +33,7 @@
 * Set pixel buffer and pack row before reading pixels (#505)
 * Suspend sigaction for our checkpoint signals
 * Handle unusual and long memory section filenames
+* Disable scroll freeze when pausing during rewind (#528)
 
 ## [1.4.4] - 2022-10-25
 ### Added

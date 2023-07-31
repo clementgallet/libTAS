@@ -204,11 +204,22 @@ void InputEditorView::update()
     /* Check if scroll is frozen because of a rewind. Disable scroll freeze when
      * reaching the paused frame. */
     if (inputEditorModel->isScrollFreeze()) {
+        static bool last_running = false;
         if (context->pause_frame == 0) {
             inputEditorModel->setScrollFreeze(false);
             autoScroll = false;
         }
-        return;
+        /* If user has paused during rewind, we must disable scroll freeze and
+         * scroll to current frame if necessary */
+        else if (!context->config.sc.running && last_running) {
+            context->pause_frame = 0;
+            inputEditorModel->setScrollFreeze(false);
+        }
+
+        last_running = context->config.sc.running;
+
+        if (inputEditorModel->isScrollFreeze())
+            return;
     }
 
     /* Don't autoscroll if disabled in the user options */
