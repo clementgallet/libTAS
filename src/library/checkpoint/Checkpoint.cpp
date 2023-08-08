@@ -62,6 +62,11 @@
 #include <sys/syscall.h>
 #endif
 
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 600
+#endif
+#include <ucontext.h>
+
 #define ONE_MB 1024 * 1024
 
 namespace libtas {
@@ -80,6 +85,9 @@ static char basepagespath[1024] = "\0";
 static int ss_index = -1;
 static int parent_ss_index = -1;
 static int base_ss_index = -1;
+
+/* Savestate ucontext (must be stored outside the alt stack) */
+static ucontext_t ss_ucontext;
 
 static bool skipArea(const Area *area);
 
@@ -277,7 +285,7 @@ int Checkpoint::checkRestore()
     return SaveStateManager::ESTATE_OK;
 }
 
-void Checkpoint::handler(int signum)
+void Checkpoint::handler(int signum, siginfo_t *info, void *ucontext)
 {
 #ifdef __unix__
     /* Check that we are using our alternate stack by looking at the address
@@ -348,8 +356,8 @@ void Checkpoint::handler(int signum)
         }
 #endif
 
-        /* We must restore the current stack frame from the savestate */
-        AltStack::restoreStackFrame();
+        /* We must restore the ucontext from the savestate */
+        memcpy(ucontext, &ss_ucontext, sizeof(ucontext_t));
     }
     else {
         /* Check that base savestate exists, otherwise save it */
@@ -368,8 +376,8 @@ void Checkpoint::handler(int signum)
                 }
             }
         }
-        /* We must store the current stack frame in the savestate */
-        AltStack::saveStackFrame();
+        /* We must store the passed ucontext in the savestate */
+        memcpy(&ss_ucontext, ucontext, sizeof(ucontext_t));
 
         writeAllAreas(false);
     }

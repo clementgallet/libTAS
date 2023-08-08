@@ -23,6 +23,7 @@
 #define LIBTAS_CHECKPOINT_H
 
 #include <string>
+#include <signal.h> // siginfo_t
 
 namespace libtas {
 namespace Checkpoint
@@ -37,7 +38,7 @@ namespace Checkpoint
 
     int checkCheckpoint();
     int checkRestore();
-    void handler(int signum);
+    void handler(int signum, siginfo_t *info, void *ucontext);
 }
 }
 

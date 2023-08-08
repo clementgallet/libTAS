@@ -92,8 +92,8 @@ void SaveStateManager::initCheckpointThread()
 
     struct sigaction sigcheckpoint;
     sigfillset(&sigcheckpoint.sa_mask);
-    sigcheckpoint.sa_flags = SA_ONSTACK;
-    sigcheckpoint.sa_handler = Checkpoint::handler;
+    sigcheckpoint.sa_flags = SA_ONSTACK | SA_SIGINFO;
+    sigcheckpoint.sa_sigaction = Checkpoint::handler;
     {
         GlobalNative gn;
         MYASSERT(sigaction(sig_checkpoint, &sigcheckpoint, nullptr) == 0)
@@ -375,12 +375,12 @@ int SaveStateManager::restore(int slot)
     /* Here is where we load all the memory and stuff */
     NATIVECALL(raise(sig_checkpoint));
 
-    /* It seems that when restoring the original stack at the end of the
-     * signal handler function, the program pulls from the stack the address
-     * to return to. Because we replace the stack memory with the checkpointed
-     * stack, we will return to after `raise(sig_checkpoint)` call in
-     * ThreadManager::checkpoint(). We may even not have to use
-     * getcontext/setcontext for this thread!
+    /* The kernel will store the current ucontext onto the stack the signal
+     * handler uses. This is the non-savestable alt stack. We ensure that
+     * a copy of this ucontext is placed onto savestable memory, and use that
+     * in order to restore the ucontext on a load state. This ensures that on
+     * returning, we will return to after the `raise(sig_checkpoint)` call in
+     * ThreadManager::checkpoint(). We don't even need to use getcontext/setcontext!
      */
 
      /* If restore was not done, we return here */
