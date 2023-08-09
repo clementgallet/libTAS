@@ -28,9 +28,6 @@ namespace AltStack
     void saveStack();
     void prepareStack();
     void restoreStack();
-
-    void saveStackFrame();
-    void restoreStackFrame();
 }
 }
 

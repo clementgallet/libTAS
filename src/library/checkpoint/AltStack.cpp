@@ -35,13 +35,6 @@ namespace libtas {
  */
 static stack_t oss;
 
-/* We must save the last stack frame of the alternate stack in the savestate, so
- * that we return at the correct location from the alternate stack.
- */
-#define STACKFRAME_OFFSET 0x700
-#define STACKFRAME_SIZE 0x700
-static uint8_t stack_frame[STACKFRAME_SIZE];
-
 void AltStack::saveStack()
 {
     int ret;
@@ -68,21 +61,6 @@ void AltStack::restoreStack()
     int ret;
     NATIVECALL(ret = sigaltstack(&oss, nullptr));
     MYASSERT(ret == 0)
-}
-
-void AltStack::saveStackFrame()
-{
-    /* Does not work in MacOS yet */
-#ifdef __unix__
-    memcpy(stack_frame, ReservedMemory::getAddr(ReservedMemory::STACK_ADDR + ReservedMemory::STACK_SIZE - STACKFRAME_OFFSET), STACKFRAME_SIZE);
-#endif
-}
-
-void AltStack::restoreStackFrame()
-{
-#ifdef __unix__
-    memcpy(ReservedMemory::getAddr(ReservedMemory::STACK_ADDR + ReservedMemory::STACK_SIZE - STACKFRAME_OFFSET), stack_frame, STACKFRAME_SIZE);
-#endif
 }
 
 }
