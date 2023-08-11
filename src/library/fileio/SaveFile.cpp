@@ -220,8 +220,22 @@ FILE* SaveFile::open(const char *modes) {
     if (stream == nullptr) {
 
         /* Open a new memory stream using pointers to these entries */
-        this->open(O_RDWR); // creates a file descriptor
-        NATIVECALL(stream = fdopen(fd, modes));
+        
+        /* Choose the right mode to open the memory stream.
+         * We need to always allow read/write */
+        if (strstr(modes, "r") != nullptr) {
+            this->open(O_RDWR);
+            NATIVECALL(stream = fdopen(fd, "r+"));
+        }
+        else if (strstr(modes, "w") != nullptr) {
+            this->open(O_RDWR | O_CREAT | O_TRUNC);
+            NATIVECALL(stream = fdopen(fd, "w+"));
+        }
+        else {
+            this->open(O_RDWR | O_CREAT | O_APPEND);
+            NATIVECALL(stream = fdopen(fd, "a+"));
+        }
+
         setvbuf(stream, nullptr, _IONBF, 0);
         return stream;
     }
