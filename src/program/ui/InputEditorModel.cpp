@@ -280,9 +280,9 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         if (si.isAnalog()) {
             /* Default framerate has a value of 0, which may be confusing,
              * so we just print `-` in place. */
-            if ((si.type == SingleInput::IT_FRAMERATE_NUM) && ((value == 0) || (value == context->config.sc.framerate_num)))
+            if ((si.type == SingleInput::IT_FRAMERATE_NUM) && ((value == 0) || (value == movie->header->framerate_num)))
                 return QString('-');
-            if ((si.type == SingleInput::IT_FRAMERATE_DEN) && ((value == 0) || (value == context->config.sc.framerate_den)))
+            if ((si.type == SingleInput::IT_FRAMERATE_DEN) && ((value == 0) || (value == movie->header->framerate_den)))
                 return QString('-');
             if ((si.type == SingleInput::IT_REALTIME_SEC) && (value == 0))
                 return QString('-');
