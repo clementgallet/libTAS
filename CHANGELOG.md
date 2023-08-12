@@ -26,6 +26,8 @@
 * Settings has its own menu and opens the corresponding tab (#521)
 * Merge controller added/removed into single flag
 * Don't use O_TMPFILE for memory map file, as it may not be available (#524)
+* Check and update movie length during last frame instead of one frame later
+  and mark it as modified
 
 ### Fixed
 

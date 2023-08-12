@@ -404,8 +404,6 @@ int MovieFileInputs::getInputs(AllInputs& inputs, uint64_t pos) const
 {
     if (pos >= input_list.size()) {
         inputs.emptyInputs();
-        if (pos == input_list.size())
-            return -2;
         return -1;
     }
 

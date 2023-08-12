@@ -433,6 +433,27 @@ bool GameLoop::startFrameMessages()
                     }
                 }
             }
+            
+            /* Check and update the moviefile length when reaching the end of
+             * the movie, useful when variable framerate is being used */
+            else if (context->config.sc.recording == SharedConfig::RECORDING_READ && 
+                context->framecount == context->config.sc.movie_framecount) {
+
+                uint64_t cur_sec = context->current_time_sec - context->config.sc.initial_monotonic_time_sec;
+                uint64_t cur_nsec = context->current_time_nsec - context->config.sc.initial_monotonic_time_nsec;
+
+                if (movie.header->length_sec != cur_sec ||
+                    movie.header->length_nsec != cur_nsec) {
+
+                    if (movie.header->length_sec != -1)
+                        emit alertToShow(QString("Movie length mismatch. Metadata stores %1.%2 seconds but end time is %3.%4 seconds.").arg(movie.header->length_sec).arg(movie.header->length_nsec, 9, 10, QChar('0')).arg(cur_sec).arg(cur_nsec, 9, 10, QChar('0')));
+
+                    movie.header->length_sec = cur_sec;
+                    movie.header->length_nsec = cur_nsec;
+                    movie.inputs->wasModified();
+                }
+            }
+
             break;
         case MSGB_GAMEINFO:
             receiveData(&game_info, sizeof(game_info));
@@ -703,24 +724,7 @@ void GameLoop::processInputs(AllInputs &ai)
                 if (context->config.sc.variable_framerate) {
                     ai.framerate_num = context->config.sc.framerate_num;
                     ai.framerate_den = context->config.sc.framerate_den;
-                }
-                
-                /* First frame after movie end */
-                if (ret == -2) {
-                    /* Check for the moviefile length */
-                    uint64_t cur_sec, cur_nsec;
-                    cur_sec = context->current_time_sec - context->config.sc.initial_monotonic_time_sec;
-                    cur_nsec = context->current_time_nsec - context->config.sc.initial_monotonic_time_nsec;
-  
-                    if ((movie.header->length_sec != -1) &&
-                        ((movie.header->length_sec != cur_sec) ||
-                        (movie.header->length_nsec != cur_nsec))) {
-
-                        emit alertToShow(QString("Movie length mismatch. Metadata stores %1.%2 seconds but end time is %3.%4 seconds.").arg(movie.header->length_sec).arg(movie.header->length_nsec, 9, 10, QChar('0')).arg(cur_sec).arg(cur_nsec, 9, 10, QChar('0')));
-                    }
-                    movie.header->length_sec = cur_sec;
-                    movie.header->length_nsec = cur_nsec;
-                }
+                }                
             }
 
             /* Call lua onInput() here so that a script can modify inputs */
