@@ -21,6 +21,9 @@
 #include "../logging.h"
 #include "hook.h"
 #include "../GlobalState.h"
+extern "C" {
+#include <libavutil/samplefmt.h>
+}
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -34,7 +37,11 @@ DEFINE_ORIG_POINTER(swr_free)
 DEFINE_ORIG_POINTER(swr_is_initialized)
 DEFINE_ORIG_POINTER(swr_close)
 DEFINE_ORIG_POINTER(swr_init)
+#if LIBSWRESAMPLE_VERSION_INT >= AV_VERSION_INT(4,7,100)
+DEFINE_ORIG_POINTER(swr_alloc_set_opts2)
+#else
 DEFINE_ORIG_POINTER(swr_alloc_set_opts)
+#endif
 DEFINE_ORIG_POINTER(swr_convert)
 
 AudioConverterSwr::AudioConverterSwr(void)
@@ -46,6 +53,7 @@ AudioConverterSwr::AudioConverterSwr(void)
     {
         GlobalNoLog gnl;
         LINK_NAMESPACE(swr_alloc, "swresample");
+        LINK_NAMESPACE_FULLNAME(swr_alloc, "libswresample.so.4");
         LINK_NAMESPACE_FULLNAME(swr_alloc, "libswresample.so.3");
         LINK_NAMESPACE_FULLNAME(swr_alloc, "libswresample.so.2");
     }
@@ -89,7 +97,11 @@ void AudioConverterSwr::init(AudioBuffer::SampleFormat inFormat, int inChannels,
         
     LINK_NAMESPACE(swr_init, "swresample");
     LINK_NAMESPACE(swr_convert, "swresample");
+#if LIBSWRESAMPLE_VERSION_INT >= AV_VERSION_INT(4,7,100)
+    LINK_NAMESPACE(swr_alloc_set_opts2, "swresample");
+#else
     LINK_NAMESPACE(swr_alloc_set_opts, "swresample");
+#endif
 
     AVSampleFormat inAVFormat = AV_SAMPLE_FMT_U8;
     switch (inFormat) {
@@ -136,7 +148,28 @@ void AudioConverterSwr::init(AudioBuffer::SampleFormat inFormat, int inChannels,
             debuglogstdio(LCF_SOUND | LCF_ERROR, "Unknown sample format");
             break;
     }
-    
+
+#if LIBSWRESAMPLE_VERSION_INT >= AV_VERSION_INT(4,7,100)
+    /* Get the channel layout */
+    AVChannelLayout in_ch_layout;
+    AVChannelLayout out_ch_layout;
+
+    if (inChannels == 1) {
+        in_ch_layout = AV_CHANNEL_LAYOUT_MONO;
+    }
+    if (inChannels == 2) {
+        in_ch_layout = AV_CHANNEL_LAYOUT_STEREO;
+    }
+    if (outChannels == 1) {
+        out_ch_layout = AV_CHANNEL_LAYOUT_MONO;
+    }
+    if (outChannels == 2) {
+        out_ch_layout = AV_CHANNEL_LAYOUT_STEREO;
+    }
+
+    MYASSERT(0 == orig::swr_alloc_set_opts2(&swr, &out_ch_layout, outAVFormat, outFreq, &in_ch_layout, inAVFormat, inFreq, 0, nullptr));
+#else
+
     /* Get the channel layout */
     int64_t in_ch_layout = 0;
     int64_t out_ch_layout = 0;
@@ -155,6 +188,7 @@ void AudioConverterSwr::init(AudioBuffer::SampleFormat inFormat, int inChannels,
     }
 
     MYASSERT(nullptr != orig::swr_alloc_set_opts(swr, out_ch_layout, outAVFormat, outFreq, in_ch_layout, inAVFormat, inFreq, 0, nullptr));
+#endif
 
     /* Open the context */
     if (orig::swr_init(swr) < 0) {

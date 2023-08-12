@@ -16,6 +16,7 @@
 * Implement FocusIn/FocusOut inputs (#367)
 * Add lua window to manage scripts (#519)
 * Update the seek frame during rewind (#530)
+* Update to newer libswresample library
 
 ### Changed
 
