@@ -38,6 +38,7 @@
 * Disable scroll freeze when pausing during rewind (#528)
 * Fix scrolling to current frame not working when input editor was scrolled to bottom
 * Fix fopen savefiles that couldn't be read (#547)
+* Use correct prototype for SDL1 SDL_CreateThread()
 
 ## [1.4.4] - 2022-10-25
 ### Added

@@ -28,7 +28,12 @@ DECLARE_ORIG_POINTER(SDL_WaitThread)
 
 /* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
 {
-    debuglogstdio(LCF_THREAD, "SDL Thread %s was created.", name);
+    if (get_sdlversion() == 1)
+        /* SDL1 version prototype is SDL_CreateThread(int (SDLCALL *fn)(void *), void *data)
+         * So we can't print the thread name */
+        DEBUGLOGCALL(LCF_THREAD);
+    else
+        debuglogstdio(LCF_THREAD, "SDL Thread %s was created.", name);
     LINK_NAMESPACE_SDLX(SDL_CreateThread);
     return orig::SDL_CreateThread(fn, name, data);
 }

@@ -28,7 +28,14 @@ namespace libtas {
 /**
  *  Create a thread.
  */
+
+ /* SDL1 function prototype is SDL_CreateThread(int (SDLCALL *fn)(void *), void *data)
+  * but we don't actually do anything in our function, as thread handling is
+  * performed in low-level pthread API, so having one prototype for both versions
+  * is fine.
+  */
 OVERRIDE SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data);
+
 
 /**
  *  Wait for a thread to finish. Threads that haven't been detached will
