@@ -42,6 +42,7 @@
 * Fix fopen savefiles that couldn't be read (#547)
 * Use correct prototype for SDL1 SDL_CreateThread()
 * Fix input editor variable framerate values not showing off correctly
+* Save GL unpack alignment for OSD
 
 ## [1.4.4] - 2022-10-25
 ### Added

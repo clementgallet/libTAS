@@ -350,6 +350,15 @@ void RenderHUD_GL::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y
             debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glPixelStorei failed with error %d", error);
     }
 
+    /* Save previous unpack alignment */
+    GLint oldUnpackAlignment;
+    orig::glGetIntegerv(GL_UNPACK_ALIGNMENT, &oldUnpackAlignment);
+    if (oldUnpackAlignment != 0) {
+        orig::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        if ((error = orig::glGetError()) != GL_NO_ERROR)
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glPixelStorei failed with error %d", error);
+    }
+    
     /* Save previous binded texture and active texture unit */
     GLint oldTex;
     orig::glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTex);
@@ -419,6 +428,13 @@ void RenderHUD_GL::renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y
             debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glActiveTexture failed with error %d", error);
     }
 
+    /* Restore unpack row alignment */
+    if (oldUnpackAlignment != 1) {
+        orig::glPixelStorei(GL_UNPACK_ALIGNMENT, oldUnpackAlignment);
+        if ((error = orig::glGetError()) != GL_NO_ERROR)
+            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glPixelStorei failed with error %d", error);
+    }
+    
     /* Restore unpack row length */
     if (oldUnpackRow != 0) {
         orig::glPixelStorei(GL_UNPACK_ROW_LENGTH, oldUnpackRow);
