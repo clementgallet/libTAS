@@ -275,6 +275,9 @@ void InputEditorView::updateMenu()
             min_row = index.row();
     }
 
+    markAct->setText(inputEditorModel->hasMarker(min_row) ? tr("Edit marker") : tr("Add marker"));
+    unmarkAct->setEnabled(inputEditorModel->hasMarker(min_row));
+
     if (static_cast<uint32_t>(min_row) < context->framecount) {
         duplicateAct->setEnabled(false);
         insertAct->setEnabled(false);
@@ -573,11 +576,19 @@ void InputEditorView::addMarker()
     /* Obtain description if there's already a marker here */
     bool ok;
 	QString text = QString("Marker text for frame %1: ").arg(frame);
-    QString newText = QInputDialog::getText(this, tr("Add marker"), text, QLineEdit::Normal, QString(inputEditorModel->getMarkerText(frame).c_str()), &ok);
+    QString newText = QInputDialog::getText(
+        this,
+        (inputEditorModel->hasMarker(frame) ? tr("Edit marker") : tr("Add marker")),
+        text,
+        QLineEdit::Normal,
+        QString(inputEditorModel->getMarkerText(frame).c_str()),
+        &ok);
 
     if (ok) {
         inputEditorModel->addMarker(frame, newText.toStdString());
     }
+    
+    InputEditorView::updateMenu();
 }
 
 void InputEditorView::removeMarker()
@@ -589,6 +600,8 @@ void InputEditorView::removeMarker()
         return;
 
     inputEditorModel->removeMarker(indexes[0].row());
+    
+    InputEditorView::updateMenu();
 }
 
 void InputEditorView::duplicateInput()

@@ -85,6 +85,7 @@ public:
     /* Insert rows, and specify if we want to duplicate the selected input row */
     bool insertRows(int row, int count, bool duplicate, const QModelIndex &parent = QModelIndex());
 
+    bool hasMarker(int frame);
     std::string getMarkerText(int frame);
     void addMarker(int frame, std::string text);
     void removeMarker(int frame);
