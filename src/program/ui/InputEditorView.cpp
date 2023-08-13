@@ -119,6 +119,10 @@ void InputEditorView::fillMenu(QMenu* frameMenu)
 
     insertsAct = menu->addAction(tr("Insert # frames"), this, &InputEditorView::insertInputs);
 
+    markAct = menu->addAction(tr("Add marker"), this, &InputEditorView::addMarker);
+
+    unmarkAct = menu->addAction(tr("Remove marker"), this, &InputEditorView::removeMarker);
+
     duplicateAct = menu->addAction(tr("Duplicate"), this, &InputEditorView::duplicateInput, QKeySequence(Qt::CTRL + Qt::Key_D));
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     duplicateAct->setShortcutVisibleInContextMenu(true);
@@ -554,6 +558,37 @@ void InputEditorView::mainMenu(QPoint pos)
 
     /* Display the context menu */
     menu->popup(viewport()->mapToGlobal(pos));
+}
+
+void InputEditorView::addMarker()
+{
+    const QModelIndexList indexes = selectionModel()->selectedRows();
+
+    /* If no row was selected, return */
+    if (indexes.count() == 0)
+        return;
+
+    int frame = indexes[0].row();
+
+    /* Obtain description if there's already a marker here */
+    bool ok;
+	QString text = QString("Marker text for frame %1: ").arg(frame);
+    QString newText = QInputDialog::getText(this, tr("Add marker"), text, QLineEdit::Normal, QString(inputEditorModel->getMarkerText(frame).c_str()), &ok);
+
+    if (ok) {
+        inputEditorModel->addMarker(frame, newText.toStdString());
+    }
+}
+
+void InputEditorView::removeMarker()
+{
+    const QModelIndexList indexes = selectionModel()->selectedRows();
+
+    /* If no row was selected, return */
+    if (indexes.count() == 0)
+        return;
+
+    inputEditorModel->removeMarker(indexes[0].row());
 }
 
 void InputEditorView::duplicateInput()

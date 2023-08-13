@@ -85,6 +85,10 @@ public:
     /* Insert rows, and specify if we want to duplicate the selected input row */
     bool insertRows(int row, int count, bool duplicate, const QModelIndex &parent = QModelIndex());
 
+    std::string getMarkerText(int frame);
+    void addMarker(int frame, std::string text);
+    void removeMarker(int frame);
+
     /* Get lock status of a single input */
     bool isLockedUniqueInput(int column);
 

@@ -65,6 +65,13 @@ void MovieFileEditor::load()
     }
     editor.endArray();
     
+    size = editor.beginReadArray("markers");
+    for (int i = 0; i < size; ++i) {
+        editor.setArrayIndex(i);
+        markers[editor.value("frame").toInt()] = editor.value("text").toString().toStdString();
+    }
+    editor.endArray();
+    
     /* If we found something, return. Else, try the old location into config.ini */
     if (!input_set.empty())
         return;
@@ -113,7 +120,17 @@ void MovieFileEditor::save()
         config.setValue("frame", static_cast<unsigned long long>(f));
     }
     config.endArray();
-
+    
+    config.remove("markers");
+    config.beginWriteArray("markers");
+    i = 0;
+    for (const auto& marker : markers) {
+        config.setArrayIndex(i++);
+        config.setValue("frame", marker.first);
+        config.setValue("text", marker.second.c_str());
+    }
+    config.endArray();
+    
     config.sync();
 }
 
