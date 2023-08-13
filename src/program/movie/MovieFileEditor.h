@@ -24,12 +24,16 @@
 #include "../Context.h"
 #include <vector>
 #include <set>
+#include <map>
 #include <stdint.h>
 
 class MovieFileEditor {
 public:
     /* Ordered list of single inputs to be shown on the input editor */
     std::vector<SingleInput> input_set;
+
+    /* Ordered list of markers to be shown on the input editor */
+    std::map<int, std::string> markers;
 
     /* List of locked single inputs. They won't be modified even in recording mode */
     std::set<SingleInput> locked_inputs;

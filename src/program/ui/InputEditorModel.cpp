@@ -554,6 +554,24 @@ bool InputEditorModel::removeRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
+std::string InputEditorModel::getMarkerText(int frame)
+{
+    if (movie->editor->markers.count(frame))
+        return movie->editor->markers[frame];
+
+    return "";
+}
+
+void InputEditorModel::addMarker(int frame, std::string text)
+{
+    movie->editor->markers[frame] = text;
+}
+
+void InputEditorModel::removeMarker(int frame)
+{
+    movie->editor->markers.erase(frame);
+}
+
 void InputEditorModel::clearClipboard()
 {
     QClipboard *clipboard = QGuiApplication::clipboard();

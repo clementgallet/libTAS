@@ -56,6 +56,8 @@ public slots:
     void deleteInput();
     void truncateInputs();
     void clearInput();
+    void addMarker();
+    void removeMarker();
 
     void copyInputs();
     void cutInputs();
@@ -101,6 +103,8 @@ private:
     QAction *cutAct;
     QAction *pasteAct;
     QAction *pasteInsertAct;
+    QAction *markAct;
+    QAction *unmarkAct;
 
     QAction *lockAction;
 
