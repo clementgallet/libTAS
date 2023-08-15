@@ -55,6 +55,7 @@ typedef int HotKeyType; enum
     HOTKEY_SAVESTATE8,
     HOTKEY_SAVESTATE9,
     HOTKEY_SAVESTATE_BACKTRACK,
+    HOTKEY_SAVESTATE_SELECTED,
     HOTKEY_LOADSTATE1, // Load the entire state of the game
     HOTKEY_LOADSTATE2,
     HOTKEY_LOADSTATE3,
@@ -65,6 +66,7 @@ typedef int HotKeyType; enum
     HOTKEY_LOADSTATE8,
     HOTKEY_LOADSTATE9,
     HOTKEY_LOADSTATE_BACKTRACK,
+    HOTKEY_LOADSTATE_SELECTED,
     HOTKEY_TOGGLE_ENCODE, // Start/stop audio/video encoding
     HOTKEY_CALIBRATE_MOUSE, // Calibrate mouse cursor position
     HOTKEY_LOADBRANCH1, // Load state and movie
@@ -77,6 +79,8 @@ typedef int HotKeyType; enum
     HOTKEY_LOADBRANCH8,
     HOTKEY_LOADBRANCH9,
     HOTKEY_LOADBRANCH_BACKTRACK,
+    HOTKEY_SELECTSTATE_NEXT,
+    HOTKEY_SELECTSTATE_PREVIOUS,
     HOTKEY_TOGGLE_FASTFORWARD, // Toggle fastforward
     HOTKEY_LEN
 };
