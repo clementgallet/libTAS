@@ -77,6 +77,14 @@ LuaConsoleWindow::LuaConsoleWindow(Context *c, QWidget *parent) : QMainWindow(pa
     QWidget *centralWidget = new QWidget;
     centralWidget->setLayout(mainLayout);
     setCentralWidget(centralWidget);
+    
+    /* Configure the call timer */
+    startTimer(1000);
+}
+
+void LuaConsoleWindow::timerEvent(QTimerEvent *event)
+{
+    luaModel->update();
 }
 
 void LuaConsoleWindow::slotAppend(QString qstr)

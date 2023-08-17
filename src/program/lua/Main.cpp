@@ -63,13 +63,14 @@ void Lua::Main::exit()
 
 std::string luaFile;
 
-void Lua::Main::run(std::string filename)
+int Lua::Main::run(std::string filename)
 {
     luaFile = filename;
     int status = luaL_dofile(lua_state, filename.c_str());
     if (status != 0) {
         std::cerr << "Error " << status << " loading lua script " << filename << std::endl;
         std::cerr << lua_tostring(lua_state, -1) << std::endl;
+        return -1;
     }
     else {
         std::cout << "Loaded script " << filename << std::endl;        
@@ -100,6 +101,7 @@ void Lua::Main::run(std::string filename)
     else
         lua_pop(lua_state, 1);
 
+    return 0;
 }
 
 const std::string& Lua::Main::currentFile()

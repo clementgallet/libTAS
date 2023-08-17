@@ -31,8 +31,6 @@ extern "C" {
 
 namespace Lua {
 
-static LuaFunctionList lfl;
-
 /* List of functions to register */
 static const luaL_Reg callback_functions[] =
 {
@@ -51,40 +49,41 @@ void Callbacks::registerFunctions(lua_State *L)
 
 void Callbacks::clear()
 {
-    lfl.clear();
+    getList().clear();
 }
 
 int Callbacks::onStartup(lua_State *L)
 {
-    lfl.add(L, NamedLuaFunction::CallbackStartup);
+    getList().add(L, NamedLuaFunction::CallbackStartup);
     return 0;
 }
 
 int Callbacks::onInput(lua_State *L)
 {
-    lfl.add(L, NamedLuaFunction::CallbackInput);
+    getList().add(L, NamedLuaFunction::CallbackInput);
     return 0;
 }
 
 int Callbacks::onFrame(lua_State *L)
 {
-    lfl.add(L, NamedLuaFunction::CallbackFrame);
+    getList().add(L, NamedLuaFunction::CallbackFrame);
     return 0;
 }
 
 int Callbacks::onPaint(lua_State *L)
 {
-    lfl.add(L, NamedLuaFunction::CallbackPaint);
+    getList().add(L, NamedLuaFunction::CallbackPaint);
     return 0;
 }
 
 void Callbacks::call(NamedLuaFunction::CallbackType type)
 {
-    lfl.call(type);
+    getList().call(type);
 }
 
 LuaFunctionList& Callbacks::getList()
 {
+    static LuaFunctionList lfl;
     return lfl;
 }
 

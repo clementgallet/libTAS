@@ -76,9 +76,9 @@ QVariant LuaConsoleModel::data(const QModelIndex &index, int role) const
             case 0:
                 return QString("");
             case 1:
-                return QString(lfl.fileNameList[index.row()].c_str());
+                return QString(lfl.fileList[index.row()].filename.c_str());
             case 2:
-                return QString(lfl.fileList[index.row()].c_str());
+                return QString(lfl.fileList[index.row()].file.c_str());
             default:
                 return QString();
         }
@@ -130,5 +130,5 @@ void LuaConsoleModel::clear()
 
 void LuaConsoleModel::update()
 {
-    emit dataChanged(index(0,0), index(rowCount()-1,2), QVector<int>(Qt::DisplayRole));
+    Lua::Callbacks::getList().watchChanges();
 }

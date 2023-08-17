@@ -35,6 +35,17 @@ namespace Lua {
 class LuaFunctionList {
     
 public:
+    
+    struct LuaFile {
+        std::string file;
+        std::string filename;
+        int wd;
+        bool enabled;
+    };
+    
+    LuaFunctionList();
+    ~LuaFunctionList();
+
     /* Add a named function from lua stack */
     void add(lua_State *L, NamedLuaFunction::CallbackType t);
 
@@ -43,6 +54,9 @@ public:
 
     /* Remove all callbacks from a file */
     void removeForFile(int row);
+
+    /* Look for file changes and reloads them */
+    void watchChanges();
 
     /* Get the active state */
     bool activeState(int row) const;
@@ -59,13 +73,12 @@ public:
     /* Clear all callbacks */
     void clear();
 
-    std::vector<std::string> fileList;
-    std::vector<std::string> fileNameList;
-    std::vector<bool> fileEnabled;
+    std::vector<LuaFile> fileList;
     std::set<std::string> fileSet;
     
 private:
     std::list<NamedLuaFunction> functions;
+    int inotifyfd;
 
 };
 }

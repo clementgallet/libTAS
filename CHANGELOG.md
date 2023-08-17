@@ -17,6 +17,7 @@
 * Add lua window to manage scripts (#519)
 * Update the seek frame during rewind (#530)
 * Update to newer libswresample library
+* Reload lua scripts when modified by user (#519)
 
 ### Changed
 

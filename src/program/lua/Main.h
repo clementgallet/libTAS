@@ -36,7 +36,7 @@ namespace Main {
     void exit();
 
     /* Run a lua script */
-    void run(std::string filename);
+    int run(std::string filename);
 
     /* Return the current executed filename */
     const std::string& currentFile();

@@ -35,6 +35,8 @@ class LuaConsoleWindow : public QMainWindow {
 public:
     LuaConsoleWindow(Context *c, QWidget *parent = Q_NULLPTR);
 
+    void timerEvent(QTimerEvent *event);
+
 private:
     Context *context;
     QPlainTextEdit *consoleText;
