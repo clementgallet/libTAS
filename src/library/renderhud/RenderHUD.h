@@ -68,6 +68,9 @@ class RenderHUD
         /* Insert a ram watch to be displayed */
         static void insertWatch(std::string watch);
 
+        /* Set marker text to be displayed */
+        static void setMarkerText(std::string text);
+
         /* Clear the list of watches */
         static void resetWatches();
 
@@ -160,6 +163,9 @@ class RenderHUD
         /* Display lua drawings */
         void drawLua();
 
+        /* Display marker text */
+        void drawMarkers();
+
         /* Display crosshair on current pointer position */
         void drawCrosshair(const AllInputs& ai);
 
@@ -172,30 +178,32 @@ class RenderHUD
         /* Ram watches to print on screen */
         static std::list<std::string> watches;
 
-        struct LuaShape
-        {
-            virtual void render(RenderHUD *hud) = 0;
-        };
+        /* Marker text to print on screen */
+        static std::string marker;
 
-        struct LuaText : public LuaShape
+        struct LuaText
         {
             std::string text;
             Color fg_color;
             Color bg_color;
             int x;
             int y;
-            void render(RenderHUD *hud) override;
         };
 
-        struct LuaPixel : public LuaShape
+        /* Lua texts to print on screen */
+        static std::list<LuaText> lua_texts;
+
+        struct LuaPixel
         {
             int x;
             int y;
             Color color;
-            void render(RenderHUD *hud) override;
         };
 
-        struct LuaRect : public LuaShape
+        /* Lua pixels to print on screen */
+        static std::list<LuaPixel> lua_pixels;
+
+        struct LuaRect
         {
             int x;
             int y;
@@ -204,31 +212,34 @@ class RenderHUD
             int thickness;
             Color outline;
             Color fill;
-            void render(RenderHUD *hud) override;
         };
 
-        struct LuaLine : public LuaShape
+        /* Lua rects to print on screen */
+        static std::list<LuaRect> lua_rects;
+
+        struct LuaLine
         {
             int x0;
             int y0;
             int x1;
             int y1;
             Color color;
-            void render(RenderHUD *hud) override;
         };
 
-        struct LuaEllipse : public LuaShape
+        /* Lua rects to print on screen */
+        static std::list<LuaLine> lua_lines;
+
+        struct LuaEllipse
         {
             int center_x;
             int center_y;
             int radius_x;
             int radius_y;
             Color color;
-            void render(RenderHUD *hud) override;
         };
 
-        /* Lua shapes to print on screen */
-        static std::list<std::unique_ptr<LuaShape>> lua_shapes;
+        /* Lua rects to print on screen */
+        static std::list<LuaEllipse> lua_ellipses;
 
 };
 }

@@ -58,6 +58,7 @@ public slots:
     void clearInput();
     void addMarker();
     void removeMarker();
+    std::string getCurrentMarkerText();
 
     void copyInputs();
     void cutInputs();
@@ -92,6 +93,7 @@ private:
     int minToggleRow;
     int mouseValue;
     KeyPressedDialog* keyDialog;
+    std::string currentMarkerText;
 
     QAction *duplicateAct;
     QAction *insertAct;

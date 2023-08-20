@@ -39,6 +39,7 @@
 #include "lua/Callbacks.h"
 #include "lua/NamedLuaFunction.h"
 #include "ramsearch/MemAccess.h"
+#include "ui/InputEditorView.h"
 
 #include "../shared/sockethelpers.h"
 #include "../shared/SharedConfig.h"
@@ -544,6 +545,16 @@ bool GameLoop::startFrameMessages()
             sendMessage(MSGN_RAMWATCH);
             sendString(ramwatch);
             emit getRamWatch(ramwatch);
+        }
+    }
+
+    /* Send marker text */
+    if (context->config.sc.osd & SharedConfig::OSD_MARKERS) {
+        std::string text;
+        emit getMarkerText(text);
+        if (!text.empty()) {
+            sendMessage(MSGN_MARKER);
+            sendString(text);
         }
     }
 
