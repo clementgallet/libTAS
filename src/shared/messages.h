@@ -311,6 +311,12 @@ enum {
      */
     MSGB_SYMBOL_ADDRESS,
 
+    /*
+     * Send marker string to display on OSD
+     * Argument: size_t (string length) then char[len]
+     */
+    MSGN_MARKER,
+
 };
 
 #endif

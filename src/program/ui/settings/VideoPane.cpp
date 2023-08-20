@@ -136,6 +136,19 @@ void VideoPane::initLayout()
     watchesVertChoice->addItem("Middle", SharedConfig::OSD_VCENTER);
     watchesVertChoice->addItem("Bottom", SharedConfig::OSD_BOTTOM);
 
+    /* Markers */
+    osdMarkersBox = new QCheckBox(tr("Markers"));
+
+    markersHorChoice = new QComboBox();
+    markersHorChoice->addItem("Left", SharedConfig::OSD_LEFT);
+    markersHorChoice->addItem("Center", SharedConfig::OSD_HCENTER);
+    markersHorChoice->addItem("Right", SharedConfig::OSD_RIGHT);
+
+    markersVertChoice = new QComboBox();
+    markersVertChoice->addItem("Top", SharedConfig::OSD_TOP);
+    markersVertChoice->addItem("Middle", SharedConfig::OSD_VCENTER);
+    markersVertChoice->addItem("Bottom", SharedConfig::OSD_BOTTOM);
+
     osdLuaBox = new QCheckBox(tr("Lua"));
     osdCrosshairBox = new QCheckBox(tr("Crosshair"));
 
@@ -153,9 +166,12 @@ void VideoPane::initLayout()
     osdLayout->addWidget(osdRamBox, 3, 0);
     osdLayout->addWidget(watchesHorChoice, 3, 1);
     osdLayout->addWidget(watchesVertChoice, 3, 2);
-    osdLayout->addWidget(osdLuaBox, 4, 0);
-    osdLayout->addWidget(osdCrosshairBox, 5, 0);
-    osdLayout->addWidget(osdEncodeBox, 6, 0, 1, 3);
+    osdLayout->addWidget(osdMarkersBox, 4, 0);
+    osdLayout->addWidget(markersHorChoice, 4, 1);
+    osdLayout->addWidget(markersVertChoice, 4, 2);
+    osdLayout->addWidget(osdLuaBox, 5, 0);
+    osdLayout->addWidget(osdCrosshairBox, 6, 0);
+    osdLayout->addWidget(osdEncodeBox, 7, 0, 1, 3);
     
     renderingBox = new QGroupBox(tr("Rendering"));
     QVBoxLayout* renderingLayout = new QVBoxLayout;
@@ -198,6 +214,9 @@ void VideoPane::initSignals()
     connect(osdRamBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
     connect(watchesHorChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
     connect(watchesVertChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
+    connect(osdMarkersBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
+    connect(markersHorChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
+    connect(markersVertChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
     connect(osdLuaBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
     connect(osdCrosshairBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
     connect(osdEncodeBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
@@ -251,6 +270,7 @@ void VideoPane::loadConfig()
     osdInputsBox->setChecked(context->config.sc.osd & SharedConfig::OSD_INPUTS);
     osdMessagesBox->setChecked(context->config.sc.osd & SharedConfig::OSD_MESSAGES);
     osdRamBox->setChecked(context->config.sc.osd & SharedConfig::OSD_RAMWATCHES);
+    osdMarkersBox->setChecked(context->config.sc.osd & SharedConfig::OSD_MARKERS);
     osdLuaBox->setChecked(context->config.sc.osd & SharedConfig::OSD_LUA);
     osdCrosshairBox->setChecked(context->config.sc.osd & SharedConfig::OSD_CROSSHAIR);
     osdEncodeBox->setChecked(context->config.sc.osd_encode);
@@ -291,6 +311,14 @@ void VideoPane::loadConfig()
     if (index >= 0)
         watchesVertChoice->setCurrentIndex(index);
 
+    index = markersHorChoice->findData(context->config.sc.osd_markers_location & hflags);
+    if (index >= 0)
+        markersHorChoice->setCurrentIndex(index);
+
+    index = markersVertChoice->findData(context->config.sc.osd_markers_location & vflags);
+    if (index >= 0)
+        markersVertChoice->setCurrentIndex(index);
+
     rendSoftBox->setChecked(context->config.sc.opengl_soft);
     rendPerfBox->setChecked(context->config.sc.opengl_performance);
 }
@@ -317,9 +345,11 @@ void VideoPane::saveConfig()
     if (osdInputsBox->isChecked())
         context->config.sc.osd |= SharedConfig::OSD_INPUTS;
     if (osdMessagesBox->isChecked())
-        context->config.sc.osd |= SharedConfig::OSD_MESSAGES;        
+        context->config.sc.osd |= SharedConfig::OSD_MESSAGES;
     if (osdRamBox->isChecked())
         context->config.sc.osd |= SharedConfig::OSD_RAMWATCHES;
+    if (osdMarkersBox->isChecked())
+        context->config.sc.osd |= SharedConfig::OSD_MARKERS;
     if (osdLuaBox->isChecked())
         context->config.sc.osd |= SharedConfig::OSD_LUA;
     if (osdCrosshairBox->isChecked())
@@ -331,6 +361,7 @@ void VideoPane::saveConfig()
     context->config.sc.osd_inputs_location = inputsHorChoice->currentData().toInt() | inputsVertChoice->currentData().toInt();
     context->config.sc.osd_messages_location = messagesHorChoice->currentData().toInt() | messagesVertChoice->currentData().toInt();
     context->config.sc.osd_ramwatches_location = watchesHorChoice->currentData().toInt() | watchesVertChoice->currentData().toInt();
+    context->config.sc.osd_markers_location = markersHorChoice->currentData().toInt() | markersVertChoice->currentData().toInt();
 
     context->config.sc.opengl_soft = rendSoftBox->isChecked();
     context->config.sc.opengl_performance = rendPerfBox->isChecked();

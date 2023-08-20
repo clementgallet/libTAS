@@ -36,6 +36,7 @@ std::list<RenderHUD::LuaPixel> RenderHUD::lua_pixels;
 std::list<RenderHUD::LuaRect> RenderHUD::lua_rects;
 std::list<RenderHUD::LuaLine> RenderHUD::lua_lines;
 std::list<RenderHUD::LuaEllipse> RenderHUD::lua_ellipses;
+std::string RenderHUD::marker;
 
 void RenderHUD::renderPixel(int x, int y, Color color)
 {
@@ -283,6 +284,26 @@ void RenderHUD::drawLua()
     }
 }
 
+void RenderHUD::setMarkerText(std::string text)
+{
+    marker = text;
+}
+
+void RenderHUD::drawMarkers()
+{
+    if (marker.empty())
+        return;
+    
+    debuglogstdio(LCF_INFO, "drawMarkers()");
+
+    Color fg_color = {255, 255, 255, 255};
+    Color bg_color = {0, 0, 0, 255};
+
+    int x, y;
+    locationToCoords(Global::shared_config.osd_markers_location, x, y);
+    renderText(marker.c_str(), fg_color, bg_color, x, y);
+}
+
 void RenderHUD::drawCrosshair(const AllInputs& ai)
 {
     int size = 5;
@@ -394,6 +415,9 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
 
     if (Global::shared_config.osd & SharedConfig::OSD_RAMWATCHES)
         drawWatches();
+
+    if (Global::shared_config.osd & SharedConfig::OSD_MARKERS)
+        drawMarkers();
 
     if (Global::shared_config.osd & SharedConfig::OSD_LUA)
         drawLua();

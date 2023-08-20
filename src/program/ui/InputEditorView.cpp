@@ -94,6 +94,8 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
 
     keyDialog = new KeyPressedDialog(c, this);
     keyDialog->withModifiers = false;
+
+    currentMarkerText = "";
 }
 
 void InputEditorView::fillMenu(QMenu* frameMenu)
@@ -275,8 +277,15 @@ void InputEditorView::updateMenu()
             min_row = index.row();
     }
 
-    markAct->setText(inputEditorModel->hasMarker(min_row) ? tr("Edit marker") : tr("Add marker"));
-    unmarkAct->setEnabled(inputEditorModel->hasMarker(min_row));
+    bool has_marker = inputEditorModel->hasMarker(min_row);
+
+    /* Set current marker text */
+    if (has_marker) {
+        currentMarkerText = inputEditorModel->getMarkerText(min_row);
+    }
+
+    markAct->setText(has_marker ? tr("Edit marker") : tr("Add marker"));
+    unmarkAct->setEnabled(has_marker);
 
     if (static_cast<uint32_t>(min_row) < context->framecount) {
         duplicateAct->setEnabled(false);
@@ -561,6 +570,11 @@ void InputEditorView::mainMenu(QPoint pos)
 
     /* Display the context menu */
     menu->popup(viewport()->mapToGlobal(pos));
+}
+
+std::string InputEditorView::getCurrentMarkerText()
+{
+    return currentMarkerText;
 }
 
 void InputEditorView::addMarker()

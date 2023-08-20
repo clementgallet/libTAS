@@ -68,6 +68,9 @@ class RenderHUD
         /* Insert a ram watch to be displayed */
         static void insertWatch(std::string watch);
 
+        /* Set marker text to be displayed */
+        static void setMarkerText(std::string text);
+
         /* Clear the list of watches */
         static void resetWatches();
 
@@ -160,6 +163,9 @@ class RenderHUD
         /* Display lua drawings */
         void drawLua();
 
+        /* Display marker text */
+        void drawMarkers();
+
         /* Display crosshair on current pointer position */
         void drawCrosshair(const AllInputs& ai);
 
@@ -171,6 +177,9 @@ class RenderHUD
 
         /* Ram watches to print on screen */
         static std::list<std::string> watches;
+
+        /* Marker text to print on screen */
+        static std::string marker;
 
         struct LuaText
         {
