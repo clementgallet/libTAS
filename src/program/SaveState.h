@@ -116,7 +116,7 @@ private:
     std::string loaded_msg;
 
     /* Build all savestate messages */
-    void buildMessages(Context* context);
+    void buildMessages(bool branch = false);
 
 };
 
