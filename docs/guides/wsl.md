@@ -4,6 +4,8 @@ title: Running libTAS using WSL 2
 permalink: /guides/wsl/
 ---
 
+Note: There is a [new, simpler guide](https://tasvideos.org/Forum/Topics/24747) which is in need of testing. Please give feedback in the forum thread or the [libTAS Discord server](https://discord.gg/3MBVAzU).
+
 *This guide was written by @SchneeheideWW*
 
 # Introduction
