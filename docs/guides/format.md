@@ -11,7 +11,7 @@ The tool records inputs into a movie file which has a `.ltm` extension. It is ac
 The first one is `config.ini`, containing all meta-data of the movie file. It consists of a list of key/value pairs. Here is an example of such a file, with added comments:
 
     [General]
-    exec_path=SuperMeatBoy ; path of the game executable
+    exec_path=~/SuperMeatBoy ; path of the game executable
     command_line_args= ; command-line options for the executable
     md5=a6fa991f40ef518b302a4a492af7259c ; md5 hash of the game executable
     frame_count=81 ; frame count of the movie file
