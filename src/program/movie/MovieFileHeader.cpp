@@ -128,8 +128,8 @@ void MovieFileHeader::save(uint64_t tot_frames, uint64_t nb_frames)
     QSettings config(configfile, QSettings::IniFormat);
     config.setFallbacksEnabled(false);
 
-    config.setValue("game_path", context->gamepath.c_str());
-    config.setValue("game_args", context->config.gameargs.c_str());
+    config.setValue("exec_path", context->gamepath.c_str());
+    config.setValue("command_line_args", context->config.gameargs.c_str());
     config.setValue("frame_count", static_cast<unsigned long long>(tot_frames));
     config.setValue("mouse_support", context->config.sc.mouse_support);
     config.setValue("nb_controllers", context->config.sc.nb_controllers);
