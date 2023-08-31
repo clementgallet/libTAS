@@ -359,7 +359,8 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
             return false;
 
         /* Update the pause frame if we changed an earlier frame */
-        if ((context->pause_frame != 0) && (row < context->pause_frame)) {
+        if ((context->pause_frame != 0) && !context->config.editor_rewind_seek
+                                        && (row < context->pause_frame)) {
             context->pause_frame = row;
         }
 
@@ -446,7 +447,8 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
     }
 
     /* Update the pause frame if we changed an earlier frame */
-    if ((context->pause_frame != 0) && (row < context->pause_frame)) {
+    if ((context->pause_frame != 0) && !context->config.editor_rewind_seek
+                                    && (row < context->pause_frame)) {
         context->pause_frame = row;
     }
 
