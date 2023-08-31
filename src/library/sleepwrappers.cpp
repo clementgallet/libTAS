@@ -39,9 +39,13 @@ DEFINE_ORIG_POINTER(sched_yield)
 /* Advance time when sleep call, depending on config and main thread.
  * Returns if the call was transfered.
  */
-static bool transfer_sleep(const struct timespec &ts)
+bool transfer_sleep(const struct timespec &ts)
 {
     if (ts.tv_sec == 0 && ts.tv_nsec == 0)
+        return false;
+
+    /* Enforce SLEEP_NEVER on Unity games */
+    if (GameHacks::isUnity())
         return false;
 
     switch (Global::shared_config.sleep_handling) {

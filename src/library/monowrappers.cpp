@@ -24,34 +24,11 @@
 #include "hookpatch.h"
 #include "global.h"
 #include "DeterministicTimer.h"
-#include "global.h"
 #include "GlobalState.h"
 #include "checkpoint/ThreadManager.h" // isMainThread()
+#include "sleepwrappers.h" // transfer_sleep()
 
 namespace libtas {
-
-/* Advance time when sleep call, depending on config and main thread.
- * Returns if the call was transfered.
- * TODO: duplicate of sleepwrappers.cpp
- */
-static bool transfer_sleep(const struct timespec &ts)
-{
-    if (ts.tv_sec == 0 && ts.tv_nsec == 0)
-        return false;
-
-    switch (Global::shared_config.sleep_handling) {
-        case SharedConfig::SLEEP_NEVER:
-            return false;
-        case SharedConfig::SLEEP_MAIN:
-            if (!ThreadManager::isMainThread())
-                return false;
-        case SharedConfig::SLEEP_ALWAYS:
-            detTimer.addDelay(ts);
-            NATIVECALL(sched_yield());
-            return true;        
-    }
-    return true;
-}
 
 namespace orig {
 

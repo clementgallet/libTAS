@@ -25,6 +25,7 @@
 #include "GlobalState.h"
 #include "hook.h"
 #include "global.h"
+#include "sleepwrappers.h" // transfer_sleep()
 #ifdef __linux__
 #include "audio/alsa/pcm.h"
 #endif
@@ -37,28 +38,6 @@ DEFINE_ORIG_POINTER(pselect)
 #ifdef __linux__
 DEFINE_ORIG_POINTER(epoll_wait)
 #endif
-
-/* Advance time when sleep call, depending on config and main thread.
- * Returns if the call was transfered.
- */
-static bool transfer_sleep(const struct timespec &ts)
-{
-    if (ts.tv_sec == 0 && ts.tv_nsec == 0)
-        return false;
-
-    switch (Global::shared_config.sleep_handling) {
-        case SharedConfig::SLEEP_NEVER:
-            return false;
-        case SharedConfig::SLEEP_MAIN:
-            if (!ThreadManager::isMainThread())
-                return false;
-        case SharedConfig::SLEEP_ALWAYS:
-            detTimer.addDelay(ts);
-            NATIVECALL(sched_yield());
-            return true;        
-    }
-    return true;
-}
 
 /* Override */ int poll (struct pollfd *fds, nfds_t nfds, int timeout)
 {

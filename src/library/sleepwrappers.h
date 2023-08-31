@@ -28,6 +28,11 @@
 
 namespace libtas {
 
+/* Advance time when sleep call, depending on config and main thread.
+ * Returns if the call was transfered.
+ */
+bool transfer_sleep(const struct timespec &ts);
+
 /* Sleep USECONDS microseconds, or until a signal arrives that is not blocked
    or ignored.
 
