@@ -252,7 +252,8 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
             return row;
         }
 
-        const AllInputs ai = movie->inputs->input_list[row];
+        AllInputs ai;
+        movie->inputs->getInputs(ai, row);
         const SingleInput si = movie->editor->input_set[index.column()-2];
 
         /* Get the value of the single input in movie inputs */
@@ -313,7 +314,8 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         if (movie->editor->locked_inputs.find(si) != movie->editor->locked_inputs.end())
             return QVariant();
 
-        const AllInputs ai = movie->inputs->input_list[row];
+        AllInputs ai;
+        movie->inputs->getInputs(ai, row);
 
         /* Get the value of the single input in movie inputs */
         int value = ai.getInput(si);
@@ -382,9 +384,7 @@ void InputEditorModel::buildInputSet()
     std::set<SingleInput> new_input_set;
 
     /* Gather all unique inputs from the movie */
-    for (const AllInputs &ai : movie->inputs->input_list) {
-        ai.extractInputs(new_input_set);
-    }
+    movie->inputs->extractInputs(new_input_set);
 
     /* Remove inputs already on the list */
     for (SingleInput si : movie->editor->input_set) {
@@ -520,7 +520,7 @@ bool InputEditorModel::insertRows(int row, int count, bool duplicate, const QMod
 
     AllInputs ai;
     if (duplicate)
-        ai = movie->inputs->input_list[row];
+        movie->inputs->getInputs(ai, row);
     else
         ai.emptyInputs();
 
@@ -568,7 +568,9 @@ void InputEditorModel::copyInputs(int row, int count)
 
     /* Translate inputs into a string */
     for (int r=row; r < row+count; r++) {
-        movie->inputs->writeFrame(inputString, movie->inputs->input_list[r]);
+        AllInputs ai;
+        movie->inputs->getInputs(ai, r);
+        movie->inputs->writeFrame(inputString, ai);
     }
 
     /* Append text from the existing clipboard text */
@@ -757,10 +759,11 @@ void InputEditorModel::clearUniqueInput(int column)
         return;
 
     for (unsigned int f = context->framecount; f < movie->inputs->nbFrames(); f++) {
-        movie->inputs->input_list[f].setInput(si, 0);
+        AllInputs ai;
+        movie->inputs->getInputs(ai, f);
+        ai.setInput(si, 0);
+        movie->inputs->setInputs(ai, f, true);
     }
-
-    movie->inputs->wasModified();
 }
 
 bool InputEditorModel::removeUniqueInput(int column)
@@ -769,16 +772,19 @@ bool InputEditorModel::removeUniqueInput(int column)
 
     /* Check if the input is set in past frames */
     for (unsigned int f = 0; f < context->framecount; f++) {
-        if (movie->inputs->input_list[f].getInput(si))
+        AllInputs ai;
+        movie->inputs->getInputs(ai, f);
+        if (ai.getInput(si))
             return false;
     }
 
     /* Clear remaining frames */
     for (unsigned int f = context->framecount; f < movie->inputs->nbFrames(); f++) {
-        movie->inputs->input_list[f].setInput(si, 0);
+        AllInputs ai;
+        movie->inputs->getInputs(ai, f);
+        ai.setInput(si, 0);
+        movie->inputs->setInputs(ai, f, true);
     }
-
-    movie->inputs->wasModified();
 
     /* Remove clear locked state */
     if (movie->editor->locked_inputs.find(si) != movie->editor->locked_inputs.end())
@@ -827,10 +833,8 @@ void InputEditorModel::lockUniqueInput(int column, bool locked)
 
 void InputEditorModel::clearInput(int row)
 {
-    movie->inputs->input_list[row].emptyInputs();
+    movie->inputs->clearInputs(row);
     emit dataChanged(index(row, 0), index(row, columnCount()));
-
-    movie->inputs->wasModified();
 }
 
 void InputEditorModel::beginModifyInputs()
@@ -855,7 +859,10 @@ void InputEditorModel::endAddInputs()
     endInsertRows();
 
     /* We have to check if new inputs were added */
-    addUniqueInputs(movie->inputs->input_list[movie->inputs->nbFrames()-1]);
+    AllInputs ai;
+    movie->inputs->getInputs(ai, movie->inputs->nbFrames()-1);
+
+    addUniqueInputs(ai);
 }
 
 void InputEditorModel::beginEditInputs(unsigned long long framecount)
@@ -867,7 +874,9 @@ void InputEditorModel::endEditInputs(unsigned long long framecount)
     emit dataChanged(index(framecount,0), index(framecount,columnCount()-1));
 
     /* We have to check if new inputs were added */
-    addUniqueInputs(movie->inputs->input_list[framecount]);
+    AllInputs ai;
+    movie->inputs->getInputs(ai, framecount);
+    addUniqueInputs(ai);
 }
 
 void InputEditorModel::update()

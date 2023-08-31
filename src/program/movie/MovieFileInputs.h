@@ -27,6 +27,8 @@
 #include <string>
 #include <vector>
 #include <regex>
+#include <set>
+#include <mutex>
 #include <stdint.h>
 
 /* Struct to push movie changes from the UI to the main thread. UI thread should
@@ -39,11 +41,6 @@ struct InputEvent {
 
 class MovieFileInputs {
 public:
-
-    /* The list of inputs. We need this to be public because a movie may
-     * check if another movie is a prefix
-     */
-    std::vector<AllInputs> input_list;
 
     /* Flag storing if the movie has been modified since last save.
      * Used for prompting a message when the game exits if the user wants
@@ -84,7 +81,7 @@ public:
     int readFrame(const std::string& line, AllInputs& inputs);
 
     /* Get the number of frames of the current movie */
-    uint64_t nbFrames() const;
+    uint64_t nbFrames();
 
     /* Set inputs for a certain frame, and truncate if keep_inputs is false */
     int setInputs(const AllInputs& inputs, uint64_t pos, bool keep_inputs);
@@ -93,16 +90,25 @@ public:
     int setInputs(const AllInputs& inputs, bool keep_inputs);
 
     /* Load inputs from a certain frame */
-    int getInputs(AllInputs& inputs, uint64_t pos) const;
+    int getInputs(AllInputs& inputs, uint64_t pos);
 
     /* Load inputs from the current frame */
-    int getInputs(AllInputs& inputs) const;
+    int getInputs(AllInputs& inputs);
+
+    /* Clear a single frame of inputs */
+    void clearInputs(uint64_t pos);
 
     /* Insert inputs before the requested pos */
     void insertInputsBefore(const AllInputs& inputs, uint64_t pos);
 
     /* Delete inputs at the requested pos */
     void deleteInputs(uint64_t pos);
+
+    /* Extract all single inputs of all frames and insert them in the set */
+    void extractInputs(std::set<SingleInput> &set);
+
+    /* Copy inputs to another one */
+    void copyTo(MovieFileInputs* movie_inputs) const;
 
     /* Truncate inputs to a frame number */
     // void truncateInputs(uint64_t size);
@@ -124,6 +130,13 @@ public:
 
 private:
     Context* context;
+
+    /* The list of inputs */
+    std::vector<AllInputs> input_list;
+
+    /* We need to protect the input list access, because both the main and UI
+     * threads can read and write to the list */
+    std::mutex input_list_mutex;
 
     /* Regex for the keyboard input string */
     std::regex rek;

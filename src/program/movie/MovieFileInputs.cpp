@@ -353,8 +353,9 @@ void MovieFileInputs::readRealtimeFrame(std::istringstream& input_string, AllInp
     input_string >> inputs.realtime_sec >> d >> inputs.realtime_nsec >> d;
 }
 
-uint64_t MovieFileInputs::nbFrames() const
+uint64_t MovieFileInputs::nbFrames()
 {
+    std::unique_lock<std::mutex> lock(input_list_mutex);
     return input_list.size();
 }
 
@@ -365,6 +366,8 @@ int MovieFileInputs::setInputs(const AllInputs& inputs, bool keep_inputs)
 
 int MovieFileInputs::setInputs(const AllInputs& inputs, uint64_t pos, bool keep_inputs)
 {
+    std::unique_lock<std::mutex> lock(input_list_mutex);
+
     if (pos < context->framecount)
         return -1;
         
@@ -395,13 +398,15 @@ int MovieFileInputs::setInputs(const AllInputs& inputs, uint64_t pos, bool keep_
     }
 }
 
-int MovieFileInputs::getInputs(AllInputs& inputs) const
+int MovieFileInputs::getInputs(AllInputs& inputs)
 {
     return getInputs(inputs, context->framecount);
 }
 
-int MovieFileInputs::getInputs(AllInputs& inputs, uint64_t pos) const
+int MovieFileInputs::getInputs(AllInputs& inputs, uint64_t pos)
 {
+    std::unique_lock<std::mutex> lock(input_list_mutex);
+
     if (pos >= input_list.size()) {
         inputs.emptyInputs();
         return -1;
@@ -423,8 +428,20 @@ int MovieFileInputs::getInputs(AllInputs& inputs, uint64_t pos) const
     return 0;
 }
 
+void MovieFileInputs::clearInputs(uint64_t pos)
+{
+    std::unique_lock<std::mutex> lock(input_list_mutex);
+
+    if (pos < input_list.size()) {
+        input_list[pos].emptyInputs();
+        wasModified();
+    }
+}
+
 void MovieFileInputs::insertInputsBefore(const AllInputs& inputs, uint64_t pos)
 {
+    std::unique_lock<std::mutex> lock(input_list_mutex);
+
     if (pos > input_list.size())
         return;
 
@@ -434,11 +451,28 @@ void MovieFileInputs::insertInputsBefore(const AllInputs& inputs, uint64_t pos)
 
 void MovieFileInputs::deleteInputs(uint64_t pos)
 {
+    std::unique_lock<std::mutex> lock(input_list_mutex);
+
     if (pos >= input_list.size())
         return;
 
     input_list.erase(input_list.begin() + pos);
     wasModified();
+}
+
+void MovieFileInputs::extractInputs(std::set<SingleInput> &set)
+{
+    std::unique_lock<std::mutex> lock(input_list_mutex);
+
+    for (const AllInputs &ai : input_list) {
+        ai.extractInputs(set);
+    }
+}
+
+
+void MovieFileInputs::copyTo(MovieFileInputs* movie_inputs) const
+{
+    movie_inputs->input_list = input_list;
 }
 
 // void MovieFileInputs::truncateInputs(uint64_t size)
