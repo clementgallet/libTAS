@@ -32,9 +32,30 @@
 #include "global.h" // Global::shared_config
 #include "GlobalState.h"
 
+/* Color printing
+ * Taken from http://stackoverflow.com/questions/3219393/stdlib-and-colored-output-in-c
+ */
+#define ANSI_COLOR_RED           "\x1b[31m"
+#define ANSI_COLOR_GREEN         "\x1b[32m"
+#define ANSI_COLOR_YELLOW        "\x1b[33m"
+#define ANSI_COLOR_BLUE          "\x1b[34m"
+#define ANSI_COLOR_MAGENTA       "\x1b[35m"
+#define ANSI_COLOR_CYAN          "\x1b[36m"
+#define ANSI_COLOR_GRAY          "\x1b[37m"
+
+#define ANSI_COLOR_LIGHT_RED     "\x1b[91m"
+#define ANSI_COLOR_LIGHT_GREEN   "\x1b[92m"
+#define ANSI_COLOR_LIGHT_YELLOW  "\x1b[93m"
+#define ANSI_COLOR_LIGHT_BLUE    "\x1b[94m"
+#define ANSI_COLOR_LIGHT_MAGENTA "\x1b[95m"
+#define ANSI_COLOR_LIGHT_CYAN    "\x1b[96m"
+#define ANSI_COLOR_LIGHT_GRAY    "\x1b[97m"
+
+#define ANSI_COLOR_RESET         "\x1b[0m"
+
 namespace libtas {
 
-void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
+void debuglogfull(LogCategoryFlag lcf, const char* file, int line, ...)
 {
     if ((Global::shared_config.includeFlags & LCF_MAINTHREAD) &&
         !ThreadManager::isMainThread())
@@ -99,11 +120,12 @@ void debuglogstdio(LogCategoryFlag lcf, const char* fmt, ...)
     }
 
     if (lcf & LCF_ERROR) {
-        strncat(s, "ERROR: ", maxsize-size-1);
+        snprintf(s + size, maxsize-size-1, "ERROR (%s:%d): ", file, line);
         size = strlen(s);
     }
     va_list args;
-    va_start(args, fmt);
+    va_start(args, line);
+    char* fmt = va_arg(args, char *);
     vsnprintf(s + size, maxsize-size-1, fmt, args);
     va_end(args);
 

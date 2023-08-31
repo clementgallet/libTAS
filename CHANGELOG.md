@@ -18,6 +18,7 @@
 * Update the seek frame during rewind (#530)
 * Update to newer libswresample library
 * Reload lua scripts when modified by user (#519)
+* Debug errors show file and line
 
 ### Changed
 
