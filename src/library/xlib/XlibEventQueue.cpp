@@ -68,6 +68,8 @@ void XlibEventQueue::setMask(Window w, long event_mask)
 
 int XlibEventQueue::insert(XEvent* event)
 {
+    std::lock_guard<std::mutex> lock(mutex);
+
     /* Check if pointer event and pointer is grabbed */
     if ((grab_window != 0) &&
         ((event->type == MotionNotify) || (event->type == ButtonPress) ||
