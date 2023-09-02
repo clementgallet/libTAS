@@ -70,6 +70,7 @@ int Lua::Main::run(std::string filename)
     if (status != 0) {
         std::cerr << "Error " << status << " loading lua script " << filename << std::endl;
         std::cerr << lua_tostring(lua_state, -1) << std::endl;
+        lua_pop(lua_state, 1);
         return -1;
     }
     else {

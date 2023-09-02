@@ -47,6 +47,7 @@
 * Fix input editor variable framerate values not showing off correctly
 * Save GL unpack alignment for OSD
 * Synchronize movie input access
+* Fix lua stack when scipt has error
 
 ## [1.4.4] - 2022-10-25
 ### Added
