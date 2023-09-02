@@ -743,7 +743,7 @@ int pthread_setname_np (const char *name)
     }
     
     if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_CELESTE) {
-        if ((strcmp(name, "OVERWORLD_LOADE") == 0) ||
+        if ((strcmp(name, "OVERWORLD_LOADER") == 0) ||
             (strcmp(name, "LEVEL_LOADER") == 0) ||
             (strcmp(name, "USER_IO") == 0) ||
             (strcmp(name, "FILE_LOADING") == 0) ||
