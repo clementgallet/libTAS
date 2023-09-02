@@ -48,18 +48,12 @@ void NamedLuaFunction::call()
     /* stored in the registry */
     lua_rawgeti( lua_state, LUA_REGISTRYINDEX, function_ref );
 
-    /* duplicate the value on the stack */
-    lua_pushvalue( lua_state, 1 );
-
     /* call the callback */
-    /* NOTE: This is using the one we duplicated with lua_pushvalue */
     if ( 0 != lua_pcall( lua_state, 0, 0, 0 ) ) {
         std::cerr << "Failed to call the callback: " << lua_tostring( lua_state, -1 ) << std::endl;
+        lua_pop(lua_state, 1);
         return;
     }
-
-    /* get a new reference to the Lua function and store it again */
-    function_ref = luaL_ref( lua_state, LUA_REGISTRYINDEX );
 }
 
 }

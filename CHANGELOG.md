@@ -48,6 +48,7 @@
 * Save GL unpack alignment for OSD
 * Synchronize movie input access
 * Fix lua stack when scipt has error
+* Fix lua stack when calling a callback
 
 ## [1.4.4] - 2022-10-25
 ### Added
