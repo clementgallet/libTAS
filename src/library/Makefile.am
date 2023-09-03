@@ -31,6 +31,7 @@ libtas_so_SOURCES = \
     ScreenCapture.cpp \
     signalwrappers.cpp \
     sleepwrappers.cpp \
+    socketwrappers.cpp \
     Stack.cpp \
     systemwrappers.cpp \
     TimeHolder.cpp \

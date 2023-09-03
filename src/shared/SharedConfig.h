@@ -183,6 +183,7 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
         DEBUG_NATIVE_EVENTS = 0x02, // Allow game to access real events
         DEBUG_MAIN_FIRST_THREAD = 0x04, // Keep main thread as first thread
         DEBUG_NATIVE_FILEIO = 0x08, // Allow game to access the filesystem
+        DEBUG_NATIVE_INET = 0x10, // Allow game to access the internet
     };
 
     int debug_state = 0;
