@@ -125,9 +125,9 @@ int MovieFile::loadMovie(const std::string& moviefile)
     inputs->framerate_num = header->framerate_num;
     inputs->framerate_den = header->framerate_den;
 
-    if (context->config.sc.movie_framecount != inputs->nbFrames()) {
+    if (context->config.sc.movie_framecount != inputs->input_list.size()) {
         std::cerr << "Warning: movie framecount and movie config mismatch!" << std::endl;
-        context->config.sc.movie_framecount = inputs->nbFrames();
+        context->config.sc.movie_framecount = inputs->input_list.size();
     }
 
     return 0;
@@ -159,7 +159,7 @@ int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
         return ENOMOVIE;
 
     inputs->save();
-    header->save(inputs->nbFrames(), nb_frames);
+    header->save(inputs->input_list.size(), nb_frames);
     annotations->save();
     editor->save();
 
@@ -183,7 +183,7 @@ int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
 
 int MovieFile::saveMovie(const std::string& moviefile)
 {
-    return saveMovie(moviefile, inputs->nbFrames());
+    return saveMovie(moviefile, inputs->input_list.size());
 }
 
 int MovieFile::saveMovie()
@@ -200,7 +200,7 @@ void MovieFile::copyTo(MovieFile& movie) const
     movie.header->framerate_num = header->framerate_num;
     movie.header->framerate_den = header->framerate_den;
     movie.header->savestate_framecount = context->framecount;
-    movie.inputs->copyTo(movie.inputs);
+    movie.inputs->input_list = inputs->input_list;
 }
 
 void MovieFile::setLockedInputs(AllInputs& inp)
