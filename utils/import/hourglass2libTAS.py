@@ -8,7 +8,7 @@ import os
 import math
 
 input_file = open(sys.argv[1], 'rb')
-output_file = open(os.path.splitext(sys.argv[1])[0]+'.ltm' , 'w')
+output_file = open(os.path.dirname(sys.argv[1])+'/inputs' , 'w')
 
 input_keys = [0x0D, 0xA0, 0xA2, 0x1B, 0x20, 0x25, 0x26, 0x27, 0x28] + list(range(0x41, 0x5B))
 mapped_keys = ["ff0d", "ffe1", "ffe3", "ff1b", "20", "ff51", "ff52", "ff53", "ff54"] + \
