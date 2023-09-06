@@ -49,7 +49,7 @@ void NamedLuaFunction::call()
     lua_rawgeti( lua_state, LUA_REGISTRYINDEX, function_ref );
 
     /* duplicate the value on the stack */
-    lua_pushvalue( lua_state, 1 );
+    lua_pushvalue( lua_state, -1 );
 
     /* call the callback */
     /* NOTE: This is using the one we duplicated with lua_pushvalue */
