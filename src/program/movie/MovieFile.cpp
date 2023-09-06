@@ -200,7 +200,7 @@ void MovieFile::copyTo(MovieFile& movie) const
     movie.header->framerate_num = header->framerate_num;
     movie.header->framerate_den = header->framerate_den;
     movie.header->savestate_framecount = context->framecount;
-    movie.inputs->copyTo(movie.inputs);
+    inputs->copyTo(movie.inputs);
 }
 
 void MovieFile::setLockedInputs(AllInputs& inp)
