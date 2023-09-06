@@ -102,7 +102,6 @@ void LuaConsoleModel::addFile(const QString& str)
 {
     Lua::LuaFunctionList& lfl = Lua::Callbacks::getList();
 
-    std::cerr << "fileset size: " << lfl.fileSet.size() << std::endl;
     /* Check if file is already in the list before calling beginInsertRows */
     if (lfl.fileSet.find(str.toStdString()) != lfl.fileSet.end())
         return;

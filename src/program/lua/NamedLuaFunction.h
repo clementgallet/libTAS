@@ -47,7 +47,7 @@ public:
     void call();
     
     CallbackType type;
-    const std::string& file;
+    const std::string file;
     bool active;
     
 private:

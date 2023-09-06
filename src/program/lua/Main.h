@@ -25,27 +25,26 @@
 
 #include <string>
 
+struct lua_State;
+
 namespace Lua {
 
 namespace Main {
 
     /* Init */
     void init(Context* context);
+    
+    /* Create and initialize a new lua state */
+    lua_State* new_state();
 
     /* Exit */
     void exit();
 
     /* Run a lua script */
-    int run(std::string filename);
+    int run(lua_State* lua_state, std::string filename);
 
     /* Return the current executed filename */
     const std::string& currentFile();
-
-    /* Reset the lua VM */
-    void reset(Context* context);
-
-    /* Call the lua function */
-    void callLua(const char* func);
 }
 }
 

@@ -18,6 +18,7 @@
  */
 
 #include "Main.h"
+#include "LuaFunctionList.h"
 #include "Gui.h"
 #include "Input.h"
 #include "Movie.h"
@@ -33,14 +34,17 @@ extern "C" {
 }
 
 /* Lua state */
-static lua_State *lua_state = nullptr;
+// static lua_State *lua_state = nullptr;
+static Context* context;
 
-void Lua::Main::init(Context* context)
+void Lua::Main::init(Context* c)
 {
-    if (lua_state)
-        lua_close(lua_state);
-    
-    lua_state = luaL_newstate();
+    context = c;
+}
+
+lua_State* Lua::Main::new_state()
+{    
+    lua_State *lua_state = luaL_newstate();
     luaL_openlibs(lua_state);
     
     /* Register our functions */
@@ -50,20 +54,18 @@ void Lua::Main::init(Context* context)
     Lua::Movie::registerFunctions(lua_state, context);
     Lua::Callbacks::registerFunctions(lua_state);
     Lua::Print::init(lua_state);
+    
+    return lua_state;
 }
 
 void Lua::Main::exit()
 {
     Lua::Callbacks::clear();
-    
-    if (lua_state)
-        lua_close(lua_state);
-    lua_state = nullptr;
 }
 
 std::string luaFile;
 
-int Lua::Main::run(std::string filename)
+int Lua::Main::run(lua_State* lua_state, std::string filename)
 {
     luaFile = filename;
     int status = luaL_dofile(lua_state, filename.c_str());
@@ -74,7 +76,7 @@ int Lua::Main::run(std::string filename)
         return -1;
     }
     else {
-        std::cout << "Loaded script " << filename << std::endl;        
+        std::cout << "Loaded script " << filename << std::endl;
     }
     
     /* Push old-style callback methods into new-style */
@@ -108,28 +110,4 @@ int Lua::Main::run(std::string filename)
 const std::string& Lua::Main::currentFile()
 {
     return luaFile;
-}
-
-void Lua::Main::reset(Context* context)
-{
-    exit();
-    init(context);
-}
-
-void Lua::Main::callLua(const char* func)
-{
-    if (!lua_state) return;
-    
-    lua_getglobal(lua_state, func);
-    if (lua_isfunction(lua_state, -1)) {
-        int ret = lua_pcall(lua_state, 0, 0, 0);
-        if (ret != 0) {
-            std::cerr << "error running function "<< func << "(): " << lua_tostring(lua_state, -1) << std::endl;
-            lua_pop(lua_state, 1);  // pop error message from the stack
-        }
-    }
-    else {
-        /* No function, we need to clear the stack */
-        lua_pop(lua_state, 1);
-    }
 }

@@ -47,12 +47,18 @@ void LuaFunctionList::addFile(const std::string& file)
     if (fileSet.find(file) != fileSet.end())
         return;
 
-    int ret = Lua::Main::run(file);
-        
-    if (ret < 0)
+    lua_State *lua_state = Lua::Main::new_state();
+    
+    int ret = Lua::Main::run(lua_state, file);
+    
+    if (ret < 0) {
+        if (lua_state)
+            lua_close(lua_state);
         return;
+    }
 
     LuaFile f;
+    f.lua_state = lua_state;
     f.file = file;
     f.filename = fileFromPath(file);
     /* Register inotify on file to look for changes */
@@ -69,6 +75,8 @@ void LuaFunctionList::removeForFile(int row)
     functions.remove_if([&file](const NamedLuaFunction& nlf){ return 0 == file.compare(nlf.file); });
 
     inotify_rm_watch(inotifyfd, fileList[row].wd);
+    if (fileList[row].lua_state)
+        lua_close(fileList[row].lua_state);
     fileSet.erase(file);
     fileList.erase(fileList.begin() + row);
 }
@@ -85,10 +93,17 @@ void LuaFunctionList::watchChanges()
         for (size_t i = 0; i < fileList.size(); i++) {
             if (fileList[i].wd == ev.wd ) {
                 if (ev.mask == IN_MODIFY) {
+                    LuaFile& lf = fileList[i];
+                    
                     /* Reload the file */
-                    const std::string& file = fileList[i].file;
+                    const std::string& file = lf.file;
                     functions.remove_if([&file](const NamedLuaFunction& nlf){ return 0 == file.compare(nlf.file); });
-                    Lua::Main::run(file);
+
+                    /* Create a new lua state */
+                    if (lf.lua_state)
+                        lua_close(lf.lua_state);
+                    lf.lua_state = Main::new_state();
+                    Main::run(lf.lua_state, file);
                 }
                 return;
             }

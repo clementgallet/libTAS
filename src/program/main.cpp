@@ -24,6 +24,7 @@
 #include "Context.h"
 #include "utils.h" // create_dir
 #include "lua/Main.h"
+#include "lua/Callbacks.h"
 #include "KeyMapping.h"
 #include "ramsearch/MemScanner.h"
 #ifdef __unix__
@@ -385,7 +386,7 @@ int main(int argc, char **argv)
 
     /* Start a lua script if specified */
     if (!luafile.empty())
-        Lua::Main::run(luafile);
+        Lua::Callbacks::getList().addFile(luafile);
 
     /* Starts the user interface */
     QApplication app(argc, argv);

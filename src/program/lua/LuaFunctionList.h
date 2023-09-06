@@ -37,6 +37,7 @@ class LuaFunctionList {
 public:
     
     struct LuaFile {
+        lua_State *lua_state;
         std::string file;
         std::string filename;
         int wd;

@@ -31,6 +31,7 @@
 * Check and update movie length during last frame instead of one frame later
   and mark it as modified
 * Enforce No Sleep on Unity games
+* Use a different lua state for each script
 
 ### Fixed
 

@@ -25,8 +25,6 @@
 #include <vector>
 #include <memory>
 
-#include "../lua/Callbacks.h"
-
 class LuaConsoleModel : public QAbstractTableModel {
     Q_OBJECT
 
