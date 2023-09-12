@@ -31,11 +31,32 @@ namespace libtas {
 
 std::list<std::pair<std::string, TimeHolder>> RenderHUD::messages;
 std::list<std::string> RenderHUD::watches;
-std::list<RenderHUD::LuaText> RenderHUD::lua_texts;
-std::list<RenderHUD::LuaPixel> RenderHUD::lua_pixels;
-std::list<RenderHUD::LuaRect> RenderHUD::lua_rects;
-std::list<RenderHUD::LuaLine> RenderHUD::lua_lines;
-std::list<RenderHUD::LuaEllipse> RenderHUD::lua_ellipses;
+std::list<std::unique_ptr<RenderHUD::LuaShape>> RenderHUD::lua_shapes;
+
+void RenderHUD::LuaText::render(RenderHUD *hud)
+{
+    hud->renderText(text.c_str(), fg_color, bg_color, x, y);
+}
+
+void RenderHUD::LuaPixel::render(RenderHUD *hud)
+{
+    hud->renderPixel(x, y, color);
+}
+
+void RenderHUD::LuaRect::render(RenderHUD *hud)
+{
+    hud->renderRect(x, y, w, h, thickness, outline, fill);
+}
+
+void RenderHUD::LuaLine::render(RenderHUD *hud)
+{
+    hud->renderLine(x0, y0, x1, y1, color);
+}
+
+void RenderHUD::LuaEllipse::render(RenderHUD *hud)
+{
+    hud->renderEllipse(center_x, center_y, radius_x, radius_y, color);
+}
 
 void RenderHUD::renderPixel(int x, int y, Color color)
 {
@@ -266,20 +287,8 @@ void RenderHUD::drawWatches()
 
 void RenderHUD::drawLua()
 {
-    for (auto iter = lua_texts.begin(); iter != lua_texts.end(); iter++) {
-        renderText(iter->text.c_str(), iter->fg_color, iter->bg_color, iter->x, iter->y);
-    }
-    for (auto iter = lua_pixels.begin(); iter != lua_pixels.end(); iter++) {
-        renderPixel(iter->x, iter->y, iter->color);
-    }
-    for (auto iter = lua_rects.begin(); iter != lua_rects.end(); iter++) {
-        renderRect(iter->x, iter->y, iter->w, iter->h, iter->thickness, iter->outline, iter->fill);
-    }
-    for (auto iter = lua_lines.begin(); iter != lua_lines.end(); iter++) {
-        renderLine(iter->x0, iter->y0, iter->x1, iter->y1, iter->color);
-    }
-    for (auto iter = lua_ellipses.begin(); iter != lua_ellipses.end(); iter++) {
-        renderEllipse(iter->center_x, iter->center_y, iter->radius_x, iter->radius_y, iter->color);
+    for (auto &shape : lua_shapes) {
+        shape->render(this);
     }
 }
 
@@ -294,87 +303,83 @@ void RenderHUD::drawCrosshair(const AllInputs& ai)
 
 void RenderHUD::insertLuaText(int x, int y, std::string text, uint32_t fg_color, uint32_t bg_color)
 {
-    LuaText lt;
-    lt.x = x;
-    lt.y = y;
-    lt.text = text;
-    lt.fg_color = {static_cast<uint8_t>((fg_color >> 16) & 0xff),
-                   static_cast<uint8_t>((fg_color >> 8) & 0xff),
-                   static_cast<uint8_t>(fg_color & 0xff),
-                   static_cast<uint8_t>((fg_color >> 24) & 0xff)};
-    lt.bg_color = {static_cast<uint8_t>((bg_color >> 16) & 0xff),
-                   static_cast<uint8_t>((bg_color >> 8) & 0xff),
-                   static_cast<uint8_t>(bg_color & 0xff),
-                   static_cast<uint8_t>((bg_color >> 24) & 0xff)};
-    lua_texts.push_back(lt);
+    auto lt = new LuaText();
+    lt->x = x;
+    lt->y = y;
+    lt->text = text;
+    lt->fg_color = {static_cast<uint8_t>((fg_color >> 16) & 0xff),
+                    static_cast<uint8_t>((fg_color >> 8) & 0xff),
+                    static_cast<uint8_t>(fg_color & 0xff),
+                    static_cast<uint8_t>((fg_color >> 24) & 0xff)};
+    lt->bg_color = {static_cast<uint8_t>((bg_color >> 16) & 0xff),
+                    static_cast<uint8_t>((bg_color >> 8) & 0xff),
+                    static_cast<uint8_t>(bg_color & 0xff),
+                    static_cast<uint8_t>((bg_color >> 24) & 0xff)};
+    lua_shapes.emplace_back(lt);
 }
 
 void RenderHUD::insertLuaPixel(int x, int y, uint32_t color)
 {
-    LuaPixel lp;
-    lp.x = x;
-    lp.y = y;
-    lp.color = {static_cast<uint8_t>((color >> 16) & 0xff),
-                static_cast<uint8_t>((color >> 8) & 0xff),
-                static_cast<uint8_t>(color & 0xff),
-                static_cast<uint8_t>((color >> 24) & 0xff)};
-    lua_pixels.push_back(lp);
+    auto lp = new LuaPixel;
+    lp->x = x;
+    lp->y = y;
+    lp->color = {static_cast<uint8_t>((color >> 16) & 0xff),
+                 static_cast<uint8_t>((color >> 8) & 0xff),
+                 static_cast<uint8_t>(color & 0xff),
+                 static_cast<uint8_t>((color >> 24) & 0xff)};
+    lua_shapes.emplace_back(lp);
 }
 
 void RenderHUD::insertLuaRect(int x, int y, int w, int h, int thickness, uint32_t outline, uint32_t fill)
 {
-    LuaRect lr;
-    lr.x = x;
-    lr.y = y;
-    lr.w = w;
-    lr.h = h;
-    lr.thickness = thickness;
-    lr.outline = {static_cast<uint8_t>((outline >> 16) & 0xff),
-                  static_cast<uint8_t>((outline >> 8) & 0xff),
-                  static_cast<uint8_t>(outline & 0xff),
-                  static_cast<uint8_t>((outline >> 24) & 0xff)};
-    lr.fill = {static_cast<uint8_t>((fill >> 16) & 0xff),
-               static_cast<uint8_t>((fill >> 8) & 0xff),
-               static_cast<uint8_t>(fill & 0xff),
-               static_cast<uint8_t>((fill >> 24) & 0xff)};
-    lua_rects.push_back(lr);
+    auto lr = new LuaRect();
+    lr->x = x;
+    lr->y = y;
+    lr->w = w;
+    lr->h = h;
+    lr->thickness = thickness;
+    lr->outline = {static_cast<uint8_t>((outline >> 16) & 0xff),
+                   static_cast<uint8_t>((outline >> 8) & 0xff),
+                   static_cast<uint8_t>(outline & 0xff),
+                   static_cast<uint8_t>((outline >> 24) & 0xff)};
+    lr->fill = {static_cast<uint8_t>((fill >> 16) & 0xff),
+                static_cast<uint8_t>((fill >> 8) & 0xff),
+                static_cast<uint8_t>(fill & 0xff),
+                static_cast<uint8_t>((fill >> 24) & 0xff)};
+    lua_shapes.emplace_back(lr);
 }
 
 void RenderHUD::insertLuaLine(int x0, int y0, int x1, int y1, uint32_t color)
 {
-    LuaLine ll;
-    ll.x0 = x0;
-    ll.y0 = y0;
-    ll.x1 = x1;
-    ll.y1 = y1;
-    ll.color = {static_cast<uint8_t>((color >> 16) & 0xff),
-                static_cast<uint8_t>((color >> 8) & 0xff),
-                static_cast<uint8_t>(color & 0xff),
-                static_cast<uint8_t>((color >> 24) & 0xff)};
-    lua_lines.push_back(ll);
+    auto ll = new LuaLine();
+    ll->x0 = x0;
+    ll->y0 = y0;
+    ll->x1 = x1;
+    ll->y1 = y1;
+    ll->color = {static_cast<uint8_t>((color >> 16) & 0xff),
+                 static_cast<uint8_t>((color >> 8) & 0xff),
+                 static_cast<uint8_t>(color & 0xff),
+                 static_cast<uint8_t>((color >> 24) & 0xff)};
+    lua_shapes.emplace_back(ll);
 }
 
 void RenderHUD::insertLuaEllipse(int center_x, int center_y, int radius_x, int radius_y, uint32_t color)
 {
-    LuaEllipse le;
-    le.center_x = center_x;
-    le.center_y = center_y;
-    le.radius_x = radius_x;
-    le.radius_y = radius_y;
-    le.color = {static_cast<uint8_t>((color >> 16) & 0xff),
-                static_cast<uint8_t>((color >> 8) & 0xff),
-                static_cast<uint8_t>(color & 0xff),
-                static_cast<uint8_t>((color >> 24) & 0xff)};
-    lua_ellipses.push_back(le);
+    auto le = new LuaEllipse();
+    le->center_x = center_x;
+    le->center_y = center_y;
+    le->radius_x = radius_x;
+    le->radius_y = radius_y;
+    le->color = {static_cast<uint8_t>((color >> 16) & 0xff),
+                 static_cast<uint8_t>((color >> 8) & 0xff),
+                 static_cast<uint8_t>(color & 0xff),
+                 static_cast<uint8_t>((color >> 24) & 0xff)};
+    lua_shapes.emplace_back(le);
 }
 
 void RenderHUD::resetLua()
 {
-    lua_texts.clear();
-    lua_pixels.clear();
-    lua_rects.clear();
-    lua_lines.clear();
-    lua_ellipses.clear();
+    lua_shapes.clear();
 }
 
 void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai)

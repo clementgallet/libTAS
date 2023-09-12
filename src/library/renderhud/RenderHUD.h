@@ -172,29 +172,30 @@ class RenderHUD
         /* Ram watches to print on screen */
         static std::list<std::string> watches;
 
-        struct LuaText
+        struct LuaShape
+        {
+            virtual void render(RenderHUD *hud) = 0;
+        };
+
+        struct LuaText : public LuaShape
         {
             std::string text;
             Color fg_color;
             Color bg_color;
             int x;
             int y;
+            void render(RenderHUD *hud) override;
         };
 
-        /* Lua texts to print on screen */
-        static std::list<LuaText> lua_texts;
-
-        struct LuaPixel
+        struct LuaPixel : public LuaShape
         {
             int x;
             int y;
             Color color;
+            void render(RenderHUD *hud) override;
         };
 
-        /* Lua pixels to print on screen */
-        static std::list<LuaPixel> lua_pixels;
-
-        struct LuaRect
+        struct LuaRect : public LuaShape
         {
             int x;
             int y;
@@ -203,34 +204,31 @@ class RenderHUD
             int thickness;
             Color outline;
             Color fill;
+            void render(RenderHUD *hud) override;
         };
 
-        /* Lua rects to print on screen */
-        static std::list<LuaRect> lua_rects;
-
-        struct LuaLine
+        struct LuaLine : public LuaShape
         {
             int x0;
             int y0;
             int x1;
             int y1;
             Color color;
+            void render(RenderHUD *hud) override;
         };
 
-        /* Lua rects to print on screen */
-        static std::list<LuaLine> lua_lines;
-
-        struct LuaEllipse
+        struct LuaEllipse : public LuaShape
         {
             int center_x;
             int center_y;
             int radius_x;
             int radius_y;
             Color color;
+            void render(RenderHUD *hud) override;
         };
 
-        /* Lua rects to print on screen */
-        static std::list<LuaEllipse> lua_ellipses;
+        /* Lua shapes to print on screen */
+        static std::list<std::unique_ptr<LuaShape>> lua_shapes;
 
 };
 }
