@@ -22,6 +22,7 @@
 
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QTabWidget>
+#include <QtWidgets/QMainWindow>
 
 class Context;
 class RuntimePane;
@@ -32,7 +33,7 @@ class VideoPane;
 class DebugPane;
 class GameSpecificPane;
 
-class SettingsWindow : public QDialog {
+class SettingsWindow : public QMainWindow {
     Q_OBJECT
 public:
     SettingsWindow(Context *c, QWidget *parent = Q_NULLPTR);

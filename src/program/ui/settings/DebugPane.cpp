@@ -21,6 +21,7 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QGridLayout>
+#include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QCheckBox>
@@ -71,6 +72,10 @@ void DebugPane::initLayout()
     QGridLayout* logPrintLayout = new QGridLayout;
     logPrintBox->setLayout(logPrintLayout);
 
+    QGroupBox* logMainPrintBox = new QGroupBox();
+    QHBoxLayout* logMainPrintLayout = new QHBoxLayout;
+    logMainPrintBox->setLayout(logMainPrintLayout);
+
     logPrintMainBox = new QCheckBox(tr("Main Thread"));
     logPrintFrequentBox = new QCheckBox(tr("Frequent"));
     logPrintErrorBox = new QCheckBox(tr("Error"));
@@ -103,41 +108,47 @@ void DebugPane::initLayout()
     logPrintWindowsBox = new QCheckBox(tr("Windows"));
     logPrintWineBox = new QCheckBox(tr("Wine"));
 
-    logPrintLayout->addWidget(logPrintMainBox, 0, 0);
-    logPrintLayout->addWidget(logPrintFrequentBox, 1, 0);
-    logPrintLayout->addWidget(logPrintErrorBox, 2, 0);
-    logPrintLayout->addWidget(logPrintWarningBox, 3, 0);
-    logPrintLayout->addWidget(logPrintInfoBox, 4, 0);
-    logPrintLayout->addWidget(logPrintTODOBox, 5, 0);
-    logPrintLayout->addWidget(logPrintAVBox, 6, 0);
-    logPrintLayout->addWidget(logPrintCheckpointBox, 7, 0);
-    logPrintLayout->addWidget(logPrintEventsBox, 0, 1);
-    logPrintLayout->addWidget(logPrintIOBox, 1, 1);
-    logPrintLayout->addWidget(logPrintHookBox, 2, 1);
-    logPrintLayout->addWidget(logPrintJoystickBox, 3, 1);
-    logPrintLayout->addWidget(logPrintKeyboardBox, 4, 1);
-    logPrintLayout->addWidget(logPrintLocaleBox, 5, 1);
-    logPrintLayout->addWidget(logPrintMouseBox, 6, 1);
-    logPrintLayout->addWidget(logPrintGLBox, 7, 1);
-    logPrintLayout->addWidget(logPrintRandomBox, 0, 2);
-    logPrintLayout->addWidget(logPrintSDLBox, 1, 2);
-    logPrintLayout->addWidget(logPrintSignalsBox, 2, 2);
-    logPrintLayout->addWidget(logPrintSleepBox, 3, 2);
-    logPrintLayout->addWidget(logPrintSocketBox, 4, 2);
-    logPrintLayout->addWidget(logPrintSoundBox, 5, 2);
-    logPrintLayout->addWidget(logPrintSteamBox, 6, 2);
-    logPrintLayout->addWidget(logPrintSystemBox, 7, 2);
-    logPrintLayout->addWidget(logPrintTimeGetBox, 0, 3);
-    logPrintLayout->addWidget(logPrintTimeSetBox, 1, 3);
-    logPrintLayout->addWidget(logPrintTimersBox, 2, 3);
-    logPrintLayout->addWidget(logPrintThreadsBox, 3, 3);
-    logPrintLayout->addWidget(logPrintWaitBox, 4, 3);
-    logPrintLayout->addWidget(logPrintWindowsBox, 5, 3);
-    logPrintLayout->addWidget(logPrintWineBox, 6, 3);
+    logMainPrintLayout->addWidget(logPrintMainBox);
+    logMainPrintLayout->addWidget(logPrintFrequentBox);
+    logMainPrintLayout->addWidget(logPrintErrorBox);
+    logMainPrintLayout->addWidget(logPrintWarningBox);
+    logMainPrintLayout->addWidget(logPrintInfoBox);
+    logMainPrintLayout->addWidget(logPrintTODOBox);
+
+    logPrintLayout->addWidget(logMainPrintBox, 0, 0, 1, 5);
+    logPrintLayout->addWidget(logPrintAVBox, 1, 0);
+    logPrintLayout->addWidget(logPrintCheckpointBox, 2, 0);
+    logPrintLayout->addWidget(logPrintEventsBox, 3, 0);
+    logPrintLayout->addWidget(logPrintIOBox, 4, 0);
+    logPrintLayout->addWidget(logPrintHookBox, 5, 0);
+    logPrintLayout->addWidget(logPrintJoystickBox, 1, 1);
+    logPrintLayout->addWidget(logPrintKeyboardBox, 2, 1);
+    logPrintLayout->addWidget(logPrintLocaleBox, 3, 1);
+    logPrintLayout->addWidget(logPrintMouseBox, 4, 1);
+    logPrintLayout->addWidget(logPrintGLBox, 5, 1);
+    logPrintLayout->addWidget(logPrintRandomBox, 1, 2);
+    logPrintLayout->addWidget(logPrintSDLBox, 2, 2);
+    logPrintLayout->addWidget(logPrintSignalsBox, 3, 2);
+    logPrintLayout->addWidget(logPrintSleepBox, 4, 2);
+    logPrintLayout->addWidget(logPrintSocketBox, 5, 2);
+    logPrintLayout->addWidget(logPrintSoundBox, 1, 3);
+    logPrintLayout->addWidget(logPrintSteamBox, 2, 3);
+    logPrintLayout->addWidget(logPrintSystemBox, 3, 3);
+    logPrintLayout->addWidget(logPrintTimeGetBox, 4, 3);
+    logPrintLayout->addWidget(logPrintTimeSetBox, 5, 3);
+    logPrintLayout->addWidget(logPrintTimersBox, 1, 4);
+    logPrintLayout->addWidget(logPrintThreadsBox, 2, 4);
+    logPrintLayout->addWidget(logPrintWaitBox, 3, 4);
+    logPrintLayout->addWidget(logPrintWindowsBox, 4, 4);
+    logPrintLayout->addWidget(logPrintWineBox, 5, 4);
 
     QGroupBox* logExcludeBox = new QGroupBox(tr("Exclude"));
     QGridLayout* logExcludeLayout = new QGridLayout;
     logExcludeBox->setLayout(logExcludeLayout);
+
+    QGroupBox* logMainExcludeBox = new QGroupBox();
+    QHBoxLayout* logMainExcludeLayout = new QHBoxLayout;
+    logMainExcludeBox->setLayout(logMainExcludeLayout);
 
     logExcludeMainBox = new QCheckBox(tr("Main Thread"));
     logExcludeFrequentBox = new QCheckBox(tr("Frequent"));
@@ -171,37 +182,39 @@ void DebugPane::initLayout()
     logExcludeWindowsBox = new QCheckBox(tr("Windows"));
     logExcludeWineBox = new QCheckBox(tr("Wine"));
     
-    logExcludeLayout->addWidget(logExcludeMainBox, 0, 0);
-    logExcludeLayout->addWidget(logExcludeFrequentBox, 1, 0);
-    logExcludeLayout->addWidget(logExcludeErrorBox, 2, 0);
-    logExcludeLayout->addWidget(logExcludeWarningBox, 3, 0);
-    logExcludeLayout->addWidget(logExcludeInfoBox, 4, 0);
-    logExcludeLayout->addWidget(logExcludeTODOBox, 5, 0);
-    logExcludeLayout->addWidget(logExcludeAVBox, 6, 0);
-    logExcludeLayout->addWidget(logExcludeCheckpointBox, 7, 0);
-    logExcludeLayout->addWidget(logExcludeEventsBox, 0, 1);
-    logExcludeLayout->addWidget(logExcludeIOBox, 1, 1);
-    logExcludeLayout->addWidget(logExcludeHookBox, 2, 1);
-    logExcludeLayout->addWidget(logExcludeJoystickBox, 3, 1);
-    logExcludeLayout->addWidget(logExcludeKeyboardBox, 4, 1);
-    logExcludeLayout->addWidget(logExcludeLocaleBox, 5, 1);
-    logExcludeLayout->addWidget(logExcludeMouseBox, 6, 1);
-    logExcludeLayout->addWidget(logExcludeGLBox, 7, 1);
-    logExcludeLayout->addWidget(logExcludeRandomBox, 0, 2);
-    logExcludeLayout->addWidget(logExcludeSDLBox, 1, 2);
-    logExcludeLayout->addWidget(logExcludeSignalsBox, 2, 2);
-    logExcludeLayout->addWidget(logExcludeSleepBox, 3, 2);
-    logExcludeLayout->addWidget(logExcludeSocketBox, 4, 2);
-    logExcludeLayout->addWidget(logExcludeSoundBox, 5, 2);
-    logExcludeLayout->addWidget(logExcludeSteamBox, 6, 2);
-    logExcludeLayout->addWidget(logExcludeSystemBox, 7, 2);
-    logExcludeLayout->addWidget(logExcludeTimeGetBox, 0, 3);
-    logExcludeLayout->addWidget(logExcludeTimeSetBox, 1, 3);
-    logExcludeLayout->addWidget(logExcludeTimersBox, 2, 3);
-    logExcludeLayout->addWidget(logExcludeThreadsBox, 3, 3);
-    logExcludeLayout->addWidget(logExcludeWaitBox, 4, 3);
-    logExcludeLayout->addWidget(logExcludeWindowsBox, 5, 3);
-    logExcludeLayout->addWidget(logExcludeWineBox, 6, 3);
+    logMainExcludeLayout->addWidget(logExcludeMainBox);
+    logMainExcludeLayout->addWidget(logExcludeFrequentBox);
+    logMainExcludeLayout->addWidget(logExcludeErrorBox);
+    logMainExcludeLayout->addWidget(logExcludeWarningBox);
+    logMainExcludeLayout->addWidget(logExcludeInfoBox);
+    logMainExcludeLayout->addWidget(logExcludeTODOBox);
+
+    logExcludeLayout->addWidget(logMainExcludeBox, 0, 0, 1, 5);
+    logExcludeLayout->addWidget(logExcludeAVBox, 1, 0);
+    logExcludeLayout->addWidget(logExcludeCheckpointBox, 2, 0);
+    logExcludeLayout->addWidget(logExcludeEventsBox, 3, 0);
+    logExcludeLayout->addWidget(logExcludeIOBox, 4, 0);
+    logExcludeLayout->addWidget(logExcludeHookBox, 5, 0);
+    logExcludeLayout->addWidget(logExcludeJoystickBox, 1, 1);
+    logExcludeLayout->addWidget(logExcludeKeyboardBox, 2, 1);
+    logExcludeLayout->addWidget(logExcludeLocaleBox, 3, 1);
+    logExcludeLayout->addWidget(logExcludeMouseBox, 4, 1);
+    logExcludeLayout->addWidget(logExcludeGLBox, 5, 1);
+    logExcludeLayout->addWidget(logExcludeRandomBox, 1, 2);
+    logExcludeLayout->addWidget(logExcludeSDLBox, 2, 2);
+    logExcludeLayout->addWidget(logExcludeSignalsBox, 3, 2);
+    logExcludeLayout->addWidget(logExcludeSleepBox, 4, 2);
+    logExcludeLayout->addWidget(logExcludeSocketBox, 5, 2);
+    logExcludeLayout->addWidget(logExcludeSoundBox, 1, 3);
+    logExcludeLayout->addWidget(logExcludeSteamBox, 2, 3);
+    logExcludeLayout->addWidget(logExcludeSystemBox, 3, 3);
+    logExcludeLayout->addWidget(logExcludeTimeGetBox, 4, 3);
+    logExcludeLayout->addWidget(logExcludeTimeSetBox, 5, 3);
+    logExcludeLayout->addWidget(logExcludeTimersBox, 1, 4);
+    logExcludeLayout->addWidget(logExcludeThreadsBox, 2, 4);
+    logExcludeLayout->addWidget(logExcludeWaitBox, 3, 4);
+    logExcludeLayout->addWidget(logExcludeWindowsBox, 4, 4);
+    logExcludeLayout->addWidget(logExcludeWineBox, 5, 4);
     
     logLayout->addWidget(logToChoice);
     logLayout->addWidget(logPrintBox);

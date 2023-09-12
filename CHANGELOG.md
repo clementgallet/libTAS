@@ -32,6 +32,7 @@
   and mark it as modified
 * Enforce No Sleep on Unity games
 * Use a different lua state for each script
+* Set settings window as main window (#567)
 
 ### Fixed
 

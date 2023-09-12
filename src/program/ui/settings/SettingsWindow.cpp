@@ -34,7 +34,7 @@
 #include "GameSpecificPane.h"
 #include "../../Context.h"
 
-SettingsWindow::SettingsWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
+SettingsWindow::SettingsWindow(Context* c, QWidget *parent) : QMainWindow(parent), context(c)
 {
     setWindowTitle("Settings");
 
@@ -67,55 +67,57 @@ SettingsWindow::SettingsWindow(Context* c, QWidget *parent) : QDialog(parent), c
 
     layout->addWidget(closeBox);
 
-    setLayout(layout);
+    QWidget *centralWidget = new QWidget;
+    centralWidget->setLayout(layout);
+    setCentralWidget(centralWidget);
 }
 
 void SettingsWindow::openRuntimeTab()
 {
     tabWidget->setCurrentIndex(static_cast<int>(RuntimeTab));
-    exec();
+    show();
 }
 
 void SettingsWindow::openMovieTab()
 {
     tabWidget->setCurrentIndex(static_cast<int>(MovieTab));
-    exec();
+    show();
 }
 
 void SettingsWindow::openInputTab()
 {
     tabWidget->setCurrentIndex(static_cast<int>(InputTab));
-    exec();
+    show();
 }
 
 void SettingsWindow::openAudioTab()
 {
     tabWidget->setCurrentIndex(static_cast<int>(AudioTab));
-    exec();
+    show();
 }
 
 void SettingsWindow::openVideoTab()
 {
     tabWidget->setCurrentIndex(static_cast<int>(VideoTab));
-    exec();
+    show();
 }
 
 void SettingsWindow::openDebugTab()
 {
     tabWidget->setCurrentIndex(static_cast<int>(DebugTab));
-    exec();
+    show();
 }
 
 void SettingsWindow::openGameSpecificTab()
 {
     tabWidget->setCurrentIndex(static_cast<int>(GameSpecificTab));
-    exec();
+    show();
 }
 
 void SettingsWindow::save()
 {
     context->config.save(context->gamepath);
-    reject();
+    hide();
 }
 
 void SettingsWindow::update(int status)
