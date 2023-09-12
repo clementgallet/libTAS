@@ -68,7 +68,7 @@ void XlibEventQueue::setMask(Window w, long event_mask)
 
 int XlibEventQueue::insert(XEvent* event)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
 
     /* Check if pointer event and pointer is grabbed */
     if ((grab_window != 0) &&
@@ -133,7 +133,7 @@ int XlibEventQueue::insert(XEvent* event)
 
 bool XlibEventQueue::pop(XEvent* event, bool update)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
 
     if (eventQueue.size() == 0) {
         emptied = true;
@@ -150,7 +150,7 @@ bool XlibEventQueue::pop(XEvent* event, bool update)
 
 bool XlibEventQueue::pop(XEvent* event, Window w, long event_mask)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
 
     for (auto it = eventQueue.begin(); it != eventQueue.end(); ++it) {
         XEvent ev = *it;
@@ -175,7 +175,7 @@ bool XlibEventQueue::pop(XEvent* event, Window w, long event_mask)
 
 bool XlibEventQueue::pop(XEvent* event, Window w, int event_type)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
 
     for (auto it = eventQueue.begin(); it != eventQueue.end(); ++it) {
         XEvent ev = *it;
@@ -199,7 +199,7 @@ bool XlibEventQueue::pop(XEvent* event, Window w, int event_type)
 
 bool XlibEventQueue::pop(XEvent* event, Bool (*predicate)(Display *, XEvent *, XPointer), XPointer arg)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
 
     for (auto it = eventQueue.begin(); it != eventQueue.end(); ++it) {
         XEvent ev = *it;
@@ -218,7 +218,7 @@ bool XlibEventQueue::pop(XEvent* event, Bool (*predicate)(Display *, XEvent *, X
 
 int XlibEventQueue::size()
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::recursive_mutex> lock(mutex);
 
     size_t s = eventQueue.size();
     if (s == 0)

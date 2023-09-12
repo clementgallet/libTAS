@@ -73,7 +73,7 @@ class XlibEventQueue
         bool emptied;
 
         /* Mutex for protecting empied and pop() */
-        std::mutex mutex;
+        std::recursive_mutex mutex;
 
     private:
         /* Event queue */
