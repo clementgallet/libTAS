@@ -1,0 +1,64 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "autoreconf",
+			"command": "autoreconf",
+			"args": [
+				"--install"
+			],
+			"problemMatcher": []
+		},
+		{
+			"type": "shell",
+			"label": "configure",
+			"command": "./configure",
+			"args": [
+				"CXXFLAGS=\"-O2 -g -Wall -pedantic\""
+			],
+			"problemMatcher": []
+		},
+		{
+			"type": "shell",
+			"label": "configure and make",
+			"command": "make",
+			"args": [
+				"-j4"
+			],
+			"problemMatcher": [
+				"$gcc"
+			],
+			"dependsOrder": "sequence",
+			"dependsOn": ["autoreconf", "configure"],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+		},
+		{
+			"type": "shell",
+			"label": "make",
+			"command": "make",
+			"args": [
+				"-j4"
+			],
+			"problemMatcher": [
+				"$gcc"
+			],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+		},
+		{
+			"type": "shell",
+			"label": "clean",
+			"command": "make",
+			"args": [
+				"clean"
+			],
+			"problemMatcher": []
+		}
+	]
+}
