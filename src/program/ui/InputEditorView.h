@@ -58,7 +58,7 @@ public slots:
     void clearInput();
     void addMarker();
     void removeMarker();
-    std::string getCurrentMarkerText();
+    void getCurrentMarkerText(std::string &marker);
 
     void copyInputs();
     void cutInputs();
