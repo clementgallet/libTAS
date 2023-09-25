@@ -343,6 +343,13 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
             RenderHUD::insertWatch(ramwatch);
             break;
         }
+        case MSGN_MARKER:
+        {
+            /* Get marker text from the program */
+            std::string text = receiveString();
+            RenderHUD::setMarkerText(text);
+            break;
+        }
         case MSGN_LUA_RESOLUTION:
         {
             int w, h;

@@ -83,10 +83,11 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
         OSD_RAMWATCHES = 0x08,
         OSD_LUA = 0x10,
         OSD_CROSSHAIR = 0x20,
+        OSD_MARKERS = 0x40,
     };
 
     /* Elements to be displayed on the OSD */
-    int osd = OSD_FRAMECOUNT | OSD_INPUTS | OSD_MESSAGES | OSD_RAMWATCHES | OSD_LUA | OSD_CROSSHAIR;
+    int osd = OSD_FRAMECOUNT | OSD_INPUTS | OSD_MESSAGES | OSD_RAMWATCHES | OSD_LUA | OSD_CROSSHAIR | OSD_MARKERS;
 
     /* OSD text location */
     enum OSDLocation {
@@ -102,6 +103,7 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     int osd_inputs_location = OSD_LEFT | OSD_BOTTOM;
     int osd_messages_location = OSD_RIGHT | OSD_BOTTOM;
     int osd_ramwatches_location = OSD_RIGHT | OSD_TOP;
+    int osd_markers_location = OSD_LEFT | OSD_VCENTER;
 
     /** Sound config **/
     /* Bit depth of the buffer (usually 8 or 16) */

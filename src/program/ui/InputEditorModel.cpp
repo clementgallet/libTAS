@@ -101,7 +101,11 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
 
     if (role == Qt::FontRole) {
         QFont font;
-        if ((index.column() == 0) && (row == last_savestate)) {
+        if (index.column() == 0 && row == last_savestate) {
+            font.setBold(true);
+        }
+        else if (index.column() == 1 && movie->editor->markers.count(row)) {
+            font.setStretch(QFont::ExtraExpanded);
             font.setBold(true);
         }
         return font;
@@ -554,6 +558,29 @@ bool InputEditorModel::removeRows(int row, int count, const QModelIndex &parent)
     movie->updateLength();
 
     return true;
+}
+
+bool InputEditorModel::hasMarker(int frame)
+{
+    return movie->editor->markers.count(frame) != 0;
+}
+
+std::string InputEditorModel::getMarkerText(int frame)
+{
+    if (hasMarker(frame))
+        return movie->editor->markers[frame];
+
+    return "";
+}
+
+void InputEditorModel::addMarker(int frame, std::string text)
+{
+    movie->editor->markers[frame] = text;
+}
+
+void InputEditorModel::removeMarker(int frame)
+{
+    movie->editor->markers.erase(frame);
 }
 
 void InputEditorModel::clearClipboard()

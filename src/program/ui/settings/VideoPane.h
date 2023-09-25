@@ -60,6 +60,7 @@ private:
     QCheckBox* osdInputsBox;
     QCheckBox* osdMessagesBox;
     QCheckBox* osdRamBox;
+    QCheckBox* osdMarkersBox;
     QCheckBox* osdLuaBox;
     QCheckBox* osdCrosshairBox;
     QCheckBox* osdEncodeBox;
@@ -72,6 +73,8 @@ private:
     QComboBox *messagesVertChoice;
     QComboBox *watchesHorChoice;
     QComboBox *watchesVertChoice;
+    QComboBox *markersHorChoice;
+    QComboBox *markersVertChoice;
 
     ToolTipCheckBox* rendSoftBox;
     ToolTipCheckBox* rendPerfBox;

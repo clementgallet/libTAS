@@ -94,6 +94,8 @@ signals:
     void inputsEdited(unsigned long long framecount);
 
     void getRamWatch(std::string &watch);
+    
+    void getMarkerText(std::string &text);
 
     void getTimeTrace(int type, unsigned long long hash, std::string stacktrace);
     

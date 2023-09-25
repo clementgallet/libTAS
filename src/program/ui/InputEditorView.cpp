@@ -94,6 +94,8 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
 
     keyDialog = new KeyPressedDialog(c, this);
     keyDialog->withModifiers = false;
+
+    currentMarkerText = "";
 }
 
 void InputEditorView::fillMenu(QMenu* frameMenu)
@@ -118,6 +120,10 @@ void InputEditorView::fillMenu(QMenu* frameMenu)
     this->addAction(insertAct);
 
     insertsAct = menu->addAction(tr("Insert # frames"), this, &InputEditorView::insertInputs);
+
+    markAct = menu->addAction(tr("Add marker"), this, &InputEditorView::addMarker);
+
+    unmarkAct = menu->addAction(tr("Remove marker"), this, &InputEditorView::removeMarker);
 
     duplicateAct = menu->addAction(tr("Duplicate"), this, &InputEditorView::duplicateInput, QKeySequence(Qt::CTRL + Qt::Key_D));
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
@@ -270,6 +276,16 @@ void InputEditorView::updateMenu()
         if (index.row() < min_row)
             min_row = index.row();
     }
+
+    bool has_marker = inputEditorModel->hasMarker(min_row);
+
+    /* Set current marker text */
+    if (has_marker) {
+        currentMarkerText = inputEditorModel->getMarkerText(min_row);
+    }
+
+    markAct->setText(has_marker ? tr("Edit marker") : tr("Add marker"));
+    unmarkAct->setEnabled(has_marker);
 
     if (static_cast<uint32_t>(min_row) < context->framecount) {
         duplicateAct->setEnabled(false);
@@ -554,6 +570,52 @@ void InputEditorView::mainMenu(QPoint pos)
 
     /* Display the context menu */
     menu->popup(viewport()->mapToGlobal(pos));
+}
+
+void InputEditorView::getCurrentMarkerText(std::string &marker)
+{
+    marker = currentMarkerText;
+}
+
+void InputEditorView::addMarker()
+{
+    const QModelIndexList indexes = selectionModel()->selectedRows();
+
+    /* If no row was selected, return */
+    if (indexes.count() == 0)
+        return;
+
+    int frame = indexes[0].row();
+
+    /* Obtain description if there's already a marker here */
+    bool ok;
+	QString text = QString("Marker text for frame %1: ").arg(frame);
+    QString newText = QInputDialog::getText(
+        this,
+        (inputEditorModel->hasMarker(frame) ? tr("Edit marker") : tr("Add marker")),
+        text,
+        QLineEdit::Normal,
+        QString(inputEditorModel->getMarkerText(frame).c_str()),
+        &ok);
+
+    if (ok) {
+        inputEditorModel->addMarker(frame, newText.toStdString());
+    }
+    
+    InputEditorView::updateMenu();
+}
+
+void InputEditorView::removeMarker()
+{
+    const QModelIndexList indexes = selectionModel()->selectedRows();
+
+    /* If no row was selected, return */
+    if (indexes.count() == 0)
+        return;
+
+    inputEditorModel->removeMarker(indexes[0].row());
+    
+    InputEditorView::updateMenu();
 }
 
 void InputEditorView::duplicateInput()
