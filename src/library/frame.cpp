@@ -345,7 +345,6 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         }
         case MSGN_MARKER:
         {
-            debuglogstdio(LCF_INFO, "MSGN_MARKER");
             /* Get marker text from the program */
             std::string text = receiveString();
             RenderHUD::setMarkerText(text);

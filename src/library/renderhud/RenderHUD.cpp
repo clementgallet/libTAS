@@ -294,8 +294,6 @@ void RenderHUD::drawMarkers()
     if (marker.empty())
         return;
     
-    debuglogstdio(LCF_INFO, "drawMarkers()");
-
     Color fg_color = {255, 255, 255, 255};
     Color bg_color = {0, 0, 0, 255};
 
