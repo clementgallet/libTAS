@@ -572,9 +572,9 @@ void InputEditorView::mainMenu(QPoint pos)
     menu->popup(viewport()->mapToGlobal(pos));
 }
 
-std::string InputEditorView::getCurrentMarkerText()
+void InputEditorView::getCurrentMarkerText(std::string &marker)
 {
-    return currentMarkerText;
+    marker = currentMarkerText;
 }
 
 void InputEditorView::addMarker()
