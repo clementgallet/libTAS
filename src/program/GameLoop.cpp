@@ -552,10 +552,8 @@ bool GameLoop::startFrameMessages()
     if (context->config.sc.osd & SharedConfig::OSD_MARKERS) {
         std::string text;
         emit getMarkerText(text);
-        if (!text.empty()) {
-            sendMessage(MSGN_MARKER);
-            sendString(text);
-        }
+        sendMessage(MSGN_MARKER);
+        sendString(text);
     }
 
     /* Execute the lua callback onPaint here */
