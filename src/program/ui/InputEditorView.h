@@ -78,9 +78,12 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
+    void timerEvent(QTimerEvent* event) override;
+    void hideEvent(QHideEvent* event) override;
 
 private slots:
     void resizeAllColumns();
+    void showMarkerToolTip(const QModelIndex &index);
 
 private:
     Context *context;
@@ -112,8 +115,11 @@ private:
     QAction *lockAction;
 
     bool autoScroll = true;
+    int markerTimerId = 0;
+    int markerRow = 0;
     
     void addMarkerFrame(int frame);
+    void hideMarkerToolTip();
 
     /* Apply a function to each range of selected rows,
      * and return min selected row */

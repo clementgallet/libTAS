@@ -117,8 +117,10 @@ BalloonTip::BalloonTip(PrivateTag, const QIcon& icon, QString title, QString mes
   }
 
   auto* layout = new QGridLayout;
+  if (!title.isEmpty())
   layout->addWidget(title_label, 0, 0, 1, 2);
 
+  if (!message.isEmpty())
   layout->addWidget(message_label, 1, 0, 1, 3);
   layout->setSizeConstraint(QLayout::SetMinimumSize);
   setLayout(layout);

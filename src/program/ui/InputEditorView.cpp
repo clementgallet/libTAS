@@ -31,6 +31,7 @@
 #include "MainWindow.h"
 #include "qtutils.h"
 #include "../Context.h"
+#include "settings/tooltip/BalloonTip.h"
 
 InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTableView(parent), context(c)
 {
@@ -50,6 +51,8 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
     setModel(inputEditorModel);
 
     connect(inputEditorModel, &InputEditorModel::inputSetChanged, this, &InputEditorView::resizeAllColumns);
+    connect(this, &InputEditorView::entered, this, &InputEditorView::showMarkerToolTip);
+    setMouseTracking(true);
 
     /* Horizontal header */
     horizontalHeader()->setMinimumSectionSize(20);
@@ -375,11 +378,22 @@ void InputEditorView::mouseDoubleClickEvent(QMouseEvent *event)
     event->accept();
 }
 
+void InputEditorView::showMarkerToolTip(const QModelIndex &index)
+{
+    /* Hide previous tooltip */
+    hideMarkerToolTip();
+    
+    /* Check if there is a marker */
+    if (index.column() == InputEditorModel::COLUMN_FRAME && inputEditorModel->hasMarker(index.row())) {
+        markerRow = index.row();
+        markerTimerId = this->startTimer(300);
+    }
+}
 
 void InputEditorView::mouseMoveEvent(QMouseEvent *event)
 {
     /* Check if the mouse press event was valid */
-    if (mouseSection < 0) {
+    if (mouseColumn < 0) {
         return QTableView::mouseMoveEvent(event);
     }
 
@@ -432,6 +446,35 @@ void InputEditorView::mouseMoveEvent(QMouseEvent *event)
         
         inputEditorModel->setData(toggle_index, QVariant(newMouseValue), Qt::EditRole);        
     }
+}
+
+void InputEditorView::timerEvent(QTimerEvent* event)
+{
+    if (event->timerId() != markerTimerId)
+        return QTableView::timerEvent(event);
+    
+    this->killTimer(markerTimerId);
+    markerTimerId = 0;
+
+    int x = columnViewportPosition(InputEditorModel::COLUMN_FRAME) + columnWidth(InputEditorModel::COLUMN_FRAME) / 2;
+    int y = rowViewportPosition(markerRow) + rowHeight(markerRow);
+    QPoint pos = QPoint(x, y);
+
+    BalloonTip::showBalloon(QIcon(), "",  QString(inputEditorModel->getMarkerText(markerRow).c_str()), this->mapToGlobal(pos), this);
+}
+
+void InputEditorView::hideEvent(QHideEvent* event)
+{
+    hideMarkerToolTip();
+}
+
+void InputEditorView::hideMarkerToolTip()
+{
+    if (markerTimerId) {
+        this->killTimer(markerTimerId);
+        markerTimerId = 0;
+    }
+    BalloonTip::hideBalloon();
 }
 
 void InputEditorView::keyPressEvent(QKeyEvent *event)
