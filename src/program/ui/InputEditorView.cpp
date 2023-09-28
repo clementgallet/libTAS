@@ -354,6 +354,28 @@ void InputEditorView::mousePressEvent(QMouseEvent *event)
     event->accept();
 }
 
+void InputEditorView::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    if (event->button() != Qt::LeftButton) {
+        return QTableView::mouseDoubleClickEvent(event);
+    }
+
+    /* Get the table cell under the mouse position */
+    const QModelIndex index = indexAt(event->pos());
+    if (!index.isValid()) {
+        return QTableView::mouseDoubleClickEvent(event);
+    }
+
+    if (index.column() != 1) {
+        return QTableView::mouseDoubleClickEvent(event);
+    }
+
+    addMarkerFrame(index.row());
+
+    event->accept();
+}
+
+
 void InputEditorView::mouseMoveEvent(QMouseEvent *event)
 {
     /* Check if the mouse press event was valid */
@@ -583,8 +605,11 @@ void InputEditorView::addMarker()
     if (indexes.count() == 0)
         return;
 
-    int frame = indexes[0].row();
+    return addMarkerFrame(indexes[0].row());
+}
 
+void InputEditorView::addMarkerFrame(int frame)
+{
     /* Obtain description if there's already a marker here */
     bool ok;
 	QString text = QString("Marker text for frame %1: ").arg(frame);

@@ -74,6 +74,7 @@ public slots:
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
@@ -112,6 +113,8 @@ private:
 
     bool autoScroll = true;
     
+    void addMarkerFrame(int frame);
+
     /* Apply a function to each range of selected rows,
      * and return min selected row */
     int applyToSelectedRanges(std::function<void(int, int)>);
