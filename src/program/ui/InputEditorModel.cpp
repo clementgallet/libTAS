@@ -575,7 +575,11 @@ std::string InputEditorModel::getMarkerText(int frame)
 
 void InputEditorModel::addMarker(int frame, std::string text)
 {
-    movie->editor->markers[frame] = text;
+    /* Setting an empty marker as a shortcut for removing the marker */
+    if (text.empty())
+        movie->editor->markers.erase(frame);
+    else
+        movie->editor->markers[frame] = text;
 }
 
 void InputEditorModel::removeMarker(int frame)
