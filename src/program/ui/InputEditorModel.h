@@ -35,6 +35,13 @@ class InputEditorModel : public QAbstractTableModel {
     Q_OBJECT
 
 public:
+    
+    enum {
+        COLUMN_SAVESTATE = 0,
+        COLUMN_FRAME = 1,
+        COLUMN_SPECIAL_SIZE,
+    };
+    
     InputEditorModel(Context* c, MovieFile* m, QObject *parent = Q_NULLPTR);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;

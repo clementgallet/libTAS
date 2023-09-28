@@ -87,7 +87,7 @@ private:
     QMenu *horMenu;
     QMenu *menu;
     int contextSection;
-    int mouseSection;
+    int mouseColumn;
     int mouseRow;
     int mouseMinRow;
     int mouseMaxRow;

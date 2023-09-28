@@ -174,14 +174,14 @@ void InputEditorView::resizeAllColumns()
 {
 
     resizeColumnsToContents();
-    horizontalHeader()->resizeSection(0, 20);
-    horizontalHeader()->resizeSection(1, 80);
+    horizontalHeader()->resizeSection(InputEditorModel::COLUMN_SAVESTATE, 20);
+    horizontalHeader()->resizeSection(InputEditorModel::COLUMN_FRAME, 80);
 
     /* Resize analog columns to a fixed value
      * Increase the other columns by a small amount, because even if it's
      * supposed to take the same place as the header, sometimes it considers
      * that it doesn't have enough space. */
-    for (int c = 2; c < inputEditorModel->columnCount(); c++) {
+    for (int c = InputEditorModel::COLUMN_SPECIAL_SIZE; c < inputEditorModel->columnCount(); c++) {
         int size = horizontalHeader()->sectionSize(c);
         if (inputEditorModel->isInputAnalog(c)) {            
             if (size < 70)
@@ -311,7 +311,7 @@ void InputEditorView::updateMenu()
 
 void InputEditorView::mousePressEvent(QMouseEvent *event)
 {
-    mouseSection = -1;
+    mouseColumn = -1;
 
     if (event->button() != Qt::LeftButton) {
         return QTableView::mousePressEvent(event);
@@ -323,18 +323,18 @@ void InputEditorView::mousePressEvent(QMouseEvent *event)
         return QTableView::mousePressEvent(event);
     }
 
-    if (index.column() == 1) {
+    if (index.column() == InputEditorModel::COLUMN_FRAME) {
         return QTableView::mousePressEvent(event);
     }
 
     selectionModel()->clear();
-    mouseSection = index.column();
+    mouseColumn = index.column();
     mouseRow = index.row();
     mouseMinRow = mouseRow;
     mouseMaxRow = mouseRow;
 
     /* Rewind when clicking for column */
-    if (mouseSection == 0) {
+    if (mouseColumn == InputEditorModel::COLUMN_SAVESTATE) {
         inputEditorModel->rewind(mouseRow, false);
         return;
     }
@@ -366,7 +366,7 @@ void InputEditorView::mouseDoubleClickEvent(QMouseEvent *event)
         return QTableView::mouseDoubleClickEvent(event);
     }
 
-    if (index.column() != 1) {
+    if (index.column() != InputEditorModel::COLUMN_FRAME) {
         return QTableView::mouseDoubleClickEvent(event);
     }
 
@@ -428,7 +428,7 @@ void InputEditorView::mouseMoveEvent(QMouseEvent *event)
         }
         
         /* Toggle the cell with the same row as the cell under the mouse */
-        QModelIndex toggle_index = inputEditorModel->index(i, mouseSection);
+        QModelIndex toggle_index = inputEditorModel->index(i, mouseColumn);
         
         inputEditorModel->setData(toggle_index, QVariant(newMouseValue), Qt::EditRole);        
     }
@@ -497,7 +497,7 @@ void InputEditorView::horizontalMenu(QPoint pos)
     /* Storing the index of the section where context menu was shown */
     contextSection = horizontalHeader()->logicalIndexAt(pos);
 
-    if (contextSection < 2)
+    if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
         return;
 
     /* Update the status of the lock action */
@@ -509,7 +509,7 @@ void InputEditorView::horizontalMenu(QPoint pos)
 
 void InputEditorView::renameLabel()
 {
-    if (contextSection < 2)
+    if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
         return;
 
     QString text = QString("New label for input %1 is: ").arg(inputEditorModel->inputDescription(contextSection).c_str());
@@ -557,7 +557,7 @@ void InputEditorView::addInputColumn()
 
 void InputEditorView::clearInputColumn()
 {
-    if (contextSection < 2)
+    if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
         return;
 
     inputEditorModel->clearUniqueInput(contextSection);
@@ -565,7 +565,7 @@ void InputEditorView::clearInputColumn()
 
 void InputEditorView::removeInputColumn()
 {
-    if (contextSection < 2)
+    if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
         return;
 
     bool removed = inputEditorModel->removeUniqueInput(contextSection);
@@ -577,7 +577,7 @@ void InputEditorView::removeInputColumn()
 
 void InputEditorView::lockInputColumn(bool checked)
 {
-    if (contextSection < 2)
+    if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
         return;
 
     inputEditorModel->lockUniqueInput(contextSection, checked);
@@ -876,8 +876,8 @@ void InputEditorView::moveAgainSection(int logicalIndex, int oldVisualIndex, int
      */
 
     /* Skip if moving the first two columns */
-    if ((oldVisualIndex >= 2) && (newVisualIndex >= 2)) {
-        inputEditorModel->moveInputs(oldVisualIndex-2, newVisualIndex-2);
+    if ((oldVisualIndex >= InputEditorModel::COLUMN_SPECIAL_SIZE) && (newVisualIndex >= InputEditorModel::COLUMN_SPECIAL_SIZE)) {
+        inputEditorModel->moveInputs(oldVisualIndex-InputEditorModel::COLUMN_SPECIAL_SIZE, newVisualIndex-InputEditorModel::COLUMN_SPECIAL_SIZE);
     }
 
     /* Disconnect before moving back */
