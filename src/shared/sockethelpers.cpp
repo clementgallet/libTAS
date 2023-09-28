@@ -207,7 +207,8 @@ void sendString(const std::string& str)
 #endif
     unsigned int str_size = str.size();
     sendData(&str_size, sizeof(unsigned int));
-    sendData(str.c_str(), str_size);
+    if (str_size > 0)
+        sendData(str.c_str(), str_size);
 }
 
 int receiveData(void* elem, unsigned int size)
@@ -228,7 +229,7 @@ int receiveData(void* elem, unsigned int size)
         std::cerr << "recv() returns -1 with error " << strerror(errno) << std::endl;
 #endif
     }
-    else if (ret == 0) { // socket has been closed
+    else if (ret == 0 && size > 0) { // socket has been closed
 #ifdef SOCKET_LOG
         libtas::debuglogstdio(LCF_SOCKET | LCF_WARNING, "recv() returns 0 -> socket closed");
 #else
@@ -282,6 +283,9 @@ std::string receiveString()
 {
     unsigned int str_size;
     receiveData(&str_size, sizeof(unsigned int));
+
+    if (str_size == 0)
+        return "";
 
     /* TODO: There might be a better way to do this...? */
     std::vector<char> buf(str_size, 0x00);

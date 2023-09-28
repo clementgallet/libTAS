@@ -548,16 +548,6 @@ bool GameLoop::startFrameMessages()
         }
     }
 
-    /* Send marker text */
-    if (context->config.sc.osd & SharedConfig::OSD_MARKERS) {
-        std::string text;
-        emit getMarkerText(text);
-        if (!text.empty()) {
-            sendMessage(MSGN_MARKER);
-            sendString(text);
-        }
-    }
-
     /* Execute the lua callback onPaint here */
     Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackPaint);
 
@@ -571,6 +561,18 @@ void GameLoop::sleepSendPreview()
     /* Sleep a bit to not surcharge the processor */
     struct timespec tim = {0, 17L*1000L*1000L};
     nanosleep(&tim, NULL);
+
+    /* Send marker text if it has changed */
+    static std::string old_marker_text;
+    if (context->config.sc.osd & SharedConfig::OSD_MARKERS) {
+        std::string text;
+        emit getMarkerText(text);
+        if (old_marker_text != text) {
+            old_marker_text = text;
+            sendMessage(MSGN_MARKER);
+            sendString(text);
+        }
+    }
 
     /* Send a preview of inputs so that the game can display them
      * on the HUD */

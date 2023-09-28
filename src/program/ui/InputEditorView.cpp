@@ -280,9 +280,7 @@ void InputEditorView::updateMenu()
     bool has_marker = inputEditorModel->hasMarker(min_row);
 
     /* Set current marker text */
-    if (has_marker) {
-        currentMarkerText = inputEditorModel->getMarkerText(min_row);
-    }
+    currentMarkerText = inputEditorModel->getMarkerText(min_row);
 
     markAct->setText(has_marker ? tr("Edit marker") : tr("Add marker"));
     unmarkAct->setEnabled(has_marker);
