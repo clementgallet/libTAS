@@ -37,7 +37,7 @@ void SaveState::init(Context* context, int i)
     movie = std::unique_ptr<MovieFile>(new MovieFile(context));
 
     buildPaths(context);
-    buildMessages(context);
+    buildMessages();
 }
 
 void SaveState::invalidate()
@@ -68,7 +68,7 @@ void SaveState::buildPaths(Context* context)
     }
 }
 
-void SaveState::buildMessages(Context* context)
+void SaveState::buildMessages(bool branch)
 {
     if (saving_msg.empty()) {
         if (is_backtrack) {
@@ -85,25 +85,23 @@ void SaveState::buildMessages(Context* context)
         no_state_msg += std::to_string(id);
     }
 
-    if (loading_msg.empty()) {
-        if (is_backtrack) {
-            loading_msg = "Loading backtrack state";
-        }
-        else {
-            loading_msg = "Loading state ";
-            loading_msg += std::to_string(id);
-        }
+    std::string term = branch ? "branch" : "state";
+
+    if (is_backtrack) {
+        loading_msg = "Loading backtrack " + term;
+    }
+    else {
+        loading_msg = "Loading " + term + " ";
+        loading_msg += std::to_string(id);
     }
 
-    if (loaded_msg.empty()) {
-        if (is_backtrack) {
-            loaded_msg = "Backtrack state loaded";
-        }
-        else {
-            loaded_msg = "State ";
-            loaded_msg += std::to_string(id);
-            loaded_msg += " loaded";
-        }
+    if (is_backtrack) {
+        loaded_msg = "Backtrack " + term + " loaded";
+    }
+    else {
+        loaded_msg = branch ? "Branch " : "State ";
+        loaded_msg += std::to_string(id);
+        loaded_msg += " loaded";
     }
 }
 
@@ -201,6 +199,9 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch)
         }
         return EINVALID;
     }
+
+    /* Rebuild messages to account for a possible branch load */
+    buildMessages(branch);
     
     /* Send the savestate index */
     sendMessage(MSGN_SAVESTATE_INDEX);
