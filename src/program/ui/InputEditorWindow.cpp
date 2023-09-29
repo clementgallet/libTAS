@@ -48,6 +48,9 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(
     fastforwardAct = optionMenu->addAction(tr("Disable fastforward during rewind"), this, &InputEditorWindow::fastforwardSlot);
     fastforwardAct->setCheckable(true);
 
+    markerPauseAct = optionMenu->addAction(tr("Autopause on markers"), this, &InputEditorWindow::markerPauseSlot);
+    markerPauseAct->setCheckable(true);
+
     /* Layout */
     QHBoxLayout *mainLayout = new QHBoxLayout;
     mainLayout->addWidget(inputEditorView);
@@ -94,4 +97,9 @@ void InputEditorWindow::rewindSlot(bool checked)
 void InputEditorWindow::fastforwardSlot(bool checked)
 {
     context->config.editor_rewind_fastforward = !checked;
+}
+
+void InputEditorWindow::markerPauseSlot(bool checked)
+{
+    context->config.editor_marker_pause = checked;
 }

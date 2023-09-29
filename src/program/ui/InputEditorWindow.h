@@ -45,12 +45,15 @@ public slots:
     void scrollingSlot(bool checked);
     void rewindSlot(bool checked);
     void fastforwardSlot(bool checked);
+    void markerPauseSlot(bool checked);
+    
     
 private:
     Context *context;
     QAction* scrollingAct;
     QAction* rewindAct;
     QAction* fastforwardAct;
+    QAction* markerPauseAct;
 };
 
 #endif

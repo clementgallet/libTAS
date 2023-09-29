@@ -122,6 +122,16 @@ void GameLoop::start()
 
         bool shouldQuit = false;
 
+        /* Toggle pause when reaching a marker */
+        if (context->config.editor_marker_pause) {
+            if (movie.editor->markers.count(context->framecount+1)) {
+                context->config.sc.running = false;
+                context->config.sc.fastforward = false;
+                context->config.sc_modified = true;
+                emit sharedConfigChanged();
+            }
+        }
+
         /* Pause if needed */
         if ((context->pause_frame == (context->framecount + 1)) ||
             ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&

@@ -130,6 +130,9 @@ public:
     /* Use fastforward to rewind or seek to a specific frame in the input editor */
     bool editor_rewind_fastforward = true;
 
+    /* Pause and stop fastforward when reaching an input editor marker */
+    bool editor_marker_pause = false;
+
     /* Proton absolute path */
     std::string proton_path;
 

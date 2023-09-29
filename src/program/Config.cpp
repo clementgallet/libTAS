@@ -102,6 +102,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("editor_autoscroll", editor_autoscroll);
     settings.setValue("editor_rewind_seek", editor_rewind_seek);
     settings.setValue("editor_rewind_fastforward", editor_rewind_fastforward);
+    settings.setValue("editor_marker_pause", editor_marker_pause);
 
     settings.beginGroup("keymapping");
 
@@ -260,6 +261,7 @@ void Config::load(const std::string& gamepath) {
     editor_autoscroll = settings.value("editor_autoscroll", editor_autoscroll).toBool();
     editor_rewind_seek = settings.value("editor_rewind_seek", editor_rewind_seek).toBool();
     editor_rewind_fastforward = settings.value("editor_rewind_fastforward", editor_rewind_fastforward).toBool();
+    editor_marker_pause = settings.value("editor_marker_pause", editor_marker_pause).toBool();
 
     /* Load key mapping */
 
