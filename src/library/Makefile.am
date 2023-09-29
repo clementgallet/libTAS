@@ -182,7 +182,7 @@ libtas_so_SOURCES = \
     ../external/elfhacks.cpp	
 
 libtas_so_CXXFLAGS = $(LIBSWRESAMPLE_CFLAGS) -fPIC -shared -fvisibility=hidden -fno-stack-protector
-libtas_so_CXXFLAGS += -DSOCKET_LOG
+libtas_so_CXXFLAGS += -DLIBTAS_LIBRARY
 libtas_so_LDFLAGS = -shared
 libtas_so_LDADD = $(LIBRARY_LIBS)
 
