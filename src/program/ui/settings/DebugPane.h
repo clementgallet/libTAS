@@ -52,6 +52,7 @@ private:
     ToolTipCheckBox* debugEventsBox;
     ToolTipCheckBox* debugMainBox;
     ToolTipCheckBox* debugIOBox;
+    ToolTipCheckBox* debugInetBox;
     QCheckBox* debugSigIntBox;
 
     QComboBox* logToChoice;

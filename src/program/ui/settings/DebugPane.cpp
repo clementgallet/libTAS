@@ -50,14 +50,16 @@ void DebugPane::initLayout()
     debugEventsBox = new ToolTipCheckBox(tr("Native events"));
     debugMainBox = new ToolTipCheckBox(tr("Keep main first thread"));
     debugIOBox = new ToolTipCheckBox(tr("Native file IO"));
+    debugInetBox = new ToolTipCheckBox(tr("Native internet"));
     debugSigIntBox = new QCheckBox(tr("Raise SIGINT upon game launch (if debugging)"));
 
     generalLayout->addWidget(debugUncontrolledBox);
     generalLayout->addWidget(debugEventsBox);
     generalLayout->addWidget(debugMainBox);
     generalLayout->addWidget(debugIOBox);
+    generalLayout->addWidget(debugInetBox);
     generalLayout->addWidget(debugSigIntBox);
-    
+
     QGroupBox* logBox = new QGroupBox(tr("Logging"));
     QVBoxLayout* logLayout = new QVBoxLayout;
     logBox->setLayout(logLayout);
@@ -234,6 +236,7 @@ void DebugPane::initSignals()
     connect(debugEventsBox, &QAbstractButton::clicked, this, &DebugPane::saveConfig);
     connect(debugMainBox, &QAbstractButton::clicked, this, &DebugPane::saveConfig);
     connect(debugIOBox, &QAbstractButton::clicked, this, &DebugPane::saveConfig);
+    connect(debugInetBox, &QAbstractButton::clicked, this, &DebugPane::saveConfig);
     connect(debugSigIntBox, &QAbstractButton::clicked, this, &DebugPane::saveConfig);
     connect(logToChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &DebugPane::saveConfig);
 
@@ -318,6 +321,8 @@ void DebugPane::initToolTips()
     debugIOBox->setDescription("Let the game access to the real filesystem, only for debugging purpose. "
     "This is different from unchecking 'Prevent writing to disk', as it will allow "
     "games to access to device files, such as reading joystick events, or the hardware random generator.");
+
+    debugInetBox->setDescription("Let the game access the internet, only for debugging purpose.");
 }
 
 void DebugPane::showEvent(QShowEvent *event)
@@ -331,6 +336,7 @@ void DebugPane::loadConfig()
     debugEventsBox->setChecked(context->config.sc.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS);
     debugMainBox->setChecked(context->config.sc.debug_state & SharedConfig::DEBUG_MAIN_FIRST_THREAD);
     debugIOBox->setChecked(context->config.sc.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO);
+    debugInetBox->setChecked(context->config.sc.debug_state & SharedConfig::DEBUG_NATIVE_INET);
     debugSigIntBox->setChecked(context->config.sc.sigint_upon_launch);
     
     int index = logToChoice->findData(context->config.sc.logging_status);
@@ -413,6 +419,8 @@ void DebugPane::saveConfig()
         context->config.sc.debug_state |= SharedConfig::DEBUG_MAIN_FIRST_THREAD;
     if (debugIOBox->isChecked())
         context->config.sc.debug_state |= SharedConfig::DEBUG_NATIVE_FILEIO;
+    if (debugInetBox->isChecked())
+        context->config.sc.debug_state |= SharedConfig::DEBUG_NATIVE_INET;
     context->config.sc.sigint_upon_launch = debugSigIntBox->isChecked();
 
     context->config.sc.logging_status = logToChoice->currentData().toInt();
