@@ -516,10 +516,6 @@ void ScreenCapture::resize(int w, int h)
     }
 #endif
 
-    if (width == w && height == h) {
-        return;
-    }
-
     destroyScreenSurface();
 
     width = w;
