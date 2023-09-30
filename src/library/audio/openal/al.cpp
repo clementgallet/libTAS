@@ -19,7 +19,6 @@
 
 #include "al.h"
 #include "efx.h"
-#include "../../hookpatch.h"
 #include "../../logging.h"
 #include "../AudioBuffer.h"
 #include "../AudioSource.h"
@@ -1197,15 +1196,6 @@ void alGetListeneriv(ALenum param, ALint *values)
     debuglogstdio(LCF_SOUND, "Operation not supported");
 }
 
-namespace orig {
-
-static unsigned int __attribute__((noinline)) alBufferSubDataSOFT(ALuint buffer, ALenum format, const ALvoid *data, ALsizei offset, ALsizei length)
-{
-    HOOK_PLACEHOLDER_RETURN_ZERO
-}
-
-}
-
 void alBufferSubDataSOFT(ALuint buffer, ALenum format, const ALvoid *data, ALsizei offset, ALsizei length)
 {
     debuglogstdio(LCF_SOUND, "%s call - copy buffer sub data of format %d, length %d and offset %d into buffer %d", __func__, format, length, offset, buffer);
@@ -1287,11 +1277,6 @@ void alBufferSubDataSOFT(ALuint buffer, ALenum format, const ALvoid *data, ALsiz
     debuglogstdio(LCF_SOUND, "%s - do copy of length %d bytes", __func__, length);
 
     memcpy(samples, data, length);
-}
-
-void hook_openal()
-{
-    HOOK_PATCH_ORIG(alBufferSubDataSOFT, nullptr);
 }
 
 }

@@ -538,8 +538,7 @@ OVERRIDE void alGetListeneri(ALenum param, ALint *value);
 OVERRIDE void alGetListener3i(ALenum param, ALint *v1, ALint *v2, ALint *v3);
 OVERRIDE void alGetListeneriv(ALenum param, ALint *values);
 
-/** Override some protected OpenAL functions */
-void hook_openal();
+OVERRIDE void alBufferSubDataSOFT(ALuint buffer, ALenum format, const ALvoid *data, ALsizei offset, ALsizei length);
 
 }
 

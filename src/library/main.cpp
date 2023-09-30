@@ -34,7 +34,6 @@
 #include "checkpoint/SaveStateManager.h"
 #include "checkpoint/Checkpoint.h"
 #include "audio/AudioContext.h"
-#include "audio/openal/al.h"
 #include "encoding/AVEncoder.h"
 #include <unistd.h> // getpid()
 #include "frame.h" // framecount
@@ -194,7 +193,6 @@ void __attribute__((constructor)) init(void)
     audiocontext.init();
 
     hook_mono();
-    hook_openal();
 
     Global::is_inited = true;
 }
