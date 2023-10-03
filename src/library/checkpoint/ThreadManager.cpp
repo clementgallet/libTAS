@@ -120,12 +120,18 @@ void ThreadManager::setMainThread()
     }
 
     if (main_pthread_id != pthread_id) {
-        if (!(Global::shared_config.debug_state & SharedConfig::DEBUG_MAIN_FIRST_THREAD)) {
+        if (!(Global::shared_config.debug_state & SharedConfig::DEBUG_MAIN_FIRST_THREAD) &&
+            !(Global::shared_config.game_specific_timing & SharedConfig::GC_TIMING_ARMA_CWA)) {
             /* Switching main thread */
             debuglogstdio(LCF_THREAD | LCF_WARNING, "Switching main thread from %d to %d", main_pthread_id, pthread_id);
             main_pthread_id = pthread_id;
         }
     }
+}
+
+void ThreadManager::setMainThread(pthread_t pthread_id)
+{
+    main_pthread_id = pthread_id;
 }
 
 void ThreadManager::setCheckpointThread()

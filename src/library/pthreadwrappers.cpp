@@ -753,6 +753,12 @@ int pthread_setname_np (const char *name)
         }
     }
 
+    if (Global::shared_config.game_specific_timing & SharedConfig::GC_TIMING_ARMA_CWA) {
+        if (strcmp(name, "G.Main") == 0) {
+            ThreadManager::setMainThread(target_thread);
+        }
+    }
+
 #ifdef __unix__
     return orig::pthread_setname_np(target_thread, name);
 #elif defined(__APPLE__) && defined(__MACH__)
