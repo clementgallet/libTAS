@@ -1,12 +1,16 @@
-## libTAS
+## <img src="https://raw.githubusercontent.com/clementgallet/libTAS/master/libTAS.svg" width="24"/> libTAS
 
-GNU/Linux software to give TAS tools to games. Code orginates from [SuperMeatBoyTaser](https://github.com/DeathlyDeep/SuperMeatBoyTaser). It requires a GNU/Linux system with a recent kernel (at least 3.17 for the `memfd_create` syscall). Supported archs are `x86_64` and `x86`. You will need the Mesa llvm OpenGL driver to support savestates for games using OpenGL.
+[![Discord](https://img.shields.io/discord/726811446498820198?logo=discord)](https://discord.gg/3MBVAzU)
+[![Website](https://img.shields.io/badge/website-blue)](https://clementgallet.github.io/libTAS/)
+
+
+GNU/Linux software to give TAS tools to games. Code originates from [SuperMeatBoyTaser](https://github.com/DeathlyDeep/SuperMeatBoyTaser). It requires a GNU/Linux system with a recent kernel (at least 3.17 for the `memfd_create` syscall). Supported archs are `x86_64` and `x86`. You will need the Mesa llvm OpenGL driver to support savestates for games using OpenGL.
 
 Discord server: https://discord.gg/3MBVAzU
 
 Website: https://clementgallet.github.io/libTAS/ (still in progress)
 
-Additional documentation on tasvideos.org: https://tasvideos.org/EmulatorResources/LibTAS.html
+Additional documentation on tasvideos.org: https://tasvideos.org/EmulatorResources/LibTAS
 
 ## Supported Games
 
@@ -16,7 +20,7 @@ By default, you should look for a drm-free version of the game. Games installed 
 
 There is also initial support for Windows games through wine. Details are given below.
 
-## Non-linux users
+## Non-Linux users
 
 If you don't have a Linux system beforehand, there are several options that you can choose:
 - Run libTAS using [WSL 2](https://clementgallet.github.io/libTAS/guides/wsl/) (Windows Subsystem for Linux) (preferred option)
@@ -104,16 +108,16 @@ Here are the default controls when the game has started:
 
 Note: the game starts up **paused**.
 
-## Run Windows games through wine
+## Run Windows games through Wine
 
-This is still experimental. To launch Windows games through wine, you first need to install wine on your system (it must be located somewhere in $PATH).
+This is still experimental. To launch Windows games through Wine, you first need to install Wine on your system (it must be located somewhere in $PATH).
 
 To get audio correctly handled, you need to open winetricks, then select "Select the default wineprefix", "Change settings" and check "sound=alsa".
 
-In the game executable field, you must set the Windows `.exe` executable (both 32-bit and 64-bit are supported, given that you have the wine version for it). It will detect a Windows executable and launch wine with the right options.
+In the game executable field, you must set the Windows `.exe` executable (both 32-bit and 64-bit are supported, given that you have the wine version for it). It will detect a Windows executable and launch Wine with the right options.
 
 There are still a lot of issues to fix:
-- "Prevent writing to disk" feature does not work, because wine delegating to another process (wine server) the file handling (#250)
+- "Prevent writing to disk" feature does not work, because Wine delegating to another process (wine server) the file handling (#250)
 - Window focus/unfocus doesn't work sometimes and you cannot move the game window (#262). Try alt-tabbing until you get it back
 - "Virtual Steam client" does not work, because we don't hook the loading of the `steam_api.dll` file (#264)
 - Window repainting (Expose event) does not work, so if you pause the game and drag another window in front of it, it will overwrite what is displayed by the game
