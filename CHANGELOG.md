@@ -21,6 +21,7 @@
 * Debug errors show file and line
 * Add markers to frames in input editor (#548)
 * Add an option to pause on markers
+* Save a backup movie when user did not set a recording movie
 
 ### Changed
 

@@ -250,7 +250,7 @@ void GameLoop::init()
     }
 
     /* We must add a blank frame in most cases */
-    if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
+    if (context->config.sc.recording != SharedConfig::RECORDING_READ) {
         /* Add one blank frame in every movie corresponding to the input
          * between the game startup and the first screen draw, which is for now
          * impossible to set. Exception is if we restarted.
@@ -462,6 +462,17 @@ bool GameLoop::startFrameMessages()
                     movie.header->length_sec = cur_sec;
                     movie.header->length_nsec = cur_nsec;
                     movie.inputs->wasModified();
+                }
+            }
+            
+            /* When not recording, always truncate the movie */
+            if (context->config.sc.recording == SharedConfig::NO_RECORDING) {
+                context->config.sc.movie_framecount = context->framecount;
+                movie.header->length_sec = context->current_time_sec - context->config.sc.initial_monotonic_time_sec;
+                movie.header->length_nsec = context->current_time_nsec - context->config.sc.initial_monotonic_time_nsec;
+                if (movie.header->length_nsec < 0) {
+                    movie.header->length_nsec += 1000000000;
+                    movie.header->length_sec--;
                 }
             }
 
@@ -706,6 +717,10 @@ void GameLoop::processInputs(AllInputs &ai)
 
                 AutoSave::update(context, movie);
             }
+            else {
+                /* Just save the inputs into the backup movie */
+                movie.inputs->setInputs(ai, false);
+            }
             break;
 
         case SharedConfig::RECORDING_READ:
@@ -842,7 +857,11 @@ void GameLoop::loopExit()
         return;
     }
 
-    if (movie.inputs->modifiedSinceLastSave) {
+    /* When not recording, silently save a backup movie and inform the user */
+    if (context->config.sc.recording == SharedConfig::NO_RECORDING) {
+        movie.saveBackupMovie();
+    }
+    else if (movie.inputs->modifiedSinceLastSave) {
 
         /* Ask the user if he wants to save the movie, and get the answer.
          * Prompting a alert window must be done by the UI thread, so we are

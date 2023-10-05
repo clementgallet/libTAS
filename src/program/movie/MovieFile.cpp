@@ -192,6 +192,13 @@ int MovieFile::saveMovie()
     return saveMovie(context->config.moviefile);
 }
 
+int MovieFile::saveBackupMovie()
+{
+    std::string backupfile = context->config.tempmoviedir + "/backup.ltm";
+    std::cout << "No movie recording was selected. A backup movie was saved to " << backupfile << std::endl;
+    return saveMovie(backupfile);
+}
+
 void MovieFile::copyTo(MovieFile& movie) const
 {
     /* This will only be used for savestate movies, we only care to copy relevant data */

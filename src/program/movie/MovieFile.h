@@ -71,6 +71,7 @@ public:
 
     /* Write the inputs into a file and compress to the whole moviefile */
     int saveMovie();
+    int saveBackupMovie();
     int saveMovie(const std::string& moviefile);
 
     /* Write only the n first frames of input into the movie file. Used for savestate movies */
