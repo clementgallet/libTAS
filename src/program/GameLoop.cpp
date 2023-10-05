@@ -478,11 +478,14 @@ bool GameLoop::startFrameMessages()
             receiveData(&encoding_segment, sizeof(int));
             break;
         case MSGB_INVALIDATE_SAVESTATES:
-            /* Only save a backtrack savestate if we did at least one savestate.
+            /* If incremental savestating feature is checked,
+             * only save a backtrack savestate if we did at least one savestate.
              * This prevent incremental savestating from being inefficient if a
              * backtrack savestate is performed at the very beginning of the game.
              */
-            if ((context->config.sc.savestate_settings & SharedConfig::SS_BACKTRACK) && gameEvents->didASavestate)
+            if ((context->config.sc.savestate_settings & SharedConfig::SS_BACKTRACK) &&
+                (gameEvents->didASavestate ||
+                !(context->config.sc.savestate_settings & SharedConfig::SS_INCREMENTAL)))
                 context->hotkey_pressed_queue.push(HOTKEY_SAVESTATE_BACKTRACK);
 
             /* Invalidate all savestates */
