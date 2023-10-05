@@ -23,6 +23,7 @@
 #include "../logging.h"
 #include "../Utils.h"
 #include "../GlobalState.h"
+#include "../global.h"
 #ifdef __linux__
 #include "../inputs/evdev.h"
 #include "../inputs/jsdev.h"
@@ -114,6 +115,14 @@ bool closeFile(int fd)
 {
     if (fd < 0)
         return true;
+
+    if (Global::is_exiting) {
+        /* Closing files may be late in the termination of the program, and
+         * the structs used here may already be gone. We don't care to keep track
+         * when exiting
+         */
+        return true;
+    }
 
     std::lock_guard<std::mutex> lock(getFileListMutex());
     auto& filehandles = getFileList();
