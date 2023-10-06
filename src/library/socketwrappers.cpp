@@ -34,8 +34,8 @@ DEFINE_ORIG_POINTER(socket)
     DEBUGLOGCALL(LCF_SOCKET);
     LINK_NAMESPACE_GLOBAL(socket);
 
-    /* Passthrough socket call if this is our own code (mainly for X connections) */
-    if (GlobalState::isOwnCode()) {
+    /* Passthrough socket call if this is a native call (e.g. ALSA init) or our own code (e.g. X connections) */
+    if (GlobalState::isNative() || GlobalState::isOwnCode()) {
         return orig::socket(domain, type, protocol);
     }
 
