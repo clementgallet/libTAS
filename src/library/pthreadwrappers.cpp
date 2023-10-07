@@ -187,14 +187,29 @@ static void *pthread_start(void *arg)
     return thread->retval;
 }
 
+static void *pthread_native_start(void *arg)
+{
+    ThreadInfo* thread = static_cast<ThreadInfo*>(arg);
+    ThreadManager::update(thread);
+
+    auto thread_start = thread->start;
+    auto thread_arg = thread->arg;
+    delete thread;
+
+    return thread_start(thread_arg);
+}
+
 
 /* Override */ int pthread_create (pthread_t * tid_p, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) __THROW
 {
     LINK_NAMESPACE(pthread_create, "pthread");
     LINK_NAMESPACE(pthread_detach, "pthread");
 
-    if (GlobalState::isNative())
-        return orig::pthread_create(tid_p, attr, start_routine, arg);
+    if (GlobalState::isNative()) {
+        ThreadInfo* thread = new ThreadInfo();
+        ThreadManager::initThreadFromParent(thread, start_routine, arg, __builtin_return_address(0));
+        return orig::pthread_create(tid_p, attr, pthread_native_start, thread);
+    }
 
     debuglogstdio(LCF_THREAD, "Thread is created with routine %p", (void*)start_routine);
 
