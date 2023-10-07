@@ -18,6 +18,7 @@
  */
 
 #include "al.h"
+#include "alsoft.h"
 #include "efx.h"
 #include "../../logging.h"
 #include "../AudioBuffer.h"
@@ -28,8 +29,93 @@
 
 namespace libtas {
 
+// DEFINE_ORIG_POINTER(alEnable)
+// DEFINE_ORIG_POINTER(alDisable)
+// DEFINE_ORIG_POINTER(alIsEnabled)
+
+DEFINE_ORIG_POINTER(alGetString)
+// DEFINE_ORIG_POINTER(alGetBooleanv)
+// DEFINE_ORIG_POINTER(alGetIntegerv)
+// DEFINE_ORIG_POINTER(alGetFloatv)
+// DEFINE_ORIG_POINTER(alGetDoublev)
+// DEFINE_ORIG_POINTER(alGetBoolean)
+// DEFINE_ORIG_POINTER(alGetInteger)
+// DEFINE_ORIG_POINTER(alGetFloat)
+// DEFINE_ORIG_POINTER(alGetDouble)
+
+DEFINE_ORIG_POINTER(alGetError);
+
+DEFINE_ORIG_POINTER(alIsExtensionPresent)
+DEFINE_ORIG_POINTER(alGetProcAddress)
+// DEFINE_ORIG_POINTER(alGetEnumValue)
+
+DEFINE_ORIG_POINTER(alGenBuffers)
+DEFINE_ORIG_POINTER(alDeleteBuffers)
+DEFINE_ORIG_POINTER(alIsBuffer)
+
+DEFINE_ORIG_POINTER(alBufferData)
+
+DEFINE_ORIG_POINTER(alBufferf)
+DEFINE_ORIG_POINTER(alBuffer3f)
+DEFINE_ORIG_POINTER(alBufferfv)
+DEFINE_ORIG_POINTER(alBufferi)
+DEFINE_ORIG_POINTER(alBuffer3i)
+DEFINE_ORIG_POINTER(alBufferiv)
+
+DEFINE_ORIG_POINTER(alGetBufferi)
+DEFINE_ORIG_POINTER(alGetBufferiv)
+
+DEFINE_ORIG_POINTER(alGenSources)
+DEFINE_ORIG_POINTER(alDeleteSources)
+DEFINE_ORIG_POINTER(alIsSource)
+
+DEFINE_ORIG_POINTER(alSourcef)
+DEFINE_ORIG_POINTER(alSource3f)
+DEFINE_ORIG_POINTER(alSourcefv)
+DEFINE_ORIG_POINTER(alSourcei)
+DEFINE_ORIG_POINTER(alSource3i)
+DEFINE_ORIG_POINTER(alSourceiv)
+
+DEFINE_ORIG_POINTER(alGetSourcef)
+DEFINE_ORIG_POINTER(alGetSource3f)
+DEFINE_ORIG_POINTER(alGetSourcefv)
+DEFINE_ORIG_POINTER(alGetSourcei)
+DEFINE_ORIG_POINTER(alGetSource3i)
+DEFINE_ORIG_POINTER(alGetSourceiv)
+
+DEFINE_ORIG_POINTER(alSourcePlayv)
+DEFINE_ORIG_POINTER(alSourceStopv)
+DEFINE_ORIG_POINTER(alSourceRewindv)
+DEFINE_ORIG_POINTER(alSourcePausev)
+
+DEFINE_ORIG_POINTER(alSourcePlay)
+DEFINE_ORIG_POINTER(alSourceStop)
+DEFINE_ORIG_POINTER(alSourceRewind)
+DEFINE_ORIG_POINTER(alSourcePause)
+
+DEFINE_ORIG_POINTER(alSourceQueueBuffers)
+DEFINE_ORIG_POINTER(alSourceUnqueueBuffers)
+
+DEFINE_ORIG_POINTER(alListenerf)
+DEFINE_ORIG_POINTER(alListener3f)
+DEFINE_ORIG_POINTER(alListenerfv)
+DEFINE_ORIG_POINTER(alListeneri)
+DEFINE_ORIG_POINTER(alListener3i)
+DEFINE_ORIG_POINTER(alListeneriv)
+
+DEFINE_ORIG_POINTER(alGetListenerf)
+DEFINE_ORIG_POINTER(alGetListener3f)
+DEFINE_ORIG_POINTER(alGetListenerfv)
+DEFINE_ORIG_POINTER(alGetListeneri)
+DEFINE_ORIG_POINTER(alGetListener3i)
+DEFINE_ORIG_POINTER(alGetListeneriv)
+
+DEFINE_ORIG_POINTER(alBufferSubDataSOFT)
+
 const ALchar* alGetString(ALenum param)
 {
+    CHECK_USE_ALSOFT_FUNCTION(alGetString, param)
+
     switch(param) {
         case AL_VENDOR:
             return "libTAS_AL_vendor";
@@ -52,6 +138,11 @@ void alSetError(ALenum error)
 
 ALenum alGetError(ALvoid)
 {
+    if (Global::shared_config.openal_soft && check_al_soft_available()) {
+        LINK_NAMESPACE_ALSOFT(alGetError);
+        alError = orig::alGetError();
+    }
+
     debuglogstdio(LCF_SOUND, "%s call, returning %d", __func__, alError);
     ALenum err = alError;
     alError = AL_NO_ERROR;
@@ -67,6 +158,7 @@ ALenum alGetError(ALvoid)
 ALboolean alIsExtensionPresent(const ALchar *extname)
 {
     debuglogstdio(LCF_SOUND, "%s call with extname %s", __func__, extname);
+    CHECK_USE_ALSOFT_FUNCTION(alIsExtensionPresent, extname)
 
     if (strcmp(extname, ALC_EXT_EFX_NAME) == 0) {
         return AL_TRUE;
@@ -84,6 +176,7 @@ ALboolean alIsExtensionPresent(const ALchar *extname)
 void* alGetProcAddress(const ALchar *fname)
 {
     debuglogstdio(LCF_SOUND, "%s call with name %s", __func__, fname);
+    CHECK_USE_ALSOFT_FUNCTION(alGetProcAddress, fname)
 
     CHECK_RETURN_MY_FUNCTION(alGenEffects)
     CHECK_RETURN_MY_FUNCTION(alDeleteEffects)
@@ -127,6 +220,7 @@ void* alGetProcAddress(const ALchar *fname)
 void alGenBuffers(ALsizei n, ALuint *buffers)
 {
     debuglogstdio(LCF_SOUND, "%s call - generate %d buffers", __func__, n);
+    CHECK_USE_ALSOFT_FUNCTION(alGenBuffers, n, buffers)
 
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     for (int i=0; i<n; i++) {
@@ -140,6 +234,7 @@ void alGenBuffers(ALsizei n, ALuint *buffers)
 void alDeleteBuffers(ALsizei n, ALuint *buffers)
 {
     debuglogstdio(LCF_SOUND, "%s call - delete %d buffers", __func__, n);
+    CHECK_USE_ALSOFT_FUNCTION(alDeleteBuffers, n, buffers)
 
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     for (int i=0; i<n; i++) {
@@ -157,6 +252,8 @@ void alDeleteBuffers(ALsizei n, ALuint *buffers)
 ALboolean alIsBuffer(ALuint buffer)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alIsBuffer, buffer)
+
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     return audiocontext.isBuffer(buffer);
 }
@@ -164,6 +261,7 @@ ALboolean alIsBuffer(ALuint buffer)
 void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size, ALsizei freq)
 {
     debuglogstdio(LCF_SOUND, "%s call - copy buffer data of format %d, size %d and frequency %d into buffer %d", __func__, format, size, freq, buffer);
+    CHECK_USE_ALSOFT_FUNCTION(alBufferData, buffer, format, data, size, freq)
 
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
@@ -243,24 +341,32 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
 void alBufferf(ALuint buffer, ALenum param, ALfloat value)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alBufferf, buffer, param, value)
+
     debuglogstdio(LCF_SOUND, "Operation not supported");
 }
 
 void alBuffer3f(ALuint buffer, ALenum param, ALfloat value1, ALfloat value2, ALfloat value3)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alBuffer3f, buffer, param, value1, value2, value3)
+
     debuglogstdio(LCF_SOUND, "Operation not supported");
 }
 
 void alBufferfv(ALuint buffer, ALenum param, const ALfloat *values)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alBufferfv, buffer, param, values)
+
     debuglogstdio(LCF_SOUND, "Operation not supported");
 }
 
 void alBufferi(ALuint buffer, ALenum param, ALint value)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alBufferi, buffer, param, value)
+
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto ab = audiocontext.getBuffer(buffer);
     if (ab == nullptr) {
@@ -284,12 +390,16 @@ void alBufferi(ALuint buffer, ALenum param, ALint value)
 void alBuffer3i(ALuint buffer, ALenum param, ALint value1, ALint value2, ALint value3)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alBuffer3i, buffer, param, value1, value2, value3)
+
     debuglogstdio(LCF_SOUND, "Operation not supported");
 }
 
 void alBufferiv(ALuint buffer, ALenum param, const ALint *values)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alBufferiv, buffer, param, values)
+
     if (values == nullptr) {
         alSetError(AL_INVALID_VALUE);
         return;
@@ -322,6 +432,7 @@ void alBufferiv(ALuint buffer, ALenum param, const ALint *values)
 void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alGetBufferi, buffer, pname, value)
 
     if (value == nullptr) {
         return;
@@ -364,6 +475,7 @@ void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
 void alGetBufferiv(ALuint buffer, ALenum pname, ALint *values)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alGetBufferiv, buffer, pname, values)
 
     if (values == nullptr) {
         return;
@@ -409,6 +521,8 @@ void alGetBufferiv(ALuint buffer, ALenum pname, ALint *values)
 void alGenSources(ALsizei n, ALuint *sources)
 {
     debuglogstdio(LCF_SOUND, "%s call - generate %d sources", __func__, n);
+    CHECK_USE_ALSOFT_FUNCTION(alGenSources, n, sources)
+
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 	for (int i=0; i<n; i++) {
 		int id = audiocontext.createSource();
@@ -425,6 +539,8 @@ void alGenSources(ALsizei n, ALuint *sources)
 void alDeleteSources(ALsizei n, ALuint *sources)
 {
     debuglogstdio(LCF_SOUND, "%s call - delete %d sources", __func__, n);
+    CHECK_USE_ALSOFT_FUNCTION(alDeleteSources, n, sources)
+
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 	for (int i=0; i<n; i++) {
         /* Check if all sources exist before removing any. */
@@ -445,6 +561,8 @@ void alDeleteSources(ALsizei n, ALuint *sources)
 ALboolean alIsSource(ALuint source)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alIsSource, source)
+
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 	return audiocontext.isSource(source);
 }
@@ -452,6 +570,8 @@ ALboolean alIsSource(ALuint source)
 void alSourcef(ALuint source, ALenum param, ALfloat value)
 {
     debuglogstdio(LCF_SOUND, "%s called with source %d", __func__, source);
+    CHECK_USE_ALSOFT_FUNCTION(alSourcef, source, param, value)
+
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as) {
@@ -551,6 +671,8 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
 void alSource3f(ALuint source, ALenum param, ALfloat v1, ALfloat v2, ALfloat v3)
 {
     debuglogstdio(LCF_SOUND, "%s called with source %d", __func__, source);
+    CHECK_USE_ALSOFT_FUNCTION(alSource3f, source, param, v1, v2, v3)
+
     switch(param) {
         case AL_DIRECTION:
             debuglogstdio(LCF_SOUND, "Setting direction not supported");
@@ -567,6 +689,8 @@ void alSource3f(ALuint source, ALenum param, ALfloat v1, ALfloat v2, ALfloat v3)
 void alSourcefv(ALuint source, ALenum param, ALfloat *values)
 {
     debuglogstdio(LCF_SOUND, "%s called with source %d", __func__, source);
+    CHECK_USE_ALSOFT_FUNCTION(alSourcefv, source, param, values)
+
     if (values == nullptr) {
         alSetError(AL_INVALID_VALUE);
         return;
@@ -585,6 +709,8 @@ void alSourcefv(ALuint source, ALenum param, ALfloat *values)
 void alSourcei(ALuint source, ALenum param, ALint value)
 {
     debuglogstdio(LCF_SOUND, "%s called with source %d", __func__, source);
+    CHECK_USE_ALSOFT_FUNCTION(alSourcei, source, param, value)
+
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as) {
@@ -696,6 +822,8 @@ void alSourcei(ALuint source, ALenum param, ALint value)
 void alSource3i(ALuint source, ALenum param, ALint v1, ALint v2, ALint v3)
 {
     debuglogstdio(LCF_SOUND, "%s called with source %d", __func__, source);
+    CHECK_USE_ALSOFT_FUNCTION(alSource3i, source, param, v1, v2, v3)
+
     switch(param) {
         case AL_AUXILIARY_SEND_FILTER:
             debuglogstdio(LCF_SOUND, "Operation not supported");
@@ -707,6 +835,8 @@ void alSource3i(ALuint source, ALenum param, ALint v1, ALint v2, ALint v3)
 void alSourceiv(ALuint source, ALenum param, ALint *values)
 {
     debuglogstdio(LCF_SOUND, "%s called with source %d", __func__, source);
+    CHECK_USE_ALSOFT_FUNCTION(alSourceiv, source, param, values)
+
     if (values == nullptr) {
         alSetError(AL_INVALID_VALUE);
         return;
@@ -717,6 +847,7 @@ void alSourceiv(ALuint source, ALenum param, ALint *values)
 void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alGetSourcef, source, param, value)
 
     if (value == nullptr) {
         return;
@@ -797,18 +928,23 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
 void alGetSource3f(ALuint source, ALenum param, ALfloat *v1, ALfloat *v2, ALfloat *v3)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alGetSource3f, source, param, v1, v2, v3)
+
     debuglogstdio(LCF_SOUND, "Operation not supported");
 }
 
 void alGetSourcefv(ALuint source, ALenum param, ALfloat *values)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alGetSourcefv, source, param, values)
+
     alGetSourcef(source, param, values);
 }
 
 void alGetSourcei(ALuint source, ALenum param, ALint *value)
 {
     debuglogstdio(LCF_SOUND, "%s call for source %d", __func__, source);
+    CHECK_USE_ALSOFT_FUNCTION(alGetSourcei, source, param, value)
 
     if (value == nullptr) {
         return;
@@ -939,18 +1075,24 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
 void alGetSource3i(ALuint source, ALenum param, ALint *v1, ALint *v2, ALint *v3)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alGetSource3i, source, param, v1, v2, v3)
+
     debuglogstdio(LCF_SOUND, "Operation not supported");
 }
 
 void alGetSourceiv(ALuint source, ALenum param, ALint *values)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alGetSourceiv, source, param, values)
+
     alGetSourcei(source, param, values);
 }
 
 void alSourcePlay(ALuint source)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alSourcePlay, source)
+
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as)
@@ -966,6 +1108,8 @@ void alSourcePlay(ALuint source)
 void alSourcePlayv(ALsizei n, ALuint *sources)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alSourcePlayv, n, sources)
+
     for (int i=0; i<n; i++)
         alSourcePlay(sources[i]);
 }
@@ -973,6 +1117,8 @@ void alSourcePlayv(ALsizei n, ALuint *sources)
 void alSourcePause(ALuint source)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alSourcePause, source)
+
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as)
@@ -988,6 +1134,8 @@ void alSourcePause(ALuint source)
 void alSourcePausev(ALsizei n, ALuint *sources)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alSourcePausev, n, sources)
+
     for (int i=0; i<n; i++)
         alSourcePause(sources[i]);
 }
@@ -995,6 +1143,8 @@ void alSourcePausev(ALsizei n, ALuint *sources)
 void alSourceStop(ALuint source)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alSourceStop, source)
+
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as)
@@ -1011,6 +1161,8 @@ void alSourceStop(ALuint source)
 void alSourceStopv(ALsizei n, ALuint *sources)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alSourceStopv, n, sources)
+
     for (int i=0; i<n; i++)
         alSourceStop(sources[i]);
 }
@@ -1018,6 +1170,8 @@ void alSourceStopv(ALsizei n, ALuint *sources)
 void alSourceRewind(ALuint source)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alSourceRewind, source)
+
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as)
@@ -1034,6 +1188,8 @@ void alSourceRewind(ALuint source)
 void alSourceRewindv(ALsizei n, ALuint *sources)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alSourceRewindv, n, sources)
+
     for (int i=0; i<n; i++)
         alSourceRewind(sources[i]);
 }
@@ -1041,6 +1197,8 @@ void alSourceRewindv(ALsizei n, ALuint *sources)
 void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 {
     debuglogstdio(LCF_SOUND, "Pushing %d buffers in the queue of source ", n, source);
+    CHECK_USE_ALSOFT_FUNCTION(alSourceQueueBuffers, source, n, buffers)
+
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as)
@@ -1068,6 +1226,8 @@ void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alSourceUnqueueBuffers, source, n, buffers)
+
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     auto as = audiocontext.getSource(source);
     if (!as)
@@ -1104,6 +1264,8 @@ void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 void alListenerf(ALenum param, ALfloat value)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alListenerf, param, value)
+
     if (param == AL_GAIN)
         audiocontext.outVolume = value;
 }
@@ -1111,6 +1273,8 @@ void alListenerf(ALenum param, ALfloat value)
 void alListener3f(ALenum param, ALfloat v1, ALfloat v2, ALfloat v3)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alListener3f, param, v1, v2, v3)
+
     switch(param) {
     case AL_POSITION:
         debuglogstdio(LCF_SOUND, "   Set Position to: %f, %f; %f", v1, v2, v3);
@@ -1125,6 +1289,8 @@ void alListener3f(ALenum param, ALfloat v1, ALfloat v2, ALfloat v3)
 void alListenerfv(ALenum param, ALfloat *values)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alListenerfv, param, values)
+
     switch(param) {
     case AL_ORIENTATION:
         debuglogstdio(LCF_SOUND, "   Set Orientation to: %f, %f, %f, %f, %f, %f", values[0], values[1], values[2], values[3], values[4], values[5]);
@@ -1136,24 +1302,32 @@ void alListenerfv(ALenum param, ALfloat *values)
 void alListeneri(ALenum param, ALint value)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alListeneri, param, value)
+
     debuglogstdio(LCF_SOUND, "Operation not supported");
 }
 
 void alListener3i(ALenum param, ALint v1, ALint v2, ALint v3)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alListener3i, param, v1, v2, v3)
+
     debuglogstdio(LCF_SOUND, "Operation not supported");
 }
 
 void alListeneriv(ALenum param, ALint *values)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alListeneriv, param, values)
+
     debuglogstdio(LCF_SOUND, "Operation not supported");
 }
 
 void alGetListenerf(ALenum param, ALfloat *value)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alGetListenerf, param, value)
+
     if (param == AL_GAIN) {
         if (!value) {
             // alSetError(AL_INVALID_VALUE);
@@ -1166,12 +1340,16 @@ void alGetListenerf(ALenum param, ALfloat *value)
 void alGetListener3f(ALenum param, ALfloat *v1, ALfloat *v2, ALfloat *v3)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alGetListener3f, param, v1, v2, v3)
+
     debuglogstdio(LCF_SOUND, "Operation not supported");
 }
 
 void alGetListenerfv(ALenum param, ALfloat *values)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alGetListenerfv, param, values)
+
     if (param == AL_GAIN)
         alGetListenerf(param, values);
     else
@@ -1181,24 +1359,31 @@ void alGetListenerfv(ALenum param, ALfloat *values)
 void alGetListeneri(ALenum param, ALint *value)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alGetListeneri, param, value)
+
     debuglogstdio(LCF_SOUND, "Operation not supported");
 }
 
 void alGetListener3i(ALenum param, ALint *v1, ALint *v2, ALint *v3)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alGetListener3i, param, v1, v2, v3)
+
     debuglogstdio(LCF_SOUND, "Operation not supported");
 }
 
 void alGetListeneriv(ALenum param, ALint *values)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alGetListeneriv, param, values)
+
     debuglogstdio(LCF_SOUND, "Operation not supported");
 }
 
 void alBufferSubDataSOFT(ALuint buffer, ALenum format, const ALvoid *data, ALsizei offset, ALsizei length)
 {
     debuglogstdio(LCF_SOUND, "%s call - copy buffer sub data of format %d, length %d and offset %d into buffer %d", __func__, format, length, offset, buffer);
+    CHECK_USE_ALSOFT_FUNCTION(alBufferSubDataSOFT, buffer, format, data, offset, length)
 
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 

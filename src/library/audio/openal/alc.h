@@ -194,8 +194,8 @@ OVERRIDE const ALCchar* alcGetString(ALCdevice *device, ALCenum param);
 OVERRIDE void           alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *values);
 
 /** Extensions **/
-OVERRIDE ALCboolean  myalcSetThreadContext(ALCcontext *context);
-OVERRIDE ALCcontext* myalcGetThreadContext(void);
+ALCboolean  myalcSetThreadContext(ALCcontext *context);
+ALCcontext* myalcGetThreadContext(void);
 
 #define AL_DIRECT_CHANNELS_SOFT                  0x1033
 #define ALC_FORMAT_CHANNELS_SOFT                 0x1990
@@ -218,9 +218,9 @@ OVERRIDE ALCcontext* myalcGetThreadContext(void);
 #define ALC_6POINT1_SOFT                         0x1505
 #define ALC_7POINT1_SOFT                         0x1506
 
-OVERRIDE ALCdevice* myalcLoopbackOpenDeviceSOFT(const ALCchar *deviceName);
-OVERRIDE ALCboolean myalcIsRenderFormatSupportedSOFT(ALCdevice *device, ALCsizei freq, ALCenum channels, ALCenum type);
-OVERRIDE void myalcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffer, ALCsizei samples);
+ALCdevice* myalcLoopbackOpenDeviceSOFT(const ALCchar *deviceName);
+ALCboolean myalcIsRenderFormatSupportedSOFT(ALCdevice *device, ALCsizei freq, ALCenum channels, ALCenum type);
+void myalcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffer, ALCsizei samples);
 
 #define ALC_HRTF_SOFT                            0x1992
 #define ALC_DONT_CARE_SOFT                       0x0002

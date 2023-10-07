@@ -17,43 +17,30 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_AUDIOPANE_H_INCLUDED
-#define LIBTAS_AUDIOPANE_H_INCLUDED
+#ifndef LIBTAS_OPENALSOFT_H_INCL
+#define LIBTAS_OPENALSOFT_H_INCL
 
-#include <QtWidgets/QWidget>
+#include "../../hook.h"
+#include "../../global.h"
 
-class Context;
-class QComboBox;
-class QCheckBox;
-class ToolTipCheckBox;
+namespace libtas {
 
-class AudioPane : public QWidget {
-    Q_OBJECT
-public:
-    AudioPane(Context *c);
+/** Check if OpenAL Soft is available */
+bool check_al_soft_available();
 
-    void update(int status);
+/** Helper macro to link against OpenAL Soft functions */
+#define LINK_NAMESPACE_ALSOFT(func) do { \
+    link_function((void**)&orig::func, #func, "libopenal-soft.so.1"); \
+    link_function((void**)&orig::func, #func, "libopenal.so.1"); \
+} while (0)
 
-    Context *context;
+/** Helper macro to use OpenAL Soft functions if preferred and available */
+#define CHECK_USE_ALSOFT_FUNCTION(func, ...) \
+    if (Global::shared_config.openal_soft && check_al_soft_available()) { \
+        LINK_NAMESPACE_ALSOFT(func); \
+        return orig::func(__VA_ARGS__); \
+    }
 
-private:
-    void initLayout();
-    void initSignals();
-    void initToolTips();
-
-    void showEvent(QShowEvent *event) override;
-    
-    QComboBox* freqChoice;
-    QComboBox* depthChoice;
-    QComboBox* channelChoice;
-
-    ToolTipCheckBox* muteBox;
-    ToolTipCheckBox* disableBox;
-    ToolTipCheckBox* preferOpenAlBox;
-
-public slots:
-    void loadConfig();
-    void saveConfig();
-};
+}
 
 #endif

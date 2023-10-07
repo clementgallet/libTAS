@@ -319,6 +319,9 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Prevent audio device from being initialized */
     bool audio_disabled = false;
 
+    /* Prefer using OpenAL Soft over our own OpenAL implementation */
+    bool openal_soft = false;
+
     /* Recycle threads when they terminate */
     bool recycle_threads = false;
 

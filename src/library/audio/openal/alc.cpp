@@ -18,12 +18,33 @@
  */
 
 #include "alc.h"
+#include "alsoft.h"
 #include "efx.h"
 #include "../AudioContext.h"
 #include "../../logging.h"
 #include "../../global.h"
 
 namespace libtas {
+
+DEFINE_ORIG_POINTER(alcOpenDevice)
+DEFINE_ORIG_POINTER(alcCloseDevice)
+
+DEFINE_ORIG_POINTER(alcCreateContext)
+DEFINE_ORIG_POINTER(alcMakeContextCurrent)
+DEFINE_ORIG_POINTER(alcProcessContext)
+DEFINE_ORIG_POINTER(alcSuspendContext)
+DEFINE_ORIG_POINTER(alcDestroyContext)
+DEFINE_ORIG_POINTER(alcGetCurrentContext)
+DEFINE_ORIG_POINTER(alcGetContextsDevice)
+
+DEFINE_ORIG_POINTER(alcGetError)
+
+DEFINE_ORIG_POINTER(alcIsExtensionPresent)
+DEFINE_ORIG_POINTER(alcGetProcAddress)
+DEFINE_ORIG_POINTER(alcGetEnumValue)
+
+DEFINE_ORIG_POINTER(alcGetString)
+DEFINE_ORIG_POINTER(alcGetIntegerv)
 
 static ALCdevice dummyDevice = 0;
 static ALCcontext dummyContext = -1;
@@ -35,6 +56,8 @@ static ALCenum alcError = ALC_NO_ERROR;
 /* Override */ ALCenum alcGetError(ALCdevice *device)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alcGetError, device)
+
     ALCenum err = alcError;
     alcError = ALC_NO_ERROR;
     return err;
@@ -43,6 +66,8 @@ static ALCenum alcError = ALC_NO_ERROR;
 /* Override */ ALCdevice* alcOpenDevice(const ALCchar* devicename)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alcOpenDevice, devicename)
+
     Global::game_info.audio |= GameInfo::OPENAL;
     Global::game_info.tosend = true;
     return &dummyDevice;
@@ -51,12 +76,15 @@ static ALCenum alcError = ALC_NO_ERROR;
 /* Override */ ALCboolean alcCloseDevice(ALCdevice* deviceHandle)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alcCloseDevice, deviceHandle)
+
     return ALC_TRUE;
 }
 
 /* Override */ ALCcontext* alcCreateContext(ALCdevice *device, const ALCint* attrlist)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alcCreateContext, device, attrlist)
 
     if (Global::shared_config.audio_disabled)
         return nullptr;
@@ -78,6 +106,7 @@ static ALCenum alcError = ALC_NO_ERROR;
 /* Override */ ALCboolean alcMakeContextCurrent(ALCcontext *context)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alcMakeContextCurrent, context)
 
     if (context == NULL) {
         currentContext = -1;
@@ -95,6 +124,8 @@ static ALCenum alcError = ALC_NO_ERROR;
 /* Override */ void alcProcessContext(ALCcontext *context)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alcProcessContext, context)
+
     if (context == NULL)
         ALCSETERROR(ALC_INVALID_CONTEXT);
     if (*context != dummyContext)
@@ -104,6 +135,8 @@ static ALCenum alcError = ALC_NO_ERROR;
 /* Override */ void alcSuspendContext(ALCcontext *context)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alcSuspendContext, context)
+
     if (context == NULL)
         ALCSETERROR(ALC_INVALID_CONTEXT);
     if (*context != dummyContext)
@@ -113,6 +146,8 @@ static ALCenum alcError = ALC_NO_ERROR;
 /* Override */ void alcDestroyContext(ALCcontext *context)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alcDestroyContext, context)
+
     if (context == NULL)
         ALCSETERROR(ALC_INVALID_CONTEXT);
     if (*context == dummyContext) {
@@ -130,6 +165,15 @@ static ALCenum alcError = ALC_NO_ERROR;
 /* Override */ ALCcontext* alcGetCurrentContext(void)
 {
     DEBUGLOGCALL(LCF_SOUND);
+
+    /* Can't use CHECK_USE_ALSOFT_FUNCTION :(
+     * "ISO C++11 requires at least one argument for the "..." in a variadic macro"
+     */
+    if (Global::shared_config.openal_soft && check_al_soft_available()) {
+        LINK_NAMESPACE_ALSOFT(alcGetCurrentContext);
+        return orig::alcGetCurrentContext();
+    }
+
     if (currentContext == -1)
         return NULL;
     else
@@ -140,12 +184,16 @@ static ALCenum alcError = ALC_NO_ERROR;
 /* Override */ ALCdevice* alcGetContextsDevice(ALCcontext *context)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alcGetContextsDevice, context)
+
     return &dummyDevice;
 }
 
 /* Override */ ALCboolean alcIsExtensionPresent(ALCdevice *device, const ALCchar *extname)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alcIsExtensionPresent, device, extname)
+
     if (extname == NULL) {
         ALCSETERROR(ALC_INVALID_VALUE);
         return ALC_FALSE;
@@ -176,6 +224,8 @@ static ALCenum alcError = ALC_NO_ERROR;
 /* Override */ void* alcGetProcAddress(ALCdevice *device, const ALCchar *funcname)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alcGetProcAddress, device, funcname)
+
     if (funcname == NULL) {
         ALCSETERROR(ALC_INVALID_VALUE);
         return NULL;
@@ -211,6 +261,8 @@ static ALCenum alcError = ALC_NO_ERROR;
 /* Override */ ALCenum alcGetEnumValue(ALCdevice *device, const ALCchar *enumname)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alcGetEnumValue, device, enumname)
+
     if (enumname == NULL) {
         ALCSETERROR(ALC_INVALID_VALUE);
         return 0;
@@ -235,6 +287,7 @@ static const ALCchar* alcDefault = "";
 /* Override */ const ALCchar* alcGetString(ALCdevice *device, ALCenum param)
 {
     debuglogstdio(LCF_SOUND, "%s call with param %d", __func__, param);
+    CHECK_USE_ALSOFT_FUNCTION(alcGetString, device, param)
 
     switch (param) {
         case ALC_DEFAULT_DEVICE_SPECIFIER:
@@ -304,9 +357,10 @@ static const ALCchar* alcDefault = "";
     }
 }
 
-void alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *values)
+/* Override */ void alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *values)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    CHECK_USE_ALSOFT_FUNCTION(alcGetIntegerv, device, param, size, values)
 
     if (values == NULL)
         return;

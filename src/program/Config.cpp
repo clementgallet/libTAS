@@ -163,6 +163,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("audio_bitrate", sc.audio_bitrate);
     settings.setValue("locale", sc.locale);
     settings.setValue("virtual_steam", sc.virtual_steam);
+    settings.setValue("openal_soft", sc.openal_soft);
     settings.setValue("opengl_soft", sc.opengl_soft);
     settings.setValue("opengl_performance", sc.opengl_performance);
     settings.setValue("async_events", sc.async_events);
@@ -318,6 +319,7 @@ void Config::load(const std::string& gamepath) {
     sc.audio_frequency = settings.value("audio_frequency", sc.audio_frequency).toInt();
     sc.audio_mute = settings.value("audio_mute", sc.audio_mute).toBool();
     sc.audio_disabled = settings.value("audio_disabled", sc.audio_disabled).toBool();
+    sc.openal_soft = settings.value("openal_soft", sc.openal_soft).toBool();
     sc.locale = settings.value("locale", sc.locale).toInt();
     sc.virtual_steam = settings.value("virtual_steam", sc.virtual_steam).toBool();
     sc.async_events = settings.value("async_events", sc.async_events).toInt();
