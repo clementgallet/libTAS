@@ -40,6 +40,7 @@ public:
     void update();
     void resetInputs();
     InputEditorModel *inputEditorModel;
+    int scrollBarWidth;
 
 public slots:
     void horizontalMenu(QPoint pos);
