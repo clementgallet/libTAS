@@ -96,6 +96,11 @@ static bool windowFullscreen = false;
 
     DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
 
+    /* Games are sometimes tricky with their GL context management
+     * Initing screen capture here ensures the GL context used for
+     * swapping the game window will be captured */
+    ScreenCapture::init();
+
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_GL renderHUD_GL;
     frameBoundary([&] () {orig::SDL_GL_SwapWindow(window);}, renderHUD_GL);
@@ -122,9 +127,6 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     if (!context) {
         return context;
     }
-
-    /* Now that the context is created, we can init the screen capture */
-    ScreenCapture::init();
 
 #ifdef __unix__
     /* Alerting the user if software rendering is not active */
