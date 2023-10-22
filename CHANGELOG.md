@@ -1,4 +1,4 @@
-## [Unreleased]
+## [1.4.5] - 2023-10-22
 ### Added
 
 * Add a "Save as default" button for the Encode window (#507)
