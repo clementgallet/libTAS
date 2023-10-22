@@ -94,8 +94,8 @@ void AudioPane::initSignals()
     connect(freqChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &AudioPane::saveConfig);
     connect(depthChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &AudioPane::saveConfig);
     connect(channelChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &AudioPane::saveConfig);
-    connect(muteBox, &QCheckBox::toggled, this, &AudioPane::saveConfig);
-    connect(disableBox, &QCheckBox::toggled, this, &AudioPane::saveConfig);    
+    connect(muteBox, &QAbstractButton::clicked, this, &AudioPane::saveConfig);
+    connect(disableBox, &QAbstractButton::clicked, this, &AudioPane::saveConfig);    
 }
 
 void AudioPane::initToolTips()

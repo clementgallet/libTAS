@@ -256,8 +256,13 @@ void VideoPane::loadConfig()
         if (index == -1) {
             /* Custom screen resolution */
             screenCustomRadio->setChecked(true);
+            widthField->blockSignals(true);
             widthField->setValue(context->config.sc.screen_width);
+            widthField->blockSignals(false);
+
+            heightField->blockSignals(true);
             heightField->setValue(context->config.sc.screen_height);
+            heightField->blockSignals(false);
         }
         else {
             /* Common screen resolution */

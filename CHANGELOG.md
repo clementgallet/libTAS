@@ -54,6 +54,7 @@
 * Synchronize movie input access
 * Fix lua stack when scipt has error
 * Fix lua stack when calling a callback
+* Prevent triggering a setting save when loading settings (fix #582)
 
 ## [1.4.4] - 2022-10-25
 ### Added

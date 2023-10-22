@@ -75,9 +75,9 @@ void InputPane::initLayout()
 
 void InputPane::initSignals()
 {
-    connect(mouseSupportBox, &QCheckBox::toggled, this, &InputPane::saveConfig);
-    connect(mouseWarpBox, &QCheckBox::toggled, this, &InputPane::saveConfig);
-    connect(mouseGameWarpBox, &QCheckBox::toggled, this, &InputPane::saveConfig);
+    connect(mouseSupportBox, &QAbstractButton::clicked, this, &InputPane::saveConfig);
+    connect(mouseWarpBox, &QAbstractButton::clicked, this, &InputPane::saveConfig);
+    connect(mouseGameWarpBox, &QAbstractButton::clicked, this, &InputPane::saveConfig);
     connect(joyChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &InputPane::saveConfig);
 }
 

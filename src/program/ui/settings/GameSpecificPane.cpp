@@ -67,10 +67,10 @@ void GameSpecificPane::initLayout()
 
 void GameSpecificPane::initSignals()
 {
-    connect(timingCeleste, &QCheckBox::toggled, this, &GameSpecificPane::saveConfig);
-    connect(timingArmaCwa, &QCheckBox::toggled, this, &GameSpecificPane::saveConfig);
-    connect(syncCeleste, &QCheckBox::toggled, this, &GameSpecificPane::saveConfig);
-    connect(syncWitness, &QCheckBox::toggled, this, &GameSpecificPane::saveConfig);
+    connect(timingCeleste, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
+    connect(timingArmaCwa, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
+    connect(syncCeleste, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
+    connect(syncWitness, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
 }
 
 void GameSpecificPane::initToolTips()
