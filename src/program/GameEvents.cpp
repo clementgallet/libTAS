@@ -33,6 +33,8 @@
 #include <future>
 #include <stdint.h>
 
+#define MAX_SELECTABLE_SAVESTATE 9
+
 GameEvents::GameEvents(Context* c, MovieFile* m) : context(c), movie(m) {}
 
 void GameEvents::init()
@@ -109,6 +111,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
         case HOTKEY_SAVESTATE8:
         case HOTKEY_SAVESTATE9:
         case HOTKEY_SAVESTATE_BACKTRACK:
+        case HOTKEY_SAVESTATE_SELECTED:
         {
             /* Perform a savestate:
              * - save the moviefile if we are recording
@@ -122,7 +125,13 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
             }
 
             /* Slot number */
-            int statei = hk.type - HOTKEY_SAVESTATE1 + 1;
+            int statei;
+            if (hk.type == HOTKEY_SAVESTATE_SELECTED) {
+                statei = selectedSavestateId;
+            }
+            else {
+                statei = hk.type - HOTKEY_SAVESTATE1 + 1;
+            }
 
             /* Perform savestate */
             int message = SaveStateList::save(statei, context, *movie);
@@ -146,6 +155,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
         case HOTKEY_LOADSTATE8:
         case HOTKEY_LOADSTATE9:
         case HOTKEY_LOADSTATE_BACKTRACK:
+        case HOTKEY_LOADSTATE_SELECTED:
         case HOTKEY_LOADBRANCH1:
         case HOTKEY_LOADBRANCH2:
         case HOTKEY_LOADBRANCH3:
@@ -180,7 +190,13 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
             bool load_branch = (hk.type >= HOTKEY_LOADBRANCH1) && (hk.type <= HOTKEY_LOADBRANCH_BACKTRACK);
 
             /* Slot number */
-            int statei = hk.type - (load_branch?HOTKEY_LOADBRANCH1:HOTKEY_LOADSTATE1) + 1;
+            int statei;
+            if (hk.type == HOTKEY_LOADSTATE_SELECTED) {
+                statei = selectedSavestateId;
+            }
+            else {
+                statei = hk.type - (load_branch?HOTKEY_LOADBRANCH1:HOTKEY_LOADSTATE1) + 1;
+            }
 
             /* Perform state loading */
             int error = SaveStateList::load(statei, context, *movie, load_branch);
@@ -267,6 +283,32 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
 
             return false;
         }
+
+        case HOTKEY_SELECTSTATE_NEXT:
+            if (selectedSavestateId >= MAX_SELECTABLE_SAVESTATE) {
+                selectedSavestateId = 1;
+            }
+            else {
+                selectedSavestateId++;
+            }
+            
+            sendMessage(MSGN_OSD_MSG);
+            sendString("State " + std::to_string(selectedSavestateId) + " selected");
+
+            return false;
+
+        case HOTKEY_SELECTSTATE_PREVIOUS:
+            if (selectedSavestateId <= 1) {
+                selectedSavestateId = MAX_SELECTABLE_SAVESTATE;
+            }
+            else {
+                selectedSavestateId--;
+            }
+            
+            sendMessage(MSGN_OSD_MSG);
+            sendString("State " + std::to_string(selectedSavestateId) + " selected");
+            
+            return false;
 
         case HOTKEY_READWRITE:
             /* Switch between movie write and read-only */

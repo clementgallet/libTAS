@@ -81,6 +81,10 @@ KeyMapping::KeyMapping(void* c)
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F9 | XK_Control_Flag}, HOTKEY_LOADBRANCH9, "Load Branch 9"});
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F10 | XK_Control_Flag}, HOTKEY_LOADBRANCH_BACKTRACK, "Load Backtrack Branch"});
     hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_TOGGLE_ENCODE, "Toggle encode"});
+    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_SAVESTATE_SELECTED, "Save Selected State"});
+    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_LOADSTATE_SELECTED, "Load Selected State"});
+    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_SELECTSTATE_NEXT, "Select Next State"});
+    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_SELECTSTATE_PREVIOUS, "Select Previous State"});
 
     /* Add flags mapping */
     input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_RESTART, "Restart"});

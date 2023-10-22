@@ -58,6 +58,9 @@ public:
     /* Indicate if at least one savestate was performed, for backtrack savestate */
     bool didASavestate = false;
 
+    /* Track selected savestate id */
+    int selectedSavestateId = 1;
+
 protected:
     Context* context;
     MovieFile* movie;
