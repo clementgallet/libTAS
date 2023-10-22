@@ -71,7 +71,7 @@ void InputEditorWindow::update_config()
 QSize InputEditorWindow::sizeHint() const
 {
     QSize viewSize = inputEditorView->sizeHint();
-    return QSize(viewSize.width(), 600);
+    return QSize(viewSize.width() + inputEditorView->scrollBarWidth, 600);
 }
 
 void InputEditorWindow::resetInputs()

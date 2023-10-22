@@ -99,6 +99,8 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
     keyDialog->withModifiers = false;
 
     currentMarkerText = "";
+
+    scrollBarWidth = verticalScrollBar()->sizeHint().width() + 20;
 }
 
 void InputEditorView::fillMenu(QMenu* frameMenu)
