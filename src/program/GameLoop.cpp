@@ -495,6 +495,7 @@ bool GameLoop::startFrameMessages()
              * backtrack savestate is performed at the very beginning of the game.
              */
             if ((context->config.sc.savestate_settings & SharedConfig::SS_BACKTRACK) &&
+                (!context->config.sc.av_dumping) && 
                 (gameEvents->didASavestate ||
                 !(context->config.sc.savestate_settings & SharedConfig::SS_INCREMENTAL)))
                 context->hotkey_pressed_queue.push(HOTKEY_SAVESTATE_BACKTRACK);

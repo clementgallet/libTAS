@@ -1,3 +1,10 @@
+## [Unreleased]
+### Added
+### Changed
+### Fixed
+
+* Disable backtrack savestate when encoding
+
 ## [1.4.5] - 2023-10-22
 ### Added
 
