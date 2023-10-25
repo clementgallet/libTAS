@@ -65,6 +65,9 @@ public:
     /* Were we started up with the -d option? */
     bool dumping;
 
+    /* Absolute path of the screenshot file */
+    std::string screenshotfile;
+
     /* Path of the libraries used by the game */
     std::string libdir;
 

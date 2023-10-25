@@ -87,6 +87,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("gameargs", gameargs.c_str());
     settings.setValue("moviefile", moviefile.c_str());
     settings.setValue("dumpfile", dumpfile.c_str());
+    settings.setValue("screenshotfile", screenshotfile.c_str());
     settings.setValue("ffmpegoptions", ffmpegoptions.c_str());
     settings.setValue("libdir", libdir.c_str());
     settings.setValue("rundir", rundir.c_str());
@@ -243,6 +244,9 @@ void Config::load(const std::string& gamepath) {
 
     std::string default_dumpfile = gamepath + ".mkv";
     dumpfile = settings.value("dumpfile", default_dumpfile.c_str()).toString().toStdString();
+
+    std::string default_screenshotfile = dirFromPath(gamepath) + "/screenshot.png";
+    screenshotfile = settings.value("screenshotfile", default_screenshotfile.c_str()).toString().toStdString();
 
     ffmpegoptions = settings.value("ffmpegoptions", ffmpegoptions.c_str()).toString().toStdString();
 

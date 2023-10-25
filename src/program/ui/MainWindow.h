@@ -111,6 +111,7 @@ public:
 
     QAction *configEncodeAction;
     QAction *toggleEncodeAction;
+    QAction *screenshotAction;
 
     QActionGroup *slowdownGroup;
     QActionGroup *fastforwardGroup;
@@ -234,6 +235,7 @@ private slots:
     void slotMovieEnable(bool checked);
     void slotMovieRecording();
     void slotToggleEncode();
+    void slotScreenshot();
     void slotPauseMovie();
     void slotVariableFramerate(bool checked);
     void slotRealTimeFormat();

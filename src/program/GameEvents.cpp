@@ -324,6 +324,11 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
             emit sharedConfigChanged();
             return false;
 
+        case HOTKEY_SCREENSHOT:
+            sendMessage(MSGN_SCREENSHOT);
+            sendString(context->config.screenshotfile);
+            return false;
+
         } /* switch(hk.type) */
         break;
 

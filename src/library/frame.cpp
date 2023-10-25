@@ -28,6 +28,7 @@
 #include "GlobalState.h"
 #include "DeterministicTimer.h"
 #include "encoding/AVEncoder.h"
+#include "encoding/Screenshot.h"
 #include "sdl/sdlwindows.h"
 #include "sdl/sdlevents.h"
 #include <iomanip>
@@ -702,6 +703,13 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 debuglogstdio(LCF_SOCKET, "File %s", AVEncoder::dumpfile);
                 receiveCString(AVEncoder::ffmpeg_options);
                 break;
+
+            case MSGN_SCREENSHOT:{
+                debuglogstdio(LCF_SOCKET, "Receiving screenshot filename");
+                std::string screenshotfile = receiveString();
+                Screenshot::save(screenshotfile, !!draw);                    
+                break;
+                }
 
             case MSGN_ALL_INPUTS:
                 receiveData(&ai, sizeof(AllInputs));

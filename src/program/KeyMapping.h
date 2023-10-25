@@ -78,6 +78,7 @@ typedef int HotKeyType; enum
     HOTKEY_LOADBRANCH9,
     HOTKEY_LOADBRANCH_BACKTRACK,
     HOTKEY_TOGGLE_FASTFORWARD, // Toggle fastforward
+    HOTKEY_SCREENSHOT,
     HOTKEY_LEN
 };
 

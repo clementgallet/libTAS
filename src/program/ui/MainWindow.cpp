@@ -639,6 +639,7 @@ void MainWindow::createMenus()
     QMenu *toolsMenu = menuBar()->addMenu(tr("Tools"));
     configEncodeAction = toolsMenu->addAction(tr("Configure encode..."), encodeWindow, &EncodeWindow::exec);
     toggleEncodeAction = toolsMenu->addAction(tr("Start encode"), this, &MainWindow::slotToggleEncode);
+    screenshotAction = toolsMenu->addAction(tr("Screenshot..."), this, &MainWindow::slotScreenshot);
 
     toolsMenu->addSeparator();
 
@@ -1314,6 +1315,25 @@ void MainWindow::slotToggleEncode()
         /* TODO: Using directly the hotkey does not check for existing file */
         context->hotkey_pressed_queue.push(HOTKEY_TOGGLE_ENCODE);
     }
+}
+
+void MainWindow::slotScreenshot()
+{
+    /* Prompt for screenshot filename and path */
+    if (context->interactive) {
+        QString defaultPath = QString(dirFromPath(context->gamepath).c_str()).append(QString("/screenshot.png"));
+        
+        QString screenshotPath = QFileDialog::getSaveFileName(this,
+            tr("Choose a screenshot file"),
+            defaultPath);
+            
+        if (!screenshotPath.isNull())
+            context->config.screenshotfile = screenshotPath.toStdString();
+        else
+            return;
+    }
+    
+    context->hotkey_pressed_queue.push(HOTKEY_SCREENSHOT);
 }
 
 void MainWindow::slotVariableFramerate(bool checked)

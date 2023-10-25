@@ -317,6 +317,12 @@ enum {
      */
     MSGN_MARKER,
 
+    /*
+     * Send a screenshot path and ask the game to perform a screenshot, 
+     * Argument: size_t (string length) then char[len]
+     */
+    MSGN_SCREENSHOT,
+
 };
 
 #endif
