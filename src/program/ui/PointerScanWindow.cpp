@@ -30,6 +30,7 @@
 #include "PointerScanWindow.h"
 #include "PointerScanModel.h"
 #include "RamWatchWindow.h"
+#include "RamWatchView.h"
 #include "RamWatchEditWindow.h"
 #include "MainWindow.h"
 #include "../Context.h"
@@ -164,7 +165,7 @@ void PointerScanWindow::slotAdd()
         watch->base_file = BaseAddresses::getFileAndOffset(chain.first, watch->base_file_offset);
         watch->pointer_offsets = chain.second;
         std::reverse(watch->pointer_offsets.begin(), watch->pointer_offsets.end());
-        mw->ramWatchWindow->editWindow->fill(watch);
-        mw->ramWatchWindow->slotAdd();
+        mw->ramWatchWindow->ramWatchView->editWindow->fill(watch);
+        mw->ramWatchWindow->ramWatchView->slotAdd();
     }
 }

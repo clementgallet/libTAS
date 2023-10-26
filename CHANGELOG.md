@@ -2,6 +2,7 @@
 ### Added
 
 * Screenshot
+* Add double-click on Ram Watch window to edit watches
 
 ### Changed
 ### Fixed

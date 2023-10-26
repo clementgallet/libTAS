@@ -39,16 +39,23 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(
 
     QMenu* optionMenu = menuBar()->addMenu(tr("Options"));
     
-    scrollingAct = optionMenu->addAction(tr("Disable autoscrolling"), this, &InputEditorWindow::scrollingSlot);
+    scrollingAct = optionMenu->addAction(tr("Disable autoscrolling"), this,
+        [=](bool checked){context->config.editor_autoscroll = !checked;});
     scrollingAct->setCheckable(true);
 
-    rewindAct = optionMenu->addAction(tr("Rewind seeks to current frame"), this, &InputEditorWindow::rewindSlot);
+    rewindAct = optionMenu->addAction(tr("Rewind seeks to current frame"), this,
+        [=](bool checked){context->config.editor_rewind_seek = checked;});
+
     rewindAct->setCheckable(true);
 
-    fastforwardAct = optionMenu->addAction(tr("Disable fastforward during rewind"), this, &InputEditorWindow::fastforwardSlot);
+    fastforwardAct = optionMenu->addAction(tr("Disable fastforward during rewind"), this,
+        [=](bool checked){context->config.editor_rewind_fastforward = !checked;});
+
     fastforwardAct->setCheckable(true);
 
-    markerPauseAct = optionMenu->addAction(tr("Autopause on markers"), this, &InputEditorWindow::markerPauseSlot);
+    markerPauseAct = optionMenu->addAction(tr("Autopause on markers"), this,
+        [=](bool checked){context->config.editor_marker_pause = checked;});
+
     markerPauseAct->setCheckable(true);
 
     /* Layout */
@@ -82,24 +89,4 @@ void InputEditorWindow::resetInputs()
 void InputEditorWindow::isWindowVisible(bool &visible)
 {
     visible = isVisible();
-}
-
-void InputEditorWindow::scrollingSlot(bool checked)
-{
-    context->config.editor_autoscroll = !checked;
-}
-
-void InputEditorWindow::rewindSlot(bool checked)
-{
-    context->config.editor_rewind_seek = checked;
-}
-
-void InputEditorWindow::fastforwardSlot(bool checked)
-{
-    context->config.editor_rewind_fastforward = !checked;
-}
-
-void InputEditorWindow::markerPauseSlot(bool checked)
-{
-    context->config.editor_marker_pause = checked;
 }

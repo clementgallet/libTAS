@@ -42,10 +42,6 @@ public:
 
 public slots:
     void isWindowVisible(bool &visible);
-    void scrollingSlot(bool checked);
-    void rewindSlot(bool checked);
-    void fastforwardSlot(bool checked);
-    void markerPauseSlot(bool checked);
     
     
 private:

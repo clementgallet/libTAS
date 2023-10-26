@@ -27,6 +27,7 @@
 
 #include "RamSearchWindow.h"
 #include "RamSearchModel.h"
+#include "RamWatchView.h"
 #include "RamWatchWindow.h"
 #include "RamWatchEditWindow.h"
 #include "MainWindow.h"
@@ -381,8 +382,8 @@ void RamSearchWindow::slotAdd()
     MainWindow *mw = qobject_cast<MainWindow*>(parent());
     if (mw) {
         
-        mw->ramWatchWindow->editWindow->fill(ramSearchModel->address(row), typeBox->currentIndex());
-        mw->ramWatchWindow->slotAdd();
+        mw->ramWatchWindow->ramWatchView->editWindow->fill(ramSearchModel->address(row), typeBox->currentIndex());
+        mw->ramWatchWindow->ramWatchView->slotAdd();
     }
 }
 

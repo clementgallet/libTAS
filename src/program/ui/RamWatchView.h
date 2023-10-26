@@ -17,35 +17,40 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_RAMWATCHWINDOW_H_INCLUDED
-#define LIBTAS_RAMWATCHWINDOW_H_INCLUDED
+#ifndef LIBTAS_RAMWATCHVIEW_H_INCLUDED
+#define LIBTAS_RAMWATCHVIEW_H_INCLUDED
 
-#include <QtWidgets/QDialog>
+#include <QtWidgets/QTableView>
 
 /* Forward declaration */
 struct Context;
-class PointerScanWindow;
-class RamWatchView;
+class RamWatchEditWindow;
+class RamWatchModel;
 
-class RamWatchWindow : public QDialog {
+class RamWatchView : public QTableView {
     Q_OBJECT
 
 public:
-    RamWatchWindow(Context *c, QWidget *parent = Q_NULLPTR);
+    RamWatchView(Context *c, QWidget *parent = Q_NULLPTR);
     void update();
 
-    PointerScanWindow *pointerScanWindow;
-    RamWatchView *ramWatchView;
+    RamWatchEditWindow *editWindow;
+    RamWatchModel *ramWatchModel;
+
+protected:
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
 
 private:
     Context *context;
 
+
 public slots:
+    void slotAdd();
+    void slotEdit();
+    void slotRemove();
+    void slotGet(std::string &watch);
 
 private slots:
-    void slotScanPointer();
-    void slotSave();
-    void slotLoad();
 
 };
 
