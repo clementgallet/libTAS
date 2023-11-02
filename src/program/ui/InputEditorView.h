@@ -81,6 +81,7 @@ protected:
     void keyReleaseEvent(QKeyEvent *event) override;
     void timerEvent(QTimerEvent* event) override;
     void hideEvent(QHideEvent* event) override;
+    void leaveEvent(QEvent *event) override;
 
 private slots:
     void resizeAllColumns();

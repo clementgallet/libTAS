@@ -52,6 +52,7 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
 
     connect(inputEditorModel, &InputEditorModel::inputSetChanged, this, &InputEditorView::resizeAllColumns);
     connect(this, &InputEditorView::entered, this, &InputEditorView::showMarkerToolTip);
+    connect(this, &InputEditorView::entered, inputEditorModel, &InputEditorModel::setHoveredCell);
     setMouseTracking(true);
 
     /* Horizontal header */
@@ -468,6 +469,11 @@ void InputEditorView::timerEvent(QTimerEvent* event)
 void InputEditorView::hideEvent(QHideEvent* event)
 {
     hideMarkerToolTip();
+}
+
+void InputEditorView::leaveEvent(QEvent *event)
+{
+    inputEditorModel->setHoveredCell(QModelIndex());
 }
 
 void InputEditorView::hideMarkerToolTip()

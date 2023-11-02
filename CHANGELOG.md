@@ -3,6 +3,7 @@
 
 * Screenshot
 * Add double-click on Ram Watch window to edit watches
+* Highlight hovered column in the input editor
 
 ### Changed
 ### Fixed

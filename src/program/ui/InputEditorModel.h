@@ -162,6 +162,9 @@ public slots:
     /* Invalidate all savestates */
     void invalidateSavestates();
 
+    /* Save the new hovered cell */
+    void setHoveredCell(const QModelIndex &index);
+
 private:
     Context *context;
     MovieFile *movie;
@@ -175,6 +178,9 @@ private:
     /* Freeze the vertical scroll, used for rewind */
     bool freeze_scroll = false;
 
+    /* Current hovered cell */
+    QModelIndex hoveredIndex;
+    
 signals:
     void inputSetChanged();
 

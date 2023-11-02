@@ -88,6 +88,28 @@ QVariant InputEditorModel::headerData(int section, Qt::Orientation orientation, 
                 return QString(movie->editor->input_set[section-COLUMN_SPECIAL_SIZE].description.c_str());
         }
     }
+    
+    if (role == Qt::BackgroundRole) {
+        if (orientation == Qt::Horizontal) {
+
+            /* Highlight current column */
+            if (section >= COLUMN_SPECIAL_SIZE && hoveredIndex.isValid()
+                && (section == hoveredIndex.column())) {
+                    
+                /* Main color */
+                QColor color = QGuiApplication::palette().window().color();
+                bool lightTheme = isLightTheme();
+                    
+                if (lightTheme)
+                    color = color.darker(110);
+                else
+                    color = color.lighter(110);
+
+                return QBrush(color);
+            }
+        }
+    }
+
     return QVariant();
 }
 
@@ -234,6 +256,15 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         /* Invalid portion */
         if (row < invalid_frame)
             color = color.darker(120);
+
+        /* Highlight current column */
+        if (index.column() >= COLUMN_SPECIAL_SIZE && hoveredIndex.isValid()
+            && (index.column() == hoveredIndex.column())) {
+            if (lightTheme)
+                color = color.darker(105);
+            else
+                color = color.lighter(105);
+        }
 
         return QBrush(color);
     }
@@ -1048,4 +1079,14 @@ bool InputEditorModel::isScrollFreeze()
 void InputEditorModel::setScrollFreeze(bool state)
 {
     freeze_scroll = state;
+}
+
+void InputEditorModel::setHoveredCell(const QModelIndex &i)
+{
+    const QModelIndex old = hoveredIndex;
+    hoveredIndex = i;
+    emit dataChanged(index(0,old.column()), index(rowCount(),old.column()), QVector<int>(1, Qt::BackgroundRole));
+    emit dataChanged(index(0,hoveredIndex.column()), index(rowCount(),hoveredIndex.column()), QVector<int>(1, Qt::BackgroundRole));
+    emit headerDataChanged(Qt::Horizontal, old.column(), old.column());
+    emit headerDataChanged(Qt::Horizontal, hoveredIndex.column(), hoveredIndex.column());
 }
