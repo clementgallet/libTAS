@@ -9,6 +9,7 @@
 ### Fixed
 
 * Disable backtrack savestate when encoding
+* Fix hookpatching a function that starts with CALL instruction
 
 ## [1.4.5] - 2023-10-22
 ### Added
