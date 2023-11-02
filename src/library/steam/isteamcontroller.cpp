@@ -51,8 +51,10 @@ void ISteamController::RunFrame()
 int ISteamController::GetConnectedControllers( ControllerHandle_t *handlesOut )
 {
     DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
-    for (int i = 0; i < Global::shared_config.nb_controllers; i++)
-        handlesOut[i] = i + 1;
+    if (handlesOut) {
+        for (int i = 0; i < Global::shared_config.nb_controllers; i++)
+            handlesOut[i] = i + 1;
+    }
     return Global::shared_config.nb_controllers;
 }
 
