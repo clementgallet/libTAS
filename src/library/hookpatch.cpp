@@ -395,7 +395,7 @@ void hook_patch(const char* name, const char* library, void* tramp_function, voi
     memcpy(pTarget, jmp_instr, sizeof(jmp_instr));
     pTarget += sizeof(jmp_instr);
 #ifdef __i386__
-    indirAddr = reinterpret_cast<uintptr_t>(pTarget+4);
+    uintptr_t indirAddr = reinterpret_cast<uintptr_t>(pTarget+4);
     memcpy(pTarget, &indirAddr, sizeof(uintptr_t));
     pTarget += sizeof(uintptr_t);
 #endif
