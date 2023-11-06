@@ -1322,7 +1322,7 @@ void MainWindow::slotScreenshot()
 {
     /* Prompt for screenshot filename and path */
     if (context->interactive) {
-        QString defaultPath = QString(dirFromPath(context->gamepath).c_str()).append(QString("/screenshot.png"));
+        QString defaultPath = QString(context->config.screenshotfile.c_str());
         
         QString screenshotPath = QFileDialog::getSaveFileName(this,
             tr("Choose a screenshot file"),
