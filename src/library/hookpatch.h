@@ -29,9 +29,9 @@ namespace libtas {
  * we save those instructions into a trampoline function, which then jumps to
  * the original function.
  */
-void hook_patch(const char* name, const char* library, void* tramp_function, void* my_function);
+void hook_patch(const char* name, const char* library, void** tramp_function, void* my_function);
 
-#define HOOK_PATCH_ORIG(FUNC,LIB) hook_patch(#FUNC, LIB, reinterpret_cast<void*>(orig::FUNC), reinterpret_cast<void*>(FUNC))
+#define HOOK_PATCH_ORIG(FUNC,LIB) hook_patch(#FUNC, LIB, reinterpret_cast<void**>(&orig::FUNC), reinterpret_cast<void*>(FUNC))
 
 #define HOOK_PLACEHOLDER_RETURN_ZERO \
     static long x__ = 0;\
