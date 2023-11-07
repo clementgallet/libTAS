@@ -21,7 +21,6 @@
 #define LIBTAS_COMPAREOPERATIONS_H_INCLUDED
 
 #include <cstdint>
-// #include <sys/types.h>
 
 enum class CompareType {
     Previous,

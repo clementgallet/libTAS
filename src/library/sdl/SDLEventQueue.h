@@ -20,10 +20,11 @@
 #ifndef LIBTAS_SDLEVENTQUEUE_H_INCLUDED
 #define LIBTAS_SDLEVENTQUEUE_H_INCLUDED
 
+#include "../external/SDL1.h"
+
 #include <list>
 #include <set>
 #include <mutex>
-#include "../../external/SDL1.h"
 #include <SDL2/SDL.h>
 
 namespace libtas {

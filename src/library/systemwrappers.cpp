@@ -21,12 +21,12 @@
 #include "logging.h"
 #include "global.h"
 #include "GlobalState.h"
-// #include "../shared/SharedConfig.h"
 #include "backtrace.h"
-#include <execinfo.h>
 #ifdef __unix__
 #include "xlib/xdisplay.h" // x11::gameDisplays
 #endif
+
+#include <execinfo.h>
 #include <string.h>
 
 namespace libtas {

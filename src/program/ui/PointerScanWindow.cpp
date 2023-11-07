@@ -17,6 +17,19 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "PointerScanWindow.h"
+#include "PointerScanModel.h"
+#include "RamWatchWindow.h"
+#include "RamWatchView.h"
+#include "RamWatchEditWindow.h"
+#include "MainWindow.h"
+
+#include "Context.h"
+#include "ramsearch/CompareOperations.h"
+#include "ramsearch/IRamWatchDetailed.h"
+#include "ramsearch/RamWatchDetailed.h"
+#include "ramsearch/BaseAddresses.h"
+
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QDialogButtonBox>
@@ -26,18 +39,6 @@
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QMessageBox>
-
-#include "PointerScanWindow.h"
-#include "PointerScanModel.h"
-#include "RamWatchWindow.h"
-#include "RamWatchView.h"
-#include "RamWatchEditWindow.h"
-#include "MainWindow.h"
-#include "../Context.h"
-#include "../ramsearch/CompareOperations.h"
-#include "../ramsearch/IRamWatchDetailed.h"
-#include "../ramsearch/RamWatchDetailed.h"
-#include "../ramsearch/BaseAddresses.h"
 
 PointerScanWindow::PointerScanWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

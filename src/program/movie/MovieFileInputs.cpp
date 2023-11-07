@@ -17,13 +17,14 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "MovieFileInputs.h"
+
+#include "utils.h"
+#include "../shared/version.h"
+
 #include <QtCore/QSettings>
 #include <iostream>
 #include <sstream>
-
-#include "MovieFileInputs.h"
-#include "../utils.h"
-#include "../../shared/version.h"
 
 MovieFileInputs::MovieFileInputs(Context* c) : context(c)
 {

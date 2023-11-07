@@ -20,15 +20,16 @@
 #include "timewrappers.h"
 #include "logging.h"
 #include "frame.h"
-#include <iomanip> // std::setw
 #include "DeterministicTimer.h"
 #include "GlobalState.h"
-#include "../shared/SharedConfig.h"
 #include "GameHacks.h"
-#include <execinfo.h>
 #include "hook.h"
 #include "global.h"
 #include "checkpoint/ThreadManager.h" // isMainThread()
+#include "../shared/SharedConfig.h"
+
+#include <execinfo.h>
+#include <iomanip> // std::setw
 
 namespace libtas {
 

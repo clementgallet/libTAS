@@ -18,9 +18,10 @@
  */
 
 #include "control.h"
-#include "../../logging.h"
-#include "../../GlobalState.h"
-#include "../../global.h"
+
+#include "logging.h"
+#include "GlobalState.h"
+#include "global.h"
 
 namespace libtas {
 

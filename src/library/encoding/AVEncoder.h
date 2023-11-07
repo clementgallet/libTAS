@@ -20,12 +20,15 @@
 #ifndef LIBTAS_AVDUMPING_H_INCL
 #define LIBTAS_AVDUMPING_H_INCL
 
-#include "NutMuxer.h"
-#include "../TimeHolder.h"
+#include "TimeHolder.h"
+
 #include <vector>
 #include <memory> // std::unique_ptr
 
 namespace libtas {
+
+class NutMuxer;
+
 class AVEncoder {
     public:
         /* The constructor sets up the AV dumping into a file.

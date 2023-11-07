@@ -7,9 +7,10 @@
 #ifndef LIBTAS_ISTEAMUSER_H_INCL
 #define LIBTAS_ISTEAMUSER_H_INCL
 
+#include "steamtypes.h"
+
 #include <stdint.h>
 #include <string>
-#include "steamtypes.h"
 
 namespace libtas {
 

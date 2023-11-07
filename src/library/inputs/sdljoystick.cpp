@@ -19,12 +19,14 @@
 
 #include "sdljoystick.h"
 #include "inputs.h"
-#include "../logging.h"
-#include "../sdl/sdlversion.h"
-#include "../sdl/SDLEventQueue.h"
-#include "../../shared/AllInputs.h"
-#include "../../shared/SharedConfig.h"
-#include "../global.h"
+
+#include "logging.h"
+#include "sdl/sdlversion.h"
+#include "sdl/SDLEventQueue.h"
+#include "global.h"
+#include "../shared/AllInputs.h"
+#include "../shared/SharedConfig.h"
+
 #include <stdlib.h>
 
 namespace libtas {

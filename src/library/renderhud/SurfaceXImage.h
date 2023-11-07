@@ -23,6 +23,7 @@
 #define LIBTAS_SURFACEXIMAGE_H_INCL
 
 #include "SurfaceARGB.h"
+
 #include <cstdint>
 #include <vector>
 #include <X11/Xlib.h>

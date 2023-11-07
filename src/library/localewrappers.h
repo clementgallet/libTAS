@@ -21,6 +21,7 @@
 #define LIBTAS_LOCALE_H_INCL
 
 #include "hook.h"
+
 #include <locale.h>
 
 namespace libtas {

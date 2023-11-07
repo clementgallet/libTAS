@@ -20,9 +20,10 @@
 #ifndef LIBTAS_SDLKEYBOARDLAYOUT_H_INCL
 #define LIBTAS_SDLKEYBOARDLAYOUT_H_INCL
 
+#include "hook.h"
+#include "../external/SDL1.h"
+
 #include <SDL2/SDL.h>
-#include "../../external/SDL1.h"
-#include "../hook.h"
 
 namespace libtas {
 

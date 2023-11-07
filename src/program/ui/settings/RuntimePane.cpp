@@ -17,7 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include <QtWidgets/QLabel>
+#include "RuntimePane.h"
+#include "tooltip/ToolTipComboBox.h"
+#include "tooltip/ToolTipCheckBox.h"
+#include "tooltip/ToolTipGroupBox.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QGridLayout>
@@ -25,12 +31,6 @@
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QCheckBox>
-
-#include "RuntimePane.h"
-#include "../../Context.h"
-#include "tooltip/ToolTipComboBox.h"
-#include "tooltip/ToolTipCheckBox.h"
-#include "tooltip/ToolTipGroupBox.h"
 
 RuntimePane::RuntimePane(Context* c) : context(c)
 {

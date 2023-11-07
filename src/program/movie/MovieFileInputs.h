@@ -20,9 +20,10 @@
 #ifndef LIBTAS_MOVIEFILEINPUTS_H_INCLUDED
 #define LIBTAS_MOVIEFILEINPUTS_H_INCLUDED
 
-#include "../../shared/AllInputs.h"
-#include "../Context.h"
-#include "../ConcurrentQueue.h"
+#include "Context.h"
+#include "ConcurrentQueue.h"
+#include "../shared/AllInputs.h"
+
 #include <fstream>
 #include <string>
 #include <vector>

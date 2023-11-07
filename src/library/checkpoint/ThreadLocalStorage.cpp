@@ -20,7 +20,9 @@
 */
 
 #include "ThreadLocalStorage.h"
-#include "../logging.h"
+
+#include "logging.h"
+
 #include <unistd.h>
 #include <sys/syscall.h> // SYS_get_thread_area, SYS_set_thread_area
 #include <cstring> // memset

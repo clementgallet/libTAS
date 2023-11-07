@@ -21,6 +21,7 @@
 #define LIBTAS_GLIB_H_INCL
 
 #include "hook.h"
+
 #include <cstdint>
 
 namespace libtas {

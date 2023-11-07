@@ -19,10 +19,11 @@
 
 #include "SaveFile.h"
 
-#include "../global.h" // Global::shared_config
-#include "../GlobalState.h"
-#include "../logging.h"
-#include "../Utils.h"
+#include "global.h" // Global::shared_config
+#include "GlobalState.h"
+#include "logging.h"
+#include "Utils.h"
+
 #include <cstring>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -30,7 +31,6 @@
 #include <vector>
 #include <unistd.h>
 #include <limits.h> //PATH_MAX
-
 #ifdef __linux__
 #include <sys/syscall.h>
 #endif

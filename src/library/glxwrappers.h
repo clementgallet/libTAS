@@ -21,10 +21,9 @@
 #define LIBTAS_GLXWRAPPERS_H_INCL
 
 #include "hook.h"
+
 #define GL_GLEXT_PROTOTYPES
-// #include <GL/gl.h>
 #include <GL/glx.h>
-// #include <GL/glext.h>
 #include <GL/glxext.h>
 
 namespace libtas {

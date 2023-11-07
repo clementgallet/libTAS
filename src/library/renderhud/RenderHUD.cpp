@@ -19,13 +19,14 @@
 
 #include "RenderHUD.h"
 
-#include "../logging.h"
-#include "../hook.h"
+#include "logging.h"
+#include "hook.h"
+#include "global.h" // Global::shared_config
+#include "ScreenCapture.h"
+#include "GlobalState.h"
+#include "../external/keysymdesc.h"
+
 #include <sstream>
-#include "../global.h" // Global::shared_config
-#include "../ScreenCapture.h"
-#include "../../external/keysymdesc.h"
-#include "../GlobalState.h"
 
 namespace libtas {
 

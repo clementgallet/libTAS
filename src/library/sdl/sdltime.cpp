@@ -18,9 +18,10 @@
  */
 
 #include "sdltime.h"
-#include "../logging.h"
-#include "../DeterministicTimer.h"
-#include "../hook.h"
+
+#include "logging.h"
+#include "DeterministicTimer.h"
+#include "hook.h"
 
 namespace libtas {
 

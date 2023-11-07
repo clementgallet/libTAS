@@ -20,7 +20,8 @@
 */
 
 #include "MemArea.h"
-#include "../logging.h"
+
+#include "logging.h"
 
 #include <sys/mman.h> // PROT_READ, PROT_WRITE, etc.
 #if defined(__APPLE__) && defined(__MACH__)

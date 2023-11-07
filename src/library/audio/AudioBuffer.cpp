@@ -20,7 +20,8 @@
 #include "AudioBuffer.h"
 #include "DecoderMSADPCM.h"
 #include "BinaryIStream.h"
-#include "../logging.h"
+
+#include "logging.h"
 
 namespace libtas {
 

@@ -17,7 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include <QtWidgets/QLabel>
+#include "VideoPane.h"
+#include "tooltip/ToolTipCheckBox.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QGridLayout>
@@ -26,10 +30,6 @@
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSpinBox>
-
-#include "VideoPane.h"
-#include "../../Context.h"
-#include "tooltip/ToolTipCheckBox.h"
 
 VideoPane::VideoPane(Context* c) : context(c)
 {

@@ -19,10 +19,11 @@
 
 #include "wined3d.h"
 #include "winehook.h"
-#include "../hookpatch.h"
-#include "../logging.h"
-#include "../checkpoint/ThreadSync.h"
-#include "../global.h"
+
+#include "hookpatch.h"
+#include "logging.h"
+#include "checkpoint/ThreadSync.h"
+#include "global.h"
 
 namespace libtas {
 

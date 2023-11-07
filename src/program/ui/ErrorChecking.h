@@ -20,6 +20,7 @@
 #ifndef LIBTAS_ERRORCHECKING_H_INCLUDED
 #define LIBTAS_ERRORCHECKING_H_INCLUDED
 
+#include <QString>
 #include <string>
 
 /* Forward declaration */

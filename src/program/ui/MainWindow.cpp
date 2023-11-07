@@ -17,21 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtWidgets/QFileDialog>
-#include <QtWidgets/QMenu>
-#include <QtWidgets/QMenuBar>
-#include <QtWidgets/QMessageBox>
-#include <QtWidgets/QDialogButtonBox>
-#include <QtWidgets/QHBoxLayout>
-#include <QtWidgets/QVBoxLayout>
-#include <QtWidgets/QGridLayout>
-#include <QtWidgets/QStatusBar>
-#include <QtWidgets/QInputDialog>
-#include <QtWidgets/QApplication>
-#include <QtCore/QTimer>
-
 #include "MainWindow.h"
-#include "settings/SettingsWindow.h"
 #include "EncodeWindow.h"
 #include "ExecutableWindow.h"
 #include "InputWindow.h"
@@ -47,11 +33,26 @@
 #include "TimeTraceWindow.h"
 #include "TimeTraceModel.h"
 #include "LuaConsoleWindow.h"
-#include "../movie/MovieFile.h"
 #include "ErrorChecking.h"
-#include "../../shared/version.h"
-#include "../utils.h"
-#include "../GameEvents.h"
+#include "settings/SettingsWindow.h"
+
+#include "movie/MovieFile.h"
+#include "utils.h"
+#include "GameEvents.h"
+#include "../shared/version.h"
+
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QMenuBar>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QGridLayout>
+#include <QtWidgets/QStatusBar>
+#include <QtWidgets/QInputDialog>
+#include <QtWidgets/QApplication>
+#include <QtCore/QTimer>
 
 #include <iostream>
 #include <future>

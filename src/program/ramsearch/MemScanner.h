@@ -22,7 +22,6 @@
 
 #include "CompareOperations.h"
 #include "MemSection.h"
-// #include "MemScanner.h"
 
 #include <QtCore/QObject>
 #include <string>

@@ -20,14 +20,16 @@
 */
 
 #include "SaveState.h"
-#include "../Utils.h"
 #include "StateHeader.h"
-#include "../logging.h"
+
+#include "Utils.h"
+#include "logging.h"
+#include "../external/lz4.h"
+#include "global.h"
+#include "GlobalState.h"
+
 #include <fcntl.h>
 #include <unistd.h>
-#include "../../external/lz4.h"
-#include "../global.h"
-#include "../GlobalState.h"
 
 namespace libtas {
 

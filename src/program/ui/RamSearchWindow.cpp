@@ -17,6 +17,16 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "RamSearchWindow.h"
+#include "RamSearchModel.h"
+#include "RamWatchView.h"
+#include "RamWatchWindow.h"
+#include "RamWatchEditWindow.h"
+#include "MainWindow.h"
+
+#include "Context.h"
+#include "ramsearch/CompareOperations.h"
+
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QVBoxLayout>
@@ -24,15 +34,6 @@
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QMessageBox>
-
-#include "RamSearchWindow.h"
-#include "RamSearchModel.h"
-#include "RamWatchView.h"
-#include "RamWatchWindow.h"
-#include "RamWatchEditWindow.h"
-#include "MainWindow.h"
-#include "../ramsearch/CompareOperations.h"
-#include "../Context.h"
 
 #include <limits>
 #include <thread>

@@ -20,9 +20,10 @@
 #ifndef LIBTAS_TIME_H_INCL
 #define LIBTAS_TIME_H_INCL
 
+#include "hook.h"
+
 #include <time.h>
 #include <unistd.h>
-#include "hook.h"
 
 namespace libtas {
 

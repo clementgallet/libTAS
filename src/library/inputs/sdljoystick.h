@@ -21,7 +21,8 @@
 #define LIBTAS_SDLJOYSTICK_H_INCL
 
 #include <SDL2/SDL.h>
-#include "../hook.h"
+
+#include "hook.h"
 
 namespace libtas {
 

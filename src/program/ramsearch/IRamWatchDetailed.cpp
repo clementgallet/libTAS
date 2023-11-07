@@ -22,7 +22,9 @@
 #include "MemLayout.h"
 #include "MemAccess.h"
 #include "BaseAddresses.h"
-#include "../utils.h"
+
+#include "utils.h"
+
 #include <sstream>
 #include <fstream>
 #include <iostream>

@@ -21,7 +21,6 @@
 #define LIBTAS_QTUTILS_H_INCLUDED
 
 #include <QtGui/QKeyEvent>
-//#include "../Context.h"
 
 unsigned int convertQtModifiers(Qt::KeyboardModifiers flags);
 

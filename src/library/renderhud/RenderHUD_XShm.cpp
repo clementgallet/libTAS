@@ -18,12 +18,12 @@
  */
 
 #include "RenderHUD_XShm.h"
-
 #include "SurfaceARGB.h"
 #include "SurfaceXImage.h"
-#include "../logging.h"
-#include "../hook.h"
-#include "../xlib/xshm.h" // x11::gameXImage
+
+#include "logging.h"
+#include "hook.h"
+#include "xlib/xshm.h" // x11::gameXImage
 
 namespace libtas {
 

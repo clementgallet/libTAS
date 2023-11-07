@@ -21,6 +21,7 @@
 #define LIBTAS_SOCKET_H_INCL
 
 #include "hook.h"
+
 #include <cstddef>
 
 namespace libtas {

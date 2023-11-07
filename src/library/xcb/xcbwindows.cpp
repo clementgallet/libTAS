@@ -18,15 +18,16 @@
  */
 
 #include "xcbwindows.h"
-#include "../hook.h"
-#include "../logging.h"
-#include "../../shared/sockethelpers.h"
-#include "../../shared/messages.h"
-#include "../ScreenCapture.h"
 #include "XcbEventQueueList.h"
 #include "XcbEventQueue.h"
-#include "../xlib/xwindows.h" // x11::gameXWindows
-#include "../global.h"
+
+#include "hook.h"
+#include "logging.h"
+#include "ScreenCapture.h"
+#include "xlib/xwindows.h" // x11::gameXWindows
+#include "global.h"
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
 
 namespace libtas {
 

@@ -19,10 +19,10 @@
 
 #include "xinput.h"
 
-#include "../hook.h"
-#include "../logging.h"
-#include "../global.h"
-#include "../GlobalState.h"
+#include "hook.h"
+#include "logging.h"
+#include "global.h"
+#include "GlobalState.h"
 
 namespace libtas {
 

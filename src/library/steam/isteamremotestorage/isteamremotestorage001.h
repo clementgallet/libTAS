@@ -7,9 +7,9 @@
 #ifndef LIBTAS_ISTEAMREMOTESTORAGE001_H_INCL
 #define LIBTAS_ISTEAMREMOTESTORAGE001_H_INCL
 
-#include <stdint.h>
-
 #include "isteamremotestorage.h"
+
+#include <stdint.h>
 #define STEAMREMOTESTORAGE_INTERFACE_VERSION_001 "STEAMREMOTESTORAGE_INTERFACE_VERSION001"
 
 namespace libtas {

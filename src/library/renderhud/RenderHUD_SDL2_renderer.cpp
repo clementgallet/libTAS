@@ -19,9 +19,9 @@
 
 #include "RenderHUD_SDL2_renderer.h"
 
-#include "../logging.h"
-#include "../hook.h"
-#include "../GlobalState.h"
+#include "logging.h"
+#include "hook.h"
+#include "GlobalState.h"
 
 namespace libtas {
 

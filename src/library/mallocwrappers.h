@@ -21,6 +21,7 @@
 #define LIBTAS_MALLOC_H_INCL
 
 #include "hook.h"
+
 #include <cstddef>
 
 namespace libtas {

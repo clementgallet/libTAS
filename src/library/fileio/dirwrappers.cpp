@@ -18,12 +18,12 @@
  */
 
 #include "dirwrappers.h"
-
-#include "../logging.h"
-#include "../hook.h"
 #include "SaveFileList.h"
-#include "../global.h"
-#include "../GlobalState.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "global.h"
+#include "GlobalState.h"
 
 #include <unistd.h> // readlink
 

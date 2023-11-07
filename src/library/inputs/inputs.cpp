@@ -18,7 +18,8 @@
  */
 
 #include "inputs.h"
-#include "../global.h"
+
+#include "global.h"
 
 namespace libtas {
 

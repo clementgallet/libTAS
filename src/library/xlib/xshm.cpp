@@ -18,19 +18,18 @@
  */
 
 #include "xshm.h"
-#include "../hook.h"
-#include "../logging.h"
-#include "../GlobalState.h"
-// #include "../../shared/SharedConfig.h"
-#include "../ScreenCapture.h"
-#include "../frame.h"
-#include "../renderhud/RenderHUD_XShm.h"
-#include "../DeterministicTimer.h"
-// #include "../backtrace.h"
-#include "../../shared/sockethelpers.h"
-#include "../../shared/messages.h"
 #include "xwindows.h" // x11::gameXWindows
-#include "../global.h"
+
+#include "hook.h"
+#include "logging.h"
+#include "GlobalState.h"
+#include "ScreenCapture.h"
+#include "frame.h"
+#include "renderhud/RenderHUD_XShm.h"
+#include "DeterministicTimer.h"
+#include "global.h"
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
 
 namespace libtas {
 

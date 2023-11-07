@@ -17,13 +17,14 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "KeyPressedDialog.h"
+#include "qtutils.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QLabel>
 #include <QtGui/QKeyEvent>
-
-#include "KeyPressedDialog.h"
-#include "qtutils.h"
-#include "../Context.h"
 
 KeyPressedDialog::KeyPressedDialog(Context* c, QWidget *parent) : QDialog(parent), context(c) {
 

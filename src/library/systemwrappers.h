@@ -20,8 +20,9 @@
 #ifndef LIBTAS_SYSTEM_H_INCL
 #define LIBTAS_SYSTEM_H_INCL
 
-#include <unistd.h>
 #include "hook.h"
+
+#include <unistd.h>
 
 namespace libtas {
 

@@ -19,7 +19,9 @@
 
 #include "LuaFunctionList.h"
 #include "Main.h"
-#include "../utils.h"
+
+#include "utils.h"
+
 #include <iostream>
 #include <unistd.h>
 #include <sys/inotify.h>

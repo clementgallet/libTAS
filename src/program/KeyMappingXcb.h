@@ -20,9 +20,10 @@
 #ifndef LIBTAS_KEYMAPPING_XCB_H_INCLUDED
 #define LIBTAS_KEYMAPPING_XCB_H_INCLUDED
 
+#include "KeyMapping.h"
 #include "../shared/AllInputs.h"
 #include "../shared/SharedConfig.h"
-#include "KeyMapping.h"
+
 #include <string>
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>

@@ -20,11 +20,10 @@
 #ifndef LIBTAS_GAMEEVENTS_H_INCLUDED
 #define LIBTAS_GAMEEVENTS_H_INCLUDED
 
-#include <QtCore/QObject>
-// #include <memory>
-#include <stdint.h>
-
 #include "KeyMapping.h"
+
+#include <QtCore/QObject>
+#include <stdint.h>
 
 /* Forward declaration */
 class MovieFile;

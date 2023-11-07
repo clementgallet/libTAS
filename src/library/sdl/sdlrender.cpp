@@ -19,13 +19,14 @@
 
 #include "sdlrender.h"
 #include "sdlwindows.h"
-#include "../hook.h"
-#include "../logging.h"
-#include "../frame.h"
-#include "../renderhud/RenderHUD_SDL2_renderer.h"
-#include "../ScreenCapture.h"
-#include "../global.h"
-#include "../GlobalState.h"
+
+#include "hook.h"
+#include "logging.h"
+#include "frame.h"
+#include "renderhud/RenderHUD_SDL2_renderer.h"
+#include "ScreenCapture.h"
+#include "global.h"
+#include "GlobalState.h"
 
 namespace libtas {
 

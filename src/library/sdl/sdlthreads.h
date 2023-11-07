@@ -20,7 +20,8 @@
 #ifndef LIBTAS_SDLTHREADS_H_INCL
 #define LIBTAS_SDLTHREADS_H_INCL
 
-#include "../hook.h"
+#include "hook.h"
+
 #include <SDL2/SDL.h> // SDL_Thread, SDL_ThreadFunction
 
 namespace libtas {

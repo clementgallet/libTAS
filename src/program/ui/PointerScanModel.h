@@ -20,15 +20,14 @@
 #ifndef LIBTAS_POINTERSCANMODEL_H_INCLUDED
 #define LIBTAS_POINTERSCANMODEL_H_INCLUDED
 
+#include "ramsearch/MemSection.h"
+
 #include <QtCore/QAbstractTableModel>
 #include <vector>
 #include <map>
-// #include <pair>
 #include <memory>
 #include <sys/types.h>
 #include <stdint.h>
-
-#include "../ramsearch/MemSection.h"
 
 /* Forward declaration */
 struct Context;

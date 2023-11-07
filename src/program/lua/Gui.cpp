@@ -18,8 +18,9 @@
  */
 
 #include "Gui.h"
-#include "../../shared/sockethelpers.h"
-#include "../../shared/messages.h"
+
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
 
 #include <iostream>
 #include <string>

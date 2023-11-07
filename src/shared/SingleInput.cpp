@@ -18,12 +18,13 @@
  */
 
 #include "SingleInput.h"
+
+#include "../external/SDL1.h"
+
 #ifdef __linux__
 #include <linux/input.h>
 #endif
 #include <SDL2/SDL.h>
-#include "../external/SDL1.h"
-// #include <X11/keysym.h>
 #ifdef __unix__
 #include <xcb/xcb.h>
 #endif

@@ -20,7 +20,8 @@
 #ifndef LIBTAS_SDLRENDER_H_INCL
 #define LIBTAS_SDLRENDER_H_INCL
 
-#include "../hook.h"
+#include "hook.h"
+
 #include <SDL2/SDL.h>
 
 namespace libtas {

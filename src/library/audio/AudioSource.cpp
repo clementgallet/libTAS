@@ -18,17 +18,19 @@
  */
 
 #include "AudioSource.h"
-#include "../logging.h"
-#include "../global.h" // Global::shared_config
-#include <stdlib.h>
-#include <stdint.h>
-#include "../DeterministicTimer.h" // detTimer.fakeAdvanceTimer()
 #include "AudioConverter.h"
 #ifdef __unix__
 #include "AudioConverterSwr.h"
 #elif defined(__APPLE__) && defined(__MACH__)
 #include "AudioConverterCoreAudio.h"
 #endif
+
+#include "logging.h"
+#include "global.h" // Global::shared_config
+#include "DeterministicTimer.h" // detTimer.fakeAdvanceTimer()
+
+#include <stdlib.h>
+#include <stdint.h>
 
 namespace libtas {
 

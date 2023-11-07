@@ -21,8 +21,10 @@
 
 #ifndef LIBTAS_THREAD_INFO_H
 #define LIBTAS_THREAD_INFO_H
-#include <atomic>
 
+#include "ThreadLocalStorage.h"
+
+#include <atomic>
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 600
 #endif
@@ -33,7 +35,6 @@
 #include <condition_variable>
 #include <setjmp.h>
 
-#include "ThreadLocalStorage.h"
 
 namespace libtas {
 

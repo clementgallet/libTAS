@@ -18,10 +18,11 @@
  */
 
 #include "sdlmain.h"
-#include "../logging.h"
-#include "../hook.h"
 #include "sdlversion.h"
-#include "../global.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "global.h"
 
 namespace libtas {
 

@@ -20,7 +20,8 @@
 #ifndef LIBTAS_ALSA_PCM_H_INCL
 #define LIBTAS_ALSA_PCM_H_INCL
 
-#include "../../hook.h"
+#include "hook.h"
+
 #include <alsa/asoundlib.h>
 
 namespace libtas {

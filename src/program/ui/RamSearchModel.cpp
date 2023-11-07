@@ -18,9 +18,10 @@
  */
 
 #include "RamSearchModel.h"
-#include "../ramsearch/MemLayout.h"
-#include "../ramsearch/MemSection.h"
-#include "../Context.h"
+
+#include "Context.h"
+#include "ramsearch/MemLayout.h"
+#include "ramsearch/MemSection.h"
 
 #include <QtWidgets/QMessageBox>
 #include <memory>

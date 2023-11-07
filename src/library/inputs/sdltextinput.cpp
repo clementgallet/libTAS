@@ -18,11 +18,9 @@
  */
 
 #include "sdltextinput.h"
-#include "../../external/SDL1.h"
-//#include "inputs.h"
-//#include "keyboard_helper.h"
-#include "../logging.h"
-//#include "../../shared/AllInputs.h"
+
+#include "logging.h"
+#include "../external/SDL1.h"
 
 namespace libtas {
 

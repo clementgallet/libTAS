@@ -18,12 +18,13 @@
  */
 
 #include "cubeb.h"
-#include "../../logging.h"
-#include "../../hook.h"
-#include "../../global.h"
-#include "../AudioContext.h"
-#include "../AudioSource.h"
-#include "../AudioBuffer.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "global.h"
+#include "audio/AudioContext.h"
+#include "audio/AudioSource.h"
+#include "audio/AudioBuffer.h"
 
 #include <stdint.h>
 

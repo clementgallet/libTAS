@@ -19,9 +19,10 @@
 
 #include "Callbacks.h"
 #include "Main.h"
-#include "../Context.h"
 #include "NamedLuaFunction.h"
 #include "LuaFunctionList.h"
+
+#include "Context.h"
 
 #include <iostream>
 extern "C" {

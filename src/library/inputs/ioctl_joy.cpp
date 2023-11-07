@@ -18,14 +18,16 @@
  */
 
 #include "ioctl_joy.h"
-#include "../logging.h"
-#include "../hook.h"
 #include "evdev.h" // get_ev_number
 #include "jsdev.h" // get_js_number
 #include "inputs.h" // game_ai
-#include "../../shared/SingleInput.h"
-#include "../global.h"
-#include "../GlobalState.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "../shared/SingleInput.h"
+#include "global.h"
+#include "GlobalState.h"
+
 #include <linux/joystick.h>
 #include <linux/input.h>
 #include <cstdarg>

@@ -17,18 +17,19 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "RamWatchView.h"
+#include "RamWatchWindow.h"
+#include "RamWatchModel.h"
+#include "PointerScanWindow.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QVBoxLayout>
 #include <QtCore/QSettings>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QLineEdit>
-
-#include "RamWatchView.h"
-#include "RamWatchWindow.h"
-#include "RamWatchModel.h"
-#include "PointerScanWindow.h"
-#include "../Context.h"
 
 RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

@@ -17,11 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../hook.h"
-#include "../logging.h"
-#include <dlfcn.h>
-#include "../GlobalState.h"
+#include "sdlversion.h"
 
+#include "hook.h"
+#include "logging.h"
+#include "GlobalState.h"
+
+#include <dlfcn.h>
 #include <SDL2/SDL.h> // SDL_version
 
 namespace libtas {

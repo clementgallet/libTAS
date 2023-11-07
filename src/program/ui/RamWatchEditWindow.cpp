@@ -17,6 +17,12 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "RamWatchEditWindow.h"
+
+#include "ramsearch/TypeIndex.h"
+#include "ramsearch/IRamWatchDetailed.h"
+#include "ramsearch/RamWatchDetailed.h"
+
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QVBoxLayout>
@@ -25,11 +31,6 @@
 #include <QtWidgets/QMessageBox>
 
 #include <stdint.h>
-
-#include "RamWatchEditWindow.h"
-#include "../ramsearch/TypeIndex.h"
-#include "../ramsearch/IRamWatchDetailed.h"
-#include "../ramsearch/RamWatchDetailed.h"
 
 RamWatchEditWindow::RamWatchEditWindow(QWidget *parent) : QDialog(parent)
 {

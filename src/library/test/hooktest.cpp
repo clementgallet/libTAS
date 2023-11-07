@@ -18,8 +18,9 @@
  */
 
 #include "hooktest.h"
-#include "../logging.h"
-#include "../hook.h"
+
+#include "logging.h"
+#include "hook.h"
 
 namespace libtas {
 

@@ -17,11 +17,12 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtWidgets/QMessageBox>
 #include "RamWatchModel.h"
-#include "../ramsearch/IRamWatchDetailed.h"
-#include "../ramsearch/RamWatchDetailed.h"
 
+#include "ramsearch/IRamWatchDetailed.h"
+#include "ramsearch/RamWatchDetailed.h"
+
+#include <QtWidgets/QMessageBox>
 #include <stdint.h>
 
 RamWatchModel::RamWatchModel(QObject *parent) : QAbstractTableModel(parent) {}

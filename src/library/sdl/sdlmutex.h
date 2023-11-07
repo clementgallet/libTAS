@@ -20,8 +20,9 @@
 #ifndef LIBTAS_SDLMUTEX_H_INCL
 #define LIBTAS_SDLMUTEX_H_INCL
 
+#include "hook.h"
+
 #include <SDL2/SDL.h>
-#include "../hook.h"
 
 namespace libtas {
 

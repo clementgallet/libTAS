@@ -18,30 +18,31 @@
  */
 
 #include "main.h"
-#include <vector>
-#include <string>
 #include "dlhook.h"
-#include "../shared/sockethelpers.h"
 #include "logging.h"
 #include "global.h"
 #include "NonDeterministicTimer.h"
 #include "DeterministicTimer.h"
-#include "../shared/messages.h"
-#include "../shared/SharedConfig.h"
-#include "../shared/AllInputs.h"
+#include "frame.h" // framecount
+#include "Stack.h"
+#include "monowrappers.h"
+#include "GlobalState.h"
+#include "audio/AudioContext.h"
+#include "encoding/AVEncoder.h"
+#include "steam/isteamuser.h" // SteamSetUserDataFolder
+#include "steam/isteamremotestorage/isteamremotestorage.h" // SteamSetRemoteStorageFolder
 #include "inputs/inputs.h"
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/SaveStateManager.h"
 #include "checkpoint/Checkpoint.h"
-#include "audio/AudioContext.h"
-#include "encoding/AVEncoder.h"
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
+#include "../shared/SharedConfig.h"
+#include "../shared/AllInputs.h"
+
 #include <unistd.h> // getpid()
-#include "frame.h" // framecount
-#include "steam/isteamuser.h" // SteamSetUserDataFolder
-#include "steam/isteamremotestorage/isteamremotestorage.h" // SteamSetRemoteStorageFolder
-#include "Stack.h"
-#include "monowrappers.h"
-#include "GlobalState.h"
+#include <vector>
+#include <string>
 
 extern char**environ;
 

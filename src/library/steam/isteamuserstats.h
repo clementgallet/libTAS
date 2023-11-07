@@ -7,9 +7,10 @@
 #ifndef LIBTAS_STEAMUSERSTATS_H_INCL
 #define LIBTAS_STEAMUSERSTATS_H_INCL
 
-#include <stdint.h>
 #include "steamtypes.h"
 #include "CCallback.h"
+
+#include <stdint.h>
 
 namespace libtas {
 

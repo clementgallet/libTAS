@@ -18,13 +18,14 @@
  */
 
 #include "ScreenCapture.h"
-
 #include "hook.h"
 #include "logging.h"
 #include "../external/SDL1.h" // SDL_Surface
 #include "global.h"
 #include "encoding/AVEncoder.h"
 #include "GlobalState.h"
+#include "sdl/sdlwindows.h" // sdl::gameSDLWindow
+#include "vulkanwrappers.h"
 
 #ifdef __unix__
 #include "xlib/xdisplay.h" // x11::gameDisplays
@@ -32,8 +33,6 @@
 #include "xlib/xshm.h" // x11::gameXImage
 #include "vdpauwrappers.h"
 #endif
-
-#include "sdl/sdlwindows.h" // sdl::gameSDLWindow
 
 #include <SDL2/SDL.h>
 #include <vector>
@@ -48,7 +47,6 @@
 #endif
 
 
-#include "vulkanwrappers.h"
 
 namespace libtas {
 

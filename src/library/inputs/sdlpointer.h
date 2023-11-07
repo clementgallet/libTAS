@@ -20,11 +20,12 @@
 #ifndef LIBTAS_SDLPOINTER_H_INCL
 #define LIBTAS_SDLPOINTER_H_INCL
 
-#include "../../external/SDL1.h"
-#include <SDL2/SDL.h>
 #include "inputs.h"
-#include "../hook.h"
-// #include "../sdl/sdlwindows.h" // SDL_Window
+
+#include "hook.h"
+#include "../external/SDL1.h"
+
+#include <SDL2/SDL.h>
 
 namespace libtas {
 

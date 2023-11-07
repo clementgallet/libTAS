@@ -18,14 +18,15 @@
  */
 
 #include "sdlevents.h"
-#include "../logging.h"
-#include "../hook.h"
 #include "sdlversion.h"
 #include "SDLEventQueue.h"
-#include "../sleepwrappers.h"
-#include "../GlobalState.h"
-#include "../inputs/sdlkeyboard.h"
-#include "../global.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "sleepwrappers.h"
+#include "GlobalState.h"
+#include "inputs/sdlkeyboard.h"
+#include "global.h"
 
 namespace libtas {
 

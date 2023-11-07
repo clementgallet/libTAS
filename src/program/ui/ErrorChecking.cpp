@@ -17,12 +17,12 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtWidgets/QMessageBox>
-
-#include "../Context.h"
 #include "ErrorChecking.h"
-#include "../utils.h"
 
+#include "Context.h"
+#include "utils.h"
+
+#include <QtWidgets/QMessageBox>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <iostream>

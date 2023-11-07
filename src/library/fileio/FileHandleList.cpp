@@ -18,15 +18,15 @@
  */
 
 #include "FileHandleList.h"
-
 #include "FileHandle.h"
-#include "../logging.h"
-#include "../Utils.h"
-#include "../GlobalState.h"
-#include "../global.h"
+
+#include "logging.h"
+#include "Utils.h"
+#include "GlobalState.h"
+#include "global.h"
 #ifdef __linux__
-#include "../inputs/evdev.h"
-#include "../inputs/jsdev.h"
+#include "inputs/evdev.h"
+#include "inputs/jsdev.h"
 #endif
 
 #include <cstdlib>

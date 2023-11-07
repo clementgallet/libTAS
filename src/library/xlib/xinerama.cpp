@@ -19,9 +19,9 @@
 
 #include "xinerama.h"
 
-#include "../hook.h"
-#include "../logging.h"
-#include "../global.h"
+#include "hook.h"
+#include "logging.h"
+#include "global.h"
 
 namespace libtas {
 

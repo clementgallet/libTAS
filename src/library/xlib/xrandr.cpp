@@ -18,11 +18,11 @@
  */
 
 #include "xrandr.h"
-
-#include "../hook.h"
-#include "../logging.h"
 #include "xdisplay.h" // x11::gameDisplays
-#include "../global.h"
+
+#include "hook.h"
+#include "logging.h"
+#include "global.h"
 
 #include <X11/Xlibint.h> // Xmalloc
 

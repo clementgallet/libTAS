@@ -19,10 +19,11 @@
 
 #include "kernel32.h"
 #include "winehook.h"
-#include "../hookpatch.h"
-#include "../logging.h"
-#include "../DeterministicTimer.h"
-#include "../../shared/SharedConfig.h"
+
+#include "hookpatch.h"
+#include "logging.h"
+#include "DeterministicTimer.h"
+#include "../shared/SharedConfig.h"
 
 #include <stdint.h>
 #include <inttypes.h>

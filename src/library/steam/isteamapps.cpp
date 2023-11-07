@@ -18,7 +18,8 @@
  */
 
 #include "isteamapps.h"
-#include "../logging.h"
+
+#include "logging.h"
 
 namespace libtas {
 

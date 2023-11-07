@@ -18,9 +18,9 @@
  */
 
 #include "mallocwrappers.h"
-#include <cstdlib>
-
 #include "logging.h"
+
+#include <cstdlib>
 
 namespace libtas {
 

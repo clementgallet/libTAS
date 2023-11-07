@@ -20,12 +20,12 @@
 #ifndef LIBTAS_INPUTEDITORMODEL_H_INCLUDED
 #define LIBTAS_INPUTEDITORMODEL_H_INCLUDED
 
+#include "../shared/SingleInput.h"
+#include "../shared/AllInputs.h"
+
 #include <QtCore/QAbstractTableModel>
 #include <vector>
 #include <stdint.h>
-
-#include "../../shared/SingleInput.h"
-#include "../../shared/AllInputs.h"
 
 /* Forward declaration */
 struct Context;

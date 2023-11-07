@@ -20,9 +20,10 @@
 #ifndef LIBTAS_DLHOOK_H_INCLUDED
 #define LIBTAS_DLHOOK_H_INCLUDED
 
+#include "hook.h"
+
 #include <dlfcn.h>
 #include <string>
-#include "hook.h"
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach-o/dyld.h>

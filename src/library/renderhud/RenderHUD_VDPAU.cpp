@@ -19,9 +19,9 @@
 
 #include "RenderHUD_VDPAU.h"
 
-#include "../logging.h"
-#include "../hook.h"
-#include "../../external/vdpau.h"
+#include "logging.h"
+#include "hook.h"
+#include "../external/vdpau.h"
 
 namespace libtas {
 

@@ -20,7 +20,8 @@
 #ifndef LIBTAS_XDISPLAY_H_INCL
 #define LIBTAS_XDISPLAY_H_INCL
 
-#include "../hook.h"
+#include "hook.h"
+
 #include <X11/Xlib.h>
 
 namespace libtas {

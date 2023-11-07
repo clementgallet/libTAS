@@ -20,11 +20,11 @@
 #ifndef LIBTAS_SLEEP_H_INCL
 #define LIBTAS_SLEEP_H_INCL
 
+#include "hook.h"
+
 #include <time.h>
 #include <unistd.h>
-//#include <sys/signal.h>
 #include <SDL2/SDL.h>
-#include "hook.h"
 
 namespace libtas {
 

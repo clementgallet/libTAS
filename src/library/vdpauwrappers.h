@@ -20,7 +20,6 @@
 #ifndef LIBTAS_VDPAU_H_INCL
 #define LIBTAS_VDPAU_H_INCL
 
-// #include <unistd.h>
 #include "hook.h"
 #include "../external/vdpau.h"
 #include "../external/vdpau_x11.h"

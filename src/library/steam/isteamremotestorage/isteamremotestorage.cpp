@@ -24,10 +24,11 @@
 #include "isteamremotestorage013.h"
 #include "isteamremotestorage014.h"
 #include "isteamremotestorage016.h"
-#include "../../logging.h"
-#include "../../hook.h"
-#include "../../Utils.h"
-#include "../../global.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "Utils.h"
+#include "global.h"
 
 #include <unistd.h>
 #include <fcntl.h>

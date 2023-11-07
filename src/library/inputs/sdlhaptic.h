@@ -20,9 +20,11 @@
 #ifndef LIBTAS_SDLHAPTIC_H_INCL
 #define LIBTAS_SDLHAPTIC_H_INCL
 
-#include <SDL2/SDL.h>
-#include "../hook.h"
 #include "sdljoystick.h"
+
+#include "hook.h"
+
+#include <SDL2/SDL.h>
 
 namespace libtas {
 

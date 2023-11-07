@@ -1,12 +1,13 @@
-#include <inttypes.h>
-#include <stdint.h>
-#include <forward_list>
-#include <mutex>
 
 #include "CCallback.h"
 #include "CCallbackManager.h"
 
-#include "../logging.h"
+#include "logging.h"
+
+#include <inttypes.h>
+#include <stdint.h>
+#include <forward_list>
+#include <mutex>
 
 namespace libtas {
 

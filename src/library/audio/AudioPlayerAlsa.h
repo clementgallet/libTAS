@@ -21,6 +21,7 @@
 #define LIBTAS_AUDIOPLAYERALSA_H_INCL
 
 #include "AudioContext.h"
+
 #include <alsa/asoundlib.h>
 #include <stdint.h>
 

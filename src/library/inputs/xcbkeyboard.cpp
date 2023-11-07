@@ -18,13 +18,14 @@
  */
 
 #include "xcbkeyboard.h"
-#include "../logging.h"
 #include "inputs.h"
 #include "xkeyboardlayout.h"
-// #include <X11/XKBlib.h>
+
+#include "logging.h"
+#include "GlobalState.h"
+#include "../shared/AllInputs.h"
+
 #include <cstring> // memset
-#include "../../shared/AllInputs.h"
-#include "../GlobalState.h"
 
 namespace libtas {
 

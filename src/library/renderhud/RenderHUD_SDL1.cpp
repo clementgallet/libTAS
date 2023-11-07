@@ -19,11 +19,12 @@
 
 #include "RenderHUD_SDL1.h"
 
+#include "logging.h"
+#include "hook.h"
+#include "GlobalState.h"
+#include "../external/SDL1.h" // SDL1::SDL_Surface
+
 #include <SDL2/SDL.h> // SDL_Rect
-#include "../../external/SDL1.h" // SDL1::SDL_Surface
-#include "../logging.h"
-#include "../hook.h"
-#include "../GlobalState.h"
 
 namespace libtas {
 

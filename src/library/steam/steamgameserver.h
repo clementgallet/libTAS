@@ -20,7 +20,6 @@
 #ifndef LIBTAS_STEAMGAMESERVER_H_INCL
 #define LIBTAS_STEAMGAMESERVER_H_INCL
 
-#include "../hook.h"
 #include "isteamclient/isteamclient.h"
 #include "isteamuser.h"
 #include "isteamutils.h"
@@ -29,6 +28,8 @@
 #include "isteamhttp.h"
 #include "isteamgameserver.h"
 #include "isteamnetworking.h"
+
+#include "hook.h"
 
 namespace libtas {
 

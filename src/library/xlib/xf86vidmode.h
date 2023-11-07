@@ -20,11 +20,8 @@
 #ifndef LIBTAS_XF86VIDMODE_H_INCL
 #define LIBTAS_XF86VIDMODE_H_INCL
 
-#include "../hook.h"
-#include "../../external/X11/xf86vmode.h"
-
-// #include <X11/Xlib.h>
-// #include <X11/Xutil.h> // XSetWMName
+#include "hook.h"
+#include "../external/X11/xf86vmode.h"
 
 namespace libtas {
 

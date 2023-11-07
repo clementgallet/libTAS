@@ -18,19 +18,17 @@
  */
 
 #include "vdpauwrappers.h"
-
 #include "logging.h"
 #include "GlobalState.h"
-// #include "../shared/SharedConfig.h"
 #include "ScreenCapture.h"
 #include "frame.h"
 #include "global.h"
 #include "renderhud/RenderHUD_VDPAU.h"
 #include "DeterministicTimer.h"
 #include "backtrace.h"
+#include "xlib/xwindows.h" // x11::gameXWindows
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
-#include "xlib/xwindows.h" // x11::gameXWindows
 
 namespace libtas {
 

@@ -18,12 +18,12 @@
  */
 
 #include "Screenshot.h"
-
-#include "../logging.h"
-#include "../ScreenCapture.h"
 #include "NutMuxer.h"
-#include "../global.h" // Global::shared_config
-#include "../GlobalState.h"
+
+#include "logging.h"
+#include "ScreenCapture.h"
+#include "global.h" // Global::shared_config
+#include "GlobalState.h"
 
 #include <cstdint>
 #include <sstream>

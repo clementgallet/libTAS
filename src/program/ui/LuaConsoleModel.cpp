@@ -17,10 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include <QtWidgets/QMessageBox>
 #include "LuaConsoleModel.h"
-#include "../lua/Callbacks.h"
-#include "../lua/LuaFunctionList.h"
+
+#include "lua/Callbacks.h"
+#include "lua/LuaFunctionList.h"
+
 #include <iostream>
 #include <stdint.h>
 

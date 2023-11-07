@@ -17,6 +17,15 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "KeyPressedDialog.h"
+#include "InputEditorView.h"
+#include "InputEditorModel.h"
+#include "MainWindow.h"
+#include "qtutils.h"
+#include "settings/tooltip/BalloonTip.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QScrollBar>
@@ -24,14 +33,6 @@
 #include <QtWidgets/QMessageBox>
 
 #include <stdint.h>
-
-#include "KeyPressedDialog.h"
-#include "InputEditorView.h"
-#include "InputEditorModel.h"
-#include "MainWindow.h"
-#include "qtutils.h"
-#include "../Context.h"
-#include "settings/tooltip/BalloonTip.h"
 
 InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTableView(parent), context(c)
 {

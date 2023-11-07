@@ -17,11 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ControllerAxisWidget.h"
+
 #include <QtGui/QPainter>
 #include <cstdint>
 #include <iostream>
-
-#include "ControllerAxisWidget.h"
 
 ControllerAxisWidget::ControllerAxisWidget(QWidget *parent) : QWidget(parent)
 {

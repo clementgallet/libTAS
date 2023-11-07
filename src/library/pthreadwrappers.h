@@ -21,6 +21,7 @@
 #define LIBTAS_PTHREADS_H_INCL
 
 #include "hook.h"
+
 #include <pthread.h> // pthread_t
 #include <semaphore.h>
 #if defined(__APPLE__) && defined(__MACH__)

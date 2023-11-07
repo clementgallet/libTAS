@@ -19,10 +19,10 @@
 
 #include "RenderHUD_GL.h"
 
-#include "../logging.h"
-#include "../hook.h"
-#include "../ScreenCapture.h"
-#include "../GlobalState.h"
+#include "logging.h"
+#include "hook.h"
+#include "ScreenCapture.h"
+#include "GlobalState.h"
 
 namespace libtas {
 

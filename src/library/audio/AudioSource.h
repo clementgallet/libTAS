@@ -20,11 +20,12 @@
 #ifndef LIBTAS_AUDIOSOURCE_H_INCL
 #define LIBTAS_AUDIOSOURCE_H_INCL
 
+#include "AudioBuffer.h"
+#include "AudioConverter.h"
+
 #include <vector>
 #include <memory>
 #include <functional>
-#include "AudioBuffer.h"
-#include "AudioConverter.h"
 
 namespace libtas {
 /* Class storing an audio source, whose role is to control the playback

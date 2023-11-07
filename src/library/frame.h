@@ -20,9 +20,10 @@
 #ifndef LIBTAS_FRAME_H_INCL
 #define LIBTAS_FRAME_H_INCL
 
+#include "renderhud/RenderHUD.h"
+
 #include <functional>
 #include <stdint.h>
-#include "renderhud/RenderHUD.h"
 
 namespace libtas {
 

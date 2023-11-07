@@ -19,6 +19,7 @@
 
 #include "CompareOperations.h"
 #include "TypeIndex.h"
+
 #include <cstdint>
 #include <cstdio>
 #include <inttypes.h>

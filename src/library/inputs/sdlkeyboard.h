@@ -21,7 +21,8 @@
 #define LIBTAS_SDLKEYBOARD_H_INCL
 
 #include <SDL2/SDL.h>
-#include "../hook.h"
+
+#include "hook.h"
 
 namespace libtas {
 

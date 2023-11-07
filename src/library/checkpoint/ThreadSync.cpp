@@ -22,10 +22,12 @@
 #include "ThreadSync.h"
 #include "ThreadInfo.h"
 #include "ThreadManager.h"
-#include "../logging.h"
+
+#include "logging.h"
+#include "sleepwrappers.h"
+#include "GlobalState.h"
+
 #include <time.h> // nanosleep
-#include "../sleepwrappers.h"
-#include "../GlobalState.h"
 #include <atomic>
 #include <pthread.h> // pthread_rwlock_t
 #include <mutex>

@@ -18,7 +18,8 @@
  */
 
 #include "Memory.h"
-#include "../ramsearch/MemAccess.h"
+
+#include "ramsearch/MemAccess.h"
 
 #include <iostream>
 extern "C" {

@@ -19,10 +19,10 @@
 
 #include "RenderHUD_SDL2_surface.h"
 
-#include "../logging.h"
-#include "../hook.h"
-#include "../sdl/sdlwindows.h" // sdl::gameSDLWindow
-#include "../GlobalState.h"
+#include "logging.h"
+#include "hook.h"
+#include "sdl/sdlwindows.h" // sdl::gameSDLWindow
+#include "GlobalState.h"
 
 #include <SDL2/SDL.h>
 

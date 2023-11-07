@@ -21,6 +21,7 @@
 #include "dlhook.h"
 #include "logging.h"
 #include "GlobalState.h"
+
 #include <string>
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach/task.h>

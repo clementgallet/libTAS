@@ -21,6 +21,7 @@
 #include "logging.h"
 #include "checkpoint/ProcSelfMaps.h"
 #include "checkpoint/MemArea.h"
+
 #include <sys/resource.h>
 #include <alloca.h>
 

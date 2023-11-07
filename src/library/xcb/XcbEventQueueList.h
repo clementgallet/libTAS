@@ -20,11 +20,11 @@
 #ifndef LIBTAS_XCBEVENTQUEUELIST_H_INCLUDED
 #define LIBTAS_XCBEVENTQUEUELIST_H_INCLUDED
 
+#include "XcbEventQueue.h"
+
 #include <list>
 #include <memory>
 #include <xcb/xcb.h>
-
-#include "XcbEventQueue.h"
 
 namespace libtas {
 /* This class stores all xcb event queues. */

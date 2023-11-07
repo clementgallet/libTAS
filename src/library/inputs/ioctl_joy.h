@@ -20,7 +20,8 @@
 #ifndef LIBTAS_IOCTL_JOY_H_INCL
 #define LIBTAS_IOCTL_JOY_H_INCL
 
-#include "../hook.h"
+#include "hook.h"
+
 #include <sys/ioctl.h>
 
 namespace libtas {

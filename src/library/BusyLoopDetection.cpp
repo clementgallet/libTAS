@@ -23,15 +23,7 @@
 #include "backtrace.h"
 #include "DeterministicTimer.h"
 #include "global.h" // Global::game_info
-#include <execinfo.h>
-#include <map>
-#include "../shared/sockethelpers.h"
-#include "../shared/messages.h"
 #include "checkpoint/ThreadManager.h" // isMainThread()
-#include <dlfcn.h>
-#include <sstream>
-#include <string.h>
-#include <stdint.h>
 #include "GlobalState.h"
 #ifdef __unix__
 #include "checkpoint/ProcSelfMaps.h"
@@ -40,6 +32,15 @@
 #endif
 #include "checkpoint/MemArea.h"
 #include "../shared/SharedConfig.h"
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
+
+#include <dlfcn.h>
+#include <sstream>
+#include <string.h>
+#include <stdint.h>
+#include <execinfo.h>
+#include <map>
 
 extern char**environ;
 

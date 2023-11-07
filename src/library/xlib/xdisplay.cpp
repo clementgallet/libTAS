@@ -18,12 +18,13 @@
  */
 
 #include "xdisplay.h"
-#include "../hook.h"
-#include "../logging.h"
 #include "xatom.h"
 #include "XlibEventQueueList.h"
-#include "../global.h"
-#include "../GlobalState.h"
+
+#include "hook.h"
+#include "logging.h"
+#include "global.h"
+#include "GlobalState.h"
 
 namespace libtas {
 

@@ -20,9 +20,10 @@
 #ifndef LIBTAS_NONDETERMINISTICTIMER_H_INCL
 #define LIBTAS_NONDETERMINISTICTIMER_H_INCL
 
+#include "TimeHolder.h"
+
 #include <time.h>
 #include <mutex>
-#include "TimeHolder.h"
 
 namespace libtas {
 

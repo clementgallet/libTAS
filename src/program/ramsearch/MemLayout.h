@@ -20,10 +20,11 @@
 #ifndef LIBTAS_MEMLAYOUT_H_INCLUDED
 #define LIBTAS_MEMLAYOUT_H_INCLUDED
 
+#include "MemSection.h"
+
 #include <string>
 #include <fstream>
 #include <cstdint>
-#include "MemSection.h"
 
 /* Handle the layout of game memory */
 class MemLayout {

@@ -19,9 +19,10 @@
 
 #include "config.h"
 #include "XlibEventQueue.h"
-#include "../logging.h"
-#include "../inputs/inputs.h"
 #include "xwindows.h"
+
+#include "logging.h"
+#include "inputs/inputs.h"
 
 namespace libtas {
 

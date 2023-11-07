@@ -18,7 +18,8 @@
  */
 
 #include "Input.h"
-#include "../../shared/SingleInput.h"
+
+#include "../shared/SingleInput.h"
 
 #include <iostream>
 extern "C" {

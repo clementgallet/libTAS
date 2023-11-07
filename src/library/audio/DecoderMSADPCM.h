@@ -24,8 +24,9 @@
 #ifndef LIBTAS_DECODERMSADPCM_H_INCL
 #define LIBTAS_DECODERMSADPCM_H_INCL
 
-#include <vector>
 #include "BinaryIStream.h"
+
+#include <vector>
 
 namespace libtas {
 namespace DecoderMSADPCM

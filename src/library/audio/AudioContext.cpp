@@ -17,16 +17,17 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../logging.h"
 #include "AudioContext.h"
 #ifdef __linux__
 #include "AudioPlayerAlsa.h"
 #elif defined(__APPLE__) && defined(__MACH__)
 #include "AudioPlayerCoreAudio.h"
 #endif
-#include "../global.h" // Global::shared_config
-#include "../GlobalState.h"
-#include "../checkpoint/ThreadManager.h" // isMainThread()
+
+#include "logging.h"
+#include "global.h" // Global::shared_config
+#include "GlobalState.h"
+#include "checkpoint/ThreadManager.h" // isMainThread()
 
 #include <stdint.h>
 #include <unistd.h>

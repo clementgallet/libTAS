@@ -20,10 +20,11 @@
 #ifndef LIBTAS_KEYMAPPING_H_INCLUDED
 #define LIBTAS_KEYMAPPING_H_INCLUDED
 
-#include <QtCore/QDataStream>
 #include "../shared/SingleInput.h"
 #include "../shared/AllInputs.h"
 #include "../shared/SharedConfig.h"
+
+#include <QtCore/QDataStream>
 #include <map>
 #include <vector>
 #include <array>

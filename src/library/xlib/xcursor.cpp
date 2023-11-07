@@ -19,8 +19,8 @@
 
 #include "xcursor.h"
 
-#include "../hook.h"
-#include "../logging.h"
+#include "hook.h"
+#include "logging.h"
 
 namespace libtas {
 

@@ -21,6 +21,7 @@
 #define LIBTAS_AUDIOPLAYERCOREAUDIO_H_INCL
 
 #include "AudioContext.h"
+
 #include <AudioToolbox/AudioToolbox.h>
 #include <vector>
 #include <stdint.h>

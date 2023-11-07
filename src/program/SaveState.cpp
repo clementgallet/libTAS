@@ -17,15 +17,15 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
-#include <unistd.h> // access()
-
 #include "Context.h"
 #include "SaveState.h"
 #include "utils.h"
 #include "../shared/sockethelpers.h"
 #include "../shared/SharedConfig.h"
 #include "../shared/messages.h"
+
+#include <iostream>
+#include <unistd.h> // access()
 
 void SaveState::init(Context* context, int i)
 {

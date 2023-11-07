@@ -20,8 +20,9 @@
 #ifndef LIBTAS_SDLDYNAPI_H_INCLUDED
 #define LIBTAS_SDLDYNAPI_H_INCLUDED
 
+#include "hook.h"
+
 #include <SDL2/SDL.h>
-#include "../hook.h"
 
 namespace libtas {
 

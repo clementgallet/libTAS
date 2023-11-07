@@ -18,11 +18,12 @@
  */
 
 #include "PointerScanModel.h"
-#include "../utils.h"
-#include "../ramsearch/MemAccess.h"
-#include "../ramsearch/MemLayout.h"
-#include "../ramsearch/BaseAddresses.h"
-#include "../Context.h"
+
+#include "utils.h"
+#include "Context.h"
+#include "ramsearch/MemAccess.h"
+#include "ramsearch/MemLayout.h"
+#include "ramsearch/BaseAddresses.h"
 
 #include <sstream>
 #include <fstream>

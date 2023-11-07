@@ -18,12 +18,14 @@
  */
 
 #include "steamapiinternal.h"
-#include "../logging.h"
-#include "../hook.h"
 #include "steamapi.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "global.h"
+#include "GlobalState.h"
+
 #include <dlfcn.h>
-#include "../global.h"
-#include "../GlobalState.h"
 
 namespace libtas {
 

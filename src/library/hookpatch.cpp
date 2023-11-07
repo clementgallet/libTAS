@@ -20,14 +20,15 @@
 #include "hookpatch.h"
 #include "dlhook.h"
 #include "logging.h"
+#include "GlobalState.h"
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
+
 #include <sys/mman.h>
 #include <string.h>
 #include <cstdint>
 #include <sstream>
 #include <list>
-#include "../shared/sockethelpers.h"
-#include "../shared/messages.h"
-#include "GlobalState.h"
 
 namespace libtas {
 

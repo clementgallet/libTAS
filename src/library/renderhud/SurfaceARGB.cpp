@@ -19,7 +19,7 @@
 
 #include "SurfaceARGB.h"
 
-#include "../logging.h"
+#include "logging.h"
 
 #include <cmath>
 

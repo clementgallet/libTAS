@@ -20,7 +20,7 @@
 #ifndef LIBTAS_LUAINPUT_H_INCLUDED
 #define LIBTAS_LUAINPUT_H_INCLUDED
 
-#include "../../shared/AllInputs.h"
+#include "../shared/AllInputs.h"
 
 extern "C" {
 #include <lua.h>

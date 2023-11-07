@@ -20,6 +20,8 @@
 #ifndef LIBTAS_RAMWATCHEDITWINDOW_H_INCLUDED
 #define LIBTAS_RAMWATCHEDITWINDOW_H_INCLUDED
 
+#include "ramsearch/IRamWatchDetailed.h"
+
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QComboBox>
@@ -29,8 +31,6 @@
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QDialogButtonBox>
 #include <memory> // std::unique_ptr
-
-#include "../ramsearch/IRamWatchDetailed.h"
 
 class RamWatch;
 

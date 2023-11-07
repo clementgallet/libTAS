@@ -17,11 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "MovieFileEditor.h"
+
 #include <QtCore/QSettings>
 #include <QtCore/QString>
 #include <string>
-
-#include "MovieFileEditor.h"
 
 MovieFileEditor::MovieFileEditor(Context* c) : context(c) {
     clear();

@@ -19,9 +19,10 @@
 
 #include "AudioPlayerCoreAudio.h"
 
-#include "../logging.h"
-#include "../global.h" // Global::shared_config
-#include "../GlobalState.h"
+#include "logging.h"
+#include "global.h" // Global::shared_config
+#include "GlobalState.h"
+
 #include <algorithm>
 
 namespace libtas {

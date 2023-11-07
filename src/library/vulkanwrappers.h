@@ -21,9 +21,10 @@
 #define LIBTAS_VULKANWRAPPERS_H_INCL
 
 #include "hook.h"
+#include "../external/vulkan_core.h"
+
 #include <cstddef>
 #include <vector>
-#include "../external/vulkan_core.h"
 
 namespace libtas {
 

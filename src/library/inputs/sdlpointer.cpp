@@ -19,14 +19,15 @@
 
 #include "sdlpointer.h"
 #include "inputs.h"
-#include "../logging.h"
-#include "../hook.h"
-#include "../../shared/AllInputs.h"
-#include "../DeterministicTimer.h" // detTimer
-#include "../sdl/SDLEventQueue.h"
-#include "../sdl/sdlwindows.h" // sdl::gameSDLWindow
-#include "../global.h"
-#include "../GlobalState.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "DeterministicTimer.h" // detTimer
+#include "sdl/SDLEventQueue.h"
+#include "sdl/sdlwindows.h" // sdl::gameSDLWindow
+#include "global.h"
+#include "GlobalState.h"
+#include "../shared/AllInputs.h"
 
 namespace libtas {
 

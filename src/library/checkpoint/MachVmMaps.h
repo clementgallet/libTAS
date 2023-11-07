@@ -23,6 +23,7 @@
 #define LIBTAS_MACHVMMAPS_H
 
 #include "MemArea.h"
+
 #include <mach/vm_map.h>
 
 namespace libtas {

@@ -19,6 +19,7 @@
 
 #include "KeyMapping.h"
 #include "../external/keysymdef.h"
+
 #include <cstring>
 #include <iostream>
 

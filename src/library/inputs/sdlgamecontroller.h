@@ -21,8 +21,10 @@
 #define LIBTAS_SDLGAMECONTROLLER_H_INCL
 
 #include "sdljoystick.h"
+
+#include "hook.h"
+
 #include <SDL2/SDL.h>
-#include "../hook.h"
 
 namespace libtas {
 

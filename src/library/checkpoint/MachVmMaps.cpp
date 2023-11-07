@@ -20,15 +20,11 @@
 */
 
 #include "MachVmMaps.h"
-// #include "ReservedMemory.h"
-#include "../logging.h"
-// #include "../Utils.h"
 #include "ReservedMemory.h"
 
-// #include <fcntl.h>
+#include "logging.h"
+
 #include <unistd.h>
-// #include <sys/mman.h>
-// #include <cstring>
 #include <mach/vm_region.h>
 #include <mach/vm_map.h>
 #include <mach/mach_traps.h>

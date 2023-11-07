@@ -7,24 +7,23 @@
 #ifndef LIBTAS_ISTEAMCLIENT006_H_INCL
 #define LIBTAS_ISTEAMCLIENT006_H_INCL
 
-#include <stdint.h>
-// #include <string>
-#include "../steamtypes.h"
-#include "../isteamuser.h"
-#include "../isteamuserstats.h"
-#include "../isteamutils.h"
-#include "../isteamremotestorage/isteamremotestorage.h"
-#include "../isteamapps.h"
-#include "../isteamfriends.h"
-#include "../isteamscreenshots.h"
-#include "../isteamugc.h"
-#include "../isteamcontroller.h"
-#include "../isteammatchmaking.h"
-#include "../isteamhttp.h"
-#include "../isteamgameserver.h"
-#include "../isteamnetworking.h"
-
 #include "isteamclient.h"
+#include "steam/steamtypes.h"
+#include "steam/isteamuser.h"
+#include "steam/isteamuserstats.h"
+#include "steam/isteamutils.h"
+#include "steam/isteamremotestorage/isteamremotestorage.h"
+#include "steam/isteamapps.h"
+#include "steam/isteamfriends.h"
+#include "steam/isteamscreenshots.h"
+#include "steam/isteamugc.h"
+#include "steam/isteamcontroller.h"
+#include "steam/isteammatchmaking.h"
+#include "steam/isteamhttp.h"
+#include "steam/isteamgameserver.h"
+#include "steam/isteamnetworking.h"
+
+#include <stdint.h>
 #define STEAMCLIENT_INTERFACE_VERSION_006 "SteamClient006"
 
 namespace libtas {

@@ -23,6 +23,7 @@
 #include "IRamWatchDetailed.h"
 #include "TypeIndex.h"
 #include "MemAccess.h"
+
 #include <sstream>
 #include <iostream>
 

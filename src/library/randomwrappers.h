@@ -21,6 +21,7 @@
 #define LIBTAS_RANDOM_H_INCL
 
 #include "hook.h"
+
 #include <cstdint>
 #include <cstddef>
 

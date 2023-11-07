@@ -22,8 +22,8 @@
 #ifndef LIBTAS_RENDERHUD_BASE_LINUX_H_INCL
 #define LIBTAS_RENDERHUD_BASE_LINUX_H_INCL
 
-//#include "../../external/SDL.h"
 #include "sdl_ttf.h"
+
 #include <stdint.h>
 
 namespace libtas {

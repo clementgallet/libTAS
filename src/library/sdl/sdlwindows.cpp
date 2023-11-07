@@ -18,29 +18,30 @@
  */
 
 #include "sdlwindows.h"
-#include "../hook.h"
 #include "sdlversion.h"
 #include "sdldisplay.h" // SDL_GetCurrentDisplayMode
-#include "../logging.h"
-#include "../../shared/sockethelpers.h"
-#include "../../shared/messages.h"
-#include "../../shared/SharedConfig.h"
-#include "../frame.h"
-#include "../renderhud/RenderHUD_GL.h"
-#include "../renderhud/RenderHUD_SDL1.h"
-#include "../renderhud/RenderHUD_SDL2_surface.h"
-#include "../timewrappers.h"
-#include "../ScreenCapture.h"
-#include "../DeterministicTimer.h"
-#include "../WindowTitle.h"
-#include "../encoding/AVEncoder.h"
 #include "SDLEventQueue.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "frame.h"
+#include "renderhud/RenderHUD_GL.h"
+#include "renderhud/RenderHUD_SDL1.h"
+#include "renderhud/RenderHUD_SDL2_surface.h"
+#include "timewrappers.h"
+#include "ScreenCapture.h"
+#include "DeterministicTimer.h"
+#include "WindowTitle.h"
+#include "encoding/AVEncoder.h"
 #ifdef __unix__
-#include "../glxwrappers.h" // checkMesa()
+#include "glxwrappers.h" // checkMesa()
 #endif
-#include "../checkpoint/ThreadManager.h"
-#include "../global.h"
-#include "../GlobalState.h"
+#include "checkpoint/ThreadManager.h"
+#include "global.h"
+#include "GlobalState.h"
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
+#include "../shared/SharedConfig.h"
 
 namespace libtas {
 

@@ -22,6 +22,7 @@
 
 #include "TimeHolder.h"
 #include "../shared/SharedConfig.h"
+
 #include <mutex>
 
 namespace libtas {

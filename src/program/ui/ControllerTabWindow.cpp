@@ -17,21 +17,22 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ControllerTabWindow.h"
+#include "ControllerAxisWidget.h"
+#include "ControllerWidget.h"
+#include "MainWindow.h"
+#include "qtutils.h"
+
+#include "Context.h"
+#include "GameLoop.h"
+#include "GameEvents.h"
+#include "../shared/SingleInput.h"
+
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
-
-#include "../Context.h"
-#include "ControllerTabWindow.h"
-#include "ControllerAxisWidget.h"
-#include "ControllerWidget.h"
-#include "../GameLoop.h"
-#include "../GameEvents.h"
-#include "MainWindow.h"
-#include "../../shared/SingleInput.h"
-#include "qtutils.h"
 
 ControllerTabWindow::ControllerTabWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

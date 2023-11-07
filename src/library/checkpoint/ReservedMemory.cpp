@@ -20,7 +20,9 @@
 */
 
 #include "ReservedMemory.h"
-#include "../logging.h"
+
+#include "logging.h"
+
 #include <string.h>
 #include <sys/mman.h>
 

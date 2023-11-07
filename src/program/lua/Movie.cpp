@@ -18,7 +18,8 @@
  */
 
 #include "Movie.h"
-#include "../Context.h"
+
+#include "Context.h"
 
 #include <iostream>
 extern "C" {

@@ -18,11 +18,11 @@
  */
 
 #include "KeyMappingQuartz.h"
+#include "ramsearch/MemAccess.h"
 #include "../shared/SingleInput.h"
 #include "../external/keysymdef.h"
 #include "../external/QuartzKeycodes.h"
 #include "../external/keysymdesc.h"
-#include "ramsearch/MemAccess.h"
 
 #include <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>

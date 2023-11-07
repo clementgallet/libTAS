@@ -18,15 +18,15 @@
  */
 
 #include "RenderHUD_Base_Linux.h"
-
-#include "../logging.h"
-#include "../hook.h"
-#include "../global.h" // Global::shared_config
-#include <fontconfig/fontconfig.h>
 #include "SurfaceARGB.h"
-// #include <X11/keysym.h>
-#include "../ScreenCapture.h"
-#include "../GlobalState.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "global.h" // Global::shared_config
+#include "ScreenCapture.h"
+#include "GlobalState.h"
+
+#include <fontconfig/fontconfig.h>
 
 namespace libtas {
 

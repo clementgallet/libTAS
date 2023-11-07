@@ -17,6 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "TimeTraceWindow.h"
+#include "TimeTraceModel.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QDialogButtonBox>
@@ -25,10 +30,6 @@
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QMessageBox>
-
-#include "TimeTraceWindow.h"
-#include "TimeTraceModel.h"
-#include "../Context.h"
 
 TimeTraceWindow::TimeTraceWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

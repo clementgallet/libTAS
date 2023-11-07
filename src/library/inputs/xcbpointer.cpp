@@ -18,16 +18,18 @@
  */
 
 #include "xcbpointer.h"
-#include "../logging.h"
 #include "inputs.h"
-#include "../xcb/XcbEventQueueList.h"
-#include "../DeterministicTimer.h"
+
+#include "logging.h"
+#include "xcb/XcbEventQueueList.h"
+#include "DeterministicTimer.h"
+#include "hook.h"
+#include "xlib/xwindows.h" // x11::gameXWindows
+#include "global.h"
+#include "GlobalState.h"
+#include "../shared/AllInputs.h"
+
 #include <cstring> // memset
-#include "../../shared/AllInputs.h"
-#include "../hook.h"
-#include "../xlib/xwindows.h" // x11::gameXWindows
-#include "../global.h"
-#include "../GlobalState.h"
 
 namespace libtas {
 

@@ -17,14 +17,15 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtWidgets/QTableView>
-#include <QtWidgets/QHeaderView>
-#include <QtGui/QMouseEvent>
-
 #include "RamWatchView.h"
 #include "RamWatchModel.h"
 #include "RamWatchEditWindow.h"
-#include "../Context.h"
+
+#include "Context.h"
+
+#include <QtWidgets/QTableView>
+#include <QtWidgets/QHeaderView>
+#include <QtGui/QMouseEvent>
 
 RamWatchView::RamWatchView(Context* c, QWidget *parent) : QTableView(parent), context(c)
 {

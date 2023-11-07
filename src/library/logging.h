@@ -21,6 +21,7 @@
 #define LIBTAS_LOGGING_H_INCL
 
 #include "../shared/lcf.h"
+
 #include <string>
 #include <iostream>
 #include <iomanip>

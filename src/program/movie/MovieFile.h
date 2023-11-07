@@ -20,12 +20,13 @@
 #ifndef LIBTAS_MOVIEFILE_H_INCLUDED
 #define LIBTAS_MOVIEFILE_H_INCLUDED
 
-#include "../../shared/AllInputs.h"
-#include "../Context.h"
 #include "MovieFileAnnotations.h"
 #include "MovieFileEditor.h"
 #include "MovieFileHeader.h"
 #include "MovieFileInputs.h"
+
+#include "../shared/AllInputs.h"
+#include "Context.h"
 
 #include <string>
 #include <stdint.h>

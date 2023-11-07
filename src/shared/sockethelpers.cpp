@@ -18,6 +18,15 @@
  */
 
 #include "sockethelpers.h"
+
+#ifdef LIBTAS_LIBRARY
+#include "lcf.h"
+#include "../library/logging.h"
+#include "../library/GlobalState.h"
+#else
+#include <iostream>
+#endif
+
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -29,13 +38,6 @@
 #include <mutex>
 #include <errno.h>
 
-#ifdef LIBTAS_LIBRARY
-#include "lcf.h"
-#include "../library/logging.h"
-#include "../library/GlobalState.h"
-#else
-#include <iostream>
-#endif
 
 #define SOCKET_FILENAME "/tmp/libTAS.socket"
 

@@ -20,8 +20,9 @@
 #ifndef LIBTAS_XINERAMA_H_INCL
 #define LIBTAS_XINERAMA_H_INCL
 
-#include "../hook.h"
-#include "../../external/X11/Xinerama.h"
+#include "hook.h"
+#include "../external/X11/Xinerama.h"
+
 #include <X11/Xlib.h>
 
 namespace libtas {

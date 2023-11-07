@@ -17,10 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtCore/QSettings>
-
 #include "MovieFileHeader.h"
-#include "../../shared/version.h"
+
+#include "../shared/version.h"
+
+#include <QtCore/QSettings>
 
 MovieFileHeader::MovieFileHeader(Context* c) : context(c)
 {

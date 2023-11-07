@@ -18,9 +18,9 @@
  */
 
 #include "winehook.h"
-#include "../hookpatch.h"
-#include "../logging.h"
-// #include <sys/mman.h>
+
+#include "hookpatch.h"
+#include "logging.h"
 
 namespace libtas {
 

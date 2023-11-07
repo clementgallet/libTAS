@@ -18,6 +18,30 @@
 
     Part of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
  */
+
+#include "SaveStateManager.h"
+#include "ThreadManager.h"
+#include "ThreadSync.h"
+#include "Checkpoint.h"
+#include "AltStack.h"
+#include "ReservedMemory.h"
+
+#include "timewrappers.h" // clock_gettime
+#include "logging.h"
+#include "global.h"
+#include "GlobalState.h"
+#ifdef __linux__
+#include "fileio/URandom.h"
+#include "audio/AudioPlayerAlsa.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#include "audio/AudioPlayerCoreAudio.h"
+#endif
+#include "fileio/FileHandleList.h"
+#include "renderhud/RenderHUD.h"
+#ifdef __unix__
+#include "xlib/xdisplay.h" // x11::gameDisplays
+#endif
+
 #include <sstream>
 #include <utility>
 #include <csignal>
@@ -27,28 +51,6 @@
 #include <sys/wait.h> // waitpid
 #ifdef __unix__
 #include <X11/Xlib.h> // XLockDisplay
-#endif
-
-#include "SaveStateManager.h"
-#include "ThreadManager.h"
-#include "ThreadSync.h"
-#include "Checkpoint.h"
-#include "../timewrappers.h" // clock_gettime
-#include "../logging.h"
-#include "../global.h"
-#include "../GlobalState.h"
-#ifdef __linux__
-#include "../fileio/URandom.h"
-#include "../audio/AudioPlayerAlsa.h"
-#elif defined(__APPLE__) && defined(__MACH__)
-#include "../audio/AudioPlayerCoreAudio.h"
-#endif
-#include "AltStack.h"
-#include "ReservedMemory.h"
-#include "../fileio/FileHandleList.h"
-#include "../renderhud/RenderHUD.h"
-#ifdef __unix__
-#include "../xlib/xdisplay.h" // x11::gameDisplays
 #endif
 
 namespace libtas {

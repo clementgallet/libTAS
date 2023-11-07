@@ -7,9 +7,10 @@
 #ifndef LIBTAS_ISTEAMREMOTESTORAGE_PRIV_H_INCL
 #define LIBTAS_ISTEAMREMOTESTORAGE_PRIV_H_INCL
 
+#include "steam/steamtypes.h"
+
 #include <stdint.h>
 #include <string>
-#include "../steamtypes.h"
 
 namespace libtas {
 

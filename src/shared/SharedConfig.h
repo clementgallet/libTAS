@@ -21,6 +21,7 @@
 #define LIBTAS_SHAREDCONFIG_H_INCLUDED
 
 #include "lcf.h"
+
 #include <cstdint>
 
 struct __attribute__((packed, aligned(8))) SharedConfig {

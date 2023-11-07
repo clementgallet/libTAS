@@ -20,12 +20,12 @@
 #ifndef LIBTAS_RAMWATCHMODEL_H_INCLUDED
 #define LIBTAS_RAMWATCHMODEL_H_INCLUDED
 
+#include "ramsearch/IRamWatchDetailed.h"
+
 #include <QtCore/QAbstractTableModel>
 #include <QtCore/QSettings>
 #include <vector>
 #include <memory>
-
-#include "../ramsearch/IRamWatchDetailed.h"
 
 class RamWatchModel : public QAbstractTableModel {
     Q_OBJECT

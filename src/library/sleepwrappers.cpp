@@ -17,8 +17,6 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sched.h> // sched_yield()
-
 #include "sleepwrappers.h"
 #include "logging.h"
 #include "checkpoint/ThreadManager.h"
@@ -27,8 +25,10 @@
 #include "GlobalState.h"
 #include "hook.h"
 #include "GameHacks.h"
-#include <execinfo.h>
 #include "global.h"
+
+#include <sched.h> // sched_yield()
+#include <execinfo.h>
 
 namespace libtas {
 

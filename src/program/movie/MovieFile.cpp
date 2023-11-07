@@ -17,13 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "MovieFile.h"
+
 #include <sstream>
 #include <iostream>
 #include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT
 #include <errno.h>
 #include <unistd.h>
-
-#include "MovieFile.h"
 
 MovieFile::MovieFile(Context* c) : context(c)
 {

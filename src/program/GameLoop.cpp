@@ -33,7 +33,6 @@
 #include "Context.h"
 #include "utils.h"
 #include "AutoSave.h"
-// #include "SaveState.h"
 #include "SaveStateList.h"
 #include "lua/Input.h"
 #include "lua/Callbacks.h"
@@ -54,7 +53,6 @@
 #include <csignal> // kill
 #include <sys/stat.h> // stat
 #include <sys/wait.h> // waitpid
-// #include <X11/X.h>
 #include <stdint.h>
 #include <cstdlib>
 

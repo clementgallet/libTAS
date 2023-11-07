@@ -18,21 +18,14 @@
  */
 
 #include "frame.h"
-#include "../shared/AllInputs.h"
-#include "../shared/messages.h"
 #include "global.h" // Global::shared_config
 #include "inputs/inputs.h" // AllInputs ai object
 #include "inputs/inputevents.h"
-#include "../shared/sockethelpers.h"
 #include "logging.h"
 #include "GlobalState.h"
 #include "DeterministicTimer.h"
 #include "encoding/AVEncoder.h"
 #include "encoding/Screenshot.h"
-#include "sdl/sdlwindows.h"
-#include "sdl/sdlevents.h"
-#include <iomanip>
-#include <stdint.h>
 #include "timewrappers.h" // clock_gettime
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/SaveStateManager.h"
@@ -40,12 +33,14 @@
 #include "checkpoint/ThreadSync.h"
 #include "ScreenCapture.h"
 #include "WindowTitle.h"
-#include "sdl/SDLEventQueue.h"
 #include "BusyLoopDetection.h"
-#include "audio/AudioContext.h"
 #include "hook.h"
 #include "GameHacks.h"
 #include "PerfTimer.h"
+#include "audio/AudioContext.h"
+#include "sdl/sdlwindows.h"
+#include "sdl/sdlevents.h"
+#include "sdl/SDLEventQueue.h"
 
 #ifdef __unix__
 #include "xlib/xevents.h"
@@ -55,6 +50,12 @@
 #include "xlib/XlibEventQueueList.h"
 #include "xlib/xwindows.h" // x11::gameXWindows
 #endif
+#include "../shared/sockethelpers.h"
+#include "../shared/AllInputs.h"
+#include "../shared/messages.h"
+
+#include <iomanip>
+#include <stdint.h>
 
 namespace libtas {
 

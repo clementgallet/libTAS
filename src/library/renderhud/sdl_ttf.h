@@ -36,6 +36,7 @@
 #endif
 
 #include "SurfaceARGB.h"
+
 #include <memory>
 #include <iostream>
 

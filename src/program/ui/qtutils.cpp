@@ -17,11 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "qtutils.h"
+
+#include "KeyMapping.h"
+
 #include <QtGui/QKeyEvent>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QPalette>
-#include "../KeyMapping.h"
-#include "qtutils.h"
 
 unsigned int convertQtModifiers(Qt::KeyboardModifiers flags)
 {

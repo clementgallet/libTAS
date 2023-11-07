@@ -18,14 +18,15 @@
  */
 
 #include "URandom.h"
-
 #include "FileHandleList.h"
-#include "../logging.h"
+
+#include "logging.h"
+#include "global.h"
+#include "GlobalState.h"
+
 #include <fcntl.h>
 #include <unistd.h> // getpid()
 #include <signal.h>
-#include "../global.h"
-#include "../GlobalState.h"
 
 namespace libtas {
 

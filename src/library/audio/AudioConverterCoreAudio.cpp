@@ -18,8 +18,10 @@
  */
 
 #include "AudioConverterCoreAudio.h"
-#include "../logging.h"
+
+#include "logging.h"
 #include "hook.h"
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <algorithm>

@@ -17,6 +17,14 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "InputEditorModel.h"
+#include "qtutils.h"
+
+#include "Context.h"
+#include "movie/MovieFile.h"
+#include "SaveStateList.h"
+#include "SaveState.h"
+
 #include <QtGui/QBrush>
 #include <QtGui/QClipboard>
 #include <QtGui/QGuiApplication>
@@ -25,13 +33,6 @@
 #include <sstream>
 #include <iostream>
 #include <set>
-
-#include "InputEditorModel.h"
-#include "../Context.h"
-#include "../movie/MovieFile.h"
-#include "../SaveStateList.h"
-#include "../SaveState.h"
-#include "qtutils.h"
 
 InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : QAbstractTableModel(parent), context(c), movie(m) {}
 

@@ -18,12 +18,13 @@
  */
 
 #include "WindowTitle.h"
-#include <sstream>
 #include "logging.h"
-#include "../shared/SharedConfig.h"
 #include "global.h" // Global::game_info
-#include <math.h>
 #include "GlobalState.h"
+#include "../shared/SharedConfig.h"
+
+#include <sstream>
+#include <math.h>
 
 namespace libtas {
 

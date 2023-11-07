@@ -20,13 +20,15 @@
 #include "sdlgamecontroller.h"
 #include "sdljoystick.h"
 #include "inputs.h"
-#include "../logging.h"
-#include "../hook.h"
-#include "../sdl/SDLEventQueue.h"
-#include "../../shared/AllInputs.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "sdl/SDLEventQueue.h"
+#include "../shared/AllInputs.h"
+#include "GlobalState.h"
+#include "global.h"
+
 #include <cstring>
-#include "../GlobalState.h"
-#include "../global.h"
 
 namespace libtas {
 

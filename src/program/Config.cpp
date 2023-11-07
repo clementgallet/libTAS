@@ -17,12 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtCore/QSettings>
 #include "Config.h"
-#include <fcntl.h>
-#include <unistd.h> // access
 #include "utils.h"
 #include "KeyMapping.h"
+
+#include <QtCore/QSettings>
+#include <fcntl.h>
+#include <unistd.h> // access
 
 QString Config::iniPath(const std::string& gamepath) const {
     /* Get the game executable name from path */

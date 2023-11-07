@@ -18,11 +18,11 @@
  */
 
 #include "SaveFileList.h"
-
 #include "SaveFile.h"
-#include "../global.h" // Global::shared_config
-#include "../GlobalState.h"
-#include "../logging.h"
+
+#include "global.h" // Global::shared_config
+#include "GlobalState.h"
+#include "logging.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>

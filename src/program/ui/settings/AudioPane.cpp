@@ -17,17 +17,17 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include <QtWidgets/QLabel>
+#include "AudioPane.h"
+#include "tooltip/ToolTipCheckBox.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QCheckBox>
-
-#include "AudioPane.h"
-#include "../../Context.h"
-#include "tooltip/ToolTipCheckBox.h"
 
 AudioPane::AudioPane(Context* c) : context(c)
 {

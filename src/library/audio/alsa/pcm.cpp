@@ -18,17 +18,18 @@
  */
 
 #include "pcm.h"
-#include "../../logging.h"
-#include "../AudioContext.h"
-#include "../AudioSource.h"
-#include "../AudioBuffer.h"
-#include <time.h> //nanosleep
-#include "../../GlobalState.h"
-#include "../../hook.h"
-#include "../../DeterministicTimer.h"
-#include "../../checkpoint/ThreadManager.h"
-#include "../../global.h"
 
+#include "logging.h"
+#include "audio/AudioContext.h"
+#include "audio/AudioSource.h"
+#include "audio/AudioBuffer.h"
+#include "GlobalState.h"
+#include "hook.h"
+#include "DeterministicTimer.h"
+#include "checkpoint/ThreadManager.h"
+#include "global.h"
+
+#include <time.h> //nanosleep
 #include <stdint.h>
 
 #define BUFFER_SIZE_MIN 2048

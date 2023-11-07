@@ -17,14 +17,15 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtWidgets/QHBoxLayout>
-#include <QtWidgets/QMenuBar>
-#include <QtWidgets/QMenu>
-
 #include "InputEditorWindow.h"
 #include "InputEditorView.h"
 #include "MainWindow.h"
-#include "../Context.h"
+
+#include "Context.h"
+
+#include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QMenuBar>
+#include <QtWidgets/QMenu>
 
 InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(parent), context(c)
 {

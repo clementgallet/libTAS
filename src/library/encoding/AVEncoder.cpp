@@ -18,14 +18,15 @@
  */
 
 #include "AVEncoder.h"
+#include "NutMuxer.h"
 
-#include "../logging.h"
-#include "../ScreenCapture.h"
-#include "../audio/AudioContext.h"
-#include "../global.h" // Global::shared_config
-#include "../GlobalState.h"
-#include "../../shared/sockethelpers.h"
-#include "../../shared/messages.h"
+#include "logging.h"
+#include "ScreenCapture.h"
+#include "audio/AudioContext.h"
+#include "global.h" // Global::shared_config
+#include "GlobalState.h"
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
 
 #include <cstdint>
 #include <unistd.h> // usleep

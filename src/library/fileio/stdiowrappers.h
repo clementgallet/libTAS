@@ -20,7 +20,8 @@
 #ifndef LIBTAS_STDIO_H_INCLUDED
 #define LIBTAS_STDIO_H_INCLUDED
 
-#include "../hook.h"
+#include "hook.h"
+
 #include <cstdio> // FILE
 
 namespace libtas {

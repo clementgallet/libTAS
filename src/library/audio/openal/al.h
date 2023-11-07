@@ -20,7 +20,7 @@
 #ifndef LIBTAS_OPENAL_H_INCL
 #define LIBTAS_OPENAL_H_INCL
 
-#include "../../hook.h"
+#include "hook.h"
 
 typedef char ALboolean;
 typedef char ALchar;

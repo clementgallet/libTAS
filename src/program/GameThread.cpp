@@ -17,15 +17,10 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include <QtWidgets/QApplication>
-
-// #include "ui/MainWindow.h"
-
-//#include "config.h"
 #include "GameThread.h"
 #include "utils.h"
-#include "../shared/SharedConfig.h"
 #include "Context.h"
+#include "../shared/SharedConfig.h"
 
 #include <string>
 #include <sstream>

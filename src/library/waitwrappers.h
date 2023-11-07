@@ -20,6 +20,8 @@
 #ifndef LIBTAS_WAIT_H_INCL
 #define LIBTAS_WAIT_H_INCL
 
+#include "hook.h"
+
 #include <time.h>
 #include <unistd.h>
 #include <sys/signal.h>
@@ -28,7 +30,6 @@
 #include <sys/epoll.h>
 #endif
 #include <poll.h>
-#include "hook.h"
 
 namespace libtas {
 

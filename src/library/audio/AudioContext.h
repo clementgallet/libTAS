@@ -20,12 +20,13 @@
 #ifndef LIBTAS_AUDIOCONTEXT_H_INCL
 #define LIBTAS_AUDIOCONTEXT_H_INCL
 
+#include "AudioBuffer.h"
+#include "AudioSource.h"
+
 #include <vector>
 #include <memory>
 #include <list>
 #include <mutex>
-#include "AudioBuffer.h"
-#include "AudioSource.h"
 
 namespace libtas {
 /* This class stores a set of audio sources and audio buffers, and

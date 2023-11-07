@@ -17,14 +17,15 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ExecutableWindow.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
-
-#include "../Context.h"
-#include "ExecutableWindow.h"
 
 ExecutableWindow::ExecutableWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

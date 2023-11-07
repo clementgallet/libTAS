@@ -19,7 +19,8 @@
 
 #include "config.h"
 #include "XcbEventQueueList.h"
-#include "../logging.h"
+
+#include "logging.h"
 
 namespace libtas {
 

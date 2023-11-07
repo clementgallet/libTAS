@@ -18,10 +18,11 @@
  */
 
 #include "xcbconnection.h"
-#include "../hook.h"
-#include "../logging.h"
 #include "XcbEventQueueList.h"
-#include "../GlobalState.h"
+
+#include "hook.h"
+#include "logging.h"
+#include "GlobalState.h"
 
 namespace libtas {
 

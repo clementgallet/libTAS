@@ -22,6 +22,7 @@
 
 #include "AudioBuffer.h"
 #include "AudioConverter.h"
+
 extern "C" {
 #include <libswresample/swresample.h>
 }

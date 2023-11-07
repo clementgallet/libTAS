@@ -19,11 +19,12 @@
 
 #include "config.h"
 #include "XcbEventQueue.h"
-#include "../logging.h"
-#include "../inputs/inputs.h"
-#include "../xlib/XlibEventQueueList.h"
-#include "../xlib/XlibEventQueue.h"
-#include "../xlib/xdisplay.h" // x11::gameDisplays
+
+#include "logging.h"
+#include "inputs/inputs.h"
+#include "xlib/XlibEventQueueList.h"
+#include "xlib/XlibEventQueue.h"
+#include "xlib/xdisplay.h" // x11::gameDisplays
 
 namespace libtas {
 

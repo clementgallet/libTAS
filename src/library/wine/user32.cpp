@@ -19,13 +19,13 @@
 
 #include "user32.h"
 #include "winehook.h"
-#include "../hookpatch.h"
-#include "../logging.h"
-// #include "../backtrace.h"
-#include "../checkpoint/ThreadSync.h"
-#include "../inputs/winekeyboardlayout.h"
-#include "../inputs/inputs.h"
-#include "../../shared/SingleInput.h"
+
+#include "hookpatch.h"
+#include "logging.h"
+#include "checkpoint/ThreadSync.h"
+#include "inputs/winekeyboardlayout.h"
+#include "inputs/inputs.h"
+#include "../shared/SingleInput.h"
 
 namespace libtas {
 

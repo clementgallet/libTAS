@@ -20,7 +20,6 @@
 #ifndef LIBTAS_STEAMAPI_H_INCL
 #define LIBTAS_STEAMAPI_H_INCL
 
-#include "../hook.h"
 #include "isteamclient/isteamclient.h"
 #include "isteamcontroller.h"
 #include "isteamuser.h"
@@ -40,6 +39,8 @@
 #include "isteamnetworkingmessages.h"
 #include "CCallback.h"
 #include "CCallbackManager.h"
+
+#include "hook.h"
 
 namespace libtas {
 

@@ -17,9 +17,10 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtWidgets/QFormLayout>
 #include "GameInfoWindow.h"
 #include "MainWindow.h"
+
+#include <QtWidgets/QFormLayout>
 
 GameInfoWindow::GameInfoWindow(QWidget *parent) : QDialog(parent)
 {

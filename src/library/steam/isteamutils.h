@@ -7,8 +7,9 @@
 #ifndef LIBTAS_ISTEAMUTILS_H_INCL
 #define LIBTAS_ISTEAMUTILS_H_INCL
 
-#include <stdint.h>
 #include "steamtypes.h"
+
+#include <stdint.h>
 
 namespace libtas {
 

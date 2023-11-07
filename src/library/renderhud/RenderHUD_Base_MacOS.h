@@ -22,7 +22,6 @@
 #ifndef LIBTAS_RENDERHUD_BASE_MACOS_H_INCL
 #define LIBTAS_RENDERHUD_BASE_MACOS_H_INCL
 
-//#include "../../external/SDL.h"
 #include <stdint.h>
 #include <CoreText/CoreText.h>
 #include <CoreGraphics/CoreGraphics.h>

@@ -19,10 +19,11 @@
 
 #include "al.h"
 #include "efx.h"
-#include "../../logging.h"
-#include "../AudioBuffer.h"
-#include "../AudioSource.h"
-#include "../AudioContext.h"
+
+#include "logging.h"
+#include "audio/AudioBuffer.h"
+#include "audio/AudioSource.h"
+#include "audio/AudioContext.h"
 
 #include <cstring> // strcmp
 

@@ -18,7 +18,8 @@
  */
 
 #include "isteammatchmaking.h"
-#include "../logging.h"
+
+#include "logging.h"
 
 namespace libtas {
 

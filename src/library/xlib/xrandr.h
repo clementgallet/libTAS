@@ -20,8 +20,9 @@
 #ifndef LIBTAS_XRANDR_H_INCL
 #define LIBTAS_XRANDR_H_INCL
 
-#include "../hook.h"
-#include "../../external/X11/Xrandr.h"
+#include "hook.h"
+#include "../external/X11/Xrandr.h"
+
 #include <X11/X.h>
 
 namespace libtas {

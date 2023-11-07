@@ -17,13 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
-
-#include "Context.h"
-#include "SaveState.h"
 #include "SaveStateList.h"
 #include "SaveState.h"
+#include "SaveState.h"
+#include "Context.h"
 #include "../shared/messages.h"
+
+#include <iostream>
 
 #define NB_STATES 11
 

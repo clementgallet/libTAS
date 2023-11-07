@@ -20,6 +20,8 @@
 #ifndef LIBTAS_RAMSEARCHWINDOW_H_INCLUDED
 #define LIBTAS_RAMSEARCHWINDOW_H_INCLUDED
 
+#include "ramsearch/CompareOperations.h"
+
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QCheckBox>
@@ -34,8 +36,6 @@
 #include <QtCore/QTimer>
 #include <memory>
 #include <atomic>
-
-#include "../ramsearch/CompareOperations.h"
 
 /* Forward declaration */
 struct Context;

@@ -19,8 +19,11 @@
 
 #ifndef LIBTAS_SAVESTATE_MANAGER_H
 #define LIBTAS_SAVESTATE_MANAGER_H
-#include "../TimeHolder.h"
+
 #include "ThreadInfo.h"
+
+#include "TimeHolder.h"
+
 #include <set>
 #include <map>
 #include <vector>

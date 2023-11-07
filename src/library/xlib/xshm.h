@@ -22,8 +22,8 @@
 
 #include "config.h"
 
-#include "../hook.h"
-#include "../../external/X11/XShm.h"
+#include "hook.h"
+#include "../external/X11/XShm.h"
 
 namespace libtas {
 

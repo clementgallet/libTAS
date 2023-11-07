@@ -20,7 +20,9 @@
 #include "isteamuserstats.h"
 #include "CCallback.h"
 #include "CCallbackManager.h"
-#include "../logging.h"
+
+#include "logging.h"
+
 #include <string.h>
 
 namespace libtas {

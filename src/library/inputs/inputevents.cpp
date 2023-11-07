@@ -17,46 +17,48 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "inputevents.h"
 #ifdef __unix__
 #include "config.h"
 #endif
-
-#include "inputevents.h"
 #include "inputs.h"
 #include "keyboard_helper.h"
-#include "../logging.h"
-#include "../../shared/AllInputs.h"
-#include "../../shared/SingleInput.h"
-#include "../../shared/SharedConfig.h"
-// #include <X11/keysym.h>
-#include "../DeterministicTimer.h"
 #include "sdlgamecontroller.h" // sdl_controller_events
 #include "sdljoystick.h" // sdl_joystick_event
 #include "sdltextinput.h" // SDL_EnableUNICODE
-#include "../sdl/SDLEventQueue.h"
-#include "../../external/SDL1.h"
-#include "../global.h" // Global::game_info
-#include "../GlobalState.h"
-#include <stdlib.h>
-#include <SDL2/SDL.h>
-
 #ifdef __unix__
 #include "xinput.h"
 #include "xpointer.h"
 #include "xkeyboardlayout.h"
-#include "../xlib/XlibEventQueueList.h"
-#include "../xcb/XcbEventQueueList.h"
-#include "../xcb/xcbconnection.h" // x11::gameConnections
-#include "../xlib/xevents.h"
-#include "../xlib/xdisplay.h" // x11::gameDisplays
-#include "../xlib/xwindows.h" // x11::gameXWindows
+#endif
+#ifdef __linux__
+#include "jsdev.h"
+#include "evdev.h"
 #endif
 
+#include "logging.h"
+#include "../shared/AllInputs.h"
+#include "../shared/SingleInput.h"
+#include "../shared/SharedConfig.h"
+#include "DeterministicTimer.h"
+#include "sdl/SDLEventQueue.h"
+#include "../external/SDL1.h"
+#include "global.h" // Global::game_info
+#include "GlobalState.h"
+#ifdef __unix__
+#include "xlib/XlibEventQueueList.h"
+#include "xcb/XcbEventQueueList.h"
+#include "xcb/xcbconnection.h" // x11::gameConnections
+#include "xlib/xevents.h"
+#include "xlib/xdisplay.h" // x11::gameDisplays
+#include "xlib/xwindows.h" // x11::gameXWindows
+#endif
+
+#include <stdlib.h>
+#include <SDL2/SDL.h>
 #ifdef __linux__
 #include <linux/joystick.h>
 #include <linux/input.h>
-#include "jsdev.h"
-#include "evdev.h"
 #endif
 
 namespace libtas {

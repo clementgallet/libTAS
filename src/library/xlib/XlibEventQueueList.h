@@ -20,12 +20,12 @@
 #ifndef LIBTAS_XLIBEVENTQUEUELIST_H_INCLUDED
 #define LIBTAS_XLIBEVENTQUEUELIST_H_INCLUDED
 
+#include "XlibEventQueue.h"
+
 #include <list>
 #include <memory>
 #include <X11/X.h>
 #include <X11/Xlib.h>
-
-#include "XlibEventQueue.h"
 
 namespace libtas {
 /* This class stores all Xlib event queues. */

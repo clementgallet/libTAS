@@ -17,6 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "InputWindow.h"
+#include "KeyPressedDialog.h"
+
+#include "Context.h"
+
 #include <QtCore/QStringList>
 #include <QtWidgets/QTableWidgetItem>
 #include <QtWidgets/QDialogButtonBox>
@@ -24,10 +29,6 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QTabWidget>
-
-#include "InputWindow.h"
-#include "KeyPressedDialog.h"
-#include "../Context.h"
 
 InputWindow::InputWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

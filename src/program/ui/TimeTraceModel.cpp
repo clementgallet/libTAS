@@ -18,8 +18,9 @@
  */
 
 #include "TimeTraceModel.h"
-#include "../utils.h"
-#include "../Context.h"
+
+#include "utils.h"
+#include "Context.h"
 
 #include <sstream>
 #include <fstream>

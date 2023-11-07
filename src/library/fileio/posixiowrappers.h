@@ -20,10 +20,10 @@
 #ifndef LIBTAS_POSIXIO_H_INCLUDED
 #define LIBTAS_POSIXIO_H_INCLUDED
 
-#include "../hook.h"
+#include "hook.h"
+
 #include <sys/types.h> // mode_t
 #include <sys/stat.h>
-// #include <sys/sendfile.h>
 
 namespace libtas {
 

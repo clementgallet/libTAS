@@ -18,12 +18,12 @@
  */
 
 #include "generaliowrappers.h"
-
-#include "../logging.h"
-#include "../hook.h"
 #include "SaveFileList.h"
-#include "../GlobalState.h"
-#include "../global.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "GlobalState.h"
+#include "global.h"
 
 namespace libtas {
 

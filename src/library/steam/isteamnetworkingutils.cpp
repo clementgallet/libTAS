@@ -18,7 +18,8 @@
  */
 
 #include "isteamnetworkingutils.h"
-#include "../logging.h"
+
+#include "logging.h"
 
 namespace libtas {
 

@@ -18,8 +18,9 @@
  */
 
 #include "xatom.h"
-#include "../hook.h"
-#include "../logging.h"
+
+#include "hook.h"
+#include "logging.h"
 
 namespace libtas {
 

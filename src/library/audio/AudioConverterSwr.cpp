@@ -18,9 +18,11 @@
  */
 
 #include "AudioConverterSwr.h"
-#include "../logging.h"
+
+#include "logging.h"
 #include "hook.h"
-#include "../GlobalState.h"
+#include "GlobalState.h"
+
 extern "C" {
 #include <libavutil/samplefmt.h>
 }

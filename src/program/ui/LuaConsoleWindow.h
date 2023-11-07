@@ -20,11 +20,11 @@
 #ifndef LIBTAS_LUACONSOLEWINDOW_H_INCLUDED
 #define LIBTAS_LUACONSOLEWINDOW_H_INCLUDED
 
+#include "LuaConsoleModel.h"
+
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QTableView>
-
-#include "LuaConsoleModel.h"
 
 /* Forward declaration */
 struct Context;

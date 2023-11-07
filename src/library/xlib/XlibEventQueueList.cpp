@@ -19,8 +19,9 @@
 
 #include "config.h"
 #include "XlibEventQueueList.h"
-#include "../logging.h"
-#include "../GlobalState.h"
+
+#include "logging.h"
+#include "GlobalState.h"
 
 namespace libtas {
 

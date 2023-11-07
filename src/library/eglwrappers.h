@@ -21,6 +21,7 @@
 #define LIBTAS_EGLWRAPPERS_H_INCL
 
 #include "hook.h"
+
 #include <EGL/egl.h>
 
 namespace libtas {

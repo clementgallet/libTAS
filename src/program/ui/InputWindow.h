@@ -20,11 +20,11 @@
 #ifndef LIBTAS_INPUTWINDOW_H_INCLUDED
 #define LIBTAS_INPUTWINDOW_H_INCLUDED
 
+#include "KeyMapping.h"
+
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QTableWidget>
-
-#include "../KeyMapping.h"
 
 /* Forward declaration */
 struct Context;

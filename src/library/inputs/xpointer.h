@@ -20,7 +20,8 @@
 #ifndef LIBTAS_XPOINTER_H_INCL
 #define LIBTAS_XPOINTER_H_INCL
 
-#include "../hook.h"
+#include "hook.h"
+
 #include <X11/X.h>
 #include <X11/Xlib.h>
 

@@ -19,13 +19,11 @@
 
 #include "xkeyboardlayout.h"
 
-#include "../logging.h"
-#include "../backtrace.h"
+#include "logging.h"
+#include "backtrace.h"
 
 #include <X11/keysym.h>
 #include <X11/XF86keysym.h>
-// #include <X11/X.h>
-
 
 namespace libtas {
 

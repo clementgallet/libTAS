@@ -16,6 +16,16 @@
     You should have received a copy of the GNU General Public License
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include "ThreadManager.h"
+#include "SaveStateManager.h"
+#include "ThreadSync.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "global.h"
+#include "GlobalState.h"
+
 #include <sstream>
 #include <utility>
 #include <csignal>
@@ -23,20 +33,6 @@
 #include <sys/mman.h>
 #include <sys/syscall.h> // syscall, SYS_gettid
 #include <pthread.h>
-
-#include "ThreadManager.h"
-#include "SaveStateManager.h"
-#include "Checkpoint.h"
-#include "ThreadSync.h"
-#include "../timewrappers.h" // clock_gettime
-#include "../logging.h"
-#include "../hook.h"
-//#include "../audio/AudioPlayer.h"
-#include "AltStack.h"
-#include "ReservedMemory.h"
-#include "../fileio/FileHandleList.h"
-#include "../global.h"
-#include "../GlobalState.h"
 
 namespace libtas {
 

@@ -20,7 +20,7 @@
 #ifndef LIBTAS_HOOKTEST_H_INCL
 #define LIBTAS_HOOKTEST_H_INCL
 
-#include "../global.h"
+#include "global.h"
 
 namespace libtas {
 

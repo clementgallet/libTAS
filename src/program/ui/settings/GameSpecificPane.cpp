@@ -17,13 +17,14 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "GameSpecificPane.h"
+#include "tooltip/ToolTipCheckBox.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
-
-#include "GameSpecificPane.h"
-#include "../../Context.h"
-#include "tooltip/ToolTipCheckBox.h"
 
 GameSpecificPane::GameSpecificPane(Context* c) : context(c)
 {

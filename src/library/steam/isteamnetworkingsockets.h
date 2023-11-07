@@ -3,9 +3,10 @@
 #ifndef LIBTAS_ISTEAMNETWORKINGSOCKETS_H_INCL
 #define LIBTAS_ISTEAMNETWORKINGSOCKETS_H_INCL
 
+#include "steamtypes.h"
+
 #include <stdint.h>
 #include <stddef.h>
-#include "steamtypes.h"
 
 namespace libtas {
 

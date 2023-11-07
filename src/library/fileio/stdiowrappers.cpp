@@ -18,17 +18,17 @@
  */
 
 #include "stdiowrappers.h"
-
-#include "../logging.h"
-#include "../hook.h"
 #include "SaveFileList.h"
 #include "FileHandleList.h"
-#include "../GlobalState.h"
-#include "../global.h"
-
 #ifdef __linux__
 #include "URandom.h"
 #endif
+
+#include "logging.h"
+#include "hook.h"
+#include "GlobalState.h"
+#include "global.h"
+
 
 namespace libtas {
 

@@ -19,9 +19,10 @@
 
 #include "alc.h"
 #include "efx.h"
-#include "../AudioContext.h"
-#include "../../logging.h"
-#include "../../global.h"
+
+#include "audio/AudioContext.h"
+#include "logging.h"
+#include "global.h"
 
 namespace libtas {
 

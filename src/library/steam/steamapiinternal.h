@@ -7,7 +7,6 @@
 #ifndef LIBTAS_STEAMAPIINTERNAL_H_INCL
 #define LIBTAS_STEAMAPIINTERNAL_H_INCL
 
-#include "../hook.h"
 #include "steamtypes.h"
 #include "isteamuser.h"
 #include "isteamuserstats.h"
@@ -22,6 +21,8 @@
 #include "isteammatchmaking.h"
 #include "isteamhttp.h"
 #include "isteamnetworking.h"
+
+#include "hook.h"
 
 namespace libtas {
 

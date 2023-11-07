@@ -20,10 +20,10 @@
 #ifndef LIBTAS_KEYBOARDHELPER_H_INCLUDED
 #define LIBTAS_KEYBOARDHELPER_H_INCLUDED
 
-#include "../../external/SDL1.h"
+#include "../external/SDL1.h"
+#include "../shared/AllInputs.h"
+
 #include <SDL2/SDL.h>
-//#include <X11/XKBlib.h>
-#include "../../shared/AllInputs.h"
 
 namespace libtas {
 

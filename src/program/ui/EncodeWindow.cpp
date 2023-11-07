@@ -17,6 +17,10 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "EncodeWindow.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QGroupBox>
@@ -24,10 +28,6 @@
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QGridLayout>
-
-#include "../Context.h"
-#include "EncodeWindow.h"
-
 #include <iostream>
 
 EncodeWindow::EncodeWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)

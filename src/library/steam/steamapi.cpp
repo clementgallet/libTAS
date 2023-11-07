@@ -18,16 +18,6 @@
  */
 
 #include "steamapi.h"
-#include "../logging.h"
-#include "../hook.h"
-#include <signal.h>
-#ifdef __unix__
-#include <link.h>
-#endif
-#include <dlfcn.h>
-#include "../global.h"
-#include "../GlobalState.h"
-
 #include "CCallbackManager.h"
 #include "isteamremotestorage/isteamremotestorage001.h"
 #include "isteamremotestorage/isteamremotestorage012.h"
@@ -39,6 +29,17 @@
 #include "isteamclient/isteamclient016.h"
 #include "isteamclient/isteamclient017.h"
 #include "isteamclient/isteamclient020.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "global.h"
+#include "GlobalState.h"
+
+#include <signal.h>
+#ifdef __unix__
+#include <link.h>
+#endif
+#include <dlfcn.h>
 
 namespace libtas {
 
