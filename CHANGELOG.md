@@ -4,6 +4,7 @@
 * Screenshot
 * Add double-click on Ram Watch window to edit watches
 * Highlight hovered column in the input editor
+* Add Shift modifier for text input
 
 ### Changed
 ### Fixed

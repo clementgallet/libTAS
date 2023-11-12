@@ -45,7 +45,8 @@ void xkeyboardToSDL1keyboard(const std::array<unsigned int,AllInputs::MAXKEYS>& 
 void xkeysymToSDL(SDL_Keysym *keysym, unsigned int xkeysym);
 void xkeysymToSDL1(SDL1::SDL_keysym *keysym, unsigned int xkeysym);
 
-/* Build the SDL2 modifier from the keyboard input */
+/* Build the Xlib/SDL2 modifier from the keyboard input */
+unsigned int xkeyboardToXMod(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard);
 SDL_Keymod xkeyboardToSDLMod(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard);
 
 }

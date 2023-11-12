@@ -340,29 +340,46 @@ void xkeysymToSDL1(SDL1::SDL_keysym *keysym, unsigned int xkeysym) {
 }
 
 struct ModTranslate {
+    unsigned int keysym;
     unsigned int xmod;
     SDL_Keymod sdlmod;
 };
 
 static std::array<ModTranslate, 10> mod_translate {{
-    {XK_Shift_L, KMOD_LSHIFT},
-    {XK_Shift_R, KMOD_RSHIFT},
-    {XK_Control_L, KMOD_LCTRL},
-    {XK_Control_R, KMOD_RCTRL},
-    {XK_Meta_L, KMOD_LGUI},
-    {XK_Meta_R, KMOD_RGUI},
-    {XK_Alt_L, KMOD_LALT},
-    {XK_Alt_R, KMOD_RALT},
-    {XK_Caps_Lock, KMOD_CAPS},
-    {XK_Shift_Lock, KMOD_NUM},
+    {XK_Shift_L, 1<<0, KMOD_LSHIFT},
+    {XK_Shift_R, 1<<0, KMOD_RSHIFT},
+    {XK_Control_L, 1<<2, KMOD_LCTRL},
+    {XK_Control_R, 1<<2, KMOD_RCTRL},
+    {XK_Meta_L, 1<<6, KMOD_LGUI},
+    {XK_Meta_R, 1<<6, KMOD_RGUI},
+    {XK_Alt_L, 1<<3, KMOD_LALT},
+    {XK_Alt_R, 1<<3, KMOD_RALT},
+    {XK_Caps_Lock, 1<<1, KMOD_CAPS},
+    {XK_Shift_Lock, 1<<4, KMOD_NUM},
 }};
+
+unsigned int xkeyboardToXMod(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard) {
+    unsigned int mod = 0;
+    for (int i=0; i<AllInputs::MAXKEYS; i++) {
+        if (Xkeyboard[i]) {
+            for (int j=0; j<10; j++) {
+                if (Xkeyboard[i] == mod_translate[j].keysym) {
+                    mod |= mod_translate[j].xmod;
+                    break;
+                }
+            }
+        }
+    }
+
+    return mod;
+}
 
 SDL_Keymod xkeyboardToSDLMod(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard) {
     unsigned int mod = KMOD_NONE; // use int because "bitwise or" promotes to int
     for (int i=0; i<AllInputs::MAXKEYS; i++) {
         if (Xkeyboard[i]) {
             for (int j=0; j<10; j++) {
-                if (Xkeyboard[i] == mod_translate[j].xmod) {
+                if (Xkeyboard[i] == mod_translate[j].keysym) {
                     mod |= mod_translate[j].sdlmod;
                     break;
                 }

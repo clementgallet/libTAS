@@ -136,6 +136,7 @@ static void generateKeyUpEvents(void)
                 event.xkey.subwindow = 0;
                 event.xkey.root = x11::rootWindow;
                 NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(nullptr, old_game_ai.keyboard[i]));
+                event.xkey.state = xkeyboardToXMod(game_ai.keyboard);
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (x11::gameDisplays[d]) {
                         event.xkey.root = XRootWindow(x11::gameDisplays[d], 0);
@@ -156,6 +157,7 @@ static void generateKeyUpEvents(void)
                 event.child = 0;
                 event.root = x11::rootWindow;
                 NOLOGCALL(event.detail = XKeysymToKeycode(nullptr, old_game_ai.keyboard[i]));
+                event.state = static_cast<uint16_t>(xkeyboardToXMod(game_ai.keyboard));
                 for (int c=0; c<GAMECONNECTIONNUM; c++) {
                     if (x11::gameConnections[c]) {
                         // event.root = XRootWindow(x11::gameConnections[c], 0);
@@ -179,6 +181,7 @@ static void generateKeyUpEvents(void)
                 dev->deviceid = 3;
                 dev->sourceid = 3;
                 NOLOGCALL(dev->detail = XKeysymToKeycode(nullptr, old_game_ai.keyboard[i]));
+                dev->mods.effective = xkeyboardToXMod(game_ai.keyboard); // We should not need to fill the other members
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (x11::gameDisplays[d]) {
                         dev->root = XRootWindow(x11::gameDisplays[d], 0);
@@ -297,6 +300,7 @@ static void generateKeyDownEvents(void)
                 event.xkey.subwindow = 0;
                 event.xkey.root = x11::rootWindow;
                 NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(nullptr, game_ai.keyboard[i]));
+                event.xkey.state = xkeyboardToXMod(game_ai.keyboard);
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (x11::gameDisplays[d]) {
                         event.xkey.root = XRootWindow(x11::gameDisplays[d], 0);
@@ -317,6 +321,7 @@ static void generateKeyDownEvents(void)
                 event.child = 0;
                 event.root = x11::rootWindow;
                 NOLOGCALL(event.detail = XKeysymToKeycode(nullptr, game_ai.keyboard[i]));
+                event.state = static_cast<uint16_t>(xkeyboardToXMod(game_ai.keyboard));
                 for (int c=0; c<GAMECONNECTIONNUM; c++) {
                     if (x11::gameConnections[c]) {
                         // event.root = XRootWindow(x11::gameConnections[c], 0);
@@ -340,6 +345,7 @@ static void generateKeyDownEvents(void)
                 dev->deviceid = 3;
                 dev->sourceid = 3;
                 NOLOGCALL(dev->detail = XKeysymToKeycode(nullptr, game_ai.keyboard[i]));
+                dev->mods.effective = xkeyboardToXMod(game_ai.keyboard); // We should not need to fill the other members
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (x11::gameDisplays[d]) {
                         dev->root = XRootWindow(x11::gameDisplays[d], 0);
