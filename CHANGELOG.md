@@ -5,6 +5,7 @@
 * Add double-click on Ram Watch window to edit watches
 * Highlight hovered column in the input editor
 * Add Shift modifier for text input
+* Handle softlock inside snd_pcm_wait()
 
 ### Changed
 ### Fixed
