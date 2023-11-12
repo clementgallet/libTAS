@@ -31,7 +31,8 @@
 #include <csignal>
 #include <algorithm> // std::find
 #include <sys/mman.h>
-#include <sys/syscall.h> // syscall, SYS_gettid
+#include <unistd.h> // syscall
+#include <sys/syscall.h> // SYS_gettid
 #include <pthread.h>
 
 namespace libtas {
