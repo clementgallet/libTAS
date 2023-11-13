@@ -21,6 +21,47 @@
 
 #include <iostream>
 
+AllInputs& AllInputs::operator|=(const AllInputs& ai)
+{
+    /* keyboard is a bit complex */
+    for (int k1 = 0; k1 < MAXKEYS; k1++) {
+        if (ai.keyboard[k1] != 0) {
+            bool toadd = true;
+            int k2;
+            for (k2 = 0; k2 < MAXKEYS; k2++) {
+                if (keyboard[k2] == 0) {
+                    toadd = true;
+                    break;
+                }
+                if (ai.keyboard[k1] == keyboard[k2]) {
+                    toadd = false;
+                    break;
+                }
+            }
+            if (toadd && (k2 < MAXKEYS))
+                keyboard[k2] = ai.keyboard[k1];
+        }
+    }
+    
+    pointer_x |= ai.pointer_x;
+    pointer_y |= ai.pointer_y;
+    pointer_mode |= ai.pointer_mode;
+    pointer_mask |= ai.pointer_mask;
+    for (int i=0; i<MAXJOYS; i++) {
+        for (int j=0; j<MAXAXES; j++)
+            controller_axes[i][j] |= ai.controller_axes[i][j];
+        controller_buttons[i] |= ai.controller_buttons[i];
+    }
+
+    flags |= ai.flags;
+    framerate_den |= ai.framerate_den;
+    framerate_num |= ai.framerate_num;
+    realtime_sec |= ai.realtime_sec;
+    realtime_nsec |= ai.realtime_nsec;
+
+    return *this;
+}
+
 void AllInputs::emptyInputs() {
     int i,j;
     for (i=0; i<MAXKEYS; i++)

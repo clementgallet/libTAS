@@ -98,6 +98,9 @@ class AllInputs {
                 (realtime_nsec == other.realtime_nsec));
         }
 
+        /* OR all elements of the struct, so that unique inputs can be queried */
+        AllInputs& operator|=(const AllInputs& ai);
+            
         /* Empty the state, set axes to neutral position. */
         void emptyInputs();
 

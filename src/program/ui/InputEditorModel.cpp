@@ -665,10 +665,14 @@ int InputEditorModel::pasteInputs(int row)
         beginInsertRows(QModelIndex(), rowCount(), rowCount() + insertedFrames - 1);
     }
 
+    AllInputs newais;
+    newais.emptyInputs();
+    
     for (size_t r = 0; r < paste_ais.size(); r++) {
         movie->inputs->setInputs(paste_ais[r], row + r, true);
-        addUniqueInputs(paste_ais[r]);
+        newais |= paste_ais[r];
     }
+    addUniqueInputs(newais);
 
     if (insertedFrames > 0) {
         endInsertRows();
@@ -705,11 +709,14 @@ void InputEditorModel::pasteInputsInRange(int row, int count)
     }
 
     size_t r = 0;
+    AllInputs newais;
+    newais.emptyInputs();
     for (int f = row; f < (row+count); f++) {
         movie->inputs->setInputs(paste_ais[r], f, true);
-        addUniqueInputs(paste_ais[r]);
+        newais |= paste_ais[r];
         r = (r+1)%paste_ais.size();
     }
+    addUniqueInputs(newais);
 
     /* Update the movie framecount */
     movie->updateLength();
@@ -741,10 +748,13 @@ int InputEditorModel::pasteInsertInputs(int row)
 
     beginInsertRows(QModelIndex(), row, row + paste_ais.size() - 1);
 
+    AllInputs newais;
+    newais.emptyInputs();
     for (size_t r = 0; r < paste_ais.size(); r++) {
         movie->inputs->insertInputsBefore(paste_ais[r], row + r);
-        addUniqueInputs(paste_ais[r]);
+        newais |= paste_ais[r];
     }
+    addUniqueInputs(newais);
 
     endInsertRows();
 
