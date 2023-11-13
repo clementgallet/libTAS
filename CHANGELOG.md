@@ -6,6 +6,7 @@
 * Highlight hovered column in the input editor
 * Add Shift modifier for text input
 * Handle softlock inside snd_pcm_wait()
+* Set corresponding radio button when changing a screen resolution value
 
 ### Changed
 ### Fixed

@@ -199,9 +199,22 @@ void VideoPane::initSignals()
     connect(screenCommonRadio, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
     connect(screenCustomRadio, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
 
-    connect(screenCommonChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
-    connect(widthField, QOverload<int>::of(&QSpinBox::valueChanged), this, &VideoPane::saveConfig);
-    connect(heightField, QOverload<int>::of(&QSpinBox::valueChanged), this, &VideoPane::saveConfig);
+    connect(screenCommonChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this,
+        [this](){
+            screenCommonRadio->setChecked(true);
+            saveConfig();
+        });
+    connect(widthField, QOverload<int>::of(&QSpinBox::valueChanged), this,
+    [this](){
+        screenCustomRadio->setChecked(true);
+        saveConfig();
+    });
+
+    connect(heightField, QOverload<int>::of(&QSpinBox::valueChanged), this,
+    [this](){
+        screenCustomRadio->setChecked(true);
+        saveConfig();
+    });
     connect(osdFrameBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
     connect(frameHorChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
     connect(frameVertChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
