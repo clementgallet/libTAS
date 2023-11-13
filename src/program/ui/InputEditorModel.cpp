@@ -143,13 +143,31 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         }
 
         QColor color = QGuiApplication::palette().text().color();
+        const SingleInput si = movie->editor->input_set[index.column()-COLUMN_SPECIAL_SIZE];
+
+        /* If hovering on the cell, show a preview of the input for the 
+         * following: the cell is blank and not analog input */
+        if (index.column() == hoveredIndex.column()) {
+            if (!si.isAnalog()) {
+                AllInputs ai;
+                movie->inputs->getInputs(ai, row);
+                int value = ai.getInput(si);
+                if (!value) {
+                    if (index.row() == hoveredIndex.row())
+                        color.setAlpha(128);
+                    else
+                        color.setAlpha(32);
+                    return QBrush(color);                    
+                }
+            }
+        }
 
         /* Show inputs with transparancy when they are pending due to rewind */
         movie->inputs->input_event_queue.lock();
         for (auto it = movie->inputs->input_event_queue.begin(); it != movie->inputs->input_event_queue.end(); it++) {
             if (it->framecount != row)
                 continue;
-            const SingleInput si = movie->editor->input_set[index.column()-COLUMN_SPECIAL_SIZE];
+
             if (si == it->si) {
                 /* For analog, use half-transparancy. Otherwise,
                  * use strong/weak transparancy of set/clear input */
@@ -258,15 +276,6 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         if (row < invalid_frame)
             color = color.darker(120);
 
-        /* Highlight current column */
-        if (index.column() >= COLUMN_SPECIAL_SIZE && hoveredIndex.isValid()
-            && (index.column() == hoveredIndex.column())) {
-            if (lightTheme)
-                color = color.darker(105);
-            else
-                color = color.lighter(105);
-        }
-
         return QBrush(color);
     }
 
@@ -291,6 +300,10 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         AllInputs ai;
         movie->inputs->getInputs(ai, row);
         const SingleInput si = movie->editor->input_set[index.column()-COLUMN_SPECIAL_SIZE];
+
+        /* If hovering on the cell, show a preview of the input */
+        if (index.column() == hoveredIndex.column() && (!si.isAnalog()))
+            return QString(si.description.c_str());
 
         /* Get the value of the single input in movie inputs */
         int value = ai.getInput(si);
@@ -1094,9 +1107,12 @@ void InputEditorModel::setScrollFreeze(bool state)
 
 void InputEditorModel::setHoveredCell(const QModelIndex &i)
 {
+    QVector<int> roles(2, Qt::DisplayRole);
+    roles[1] = Qt::ForegroundRole;
+    
     const QModelIndex old = hoveredIndex;
     hoveredIndex = i;
-    emit dataChanged(index(0,old.column()), index(rowCount(),old.column()), QVector<int>(1, Qt::BackgroundRole));
+    emit dataChanged(index(0,old.column()), index(rowCount(),old.column()), roles);
     emit dataChanged(index(0,hoveredIndex.column()), index(rowCount(),hoveredIndex.column()), QVector<int>(1, Qt::BackgroundRole));
     emit headerDataChanged(Qt::Horizontal, old.column(), old.column());
     emit headerDataChanged(Qt::Horizontal, hoveredIndex.column(), hoveredIndex.column());
