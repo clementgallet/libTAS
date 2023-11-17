@@ -84,7 +84,7 @@ int __stdcall WaitForMultipleObjectsEx( int count, const void **handles,
 unsigned int __stdcall GetTickCount()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_GETTICKCOUNT);
+    struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_GETTICKCOUNT);
     unsigned int msec = ts.tv_sec*1000 + ts.tv_nsec/1000000;
     debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %d", msec);
     return msec;
@@ -93,7 +93,7 @@ unsigned int __stdcall GetTickCount()
 uint64_t __stdcall GetTickCount64()
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_GETTICKCOUNT64);
+    struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_GETTICKCOUNT64);
     uint64_t msec = ts.tv_sec*1000 + ts.tv_nsec/1000000;
     debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %" PRIu64, msec);
     return msec;
@@ -109,7 +109,7 @@ int __stdcall QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency)
 int __stdcall QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount)
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_QUERYPERFORMANCECOUNTER);
+    struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_QUERYPERFORMANCECOUNTER);
     lpPerformanceCount->QuadPart = ts.tv_nsec + ts.tv_sec * 1000000000LL;
     debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %" PRId64, lpPerformanceCount->QuadPart);
     return 1;

@@ -427,6 +427,7 @@ int snd_pcm_wait(snd_pcm_t *pcm, int timeout)
     /* Check for no more available samples */
     int delta_ms = -1;
     int real_timeout_count = 0;
+    DeterministicTimer& detTimer = DeterministicTimer::get();
     if ((buffer_size - get_latency(pcm)) <= avail_min) {
         /* Wait for timeout or available samples */
         TimeHolder initial_time = detTimer.getTicks();

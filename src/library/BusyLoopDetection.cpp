@@ -57,7 +57,7 @@ void BusyLoopDetection::reset()
         return;
 
     /* Remove any fake ticks cause by the busy loop detector */
-    detTimer.fakeAdvanceTimer({0, 0});
+    DeterministicTimer::get().fakeAdvanceTimer({0, 0});
 
     timecall_count = 0;
 }
@@ -87,7 +87,7 @@ void BusyLoopDetection::increment(int type)
         return;
     if (GlobalState::isNative())
         return;
-    if (detTimer.isInsideFrameBoundary())
+    if (DeterministicTimer::get().isInsideFrameBoundary())
         return;
 
     debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "Time function called");
@@ -216,7 +216,7 @@ void BusyLoopDetection::increment(int type)
 
         if (timecall_count == 10) {
             debuglogstdio(LCF_TIMESET, "Busy loop detected, fake advance ticks to next frame");
-            detTimer.fakeAdvanceTimerFrame();
+            DeterministicTimer::get().fakeAdvanceTimerFrame();
         }
         if (timecall_count > 20) {
             debuglogstdio(LCF_TIMESET, "Still softlocking, advance one frame");

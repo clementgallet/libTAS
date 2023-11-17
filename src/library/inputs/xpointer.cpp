@@ -171,7 +171,7 @@ DEFINE_ORIG_POINTER(XWarpPointer)
         event.xmotion.y_root = event.xmotion.y;
         event.xmotion.window = x11::gameXWindows.front();
 
-        struct timespec time = detTimer.getTicks();
+        struct timespec time = DeterministicTimer::get().getTicks();
         event.xmotion.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
         xlibEventQueueList.insert(&event);

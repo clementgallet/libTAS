@@ -160,7 +160,7 @@ VdpStatus VdpPresentationQueueBlockUntilSurfaceIdle(VdpPresentationQueue present
 
     DEBUGLOGCALL(LCF_WINDOW);
 
-    detTimer.fakeAdvanceTimerFrame();
+    DeterministicTimer::get().fakeAdvanceTimerFrame();
     // VdpStatus status = orig::VdpPresentationQueueBlockUntilSurfaceIdle(presentation_queue, surface, first_presentation_time);
     // debuglogstdio(LCF_WINDOW, "first_presentation_time %llu", *first_presentation_time);
 

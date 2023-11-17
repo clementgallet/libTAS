@@ -49,6 +49,7 @@ DEFINE_ORIG_POINTER(g_cond_wait_until)
     if (Global::shared_config.wait_timeout == SharedConfig::WAIT_NATIVE)
         return orig::g_cond_wait_until(cond, mutex, end_time);
 
+    DeterministicTimer& detTimer = DeterministicTimer::get();
     TimeHolder now = detTimer.getTicks();
 
     if (Global::shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {

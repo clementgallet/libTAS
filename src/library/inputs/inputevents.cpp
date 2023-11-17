@@ -68,7 +68,7 @@ static void generateKeyUpEvents(void)
 {
     int i, j;
 
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (i=0; i<AllInputs::MAXKEYS; i++) {
@@ -216,7 +216,7 @@ static void generateKeyDownEvents(void)
 {
     int i,j;
 
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (i=0; i<AllInputs::MAXKEYS; i++) {
@@ -381,7 +381,7 @@ static void generateControllerAdded(void)
     if (!(Global::game_info.joystick & GameInfo::SDL2))
         return;
 
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     static bool init_added = false;
@@ -446,7 +446,7 @@ static void generateControllerAdded(void)
 /* Same as KeyUp/KeyDown functions but with controller events */
 static void generateControllerEvents(void)
 {
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (int ji=0; ji<Global::shared_config.nb_controllers; ji++) {
@@ -747,7 +747,7 @@ static void generateControllerEvents(void)
 /* Same as above with MouseMotion event */
 static void generateMouseMotionEvents(void)
 {
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
 #ifdef __unix__
@@ -893,7 +893,7 @@ static void generateMouseMotionEvents(void)
 /* Same as above with the MouseButton event */
 void generateMouseButtonEvents(void)
 {
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     static int buttons[] = {SingleInput::POINTER_B1,
@@ -1074,7 +1074,7 @@ static void generateFocusEvents(void)
     if (!(game_ai.flags & (1<<SingleInput::FLAG_FOCUS_UNFOCUS)))
         return;
     
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     if (Global::game_info.keyboard & GameInfo::SDL2) {
@@ -1163,7 +1163,7 @@ void syncControllerEvents()
         return;
 
 #ifdef __linux__
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (int i = 0; i < Global::shared_config.nb_controllers; i++) {

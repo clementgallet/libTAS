@@ -187,8 +187,8 @@ void __attribute__((constructor)) init(void)
     /* Initialize timers. It uses the initial time set in the config object,
      * so they must be initialized after receiving it.
      */
-    nonDetTimer.initialize();
-    detTimer.initialize(initial_sec, initial_nsec);
+    NonDeterministicTimer::get().initialize(initial_sec, initial_nsec);
+    DeterministicTimer::get().initialize(initial_sec, initial_nsec);
 
     /* Initialize sound parameters */
     audiocontext.init();

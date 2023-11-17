@@ -86,7 +86,7 @@ int open_jsdev(const char* source, int flags)
          * joystick. */
         struct js_event ev;
 
-        struct timespec ts = detTimer.getTicks();
+        struct timespec ts = DeterministicTimer::get().getTicks();
         ev.time = ts.tv_sec*1000 + ts.tv_nsec/1000000;
         ev.value = 0;
         for (int button = 0; button < 11; button++) {

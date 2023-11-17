@@ -105,7 +105,7 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
         event.root_y = event.event_y;
         event.event = x11::gameXWindows.front();
 
-        struct timespec time = detTimer.getTicks();
+        struct timespec time = DeterministicTimer::get().getTicks();
         event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
         xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
@@ -185,7 +185,7 @@ xcb_warp_pointer (xcb_connection_t *c,
         event.root_y = event.event_y;
         event.event = x11::gameXWindows.front();
 
-        struct timespec time = detTimer.getTicks();
+        struct timespec time = DeterministicTimer::get().getTicks();
         event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
         xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));

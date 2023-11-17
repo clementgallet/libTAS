@@ -47,8 +47,10 @@ class NonDeterministicTimer
 {
 public:
 
+    static NonDeterministicTimer& get();
+
     /* Initialize the class members */
-    void initialize(void);
+    void initialize(uint64_t initial_sec, uint64_t initial_nsec);
 
     /* Update and return the time of the non deterministic timer */
     struct timespec getTicks(void);
@@ -89,8 +91,6 @@ private:
 
     static bool inited;
 };
-
-extern NonDeterministicTimer nonDetTimer;
 
 }
 

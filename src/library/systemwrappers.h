@@ -23,6 +23,7 @@
 #include "hook.h"
 
 #include <unistd.h>
+#include <sched.h>
 
 namespace libtas {
 
@@ -33,6 +34,8 @@ OVERRIDE pid_t getpid (void) __THROWNL;
    Return -1 for errors, 0 to the new process,
    and the process ID of the new process to the old process.  */
 OVERRIDE pid_t fork(void) __THROWNL;
+
+OVERRIDE int __sched_cpucount (size_t setsize, const cpu_set_t *setp) __THROW;
 
 }
 

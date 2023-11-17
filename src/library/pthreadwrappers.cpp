@@ -206,6 +206,7 @@ static void *pthread_native_start(void *arg)
     LINK_NAMESPACE(pthread_detach, "pthread");
 
     if (GlobalState::isNative()) {
+        debuglogstdio(LCF_THREAD, "Native Thread is created");
         ThreadInfo* thread = new ThreadInfo();
         ThreadManager::initThreadFromParent(thread, start_routine, arg, __builtin_return_address(0));
         return orig::pthread_create(tid_p, attr, pthread_native_start, thread);
@@ -516,7 +517,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
      * a negative time, or more than 10 seconds. */
     if ((rel_timeout.tv_sec < -1) || (rel_timeout.tv_sec > 10)) {
         /* Change the reference time to real system time */
-        TimeHolder fake_time = detTimer.getTicks();
+        TimeHolder fake_time = DeterministicTimer::get().getTicks();
         TimeHolder new_rel_timeout = abs_timeout - fake_time;
         TimeHolder new_abs_timeout = real_time + new_rel_timeout;
         new_abstime = new_abs_timeout;
@@ -550,9 +551,9 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         (Global::shared_config.wait_timeout == SharedConfig::WAIT_FULL))
         {
         /* Transfer time to our deterministic timer */
-        TimeHolder now = detTimer.getTicks();
+        TimeHolder now = DeterministicTimer::get().getTicks();
         TimeHolder delay = abs_timeout - now;
-        detTimer.addDelay(delay);
+        DeterministicTimer::get().addDelay(delay);
     }
 
     if (Global::shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
@@ -672,7 +673,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
      */
     if ((rel_timeout.tv_sec < -1) || (rel_timeout.tv_sec > 10)) {
         /* Change the reference time to real system time */
-        TimeHolder fake_time = detTimer.getTicks();
+        TimeHolder fake_time = DeterministicTimer::get().getTicks();
         TimeHolder new_rel_timeout = abs_timeout - fake_time;
         TimeHolder new_abs_timeout = real_time + new_rel_timeout;
         new_abstime = new_abs_timeout;
@@ -745,6 +746,11 @@ int pthread_setname_np (const char *name)
 
     /* Check if the thread is one of the llvm ones, and make it native and disable log */
     if (strncmp(name, "llvmpipe-", 9) == 0) {
+        GlobalState::setNative(true);
+        GlobalState::setNoLog(true);
+    }
+    if (strstr(name, ":disk$")) {
+        debuglogstdio(LCF_THREAD | LCF_ERROR, "GPU native thread");
         GlobalState::setNative(true);
         GlobalState::setNoLog(true);
     }

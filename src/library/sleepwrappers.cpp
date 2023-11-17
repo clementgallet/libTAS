@@ -55,7 +55,7 @@ bool transfer_sleep(const struct timespec &ts)
             if (!ThreadManager::isMainThread())
                 return false;
         case SharedConfig::SLEEP_ALWAYS:
-            detTimer.addDelay(ts);
+            DeterministicTimer::get().addDelay(ts);
             NATIVECALL(sched_yield());
             return true;        
     }
@@ -148,7 +148,7 @@ bool transfer_sleep(const struct timespec &ts)
     }
     else {
         /* time is absolute */
-        struct timespec curtime = detTimer.getTicks();
+        struct timespec curtime = DeterministicTimer::get().getTicks();
         sleeptime -= curtime;
     }
     
@@ -172,7 +172,7 @@ bool transfer_sleep(const struct timespec &ts)
 
     if (Global::shared_config.game_specific_timing & SharedConfig::GC_TIMING_CELESTE) {
         if (ThreadManager::isMainThread())
-            detTimer.fakeAdvanceTimer({0, 1000000});
+            DeterministicTimer::get().fakeAdvanceTimer({0, 1000000});
     }
 
     return orig::sched_yield();

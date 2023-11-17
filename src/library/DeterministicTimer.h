@@ -48,6 +48,7 @@ class DeterministicTimer
     static_assert(std::is_standard_layout<TimeHolder>::value, "TimeHolder must be standard layout");
 
 public:
+    static DeterministicTimer& get();
 
     /* Initialize the class members and elapsed time */
     void initialize(uint64_t initial_sec, uint64_t initial_nsec);
@@ -141,8 +142,6 @@ private:
     
     static const char* const gettimes_names[];
 };
-
-extern DeterministicTimer detTimer;
 
 }
 

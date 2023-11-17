@@ -27,7 +27,7 @@ namespace libtas {
 
 /* Override */ Uint32 SDL_GetTicks(void)
 {
-    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_SDLGETTICKS);
+    struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_SDLGETTICKS);
     Uint32 msec = ts.tv_sec*1000 + ts.tv_nsec/1000000;
     debuglogstdio(LCF_SDL | LCF_TIMEGET, "%s call - returning %d", __func__, msec);
 
@@ -36,7 +36,7 @@ namespace libtas {
 
 /* Override */ Uint64 SDL_GetTicks64(void)
 {
-    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_SDLGETTICKS);
+    struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_SDLGETTICKS);
     Uint64 msec = ts.tv_sec*1000ull + ts.tv_nsec/1000000ull;
     debuglogstdio(LCF_SDL | LCF_TIMEGET, "%s call - returning %llu", __func__, msec);
 
@@ -52,7 +52,7 @@ namespace libtas {
 /* Override */ Uint64 SDL_GetPerformanceCounter(void)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_TIMEGET);
-    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
+    struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
     Uint64 counter = ts.tv_nsec + ts.tv_sec * 1000000000ULL;
 
     debuglogstdio(LCF_SDL | LCF_TIMEGET, "  returning %" PRIu64, counter);

@@ -109,7 +109,7 @@ static void computeFPS(float& fps, float& lfps)
 
         /* Update current ticks */
         TimeHolder lastTick = lastTicks[compute_counter];
-        lastTicks[compute_counter] = detTimer.getTicks();
+        lastTicks[compute_counter] = DeterministicTimer::get().getTicks();
 
         uint64_t deltaFrames = framecount - lastFrame;
 
@@ -203,12 +203,12 @@ static void sendFrameCountTime()
         exit(1);
         
     sendData(&framecount, sizeof(uint64_t));
-    struct timespec ticks = detTimer.getTicks(SharedConfig::TIMETYPE_UNTRACKED_MONOTONIC);
+    struct timespec ticks = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_UNTRACKED_MONOTONIC);
     uint64_t ticks_val = ticks.tv_sec;
     sendData(&ticks_val, sizeof(uint64_t));
     ticks_val = ticks.tv_nsec;
     sendData(&ticks_val, sizeof(uint64_t));
-    ticks = detTimer.getTicks(SharedConfig::TIMETYPE_UNTRACKED_REALTIME);
+    ticks = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_UNTRACKED_REALTIME);
     ticks_val = ticks.tv_sec;
     sendData(&ticks_val, sizeof(uint64_t));
     ticks_val = ticks.tv_nsec;
@@ -252,6 +252,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     perfTimer.switchTimer(PerfTimer::FrameTimer);
 
     /* Update the deterministic timer, sleep if necessary */
+    DeterministicTimer& detTimer = DeterministicTimer::get();
     TimeHolder timeIncrement = detTimer.enterFrameBoundary();
 
     /* Mix audio, except if the game opened a loopback context */
@@ -721,7 +722,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 }
                 /* Set new realtime value */
                 if (ai.realtime_sec)
-                    detTimer.setRealTime(ai.realtime_sec, ai.realtime_nsec);
+                    DeterministicTimer::get().setRealTime(ai.realtime_sec, ai.realtime_nsec);
                 
                 break;
 
