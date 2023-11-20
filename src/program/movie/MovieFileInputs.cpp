@@ -430,6 +430,22 @@ int MovieFileInputs::getInputs(AllInputs& inputs, uint64_t pos)
     return 0;
 }
 
+const AllInputs& MovieFileInputs::getInputs()
+{
+    return getInputs(context->framecount);
+}
+
+const AllInputs& MovieFileInputs::getInputs(uint64_t pos)
+{
+    std::unique_lock<std::mutex> lock(input_list_mutex);
+
+    if (pos >= input_list.size()) {
+        pos = input_list.size();
+    }
+
+    return input_list[pos];
+}
+
 void MovieFileInputs::clearInputs(uint64_t pos)
 {
     std::unique_lock<std::mutex> lock(input_list_mutex);

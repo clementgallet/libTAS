@@ -149,8 +149,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
          * following: the cell is blank and not analog input */
         if (index.column() == hoveredIndex.column()) {
             if (!si.isAnalog()) {
-                AllInputs ai;
-                movie->inputs->getInputs(ai, row);
+                const AllInputs& ai = movie->inputs->getInputs(row);
                 int value = ai.getInput(si);
                 if (!value) {
                     if (index.row() == hoveredIndex.row())
@@ -297,8 +296,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
             return row;
         }
 
-        AllInputs ai;
-        movie->inputs->getInputs(ai, row);
+        const AllInputs& ai = movie->inputs->getInputs(row);
         const SingleInput si = movie->editor->input_set[index.column()-COLUMN_SPECIAL_SIZE];
 
         /* If hovering on the cell, show a preview of the input */
@@ -363,8 +361,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         if (movie->editor->locked_inputs.find(si) != movie->editor->locked_inputs.end())
             return QVariant();
 
-        AllInputs ai;
-        movie->inputs->getInputs(ai, row);
+        const AllInputs& ai = movie->inputs->getInputs(row);
 
         /* Get the value of the single input in movie inputs */
         int value = ai.getInput(si);
@@ -404,8 +401,7 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
         }
 
         /* Check if the data is different */
-        AllInputs ai;
-        movie->inputs->getInputs(ai, row);
+        const AllInputs& ai = movie->inputs->getInputs(row);
         if (value.toInt() == ai.getInput(si))
             return false;
 
@@ -502,8 +498,7 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
     }
 
     /* Modifying the movie is only performed by the main thread */
-    AllInputs ai;
-    movie->inputs->getInputs(ai, row);
+    const AllInputs& ai = movie->inputs->getInputs(row);
     InputEvent ie;
     ie.framecount = row;
     ie.si = si;
@@ -640,8 +635,7 @@ void InputEditorModel::copyInputs(int row, int count)
 
     /* Translate inputs into a string */
     for (int r=row; r < row+count; r++) {
-        AllInputs ai;
-        movie->inputs->getInputs(ai, r);
+        const AllInputs& ai = movie->inputs->getInputs(r);
         movie->inputs->writeFrame(inputString, ai);
     }
 
@@ -838,10 +832,11 @@ void InputEditorModel::clearUniqueInput(int column)
         return;
 
     for (unsigned int f = context->framecount; f < movie->inputs->nbFrames(); f++) {
-        AllInputs ai;
-        movie->inputs->getInputs(ai, f);
-        ai.setInput(si, 0);
-        movie->inputs->setInputs(ai, f, true);
+        InputEvent ie;
+        ie.framecount = f;
+        ie.si = si;
+        ie.value = 0;
+        movie->inputs->input_event_queue.push(ie);
     }
 }
 
@@ -851,18 +846,18 @@ bool InputEditorModel::removeUniqueInput(int column)
 
     /* Check if the input is set in past frames */
     for (unsigned int f = 0; f < context->framecount; f++) {
-        AllInputs ai;
-        movie->inputs->getInputs(ai, f);
+        const AllInputs& ai = movie->inputs->getInputs(f);
         if (ai.getInput(si))
             return false;
     }
 
     /* Clear remaining frames */
     for (unsigned int f = context->framecount; f < movie->inputs->nbFrames(); f++) {
-        AllInputs ai;
-        movie->inputs->getInputs(ai, f);
-        ai.setInput(si, 0);
-        movie->inputs->setInputs(ai, f, true);
+        InputEvent ie;
+        ie.framecount = f;
+        ie.si = si;
+        ie.value = 0;
+        movie->inputs->input_event_queue.push(ie);
     }
 
     /* Remove clear locked state */
@@ -938,8 +933,7 @@ void InputEditorModel::endAddInputs()
     endInsertRows();
 
     /* We have to check if new inputs were added */
-    AllInputs ai;
-    movie->inputs->getInputs(ai, movie->inputs->nbFrames()-1);
+    const AllInputs& ai = movie->inputs->getInputs(movie->inputs->nbFrames()-1);
 
     addUniqueInputs(ai);
 }
@@ -953,8 +947,7 @@ void InputEditorModel::endEditInputs(unsigned long long framecount)
     emit dataChanged(index(framecount,0), index(framecount,columnCount()-1));
 
     /* We have to check if new inputs were added */
-    AllInputs ai;
-    movie->inputs->getInputs(ai, framecount);
+    const AllInputs& ai = movie->inputs->getInputs(framecount);
     addUniqueInputs(ai);
 }
 

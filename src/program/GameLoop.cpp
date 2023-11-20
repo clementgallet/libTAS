@@ -111,7 +111,6 @@ void GameLoop::start()
 
         AllInputs ai;
         processInputs(ai);
-        prev_ai = ai;
 
         /* Set the status to restart */
         if (ai.flags & (1 << SingleInput::FLAG_RESTART)) {

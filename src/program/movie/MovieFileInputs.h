@@ -92,9 +92,11 @@ public:
 
     /* Load inputs from a certain frame */
     int getInputs(AllInputs& inputs, uint64_t pos);
+    const AllInputs& getInputs(uint64_t pos);
 
     /* Load inputs from the current frame */
     int getInputs(AllInputs& inputs);
+    const AllInputs& getInputs();
 
     /* Clear a single frame of inputs */
     void clearInputs(uint64_t pos);

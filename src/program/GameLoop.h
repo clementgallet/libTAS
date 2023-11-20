@@ -50,9 +50,6 @@ private:
     /* Last saved/loaded savestate */
     int current_savestate;
 
-    /* Inputs from the previous frame */
-    AllInputs prev_ai;
-
     /* Current encoding segment. Sent when game is restarted */
     int encoding_segment = 0;
 

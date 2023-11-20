@@ -212,9 +212,7 @@ void MovieFile::copyTo(MovieFile& movie) const
 
 void MovieFile::setLockedInputs(AllInputs& inp)
 {
-    AllInputs movie_inputs;
-    inputs->getInputs(movie_inputs);
-    
+    const AllInputs& movie_inputs = inputs->getInputs();
     editor->setLockedInputs(inp, movie_inputs);
 }
 
