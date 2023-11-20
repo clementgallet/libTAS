@@ -83,16 +83,16 @@ int SaveStateList::save(int id, Context* context, MovieFile& movie)
     return message;
 }
 
-int SaveStateList::load(int id, Context* context, MovieFile& movie, bool branch)
+int SaveStateList::load(int id, Context* context, MovieFile& movie, bool branch, bool inputEditor)
 {
     SaveState& ss = get(id);
-    return ss.load(context, movie, branch);
+    return ss.load(context, movie, branch, inputEditor);
 }
 
-int SaveStateList::postLoad(int id, Context* context, MovieFile& movie, bool branch)
+int SaveStateList::postLoad(int id, Context* context, MovieFile& movie, bool branch, bool inputEditor)
 {
     SaveState& ss = get(id);
-    int message = ss.postLoad(context, movie, branch);
+    int message = ss.postLoad(context, movie, branch, inputEditor);
     
     if (message == MSGB_LOADING_SUCCEEDED) {
         /* Update root savestate */

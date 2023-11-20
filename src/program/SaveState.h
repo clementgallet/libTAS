@@ -76,10 +76,10 @@ public:
     int save(Context* context, const MovieFile& movie);
 
     /* Load state. Return 0 or error (<0) */
-    int load(Context* context, const MovieFile& movie, bool branch);
+    int load(Context* context, const MovieFile& movie, bool branch, bool inputEditor);
 
     /* Process after state loading. Return message or error */
-    int postLoad(Context* context, MovieFile& movie, bool branch);
+    int postLoad(Context* context, MovieFile& movie, bool branch, bool inputEditor);
 
     /* Save movie on disk when exiting */
     void backupMovie();

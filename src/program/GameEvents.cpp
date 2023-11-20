@@ -179,11 +179,15 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
             /* Loading branch? */
             bool load_branch = (hk.type >= HOTKEY_LOADBRANCH1) && (hk.type <= HOTKEY_LOADBRANCH_BACKTRACK);
 
+            /* Check if input editor is visible */
+            bool inputEditor = false;
+            emit isInputEditorVisible(inputEditor);
+
             /* Slot number */
             int statei = hk.type - (load_branch?HOTKEY_LOADBRANCH1:HOTKEY_LOADSTATE1) + 1;
 
             /* Perform state loading */
-            int error = SaveStateList::load(statei, context, *movie, load_branch);
+            int error = SaveStateList::load(statei, context, *movie, load_branch, inputEditor);
 
             /* Handle errors */
             if (error == SaveState::EINVALID) {
@@ -248,7 +252,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
             emit inputsToBeChanged();
 
             /* Processing after state loading */
-            int message = SaveStateList::postLoad(statei, context, *movie, load_branch);
+            int message = SaveStateList::postLoad(statei, context, *movie, load_branch, inputEditor);
 
             /* Handle errors and return values */
             if (message == SaveState::ENOLOAD) {

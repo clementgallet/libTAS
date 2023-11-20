@@ -40,10 +40,10 @@ namespace SaveStateList {
     int save(int id, Context* context, MovieFile& movie);
 
     /* Load state from its id */
-    int load(int id, Context* context, MovieFile& movie, bool branch);
+    int load(int id, Context* context, MovieFile& movie, bool branch, bool inputEditor);
 
     /* Process after loading state from its id and handle parent */
-    int postLoad(int id, Context* context, MovieFile& movie, bool branch);
+    int postLoad(int id, Context* context, MovieFile& movie, bool branch, bool inputEditor);
 
     /* Invalidate all savestates. Used when threads have changed */
     void invalidate();

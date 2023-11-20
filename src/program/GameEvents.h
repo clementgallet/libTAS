@@ -90,6 +90,7 @@ signals:
 
     void controllerButtonToggled(int controller_id, int button, bool pressed);
 
+    void isInputEditorVisible(bool &isVisible);
     /* Signals for notifying the input editor */
     void inputsToBeChanged();
     void inputsChanged();

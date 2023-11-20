@@ -9,6 +9,9 @@
 * Set corresponding radio button when changing a screen resolution value
 
 ### Changed
+
+* When input editor is opened, always load savestates in playback mode
+
 ### Fixed
 
 * Disable backtrack savestate when encoding
