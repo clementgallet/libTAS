@@ -20,13 +20,15 @@
 #ifndef LIBTAS_MOVIEFILEEDITOR_H_INCLUDED
 #define LIBTAS_MOVIEFILEEDITOR_H_INCLUDED
 
-#include "Context.h"
-#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/SingleInput.h"
 
 #include <vector>
 #include <set>
 #include <map>
 #include <stdint.h>
+
+class AllInputs;
+struct Context;
 
 class MovieFileEditor {
 public:

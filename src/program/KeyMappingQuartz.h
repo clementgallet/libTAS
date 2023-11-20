@@ -21,10 +21,11 @@
 #define LIBTAS_KEYMAPPING_QUARTZ_H_INCLUDED
 
 #include "KeyMapping.h"
-#include "../shared/inputs/AllInputs.h"
-#include "../shared/SharedConfig.h"
 
 #include <string>
+
+struct SharedConfig;
+class AllInputs;
 
 class KeyMappingQuartz : public KeyMapping {
     public:

@@ -19,6 +19,9 @@
 
 #include "MovieFile.h"
 
+#include "../shared/inputs/AllInputs.h"
+#include "Context.h"
+
 #include <sstream>
 #include <iostream>
 #include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT

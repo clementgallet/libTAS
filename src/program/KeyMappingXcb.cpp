@@ -19,6 +19,8 @@
 
 #include "KeyMappingXcb.h"
 #include "../shared/inputs/SingleInput.h"
+#include "../shared/inputs/AllInputs.h"
+#include "../shared/SharedConfig.h"
 #include "../external/keysymdesc.h"
 #include "../external/keysymdef.h"
 

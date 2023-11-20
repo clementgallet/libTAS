@@ -20,7 +20,6 @@
 #ifndef LIBTAS_MOVIEFILEINPUTS_H_INCLUDED
 #define LIBTAS_MOVIEFILEINPUTS_H_INCLUDED
 
-#include "Context.h"
 #include "ConcurrentQueue.h"
 #include "../shared/inputs/AllInputs.h"
 
@@ -31,6 +30,8 @@
 #include <set>
 #include <mutex>
 #include <stdint.h>
+
+struct Context;
 
 /* Struct to push movie changes from the UI to the main thread. UI thread should
  * never modify the movie */

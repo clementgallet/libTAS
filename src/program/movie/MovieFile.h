@@ -25,11 +25,11 @@
 #include "MovieFileHeader.h"
 #include "MovieFileInputs.h"
 
-#include "../shared/inputs/AllInputs.h"
-#include "Context.h"
-
 #include <string>
 #include <stdint.h>
+
+class AllInputs;
+struct Context;
 
 class MovieFile {
 public:

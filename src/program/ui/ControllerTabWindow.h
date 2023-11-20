@@ -20,7 +20,6 @@
 #ifndef LIBTAS_CONTROLLERTABWINDOW_H_INCLUDED
 #define LIBTAS_CONTROLLERTABWINDOW_H_INCLUDED
 
-#include "../shared/inputs/ControllerInputs.h"
 #include "../shared/inputs/AllInputs.h"
 
 #include <QtWidgets/QDialog>
@@ -31,6 +30,7 @@
 /* Forward declaration */
 struct Context;
 class ControllerWidget;
+class ControllerInputs;
 
 class ControllerTabWindow : public QDialog {
     Q_OBJECT

@@ -21,12 +21,13 @@
 #define LIBTAS_KEYMAPPING_XCB_H_INCLUDED
 
 #include "KeyMapping.h"
-#include "../shared/inputs/AllInputs.h"
-#include "../shared/SharedConfig.h"
 
 #include <string>
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>
+
+struct SharedConfig;
+class AllInputs;
 
 class KeyMappingXcb : public KeyMapping {
     public:

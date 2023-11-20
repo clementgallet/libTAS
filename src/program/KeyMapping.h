@@ -21,8 +21,6 @@
 #define LIBTAS_KEYMAPPING_H_INCLUDED
 
 #include "../shared/inputs/SingleInput.h"
-#include "../shared/inputs/AllInputs.h"
-#include "../shared/SharedConfig.h"
 
 #include <QtCore/QDataStream>
 #include <map>
@@ -30,6 +28,8 @@
 #include <array>
 #include <string>
 
+struct SharedConfig;
+class AllInputs;
 Q_DECLARE_METATYPE(SingleInput)
 
 /* Save the content of the struct into the stream */

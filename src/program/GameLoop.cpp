@@ -43,6 +43,8 @@
 #include "../shared/sockethelpers.h"
 #include "../shared/SharedConfig.h"
 #include "../shared/messages.h"
+#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/ControllerInputs.h"
 
 #include <string>
 #include <iostream>

@@ -20,6 +20,7 @@
 #include "MovieFileInputs.h"
 
 #include "utils.h"
+#include "Context.h"
 #include "../shared/version.h"
 
 #include <QtCore/QSettings>

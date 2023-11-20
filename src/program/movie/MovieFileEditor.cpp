@@ -19,6 +19,9 @@
 
 #include "MovieFileEditor.h"
 
+#include "Context.h"
+#include "../shared/inputs/AllInputs.h"
+
 #include <QtCore/QSettings>
 #include <QtCore/QString>
 #include <string>

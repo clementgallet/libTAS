@@ -23,13 +23,13 @@
 #include <QtCore/QObject>
 
 #include "movie/MovieFile.h"
-#include "../shared/inputs/AllInputs.h"
-#include "../shared/inputs/ControllerInputs.h"
 #include "../shared/GameInfo.h"
 
 /* Forward declaration */
 class GameEvents;
 struct Context;
+class AllInputs;
+class ControllerInputs;
 
 class GameLoop : public QObject {
     Q_OBJECT

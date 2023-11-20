@@ -20,7 +20,7 @@
 #ifndef LIBTAS_CONCURRENTQUEUE_H_INCLUDED
 #define LIBTAS_CONCURRENTQUEUE_H_INCLUDED
 
-#include <queue>
+#include <list>
 #include <mutex>
 
 /* Thread-safe queue, will be used for a single producer/single consumer model

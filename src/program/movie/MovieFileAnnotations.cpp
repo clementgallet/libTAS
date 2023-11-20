@@ -19,6 +19,8 @@
 
 #include "MovieFileAnnotations.h"
 
+#include "Context.h"
+
 #include <fstream>
 
 MovieFileAnnotations::MovieFileAnnotations(Context* c) : context(c) {}

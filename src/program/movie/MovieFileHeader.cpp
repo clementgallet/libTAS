@@ -19,6 +19,7 @@
 
 #include "MovieFileHeader.h"
 
+#include "Context.h"
 #include "../shared/version.h"
 
 #include <QtCore/QSettings>

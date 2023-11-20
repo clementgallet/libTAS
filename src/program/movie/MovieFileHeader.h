@@ -20,10 +20,10 @@
 #ifndef LIBTAS_MOVIEFILEHEADER_H_INCLUDED
 #define LIBTAS_MOVIEFILEHEADER_H_INCLUDED
 
-#include "Context.h"
-
 #include <string>
 #include <stdint.h>
+
+struct Context;
 
 class MovieFileHeader {
 public:

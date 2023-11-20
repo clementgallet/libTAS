@@ -24,6 +24,8 @@
 #include "movie/MovieFile.h"
 #include "SaveStateList.h"
 #include "SaveState.h"
+#include "../shared/inputs/SingleInput.h"
+#include "../shared/inputs/AllInputs.h"
 
 #include <QtGui/QBrush>
 #include <QtGui/QClipboard>

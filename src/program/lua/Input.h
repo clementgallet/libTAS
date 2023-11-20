@@ -20,11 +20,11 @@
 #ifndef LIBTAS_LUAINPUT_H_INCLUDED
 #define LIBTAS_LUAINPUT_H_INCLUDED
 
-#include "../shared/inputs/AllInputs.h"
-
 extern "C" {
 #include <lua.h>
 }
+
+class AllInputs;
 
 namespace Lua {
 

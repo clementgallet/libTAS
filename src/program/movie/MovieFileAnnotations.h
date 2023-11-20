@@ -20,9 +20,9 @@
 #ifndef LIBTAS_MOVIEFILEANNOTATIONS_H_INCLUDED
 #define LIBTAS_MOVIEFILEANNOTATIONS_H_INCLUDED
 
-#include "Context.h"
-
 #include <string>
+
+struct Context;
 
 class MovieFileAnnotations {
 public:

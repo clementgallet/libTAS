@@ -20,6 +20,8 @@
 #include "KeyMappingQuartz.h"
 #include "ramsearch/MemAccess.h"
 #include "../shared/inputs/SingleInput.h"
+#include "../shared/inputs/AllInputs.h"
+#include "../shared/SharedConfig.h"
 #include "../external/keysymdef.h"
 #include "../external/QuartzKeycodes.h"
 #include "../external/keysymdesc.h"
