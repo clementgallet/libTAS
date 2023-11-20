@@ -24,7 +24,7 @@
 #include "logging.h"
 #include "xlib/xwindows.h" // x11::gameXWindows
 #include "GlobalState.h"
-#include "../shared/AllInputs.h"
+#include "../shared/inputs/AllInputs.h"
 
 #include <cstring> // memset
 

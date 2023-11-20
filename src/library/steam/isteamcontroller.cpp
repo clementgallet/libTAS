@@ -111,38 +111,40 @@ ControllerDigitalActionData_t ISteamController::GetDigitalActionData( Controller
     if (controllerHandle - 1 >= ControllerHandle_t(Global::shared_config.nb_controllers) ||
         digitalActionHandle - 1 >= digitalActions.size())
         return data;
+    if (!ai.controllers[controllerHandle - 1])
+        return data;
     std::string digitalAction(digitalActions[digitalActionHandle - 1]);
     auto split = digitalAction.find('_');
     if (split != std::string::npos)
         digitalAction.resize(split);
     if (digitalAction == "a")
-        data.bState = ai.controller_buttons[controllerHandle - 1] >> SingleInput::BUTTON_A & 1;
+        data.bState = ai.controllers[controllerHandle - 1]->buttons >> SingleInput::BUTTON_A & 1;
     else if (digitalAction == "b")
-        data.bState = ai.controller_buttons[controllerHandle - 1] >> SingleInput::BUTTON_B & 1;
+        data.bState = ai.controllers[controllerHandle - 1]->buttons >> SingleInput::BUTTON_B & 1;
     else if (digitalAction == "x")
-        data.bState = ai.controller_buttons[controllerHandle - 1] >> SingleInput::BUTTON_X & 1;
+        data.bState = ai.controllers[controllerHandle - 1]->buttons >> SingleInput::BUTTON_X & 1;
     else if (digitalAction == "y")
-        data.bState = ai.controller_buttons[controllerHandle - 1] >> SingleInput::BUTTON_Y & 1;
+        data.bState = ai.controllers[controllerHandle - 1]->buttons >> SingleInput::BUTTON_Y & 1;
     else if (digitalAction == "back")
-        data.bState = ai.controller_buttons[controllerHandle - 1] >> SingleInput::BUTTON_BACK & 1;
+        data.bState = ai.controllers[controllerHandle - 1]->buttons >> SingleInput::BUTTON_BACK & 1;
     else if (digitalAction == "start")
-        data.bState = ai.controller_buttons[controllerHandle - 1] >> SingleInput::BUTTON_START & 1;
+        data.bState = ai.controllers[controllerHandle - 1]->buttons >> SingleInput::BUTTON_START & 1;
     else if (digitalAction == "lshl")
-        data.bState = ai.controller_buttons[controllerHandle - 1] >> SingleInput::BUTTON_LEFTSHOULDER & 1;
+        data.bState = ai.controllers[controllerHandle - 1]->buttons >> SingleInput::BUTTON_LEFTSHOULDER & 1;
     else if (digitalAction == "rshl")
-        data.bState = ai.controller_buttons[controllerHandle - 1] >> SingleInput::BUTTON_RIGHTSHOULDER & 1;
+        data.bState = ai.controllers[controllerHandle - 1]->buttons >> SingleInput::BUTTON_RIGHTSHOULDER & 1;
     else if (digitalAction == "dpup")
-        data.bState = ai.controller_buttons[controllerHandle - 1] >> SingleInput::BUTTON_DPAD_UP & 1;
+        data.bState = ai.controllers[controllerHandle - 1]->buttons >> SingleInput::BUTTON_DPAD_UP & 1;
     else if (digitalAction == "dpdn")
-        data.bState = ai.controller_buttons[controllerHandle - 1] >> SingleInput::BUTTON_DPAD_DOWN & 1;
+        data.bState = ai.controllers[controllerHandle - 1]->buttons >> SingleInput::BUTTON_DPAD_DOWN & 1;
     else if (digitalAction == "dplt")
-        data.bState = ai.controller_buttons[controllerHandle - 1] >> SingleInput::BUTTON_DPAD_LEFT & 1;
+        data.bState = ai.controllers[controllerHandle - 1]->buttons >> SingleInput::BUTTON_DPAD_LEFT & 1;
     else if (digitalAction == "dprt")
-        data.bState = ai.controller_buttons[controllerHandle - 1] >> SingleInput::BUTTON_DPAD_RIGHT & 1;
+        data.bState = ai.controllers[controllerHandle - 1]->buttons >> SingleInput::BUTTON_DPAD_RIGHT & 1;
     else if (digitalAction == "ltrg")
-        data.bState = ai.controller_axes[controllerHandle - 1][SingleInput::AXIS_TRIGGERLEFT] > 0;
+        data.bState = ai.controllers[controllerHandle - 1]->axes[SingleInput::AXIS_TRIGGERLEFT] > 0;
     else if (digitalAction == "rtrg")
-        data.bState = ai.controller_axes[controllerHandle - 1][SingleInput::AXIS_TRIGGERRIGHT] > 0;
+        data.bState = ai.controllers[controllerHandle - 1]->axes[SingleInput::AXIS_TRIGGERRIGHT] > 0;
     else
         return data;
     data.bActive = true;
@@ -210,17 +212,19 @@ ControllerAnalogActionData_t ISteamController::GetAnalogActionData( ControllerHa
     if (controllerHandle - 1 >= ControllerHandle_t(Global::shared_config.nb_controllers) ||
         analogActionHandle - 1 >= analogActions.size())
         return data;
+    if (!ai.controllers[controllerHandle - 1])
+        return data;
     std::string analogAction(analogActions[analogActionHandle - 1]);
     auto split = analogAction.find('_');
     if (split != std::string::npos)
         analogAction.resize(split);
     if (analogAction == "analogl") {
-        data.x = (ai.controller_axes[controllerHandle - 1][SingleInput::AXIS_LEFTX] + 0.5f) * (2/65535.0f);
-        data.y = (ai.controller_axes[controllerHandle - 1][SingleInput::AXIS_LEFTY] + 0.5f) * (2/65535.0f);
+        data.x = (ai.controllers[controllerHandle - 1]->axes[SingleInput::AXIS_LEFTX] + 0.5f) * (2/65535.0f);
+        data.y = (ai.controllers[controllerHandle - 1]->axes[SingleInput::AXIS_LEFTY] + 0.5f) * (2/65535.0f);
     }
     else if (analogAction == "analogr") {
-        data.x = (ai.controller_axes[controllerHandle - 1][SingleInput::AXIS_RIGHTX] + 0.5f) * (2/65535.0f);
-        data.y = (ai.controller_axes[controllerHandle - 1][SingleInput::AXIS_RIGHTX] + 0.5f) * (2/65535.0f);
+        data.x = (ai.controllers[controllerHandle - 1]->axes[SingleInput::AXIS_RIGHTX] + 0.5f) * (2/65535.0f);
+        data.y = (ai.controllers[controllerHandle - 1]->axes[SingleInput::AXIS_RIGHTX] + 0.5f) * (2/65535.0f);
     }
     else
         return data;

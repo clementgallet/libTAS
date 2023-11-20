@@ -25,6 +25,7 @@
 #include <QtCore/QSettings>
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 
 MovieFileInputs::MovieFileInputs(Context* c) : context(c)
 {
@@ -60,7 +61,7 @@ void MovieFileInputs::load()
         if (!line.empty() && (line[0] == '|')) {
             AllInputs ai;
             readFrame(line, ai);
-            input_list.push_back(ai);
+            input_list.push_back(std::move(ai));
         }
     }
 
@@ -110,28 +111,29 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
     for (int joy=0; joy<context->config.sc.nb_controllers; joy++) {
         if (inputs.isDefaultController(joy))
             continue;
+        /* Previous test ensures that there is an allocated ControllerInputs object */
         input_stream.put('|');
         input_stream.put('C');
         input_stream.put('1'+joy);
         input_stream << std::dec;
-        for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
-            input_stream << inputs.controller_axes[joy][axis] << ':';
+        for (int axis=0; axis<ControllerInputs::MAXAXES; axis++) {
+            input_stream << inputs.controllers[joy]->axes[axis] << ':';
         }
-        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_A))?'A':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_B))?'B':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_X))?'X':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_Y))?'Y':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_BACK))?'b':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_GUIDE))?'g':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_START))?'s':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_LEFTSTICK))?'(':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_RIGHTSTICK))?')':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_LEFTSHOULDER))?'[':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_RIGHTSHOULDER))?']':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_DPAD_UP))?'u':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_DPAD_DOWN))?'d':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_DPAD_LEFT))?'l':'.');
-        input_stream.put((inputs.controller_buttons[joy]&(1<<SingleInput::BUTTON_DPAD_RIGHT))?'r':'.');
+        input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_A))?'A':'.');
+        input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_B))?'B':'.');
+        input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_X))?'X':'.');
+        input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_Y))?'Y':'.');
+        input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_BACK))?'b':'.');
+        input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_GUIDE))?'g':'.');
+        input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_START))?'s':'.');
+        input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_LEFTSTICK))?'(':'.');
+        input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_RIGHTSTICK))?')':'.');
+        input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_LEFTSHOULDER))?'[':'.');
+        input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_RIGHTSHOULDER))?']':'.');
+        input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_DPAD_UP))?'u':'.');
+        input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_DPAD_DOWN))?'d':'.');
+        input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_DPAD_LEFT))?'l':'.');
+        input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_DPAD_RIGHT))?'r':'.');
     }
 
     /* Write flag inputs */
@@ -305,12 +307,14 @@ void MovieFileInputs::readControllerFrame(std::istringstream& input_string, AllI
 {
     char d;
     input_string >> std::dec;
-    for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
-        input_string >> inputs.controller_axes[joy][axis] >> d;
+    if (!inputs.controllers[joy])
+        inputs.controllers[joy].reset(new ControllerInputs());
+    for (int axis=0; axis<ControllerInputs::MAXAXES; axis++) {
+        input_string >> inputs.controllers[joy]->axes[axis] >> d;
     }
     for (int b=0; b<15; b++) {
         input_string >> d;
-        if (d != '.') inputs.controller_buttons[joy] |= (1 << b);
+        if (d != '.') inputs.controllers[joy]->buttons |= (1 << b);
     }
     input_string >> d;
 }
@@ -470,7 +474,8 @@ void MovieFileInputs::extractInputs(std::set<SingleInput> &set)
 
 void MovieFileInputs::copyTo(MovieFileInputs* movie_inputs) const
 {
-    movie_inputs->input_list = input_list;
+    movie_inputs->input_list.resize(input_list.size());
+    std::copy(input_list.begin(), input_list.end(), movie_inputs->input_list.begin());
 }
 
 // void MovieFileInputs::truncateInputs(uint64_t size)
@@ -510,14 +515,15 @@ uint64_t MovieFileInputs::processEvent()
         /* Check for setting inputs before current framecount */
         if (ie.framecount < context->framecount)
             continue;
-            
-        AllInputs ai;
-        int ret = getInputs(ai, ie.framecount);
-        if (ret >= 0) {
-            ai.setInput(ie.si, ie.value);
-            setInputs(ai, ie.framecount, true);
-            return ie.framecount;
-        }
+        
+        std::unique_lock<std::mutex> lock(input_list_mutex);
+
+        if (ie.framecount >= input_list.size())
+            continue;
+
+        AllInputs& ai = input_list[ie.framecount];        
+        ai.setInput(ie.si, ie.value);
+        return ie.framecount;
     }
     return UINT64_MAX;
 }

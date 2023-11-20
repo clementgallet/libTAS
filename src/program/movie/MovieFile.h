@@ -25,7 +25,7 @@
 #include "MovieFileHeader.h"
 #include "MovieFileInputs.h"
 
-#include "../shared/AllInputs.h"
+#include "../shared/inputs/AllInputs.h"
 #include "Context.h"
 
 #include <string>

@@ -51,7 +51,7 @@
 #include "xlib/xwindows.h" // x11::gameXWindows
 #endif
 #include "../shared/sockethelpers.h"
-#include "../shared/AllInputs.h"
+#include "../shared/inputs/AllInputs.h"
 #include "../shared/messages.h"
 
 #include <iomanip>
@@ -613,7 +613,7 @@ static void pushQuitEvent(void)
 }
 
 
-static void screen_redraw(std::function<void()> draw, RenderHUD& hud, AllInputs preview_ai)
+static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllInputs& preview_ai)
 {
     if (!Global::skipping_draw && draw) {
         ScreenCapture::copySurfaceToScreen();
@@ -714,7 +714,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 }
 
             case MSGN_ALL_INPUTS:
-                receiveData(&ai, sizeof(AllInputs));
+                ai.recv();
                 /* Update framerate if necessary (do we actually need to?) */
                 if (Global::shared_config.variable_framerate) {
                     Global::shared_config.framerate_num = ai.framerate_num;
@@ -731,7 +731,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 break;
 
             case MSGN_PREVIEW_INPUTS:
-                receiveData(&preview_ai, sizeof(AllInputs));
+                preview_ai.recv();
                 screen_redraw(draw, hud, preview_ai);
                 break;
 

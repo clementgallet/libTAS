@@ -21,7 +21,7 @@
 #define LIBTAS_KEYBOARDHELPER_H_INCLUDED
 
 #include "../external/SDL1.h"
-#include "../shared/AllInputs.h"
+#include "../shared/inputs/AllInputs.h"
 
 #include <SDL2/SDL.h>
 

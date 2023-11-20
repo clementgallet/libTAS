@@ -21,7 +21,7 @@
 #define LIBTAS_MOVIEFILEEDITOR_H_INCLUDED
 
 #include "Context.h"
-#include "../shared/AllInputs.h"
+#include "../shared/inputs/AllInputs.h"
 
 #include <vector>
 #include <set>

@@ -20,7 +20,7 @@
 #ifndef LIBTAS_LUAMAIN_H_INCLUDED
 #define LIBTAS_LUAMAIN_H_INCLUDED
 
-#include "../shared/AllInputs.h"
+#include "../shared/inputs/AllInputs.h"
 #include "Context.h"
 
 #include <string>

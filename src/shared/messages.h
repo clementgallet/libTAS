@@ -47,6 +47,18 @@ enum {
     MSGN_ALL_INPUTS,
 
     /*
+     * Send a controller id and inputs
+     * Argument: int, ControllerInputs
+     */
+    MSGN_CONTROLLER_INPUTS,
+
+    /*
+     * Notify the end of input sending
+     * Argument: non
+     */
+    MSGN_END_INPUTS,
+
+    /*
      * Send all inputs to the game during a frame boundary, so that it can
      * display the inputs in the HUD
      * Argument: AllInputs

@@ -20,7 +20,8 @@
 #ifndef LIBTAS_CONTROLLERTABWINDOW_H_INCLUDED
 #define LIBTAS_CONTROLLERTABWINDOW_H_INCLUDED
 
-#include "../shared/AllInputs.h"
+#include "../shared/inputs/ControllerInputs.h"
+#include "../shared/inputs/AllInputs.h"
 
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QCheckBox>
@@ -46,8 +47,8 @@ protected:
 
 public slots:
     void slotButtonToggle(int id, int button, bool pressed);
-    void slotSetInputs(AllInputs &ai);
-    void slotGetInputs(const AllInputs &ai);
+    void slotSetInputs(ControllerInputs &ci, int controller_id);
+    void slotGetInputs(const ControllerInputs &ci, int controller_id);
 
 };
 

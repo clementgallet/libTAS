@@ -27,7 +27,7 @@
 #include "SurfaceARGB.h"
 
 #include "TimeHolder.h"
-#include "../shared/AllInputs.h"
+#include "../shared/inputs/AllInputs.h"
 
 #include <memory>
 #include <list>

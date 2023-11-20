@@ -22,7 +22,7 @@
 
 #include "Context.h"
 #include "ConcurrentQueue.h"
-#include "../shared/AllInputs.h"
+#include "../shared/inputs/AllInputs.h"
 
 #include <fstream>
 #include <string>

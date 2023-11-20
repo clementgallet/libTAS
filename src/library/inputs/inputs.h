@@ -22,7 +22,7 @@
 
 /* TODO: I don't know where to put these, so in a separate file for now */
 
-#include "../shared/AllInputs.h"
+#include "../shared/inputs/AllInputs.h"
 
 namespace libtas {
 

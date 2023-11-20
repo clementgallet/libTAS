@@ -120,8 +120,9 @@ libTAS_SOURCES = \
     ramsearch/MemScanner.cpp \
     ramsearch/MemScannerThread.cpp \
     ramsearch/MemSection.cpp \
-    ../shared/AllInputs.cpp \
-    ../shared/SingleInput.cpp \
+    ../shared/inputs/AllInputs.cpp \
+    ../shared/inputs/ControllerInputs.cpp \
+    ../shared/inputs/SingleInput.cpp \
     ../shared/sockethelpers.cpp \
     $(libTAS_MOCSOURCES)
 

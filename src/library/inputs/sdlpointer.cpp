@@ -27,7 +27,7 @@
 #include "sdl/sdlwindows.h" // sdl::gameSDLWindow
 #include "global.h"
 #include "GlobalState.h"
-#include "../shared/AllInputs.h"
+#include "../shared/inputs/AllInputs.h"
 
 namespace libtas {
 

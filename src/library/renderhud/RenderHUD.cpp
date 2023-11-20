@@ -207,13 +207,16 @@ void RenderHUD::drawInputs(const AllInputs& ai, Color fg_color)
 
     /* Joystick */
     for (int i=0; i<Global::shared_config.nb_controllers; i++) {
-        for (int j=0; j<AllInputs::MAXAXES; j++) {
-            if (ai.controller_axes[i][j] != 0)
-                oss << "[J" << i << " a" << j << ":" << ai.controller_axes[i][j] << "] ";
+        if (!ai.controllers[i])
+            continue;
+
+        for (int j=0; j<ControllerInputs::MAXAXES; j++) {
+            if (ai.controllers[i]->axes[j] != 0)
+                oss << "[J" << i << " a" << j << ":" << ai.controllers[i]->axes[j] << "] ";
         }
 
         for (int j=0; j<16; j++) {
-            if (ai.controller_buttons[i] & (1 << j))
+            if (ai.controllers[i]->buttons & (1 << j))
                 oss << "[J" << i << " b" << j << "] ";
         }
     }

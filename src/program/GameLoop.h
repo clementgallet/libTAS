@@ -23,6 +23,8 @@
 #include <QtCore/QObject>
 
 #include "movie/MovieFile.h"
+#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/ControllerInputs.h"
 #include "../shared/GameInfo.h"
 
 /* Forward declaration */
@@ -80,8 +82,8 @@ signals:
     void askToShow(QString str, void* promise);
     void updateFramerate();
 
-    void showControllerInputs(const AllInputs &allinputs);
-    void fillControllerInputs(AllInputs &allinputs);
+    void showControllerInputs(const ControllerInputs &ci, int controller_id);
+    void fillControllerInputs(ControllerInputs &ci, int controller_id);
     void gameInfoChanged(GameInfo game_info);
 
     /* Signals for notifying the input editor */

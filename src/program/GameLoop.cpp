@@ -615,12 +615,15 @@ void GameLoop::sleepSendPreview()
     }
 
     /* Fill controller inputs from the controller input window. */
-    emit fillControllerInputs(preview_ai);
+    for (int j = 0; j < AllInputs::MAXJOYS; j++) {
+        if (preview_ai.controllers[j]) {
+            emit fillControllerInputs(*preview_ai.controllers[j], j);            
+        }
+    }
 
     /* Send inputs if changed */
     if (!(preview_ai == last_preview_ai)) {
-        sendMessage(MSGN_PREVIEW_INPUTS);
-        sendData(&preview_ai, sizeof(AllInputs));
+        preview_ai.send(true);
         last_preview_ai = preview_ai;
     }
 }
@@ -652,7 +655,11 @@ void GameLoop::processInputs(AllInputs &ai)
             }
             
             /* Fill controller inputs from the controller input window. */
-            emit fillControllerInputs(ai);
+            for (int j = 0; j < AllInputs::MAXJOYS; j++) {
+                if (ai.controllers[j]) {
+                    emit fillControllerInputs(*ai.controllers[j], j);            
+                }
+            }
 
             /* Add framerate if necessary */
             if (context->config.sc.variable_framerate) {
@@ -772,7 +779,11 @@ void GameLoop::processInputs(AllInputs &ai)
             Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackInput);
 
             /* Update controller inputs if controller window is shown */
-            emit showControllerInputs(ai);
+            for (int j = 0; j < AllInputs::MAXJOYS; j++) {
+                if (ai.controllers[j]) {
+                    emit showControllerInputs(*ai.controllers[j], j);            
+                }
+            }
 
             AutoSave::update(context, movie);
             break;
@@ -811,8 +822,7 @@ void GameLoop::endFrameMessages(AllInputs &ai)
     }
 
     /* Send inputs and end of frame */
-    sendMessage(MSGN_ALL_INPUTS);
-    sendData(&ai, sizeof(AllInputs));
+    ai.send(false);
 
     if ((context->status == Context::QUITTING) || (context->status == Context::RESTARTING)) {
         sendMessage(MSGN_USERQUIT);

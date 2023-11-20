@@ -37,8 +37,8 @@
 #endif
 
 #include "logging.h"
-#include "../shared/AllInputs.h"
-#include "../shared/SingleInput.h"
+#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/SingleInput.h"
 #include "../shared/SharedConfig.h"
 #include "DeterministicTimer.h"
 #include "sdl/SDLEventQueue.h"
@@ -450,6 +450,8 @@ static void generateControllerEvents(void)
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (int ji=0; ji<Global::shared_config.nb_controllers; ji++) {
+        if (!game_ai.controllers[ji])
+            continue;
 
         /* Check if we need to generate any joystick events for that
          * particular joystick. If not, we {continue;} here because
@@ -478,9 +480,9 @@ static void generateControllerEvents(void)
                 continue;
         }
 
-        for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
+        for (int axis=0; axis<ControllerInputs::MAXAXES; axis++) {
             /* Check for axes change */
-            if (game_ai.controller_axes[ji][axis] != old_game_ai.controller_axes[ji][axis]) {
+            if (game_ai.controllers[ji]->axes[axis] != old_game_ai.controllers[ji]->axes[axis]) {
                 /* We got a change in a controller axis value */
 
                 if (Global::game_info.joystick & GameInfo::SDL2) {
@@ -490,7 +492,7 @@ static void generateControllerEvents(void)
                         event2.caxis.timestamp = timestamp;
                         event2.caxis.which = ji;
                         event2.caxis.axis = SingleInput::toSDL2Axis(axis);
-                        event2.caxis.value = game_ai.controller_axes[ji][axis];
+                        event2.caxis.value = game_ai.controllers[ji]->axes[axis];
                         sdlEventQueue.insert(&event2);
                         debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERAXISMOTION with axis %d", axis);
                     }
@@ -500,7 +502,7 @@ static void generateControllerEvents(void)
                         event2.jaxis.timestamp = timestamp;
                         event2.jaxis.which = ji;
                         event2.jaxis.axis = axis;
-                        event2.jaxis.value = game_ai.controller_axes[ji][axis];
+                        event2.jaxis.value = game_ai.controllers[ji]->axes[axis];
                         sdlEventQueue.insert(&event2);
                         debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYAXISMOTION with axis %d", axis);
                     }
@@ -511,7 +513,7 @@ static void generateControllerEvents(void)
                     event1.type = SDL1::SDL_JOYAXISMOTION;
                     event1.jaxis.which = ji;
                     event1.jaxis.axis = axis;
-                    event1.jaxis.value = game_ai.controller_axes[ji][axis];
+                    event1.jaxis.value = game_ai.controllers[ji]->axes[axis];
                     sdlEventQueue.insert(&event1);
                     debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYAXISMOTION with axis %d", axis);
                 }
@@ -522,7 +524,7 @@ static void generateControllerEvents(void)
                     ev.time = timestamp;
                     ev.type = JS_EVENT_AXIS;
                     ev.number = SingleInput::toJsdevAxis(axis);
-                    ev.value = game_ai.controller_axes[ji][axis];
+                    ev.value = game_ai.controllers[ji]->axes[axis];
                     write_jsdev(ev, ji);
                     debuglogstdio(LCF_EVENTS | LCF_JOYSTICK, "Generate jsdev event JS_EVENT_AXIS with axis %d", axis);
                 }
@@ -533,7 +535,7 @@ static void generateControllerEvents(void)
                     ev.time.tv_usec = time.tv_nsec / 1000;
                     ev.type = EV_ABS;
                     ev.code = SingleInput::toEvdevAxis(axis);
-                    ev.value = game_ai.controller_axes[ji][axis];
+                    ev.value = game_ai.controllers[ji]->axes[axis];
                     write_evdev(ev, ji);
                     debuglogstdio(LCF_EVENTS | LCF_JOYSTICK, "Generate evdev event EV_ABS with axis %d", axis);
                 }
@@ -542,8 +544,8 @@ static void generateControllerEvents(void)
         }
 
         /* Check for button change */
-        unsigned short buttons = game_ai.controller_buttons[ji];
-        unsigned short old_buttons = old_game_ai.controller_buttons[ji];
+        unsigned short buttons = game_ai.controllers[ji]->buttons;
+        unsigned short old_buttons = old_game_ai.controllers[ji]->buttons;
 
         /* We generate the hat event separately from the buttons,
          * but we still check here if hat has changed */

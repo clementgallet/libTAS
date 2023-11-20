@@ -23,7 +23,7 @@
 
 #include "logging.h"
 #include "GlobalState.h"
-#include "../shared/AllInputs.h"
+#include "../shared/inputs/AllInputs.h"
 
 #include <cstring> // memset
 

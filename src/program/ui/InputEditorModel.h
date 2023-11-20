@@ -20,8 +20,8 @@
 #ifndef LIBTAS_INPUTEDITORMODEL_H_INCLUDED
 #define LIBTAS_INPUTEDITORMODEL_H_INCLUDED
 
-#include "../shared/SingleInput.h"
-#include "../shared/AllInputs.h"
+#include "../shared/inputs/SingleInput.h"
+#include "../shared/inputs/AllInputs.h"
 
 #include <QtCore/QAbstractTableModel>
 #include <vector>
