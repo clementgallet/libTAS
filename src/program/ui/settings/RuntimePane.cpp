@@ -446,13 +446,9 @@ void RuntimePane::update(int status)
 {
     switch (status) {
     case Context::INACTIVE:
-        generalBox->setEnabled(true);
-        savestateBox->setEnabled(true);
         timingBox->setEnabled(true);
         break;
     case Context::STARTING:
-        generalBox->setEnabled(false);
-        savestateBox->setEnabled(false);
         timingBox->setEnabled(false);
         break;
     }
