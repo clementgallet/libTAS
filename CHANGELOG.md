@@ -8,6 +8,7 @@
 * Handle softlock inside snd_pcm_wait()
 * Set corresponding radio button when changing a screen resolution value
 * Save and intersect pointermaps
+* Check for more Steam interface versions
 
 ### Changed
 

@@ -19,6 +19,10 @@
 
 #include "steamapiinternal.h"
 #include "steamapi.h"
+#include "isteamremotestorage/isteamremotestorage.h"
+#include "isteamapps.h"
+#include "isteamugc.h"
+#include "isteamuserstats.h"
 
 #include "logging.h"
 #include "hook.h"
@@ -101,6 +105,30 @@ void * SteamInternal_CreateInterface( const char *ver )
     auto end = symbol.find_last_not_of("0123456789");
     if (end != std::string::npos)
         symbol.resize(end + 1);
+        
+    /* For some interfaces, the version string is named differently, I'm
+     * checking specifically for those for now */
+    if (0 == symbol.compare("STEAMAPPS_INTERFACE_VERSION"))
+        return SteamApps();
+    else if (0 == symbol.compare("STEAMHTMLSURFACE_INTERFACE_VERSION_")) // Not a typo
+        symbol = "SteamHTMLSurface";
+    else if (0 == symbol.compare("STEAMMUSIC_INTERFACE_VERSION"))
+        symbol = "SteamMusic";
+    else if (0 == symbol.compare("STEAMMUSICREMOTE_INTERFACE_VERSION"))
+        symbol = "SteamMusicRemote";
+    else if (0 == symbol.compare("STEAMREMOTESTORAGE_INTERFACE_VERSION")) {
+        SteamRemoteStorage_set_version(ver);
+        return SteamRemoteStorage();
+    }
+    else if (0 == symbol.compare("STEAMSCREENSHOTS_INTERFACE_VERSION"))
+        symbol = "SteamScreenshots";
+    else if (0 == symbol.compare("STEAMUGC_INTERFACE_VERSION"))
+        return SteamUGC();
+    else if (0 == symbol.compare("STEAMUSERSTATS_INTERFACE_VERSION"))
+        return SteamUserStats();
+    else if (0 == symbol.compare("STEAMVIDEO_INTERFACE_V")) // Not a typo
+        symbol = "SteamVideo";    
+    
     void *(*func)() = reinterpret_cast<void *(*)()>(dlsym(RTLD_DEFAULT, symbol.c_str()));
     if (func)
         return func();
@@ -126,6 +154,30 @@ void * SteamInternal_FindOrCreateUserInterface(HSteamUser steam_user, const char
     auto end = symbol.find_last_not_of("0123456789");
     if (end != std::string::npos)
         symbol.resize(end + 1);
+        
+    /* For some interfaces, the version string is named differently, I'm
+     * checking specifically for those for now */
+    if (0 == symbol.compare("STEAMAPPS_INTERFACE_VERSION"))
+        return SteamApps();
+    else if (0 == symbol.compare("STEAMHTMLSURFACE_INTERFACE_VERSION_")) // Not a typo
+        symbol = "SteamHTMLSurface";
+    else if (0 == symbol.compare("STEAMMUSIC_INTERFACE_VERSION"))
+        symbol = "SteamMusic";
+    else if (0 == symbol.compare("STEAMMUSICREMOTE_INTERFACE_VERSION"))
+        symbol = "SteamMusicRemote";
+    else if (0 == symbol.compare("STEAMREMOTESTORAGE_INTERFACE_VERSION")) {
+        SteamRemoteStorage_set_version(version);
+        return SteamRemoteStorage();
+    }
+    else if (0 == symbol.compare("STEAMSCREENSHOTS_INTERFACE_VERSION"))
+        symbol = "SteamScreenshots";
+    else if (0 == symbol.compare("STEAMUGC_INTERFACE_VERSION"))
+        return SteamUGC();
+    else if (0 == symbol.compare("STEAMUSERSTATS_INTERFACE_VERSION"))
+        return SteamUserStats();
+    else if (0 == symbol.compare("STEAMVIDEO_INTERFACE_V")) // Not a typo
+        symbol = "SteamVideo";    
+    
     void *(*func)() = reinterpret_cast<void *(*)()>(dlsym(RTLD_DEFAULT, symbol.c_str()));
     if (func)
         return func();
@@ -151,6 +203,30 @@ void * SteamInternal_FindOrCreateGameServerInterface(HSteamUser steam_user, cons
     auto end = symbol.find_last_not_of("0123456789");
     if (end != std::string::npos)
         symbol.resize(end + 1);
+        
+    /* For some interfaces, the version string is named differently, I'm
+     * checking specifically for those for now */
+    if (0 == symbol.compare("STEAMAPPS_INTERFACE_VERSION"))
+        return SteamApps();
+    else if (0 == symbol.compare("STEAMHTMLSURFACE_INTERFACE_VERSION_")) // Not a typo
+        symbol = "SteamHTMLSurface";
+    else if (0 == symbol.compare("STEAMMUSIC_INTERFACE_VERSION"))
+        symbol = "SteamMusic";
+    else if (0 == symbol.compare("STEAMMUSICREMOTE_INTERFACE_VERSION"))
+        symbol = "SteamMusicRemote";
+    else if (0 == symbol.compare("STEAMREMOTESTORAGE_INTERFACE_VERSION")) {
+        SteamRemoteStorage_set_version(version);
+        return SteamRemoteStorage();
+    }
+    else if (0 == symbol.compare("STEAMSCREENSHOTS_INTERFACE_VERSION"))
+        symbol = "SteamScreenshots";
+    else if (0 == symbol.compare("STEAMUGC_INTERFACE_VERSION"))
+        return SteamUGC();
+    else if (0 == symbol.compare("STEAMUSERSTATS_INTERFACE_VERSION"))
+        return SteamUserStats();
+    else if (0 == symbol.compare("STEAMVIDEO_INTERFACE_V")) // Not a typo
+        symbol = "SteamVideo";    
+    
     void *(*func)() = reinterpret_cast<void *(*)()>(dlsym(RTLD_DEFAULT, symbol.c_str()));
     if (func)
         return func();
