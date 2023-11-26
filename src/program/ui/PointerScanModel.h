@@ -26,6 +26,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <string>
 #include <sys/types.h>
 #include <stdint.h>
 
@@ -58,6 +59,10 @@ public:
      * offset of `max_offset`
      */
     void findPointerChain(uintptr_t addr, int ml, int max_offset);
+
+    int saveChains(const std::string& file);
+
+    int loadChains(const std::string& file);
 
 private:
     Context *context;

@@ -95,26 +95,23 @@ void RamWatchWindow::slotScanPointer()
 
     int row = index.row();
 
-    /* Fill and show the watch edit window */
+    /* Fill and show the scan pointer window */
     pointerScanWindow->addressInput->setText(QString("%1").arg(ramWatchView->ramWatchModel->ramwatches.at(row)->address, 0, 16));
+    pointerScanWindow->type_index = ramWatchView->ramWatchModel->ramwatches.at(row)->type();
     pointerScanWindow->exec();
 }
 
 void RamWatchWindow::slotSave()
 {
-    QString filename = QFileDialog::getSaveFileName(this, tr("Choose a watch file"), context->gamepath.c_str(), tr("watch files (*.wch)"));
+    QString defaultPath(context->gamepath.c_str());
+    defaultPath.append(".wch");
+    
+    QString filename = QFileDialog::getSaveFileName(this, tr("Choose a watch file"), defaultPath, tr("watch files (*.wch)"));
     if (filename.isNull()) {
         return;
     }
 
-    std::string watchFile = filename.toStdString();
-
-    /* Check or add .wch extension */
-    if ((watchFile.length() < 4) || (watchFile.compare(watchFile.length()-4, 4, ".wch") != 0)) {
-        watchFile += ".wch";
-    }
-
-	QSettings watchSettings(QString(watchFile.c_str()), QSettings::IniFormat);
+	QSettings watchSettings(filename, QSettings::IniFormat);
 	watchSettings.setFallbacksEnabled(false);
 
     ramWatchView->ramWatchModel->saveSettings(watchSettings);
@@ -122,14 +119,15 @@ void RamWatchWindow::slotSave()
 
 void RamWatchWindow::slotLoad()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Choose a watch file"), context->gamepath.c_str(), tr("watch files (*.wch)"));
+    QString defaultPath(context->gamepath.c_str());
+    defaultPath.append(".wch");
+    
+    QString filename = QFileDialog::getOpenFileName(this, tr("Choose a watch file"), defaultPath, tr("watch files (*.wch)"));
     if (filename.isNull()) {
         return;
     }
 
-    std::string watchFile = filename.toStdString();
-
-	QSettings watchSettings(QString(watchFile.c_str()), QSettings::IniFormat);
+	QSettings watchSettings(filename, QSettings::IniFormat);
 	watchSettings.setFallbacksEnabled(false);
 
     ramWatchView->ramWatchModel->loadSettings(watchSettings);

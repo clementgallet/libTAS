@@ -120,6 +120,7 @@ libTAS_SOURCES = \
     ramsearch/MemScanner.cpp \
     ramsearch/MemScannerThread.cpp \
     ramsearch/MemSection.cpp \
+    ramsearch/RamWatchDetailedBuilder.cpp \
     ../shared/inputs/AllInputs.cpp \
     ../shared/inputs/ControllerInputs.cpp \
     ../shared/inputs/SingleInput.cpp \

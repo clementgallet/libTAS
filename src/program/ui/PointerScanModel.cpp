@@ -125,6 +125,9 @@ void PointerScanModel::findPointerChain(uintptr_t addr, int ml, int max_offset)
 
     recursiveFind(addr, 0, offsets, max_offset);
 
+    /* Sort pointers so that we can intersect with saved pointers */
+    std::sort(pointer_chains.begin(), pointer_chains.end());
+
     endResetModel();
 }
 
@@ -137,7 +140,7 @@ void PointerScanModel::recursiveFind(uintptr_t addr, int level, int offsets[], i
         uintptr_t base_address = iter->second;
         // std::cout << "Found static chain with last offset " << std::dec << offsets[level] << " and base address " << std::hex << base_address << std::endl;
         std::vector<int> offset_vec(offsets, offsets + level + 1);
-        pointer_chains.push_back(std::make_pair(base_address,offset_vec));
+        pointer_chains.emplace_back(base_address, std::move(offset_vec));
         iter++;
     }
 
@@ -154,6 +157,70 @@ void PointerScanModel::recursiveFind(uintptr_t addr, int level, int offsets[], i
         recursiveFind(base_address, level+1, offsets, max_offset);
         iter++;
     }
+}
+
+int PointerScanModel::saveChains(const std::string& file)
+{    
+    std::ofstream ofs(file, std::ios::binary | std::ios::trunc);
+    
+    if (!ofs) return -1;
+    
+    /* Save pointer size first, so that we don't read garbage data */
+    int ptr_size = sizeof(uintptr_t);
+    ofs.write(reinterpret_cast<char*>(&ptr_size), sizeof(ptr_size));
+    
+    for (const auto& chain : pointer_chains) {
+        ofs.write(reinterpret_cast<const char*>(&chain.first), sizeof(chain.first));
+        int size = static_cast<int>(chain.second.size());
+        ofs.write(reinterpret_cast<char*>(&size), sizeof(size));
+        ofs.write(reinterpret_cast<const char*>(chain.second.data()), size*sizeof(int));
+    }
+    
+    return 0;
+}
+
+int PointerScanModel::loadChains(const std::string& file)
+{
+    std::vector<std::pair<uintptr_t, std::vector<int>>> loaded_pointer_chains;
+    std::ifstream ifs(file, std::ios::binary);
+    
+    if (!ifs) {
+        return -1;
+    }
+    
+    int ptr_size;
+    ifs.read(reinterpret_cast<char*>(&ptr_size), sizeof(ptr_size));
+    if (ptr_size != sizeof(uintptr_t)) {
+        return -1;
+    }
+
+    while (ifs) {
+        uintptr_t addr;
+        ifs.read(reinterpret_cast<char*>(&addr), sizeof(addr));
+        if (!ifs) break;
+        
+        int size;
+        ifs.read(reinterpret_cast<char*>(&size), sizeof(size));
+        if ((size < 0) || (size > 10)) {
+            return -1;
+        }
+
+        std::vector<int> offsets(size);
+        ifs.read(reinterpret_cast<char*>(offsets.data()), size*sizeof(int));
+        loaded_pointer_chains.emplace_back(addr, std::move(offsets));
+    }
+    
+    /* Merge both pointer chain vectors */
+    std::vector<std::pair<uintptr_t, std::vector<int>>> intersected_pointer_chains;
+    std::set_intersection(pointer_chains.begin(), pointer_chains.end(),
+        loaded_pointer_chains.begin(), loaded_pointer_chains.end(),
+        std::back_inserter(intersected_pointer_chains));
+        
+    beginResetModel();
+    pointer_chains = std::move(intersected_pointer_chains);
+    endResetModel();
+
+    return 0;
 }
 
 int PointerScanModel::rowCount(const QModelIndex & /*parent*/) const

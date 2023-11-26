@@ -21,6 +21,7 @@
 #include "PointerScanModel.h"
 #include "RamWatchWindow.h"
 #include "RamWatchView.h"
+#include "RamWatchModel.h"
 #include "RamWatchEditWindow.h"
 #include "MainWindow.h"
 
@@ -28,6 +29,7 @@
 #include "ramsearch/CompareOperations.h"
 #include "ramsearch/IRamWatchDetailed.h"
 #include "ramsearch/RamWatchDetailed.h"
+#include "ramsearch/RamWatchDetailedBuilder.h"
 #include "ramsearch/BaseAddresses.h"
 
 #include <QtWidgets/QTableView>
@@ -39,6 +41,8 @@
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QMessageBox>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QMessageBox>
 
 PointerScanWindow::PointerScanWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
@@ -47,7 +51,7 @@ PointerScanWindow::PointerScanWindow(Context* c, QWidget *parent) : QDialog(pare
     /* Table */
     pointerScanView = new QTableView(this);
     pointerScanView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    pointerScanView->setSelectionMode(QAbstractItemView::SingleSelection);
+    pointerScanView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     pointerScanView->setShowGrid(false);
     pointerScanView->setAlternatingRowColors(true);
     pointerScanView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
@@ -96,9 +100,17 @@ PointerScanWindow::PointerScanWindow(Context* c, QWidget *parent) : QDialog(pare
     QPushButton *addButton = new QPushButton(tr("Add Watch"));
     connect(addButton, &QAbstractButton::clicked, this, &PointerScanWindow::slotAdd);
 
+    QPushButton *saveButton = new QPushButton(tr("Save Scan"));
+    connect(saveButton, &QAbstractButton::clicked, this, &PointerScanWindow::slotSave);
+
+    QPushButton *loadButton = new QPushButton(tr("Intersect with other Scan"));
+    connect(loadButton, &QAbstractButton::clicked, this, &PointerScanWindow::slotLoad);
+
     QDialogButtonBox *buttonBox = new QDialogButtonBox();
     buttonBox->addButton(searchButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(addButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(saveButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(loadButton, QDialogButtonBox::ActionRole);
 
     /* Create the options layout */
     QVBoxLayout *optionLayout = new QVBoxLayout;
@@ -143,30 +155,72 @@ void PointerScanWindow::slotSearch()
 
 void PointerScanWindow::slotAdd()
 {
-    const QModelIndex index = pointerScanView->selectionModel()->currentIndex();
+    const QModelIndexList indexes = pointerScanView->selectionModel()->selectedRows();
     pointerScanView->selectionModel()->clear();
 
     /* If no watch was selected, return */
-    if (!index.isValid()) {
+    if (indexes.count() == 0) {
         QMessageBox::critical(nullptr, "Error", QString("You must select an address to add a watch"));
         return;
     }
 
-    /* Fill the watch edit window with parameters from the selected result */
     MainWindow *mw = qobject_cast<MainWindow*>(parent()->parent());
     if (mw) {
         bool ok;
         uintptr_t addr = addressInput->text().toULong(&ok, 16);
-        const QModelIndex sourceIndex = proxyModel->mapToSource(index);
-        const std::pair<uintptr_t, std::vector<int>> &chain = pointerScanModel->pointer_chains.at(sourceIndex.row());
-        std::unique_ptr<IRamWatchDetailed> watch(new RamWatchDetailed<int>(addr));
+        for (int i = 0; i < indexes.count(); i++) {
+            const QModelIndex sourceIndex = proxyModel->mapToSource(indexes[i]);
+            const std::pair<uintptr_t, std::vector<int>> &chain = pointerScanModel->pointer_chains.at(sourceIndex.row());
+            std::unique_ptr<IRamWatchDetailed> watch(RamWatchDetailedBuilder::new_watch(addr, type_index));
 
-        watch->isPointer = true;
-        watch->base_address = chain.first;
-        watch->base_file = BaseAddresses::getFileAndOffset(chain.first, watch->base_file_offset);
-        watch->pointer_offsets = chain.second;
-        std::reverse(watch->pointer_offsets.begin(), watch->pointer_offsets.end());
-        mw->ramWatchWindow->ramWatchView->editWindow->fill(watch);
-        mw->ramWatchWindow->ramWatchView->slotAdd();
+            watch->isPointer = true;
+            watch->base_address = chain.first;
+            watch->base_file = BaseAddresses::getFileAndOffset(chain.first, watch->base_file_offset);
+            watch->pointer_offsets = chain.second;
+            std::reverse(watch->pointer_offsets.begin(), watch->pointer_offsets.end());
+            
+            if (indexes.count() == 1) {
+                /* If only one selected pointer chain, fill the watch edit window with
+                * parameters from the selected result */
+                mw->ramWatchWindow->ramWatchView->editWindow->fill(watch);
+                mw->ramWatchWindow->ramWatchView->slotAdd();
+            }
+            else {
+                /* Fill the ram watch window without filling labels */
+                mw->ramWatchWindow->ramWatchView->ramWatchModel->addWatch(std::move(watch));                    
+            }            
+        }
     }
+}
+
+void PointerScanWindow::slotSave()
+{
+    QString defaultPath(context->gamepath.c_str());
+    defaultPath.append(".pm");
+
+    QString filename = QFileDialog::getSaveFileName(this, tr("Save pointermap"), defaultPath, tr("pointermap files (*.pm)"));
+
+    if (filename.isNull())
+        return;
+
+    pointerScanModel->saveChains(filename.toStdString());
+}
+
+void PointerScanWindow::slotLoad()
+{
+    QString defaultPath(context->gamepath.c_str());
+    defaultPath.append(".pm");
+
+    QString filename = QFileDialog::getOpenFileName(this, tr("Open pointermap"), defaultPath, tr("pointermap files (*.pm)"));
+
+    if (filename.isNull())
+        return;
+
+    int ret = pointerScanModel->loadChains(filename.toStdString());
+    if (ret < 0) {
+        QMessageBox::warning(this, "Error", "Could not open pointermap file");
+        return;
+    }
+
+    scanCount->setText(QString("%1 results").arg(pointerScanModel->pointer_chains.size()));
 }
