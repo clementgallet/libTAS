@@ -99,6 +99,7 @@ AllInputs& AllInputs::operator=(const AllInputs& other)
     keyboard = other.keyboard;        
     pointer_x = other.pointer_x;
     pointer_y = other.pointer_y;
+    pointer_mode = other.pointer_mode;
     pointer_mask = other.pointer_mask;
 
     for (int j = 0; j < MAXJOYS; j++) {
