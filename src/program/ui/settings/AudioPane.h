@@ -49,6 +49,7 @@ private:
 
     ToolTipCheckBox* muteBox;
     ToolTipCheckBox* disableBox;
+    ToolTipCheckBox* preferOpenAlBox;
 
 public slots:
     void loadConfig();

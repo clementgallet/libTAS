@@ -77,9 +77,11 @@ void AudioPane::initLayout()
 
     muteBox = new ToolTipCheckBox(tr("Mute"));
     disableBox = new ToolTipCheckBox(tr("Disable"));
+    preferOpenAlBox = new ToolTipCheckBox(tr("Prefer OpenAL Soft"));
 
     controlLayout->addWidget(muteBox);
     controlLayout->addWidget(disableBox);
+    controlLayout->addWidget(preferOpenAlBox);
 
     QVBoxLayout* const mainLayout = new QVBoxLayout;
     mainLayout->addWidget(formatBox);
@@ -96,6 +98,7 @@ void AudioPane::initSignals()
     connect(channelChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &AudioPane::saveConfig);
     connect(muteBox, &QAbstractButton::clicked, this, &AudioPane::saveConfig);
     connect(disableBox, &QAbstractButton::clicked, this, &AudioPane::saveConfig);    
+    connect(preferOpenAlBox, &QAbstractButton::clicked, this, &AudioPane::saveConfig);
 }
 
 void AudioPane::initToolTips()
@@ -110,7 +113,14 @@ void AudioPane::initToolTips()
     disableBox->setDescription("When checked, tries to disable audio by reporting no audio "
     "device, or by failing to initialize the audio driver. Not all games accept to not "
     "have any audio device, so this can crash the game."
-    "<br><br><em>If unsure, leave this unchecked</em>");    
+    "<br><br><em>If unsure, leave this unchecked</em>");
+
+    preferOpenAlBox->setTitle("Prefer OpenAL Soft");
+    preferOpenAlBox->setDescription("When checked, tries to use OpenAL Soft instead of libTAS' "
+    "own OpenAL implementation. This can fix certain games which rely on special effects libTAS "
+    "does not yet support, but has a higher risk of causing softlocks, especially with older "
+    "OpenAL Soft versions. This setting does nothing if the game does not use OpenAL."
+    "<br><br><em>If unsure, leave this unchecked</em>");
 }
 
 void AudioPane::showEvent(QShowEvent *event)
@@ -131,6 +141,7 @@ void AudioPane::loadConfig()
     
     muteBox->setChecked(context->config.sc.audio_mute);
     disableBox->setChecked(context->config.sc.audio_disabled);
+    preferOpenAlBox->setChecked(context->config.sc.openal_soft);
 }
 
 void AudioPane::saveConfig()
@@ -140,6 +151,7 @@ void AudioPane::saveConfig()
     context->config.sc.audio_channels = channelChoice->itemData(channelChoice->currentIndex()).toInt();
     context->config.sc.audio_mute = muteBox->isChecked();
     context->config.sc.audio_disabled = disableBox->isChecked();
+    context->config.sc.openal_soft = preferOpenAlBox->isChecked();
     context->config.sc_modified = true;
 }
 
@@ -151,12 +163,14 @@ void AudioPane::update(int status)
         depthChoice->setEnabled(true);
         channelChoice->setEnabled(true);
         disableBox->setEnabled(true);
+        preferOpenAlBox->setEnabled(true);
         break;
     case Context::STARTING:
         freqChoice->setEnabled(false);
         depthChoice->setEnabled(false);
         channelChoice->setEnabled(false);
         disableBox->setEnabled(false);
+        preferOpenAlBox->setEnabled(false);
         break;
     }
 }

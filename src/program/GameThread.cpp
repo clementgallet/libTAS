@@ -88,6 +88,14 @@ void GameThread::set_env_variables(Context *context, int gameArch)
         unsetenv("VDPAU_QUIRKS");        
     }
 
+    /* If we prefer OpenAL Soft, we'll want to force it to use either SDL2 or ALSA internally */
+    if (context->config.sc.openal_soft) {
+        setenv("ALSOFT_DRIVERS", "sdl2,alsa", 1);
+    }
+    else {
+        unsetenv("ALSOFT_DRIVERS");
+    }
+
     /* Pass libtas library path to the game */
     setenv("LIBTAS_LIBRARY_PATH", context->libtaspath.c_str(), 1);
 
