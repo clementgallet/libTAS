@@ -4,11 +4,10 @@
 #ifndef LIBTAS_TOOLTIPWIDGET_H_INCLUDED
 #define LIBTAS_TOOLTIPWIDGET_H_INCLUDED
 
-#include <optional>
-
-#include <QString>
-
 #include "BalloonTip.h"
+
+#include <optional>
+#include <QString>
 
 constexpr int TOOLTIP_DELAY = 300;
 

@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,11 +17,14 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "MovieFileEditor.h"
+
+#include "Context.h"
+#include "../shared/inputs/AllInputs.h"
+
 #include <QtCore/QSettings>
 #include <QtCore/QString>
 #include <string>
-
-#include "MovieFileEditor.h"
 
 MovieFileEditor::MovieFileEditor(Context* c) : context(c) {
     clear();

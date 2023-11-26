@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -22,10 +22,12 @@
 #include "ThreadSync.h"
 #include "ThreadInfo.h"
 #include "ThreadManager.h"
-#include "../logging.h"
+
+#include "logging.h"
+#include "sleepwrappers.h"
+#include "GlobalState.h"
+
 #include <time.h> // nanosleep
-#include "../sleepwrappers.h"
-#include "../GlobalState.h"
 #include <atomic>
 #include <pthread.h> // pthread_rwlock_t
 #include <mutex>

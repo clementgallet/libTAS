@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,9 +20,10 @@
 #ifndef LIBTAS_MOVIEFILEHEADER_H_INCLUDED
 #define LIBTAS_MOVIEFILEHEADER_H_INCLUDED
 
-#include "../Context.h"
 #include <string>
 #include <stdint.h>
+
+struct Context;
 
 class MovieFileHeader {
 public:

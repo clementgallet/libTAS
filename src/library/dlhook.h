@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,9 +20,10 @@
 #ifndef LIBTAS_DLHOOK_H_INCLUDED
 #define LIBTAS_DLHOOK_H_INCLUDED
 
+#include "hook.h"
+
 #include <dlfcn.h>
 #include <string>
-#include "hook.h"
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach-o/dyld.h>

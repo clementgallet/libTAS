@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,10 +20,11 @@
 #ifndef LIBTAS_MEMLAYOUT_H_INCLUDED
 #define LIBTAS_MEMLAYOUT_H_INCLUDED
 
+#include "MemSection.h"
+
 #include <string>
 #include <fstream>
 #include <cstdint>
-#include "MemSection.h"
 
 /* Handle the layout of game memory */
 class MemLayout {

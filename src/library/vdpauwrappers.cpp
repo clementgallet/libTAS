@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,19 +18,17 @@
  */
 
 #include "vdpauwrappers.h"
-
 #include "logging.h"
 #include "GlobalState.h"
-// #include "../shared/SharedConfig.h"
 #include "ScreenCapture.h"
 #include "frame.h"
 #include "global.h"
 #include "renderhud/RenderHUD_VDPAU.h"
 #include "DeterministicTimer.h"
 #include "backtrace.h"
+#include "xlib/xwindows.h" // x11::gameXWindows
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
-#include "xlib/xwindows.h" // x11::gameXWindows
 
 namespace libtas {
 
@@ -162,7 +160,7 @@ VdpStatus VdpPresentationQueueBlockUntilSurfaceIdle(VdpPresentationQueue present
 
     DEBUGLOGCALL(LCF_WINDOW);
 
-    detTimer.fakeAdvanceTimerFrame();
+    DeterministicTimer::get().fakeAdvanceTimerFrame();
     // VdpStatus status = orig::VdpPresentationQueueBlockUntilSurfaceIdle(presentation_queue, surface, first_presentation_time);
     // debuglogstdio(LCF_WINDOW, "first_presentation_time %llu", *first_presentation_time);
 

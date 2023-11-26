@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,30 +18,31 @@
  */
 
 #include "main.h"
-#include <vector>
-#include <string>
 #include "dlhook.h"
-#include "../shared/sockethelpers.h"
 #include "logging.h"
 #include "global.h"
 #include "NonDeterministicTimer.h"
 #include "DeterministicTimer.h"
-#include "../shared/messages.h"
-#include "../shared/SharedConfig.h"
-#include "../shared/AllInputs.h"
+#include "frame.h" // framecount
+#include "Stack.h"
+#include "monowrappers.h"
+#include "GlobalState.h"
+#include "audio/AudioContext.h"
+#include "encoding/AVEncoder.h"
+#include "steam/isteamuser.h" // SteamSetUserDataFolder
+#include "steam/isteamremotestorage/isteamremotestorage.h" // SteamSetRemoteStorageFolder
 #include "inputs/inputs.h"
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/SaveStateManager.h"
 #include "checkpoint/Checkpoint.h"
-#include "audio/AudioContext.h"
-#include "encoding/AVEncoder.h"
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
+#include "../shared/SharedConfig.h"
+#include "../shared/inputs/AllInputs.h"
+
 #include <unistd.h> // getpid()
-#include "frame.h" // framecount
-#include "steam/isteamuser.h" // SteamSetUserDataFolder
-#include "steam/isteamremotestorage/isteamremotestorage.h" // SteamSetRemoteStorageFolder
-#include "Stack.h"
-#include "monowrappers.h"
-#include "GlobalState.h"
+#include <vector>
+#include <string>
 
 extern char**environ;
 
@@ -186,8 +187,8 @@ void __attribute__((constructor)) init(void)
     /* Initialize timers. It uses the initial time set in the config object,
      * so they must be initialized after receiving it.
      */
-    nonDetTimer.initialize();
-    detTimer.initialize(initial_sec, initial_nsec);
+    NonDeterministicTimer::get().initialize(initial_sec, initial_nsec);
+    DeterministicTimer::get().initialize(initial_sec, initial_nsec);
 
     /* Initialize sound parameters */
     audiocontext.init();

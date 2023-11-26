@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -19,6 +19,9 @@
 
 #include "KeyMapping.h"
 #include "../external/keysymdef.h"
+#include "../shared/inputs/AllInputs.h"
+#include "../shared/SharedConfig.h"
+
 #include <cstring>
 #include <iostream>
 
@@ -80,6 +83,7 @@ KeyMapping::KeyMapping(void* c)
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F8 | XK_Control_Flag}, HOTKEY_LOADBRANCH8, "Load Branch 8"});
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F9 | XK_Control_Flag}, HOTKEY_LOADBRANCH9, "Load Branch 9"});
     hotkey_list.push_back({{SingleInput::IT_KEYBOARD, XK_F10 | XK_Control_Flag}, HOTKEY_LOADBRANCH_BACKTRACK, "Load Backtrack Branch"});
+    hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_SCREENSHOT, "Screenshot"});
     hotkey_list.push_back({{SingleInput::IT_NONE, 0}, HOTKEY_TOGGLE_ENCODE, "Toggle encode"});
 
     /* Add flags mapping */

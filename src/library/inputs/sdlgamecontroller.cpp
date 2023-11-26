@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,13 +20,15 @@
 #include "sdlgamecontroller.h"
 #include "sdljoystick.h"
 #include "inputs.h"
-#include "../logging.h"
-#include "../hook.h"
-#include "../sdl/SDLEventQueue.h"
-#include "../../shared/AllInputs.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "sdl/SDLEventQueue.h"
+#include "../shared/inputs/AllInputs.h"
+#include "GlobalState.h"
+#include "global.h"
+
 #include <cstring>
-#include "../GlobalState.h"
-#include "../global.h"
 
 namespace libtas {
 
@@ -323,12 +325,15 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
     if (gcids[*gcid] == -1)
         return 0;
 
+    if (!game_ai.controllers[*gcid])
+        return 0;
+
     /* Check if axis is valid */
     if ((axis < 0) || (axis >= SingleInput::AXIS_LAST))
         return 0;
 
     /* Return axis value */
-    return game_ai.controller_axes[*gcid][axis];
+    return game_ai.controllers[*gcid]->axes[axis];
 
 }
 
@@ -415,14 +420,17 @@ SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
     if (gcids[*gcid] == -1)
         return 0;
 
+    if (!game_ai.controllers[*gcid])
+        return 0;
+
     /* Check if button is valid */
     if ((button < 0) || (button >= SingleInput::BUTTON_LAST))
         return 0;
 
     /* Return button value */
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "  return %d", (game_ai.controller_buttons[*gcid] >> button) & 0x1);
+    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "  return %d", (game_ai.controllers[*gcid]->buttons >> button) & 0x1);
 
-    return (game_ai.controller_buttons[*gcid] >> button) & 0x1;
+    return (game_ai.controllers[*gcid]->buttons >> button) & 0x1;
 
 }
 

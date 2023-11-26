@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -45,6 +45,18 @@ enum {
      * Argument: AllInputs
      */
     MSGN_ALL_INPUTS,
+
+    /*
+     * Send a controller id and inputs
+     * Argument: int, ControllerInputs
+     */
+    MSGN_CONTROLLER_INPUTS,
+
+    /*
+     * Notify the end of input sending
+     * Argument: non
+     */
+    MSGN_END_INPUTS,
 
     /*
      * Send all inputs to the game during a frame boundary, so that it can
@@ -316,6 +328,12 @@ enum {
      * Argument: size_t (string length) then char[len]
      */
     MSGN_MARKER,
+
+    /*
+     * Send a screenshot path and ask the game to perform a screenshot, 
+     * Argument: size_t (string length) then char[len]
+     */
+    MSGN_SCREENSHOT,
 
 };
 

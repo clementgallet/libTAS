@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,7 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include <QtWidgets/QLabel>
+#include "DebugPane.h"
+#include "tooltip/ToolTipCheckBox.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QGridLayout>
@@ -27,10 +31,6 @@
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSpinBox>
-
-#include "DebugPane.h"
-#include "../../Context.h"
-#include "tooltip/ToolTipCheckBox.h"
 
 DebugPane::DebugPane(Context* c) : context(c)
 {

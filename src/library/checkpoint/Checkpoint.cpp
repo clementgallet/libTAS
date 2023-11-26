@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -23,19 +23,28 @@
 #include "ThreadManager.h"
 #include "SaveStateManager.h"
 #include "AltStack.h"
-#include "../logging.h"
-#include "../global.h"
 #include "MemArea.h"
-#include "../GlobalState.h"
-
 #ifdef __unix__
 #include "ProcSelfMaps.h"
 #elif defined(__APPLE__) && defined(__MACH__)
 #include "MachVmMaps.h"
 #endif
-
 #include "StateHeader.h"
-#include "../Utils.h"
+#include "ReservedMemory.h"
+#include "SaveState.h"
+
+#include "logging.h"
+#include "global.h"
+#include "GlobalState.h"
+#include "Utils.h"
+#include "renderhud/RenderHUD.h"
+#include "../external/lz4.h"
+#include "../shared/sockethelpers.h"
+#ifdef __unix__
+#include "../external/xcbint.h"
+#include "xlib/xdisplay.h" // x11::gameDisplays
+#endif
+
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -44,24 +53,14 @@
 #include <csignal>
 #include <stdint.h>
 #include <sys/statvfs.h>
-#include "errno.h"
-#include "../renderhud/RenderHUD.h"
-#include "ReservedMemory.h"
-#include "SaveState.h"
-#include "../../external/lz4.h"
-#include "../../shared/sockethelpers.h"
-
+#include <cerrno>
 #ifdef __unix__
 #include <X11/Xlibint.h>
 #include <X11/Xlib-xcb.h>
-#include "../../external/xcbint.h"
-#include "../xlib/xdisplay.h" // x11::gameDisplays
 #endif
-
 #ifdef __linux__
 #include <sys/syscall.h>
 #endif
-
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 600
 #endif

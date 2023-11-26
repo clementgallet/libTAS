@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,17 +17,17 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include <QtWidgets/QLabel>
+#include "AudioPane.h"
+#include "tooltip/ToolTipCheckBox.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QCheckBox>
-
-#include "AudioPane.h"
-#include "../../Context.h"
-#include "tooltip/ToolTipCheckBox.h"
 
 AudioPane::AudioPane(Context* c) : context(c)
 {
@@ -96,9 +96,9 @@ void AudioPane::initSignals()
     connect(freqChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &AudioPane::saveConfig);
     connect(depthChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &AudioPane::saveConfig);
     connect(channelChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &AudioPane::saveConfig);
-    connect(muteBox, &QCheckBox::toggled, this, &AudioPane::saveConfig);
-    connect(disableBox, &QCheckBox::toggled, this, &AudioPane::saveConfig);
-    connect(preferOpenAlBox, &QCheckBox::toggled, this, &AudioPane::saveConfig);
+    connect(muteBox, &QAbstractButton::clicked, this, &AudioPane::saveConfig);
+    connect(disableBox, &QAbstractButton::clicked, this, &AudioPane::saveConfig);    
+    connect(preferOpenAlBox, &QAbstractButton::clicked, this, &AudioPane::saveConfig);
 }
 
 void AudioPane::initToolTips()

@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -19,14 +19,15 @@
 
 #include "config.h"
 #include "xcbevents.h"
-#include "../logging.h"
-#include "../hook.h"
 #include "XcbEventQueueList.h"
-#include "../xlib/xatom.h"
 #include "xcbconnection.h" // x11::gameConnections
-#include "../xlib/xwindows.h" // x11::gameXWindows
-#include "../global.h"
-#include "../GlobalState.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "xlib/xatom.h"
+#include "xlib/xwindows.h" // x11::gameXWindows
+#include "global.h"
+#include "GlobalState.h"
 
 #ifdef LIBTAS_HAS_XCB_RANDR
 #include <xcb/randr.h>

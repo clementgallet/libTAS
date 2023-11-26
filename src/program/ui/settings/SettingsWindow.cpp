@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,12 +17,6 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtWidgets/QLabel>
-// #include <QtWidgets/QFileDialog>
-#include <QtWidgets/QDialogButtonBox>
-#include <QtWidgets/QTabWidget>
-#include <QtWidgets/QVBoxLayout>
-
 #include "SettingsWindow.h"
 #include "WrapInScrollArea.h"
 #include "RuntimePane.h"
@@ -32,7 +26,13 @@
 #include "VideoPane.h"
 #include "DebugPane.h"
 #include "GameSpecificPane.h"
-#include "../../Context.h"
+
+#include "Context.h"
+
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QTabWidget>
+#include <QtWidgets/QVBoxLayout>
 
 SettingsWindow::SettingsWindow(Context* c, QWidget *parent) : QMainWindow(parent), context(c)
 {

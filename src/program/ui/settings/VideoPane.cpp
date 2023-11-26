@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,7 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include <QtWidgets/QLabel>
+#include "VideoPane.h"
+#include "tooltip/ToolTipCheckBox.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QGridLayout>
@@ -26,10 +30,6 @@
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSpinBox>
-
-#include "VideoPane.h"
-#include "../../Context.h"
-#include "tooltip/ToolTipCheckBox.h"
 
 VideoPane::VideoPane(Context* c) : context(c)
 {
@@ -199,9 +199,22 @@ void VideoPane::initSignals()
     connect(screenCommonRadio, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
     connect(screenCustomRadio, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
 
-    connect(screenCommonChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
-    connect(widthField, QOverload<int>::of(&QSpinBox::valueChanged), this, &VideoPane::saveConfig);
-    connect(heightField, QOverload<int>::of(&QSpinBox::valueChanged), this, &VideoPane::saveConfig);
+    connect(screenCommonChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this,
+        [this](){
+            screenCommonRadio->setChecked(true);
+            saveConfig();
+        });
+    connect(widthField, QOverload<int>::of(&QSpinBox::valueChanged), this,
+    [this](){
+        screenCustomRadio->setChecked(true);
+        saveConfig();
+    });
+
+    connect(heightField, QOverload<int>::of(&QSpinBox::valueChanged), this,
+    [this](){
+        screenCustomRadio->setChecked(true);
+        saveConfig();
+    });
     connect(osdFrameBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
     connect(frameHorChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
     connect(frameVertChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
@@ -256,8 +269,13 @@ void VideoPane::loadConfig()
         if (index == -1) {
             /* Custom screen resolution */
             screenCustomRadio->setChecked(true);
+            widthField->blockSignals(true);
             widthField->setValue(context->config.sc.screen_width);
+            widthField->blockSignals(false);
+
+            heightField->blockSignals(true);
             heightField->setValue(context->config.sc.screen_height);
+            heightField->blockSignals(false);
         }
         else {
             /* Common screen resolution */

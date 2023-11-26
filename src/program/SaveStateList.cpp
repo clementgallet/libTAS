@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,13 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
-
-#include "Context.h"
-#include "SaveState.h"
 #include "SaveStateList.h"
 #include "SaveState.h"
+#include "SaveState.h"
+#include "Context.h"
 #include "../shared/messages.h"
+
+#include <iostream>
 
 #define NB_STATES 11
 
@@ -83,16 +83,16 @@ int SaveStateList::save(int id, Context* context, MovieFile& movie)
     return message;
 }
 
-int SaveStateList::load(int id, Context* context, MovieFile& movie, bool branch)
+int SaveStateList::load(int id, Context* context, MovieFile& movie, bool branch, bool inputEditor)
 {
     SaveState& ss = get(id);
-    return ss.load(context, movie, branch);
+    return ss.load(context, movie, branch, inputEditor);
 }
 
-int SaveStateList::postLoad(int id, Context* context, MovieFile& movie, bool branch)
+int SaveStateList::postLoad(int id, Context* context, MovieFile& movie, bool branch, bool inputEditor)
 {
     SaveState& ss = get(id);
-    int message = ss.postLoad(context, movie, branch);
+    int message = ss.postLoad(context, movie, branch, inputEditor);
     
     if (message == MSGB_LOADING_SUCCEEDED) {
         /* Update root savestate */

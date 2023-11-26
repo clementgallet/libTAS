@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -21,8 +21,10 @@
 
 #ifndef LIBTAS_THREAD_INFO_H
 #define LIBTAS_THREAD_INFO_H
-#include <atomic>
 
+#include "ThreadLocalStorage.h"
+
+#include <atomic>
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 600
 #endif
@@ -33,7 +35,6 @@
 #include <condition_variable>
 #include <setjmp.h>
 
-#include "ThreadLocalStorage.h"
 
 namespace libtas {
 

@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,6 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "TimeTraceWindow.h"
+#include "TimeTraceModel.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QDialogButtonBox>
@@ -25,10 +30,6 @@
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QMessageBox>
-
-#include "TimeTraceWindow.h"
-#include "TimeTraceModel.h"
-#include "../Context.h"
 
 TimeTraceWindow::TimeTraceWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,13 +17,14 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "GameSpecificPane.h"
+#include "tooltip/ToolTipCheckBox.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
-
-#include "GameSpecificPane.h"
-#include "../../Context.h"
-#include "tooltip/ToolTipCheckBox.h"
 
 GameSpecificPane::GameSpecificPane(Context* c) : context(c)
 {
@@ -67,10 +68,10 @@ void GameSpecificPane::initLayout()
 
 void GameSpecificPane::initSignals()
 {
-    connect(timingCeleste, &QCheckBox::toggled, this, &GameSpecificPane::saveConfig);
-    connect(timingArmaCwa, &QCheckBox::toggled, this, &GameSpecificPane::saveConfig);
-    connect(syncCeleste, &QCheckBox::toggled, this, &GameSpecificPane::saveConfig);
-    connect(syncWitness, &QCheckBox::toggled, this, &GameSpecificPane::saveConfig);
+    connect(timingCeleste, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
+    connect(timingArmaCwa, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
+    connect(syncCeleste, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
+    connect(syncWitness, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
 }
 
 void GameSpecificPane::initToolTips()

@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -54,6 +54,11 @@ const char* const DeterministicTimer::gettimes_names[] =
     "QueryPerformanceCounter()",
 };
 
+DeterministicTimer& DeterministicTimer::get() {
+    static DeterministicTimer instance;
+    return instance;
+}
+
 struct timespec DeterministicTimer::getTicks()
 {
     return getTicks(SharedConfig::TIMETYPE_UNTRACKED_MONOTONIC);
@@ -78,7 +83,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
     }
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME) {
-        return nonDetTimer.getTicks(); // disable deterministic time
+        return NonDeterministicTimer::get().getTicks(); // disable deterministic time
     }
 
     if ((type == SharedConfig::TIMETYPE_UNTRACKED_MONOTONIC) || GlobalState::isOwnCode()) {
@@ -162,7 +167,7 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
     debuglogstdio(LCF_TIMESET | LCF_SLEEP, "%s call with delay %u.%010u sec", __func__, delayTicks.tv_sec, delayTicks.tv_nsec);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
-        return nonDetTimer.addDelay(delayTicks);
+        return NonDeterministicTimer::get().addDelay(delayTicks);
 
     /* We don't handle wait if it is our own code calling this. */
     if (GlobalState::isOwnCode())
@@ -228,7 +233,7 @@ void DeterministicTimer::flushDelay()
 void DeterministicTimer::exitFrameBoundary()
 {
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
-        return nonDetTimer.exitFrameBoundary();
+        return NonDeterministicTimer::get().exitFrameBoundary();
 
     DEBUGLOGCALL(LCF_TIMEGET);
 
@@ -294,7 +299,7 @@ void DeterministicTimer::exitFrameBoundary()
 TimeHolder DeterministicTimer::enterFrameBoundary()
 {
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
-        return nonDetTimer.enterFrameBoundary();
+        return NonDeterministicTimer::get().enterFrameBoundary();
 
     frame_mutex.lock();
     DEBUGLOGCALL(LCF_TIMEGET);
@@ -415,8 +420,5 @@ bool DeterministicTimer::isTimeCallMonotonic(SharedConfig::TimeCallType type)
             return true;
     }
 }
-
-
-DeterministicTimer detTimer;
 
 }

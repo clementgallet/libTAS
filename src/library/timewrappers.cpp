@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,15 +20,16 @@
 #include "timewrappers.h"
 #include "logging.h"
 #include "frame.h"
-#include <iomanip> // std::setw
 #include "DeterministicTimer.h"
 #include "GlobalState.h"
-#include "../shared/SharedConfig.h"
 #include "GameHacks.h"
-#include <execinfo.h>
 #include "hook.h"
 #include "global.h"
 #include "checkpoint/ThreadManager.h" // isMainThread()
+#include "../shared/SharedConfig.h"
+
+#include <execinfo.h>
+#include <iomanip> // std::setw
 
 namespace libtas {
 
@@ -37,7 +38,7 @@ DEFINE_ORIG_POINTER(clock_gettime)
 /* Override */ time_t time(time_t* t) __THROW
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_TIME);
+    struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_TIME);
     debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %d", ts.tv_sec);
     if (t)
         *t = ts.tv_sec;
@@ -47,7 +48,7 @@ DEFINE_ORIG_POINTER(clock_gettime)
 /* Override */ int gettimeofday(struct timeval* tv, struct timezone* tz) __THROW
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_GETTIMEOFDAY);
+    struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_GETTIMEOFDAY);
     debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %d.%06d", ts.tv_sec, ts.tv_nsec/1000);
     tv->tv_sec = ts.tv_sec;
     tv->tv_usec = ts.tv_nsec / 1000;
@@ -57,7 +58,7 @@ DEFINE_ORIG_POINTER(clock_gettime)
 /* Override */ clock_t clock (void) __THROW
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
-    struct timespec ts = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCK);
+    struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_CLOCK);
     clock_t clk = static_cast<clock_t>(ts.tv_sec) * CLOCKS_PER_SEC + (static_cast<clock_t>(ts.tv_nsec) * CLOCKS_PER_SEC) / 1000000000;
     debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %d", clk);
     return clk;
@@ -91,7 +92,7 @@ DEFINE_ORIG_POINTER(clock_gettime)
                 if (strstr(symbols[0], "libcoreclr.so")) {
                     debuglogstdio(LCF_TIMEGET | LCF_FREQUENT | LCF_ERROR, "  special advance coreclr yield");
                     struct timespec ts = {0, 1000000};
-                    detTimer.addDelay(ts);
+                    DeterministicTimer::get().addDelay(ts);
                 }
                 free(symbols);
             }
@@ -108,7 +109,7 @@ DEFINE_ORIG_POINTER(clock_gettime)
                 if (strstr(symbols[0], "libSystem.Native.so")) {
                     debuglogstdio(LCF_TIMEGET | LCF_FREQUENT | LCF_ERROR, "  special advance coreclr TLS");
                     struct timespec ts = {0, 1000000};
-                    detTimer.addDelay(ts);
+                    DeterministicTimer::get().addDelay(ts);
                 }
                 free(symbols);
             }
@@ -120,17 +121,17 @@ DEFINE_ORIG_POINTER(clock_gettime)
         case CLOCK_REALTIME_ALARM:
         case CLOCK_REALTIME_COARSE:
         case CLOCK_TAI:
-            *tp = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME_REALTIME);
+            *tp = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME_REALTIME);
             break;
         default:
-            *tp = detTimer.getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC);
+            *tp = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC);
             break;
     }
     debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %d.%09d", tp->tv_sec, tp->tv_nsec);
 
     if (Global::shared_config.game_specific_timing & SharedConfig::GC_TIMING_CELESTE) {
         if (ThreadManager::isMainThread())
-            detTimer.fakeAdvanceTimer({0, 0});
+            DeterministicTimer::get().fakeAdvanceTimer({0, 0});
     }
 
     return 0;

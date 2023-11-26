@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,9 +18,11 @@
  */
 
 #include "xcbconnection.h"
-#include "../hook.h"
-#include "../logging.h"
 #include "XcbEventQueueList.h"
+
+#include "hook.h"
+#include "logging.h"
+#include "GlobalState.h"
 
 namespace libtas {
 
@@ -34,7 +36,13 @@ xcb_connection_t *xcb_connect(const char *displayname, int *screenp)
     DEBUGLOGCALL(LCF_WINDOW);
     LINK_NAMESPACE_GLOBAL(xcb_connect);
 
-    xcb_connection_t* c = orig::xcb_connect(displayname, screenp);
+    xcb_connection_t* c;
+    OWNCALL(c = orig::xcb_connect(displayname, screenp));
+
+    if (!c) {
+        debuglogstdio(LCF_WINDOW | LCF_ERROR, "Could not open xcb connection to %s (%d)", displayname ? displayname : "$DISPLAY", screenp ? *screenp : 0);
+        return nullptr;
+    }
 
     int i;
     for (i=0; i<GAMECONNECTIONNUM; i++) {

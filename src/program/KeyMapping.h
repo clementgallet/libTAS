@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,15 +20,16 @@
 #ifndef LIBTAS_KEYMAPPING_H_INCLUDED
 #define LIBTAS_KEYMAPPING_H_INCLUDED
 
+#include "../shared/inputs/SingleInput.h"
+
 #include <QtCore/QDataStream>
-#include "../shared/SingleInput.h"
-#include "../shared/AllInputs.h"
-#include "../shared/SharedConfig.h"
 #include <map>
 #include <vector>
 #include <array>
 #include <string>
 
+struct SharedConfig;
+class AllInputs;
 Q_DECLARE_METATYPE(SingleInput)
 
 /* Save the content of the struct into the stream */
@@ -78,6 +79,7 @@ typedef int HotKeyType; enum
     HOTKEY_LOADBRANCH9,
     HOTKEY_LOADBRANCH_BACKTRACK,
     HOTKEY_TOGGLE_FASTFORWARD, // Toggle fastforward
+    HOTKEY_SCREENSHOT,
     HOTKEY_LEN
 };
 

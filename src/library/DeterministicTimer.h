@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -22,6 +22,7 @@
 
 #include "TimeHolder.h"
 #include "../shared/SharedConfig.h"
+
 #include <mutex>
 
 namespace libtas {
@@ -47,6 +48,7 @@ class DeterministicTimer
     static_assert(std::is_standard_layout<TimeHolder>::value, "TimeHolder must be standard layout");
 
 public:
+    static DeterministicTimer& get();
 
     /* Initialize the class members and elapsed time */
     void initialize(uint64_t initial_sec, uint64_t initial_nsec);
@@ -140,8 +142,6 @@ private:
     
     static const char* const gettimes_names[];
 };
-
-extern DeterministicTimer detTimer;
 
 }
 

@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,7 +20,8 @@
 */
 
 #include "MemArea.h"
-#include "../logging.h"
+
+#include "logging.h"
 
 #include <sys/mman.h> // PROT_READ, PROT_WRITE, etc.
 #if defined(__APPLE__) && defined(__MACH__)

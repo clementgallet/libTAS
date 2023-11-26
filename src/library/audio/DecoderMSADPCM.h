@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -24,8 +24,9 @@
 #ifndef LIBTAS_DECODERMSADPCM_H_INCL
 #define LIBTAS_DECODERMSADPCM_H_INCL
 
-#include <vector>
 #include "BinaryIStream.h"
+
+#include <vector>
 
 namespace libtas {
 namespace DecoderMSADPCM

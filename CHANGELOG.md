@@ -1,6 +1,28 @@
 ## [Unreleased]
 ### Added
 
+* Screenshot
+* Add double-click on Ram Watch window to edit watches
+* Highlight hovered column in the input editor
+* Add Shift modifier for text input
+* Handle softlock inside snd_pcm_wait()
+* Set corresponding radio button when changing a screen resolution value
+* Save and intersect pointermaps
+
+### Changed
+
+* When input editor is opened, always load savestates in playback mode
+* Speedup movie loading and input pasting by not using regex
+
+### Fixed
+
+* Disable backtrack savestate when encoding
+* Fix hookpatching a function that starts with CALL instruction
+* Update hookpatch method
+
+## [1.4.5] - 2023-10-22
+### Added
+
 * Add a "Save as default" button for the Encode window (#507)
 * Revamp settings
 * Draw a crosshair on current pointer coordinates (#510)
@@ -54,6 +76,7 @@
 * Synchronize movie input access
 * Fix lua stack when scipt has error
 * Fix lua stack when calling a callback
+* Prevent triggering a setting save when loading settings (fix #582)
 
 ## [1.4.4] - 2022-10-25
 ### Added

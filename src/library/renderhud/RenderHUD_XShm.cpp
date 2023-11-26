@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,12 +18,12 @@
  */
 
 #include "RenderHUD_XShm.h"
-
 #include "SurfaceARGB.h"
 #include "SurfaceXImage.h"
-#include "../logging.h"
-#include "../hook.h"
-#include "../xlib/xshm.h" // x11::gameXImage
+
+#include "logging.h"
+#include "hook.h"
+#include "xlib/xshm.h" // x11::gameXImage
 
 namespace libtas {
 

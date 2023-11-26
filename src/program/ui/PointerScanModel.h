@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,15 +20,15 @@
 #ifndef LIBTAS_POINTERSCANMODEL_H_INCLUDED
 #define LIBTAS_POINTERSCANMODEL_H_INCLUDED
 
+#include "ramsearch/MemSection.h"
+
 #include <QtCore/QAbstractTableModel>
 #include <vector>
 #include <map>
-// #include <pair>
 #include <memory>
+#include <string>
 #include <sys/types.h>
 #include <stdint.h>
-
-#include "../ramsearch/MemSection.h"
 
 /* Forward declaration */
 struct Context;
@@ -59,6 +59,10 @@ public:
      * offset of `max_offset`
      */
     void findPointerChain(uintptr_t addr, int ml, int max_offset);
+
+    int saveChains(const std::string& file);
+
+    int loadChains(const std::string& file);
 
 private:
     Context *context;

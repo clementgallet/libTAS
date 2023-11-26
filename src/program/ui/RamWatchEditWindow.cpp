@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,6 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "RamWatchEditWindow.h"
+
+#include "ramsearch/TypeIndex.h"
+#include "ramsearch/IRamWatchDetailed.h"
+#include "ramsearch/RamWatchDetailed.h"
+#include "ramsearch/RamWatchDetailedBuilder.h"
+
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QVBoxLayout>
@@ -25,11 +32,6 @@
 #include <QtWidgets/QMessageBox>
 
 #include <stdint.h>
-
-#include "RamWatchEditWindow.h"
-#include "../ramsearch/TypeIndex.h"
-#include "../ramsearch/IRamWatchDetailed.h"
-#include "../ramsearch/RamWatchDetailed.h"
 
 RamWatchEditWindow::RamWatchEditWindow(QWidget *parent) : QDialog(parent)
 {
@@ -295,38 +297,7 @@ void RamWatchEditWindow::slotSave()
         reject();
 
     /* Build the ram watch using the right type as template */
-    switch (typeBox->currentIndex()) {
-        case RamUnsignedChar:
-            ramwatch.reset(new RamWatchDetailed<unsigned char>(addr));
-            break;
-        case RamChar:
-            ramwatch.reset(new RamWatchDetailed<char>(addr));
-            break;
-        case RamUnsignedShort:
-            ramwatch.reset(new RamWatchDetailed<unsigned short>(addr));
-            break;
-        case RamShort:
-            ramwatch.reset(new RamWatchDetailed<short>(addr));
-            break;
-        case RamUnsignedInt:
-            ramwatch.reset(new RamWatchDetailed<unsigned int>(addr));
-            break;
-        case RamInt:
-            ramwatch.reset(new RamWatchDetailed<int>(addr));
-            break;
-        case RamUnsignedLong:
-            ramwatch.reset(new RamWatchDetailed<uint64_t>(addr));
-            break;
-        case RamLong:
-            ramwatch.reset(new RamWatchDetailed<int64_t>(addr));
-            break;
-        case RamFloat:
-            ramwatch.reset(new RamWatchDetailed<float>(addr));
-            break;
-        case RamDouble:
-            ramwatch.reset(new RamWatchDetailed<double>(addr));
-            break;
-    }
+    ramwatch.reset(RamWatchDetailedBuilder::new_watch(addr, typeBox->currentIndex()));
 
     ramwatch->hex = (displayBox->currentIndex() == 1);
     ramwatch->label = labelInput->text().toStdString();

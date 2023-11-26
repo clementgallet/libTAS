@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -32,10 +32,12 @@ namespace libtas {
 
 namespace orig {
 
-static unsigned int __attribute__((noinline)) ves_icall_System_Threading_Thread_Sleep_internal(int ms, void *error)
-{
-    HOOK_PLACEHOLDER_RETURN_ZERO
-}
+unsigned int (*ves_icall_System_Threading_Thread_Sleep_internal)(int ms, void *error);
+uint8_t (*ves_icall_System_Threading_ThreadPool_SetMinThreadsNative)(int32_t worker_threads, int32_t completion_port_threads, void *error);
+uint8_t (*ves_icall_System_Threading_ThreadPool_SetMaxThreadsNative)(int32_t worker_threads, int32_t completion_port_threads, void *error);
+void (*ves_icall_System_Threading_ThreadPool_GetMinThreadsNative)(int32_t *worker_threads, int32_t *completion_port_threads, void *error);
+void (*ves_icall_System_Threading_ThreadPool_GetMaxThreadsNative)(int32_t *worker_threads, int32_t *completion_port_threads, void *error);
+uint8_t (*ves_icall_System_Threading_ThreadPool_RequestWorkerThread)(void *error);
 
 }
 
@@ -60,9 +62,46 @@ void ves_icall_System_Threading_Thread_Sleep_internal(int ms, void *error)
         orig::ves_icall_System_Threading_Thread_Sleep_internal(ms, error);
 }
 
+void ves_icall_System_Threading_ThreadPool_GetMinThreadsNative (int32_t *worker_threads, int32_t *completion_port_threads, void *error)
+{
+}
+
+uint8_t ves_icall_System_Threading_ThreadPool_SetMinThreadsNative (int32_t worker_threads, int32_t completion_port_threads, void *error)
+{
+    debuglogstdio(LCF_THREAD, "%s call with worker_threads %d and completion_port_threads %d", __func__, worker_threads, completion_port_threads);
+    return 1;
+}
+
+uint8_t ves_icall_System_Threading_ThreadPool_SetMaxThreadsNative (int32_t worker_threads, int32_t completion_port_threads, void *error)
+{
+    debuglogstdio(LCF_THREAD, "%s call with worker_threads %d and completion_port_threads %d", __func__, worker_threads, completion_port_threads);
+    return 1;
+}
+
+uint8_t ves_icall_System_Threading_ThreadPool_RequestWorkerThread (void *error)
+{
+    debuglogstdio(LCF_THREAD, "%s call", __func__);
+    
+    static bool threadInit = false;
+    if (!threadInit) {
+        int32_t worker_threads = 0, completion_port_threads = 0;
+        orig::ves_icall_System_Threading_ThreadPool_GetMinThreadsNative (&worker_threads, &completion_port_threads, nullptr);
+        orig::ves_icall_System_Threading_ThreadPool_SetMaxThreadsNative(worker_threads, completion_port_threads, nullptr);
+        
+        threadInit = true;
+    }
+    
+    return orig::ves_icall_System_Threading_ThreadPool_RequestWorkerThread(error);
+}
+
 void hook_mono()
 {
     HOOK_PATCH_ORIG(ves_icall_System_Threading_Thread_Sleep_internal, nullptr);
+    HOOK_PATCH_ORIG(ves_icall_System_Threading_ThreadPool_SetMinThreadsNative, nullptr);
+    HOOK_PATCH_ORIG(ves_icall_System_Threading_ThreadPool_SetMaxThreadsNative, nullptr);
+    HOOK_PATCH_ORIG(ves_icall_System_Threading_ThreadPool_GetMinThreadsNative, nullptr);
+    HOOK_PATCH_ORIG(ves_icall_System_Threading_ThreadPool_RequestWorkerThread, nullptr);
+    
 }
 
 }

@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,16 +17,17 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "InputPane.h"
+#include "tooltip/ToolTipCheckBox.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QCheckBox>
-
-#include "InputPane.h"
-#include "../../Context.h"
-#include "tooltip/ToolTipCheckBox.h"
 
 InputPane::InputPane(Context* c) : context(c)
 {
@@ -75,9 +76,9 @@ void InputPane::initLayout()
 
 void InputPane::initSignals()
 {
-    connect(mouseSupportBox, &QCheckBox::toggled, this, &InputPane::saveConfig);
-    connect(mouseWarpBox, &QCheckBox::toggled, this, &InputPane::saveConfig);
-    connect(mouseGameWarpBox, &QCheckBox::toggled, this, &InputPane::saveConfig);
+    connect(mouseSupportBox, &QAbstractButton::clicked, this, &InputPane::saveConfig);
+    connect(mouseWarpBox, &QAbstractButton::clicked, this, &InputPane::saveConfig);
+    connect(mouseGameWarpBox, &QAbstractButton::clicked, this, &InputPane::saveConfig);
     connect(joyChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &InputPane::saveConfig);
 }
 

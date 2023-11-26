@@ -70,6 +70,7 @@ libtas_so_SOURCES = \
     checkpoint/ThreadSync.cpp \
     encoding/AVEncoder.cpp \
     encoding/NutMuxer.cpp \
+    encoding/Screenshot.cpp \
     fileio/dirwrappers.cpp \
     fileio/FileHandleList.cpp \
     fileio/generaliowrappers.cpp \
@@ -177,8 +178,9 @@ libtas_so_SOURCES = \
     xlib/xrandr.cpp \
     xlib/xshm.cpp \
     xlib/xwindows.cpp \
-    ../shared/AllInputs.cpp \
-    ../shared/SingleInput.cpp \
+    ../shared/inputs/AllInputs.cpp \
+    ../shared/inputs/ControllerInputs.cpp \
+    ../shared/inputs/SingleInput.cpp \
     ../shared/sockethelpers.cpp \
     ../external/lz4.cpp \
     ../external/elfhacks.cpp	

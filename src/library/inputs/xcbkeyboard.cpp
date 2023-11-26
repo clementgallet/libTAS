@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,13 +18,14 @@
  */
 
 #include "xcbkeyboard.h"
-#include "../logging.h"
 #include "inputs.h"
 #include "xkeyboardlayout.h"
-// #include <X11/XKBlib.h>
+
+#include "logging.h"
+#include "GlobalState.h"
+#include "../shared/inputs/AllInputs.h"
+
 #include <cstring> // memset
-#include "../../shared/AllInputs.h"
-#include "../GlobalState.h"
 
 namespace libtas {
 

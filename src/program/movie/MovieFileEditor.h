@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,12 +20,15 @@
 #ifndef LIBTAS_MOVIEFILEEDITOR_H_INCLUDED
 #define LIBTAS_MOVIEFILEEDITOR_H_INCLUDED
 
-#include "../../shared/AllInputs.h"
-#include "../Context.h"
+#include "../shared/inputs/SingleInput.h"
+
 #include <vector>
 #include <set>
 #include <map>
 #include <stdint.h>
+
+class AllInputs;
+struct Context;
 
 class MovieFileEditor {
 public:

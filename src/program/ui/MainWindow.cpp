@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,6 +17,30 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "MainWindow.h"
+#include "EncodeWindow.h"
+#include "ExecutableWindow.h"
+#include "InputWindow.h"
+#include "ControllerTabWindow.h"
+#include "GameInfoWindow.h"
+#include "RamSearchWindow.h"
+#include "RamWatchWindow.h"
+#include "RamWatchView.h"
+#include "InputEditorWindow.h"
+#include "InputEditorView.h"
+#include "InputEditorModel.h"
+#include "AnnotationsWindow.h"
+#include "TimeTraceWindow.h"
+#include "TimeTraceModel.h"
+#include "LuaConsoleWindow.h"
+#include "ErrorChecking.h"
+#include "settings/SettingsWindow.h"
+
+#include "movie/MovieFile.h"
+#include "utils.h"
+#include "GameEvents.h"
+#include "../shared/version.h"
+
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
@@ -29,28 +53,6 @@
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QApplication>
 #include <QtCore/QTimer>
-
-#include "MainWindow.h"
-#include "settings/SettingsWindow.h"
-#include "EncodeWindow.h"
-#include "ExecutableWindow.h"
-#include "InputWindow.h"
-#include "ControllerTabWindow.h"
-#include "GameInfoWindow.h"
-#include "RamSearchWindow.h"
-#include "RamWatchWindow.h"
-#include "InputEditorWindow.h"
-#include "InputEditorView.h"
-#include "InputEditorModel.h"
-#include "AnnotationsWindow.h"
-#include "TimeTraceWindow.h"
-#include "TimeTraceModel.h"
-#include "LuaConsoleWindow.h"
-#include "../movie/MovieFile.h"
-#include "ErrorChecking.h"
-#include "../../shared/version.h"
-#include "../utils.h"
-#include "../GameEvents.h"
 
 #include <iostream>
 #include <future>
@@ -179,7 +181,8 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::inputsEdited, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endEditInputs);
     connect(gameLoop->gameEvents, &GameEvents::inputsEdited, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::endEditInputs);
     connect(gameLoop, &GameLoop::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);
-    connect(gameLoop, &GameLoop::getRamWatch, ramWatchWindow, &RamWatchWindow::slotGet, Qt::DirectConnection);
+    connect(gameLoop->gameEvents, &GameEvents::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);
+    connect(gameLoop, &GameLoop::getRamWatch, ramWatchWindow->ramWatchView, &RamWatchView::slotGet, Qt::DirectConnection);
     connect(gameLoop, &GameLoop::getMarkerText, inputEditorWindow->inputEditorView, &InputEditorView::getCurrentMarkerText, Qt::DirectConnection);
     connect(gameLoop->gameEvents, &GameEvents::savestatePerformed, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::registerSavestate);
     connect(gameLoop, &GameLoop::invalidateSavestates, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::invalidateSavestates);
@@ -639,6 +642,7 @@ void MainWindow::createMenus()
     QMenu *toolsMenu = menuBar()->addMenu(tr("Tools"));
     configEncodeAction = toolsMenu->addAction(tr("Configure encode..."), encodeWindow, &EncodeWindow::exec);
     toggleEncodeAction = toolsMenu->addAction(tr("Start encode"), this, &MainWindow::slotToggleEncode);
+    screenshotAction = toolsMenu->addAction(tr("Screenshot..."), this, &MainWindow::slotScreenshot);
 
     toolsMenu->addSeparator();
 
@@ -1314,6 +1318,25 @@ void MainWindow::slotToggleEncode()
         /* TODO: Using directly the hotkey does not check for existing file */
         context->hotkey_pressed_queue.push(HOTKEY_TOGGLE_ENCODE);
     }
+}
+
+void MainWindow::slotScreenshot()
+{
+    /* Prompt for screenshot filename and path */
+    if (context->interactive) {
+        QString defaultPath = QString(context->config.screenshotfile.c_str());
+        
+        QString screenshotPath = QFileDialog::getSaveFileName(this,
+            tr("Choose a screenshot file"),
+            defaultPath);
+            
+        if (!screenshotPath.isNull())
+            context->config.screenshotfile = screenshotPath.toStdString();
+        else
+            return;
+    }
+    
+    context->hotkey_pressed_queue.push(HOTKEY_SCREENSHOT);
 }
 
 void MainWindow::slotVariableFramerate(bool checked)

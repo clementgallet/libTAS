@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,17 +18,18 @@
  */
 
 #include "pcm.h"
-#include "../../logging.h"
-#include "../AudioContext.h"
-#include "../AudioSource.h"
-#include "../AudioBuffer.h"
-#include <time.h> //nanosleep
-#include "../../GlobalState.h"
-#include "../../hook.h"
-#include "../../DeterministicTimer.h"
-#include "../../checkpoint/ThreadManager.h"
-#include "../../global.h"
 
+#include "logging.h"
+#include "audio/AudioContext.h"
+#include "audio/AudioSource.h"
+#include "audio/AudioBuffer.h"
+#include "GlobalState.h"
+#include "hook.h"
+#include "DeterministicTimer.h"
+#include "checkpoint/ThreadManager.h"
+#include "global.h"
+
+#include <time.h> //nanosleep
 #include <stdint.h>
 
 #define BUFFER_SIZE_MIN 2048
@@ -36,6 +37,7 @@
 namespace libtas {
 
 static int buffer_size = 4096; // in samples
+static int avail_min = 0;
 
 DEFINE_ORIG_POINTER(snd_pcm_open)
 DEFINE_ORIG_POINTER(snd_pcm_open_lconf)
@@ -424,19 +426,38 @@ int snd_pcm_wait(snd_pcm_t *pcm, int timeout)
 
     /* Check for no more available samples */
     int delta_ms = -1;
-    if ((buffer_size - get_latency(pcm)) <= 0) {
+    int real_timeout_count = 0;
+    DeterministicTimer& detTimer = DeterministicTimer::get();
+    if ((buffer_size - get_latency(pcm)) <= avail_min) {
         /* Wait for timeout or available samples */
         TimeHolder initial_time = detTimer.getTicks();
         do {
+            if (Global::is_exiting)
+                break;
+            
             struct timespec mssleep = {0, 1000*1000};
             NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
             TimeHolder delta_time = detTimer.getTicks();
             delta_time -= initial_time;
             delta_ms = delta_time.tv_sec * 1000 + delta_time.tv_nsec / 1000000;
-        } while (!Global::is_exiting && (get_latency(pcm) >= buffer_size) && ((timeout < 0) || (delta_ms < timeout)));
+            
+            if ((timeout >= 0) && (delta_ms >= timeout))
+                break;
+                
+            /* Create a real timeout in case we softlock here due to the game
+             * waiting for audio to drain without advancing frames */
+            if (! detTimer.isInsideFrameBoundary()) {
+                real_timeout_count++;
+                if (real_timeout_count > 1000) { // Arbitrary, about 1 sec
+                    debuglogstdio(LCF_SOUND | LCF_WARNING, "Softlocked inside snd_pcm_wait()");
+                    return 0;
+                }
+            }
+                
+        } while ((buffer_size - get_latency(pcm)) <= avail_min);
     }
 
-    if ((buffer_size - get_latency(pcm)) > 0)
+    if ((buffer_size - get_latency(pcm)) > avail_min)
         return 1;
 
     /* Timeout */
@@ -1464,6 +1485,7 @@ int snd_pcm_sw_params_set_avail_min(snd_pcm_t *pcm, snd_pcm_sw_params_t *params,
     }
 
     debuglogstdio(LCF_SOUND, "%s call with val %d", __func__, val);
+    avail_min = val;
     return 0;
 }
 

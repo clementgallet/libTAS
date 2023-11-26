@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,6 +17,12 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "LuaConsoleWindow.h"
+#include "LuaConsoleModel.h"
+
+#include "Context.h"
+#include "lua/Print.h"
+ 
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QDialogButtonBox>
@@ -26,12 +32,6 @@
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QAction>
 #include <QtWidgets/QHeaderView>
-// #include <QtWidgets/QItemSelectionModel>
-
-#include "LuaConsoleWindow.h"
-#include "LuaConsoleModel.h"
-#include "../lua/Print.h"
-#include "../Context.h"
 
 LuaConsoleWindow::LuaConsoleWindow(Context *c, QWidget *parent) : QMainWindow(parent), context(c)
 {

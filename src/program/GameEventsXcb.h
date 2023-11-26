@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,11 +20,11 @@
 #ifndef LIBTAS_GAMEEVENTS_XCB_H_INCLUDED
 #define LIBTAS_GAMEEVENTS_XCB_H_INCLUDED
 
-#include <memory>
-#include <stdint.h>
-
 #include "GameEvents.h"
 #include "KeyMapping.h"
+
+#include <memory>
+#include <stdint.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>
 

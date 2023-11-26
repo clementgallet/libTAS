@@ -7,10 +7,11 @@
 #ifndef LIBTAS_ISTEAMCLIENT_H_INCL
 #define LIBTAS_ISTEAMCLIENT_H_INCL
 
+#include "steam/steamtypes.h"
+#include "hook.h"
+
 #include <stdint.h>
 #include <string>
-#include "../steamtypes.h"
-#include "../../hook.h"
 
 namespace libtas {
 

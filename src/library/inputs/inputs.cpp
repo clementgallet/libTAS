@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,7 +18,9 @@
  */
 
 #include "inputs.h"
-#include "../global.h"
+
+#include "global.h"
+#include "logging.h"
 
 namespace libtas {
 
@@ -67,10 +69,18 @@ void updateGameInputs()
     game_ai.pointer_mask = ai.pointer_mask;
 
     for (int ji=0; ji<Global::shared_config.nb_controllers; ji++) {
-        for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
-            game_ai.controller_axes[ji][axis] = ai.controller_axes[ji][axis];
+        if (!ai.controllers[ji]) {
+            if (game_ai.controllers[ji])
+                /* No need to deallocate and then allocate again on future inputs
+                 * I'm just emptying all controller inputs */
+                game_ai.controllers[ji]->emptyInputs();
         }
-        game_ai.controller_buttons[ji] = ai.controller_buttons[ji];
+        else {
+            if (!game_ai.controllers[ji])
+                game_ai.controllers[ji].reset(new ControllerInputs());
+            
+            *game_ai.controllers[ji] = *ai.controllers[ji];
+        }
     }
 
     /* Clipping pointer inside grab window */

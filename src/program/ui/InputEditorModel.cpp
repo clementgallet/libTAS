@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,6 +17,16 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "InputEditorModel.h"
+#include "qtutils.h"
+
+#include "Context.h"
+#include "movie/MovieFile.h"
+#include "SaveStateList.h"
+#include "SaveState.h"
+#include "../shared/inputs/SingleInput.h"
+#include "../shared/inputs/AllInputs.h"
+
 #include <QtGui/QBrush>
 #include <QtGui/QClipboard>
 #include <QtGui/QGuiApplication>
@@ -25,13 +35,6 @@
 #include <sstream>
 #include <iostream>
 #include <set>
-
-#include "InputEditorModel.h"
-#include "../Context.h"
-#include "../movie/MovieFile.h"
-#include "../SaveStateList.h"
-#include "../SaveState.h"
-#include "qtutils.h"
 
 InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : QAbstractTableModel(parent), context(c), movie(m) {}
 
@@ -88,6 +91,28 @@ QVariant InputEditorModel::headerData(int section, Qt::Orientation orientation, 
                 return QString(movie->editor->input_set[section-COLUMN_SPECIAL_SIZE].description.c_str());
         }
     }
+    
+    if (role == Qt::BackgroundRole) {
+        if (orientation == Qt::Horizontal) {
+
+            /* Highlight current column */
+            if (section >= COLUMN_SPECIAL_SIZE && hoveredIndex.isValid()
+                && (section == hoveredIndex.column())) {
+                    
+                /* Main color */
+                QColor color = QGuiApplication::palette().window().color();
+                bool lightTheme = isLightTheme();
+                    
+                if (lightTheme)
+                    color = color.darker(110);
+                else
+                    color = color.lighter(110);
+
+                return QBrush(color);
+            }
+        }
+    }
+
     return QVariant();
 }
 
@@ -120,13 +145,30 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         }
 
         QColor color = QGuiApplication::palette().text().color();
+        const SingleInput si = movie->editor->input_set[index.column()-COLUMN_SPECIAL_SIZE];
+
+        /* If hovering on the cell, show a preview of the input for the 
+         * following: the cell is blank and not analog input */
+        if (index.column() == hoveredIndex.column()) {
+            if (!si.isAnalog()) {
+                const AllInputs& ai = movie->inputs->getInputs(row);
+                int value = ai.getInput(si);
+                if (!value) {
+                    if (index.row() == hoveredIndex.row())
+                        color.setAlpha(128);
+                    else
+                        color.setAlpha(32);
+                    return QBrush(color);                    
+                }
+            }
+        }
 
         /* Show inputs with transparancy when they are pending due to rewind */
         movie->inputs->input_event_queue.lock();
         for (auto it = movie->inputs->input_event_queue.begin(); it != movie->inputs->input_event_queue.end(); it++) {
             if (it->framecount != row)
                 continue;
-            const SingleInput si = movie->editor->input_set[index.column()-COLUMN_SPECIAL_SIZE];
+
             if (si == it->si) {
                 /* For analog, use half-transparancy. Otherwise,
                  * use strong/weak transparancy of set/clear input */
@@ -256,9 +298,12 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
             return row;
         }
 
-        AllInputs ai;
-        movie->inputs->getInputs(ai, row);
+        const AllInputs& ai = movie->inputs->getInputs(row);
         const SingleInput si = movie->editor->input_set[index.column()-COLUMN_SPECIAL_SIZE];
+
+        /* If hovering on the cell, show a preview of the input */
+        if (index.column() == hoveredIndex.column() && (!si.isAnalog()))
+            return QString(si.description.c_str());
 
         /* Get the value of the single input in movie inputs */
         int value = ai.getInput(si);
@@ -318,8 +363,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         if (movie->editor->locked_inputs.find(si) != movie->editor->locked_inputs.end())
             return QVariant();
 
-        AllInputs ai;
-        movie->inputs->getInputs(ai, row);
+        const AllInputs& ai = movie->inputs->getInputs(row);
 
         /* Get the value of the single input in movie inputs */
         int value = ai.getInput(si);
@@ -359,8 +403,7 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
         }
 
         /* Check if the data is different */
-        AllInputs ai;
-        movie->inputs->getInputs(ai, row);
+        const AllInputs& ai = movie->inputs->getInputs(row);
         if (value.toInt() == ai.getInput(si))
             return false;
 
@@ -457,8 +500,7 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
     }
 
     /* Modifying the movie is only performed by the main thread */
-    AllInputs ai;
-    movie->inputs->getInputs(ai, row);
+    const AllInputs& ai = movie->inputs->getInputs(row);
     InputEvent ie;
     ie.framecount = row;
     ie.si = si;
@@ -595,8 +637,7 @@ void InputEditorModel::copyInputs(int row, int count)
 
     /* Translate inputs into a string */
     for (int r=row; r < row+count; r++) {
-        AllInputs ai;
-        movie->inputs->getInputs(ai, r);
+        const AllInputs& ai = movie->inputs->getInputs(r);
         movie->inputs->writeFrame(inputString, ai);
     }
 
@@ -620,9 +661,12 @@ int InputEditorModel::pasteInputs(int row)
     std::string line;
     while (std::getline(inputString, line)) {
         if (!line.empty() && (line[0] == '|')) {
-            AllInputs ai;
-            movie->inputs->readFrame(line, ai);
-            paste_ais.push_back(ai);
+            paste_ais.emplace_back();
+            int ret = movie->inputs->readFrame(line, paste_ais.back());
+            if (ret < 0) {
+                paste_ais.pop_back();
+                break;
+            }
         }
     }
 
@@ -633,10 +677,14 @@ int InputEditorModel::pasteInputs(int row)
         beginInsertRows(QModelIndex(), rowCount(), rowCount() + insertedFrames - 1);
     }
 
+    AllInputs newais;
+    newais.emptyInputs();
+    
     for (size_t r = 0; r < paste_ais.size(); r++) {
         movie->inputs->setInputs(paste_ais[r], row + r, true);
-        addUniqueInputs(paste_ais[r]);
+        newais |= paste_ais[r];
     }
+    addUniqueInputs(newais);
 
     if (insertedFrames > 0) {
         endInsertRows();
@@ -666,18 +714,24 @@ void InputEditorModel::pasteInputsInRange(int row, int count)
     std::string line;
     while (std::getline(inputString, line)) {
         if (!line.empty() && (line[0] == '|')) {
-            AllInputs ai;
-            movie->inputs->readFrame(line, ai);
-            paste_ais.push_back(ai);
+            paste_ais.emplace_back();
+            int ret = movie->inputs->readFrame(line, paste_ais.back());
+            if (ret < 0) {
+                paste_ais.pop_back();
+                break;
+            }
         }
     }
 
     size_t r = 0;
+    AllInputs newais;
+    newais.emptyInputs();
     for (int f = row; f < (row+count); f++) {
         movie->inputs->setInputs(paste_ais[r], f, true);
-        addUniqueInputs(paste_ais[r]);
+        newais |= paste_ais[r];
         r = (r+1)%paste_ais.size();
     }
+    addUniqueInputs(newais);
 
     /* Update the movie framecount */
     movie->updateLength();
@@ -701,18 +755,24 @@ int InputEditorModel::pasteInsertInputs(int row)
     std::string line;
     while (std::getline(inputString, line)) {
         if (!line.empty() && (line[0] == '|')) {
-            AllInputs ai;
-            movie->inputs->readFrame(line, ai);
-            paste_ais.push_back(ai);
+            paste_ais.emplace_back();
+            int ret = movie->inputs->readFrame(line, paste_ais.back());
+            if (ret < 0) {
+                paste_ais.pop_back();
+                break;
+            }
         }
     }
 
     beginInsertRows(QModelIndex(), row, row + paste_ais.size() - 1);
 
+    AllInputs newais;
+    newais.emptyInputs();
     for (size_t r = 0; r < paste_ais.size(); r++) {
         movie->inputs->insertInputsBefore(paste_ais[r], row + r);
-        addUniqueInputs(paste_ais[r]);
+        newais |= paste_ais[r];
     }
+    addUniqueInputs(newais);
 
     endInsertRows();
 
@@ -786,10 +846,11 @@ void InputEditorModel::clearUniqueInput(int column)
         return;
 
     for (unsigned int f = context->framecount; f < movie->inputs->nbFrames(); f++) {
-        AllInputs ai;
-        movie->inputs->getInputs(ai, f);
-        ai.setInput(si, 0);
-        movie->inputs->setInputs(ai, f, true);
+        InputEvent ie;
+        ie.framecount = f;
+        ie.si = si;
+        ie.value = 0;
+        movie->inputs->input_event_queue.push(ie);
     }
 }
 
@@ -799,18 +860,18 @@ bool InputEditorModel::removeUniqueInput(int column)
 
     /* Check if the input is set in past frames */
     for (unsigned int f = 0; f < context->framecount; f++) {
-        AllInputs ai;
-        movie->inputs->getInputs(ai, f);
+        const AllInputs& ai = movie->inputs->getInputs(f);
         if (ai.getInput(si))
             return false;
     }
 
     /* Clear remaining frames */
     for (unsigned int f = context->framecount; f < movie->inputs->nbFrames(); f++) {
-        AllInputs ai;
-        movie->inputs->getInputs(ai, f);
-        ai.setInput(si, 0);
-        movie->inputs->setInputs(ai, f, true);
+        InputEvent ie;
+        ie.framecount = f;
+        ie.si = si;
+        ie.value = 0;
+        movie->inputs->input_event_queue.push(ie);
     }
 
     /* Remove clear locked state */
@@ -886,8 +947,7 @@ void InputEditorModel::endAddInputs()
     endInsertRows();
 
     /* We have to check if new inputs were added */
-    AllInputs ai;
-    movie->inputs->getInputs(ai, movie->inputs->nbFrames()-1);
+    const AllInputs& ai = movie->inputs->getInputs(movie->inputs->nbFrames()-1);
 
     addUniqueInputs(ai);
 }
@@ -901,8 +961,7 @@ void InputEditorModel::endEditInputs(unsigned long long framecount)
     emit dataChanged(index(framecount,0), index(framecount,columnCount()-1));
 
     /* We have to check if new inputs were added */
-    AllInputs ai;
-    movie->inputs->getInputs(ai, framecount);
+    const AllInputs& ai = movie->inputs->getInputs(framecount);
     addUniqueInputs(ai);
 }
 
@@ -1048,4 +1107,17 @@ bool InputEditorModel::isScrollFreeze()
 void InputEditorModel::setScrollFreeze(bool state)
 {
     freeze_scroll = state;
+}
+
+void InputEditorModel::setHoveredCell(const QModelIndex &i)
+{
+    QVector<int> roles(2, Qt::DisplayRole);
+    roles[1] = Qt::ForegroundRole;
+    
+    const QModelIndex old = hoveredIndex;
+    hoveredIndex = i;
+    emit dataChanged(index(0,old.column()), index(rowCount(),old.column()), roles);
+    emit dataChanged(index(0,hoveredIndex.column()), index(rowCount(),hoveredIndex.column()), QVector<int>(1, Qt::BackgroundRole));
+    emit headerDataChanged(Qt::Horizontal, old.column(), old.column());
+    emit headerDataChanged(Qt::Horizontal, hoveredIndex.column(), hoveredIndex.column());
 }

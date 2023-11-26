@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -30,10 +30,15 @@ namespace libtas {
 
 bool NonDeterministicTimer::inited = false;
 
-void NonDeterministicTimer::initialize(void)
+NonDeterministicTimer& NonDeterministicTimer::get() {
+    static NonDeterministicTimer instance;
+    return instance;
+}
+
+void NonDeterministicTimer::initialize(uint64_t initial_sec, uint64_t initial_nsec)
 {
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lasttime));
-    ticks = lasttime;
+    ticks = {initial_sec, initial_nsec};
     lastEnterTicks = ticks;
     inFB = false;
     lastEnterTime = lasttime;
@@ -128,7 +133,5 @@ void NonDeterministicTimer::addDelay(struct timespec delayTicks)
     /* Call the real nanosleep function */
     NATIVECALL(nanosleep(&delayTicks, NULL));
 }
-
-NonDeterministicTimer nonDetTimer;
 
 }

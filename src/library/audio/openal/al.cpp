@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,10 +20,11 @@
 #include "al.h"
 #include "alsoft.h"
 #include "efx.h"
-#include "../../logging.h"
-#include "../AudioBuffer.h"
-#include "../AudioSource.h"
-#include "../AudioContext.h"
+
+#include "logging.h"
+#include "audio/AudioBuffer.h"
+#include "audio/AudioSource.h"
+#include "audio/AudioContext.h"
 
 #include <cstring> // strcmp
 

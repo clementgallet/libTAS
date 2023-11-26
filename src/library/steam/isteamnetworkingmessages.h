@@ -3,9 +3,10 @@
 #ifndef LIBTAS_ISTEAMNETWORKINGMESSAGES_H_INCL
 #define LIBTAS_ISTEAMNETWORKINGMESSAGES_H_INCL
 
+#include "steamtypes.h"
+
 #include <stdint.h>
 #include <stddef.h>
-#include "steamtypes.h"
 
 namespace libtas {
 

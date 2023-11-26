@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,17 +18,17 @@
  */
 
 #include "stdiowrappers.h"
-
-#include "../logging.h"
-#include "../hook.h"
 #include "SaveFileList.h"
 #include "FileHandleList.h"
-#include "../GlobalState.h"
-#include "../global.h"
-
 #ifdef __linux__
 #include "URandom.h"
 #endif
+
+#include "logging.h"
+#include "hook.h"
+#include "GlobalState.h"
+#include "global.h"
+
 
 namespace libtas {
 

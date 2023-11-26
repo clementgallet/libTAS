@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -42,6 +42,8 @@ public:
     PointerScanWindow(Context *c, QWidget *parent = Q_NULLPTR);
 
     QLineEdit *addressInput;
+    int type_index;
+    
 private:
     Context *context;
     QTableView *pointerScanView;
@@ -57,6 +59,8 @@ private:
 private slots:
     void slotSearch();
     void slotAdd();
+    void slotSave();
+    void slotLoad();
 
 };
 

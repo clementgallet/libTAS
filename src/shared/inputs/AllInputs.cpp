@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,8 +18,111 @@
  */
 
 #include "AllInputs.h"
-// #include <X11/keysym.h>
+#include "ControllerInputs.h"
+#include "../shared/messages.h"
+#include "../shared/sockethelpers.h"
+
 #include <iostream>
+
+AllInputs::AllInputs(const AllInputs& ai)
+{
+    *this = ai;
+}
+
+bool AllInputs::operator==(const AllInputs& other) const
+{
+    if (keyboard != other.keyboard)
+        return false;
+        
+    if (!((pointer_x == other.pointer_x) &&
+        (pointer_y == other.pointer_y) &&
+        (pointer_mask == other.pointer_mask)))
+        return false;
+
+    for (int j = 0; j < MAXJOYS; j++) {
+        if (controllers[j] && other.controllers[j]) {
+            if (!(*controllers[j] == *other.controllers[j]))
+                return false;
+        }
+    }
+    
+    return ((flags == other.flags) &&
+        (framerate_den == other.framerate_den) &&
+        (framerate_num == other.framerate_num) &&
+        (realtime_sec == other.realtime_sec) &&
+        (realtime_nsec == other.realtime_nsec));
+}
+
+AllInputs& AllInputs::operator|=(const AllInputs& ai)
+{
+    /* keyboard is a bit complex */
+    for (int k1 = 0; k1 < MAXKEYS; k1++) {
+        if (ai.keyboard[k1] != 0) {
+            bool toadd = true;
+            int k2;
+            for (k2 = 0; k2 < MAXKEYS; k2++) {
+                if (keyboard[k2] == 0) {
+                    toadd = true;
+                    break;
+                }
+                if (ai.keyboard[k1] == keyboard[k2]) {
+                    toadd = false;
+                    break;
+                }
+            }
+            if (toadd && (k2 < MAXKEYS))
+                keyboard[k2] = ai.keyboard[k1];
+        }
+    }
+    
+    pointer_x |= ai.pointer_x;
+    pointer_y |= ai.pointer_y;
+    pointer_mode |= ai.pointer_mode;
+    pointer_mask |= ai.pointer_mask;
+    for (int j=0; j<MAXJOYS; j++) {
+        if (controllers[j] && ai.controllers[j]) {
+            *controllers[j] |= *ai.controllers[j];
+        }
+    }
+
+    flags |= ai.flags;
+    framerate_den |= ai.framerate_den;
+    framerate_num |= ai.framerate_num;
+    realtime_sec |= ai.realtime_sec;
+    realtime_nsec |= ai.realtime_nsec;
+
+    return *this;
+}
+
+AllInputs& AllInputs::operator=(const AllInputs& other)
+{
+    keyboard = other.keyboard;        
+    pointer_x = other.pointer_x;
+    pointer_y = other.pointer_y;
+    pointer_mode = other.pointer_mode;
+    pointer_mask = other.pointer_mask;
+
+    for (int j = 0; j < MAXJOYS; j++) {
+        if (!other.controllers[j]) {
+            if (controllers[j])
+                controllers[j]->emptyInputs();
+        }
+        else {
+            if (!controllers[j])
+                controllers[j].reset(new ControllerInputs());
+            
+            *controllers[j] = *other.controllers[j];
+        }
+    }
+    
+    flags = other.flags;
+    framerate_den = other.framerate_den;
+    framerate_num = other.framerate_num;
+    realtime_sec = other.realtime_sec;
+    realtime_nsec = other.realtime_nsec;    
+    
+    return *this;
+}
 
 void AllInputs::emptyInputs() {
     int i,j;
@@ -31,10 +134,10 @@ void AllInputs::emptyInputs() {
     pointer_mode = SingleInput::POINTER_MODE_ABSOLUTE;
     pointer_mask = 0;
 
-    for (i=0; i<MAXJOYS; i++) {
-        for (j=0; j<MAXAXES; j++)
-            controller_axes[i][j] = 0;
-        controller_buttons[i] = 0;
+    for (j=0; j<MAXJOYS; j++) {
+        if (controllers[j]) {
+            controllers[j]->emptyInputs();
+        }
     }
 
     flags = 0;
@@ -46,10 +149,10 @@ void AllInputs::emptyInputs() {
 
 bool AllInputs::isDefaultController(int j) const
 {
-    for (int a=0; a<MAXAXES; a++)
-        if (controller_axes[j][a] != 0)
-            return false;
-    return (controller_buttons[j] == 0);
+    if (controllers[j]) {
+        return controllers[j]->isDefaultController();
+    }
+    return true;
 }
 
 int AllInputs::getInput(const SingleInput &si) const
@@ -97,16 +200,9 @@ int AllInputs::getInput(const SingleInput &si) const
         default:
             /* Controller inputs */
             if (si.inputTypeIsController()) {
-                int controller_i = si.inputTypeToControllerNumber();
-                bool is_controller_axis = si.inputTypeToAxisFlag();
-                int controller_type = si.inputTypeToInputNumber();
-
-                /* We don't support analog inputs in input editor */
-                if (is_controller_axis) {
-                    return controller_axes[controller_i][controller_type];
-                }
-                else {
-                    return (controller_buttons[controller_i] >> controller_type) & 0x1;
+                int j = si.inputTypeToControllerNumber();
+                if (controllers[j]) {
+                    return controllers[j]->getInput(si);
                 }
             }
     }
@@ -196,24 +292,10 @@ void AllInputs::setInput(const SingleInput &si, int value)
         default:
             /* Controller inputs */
             if (si.inputTypeIsController()) {
-                int controller_i = si.inputTypeToControllerNumber();
-                bool is_controller_axis = si.inputTypeToAxisFlag();
-                int controller_type = si.inputTypeToInputNumber();
-
-                if (is_controller_axis) {
-                    if (value > INT16_MAX)
-                        controller_axes[controller_i][controller_type] = INT16_MAX;
-                    else if (value < INT16_MIN)
-                        controller_axes[controller_i][controller_type] = INT16_MIN;
-                    else
-                        controller_axes[controller_i][controller_type] = static_cast<short>(value);
-                }
-                else {
-                    if (value)
-                        controller_buttons[controller_i] |= (0x1 << controller_type);
-                    else
-                        controller_buttons[controller_i] &= ~(0x1 << controller_type);
-                }
+                int j = si.inputTypeToControllerNumber();
+                if (!controllers[j])
+                    controllers[j].reset(new ControllerInputs());
+                return controllers[j]->setInput(si, value);
             }
             break;
     }
@@ -285,23 +367,54 @@ void AllInputs::extractInputs(std::set<SingleInput> &input_set) const
     }
 
     for (int c = 0; c < AllInputs::MAXJOYS; c++) {
-        for (int a = 0; a < AllInputs::MAXAXES; a++) {
-            if (controller_axes[c][a]) {
-                si = {(((c+1) << SingleInput::IT_CONTROLLER_ID_SHIFT) | SingleInput::IT_CONTROLLER_AXIS_MASK) + a, 1, ""};
-                input_set.insert(si);
-            }
+        if (controllers[c]) {
+            controllers[c]->extractInputs(input_set, c);
         }
+    }
+}
 
-        if (!controller_buttons[c]) {
-            continue;
+void AllInputs::send(bool preview)
+{
+    if (preview)
+        sendMessage(MSGN_PREVIEW_INPUTS);
+    else
+        sendMessage(MSGN_ALL_INPUTS);
+    
+    sendData(this, sizeof(AllInputs));
+    for (int j = 0; j < MAXJOYS; j++) {
+        if (controllers[j]) {
+            sendMessage(MSGN_CONTROLLER_INPUTS);
+            sendData(&j, sizeof(int));
+            sendData(controllers[j].get(), sizeof(ControllerInputs));
         }
-        else {
-            for (int b=0; b<16; b++) {
-                if (controller_buttons[c] & (1 << b)) {
-                    si = {((c+1) << SingleInput::IT_CONTROLLER_ID_SHIFT) + b, 1, ""};
-                    input_set.insert(si);
-                }
-            }
+    }
+    
+    sendMessage(MSGN_END_INPUTS);
+}
+
+void AllInputs::recv()
+{
+    /* Reset all std::unique_ptr before loading */
+    for (int j=0; j < MAXJOYS; j++)
+        controllers[j].reset(nullptr);
+
+    receiveData(this, sizeof(AllInputs));
+    
+    /* Reset all std::unique_ptr that have garbage data */
+    for (int j=0; j < MAXJOYS; j++)
+        controllers[j].release();
+    
+    int message = receiveMessage();
+    while (message != MSGN_END_INPUTS) {
+        switch (message) {
+            case MSGN_CONTROLLER_INPUTS: {
+                int joy;
+                receiveData(&joy, sizeof(int));
+                controllers[joy].reset(new ControllerInputs());
+                receiveData(controllers[joy].get(), sizeof(ControllerInputs));
+                break;
+            }                
         }
+        message = receiveMessage();
     }
 }

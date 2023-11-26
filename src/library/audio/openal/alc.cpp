@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,9 +20,10 @@
 #include "alc.h"
 #include "alsoft.h"
 #include "efx.h"
-#include "../AudioContext.h"
-#include "../../logging.h"
-#include "../../global.h"
+
+#include "audio/AudioContext.h"
+#include "logging.h"
+#include "global.h"
 
 namespace libtas {
 

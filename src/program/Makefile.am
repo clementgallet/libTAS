@@ -26,6 +26,7 @@ libTAS_QTSOURCES = \
     ui/RamSearchWindow.h \
     ui/RamWatchEditWindow.h \
     ui/RamWatchModel.h \
+    ui/RamWatchView.h \
     ui/RamWatchWindow.h \
     ui/TimeTraceModel.h \
     ui/TimeTraceWindow.h \
@@ -90,6 +91,7 @@ libTAS_SOURCES = \
     ui/RamSearchWindow.cpp \
     ui/RamWatchEditWindow.cpp \
     ui/RamWatchModel.cpp \
+    ui/RamWatchView.cpp \
     ui/RamWatchWindow.cpp \
     ui/TimeTraceModel.cpp \
     ui/TimeTraceWindow.cpp \
@@ -118,8 +120,10 @@ libTAS_SOURCES = \
     ramsearch/MemScanner.cpp \
     ramsearch/MemScannerThread.cpp \
     ramsearch/MemSection.cpp \
-    ../shared/AllInputs.cpp \
-    ../shared/SingleInput.cpp \
+    ramsearch/RamWatchDetailedBuilder.cpp \
+    ../shared/inputs/AllInputs.cpp \
+    ../shared/inputs/ControllerInputs.cpp \
+    ../shared/inputs/SingleInput.cpp \
     ../shared/sockethelpers.cpp \
     $(libTAS_MOCSOURCES)
 

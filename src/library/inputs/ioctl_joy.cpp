@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,14 +18,16 @@
  */
 
 #include "ioctl_joy.h"
-#include "../logging.h"
-#include "../hook.h"
 #include "evdev.h" // get_ev_number
 #include "jsdev.h" // get_js_number
 #include "inputs.h" // game_ai
-#include "../../shared/SingleInput.h"
-#include "../global.h"
-#include "../GlobalState.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "../shared/inputs/SingleInput.h"
+#include "global.h"
+#include "GlobalState.h"
+
 #include <linux/joystick.h>
 #include <linux/input.h>
 #include <cstdarg>
@@ -252,7 +254,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
         }
 
         /* Get the buttons state */
-        unsigned short buttons = game_ai.controller_buttons[jsnum];
+        unsigned short buttons = game_ai.controllers[jsnum] ? game_ai.controllers[jsnum]->buttons : 0;
 
         /* Set the corresponding bit in the key state */
         int len = _IOC_SIZE(request);
@@ -313,7 +315,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
                 if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
                     return orig::ioctl(fd, request, argp);
                 }
-                for (int axi=0; axi<AllInputs::MAXAXES; axi++) {
+                for (int axi=0; axi<ControllerInputs::MAXAXES; axi++) {
                     CHECK_LEN_AND_SET_BIT(SingleInput::toEvdevAxis(axi), bits, len);
                 }
                 /* Add the two hat axes because they are not considered as buttons */
@@ -387,8 +389,12 @@ int ioctl(int fd, unsigned long request, ...) __THROW
             }
 
             /* Get the axes and buttons state */
-            std::array<short, AllInputs::MAXAXES> axes = game_ai.controller_axes[jsnum];
-            unsigned short buttons = game_ai.controller_buttons[jsnum];
+            std::array<short, ControllerInputs::MAXAXES> axes;
+            if (game_ai.controllers[jsnum])
+                axes = game_ai.controllers[jsnum]->axes;
+            else
+                axes.fill(0);
+            unsigned short buttons = game_ai.controllers[jsnum] ? game_ai.controllers[jsnum]->buttons : 0;
 
             /* Write the axis value */
             switch (_IOC_NR(request)) {

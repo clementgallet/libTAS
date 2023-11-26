@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,16 +18,18 @@
  */
 
 #include "evdev.h"
-#include "../logging.h"
+
+#include "logging.h"
+#include "DeterministicTimer.h"
+#include "fileio/FileHandleList.h"
+#include "../shared/inputs/AllInputs.h"
+#include "global.h"
+#include "GlobalState.h"
+
 #include <cstdio>
 #include <cerrno>
 #include <utility>
-#include "../DeterministicTimer.h"
-#include "../fileio/FileHandleList.h"
-#include "../../shared/AllInputs.h"
 #include <unistd.h> /* write */
-#include "../global.h"
-#include "../GlobalState.h"
 
 namespace libtas {
 

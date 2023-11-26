@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -24,10 +24,11 @@
 #include "isteamremotestorage013.h"
 #include "isteamremotestorage014.h"
 #include "isteamremotestorage016.h"
-#include "../../logging.h"
-#include "../../hook.h"
-#include "../../Utils.h"
-#include "../../global.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "Utils.h"
+#include "global.h"
 
 #include <unistd.h>
 #include <fcntl.h>

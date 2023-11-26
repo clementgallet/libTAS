@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,13 +17,16 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "MovieFile.h"
+
+#include "../shared/inputs/AllInputs.h"
+#include "Context.h"
+
 #include <sstream>
 #include <iostream>
 #include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT
 #include <errno.h>
 #include <unistd.h>
-
-#include "MovieFile.h"
 
 MovieFile::MovieFile(Context* c) : context(c)
 {
@@ -212,9 +215,7 @@ void MovieFile::copyTo(MovieFile& movie) const
 
 void MovieFile::setLockedInputs(AllInputs& inp)
 {
-    AllInputs movie_inputs;
-    inputs->getInputs(movie_inputs);
-    
+    const AllInputs& movie_inputs = inputs->getInputs();
     editor->setLockedInputs(inp, movie_inputs);
 }
 

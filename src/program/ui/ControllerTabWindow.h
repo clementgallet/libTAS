@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,16 +20,17 @@
 #ifndef LIBTAS_CONTROLLERTABWINDOW_H_INCLUDED
 #define LIBTAS_CONTROLLERTABWINDOW_H_INCLUDED
 
+#include "../shared/inputs/AllInputs.h"
+
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QSlider>
 
-#include "../../shared/AllInputs.h"
-
 /* Forward declaration */
 struct Context;
 class ControllerWidget;
+class ControllerInputs;
 
 class ControllerTabWindow : public QDialog {
     Q_OBJECT
@@ -46,8 +47,8 @@ protected:
 
 public slots:
     void slotButtonToggle(int id, int button, bool pressed);
-    void slotSetInputs(AllInputs &ai);
-    void slotGetInputs(const AllInputs &ai);
+    void slotSetInputs(ControllerInputs &ci, int controller_id);
+    void slotGetInputs(const ControllerInputs &ci, int controller_id);
 
 };
 

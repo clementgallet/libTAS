@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,12 +18,13 @@
  */
 
 #include "SingleInput.h"
+
+#include "../external/SDL1.h"
+
 #ifdef __linux__
 #include <linux/input.h>
 #endif
 #include <SDL2/SDL.h>
-#include "../external/SDL1.h"
-// #include <X11/keysym.h>
 #ifdef __unix__
 #include <xcb/xcb.h>
 #endif

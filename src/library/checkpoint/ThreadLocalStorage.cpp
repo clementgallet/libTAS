@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,7 +20,9 @@
 */
 
 #include "ThreadLocalStorage.h"
-#include "../logging.h"
+
+#include "logging.h"
+
 #include <unistd.h>
 #include <sys/syscall.h> // SYS_get_thread_area, SYS_set_thread_area
 #include <cstring> // memset

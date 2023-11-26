@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,9 +20,10 @@
 #ifndef LIBTAS_NONDETERMINISTICTIMER_H_INCL
 #define LIBTAS_NONDETERMINISTICTIMER_H_INCL
 
+#include "TimeHolder.h"
+
 #include <time.h>
 #include <mutex>
-#include "TimeHolder.h"
 
 namespace libtas {
 
@@ -46,8 +47,10 @@ class NonDeterministicTimer
 {
 public:
 
+    static NonDeterministicTimer& get();
+
     /* Initialize the class members */
-    void initialize(void);
+    void initialize(uint64_t initial_sec, uint64_t initial_nsec);
 
     /* Update and return the time of the non deterministic timer */
     struct timespec getTicks(void);
@@ -88,8 +91,6 @@ private:
 
     static bool inited;
 };
-
-extern NonDeterministicTimer nonDetTimer;
 
 }
 

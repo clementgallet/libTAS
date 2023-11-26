@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -21,13 +21,11 @@
 #define LIBTAS_RAMWATCHWINDOW_H_INCLUDED
 
 #include <QtWidgets/QDialog>
-#include <QtWidgets/QTableView>
 
 /* Forward declaration */
 struct Context;
-class RamWatchEditWindow;
 class PointerScanWindow;
-class RamWatchModel;
+class RamWatchView;
 
 class RamWatchWindow : public QDialog {
     Q_OBJECT
@@ -36,22 +34,15 @@ public:
     RamWatchWindow(Context *c, QWidget *parent = Q_NULLPTR);
     void update();
 
-    RamWatchEditWindow *editWindow;
     PointerScanWindow *pointerScanWindow;
+    RamWatchView *ramWatchView;
 
 private:
     Context *context;
 
-    QTableView *ramWatchView;
-    RamWatchModel *ramWatchModel;
-
 public slots:
-    void slotAdd();
-    void slotGet(std::string &watch);
 
 private slots:
-    void slotEdit();
-    void slotRemove();
     void slotScanPointer();
     void slotSave();
     void slotLoad();

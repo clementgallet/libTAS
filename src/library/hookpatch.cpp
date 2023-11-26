@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,12 +20,15 @@
 #include "hookpatch.h"
 #include "dlhook.h"
 #include "logging.h"
+#include "GlobalState.h"
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
+
 #include <sys/mman.h>
 #include <string.h>
 #include <cstdint>
-#include "../shared/sockethelpers.h"
-#include "../shared/messages.h"
-#include "GlobalState.h"
+#include <sstream>
+#include <list>
 
 namespace libtas {
 
@@ -204,8 +207,272 @@ static int instruction_length(const unsigned char *func)
 	return (int)(func - funcstart);
 }
 
-void hook_patch(const char* name, const char* library, void* tramp_function, void* my_function)
+/* To convert some instructions from the original function, we need to be at
+ * 32-bit offset from the function location. */
+static void* allocate_nearby_segment()
 {
+    /* I'm lazy and assume the function is inside the first 32-bit memory, which
+     * is usually the case for main executable */
+    
+    void* obtainedAddr = mmap(nullptr, 0x1000, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_32BIT, 0, 0);
+    
+    if (obtainedAddr == MAP_FAILED) {
+        debuglogstdio(LCF_HOOK, "  Could not obtain a memory segment for hookpatch functions, error %d", errno);
+        return nullptr;
+    }
+    
+    return obtainedAddr;
+}
+
+/* Compute how many instructions we need to overwrite in the original function */
+static int compute_overwrite_offset(const unsigned char* pOrig)
+{
+    int offset = 0;
+    # ifdef __i386__
+    int min_offset = 10;
+    # elif defined(__x86_64__)
+    int min_offset = 14;
+    # endif
+    
+    int old_offset = 0;
+    while(offset < min_offset) {
+        offset += instruction_length(pOrig + offset);
+        
+        std::ostringstream oss;
+        for (int off = old_offset; off < offset; off++) {
+            oss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(pOrig + off)) << " ";
+        }
+        debuglogstdio(LCF_HOOK, "  Found instruction %s", oss.str().c_str());
+        
+        old_offset = offset;
+    }
+    debuglogstdio(LCF_HOOK, "  Saving instructions of length %d", offset);
+    return offset;
+}
+
+struct jmp_info {
+    unsigned char* offset_addr; // where do we need to write the offset to the jmp address
+    const unsigned char* target_addr; // where the jmp instructions goes to
+};
+
+/* Fill into pTramp the function pointer of the built trampoline function.
+ * This function contains the first instructions of original function,
+ * where some instructions needs a modification, and a jump
+ * to the remaining instructions of original function.
+ */
+static void write_tramp_function(const void *orig_fun, void **pTramp)
+{
+    static unsigned char* currentTrampAddr = nullptr;
+    if (!currentTrampAddr) {
+        currentTrampAddr = static_cast<unsigned char*>(allocate_nearby_segment());
+        
+        if (!currentTrampAddr) {
+            return;
+        }
+    }
+    
+    *pTramp = currentTrampAddr;
+    
+    const unsigned char* pOrig = static_cast<const unsigned char*>(orig_fun);
+    int offset = compute_overwrite_offset(pOrig);
+    
+    /* Overwrite the trampoline function */
+    debuglogstdio(LCF_HOOK, "  Building our trampoline function in %p", currentTrampAddr);
+    
+    /* Write each instruction of the original function that we will overwrite,
+     * and update instructions with relative addresses. Our trampoline function
+     * is written in an address that is at most 32-bit away from the original
+     * function, so that for instructions with 32-bit relative address can be
+     * updated in place.
+     * Our trampoline will look like that:
+     *     orig_instr1
+     *     ...
+     *     orig_instrN
+     *     ff 25 00 00 00 00         jmp *(%rip)
+     *     ad dr re ss to or ig fn   address to orig function offset by N bytes
+     *
+     * For the short jump instructions, we change the offset
+     * to jump to another jump instruction
+     *     orig_instr1
+     *     7e of                     jne 0xof
+     *     orig_instrN
+     *     ff 25 00 00 00 00         jmp *(%rip)
+     *     ad dr re ss to or ig fn   address to orig function offset by N bytes
+     *     ad dr re ss to ju mp 01   address to orig called function 01
+     */
+    
+    int cur_offset = 0;    
+    std::list<jmp_info> jmp_list;
+    
+    while (cur_offset < offset) {
+        int instr_len = instruction_length(pOrig + cur_offset);
+        
+        std::ostringstream oss;
+        
+        /* Transcribe each instruction, and update the occasionnal relative address */
+        unsigned char opcode = *(pOrig+cur_offset);
+        
+        switch (opcode) {
+            case 0xe8: // CALL
+            case 0x3b: // CMP
+            {
+                
+                int off_to_rel = 0;
+                switch (opcode) {
+                    case 0xe8: // CALL
+                        off_to_rel = 1;
+                        break;
+                    case 0x3b: // CMP
+                        off_to_rel = 2;
+                        break;
+                }
+                
+                debuglogstdio(LCF_HOOK, "  Found instruction with rel addr %p", (*reinterpret_cast<const int*>(pOrig+cur_offset+off_to_rel)));
+
+                /* Write the instruction and just change the offset to
+                 * the new offset between our function and the call target. */
+                memcpy(currentTrampAddr, pOrig+cur_offset, off_to_rel);
+                currentTrampAddr += off_to_rel;
+
+                const unsigned char* target_addr = pOrig + cur_offset + instr_len + (*reinterpret_cast<const int*>(pOrig+cur_offset+off_to_rel));
+                debuglogstdio(LCF_HOOK, "  Absolute addr becomes %p", target_addr);
+                
+                ptrdiff_t new_offset = reinterpret_cast<ptrdiff_t>(target_addr) - reinterpret_cast<ptrdiff_t>(currentTrampAddr) - 4;
+                /* Check if it fits into signed 32-bit */
+                if (new_offset < INT32_MIN || new_offset > INT32_MAX) {
+                    debuglogstdio(LCF_HOOK | LCF_ERROR, "  Could not modify CALL instruction, offset too large: %lld", new_offset);
+                }
+                int32_t new_offset_32 = static_cast<int32_t>(new_offset);
+
+                debuglogstdio(LCF_HOOK, "  New relative addr becomes %x", new_offset_32);
+
+                memcpy(currentTrampAddr, &new_offset_32, 4);
+                currentTrampAddr += 4;
+                
+                for (int i = 0; i < off_to_rel; i++) {
+                    oss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(pOrig+cur_offset+i)) << " ";
+                }                
+                for (int i = 0; i < 4; i++) {
+                    oss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(currentTrampAddr-4+i)) << " ";
+                }
+                debuglogstdio(LCF_HOOK, "  Write modified instruction %s", oss.str().c_str());
+
+                break;
+            }
+            
+            case 0x70:
+            case 0x71:
+            case 0x72:
+            case 0x73:
+            case 0x74:
+            case 0x75:
+            case 0x76:
+            case 0x77:
+            case 0x78:
+            case 0x79:
+            case 0x7a:
+            case 0x7b:
+            case 0x7c:
+            case 0x7d:
+            case 0x7e:
+            case 0x7f:
+            case 0xe3:
+            {
+                debuglogstdio(LCF_HOOK, "  Found conditional jump instruction %p to rel addr %p", *(pOrig+cur_offset), (*(pOrig+cur_offset+1)));
+
+                jmp_info info;
+                info.target_addr = pOrig + cur_offset + instr_len + (*reinterpret_cast<const int8_t*>(pOrig+cur_offset+1));
+                info.offset_addr = currentTrampAddr + 1;
+                jmp_list.push_back(info);
+
+                debuglogstdio(LCF_HOOK, "  Absolute addr becomes %p", info.target_addr);
+
+                /* Write the same conditional jump, but later change the offset
+                 * so that it jumps to another jump
+                 * instruction where we can write a 64-bit address. */
+                memcpy(currentTrampAddr, pOrig+cur_offset, 2);
+                currentTrampAddr += 2;
+
+                break;
+            }
+            default:
+                memcpy(currentTrampAddr, pOrig + cur_offset, instr_len);
+                currentTrampAddr += instr_len;
+                
+                for (int i = 0; i < instr_len; i++) {
+                    oss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(pOrig+cur_offset+i)) << " ";
+                }
+                debuglogstdio(LCF_HOOK, "  Write unmodified instruction %s", oss.str().c_str());
+
+                break;
+        }
+        cur_offset += instr_len;
+    }
+    
+    /* Write the jmp instruction to the orginal function */
+    memcpy(currentTrampAddr, jmp_instr, sizeof(jmp_instr));
+    currentTrampAddr += sizeof(jmp_instr);
+#ifdef __i386__
+    uintptr_t indirAddr = reinterpret_cast<uintptr_t>(currentTrampAddr+4);
+    memcpy(currentTrampAddr, &indirAddr, sizeof(uintptr_t));
+    currentTrampAddr += sizeof(uintptr_t);
+#endif
+    uintptr_t targetAddr = reinterpret_cast<uintptr_t>(pOrig)+offset;
+    memcpy(currentTrampAddr, &targetAddr, sizeof(uintptr_t));
+    currentTrampAddr += sizeof(uintptr_t);
+
+    /* Write all the call target functions, and edit the offsets */
+    for (auto info = jmp_list.begin(); info != jmp_list.end(); info++) {
+        /* Write 8-bit offset */
+        int8_t off = reinterpret_cast<ptrdiff_t>(currentTrampAddr) - reinterpret_cast<ptrdiff_t>(info->offset_addr) - 1;
+        memcpy(info->offset_addr, &off, sizeof(int8_t));
+        
+        /* Write JMP instruction */
+        memcpy(currentTrampAddr, jmp_instr, sizeof(jmp_instr));
+        currentTrampAddr += sizeof(jmp_instr);
+#ifdef __i386__
+        uintptr_t indirAddr = reinterpret_cast<uintptr_t>(currentTrampAddr+4);
+        memcpy(currentTrampAddr, &indirAddr, sizeof(uintptr_t));
+        currentTrampAddr += sizeof(uintptr_t);
+#endif
+
+        /* Write called function absolute address */
+        const unsigned char *addr = info->target_addr;
+        memcpy(currentTrampAddr, &addr, sizeof(uintptr_t));
+        currentTrampAddr += sizeof(uintptr_t);
+    }
+}
+
+void overwrite_orig_function(void *orig_fun, void* my_function)
+{
+    /* Overwrite the original function */
+    debuglogstdio(LCF_HOOK, "  Overwriting the native function in %p", orig_fun);
+
+    char *pTarget = reinterpret_cast<char *>(orig_fun);
+    uintptr_t addrTarget = reinterpret_cast<uintptr_t>(pTarget);
+    uintptr_t alignedBeg = (addrTarget / 4096) * 4096;
+    uintptr_t alignedEnd = ((addrTarget+sizeof(jmp_instr)+sizeof(uintptr_t)) / 4096) * 4096;
+    size_t alignedSize = alignedEnd - alignedBeg + 4096;
+
+    MYASSERT(mprotect(reinterpret_cast<void*>(alignedBeg), alignedSize, PROT_EXEC | PROT_READ | PROT_WRITE) == 0)
+
+    memcpy(pTarget, jmp_instr, sizeof(jmp_instr));
+    pTarget += sizeof(jmp_instr);
+#ifdef __i386__
+    uintptr_t indirAddr = reinterpret_cast<uintptr_t>(pTarget+4);
+    memcpy(pTarget, &indirAddr, sizeof(uintptr_t));
+    pTarget += sizeof(uintptr_t);
+#endif
+    uintptr_t targetAddr = reinterpret_cast<uintptr_t>(my_function);
+    memcpy(pTarget, &targetAddr, sizeof(uintptr_t));
+
+    MYASSERT(mprotect(reinterpret_cast<void*>(alignedBeg), alignedSize, PROT_EXEC | PROT_READ) == 0)
+}
+
+void hook_patch(const char* name, const char* library, void** tramp_function, void* my_function)
+{
+    debuglogstdio(LCF_HOOK, "Patching function %s", name);
+
     const char* libpathstr = NULL;
     void* handle;
     
@@ -259,68 +526,8 @@ void hook_patch(const char* name, const char* library, void* tramp_function, voi
         return;
     }
 
-    /* Compute the length of the first instructions to overwrite */
-    unsigned char* pOrig = static_cast<unsigned char*>(orig_fun);
-    int offset = 0;
-# ifdef __i386__
-    int min_offset = 10;
-# elif defined(__x86_64__)
-    int min_offset = 14;
-# endif
-
-	while(offset < min_offset) {
-        offset += instruction_length(pOrig + offset);
-    }
-
-    debuglogstdio(LCF_HOOK, "Saving instructions of length %d", offset);
-
-    /* Overwrite the trampoline function */
-    debuglogstdio(LCF_HOOK, "Building our trampoline function in %p", tramp_function);
-
-    char *pTramp = reinterpret_cast<char *>(tramp_function);
-    uintptr_t addrTramp = reinterpret_cast<uintptr_t>(pTramp);
-    uintptr_t alignedBeg = (addrTramp / 4096) * 4096;
-    uintptr_t alignedEnd = ((addrTramp+offset+sizeof(jmp_instr)+sizeof(uintptr_t)) / 4096) * 4096;
-    size_t alignedSize = alignedEnd - alignedBeg + 4096;
-
-    MYASSERT(mprotect(reinterpret_cast<void*>(alignedBeg), alignedSize, PROT_EXEC | PROT_READ | PROT_WRITE) == 0)
-
-    memcpy(pTramp, orig_fun, offset);
-    pTramp += offset;
-    memcpy(pTramp, jmp_instr, sizeof(jmp_instr));
-    pTramp += sizeof(jmp_instr);
-#ifdef __i386__
-    uintptr_t indirAddr = reinterpret_cast<uintptr_t>(pTramp+4);
-    memcpy(pTramp, &indirAddr, sizeof(uintptr_t));
-    pTramp += sizeof(uintptr_t);
-#endif
-    uintptr_t targetAddr = reinterpret_cast<uintptr_t>(orig_fun)+offset;
-    memcpy(pTramp, &targetAddr, sizeof(uintptr_t));
-
-    MYASSERT(mprotect(reinterpret_cast<void*>(alignedBeg), alignedSize, PROT_EXEC | PROT_READ) == 0)
-
-    /* Overwrite the original function */
-    debuglogstdio(LCF_HOOK, "Overwriting the native function in %p", orig_fun);
-
-    char *pTarget = reinterpret_cast<char *>(orig_fun);
-    uintptr_t addrTarget = reinterpret_cast<uintptr_t>(pTarget);
-    alignedBeg = (addrTarget / 4096) * 4096;
-    alignedEnd = ((addrTarget+sizeof(jmp_instr)+sizeof(uintptr_t)) / 4096) * 4096;
-    alignedSize = alignedEnd - alignedBeg + 4096;
-
-    MYASSERT(mprotect(reinterpret_cast<void*>(alignedBeg), alignedSize, PROT_EXEC | PROT_READ | PROT_WRITE) == 0)
-
-    memcpy(pTarget, jmp_instr, sizeof(jmp_instr));
-    pTarget += sizeof(jmp_instr);
-#ifdef __i386__
-    indirAddr = reinterpret_cast<uintptr_t>(pTarget+4);
-    memcpy(pTarget, &indirAddr, sizeof(uintptr_t));
-    pTarget += sizeof(uintptr_t);
-#endif
-    targetAddr = reinterpret_cast<uintptr_t>(my_function);
-    memcpy(pTarget, &targetAddr, sizeof(uintptr_t));
-
-    MYASSERT(mprotect(reinterpret_cast<void*>(alignedBeg), alignedSize, PROT_EXEC | PROT_READ) == 0)
+    write_tramp_function(orig_fun, tramp_function);
+    overwrite_orig_function(orig_fun, my_function);
 }
 
 }

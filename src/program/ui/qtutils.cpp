@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,11 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "qtutils.h"
+
+#include "KeyMapping.h"
+
 #include <QtGui/QKeyEvent>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QPalette>
-#include "../KeyMapping.h"
-#include "qtutils.h"
 
 unsigned int convertQtModifiers(Qt::KeyboardModifiers flags)
 {

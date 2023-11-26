@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -19,11 +19,12 @@
 
 #include "RenderHUD_SDL1.h"
 
+#include "logging.h"
+#include "hook.h"
+#include "GlobalState.h"
+#include "../external/SDL1.h" // SDL1::SDL_Surface
+
 #include <SDL2/SDL.h> // SDL_Rect
-#include "../../external/SDL1.h" // SDL1::SDL_Surface
-#include "../logging.h"
-#include "../hook.h"
-#include "../GlobalState.h"
 
 namespace libtas {
 

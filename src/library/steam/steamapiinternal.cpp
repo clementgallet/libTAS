@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,12 +18,14 @@
  */
 
 #include "steamapiinternal.h"
-#include "../logging.h"
-#include "../hook.h"
 #include "steamapi.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "global.h"
+#include "GlobalState.h"
+
 #include <dlfcn.h>
-#include "../global.h"
-#include "../GlobalState.h"
 
 namespace libtas {
 

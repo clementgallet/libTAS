@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,12 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtCore/QSettings>
 #include "Config.h"
-#include <fcntl.h>
-#include <unistd.h> // access
 #include "utils.h"
 #include "KeyMapping.h"
+
+#include <QtCore/QSettings>
+#include <fcntl.h>
+#include <unistd.h> // access
 
 QString Config::iniPath(const std::string& gamepath) const {
     /* Get the game executable name from path */
@@ -87,6 +88,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("gameargs", gameargs.c_str());
     settings.setValue("moviefile", moviefile.c_str());
     settings.setValue("dumpfile", dumpfile.c_str());
+    settings.setValue("screenshotfile", screenshotfile.c_str());
     settings.setValue("ffmpegoptions", ffmpegoptions.c_str());
     settings.setValue("libdir", libdir.c_str());
     settings.setValue("rundir", rundir.c_str());
@@ -244,6 +246,9 @@ void Config::load(const std::string& gamepath) {
 
     std::string default_dumpfile = gamepath + ".mkv";
     dumpfile = settings.value("dumpfile", default_dumpfile.c_str()).toString().toStdString();
+
+    std::string default_screenshotfile = dirFromPath(gamepath) + "/screenshot.png";
+    screenshotfile = settings.value("screenshotfile", default_screenshotfile.c_str()).toString().toStdString();
 
     ffmpegoptions = settings.value("ffmpegoptions", ffmpegoptions.c_str()).toString().toStdString();
 

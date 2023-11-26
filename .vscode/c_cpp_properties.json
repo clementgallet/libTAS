@@ -5,7 +5,9 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/usr/include/x86_64-linux-gnu/qt5",
-                "/usr/include/lua5.4"
+                "/usr/include/lua5.4",
+                "/usr/include/x86_64-linux-gnu/qt5/QtGui",
+                "/usr/include/x86_64-linux-gnu/qt5/QtWidgets"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

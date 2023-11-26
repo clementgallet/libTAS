@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,13 +17,14 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtWidgets/QDialogButtonBox>
-#include <QtWidgets/QVBoxLayout>
-
 #include "AnnotationsWindow.h"
 #include "MainWindow.h"
-#include "../Context.h"
-#include "../movie/MovieFile.h"
+
+#include "Context.h"
+#include "movie/MovieFile.h"
+
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QVBoxLayout>
 
 AnnotationsWindow::AnnotationsWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {

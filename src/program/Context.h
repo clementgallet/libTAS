@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -21,16 +21,15 @@
 #define LIBTAS_CONTEXT_H_INCLUDED
 
 #include "Config.h"
+#include "ConcurrentQueue.h"
+#include "KeyMapping.h"
 
 #ifdef __unix__
 #include <xcb/xcb.h>
 #elif defined(__APPLE__) && defined(__MACH__)
 #endif
-
 #include <string>
 #include <stdint.h>
-#include "ConcurrentQueue.h"
-#include "KeyMapping.h"
 
 struct Context {
     /* Execution status */

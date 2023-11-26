@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,12 +20,12 @@
 #ifndef LIBTAS_XLIBEVENTQUEUELIST_H_INCLUDED
 #define LIBTAS_XLIBEVENTQUEUELIST_H_INCLUDED
 
+#include "XlibEventQueue.h"
+
 #include <list>
 #include <memory>
 #include <X11/X.h>
 #include <X11/Xlib.h>
-
-#include "XlibEventQueue.h"
 
 namespace libtas {
 /* This class stores all Xlib event queues. */

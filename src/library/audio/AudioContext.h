@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,12 +20,13 @@
 #ifndef LIBTAS_AUDIOCONTEXT_H_INCL
 #define LIBTAS_AUDIOCONTEXT_H_INCL
 
+#include "AudioBuffer.h"
+#include "AudioSource.h"
+
 #include <vector>
 #include <memory>
 #include <list>
 #include <mutex>
-#include "AudioBuffer.h"
-#include "AudioSource.h"
 
 namespace libtas {
 /* This class stores a set of audio sources and audio buffers, and

@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,21 +20,22 @@
 #include "config.h"
 #include "xwindows.h"
 #include "xevents.h"
-#include "../hook.h"
-#include "../logging.h"
-#include "../../shared/sockethelpers.h"
-#include "../../shared/messages.h"
-#include "../ScreenCapture.h"
-#include "../WindowTitle.h"
-#include "../encoding/AVEncoder.h"
-#include "../backtrace.h"
-#include "../inputs/xinput.h"
 #include "xatom.h"
-#include "../../external/mwm.h"
-#include "XlibEventQueueList.h"
 #include "xrandr.h"
-#include "../global.h"
-#include "../GlobalState.h"
+#include "XlibEventQueueList.h"
+
+#include "hook.h"
+#include "logging.h"
+#include "ScreenCapture.h"
+#include "WindowTitle.h"
+#include "encoding/AVEncoder.h"
+#include "backtrace.h"
+#include "inputs/xinput.h"
+#include "global.h"
+#include "GlobalState.h"
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
+#include "../external/mwm.h"
 
 #include <vector>
 

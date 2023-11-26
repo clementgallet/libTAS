@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -33,7 +33,6 @@
 #include "Context.h"
 #include "utils.h"
 #include "AutoSave.h"
-// #include "SaveState.h"
 #include "SaveStateList.h"
 #include "lua/Input.h"
 #include "lua/Callbacks.h"
@@ -44,6 +43,8 @@
 #include "../shared/sockethelpers.h"
 #include "../shared/SharedConfig.h"
 #include "../shared/messages.h"
+#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/ControllerInputs.h"
 
 #include <string>
 #include <iostream>
@@ -54,7 +55,6 @@
 #include <csignal> // kill
 #include <sys/stat.h> // stat
 #include <sys/wait.h> // waitpid
-// #include <X11/X.h>
 #include <stdint.h>
 #include <cstdlib>
 
@@ -113,7 +113,6 @@ void GameLoop::start()
 
         AllInputs ai;
         processInputs(ai);
-        prev_ai = ai;
 
         /* Set the status to restart */
         if (ai.flags & (1 << SingleInput::FLAG_RESTART)) {
@@ -495,6 +494,7 @@ bool GameLoop::startFrameMessages()
              * backtrack savestate is performed at the very beginning of the game.
              */
             if ((context->config.sc.savestate_settings & SharedConfig::SS_BACKTRACK) &&
+                (!context->config.sc.av_dumping) && 
                 (gameEvents->didASavestate ||
                 !(context->config.sc.savestate_settings & SharedConfig::SS_INCREMENTAL)))
                 context->hotkey_pressed_queue.push(HOTKEY_SAVESTATE_BACKTRACK);
@@ -616,12 +616,15 @@ void GameLoop::sleepSendPreview()
     }
 
     /* Fill controller inputs from the controller input window. */
-    emit fillControllerInputs(preview_ai);
+    for (int j = 0; j < AllInputs::MAXJOYS; j++) {
+        if (preview_ai.controllers[j]) {
+            emit fillControllerInputs(*preview_ai.controllers[j], j);            
+        }
+    }
 
     /* Send inputs if changed */
     if (!(preview_ai == last_preview_ai)) {
-        sendMessage(MSGN_PREVIEW_INPUTS);
-        sendData(&preview_ai, sizeof(AllInputs));
+        preview_ai.send(true);
         last_preview_ai = preview_ai;
     }
 }
@@ -653,7 +656,11 @@ void GameLoop::processInputs(AllInputs &ai)
             }
             
             /* Fill controller inputs from the controller input window. */
-            emit fillControllerInputs(ai);
+            for (int j = 0; j < AllInputs::MAXJOYS; j++) {
+                if (ai.controllers[j]) {
+                    emit fillControllerInputs(*ai.controllers[j], j);            
+                }
+            }
 
             /* Add framerate if necessary */
             if (context->config.sc.variable_framerate) {
@@ -773,7 +780,11 @@ void GameLoop::processInputs(AllInputs &ai)
             Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackInput);
 
             /* Update controller inputs if controller window is shown */
-            emit showControllerInputs(ai);
+            for (int j = 0; j < AllInputs::MAXJOYS; j++) {
+                if (ai.controllers[j]) {
+                    emit showControllerInputs(*ai.controllers[j], j);            
+                }
+            }
 
             AutoSave::update(context, movie);
             break;
@@ -812,8 +823,7 @@ void GameLoop::endFrameMessages(AllInputs &ai)
     }
 
     /* Send inputs and end of frame */
-    sendMessage(MSGN_ALL_INPUTS);
-    sendData(&ai, sizeof(AllInputs));
+    ai.send(false);
 
     if ((context->status == Context::QUITTING) || (context->status == Context::RESTARTING)) {
         sendMessage(MSGN_USERQUIT);

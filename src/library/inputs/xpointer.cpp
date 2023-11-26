@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,15 +18,16 @@
  */
 
 #include "xpointer.h"
-#include "../hook.h"
-#include "../logging.h"
 #include "inputs.h"
-#include "../../shared/AllInputs.h"
-#include "../DeterministicTimer.h"
-#include "../xlib/XlibEventQueueList.h"
-#include "../xlib/xwindows.h" // x11::gameXWindows
-#include "../global.h"
-#include "../GlobalState.h"
+
+#include "hook.h"
+#include "logging.h"
+#include "DeterministicTimer.h"
+#include "xlib/XlibEventQueueList.h"
+#include "xlib/xwindows.h" // x11::gameXWindows
+#include "global.h"
+#include "GlobalState.h"
+#include "../shared/inputs/AllInputs.h"
 
 namespace libtas {
 
@@ -170,7 +171,7 @@ DEFINE_ORIG_POINTER(XWarpPointer)
         event.xmotion.y_root = event.xmotion.y;
         event.xmotion.window = x11::gameXWindows.front();
 
-        struct timespec time = detTimer.getTicks();
+        struct timespec time = DeterministicTimer::get().getTicks();
         event.xmotion.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
         xlibEventQueueList.insert(&event);

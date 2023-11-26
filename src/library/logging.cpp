@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,19 +18,20 @@
  */
 
 #include "logging.h"
-#include <stdlib.h>
 #include "checkpoint/ThreadManager.h" // isMainThread()
+#include "frame.h" // For framecount
+#include "global.h" // Global::shared_config
+#include "GlobalState.h"
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
+
+#include <stdlib.h>
 #include <unistd.h> // For isatty
 #include <cstdarg>
 #include <cstring>
 #include <inttypes.h> // PRI stuff
-#include "frame.h" // For framecount
 #include <mutex>
 #include <list>
-#include "../shared/sockethelpers.h"
-#include "../shared/messages.h"
-#include "global.h" // Global::shared_config
-#include "GlobalState.h"
 
 /* Color printing
  * Taken from http://stackoverflow.com/questions/3219393/stdlib-and-colored-output-in-c

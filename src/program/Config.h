@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,12 +20,13 @@
 #ifndef LIBTAS_CONFIG_H_INCLUDED
 #define LIBTAS_CONFIG_H_INCLUDED
 
+#include "../shared/SharedConfig.h"
+
 #include <QtCore/QString>
 #include <string>
 #include <memory>
 #include <list>
 
-#include "../shared/SharedConfig.h"
 
 /* Forward declaration */
 class KeyMapping;
@@ -64,6 +65,9 @@ public:
 
     /* Were we started up with the -d option? */
     bool dumping;
+
+    /* Absolute path of the screenshot file */
+    std::string screenshotfile;
 
     /* Path of the libraries used by the game */
     std::string libdir;

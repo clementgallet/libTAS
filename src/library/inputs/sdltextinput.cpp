@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,11 +18,9 @@
  */
 
 #include "sdltextinput.h"
-#include "../../external/SDL1.h"
-//#include "inputs.h"
-//#include "keyboard_helper.h"
-#include "../logging.h"
-//#include "../../shared/AllInputs.h"
+
+#include "logging.h"
+#include "../external/SDL1.h"
 
 namespace libtas {
 

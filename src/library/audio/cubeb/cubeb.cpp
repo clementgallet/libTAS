@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,12 +18,13 @@
  */
 
 #include "cubeb.h"
-#include "../../logging.h"
-#include "../../hook.h"
-#include "../../global.h"
-#include "../AudioContext.h"
-#include "../AudioSource.h"
-#include "../AudioBuffer.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "global.h"
+#include "audio/AudioContext.h"
+#include "audio/AudioSource.h"
+#include "audio/AudioBuffer.h"
 
 #include <stdint.h>
 

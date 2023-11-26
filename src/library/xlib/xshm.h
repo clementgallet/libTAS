@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -22,8 +22,8 @@
 
 #include "config.h"
 
-#include "../hook.h"
-#include "../../external/X11/XShm.h"
+#include "hook.h"
+#include "../external/X11/XShm.h"
 
 namespace libtas {
 

@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,17 +18,19 @@
  */
 
 #include "AudioSource.h"
-#include "../logging.h"
-#include "../global.h" // Global::shared_config
-#include <stdlib.h>
-#include <stdint.h>
-#include "../DeterministicTimer.h" // detTimer.fakeAdvanceTimer()
 #include "AudioConverter.h"
 #ifdef __unix__
 #include "AudioConverterSwr.h"
 #elif defined(__APPLE__) && defined(__MACH__)
 #include "AudioConverterCoreAudio.h"
 #endif
+
+#include "logging.h"
+#include "global.h" // Global::shared_config
+#include "DeterministicTimer.h" // detTimer.fakeAdvanceTimer()
+
+#include <stdlib.h>
+#include <stdint.h>
 
 namespace libtas {
 
@@ -258,6 +260,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                  */
                 int64_t extraTicks = static_cast<int64_t>(1000000000) * (-remainingSamples);
                 extraTicks /= curBuf->frequency;
+                DeterministicTimer& detTimer = DeterministicTimer::get();
                 detTimer.fakeAdvanceTimer({static_cast<time_t>(extraTicks / 1000000000), static_cast<long>(extraTicks % 1000000000)});
                 callback(*curBuf);
                 detTimer.fakeAdvanceTimer({0, 0});

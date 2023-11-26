@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -19,9 +19,10 @@
 
 #include "AudioPlayerCoreAudio.h"
 
-#include "../logging.h"
-#include "../global.h" // Global::shared_config
-#include "../GlobalState.h"
+#include "logging.h"
+#include "global.h" // Global::shared_config
+#include "GlobalState.h"
+
 #include <algorithm>
 
 namespace libtas {

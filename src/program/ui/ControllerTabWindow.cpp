@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,21 +17,24 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ControllerTabWindow.h"
+#include "ControllerAxisWidget.h"
+#include "ControllerWidget.h"
+#include "MainWindow.h"
+#include "qtutils.h"
+
+#include "Context.h"
+#include "GameLoop.h"
+#include "GameEvents.h"
+#include "../shared/inputs/SingleInput.h"
+#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/ControllerInputs.h"
+
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
-
-#include "../Context.h"
-#include "ControllerTabWindow.h"
-#include "ControllerAxisWidget.h"
-#include "ControllerWidget.h"
-#include "../GameLoop.h"
-#include "../GameEvents.h"
-#include "MainWindow.h"
-#include "../../shared/SingleInput.h"
-#include "qtutils.h"
 
 ControllerTabWindow::ControllerTabWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
@@ -49,7 +52,7 @@ ControllerTabWindow::ControllerTabWindow(Context* c, QWidget *parent) : QDialog(
     mainLayout->addWidget(tabWidget);
     setLayout(mainLayout);
 
-    qRegisterMetaType<AllInputs>("AllInputs");
+    qRegisterMetaType<ControllerInputs>("ControllerInputs");
 
     /* We need connections to the game loop, so we access it through our parent */
     MainWindow *mw = qobject_cast<MainWindow*>(parent);
@@ -122,61 +125,57 @@ void ControllerTabWindow::slotButtonToggle(int id, int button, bool pressed)
     }
 }
 
-void ControllerTabWindow::slotSetInputs(AllInputs &ai)
+void ControllerTabWindow::slotSetInputs(ControllerInputs &ci, int j)
 {
     /* Don't set inputs from the controller input window if the window is hidden */
     if (!isVisible())
         return;
 
-    for (int j=0; j<AllInputs::MAXJOYS; j++) {
-        /* Set controller axes */
-        ai.controller_axes[j][SingleInput::AXIS_LEFTX] = controllers[j]->axis_left->x_axis;
-        ai.controller_axes[j][SingleInput::AXIS_LEFTY] = controllers[j]->axis_left->y_axis;
-        ai.controller_axes[j][SingleInput::AXIS_RIGHTX] = controllers[j]->axis_right->x_axis;
-        ai.controller_axes[j][SingleInput::AXIS_RIGHTY] = controllers[j]->axis_right->y_axis;
-        ai.controller_axes[j][SingleInput::AXIS_TRIGGERLEFT] = static_cast<short>(controllers[j]->trigger_left_value->value());
-        ai.controller_axes[j][SingleInput::AXIS_TRIGGERRIGHT] = static_cast<short>(controllers[j]->trigger_right_value->value());
+    /* Set controller axes */
+    ci.axes[SingleInput::AXIS_LEFTX] = controllers[j]->axis_left->x_axis;
+    ci.axes[SingleInput::AXIS_LEFTY] = controllers[j]->axis_left->y_axis;
+    ci.axes[SingleInput::AXIS_RIGHTX] = controllers[j]->axis_right->x_axis;
+    ci.axes[SingleInput::AXIS_RIGHTY] = controllers[j]->axis_right->y_axis;
+    ci.axes[SingleInput::AXIS_TRIGGERLEFT] = static_cast<short>(controllers[j]->trigger_left_value->value());
+    ci.axes[SingleInput::AXIS_TRIGGERRIGHT] = static_cast<short>(controllers[j]->trigger_right_value->value());
 
-        /* Set controller buttons */
-        ai.controller_buttons[j] = 0;
+    /* Set controller buttons */
+    ci.buttons = 0;
 
-        ai.controller_buttons[j] |= (controllers[j]->button_a->isChecked() << SingleInput::BUTTON_A);
-        ai.controller_buttons[j] |= (controllers[j]->button_b->isChecked() << SingleInput::BUTTON_B);
-        ai.controller_buttons[j] |= (controllers[j]->button_x->isChecked() << SingleInput::BUTTON_X);
-        ai.controller_buttons[j] |= (controllers[j]->button_y->isChecked() << SingleInput::BUTTON_Y);
-        ai.controller_buttons[j] |= (controllers[j]->button_back->isChecked() << SingleInput::BUTTON_BACK);
-        ai.controller_buttons[j] |= (controllers[j]->button_guide->isChecked() << SingleInput::BUTTON_GUIDE);
-        ai.controller_buttons[j] |= (controllers[j]->button_start->isChecked() << SingleInput::BUTTON_START);
-        ai.controller_buttons[j] |= (controllers[j]->button_ls->isChecked() << SingleInput::BUTTON_LEFTSTICK);
-        ai.controller_buttons[j] |= (controllers[j]->button_rs->isChecked() << SingleInput::BUTTON_RIGHTSTICK);
-        ai.controller_buttons[j] |= (controllers[j]->button_lb->isChecked() << SingleInput::BUTTON_LEFTSHOULDER);
-        ai.controller_buttons[j] |= (controllers[j]->button_rb->isChecked() << SingleInput::BUTTON_RIGHTSHOULDER);
-        ai.controller_buttons[j] |= (controllers[j]->button_dpad_up->isChecked() << SingleInput::BUTTON_DPAD_UP);
-        ai.controller_buttons[j] |= (controllers[j]->button_dpad_down->isChecked() << SingleInput::BUTTON_DPAD_DOWN);
-        ai.controller_buttons[j] |= (controllers[j]->button_dpad_left->isChecked() << SingleInput::BUTTON_DPAD_LEFT);
-        ai.controller_buttons[j] |= (controllers[j]->button_dpad_right->isChecked() << SingleInput::BUTTON_DPAD_RIGHT);
-    }
+    ci.buttons |= (controllers[j]->button_a->isChecked() << SingleInput::BUTTON_A);
+    ci.buttons |= (controllers[j]->button_b->isChecked() << SingleInput::BUTTON_B);
+    ci.buttons |= (controllers[j]->button_x->isChecked() << SingleInput::BUTTON_X);
+    ci.buttons |= (controllers[j]->button_y->isChecked() << SingleInput::BUTTON_Y);
+    ci.buttons |= (controllers[j]->button_back->isChecked() << SingleInput::BUTTON_BACK);
+    ci.buttons |= (controllers[j]->button_guide->isChecked() << SingleInput::BUTTON_GUIDE);
+    ci.buttons |= (controllers[j]->button_start->isChecked() << SingleInput::BUTTON_START);
+    ci.buttons |= (controllers[j]->button_ls->isChecked() << SingleInput::BUTTON_LEFTSTICK);
+    ci.buttons |= (controllers[j]->button_rs->isChecked() << SingleInput::BUTTON_RIGHTSTICK);
+    ci.buttons |= (controllers[j]->button_lb->isChecked() << SingleInput::BUTTON_LEFTSHOULDER);
+    ci.buttons |= (controllers[j]->button_rb->isChecked() << SingleInput::BUTTON_RIGHTSHOULDER);
+    ci.buttons |= (controllers[j]->button_dpad_up->isChecked() << SingleInput::BUTTON_DPAD_UP);
+    ci.buttons |= (controllers[j]->button_dpad_down->isChecked() << SingleInput::BUTTON_DPAD_DOWN);
+    ci.buttons |= (controllers[j]->button_dpad_left->isChecked() << SingleInput::BUTTON_DPAD_LEFT);
+    ci.buttons |= (controllers[j]->button_dpad_right->isChecked() << SingleInput::BUTTON_DPAD_RIGHT);
 }
 
-void ControllerTabWindow::slotGetInputs(const AllInputs &ai)
+void ControllerTabWindow::slotGetInputs(const ControllerInputs &ci, int j)
 {
     /* Don't grab inputs if the window is hidden */
     if (!isVisible())
         return;
 
-    for (int j=0; j<AllInputs::MAXJOYS; j++) {
-        /* Get controller axes */
-        controllers[j]->axis_left_x->setValue(ai.controller_axes[j][SingleInput::AXIS_LEFTX]);
-        controllers[j]->axis_left_y->setValue(ai.controller_axes[j][SingleInput::AXIS_LEFTY]);
-        controllers[j]->axis_right_x->setValue(ai.controller_axes[j][SingleInput::AXIS_RIGHTX]);
-        controllers[j]->axis_right_y->setValue(ai.controller_axes[j][SingleInput::AXIS_RIGHTY]);
-        controllers[j]->trigger_left_value->setValue(ai.controller_axes[j][SingleInput::AXIS_TRIGGERLEFT]);
-        controllers[j]->trigger_right_value->setValue(ai.controller_axes[j][SingleInput::AXIS_TRIGGERRIGHT]);
+    /* Get controller axes */
+    controllers[j]->axis_left_x->setValue(ci.axes[SingleInput::AXIS_LEFTX]);
+    controllers[j]->axis_left_y->setValue(ci.axes[SingleInput::AXIS_LEFTY]);
+    controllers[j]->axis_right_x->setValue(ci.axes[SingleInput::AXIS_RIGHTX]);
+    controllers[j]->axis_right_y->setValue(ci.axes[SingleInput::AXIS_RIGHTY]);
+    controllers[j]->trigger_left_value->setValue(ci.axes[SingleInput::AXIS_TRIGGERLEFT]);
+    controllers[j]->trigger_right_value->setValue(ci.axes[SingleInput::AXIS_TRIGGERRIGHT]);
 
-        /* Get controller buttons */
-        for (int b = SingleInput::BUTTON_A; b < SingleInput::BUTTON_LAST; b++) {
-            slotButtonToggle(j, b, ai.controller_buttons[j] & (1 << b));
-        }
+    /* Get controller buttons */
+    for (int b = SingleInput::BUTTON_A; b < SingleInput::BUTTON_LAST; b++) {
+        slotButtonToggle(j, b, ci.buttons & (1 << b));
     }
 }
 

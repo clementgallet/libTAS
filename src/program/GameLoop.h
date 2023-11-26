@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -28,6 +28,8 @@
 /* Forward declaration */
 class GameEvents;
 struct Context;
+class AllInputs;
+class ControllerInputs;
 
 class GameLoop : public QObject {
     Q_OBJECT
@@ -47,9 +49,6 @@ private:
 
     /* Last saved/loaded savestate */
     int current_savestate;
-
-    /* Inputs from the previous frame */
-    AllInputs prev_ai;
 
     /* Current encoding segment. Sent when game is restarted */
     int encoding_segment = 0;
@@ -80,8 +79,8 @@ signals:
     void askToShow(QString str, void* promise);
     void updateFramerate();
 
-    void showControllerInputs(const AllInputs &allinputs);
-    void fillControllerInputs(AllInputs &allinputs);
+    void showControllerInputs(const ControllerInputs &ci, int controller_id);
+    void fillControllerInputs(ControllerInputs &ci, int controller_id);
     void gameInfoChanged(GameInfo game_info);
 
     /* Signals for notifying the input editor */

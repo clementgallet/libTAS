@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,16 +20,17 @@
 #ifndef LIBTAS_MOVIEFILEINPUTS_H_INCLUDED
 #define LIBTAS_MOVIEFILEINPUTS_H_INCLUDED
 
-#include "../../shared/AllInputs.h"
-#include "../Context.h"
-#include "../ConcurrentQueue.h"
+#include "ConcurrentQueue.h"
+#include "../shared/inputs/AllInputs.h"
+
 #include <fstream>
 #include <string>
 #include <vector>
-#include <regex>
 #include <set>
 #include <mutex>
 #include <stdint.h>
+
+struct Context;
 
 /* Struct to push movie changes from the UI to the main thread. UI thread should
  * never modify the movie */
@@ -91,9 +92,11 @@ public:
 
     /* Load inputs from a certain frame */
     int getInputs(AllInputs& inputs, uint64_t pos);
+    const AllInputs& getInputs(uint64_t pos);
 
     /* Load inputs from the current frame */
     int getInputs(AllInputs& inputs);
+    const AllInputs& getInputs();
 
     /* Clear a single frame of inputs */
     void clearInputs(uint64_t pos);
@@ -138,41 +141,23 @@ private:
      * threads can read and write to the list */
     std::mutex input_list_mutex;
 
-    /* Regex for the keyboard input string */
-    std::regex rek;
-
-    /* Regex for the mouse input string */
-    std::regex rem;
-
-    /* Regex for the controller input string */
-    std::regex rec;
-
-    /* Regex for the flag input string */
-    std::regex ref;
-
-    /* Regex for the framerate input string */
-    std::regex ret;
-
-    /* Regex for the realtime input string */
-    std::regex red;
-
     /* Read the keyboard input string */
-    void readKeyboardFrame(std::istringstream& input_string, AllInputs& inputs);
+    int readKeyboardFrame(std::istringstream& input_string, AllInputs& inputs);
 
     /* Read the mouse input string */
-    void readMouseFrame(std::istringstream& input_string, AllInputs& inputs);
+    int readMouseFrame(std::istringstream& input_string, AllInputs& inputs);
 
     /* Read one controller input string */
-    void readControllerFrame(std::istringstream& input_string, AllInputs& inputs, int joy);
+    int readControllerFrame(std::istringstream& input_string, AllInputs& inputs, int joy);
 
     /* Read the flag input string */
-    void readFlagFrame(std::istringstream& input_string, AllInputs& inputs);
+    int readFlagFrame(std::istringstream& input_string, AllInputs& inputs);
 
     /* Read the framerate input string */
-    void readFramerateFrame(std::istringstream& input_string, AllInputs& inputs);
+    int readFramerateFrame(std::istringstream& input_string, AllInputs& inputs);
 
     /* Read the realtime input string */
-    void readRealtimeFrame(std::istringstream& input_string, AllInputs& inputs);
+    int readRealtimeFrame(std::istringstream& input_string, AllInputs& inputs);
 
 };
 

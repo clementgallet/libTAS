@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,15 +20,11 @@
 */
 
 #include "MachVmMaps.h"
-// #include "ReservedMemory.h"
-#include "../logging.h"
-// #include "../Utils.h"
 #include "ReservedMemory.h"
 
-// #include <fcntl.h>
+#include "logging.h"
+
 #include <unistd.h>
-// #include <sys/mman.h>
-// #include <cstring>
 #include <mach/vm_region.h>
 #include <mach/vm_map.h>
 #include <mach/mach_traps.h>

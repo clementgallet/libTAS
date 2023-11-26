@@ -7,9 +7,10 @@
 #ifndef LIBTAS_ISTEAMNETWORKINGUTILS_H_INCL
 #define LIBTAS_ISTEAMNETWORKINGUTILS_H_INCL
 
+#include "steamtypes.h"
+
 #include <stdint.h>
 #include <stddef.h>
-#include "steamtypes.h"
 
 namespace libtas {
 

@@ -7,8 +7,9 @@
 #ifndef LIBTAS_ISTEAMGAMESERVER_H
 #define LIBTAS_ISTEAMGAMESERVER_H
 
-#include <stdint.h>
 #include "steamtypes.h"
+
+#include <stdint.h>
 
 namespace libtas {
 

@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,11 +20,11 @@
 #ifndef LIBTAS_SAVESTATE_H_INCLUDED
 #define LIBTAS_SAVESTATE_H_INCLUDED
 
+#include "movie/MovieFile.h"
+
 #include <string>
 #include <memory>
 #include <stdint.h>
-
-#include "movie/MovieFile.h"
 
 /* Forward declaration */
 struct Context;
@@ -76,10 +76,10 @@ public:
     int save(Context* context, const MovieFile& movie);
 
     /* Load state. Return 0 or error (<0) */
-    int load(Context* context, const MovieFile& movie, bool branch);
+    int load(Context* context, const MovieFile& movie, bool branch, bool inputEditor);
 
     /* Process after state loading. Return message or error */
-    int postLoad(Context* context, MovieFile& movie, bool branch);
+    int postLoad(Context* context, MovieFile& movie, bool branch, bool inputEditor);
 
     /* Save movie on disk when exiting */
     void backupMovie();

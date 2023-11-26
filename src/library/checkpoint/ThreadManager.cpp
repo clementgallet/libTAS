@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -16,27 +16,24 @@
     You should have received a copy of the GNU General Public License
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include "ThreadManager.h"
+#include "SaveStateManager.h"
+#include "ThreadSync.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "global.h"
+#include "GlobalState.h"
+
 #include <sstream>
 #include <utility>
 #include <csignal>
 #include <algorithm> // std::find
 #include <sys/mman.h>
-#include <sys/syscall.h> // syscall, SYS_gettid
+#include <unistd.h> // syscall
+#include <sys/syscall.h> // SYS_gettid
 #include <pthread.h>
-
-#include "ThreadManager.h"
-#include "SaveStateManager.h"
-#include "Checkpoint.h"
-#include "ThreadSync.h"
-#include "../timewrappers.h" // clock_gettime
-#include "../logging.h"
-#include "../hook.h"
-//#include "../audio/AudioPlayer.h"
-#include "AltStack.h"
-#include "ReservedMemory.h"
-#include "../fileio/FileHandleList.h"
-#include "../global.h"
-#include "../GlobalState.h"
 
 namespace libtas {
 
@@ -183,7 +180,7 @@ ThreadInfo* ThreadManager::getNewThread()
 
     /* No free thread, create a new one */
     if (!thread) {
-        thread = new ThreadInfo;
+        thread = new ThreadInfo();
         debuglogstdio(LCF_THREAD, "Allocate a new ThreadInfo struct");
         threadListChanged = true;
     }

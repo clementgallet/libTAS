@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,11 +18,13 @@
  */
 
 #include "xdisplay.h"
-#include "../hook.h"
-#include "../logging.h"
 #include "xatom.h"
 #include "XlibEventQueueList.h"
-#include "../global.h"
+
+#include "hook.h"
+#include "logging.h"
+#include "global.h"
+#include "GlobalState.h"
 
 namespace libtas {
 
@@ -38,7 +40,13 @@ Display *XOpenDisplay(const char *display_name)
     DEBUGLOGCALL(LCF_WINDOW);
     LINK_NAMESPACE_GLOBAL(XOpenDisplay);
 
-    Display* display = orig::XOpenDisplay(display_name);
+    Display* display;
+    OWNCALL(display = orig::XOpenDisplay(display_name));
+
+    if (!display) {
+        debuglogstdio(LCF_WINDOW | LCF_ERROR, "Could not open X connection to %s", display_name ? display_name : "$DISPLAY");
+        return nullptr;
+    }
 
     int i;
     for (i=0; i<GAMEDISPLAYNUM; i++) {

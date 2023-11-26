@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -21,18 +21,21 @@
 #include "logging.h"
 #include "global.h"
 #include "GlobalState.h"
-// #include "../shared/SharedConfig.h"
 #include "backtrace.h"
-#include <execinfo.h>
 #ifdef __unix__
 #include "xlib/xdisplay.h" // x11::gameDisplays
 #endif
+
+#include <execinfo.h>
 #include <string.h>
+#include <signal.h>
 
 namespace libtas {
 
 DEFINE_ORIG_POINTER(getpid)
 DEFINE_ORIG_POINTER(fork)
+DEFINE_ORIG_POINTER(sched_getaffinity)
+DEFINE_ORIG_POINTER(__sched_cpucount)
 
 /* Override */ pid_t getpid (void) __THROW
 {
@@ -87,6 +90,28 @@ DEFINE_ORIG_POINTER(fork)
         GlobalState::setNative(true);
     }
     return pid;
+}
+
+/* Override */ int __sched_cpucount (size_t setsize, const cpu_set_t *setp) __THROW
+{
+    LINK_NAMESPACE_GLOBAL(__sched_cpucount);
+
+    /* Check if called from GPU driver. If so, return the real value */
+    void* return_address =  __builtin_return_address(0);
+    char** symbols = backtrace_symbols(&return_address, 1);
+    if (symbols != nullptr) {
+        if (strstr(symbols[0], "nouveau_dri.so") || strstr(symbols[0], "swrast_dri.so")) {
+            // debuglogstdio(LCF_TIMEGET | LCF_FREQUENT | LCF_ERROR, "  special workaround");
+            int ret = orig::__sched_cpucount (setsize, setp);
+            free(symbols);
+            return ret;
+        }
+        free(symbols);
+    }
+
+    // raise(SIGSEGV);
+    DEBUGLOGCALL(LCF_SYSTEM);
+    return 1;
 }
 
 }

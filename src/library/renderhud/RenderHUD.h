@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -24,11 +24,11 @@
 #ifndef LIBTAS_RENDERHUD_H_INCL
 #define LIBTAS_RENDERHUD_H_INCL
 
-//#include "../../external/SDL.h"
-//#include "sdl_ttf.h"
 #include "SurfaceARGB.h"
-#include "../../shared/AllInputs.h"
-#include "../TimeHolder.h"
+
+#include "TimeHolder.h"
+#include "../shared/inputs/AllInputs.h"
+
 #include <memory>
 #include <list>
 #include <utility>

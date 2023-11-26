@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -27,14 +27,15 @@
 #include "wine/wined3d.h"
 #include "wine/user32.h"
 #include "wine/kernel32.h"
-#include "../external/elfhacks.h"
 #endif
-#include <cstring>
-#include <set>
 #include "backtrace.h"
 #include "GameHacks.h"
-#include <sys/stat.h>
+#include "../external/elfhacks.h"
 #include "../dyld_func_lookup_helper/dyld_func_lookup_helper.h"
+
+#include <cstring>
+#include <set>
+#include <sys/stat.h>
 
 namespace libtas {
 

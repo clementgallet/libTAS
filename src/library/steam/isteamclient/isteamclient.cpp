@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -25,13 +25,14 @@
 #include "isteamclient016.h"
 #include "isteamclient017.h"
 #include "isteamclient020.h"
-#include "../isteamcontroller.h"
-#include "../steamapi.h"
-#include "../steamgameserver.h"
-#include "../isteamgamecoordinator.h"
-#include "../../logging.h"
-#include "../../hook.h"
-#include "../../global.h"
+
+#include "steam/isteamcontroller.h"
+#include "steam/steamapi.h"
+#include "steam/steamgameserver.h"
+#include "steam/isteamgamecoordinator.h"
+#include "logging.h"
+#include "hook.h"
+#include "global.h"
 
 namespace libtas {
 

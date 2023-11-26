@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -19,13 +19,14 @@
 
 #include "RenderHUD.h"
 
-#include "../logging.h"
-#include "../hook.h"
+#include "logging.h"
+#include "hook.h"
+#include "global.h" // Global::shared_config
+#include "ScreenCapture.h"
+#include "GlobalState.h"
+#include "../external/keysymdesc.h"
+
 #include <sstream>
-#include "../global.h" // Global::shared_config
-#include "../ScreenCapture.h"
-#include "../../external/keysymdesc.h"
-#include "../GlobalState.h"
 
 namespace libtas {
 
@@ -206,13 +207,16 @@ void RenderHUD::drawInputs(const AllInputs& ai, Color fg_color)
 
     /* Joystick */
     for (int i=0; i<Global::shared_config.nb_controllers; i++) {
-        for (int j=0; j<AllInputs::MAXAXES; j++) {
-            if (ai.controller_axes[i][j] != 0)
-                oss << "[J" << i << " a" << j << ":" << ai.controller_axes[i][j] << "] ";
+        if (!ai.controllers[i])
+            continue;
+
+        for (int j=0; j<ControllerInputs::MAXAXES; j++) {
+            if (ai.controllers[i]->axes[j] != 0)
+                oss << "[J" << i << " a" << j << ":" << ai.controllers[i]->axes[j] << "] ";
         }
 
         for (int j=0; j<16; j++) {
-            if (ai.controller_buttons[i] & (1 << j))
+            if (ai.controllers[i]->buttons & (1 << j))
                 oss << "[J" << i << " b" << j << "] ";
         }
     }

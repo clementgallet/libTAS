@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -21,6 +21,7 @@
 #define LIBTAS_OPENGLWRAPPERS_H_INCL
 
 #include "hook.h"
+
 #define GL_GLEXT_PROTOTYPES
 #ifdef __unix__
 #include <GL/gl.h>

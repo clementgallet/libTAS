@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,15 +18,16 @@
  */
 
 #include "xcbwindows.h"
-#include "../hook.h"
-#include "../logging.h"
-#include "../../shared/sockethelpers.h"
-#include "../../shared/messages.h"
-#include "../ScreenCapture.h"
 #include "XcbEventQueueList.h"
 #include "XcbEventQueue.h"
-#include "../xlib/xwindows.h" // x11::gameXWindows
-#include "../global.h"
+
+#include "hook.h"
+#include "logging.h"
+#include "ScreenCapture.h"
+#include "xlib/xwindows.h" // x11::gameXWindows
+#include "global.h"
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
 
 namespace libtas {
 

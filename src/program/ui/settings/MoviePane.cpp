@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,16 +17,17 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "MoviePane.h"
+#include "tooltip/ToolTipComboBox.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QDoubleSpinBox>
-
-#include "MoviePane.h"
-#include "../../Context.h"
-#include "tooltip/ToolTipComboBox.h"
 
 MoviePane::MoviePane(Context* c) : context(c)
 {

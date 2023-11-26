@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,8 +17,6 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#include "config.h"
-#include <QtWidgets/QApplication>
 
 #include "ui/MainWindow.h"
 #include "Context.h"
@@ -32,6 +30,8 @@
 #elif defined(__APPLE__) && defined(__MACH__)
 #include "KeyMappingQuartz.h"
 #endif
+
+#include <QtWidgets/QApplication>
 
 #include <limits.h> // PATH_MAX
 #include <libgen.h> // dirname

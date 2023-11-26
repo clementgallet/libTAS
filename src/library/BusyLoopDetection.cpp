@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -23,15 +23,7 @@
 #include "backtrace.h"
 #include "DeterministicTimer.h"
 #include "global.h" // Global::game_info
-#include <execinfo.h>
-#include <map>
-#include "../shared/sockethelpers.h"
-#include "../shared/messages.h"
 #include "checkpoint/ThreadManager.h" // isMainThread()
-#include <dlfcn.h>
-#include <sstream>
-#include <string.h>
-#include <stdint.h>
 #include "GlobalState.h"
 #ifdef __unix__
 #include "checkpoint/ProcSelfMaps.h"
@@ -40,6 +32,15 @@
 #endif
 #include "checkpoint/MemArea.h"
 #include "../shared/SharedConfig.h"
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
+
+#include <dlfcn.h>
+#include <sstream>
+#include <string.h>
+#include <stdint.h>
+#include <execinfo.h>
+#include <map>
 
 extern char**environ;
 
@@ -56,7 +57,7 @@ void BusyLoopDetection::reset()
         return;
 
     /* Remove any fake ticks cause by the busy loop detector */
-    detTimer.fakeAdvanceTimer({0, 0});
+    DeterministicTimer::get().fakeAdvanceTimer({0, 0});
 
     timecall_count = 0;
 }
@@ -86,7 +87,7 @@ void BusyLoopDetection::increment(int type)
         return;
     if (GlobalState::isNative())
         return;
-    if (detTimer.isInsideFrameBoundary())
+    if (DeterministicTimer::get().isInsideFrameBoundary())
         return;
 
     debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "Time function called");
@@ -215,7 +216,7 @@ void BusyLoopDetection::increment(int type)
 
         if (timecall_count == 10) {
             debuglogstdio(LCF_TIMESET, "Busy loop detected, fake advance ticks to next frame");
-            detTimer.fakeAdvanceTimerFrame();
+            DeterministicTimer::get().fakeAdvanceTimerFrame();
         }
         if (timecall_count > 20) {
             debuglogstdio(LCF_TIMESET, "Still softlocking, advance one frame");

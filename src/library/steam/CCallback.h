@@ -8,6 +8,7 @@
 #define LIBTAS_CCALLBACK_H_INCL
 
 #include "steamtypes.h"
+
 #include <cstddef> // size_t
 
 namespace libtas {

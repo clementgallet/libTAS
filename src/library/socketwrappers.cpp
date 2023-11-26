@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,6 +20,7 @@
 #include "socketwrappers.h"
 #include "logging.h"
 #include "global.h"
+#include "GlobalState.h"
 
 #include <sys/socket.h>
 #include <errno.h>
@@ -31,6 +32,12 @@ DEFINE_ORIG_POINTER(socket)
 /* Override */ int socket (int domain, int type, int protocol) __THROW
 {
     DEBUGLOGCALL(LCF_SOCKET);
+    LINK_NAMESPACE_GLOBAL(socket);
+
+    /* Passthrough socket call if this is a native call (e.g. ALSA init) or our own code (e.g. X connections) */
+    if (GlobalState::isNative() || GlobalState::isOwnCode()) {
+        return orig::socket(domain, type, protocol);
+    }
 
     /* Deny internet access */
     if (domain == AF_INET || domain == AF_INET6) {
@@ -40,7 +47,6 @@ DEFINE_ORIG_POINTER(socket)
         }
     }
 
-    LINK_NAMESPACE_GLOBAL(socket);
     return orig::socket(domain, type, protocol);
 }
 

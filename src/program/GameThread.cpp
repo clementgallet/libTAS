@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,15 +17,10 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include <QtWidgets/QApplication>
-
-// #include "ui/MainWindow.h"
-
-//#include "config.h"
 #include "GameThread.h"
 #include "utils.h"
-#include "../shared/SharedConfig.h"
 #include "Context.h"
+#include "../shared/SharedConfig.h"
 
 #include <string>
 #include <sstream>

@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,7 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include <QtWidgets/QLabel>
+#include "RuntimePane.h"
+#include "tooltip/ToolTipComboBox.h"
+#include "tooltip/ToolTipCheckBox.h"
+#include "tooltip/ToolTipGroupBox.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QGridLayout>
@@ -25,12 +31,6 @@
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QCheckBox>
-
-#include "RuntimePane.h"
-#include "../../Context.h"
-#include "tooltip/ToolTipComboBox.h"
-#include "tooltip/ToolTipCheckBox.h"
-#include "tooltip/ToolTipGroupBox.h"
 
 RuntimePane::RuntimePane(Context* c) : context(c)
 {
@@ -446,13 +446,9 @@ void RuntimePane::update(int status)
 {
     switch (status) {
     case Context::INACTIVE:
-        generalBox->setEnabled(true);
-        savestateBox->setEnabled(true);
         timingBox->setEnabled(true);
         break;
     case Context::STARTING:
-        generalBox->setEnabled(false);
-        savestateBox->setEnabled(false);
         timingBox->setEnabled(false);
         break;
     }

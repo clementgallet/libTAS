@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,6 +17,16 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "RamSearchWindow.h"
+#include "RamSearchModel.h"
+#include "RamWatchView.h"
+#include "RamWatchWindow.h"
+#include "RamWatchEditWindow.h"
+#include "MainWindow.h"
+
+#include "Context.h"
+#include "ramsearch/CompareOperations.h"
+
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QVBoxLayout>
@@ -24,14 +34,6 @@
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QMessageBox>
-
-#include "RamSearchWindow.h"
-#include "RamSearchModel.h"
-#include "RamWatchWindow.h"
-#include "RamWatchEditWindow.h"
-#include "MainWindow.h"
-#include "../ramsearch/CompareOperations.h"
-#include "../Context.h"
 
 #include <limits>
 #include <thread>
@@ -381,8 +383,8 @@ void RamSearchWindow::slotAdd()
     MainWindow *mw = qobject_cast<MainWindow*>(parent());
     if (mw) {
         
-        mw->ramWatchWindow->editWindow->fill(ramSearchModel->address(row), typeBox->currentIndex());
-        mw->ramWatchWindow->slotAdd();
+        mw->ramWatchWindow->ramWatchView->editWindow->fill(ramSearchModel->address(row), typeBox->currentIndex());
+        mw->ramWatchWindow->ramWatchView->slotAdd();
     }
 }
 

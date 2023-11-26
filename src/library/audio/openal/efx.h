@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -21,7 +21,8 @@
 #define LIBTAS_OPENALEFX_H_INCL
 
 #include "al.h"
-#include "../../hook.h"
+
+#include "hook.h"
 
 #define ALC_EXT_EFX_NAME                         "ALC_EXT_EFX"
 

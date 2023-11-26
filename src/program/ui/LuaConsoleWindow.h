@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,11 +20,11 @@
 #ifndef LIBTAS_LUACONSOLEWINDOW_H_INCLUDED
 #define LIBTAS_LUACONSOLEWINDOW_H_INCLUDED
 
+#include "LuaConsoleModel.h"
+
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QTableView>
-
-#include "LuaConsoleModel.h"
 
 /* Forward declaration */
 struct Context;

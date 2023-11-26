@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,6 +20,13 @@
 #ifndef LIBTAS_MAINWINDOW_H_INCLUDED
 #define LIBTAS_MAINWINDOW_H_INCLUDED
 
+#ifdef __unix__
+#include "config.h"
+#endif
+
+#include "GameLoop.h"
+#include "Context.h"
+
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QActionGroup>
 #include <QtWidgets/QAction>
@@ -37,13 +44,6 @@
 #include <QtGui/QCloseEvent>
 #include <forward_list>
 #include <string>
-
-#ifdef __unix__
-#include "config.h"
-#endif
-
-#include "../GameLoop.h"
-#include "../Context.h"
 
 #include <thread>
 
@@ -111,6 +111,7 @@ public:
 
     QAction *configEncodeAction;
     QAction *toggleEncodeAction;
+    QAction *screenshotAction;
 
     QActionGroup *slowdownGroup;
     QActionGroup *fastforwardGroup;
@@ -234,6 +235,7 @@ private slots:
     void slotMovieEnable(bool checked);
     void slotMovieRecording();
     void slotToggleEncode();
+    void slotScreenshot();
     void slotPauseMovie();
     void slotVariableFramerate(bool checked);
     void slotRealTimeFormat();

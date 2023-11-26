@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -24,12 +24,11 @@
 #include <vector>
 #include <stdint.h>
 
-#include "../../shared/SingleInput.h"
-#include "../../shared/AllInputs.h"
-
 /* Forward declaration */
 struct Context;
 class MovieFile;
+class SingleInput;
+class AllInputs;
 
 class InputEditorModel : public QAbstractTableModel {
     Q_OBJECT
@@ -162,6 +161,9 @@ public slots:
     /* Invalidate all savestates */
     void invalidateSavestates();
 
+    /* Save the new hovered cell */
+    void setHoveredCell(const QModelIndex &index);
+
 private:
     Context *context;
     MovieFile *movie;
@@ -175,6 +177,9 @@ private:
     /* Freeze the vertical scroll, used for rewind */
     bool freeze_scroll = false;
 
+    /* Current hovered cell */
+    QModelIndex hoveredIndex;
+    
 signals:
     void inputSetChanged();
 

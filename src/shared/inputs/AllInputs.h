@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -21,20 +21,23 @@
 #define LIBTAS_ALLINPUTS_H_INCLUDED
 
 #include "SingleInput.h"
+#include "ControllerInputs.h"
 
 #include <array>
 #include <set>
 #include <cstdint>
+#include <memory>
 
 /* Input structure that is filled by libTAS and send to the game every frame
  * Structure is inspired by SDL.
  */
 class AllInputs {
     public:
+        AllInputs() {};
+        AllInputs(const AllInputs&);
 
         static const int MAXKEYS = 16;
         static const int MAXJOYS = 4;
-        static const int MAXAXES = 6;
 
         /* Keyboard state. Each element is a (X11) KeySym of a pressed key.
          * KeySym is a 4-byte integer struct containing a key symbol or meaning,
@@ -63,15 +66,7 @@ class AllInputs {
         /* Pointer buttons */
         unsigned int pointer_mask;
 
-        /* controller_axes[i][j] stores the state of axis j of controller i */
-        std::array<std::array<short, MAXAXES>,MAXJOYS> controller_axes;
-
-        /* controller_buttons[i] stores the bitmap state of buttons of
-         * controller i. Bit j set means that button j is pressed.
-         * We use a 2-byte integer here, meaning we can have at most
-         * 16 buttons in a controller.
-         */
-        std::array<unsigned short,MAXJOYS> controller_buttons;
+        std::array<std::unique_ptr<ControllerInputs>,MAXJOYS> controllers;
 
         /* Flags */
         uint32_t flags;
@@ -83,21 +78,13 @@ class AllInputs {
         uint32_t realtime_sec, realtime_nsec;
 
         /* Operator needed for comparing movies */
-        inline bool operator==(const AllInputs& other) const
-        {
-            return ((keyboard == other.keyboard) &&
-                (pointer_x == other.pointer_x) &&
-                (pointer_y == other.pointer_y) &&
-                (pointer_mask == other.pointer_mask) &&
-                (controller_axes == other.controller_axes) &&
-                (controller_buttons == other.controller_buttons) &&
-                (flags == other.flags) &&
-                (framerate_den == other.framerate_den) &&
-                (framerate_num == other.framerate_num) &&
-                (realtime_sec == other.realtime_sec) &&
-                (realtime_nsec == other.realtime_nsec));
-        }
+        bool operator==(const AllInputs& other) const;
 
+        /* OR all elements of the struct, so that unique inputs can be queried */
+        AllInputs& operator|=(const AllInputs& ai);
+
+        AllInputs& operator=(const AllInputs& ai);
+            
         /* Empty the state, set axes to neutral position. */
         void emptyInputs();
 
@@ -115,6 +102,12 @@ class AllInputs {
 
         /* Extract all single inputs and insert them in the set */
         void extractInputs(std::set<SingleInput> &set) const;
+
+        /* Send inputs through the socket */
+        void send(bool preview);
+
+        /* Receive inputs through the socket excluding the first message MSGN_ALL_INPUTS */
+        void recv();
 
 };
 

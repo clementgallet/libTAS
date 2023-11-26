@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,11 +18,13 @@
  */
 
 #include "KeyMappingQuartz.h"
-#include "../shared/SingleInput.h"
+#include "ramsearch/MemAccess.h"
+#include "../shared/inputs/SingleInput.h"
+#include "../shared/inputs/AllInputs.h"
+#include "../shared/SharedConfig.h"
 #include "../external/keysymdef.h"
 #include "../external/QuartzKeycodes.h"
 #include "../external/keysymdesc.h"
-#include "ramsearch/MemAccess.h"
 
 #include <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
@@ -259,13 +261,15 @@ void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConf
                     if (controller_i >= sc.nb_controllers)
                         continue;
 
+                    if (!ai.controllers[controller_i])
+                        ai.controllers[controller_i].reset(new ControllerInputs());
                     int controller_axis = si.type & SingleInput::IT_CONTROLLER_AXIS_MASK;
                     int controller_type = si.type & SingleInput::IT_CONTROLLER_TYPE_MASK;
                     if (controller_axis) {
-                        ai.controller_axes[controller_i][controller_type] = static_cast<short>(si.value);
+                        ai.controllers[controller_i]->axes[controller_type] = static_cast<short>(si.value);
                     }
                     else {
-                        ai.controller_buttons[controller_i] |= (si.value & 0x1) << controller_type;
+                        ai.controllers[controller_i]->buttons |= (si.value & 0x1) << controller_type;
                     }
                 }
             }

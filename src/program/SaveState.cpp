@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,15 +17,15 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
-#include <unistd.h> // access()
-
 #include "Context.h"
 #include "SaveState.h"
 #include "utils.h"
 #include "../shared/sockethelpers.h"
 #include "../shared/SharedConfig.h"
 #include "../shared/messages.h"
+
+#include <iostream>
+#include <unistd.h> // access()
 
 void SaveState::init(Context* context, int i)
 {
@@ -153,7 +153,7 @@ int SaveState::save(Context* context, const MovieFile& m)
     return message;
 }
 
-int SaveState::load(Context* context, const MovieFile& m, bool branch)
+int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inputEditor)
 {
     /* Check that the savestate exists (check for both savestate files and 
      * framecount, because there can be leftover savestate files from
@@ -213,8 +213,14 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch)
         sendString(path);
     }
 
-    /* When loading in read mode and not branch, we don't allow loading a non-prefix movie */
-    if ((context->config.sc.recording == SharedConfig::RECORDING_READ) && (!branch)) {
+    /* Check if we need to load a prefix movie when:
+     * - not loading a branch, and
+     * - being in read mode, or being in write mode with input editor opened
+     */
+    if ((!branch) && 
+        (context->config.sc.recording == SharedConfig::RECORDING_READ ||
+            (context->config.sc.recording == SharedConfig::RECORDING_WRITE &&
+             inputEditor))) {
 
         /* Checking if the savestate movie is a prefix of our movie */
         if (!movie || !m.isPrefix(*movie)) {
@@ -238,7 +244,7 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch)
     return 0;
 }
 
-int SaveState::postLoad(Context* context, MovieFile& m, bool branch)
+int SaveState::postLoad(Context* context, MovieFile& m, bool branch, bool inputEditor)
 {
     int message = receiveMessage();
     
@@ -254,10 +260,10 @@ int SaveState::postLoad(Context* context, MovieFile& m, bool branch)
         sendMessage(MSGN_CONFIG);
         sendData(&context->config.sc, sizeof(SharedConfig));
 
-        if ((context->config.sc.recording == SharedConfig::RECORDING_WRITE) || branch) {
-            /* When in writing move or loading a branch,
-             * we load the movie associated with the savestate.
-             */
+        if (!((!branch) && 
+            (context->config.sc.recording == SharedConfig::RECORDING_READ ||
+                (context->config.sc.recording == SharedConfig::RECORDING_WRITE &&
+                 inputEditor)))) {
             movie->copyTo(m);
         }
 

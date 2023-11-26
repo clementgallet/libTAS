@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,14 +17,14 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ControllerWidget.h"
+#include "ControllerAxisWidget.h"
+
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
-
-#include "ControllerWidget.h"
-#include "ControllerAxisWidget.h"
 
 ControllerWidget::ControllerWidget(QWidget *parent) : QWidget(parent)
 {

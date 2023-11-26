@@ -15,7 +15,7 @@
 			"label": "configure",
 			"command": "./configure",
 			"args": [
-				"CXXFLAGS=\"-O2 -g -Wall -pedantic\""
+				"CXXFLAGS=\"-Og -g -Wall -pedantic\""
 			],
 			"problemMatcher": []
 		},

@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,10 +20,10 @@
 #ifndef LIBTAS_KEYBOARDHELPER_H_INCLUDED
 #define LIBTAS_KEYBOARDHELPER_H_INCLUDED
 
-#include "../../external/SDL1.h"
+#include "../external/SDL1.h"
+#include "../shared/inputs/AllInputs.h"
+
 #include <SDL2/SDL.h>
-//#include <X11/XKBlib.h>
-#include "../../shared/AllInputs.h"
 
 namespace libtas {
 
@@ -45,7 +45,8 @@ void xkeyboardToSDL1keyboard(const std::array<unsigned int,AllInputs::MAXKEYS>& 
 void xkeysymToSDL(SDL_Keysym *keysym, unsigned int xkeysym);
 void xkeysymToSDL1(SDL1::SDL_keysym *keysym, unsigned int xkeysym);
 
-/* Build the SDL2 modifier from the keyboard input */
+/* Build the Xlib/SDL2 modifier from the keyboard input */
+unsigned int xkeyboardToXMod(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard);
 SDL_Keymod xkeyboardToSDLMod(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard);
 
 }

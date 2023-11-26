@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -21,8 +21,11 @@
 
 #ifndef LIBTAS_THREAD_MANAGER_H
 #define LIBTAS_THREAD_MANAGER_H
-#include "../TimeHolder.h"
+
 #include "ThreadInfo.h"
+
+#include "TimeHolder.h"
+
 #include <set>
 #include <map>
 #include <vector>

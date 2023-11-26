@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,46 +17,36 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtWidgets/QTableView>
+#include "RamWatchView.h"
+#include "RamWatchWindow.h"
+#include "RamWatchModel.h"
+#include "PointerScanWindow.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QVBoxLayout>
-#include <QtWidgets/QHeaderView>
 #include <QtCore/QSettings>
 #include <QtWidgets/QFileDialog>
-
-#include "RamWatchWindow.h"
-#include "RamWatchModel.h"
-#include "RamWatchEditWindow.h"
-#include "PointerScanWindow.h"
-#include "../Context.h"
+#include <QtWidgets/QLineEdit>
 
 RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
     setWindowTitle("Ram Watch");
 
     /* Table */
-    ramWatchView = new QTableView(this);
-    ramWatchView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ramWatchView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    ramWatchView->setShowGrid(false);
-    ramWatchView->setAlternatingRowColors(true);
-    ramWatchView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ramWatchView->horizontalHeader()->setHighlightSections(false);
-    ramWatchView->verticalHeader()->hide();
-
-    ramWatchModel = new RamWatchModel();
-    ramWatchView->setModel(ramWatchModel);
+    ramWatchView = new RamWatchView(c, this);
 
     /* Buttons */
     QPushButton *addWatch = new QPushButton(tr("Add Watch"));
-    connect(addWatch, &QAbstractButton::clicked, this, &RamWatchWindow::slotAdd);
+    connect(addWatch, &QAbstractButton::clicked, ramWatchView, &RamWatchView::slotAdd);
 
     QPushButton *editWatch = new QPushButton(tr("Edit Watch"));
-    connect(editWatch, &QAbstractButton::clicked, this, &RamWatchWindow::slotEdit);
+    connect(editWatch, &QAbstractButton::clicked, ramWatchView, &RamWatchView::slotEdit);
 
     QPushButton *removeWatch = new QPushButton(tr("Remove Watch"));
-    connect(removeWatch, &QAbstractButton::clicked, this, &RamWatchWindow::slotRemove);
+    connect(removeWatch, &QAbstractButton::clicked, ramWatchView, &RamWatchView::slotRemove);
 
     QPushButton *scanWatch = new QPushButton(tr("Scan Pointer"));
     connect(scanWatch, &QAbstractButton::clicked, this, &RamWatchWindow::slotScanPointer);
@@ -87,75 +77,12 @@ RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent) : QDialog(parent), c
 
     setLayout(mainLayout);
 
-    editWindow = new RamWatchEditWindow(this);
     pointerScanWindow = new PointerScanWindow(c, this);
 }
 
 void RamWatchWindow::update()
 {
-    ramWatchModel->update();
-}
-
-void RamWatchWindow::slotAdd()
-{
-    editWindow->exec();
-
-    if (editWindow->ramwatch) {
-        ramWatchModel->addWatch(std::move(editWindow->ramwatch));
-    }
-}
-
-void RamWatchWindow::slotGet(std::string &watch)
-{
-    static unsigned int index = 0;
-
-    if (index >= ramWatchModel->ramwatches.size()) {
-        /* We sent all watches, returning NULL */
-        watch = "";
-        index = 0;
-        return;
-    }
-
-    watch = ramWatchModel->ramwatches[index]->label;
-    watch += ": ";
-    watch += ramWatchModel->ramwatches[index]->value_str();
-
-    index++;
-}
-
-void RamWatchWindow::slotEdit()
-{
-    const QModelIndex index = ramWatchView->selectionModel()->currentIndex();
-
-    /* If no watch was selected, return */
-    if (!index.isValid())
-        return;
-
-    int row = index.row();
-
-    /* Fill and show the watch edit window */
-    editWindow->fill(ramWatchModel->ramwatches.at(row));
-    editWindow->exec();
-
-    /* Modify the watch */
-    if (editWindow->ramwatch) {
-        ramWatchModel->ramwatches[row] = std::move(editWindow->ramwatch);
-        ramWatchModel->update();
-    }
-}
-
-void RamWatchWindow::slotRemove()
-{
-    QModelIndexList indexlist = ramWatchView->selectionModel()->selectedRows();
-    ramWatchView->selectionModel()->clear();
-
-    /* If no watch was selected, return */
-    if (indexlist.isEmpty())
-        return;
-
-    for (const QModelIndex index : indexlist) {
-        ramWatchModel->removeWatch(index.row());
-    }
+    ramWatchView->update();
 }
 
 void RamWatchWindow::slotScanPointer()
@@ -168,42 +95,40 @@ void RamWatchWindow::slotScanPointer()
 
     int row = index.row();
 
-    /* Fill and show the watch edit window */
-    pointerScanWindow->addressInput->setText(QString("%1").arg(ramWatchModel->ramwatches.at(row)->address, 0, 16));
+    /* Fill and show the scan pointer window */
+    pointerScanWindow->addressInput->setText(QString("%1").arg(ramWatchView->ramWatchModel->ramwatches.at(row)->address, 0, 16));
+    pointerScanWindow->type_index = ramWatchView->ramWatchModel->ramwatches.at(row)->type();
     pointerScanWindow->exec();
 }
 
 void RamWatchWindow::slotSave()
 {
-    QString filename = QFileDialog::getSaveFileName(this, tr("Choose a watch file"), context->gamepath.c_str(), tr("watch files (*.wch)"));
+    QString defaultPath(context->gamepath.c_str());
+    defaultPath.append(".wch");
+    
+    QString filename = QFileDialog::getSaveFileName(this, tr("Choose a watch file"), defaultPath, tr("watch files (*.wch)"));
     if (filename.isNull()) {
         return;
     }
 
-    std::string watchFile = filename.toStdString();
-
-    /* Check or add .wch extension */
-    if ((watchFile.length() < 4) || (watchFile.compare(watchFile.length()-4, 4, ".wch") != 0)) {
-        watchFile += ".wch";
-    }
-
-	QSettings watchSettings(QString(watchFile.c_str()), QSettings::IniFormat);
+	QSettings watchSettings(filename, QSettings::IniFormat);
 	watchSettings.setFallbacksEnabled(false);
 
-    ramWatchModel->saveSettings(watchSettings);
+    ramWatchView->ramWatchModel->saveSettings(watchSettings);
 }
 
 void RamWatchWindow::slotLoad()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Choose a watch file"), context->gamepath.c_str(), tr("watch files (*.wch)"));
+    QString defaultPath(context->gamepath.c_str());
+    defaultPath.append(".wch");
+    
+    QString filename = QFileDialog::getOpenFileName(this, tr("Choose a watch file"), defaultPath, tr("watch files (*.wch)"));
     if (filename.isNull()) {
         return;
     }
 
-    std::string watchFile = filename.toStdString();
-
-	QSettings watchSettings(QString(watchFile.c_str()), QSettings::IniFormat);
+	QSettings watchSettings(filename, QSettings::IniFormat);
 	watchSettings.setFallbacksEnabled(false);
 
-    ramWatchModel->loadSettings(watchSettings);
+    ramWatchView->ramWatchModel->loadSettings(watchSettings);
 }

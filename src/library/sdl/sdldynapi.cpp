@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -21,12 +21,11 @@
 
 /* Define some SDL functions that appear in version 2.0.6, because still many
  * distributions are bundled with version 2.0.5 */
-#include "../inputs/sdljoystick.h"
-
-#include "../logging.h"
-#include "../dlhook.h"
-#include "../hook.h"
-#include "../GlobalState.h"
+#include "inputs/sdljoystick.h"
+#include "logging.h"
+#include "dlhook.h"
+#include "hook.h"
+#include "GlobalState.h"
 
 #include <dlfcn.h>
 

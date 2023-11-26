@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -19,13 +19,13 @@
 
 #include "user32.h"
 #include "winehook.h"
-#include "../hookpatch.h"
-#include "../logging.h"
-// #include "../backtrace.h"
-#include "../checkpoint/ThreadSync.h"
-#include "../inputs/winekeyboardlayout.h"
-#include "../inputs/inputs.h"
-#include "../../shared/SingleInput.h"
+
+#include "hookpatch.h"
+#include "logging.h"
+#include "checkpoint/ThreadSync.h"
+#include "inputs/winekeyboardlayout.h"
+#include "inputs/inputs.h"
+#include "../shared/inputs/SingleInput.h"
 
 namespace libtas {
 

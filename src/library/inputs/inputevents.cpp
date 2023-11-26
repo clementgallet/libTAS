@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,46 +17,48 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "inputevents.h"
 #ifdef __unix__
 #include "config.h"
 #endif
-
-#include "inputevents.h"
 #include "inputs.h"
 #include "keyboard_helper.h"
-#include "../logging.h"
-#include "../../shared/AllInputs.h"
-#include "../../shared/SingleInput.h"
-#include "../../shared/SharedConfig.h"
-// #include <X11/keysym.h>
-#include "../DeterministicTimer.h"
 #include "sdlgamecontroller.h" // sdl_controller_events
 #include "sdljoystick.h" // sdl_joystick_event
 #include "sdltextinput.h" // SDL_EnableUNICODE
-#include "../sdl/SDLEventQueue.h"
-#include "../../external/SDL1.h"
-#include "../global.h" // Global::game_info
-#include "../GlobalState.h"
-#include <stdlib.h>
-#include <SDL2/SDL.h>
-
 #ifdef __unix__
 #include "xinput.h"
 #include "xpointer.h"
 #include "xkeyboardlayout.h"
-#include "../xlib/XlibEventQueueList.h"
-#include "../xcb/XcbEventQueueList.h"
-#include "../xcb/xcbconnection.h" // x11::gameConnections
-#include "../xlib/xevents.h"
-#include "../xlib/xdisplay.h" // x11::gameDisplays
-#include "../xlib/xwindows.h" // x11::gameXWindows
+#endif
+#ifdef __linux__
+#include "jsdev.h"
+#include "evdev.h"
 #endif
 
+#include "logging.h"
+#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/SingleInput.h"
+#include "../shared/SharedConfig.h"
+#include "DeterministicTimer.h"
+#include "sdl/SDLEventQueue.h"
+#include "../external/SDL1.h"
+#include "global.h" // Global::game_info
+#include "GlobalState.h"
+#ifdef __unix__
+#include "xlib/XlibEventQueueList.h"
+#include "xcb/XcbEventQueueList.h"
+#include "xcb/xcbconnection.h" // x11::gameConnections
+#include "xlib/xevents.h"
+#include "xlib/xdisplay.h" // x11::gameDisplays
+#include "xlib/xwindows.h" // x11::gameXWindows
+#endif
+
+#include <stdlib.h>
+#include <SDL2/SDL.h>
 #ifdef __linux__
 #include <linux/joystick.h>
 #include <linux/input.h>
-#include "jsdev.h"
-#include "evdev.h"
 #endif
 
 namespace libtas {
@@ -66,7 +68,7 @@ static void generateKeyUpEvents(void)
 {
     int i, j;
 
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (i=0; i<AllInputs::MAXKEYS; i++) {
@@ -134,6 +136,7 @@ static void generateKeyUpEvents(void)
                 event.xkey.subwindow = 0;
                 event.xkey.root = x11::rootWindow;
                 NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(nullptr, old_game_ai.keyboard[i]));
+                event.xkey.state = xkeyboardToXMod(game_ai.keyboard);
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (x11::gameDisplays[d]) {
                         event.xkey.root = XRootWindow(x11::gameDisplays[d], 0);
@@ -154,6 +157,7 @@ static void generateKeyUpEvents(void)
                 event.child = 0;
                 event.root = x11::rootWindow;
                 NOLOGCALL(event.detail = XKeysymToKeycode(nullptr, old_game_ai.keyboard[i]));
+                event.state = static_cast<uint16_t>(xkeyboardToXMod(game_ai.keyboard));
                 for (int c=0; c<GAMECONNECTIONNUM; c++) {
                     if (x11::gameConnections[c]) {
                         // event.root = XRootWindow(x11::gameConnections[c], 0);
@@ -177,6 +181,7 @@ static void generateKeyUpEvents(void)
                 dev->deviceid = 3;
                 dev->sourceid = 3;
                 NOLOGCALL(dev->detail = XKeysymToKeycode(nullptr, old_game_ai.keyboard[i]));
+                dev->mods.effective = xkeyboardToXMod(game_ai.keyboard); // We should not need to fill the other members
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (x11::gameDisplays[d]) {
                         dev->root = XRootWindow(x11::gameDisplays[d], 0);
@@ -211,7 +216,7 @@ static void generateKeyDownEvents(void)
 {
     int i,j;
 
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (i=0; i<AllInputs::MAXKEYS; i++) {
@@ -295,6 +300,7 @@ static void generateKeyDownEvents(void)
                 event.xkey.subwindow = 0;
                 event.xkey.root = x11::rootWindow;
                 NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(nullptr, game_ai.keyboard[i]));
+                event.xkey.state = xkeyboardToXMod(game_ai.keyboard);
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (x11::gameDisplays[d]) {
                         event.xkey.root = XRootWindow(x11::gameDisplays[d], 0);
@@ -315,6 +321,7 @@ static void generateKeyDownEvents(void)
                 event.child = 0;
                 event.root = x11::rootWindow;
                 NOLOGCALL(event.detail = XKeysymToKeycode(nullptr, game_ai.keyboard[i]));
+                event.state = static_cast<uint16_t>(xkeyboardToXMod(game_ai.keyboard));
                 for (int c=0; c<GAMECONNECTIONNUM; c++) {
                     if (x11::gameConnections[c]) {
                         // event.root = XRootWindow(x11::gameConnections[c], 0);
@@ -338,6 +345,7 @@ static void generateKeyDownEvents(void)
                 dev->deviceid = 3;
                 dev->sourceid = 3;
                 NOLOGCALL(dev->detail = XKeysymToKeycode(nullptr, game_ai.keyboard[i]));
+                dev->mods.effective = xkeyboardToXMod(game_ai.keyboard); // We should not need to fill the other members
                 for (int d=0; d<GAMEDISPLAYNUM; d++) {
                     if (x11::gameDisplays[d]) {
                         dev->root = XRootWindow(x11::gameDisplays[d], 0);
@@ -373,7 +381,7 @@ static void generateControllerAdded(void)
     if (!(Global::game_info.joystick & GameInfo::SDL2))
         return;
 
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     static bool init_added = false;
@@ -438,10 +446,12 @@ static void generateControllerAdded(void)
 /* Same as KeyUp/KeyDown functions but with controller events */
 static void generateControllerEvents(void)
 {
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (int ji=0; ji<Global::shared_config.nb_controllers; ji++) {
+        if (!game_ai.controllers[ji])
+            continue;
 
         /* Check if we need to generate any joystick events for that
          * particular joystick. If not, we {continue;} here because
@@ -470,9 +480,9 @@ static void generateControllerEvents(void)
                 continue;
         }
 
-        for (int axis=0; axis<AllInputs::MAXAXES; axis++) {
+        for (int axis=0; axis<ControllerInputs::MAXAXES; axis++) {
             /* Check for axes change */
-            if (game_ai.controller_axes[ji][axis] != old_game_ai.controller_axes[ji][axis]) {
+            if (game_ai.controllers[ji]->axes[axis] != old_game_ai.controllers[ji]->axes[axis]) {
                 /* We got a change in a controller axis value */
 
                 if (Global::game_info.joystick & GameInfo::SDL2) {
@@ -482,7 +492,7 @@ static void generateControllerEvents(void)
                         event2.caxis.timestamp = timestamp;
                         event2.caxis.which = ji;
                         event2.caxis.axis = SingleInput::toSDL2Axis(axis);
-                        event2.caxis.value = game_ai.controller_axes[ji][axis];
+                        event2.caxis.value = game_ai.controllers[ji]->axes[axis];
                         sdlEventQueue.insert(&event2);
                         debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERAXISMOTION with axis %d", axis);
                     }
@@ -492,7 +502,7 @@ static void generateControllerEvents(void)
                         event2.jaxis.timestamp = timestamp;
                         event2.jaxis.which = ji;
                         event2.jaxis.axis = axis;
-                        event2.jaxis.value = game_ai.controller_axes[ji][axis];
+                        event2.jaxis.value = game_ai.controllers[ji]->axes[axis];
                         sdlEventQueue.insert(&event2);
                         debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYAXISMOTION with axis %d", axis);
                     }
@@ -503,7 +513,7 @@ static void generateControllerEvents(void)
                     event1.type = SDL1::SDL_JOYAXISMOTION;
                     event1.jaxis.which = ji;
                     event1.jaxis.axis = axis;
-                    event1.jaxis.value = game_ai.controller_axes[ji][axis];
+                    event1.jaxis.value = game_ai.controllers[ji]->axes[axis];
                     sdlEventQueue.insert(&event1);
                     debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYAXISMOTION with axis %d", axis);
                 }
@@ -514,7 +524,7 @@ static void generateControllerEvents(void)
                     ev.time = timestamp;
                     ev.type = JS_EVENT_AXIS;
                     ev.number = SingleInput::toJsdevAxis(axis);
-                    ev.value = game_ai.controller_axes[ji][axis];
+                    ev.value = game_ai.controllers[ji]->axes[axis];
                     write_jsdev(ev, ji);
                     debuglogstdio(LCF_EVENTS | LCF_JOYSTICK, "Generate jsdev event JS_EVENT_AXIS with axis %d", axis);
                 }
@@ -525,7 +535,7 @@ static void generateControllerEvents(void)
                     ev.time.tv_usec = time.tv_nsec / 1000;
                     ev.type = EV_ABS;
                     ev.code = SingleInput::toEvdevAxis(axis);
-                    ev.value = game_ai.controller_axes[ji][axis];
+                    ev.value = game_ai.controllers[ji]->axes[axis];
                     write_evdev(ev, ji);
                     debuglogstdio(LCF_EVENTS | LCF_JOYSTICK, "Generate evdev event EV_ABS with axis %d", axis);
                 }
@@ -534,8 +544,8 @@ static void generateControllerEvents(void)
         }
 
         /* Check for button change */
-        unsigned short buttons = game_ai.controller_buttons[ji];
-        unsigned short old_buttons = old_game_ai.controller_buttons[ji];
+        unsigned short buttons = game_ai.controllers[ji]->buttons;
+        unsigned short old_buttons = old_game_ai.controllers[ji]->buttons;
 
         /* We generate the hat event separately from the buttons,
          * but we still check here if hat has changed */
@@ -739,7 +749,7 @@ static void generateControllerEvents(void)
 /* Same as above with MouseMotion event */
 static void generateMouseMotionEvents(void)
 {
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
 #ifdef __unix__
@@ -885,7 +895,7 @@ static void generateMouseMotionEvents(void)
 /* Same as above with the MouseButton event */
 void generateMouseButtonEvents(void)
 {
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     static int buttons[] = {SingleInput::POINTER_B1,
@@ -1066,7 +1076,7 @@ static void generateFocusEvents(void)
     if (!(game_ai.flags & (1<<SingleInput::FLAG_FOCUS_UNFOCUS)))
         return;
     
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     if (Global::game_info.keyboard & GameInfo::SDL2) {
@@ -1155,7 +1165,7 @@ void syncControllerEvents()
         return;
 
 #ifdef __linux__
-    struct timespec time = detTimer.getTicks();
+    struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (int i = 0; i < Global::shared_config.nb_controllers; i++) {

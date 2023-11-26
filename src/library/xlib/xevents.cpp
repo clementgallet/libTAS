@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -19,19 +19,19 @@
 
 #include "config.h"
 #include "xevents.h"
-#include "../logging.h"
-#include "../hook.h"
-#include "../GameHacks.h"
-#include "../frame.h"
 #include "XlibEventQueueList.h"
 #include "xatom.h"
 #include "xdisplay.h" // x11::gameDisplays
 #include "xwindows.h" // x11::gameXWindows
-#include "../../external/X11/XInput2.h"
-#include "../global.h"
-#include "../GlobalState.h"
-
 #include "xrandr.h"
+
+#include "logging.h"
+#include "hook.h"
+#include "GameHacks.h"
+#include "frame.h"
+#include "global.h"
+#include "GlobalState.h"
+#include "../external/X11/XInput2.h"
 
 namespace libtas {
 

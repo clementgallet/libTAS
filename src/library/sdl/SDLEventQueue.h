@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -20,10 +20,11 @@
 #ifndef LIBTAS_SDLEVENTQUEUE_H_INCLUDED
 #define LIBTAS_SDLEVENTQUEUE_H_INCLUDED
 
+#include "../external/SDL1.h"
+
 #include <list>
 #include <set>
 #include <mutex>
-#include "../../external/SDL1.h"
 #include <SDL2/SDL.h>
 
 namespace libtas {

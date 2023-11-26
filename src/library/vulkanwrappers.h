@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -21,9 +21,10 @@
 #define LIBTAS_VULKANWRAPPERS_H_INCL
 
 #include "hook.h"
+#include "../external/vulkan_core.h"
+
 #include <cstddef>
 #include <vector>
-#include "../external/vulkan_core.h"
 
 namespace libtas {
 

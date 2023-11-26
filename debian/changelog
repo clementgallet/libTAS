@@ -1,3 +1,56 @@
+libtas (1.4.5) unstable; urgency=medium
+
+  * Add a "Save as default" button for the Encode window (#507)
+  * Revamp settings
+  * Draw a crosshair on current pointer coordinates (#510)
+  * Add a timeout for waiting on Unity threads (#515)
+  * Add new SDL audio functions and update SDL_dynapi (#518)
+  * RAM search can be interrupted
+  * Hook mono sleep function
+  * Implement XIQueryDevice()
+  * Implement SDL_JoystickGetDeviceInstanceID()
+  * Add a window for lua output
+  * Manage lua scripts and change the callback system
+  * Add a performance timer for monitoring
+  * Implement FocusIn/FocusOut inputs (#367)
+  * Add lua window to manage scripts (#519)
+  * Update the seek frame during rewind (#530)
+  * Update to newer libswresample library
+  * Reload lua scripts when modified by user (#519)
+  * Debug errors show file and line
+  * Add markers to frames in input editor (#548)
+  * Add an option to pause on markers
+  * Save a backup movie when user did not set a recording movie
+  * Remove code needing c++17, and add the c++11 compile flag (#516)
+  * Don't skip frames in Vulkan for now (#492)
+  * Immediately detach all created threads, and handle joinable state manually
+  * Settings has its own menu and opens the corresponding tab (#521)
+  * Merge controller added/removed into single flag
+  * Don't use O_TMPFILE for memory map file, as it may not be available (#524)
+  * Check and update movie length during last frame instead of one frame later
+    and mark it as modified
+  * Enforce No Sleep on Unity games
+  * Use a different lua state for each script
+  * Set settings window as main window (#567)
+  * Fix OSD SDL2 renderer memory leak
+  * Fix SDL_GameController functions as they raised the maximum number of buttons
+  * Get game window size from SDL2 when possible (#513)
+  * Set pixel buffer and pack row before reading pixels (#505)
+  * Suspend sigaction for our checkpoint signals
+  * Handle unusual and long memory section filenames
+  * Disable scroll freeze when pausing during rewind (#528)
+  * Fix scrolling to current frame not working when input editor was scrolled to bottom
+  * Fix fopen savefiles that couldn't be read (#547)
+  * Use correct prototype for SDL1 SDL_CreateThread()
+  * Fix input editor variable framerate values not showing off correctly
+  * Save GL unpack alignment for OSD
+  * Synchronize movie input access
+  * Fix lua stack when scipt has error
+  * Fix lua stack when calling a callback
+  * Prevent triggering a setting save when loading settings (fix #582)
+
+ -- clement <clement@debian.home>  Sun, 22 Oct 2023 15:01:00 +0200
+
 libtas (1.4.4) unstable; urgency=medium
 
   * Split deterministic timer into monotonic/realtime (#474)

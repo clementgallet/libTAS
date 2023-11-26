@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -40,6 +40,7 @@ public:
     void update();
     void resetInputs();
     InputEditorModel *inputEditorModel;
+    int scrollBarWidth;
 
 public slots:
     void horizontalMenu(QPoint pos);
@@ -80,6 +81,7 @@ protected:
     void keyReleaseEvent(QKeyEvent *event) override;
     void timerEvent(QTimerEvent* event) override;
     void hideEvent(QHideEvent* event) override;
+    void leaveEvent(QEvent *event) override;
 
 private slots:
     void resizeAllColumns();

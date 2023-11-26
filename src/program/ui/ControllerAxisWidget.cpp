@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,11 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ControllerAxisWidget.h"
+
 #include <QtGui/QPainter>
 #include <cstdint>
 #include <iostream>
-
-#include "ControllerAxisWidget.h"
 
 ControllerAxisWidget::ControllerAxisWidget(QWidget *parent) : QWidget(parent)
 {

@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -18,20 +18,14 @@
  */
 
 #include "frame.h"
-#include "../shared/AllInputs.h"
-#include "../shared/messages.h"
 #include "global.h" // Global::shared_config
 #include "inputs/inputs.h" // AllInputs ai object
 #include "inputs/inputevents.h"
-#include "../shared/sockethelpers.h"
 #include "logging.h"
 #include "GlobalState.h"
 #include "DeterministicTimer.h"
 #include "encoding/AVEncoder.h"
-#include "sdl/sdlwindows.h"
-#include "sdl/sdlevents.h"
-#include <iomanip>
-#include <stdint.h>
+#include "encoding/Screenshot.h"
 #include "timewrappers.h" // clock_gettime
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/SaveStateManager.h"
@@ -39,12 +33,14 @@
 #include "checkpoint/ThreadSync.h"
 #include "ScreenCapture.h"
 #include "WindowTitle.h"
-#include "sdl/SDLEventQueue.h"
 #include "BusyLoopDetection.h"
-#include "audio/AudioContext.h"
 #include "hook.h"
 #include "GameHacks.h"
 #include "PerfTimer.h"
+#include "audio/AudioContext.h"
+#include "sdl/sdlwindows.h"
+#include "sdl/sdlevents.h"
+#include "sdl/SDLEventQueue.h"
 
 #ifdef __unix__
 #include "xlib/xevents.h"
@@ -54,6 +50,12 @@
 #include "xlib/XlibEventQueueList.h"
 #include "xlib/xwindows.h" // x11::gameXWindows
 #endif
+#include "../shared/sockethelpers.h"
+#include "../shared/inputs/AllInputs.h"
+#include "../shared/messages.h"
+
+#include <iomanip>
+#include <stdint.h>
 
 namespace libtas {
 
@@ -107,7 +109,7 @@ static void computeFPS(float& fps, float& lfps)
 
         /* Update current ticks */
         TimeHolder lastTick = lastTicks[compute_counter];
-        lastTicks[compute_counter] = detTimer.getTicks();
+        lastTicks[compute_counter] = DeterministicTimer::get().getTicks();
 
         uint64_t deltaFrames = framecount - lastFrame;
 
@@ -201,12 +203,12 @@ static void sendFrameCountTime()
         exit(1);
         
     sendData(&framecount, sizeof(uint64_t));
-    struct timespec ticks = detTimer.getTicks(SharedConfig::TIMETYPE_UNTRACKED_MONOTONIC);
+    struct timespec ticks = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_UNTRACKED_MONOTONIC);
     uint64_t ticks_val = ticks.tv_sec;
     sendData(&ticks_val, sizeof(uint64_t));
     ticks_val = ticks.tv_nsec;
     sendData(&ticks_val, sizeof(uint64_t));
-    ticks = detTimer.getTicks(SharedConfig::TIMETYPE_UNTRACKED_REALTIME);
+    ticks = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_UNTRACKED_REALTIME);
     ticks_val = ticks.tv_sec;
     sendData(&ticks_val, sizeof(uint64_t));
     ticks_val = ticks.tv_nsec;
@@ -250,6 +252,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     perfTimer.switchTimer(PerfTimer::FrameTimer);
 
     /* Update the deterministic timer, sleep if necessary */
+    DeterministicTimer& detTimer = DeterministicTimer::get();
     TimeHolder timeIncrement = detTimer.enterFrameBoundary();
 
     /* Mix audio, except if the game opened a loopback context */
@@ -610,7 +613,7 @@ static void pushQuitEvent(void)
 }
 
 
-static void screen_redraw(std::function<void()> draw, RenderHUD& hud, AllInputs preview_ai)
+static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllInputs& preview_ai)
 {
     if (!Global::skipping_draw && draw) {
         ScreenCapture::copySurfaceToScreen();
@@ -703,8 +706,15 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 receiveCString(AVEncoder::ffmpeg_options);
                 break;
 
+            case MSGN_SCREENSHOT:{
+                debuglogstdio(LCF_SOCKET, "Receiving screenshot filename");
+                std::string screenshotfile = receiveString();
+                Screenshot::save(screenshotfile, !!draw);                    
+                break;
+                }
+
             case MSGN_ALL_INPUTS:
-                receiveData(&ai, sizeof(AllInputs));
+                ai.recv();
                 /* Update framerate if necessary (do we actually need to?) */
                 if (Global::shared_config.variable_framerate) {
                     Global::shared_config.framerate_num = ai.framerate_num;
@@ -712,7 +722,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 }
                 /* Set new realtime value */
                 if (ai.realtime_sec)
-                    detTimer.setRealTime(ai.realtime_sec, ai.realtime_nsec);
+                    DeterministicTimer::get().setRealTime(ai.realtime_sec, ai.realtime_nsec);
                 
                 break;
 
@@ -721,7 +731,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 break;
 
             case MSGN_PREVIEW_INPUTS:
-                receiveData(&preview_ai, sizeof(AllInputs));
+                preview_ai.recv();
                 screen_redraw(draw, hud, preview_ai);
                 break;
 

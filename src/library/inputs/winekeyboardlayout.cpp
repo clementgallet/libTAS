@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -19,11 +19,10 @@
 
 #include "winekeyboardlayout.h"
 
-#include "../logging.h"
+#include "logging.h"
 
 #include <X11/keysym.h>
 #include <X11/XF86keysym.h>
-// #include <X11/X.h>
 
 namespace libtas {
 

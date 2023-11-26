@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -17,6 +17,15 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "KeyPressedDialog.h"
+#include "InputEditorView.h"
+#include "InputEditorModel.h"
+#include "MainWindow.h"
+#include "qtutils.h"
+#include "settings/tooltip/BalloonTip.h"
+
+#include "Context.h"
+
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QScrollBar>
@@ -24,14 +33,6 @@
 #include <QtWidgets/QMessageBox>
 
 #include <stdint.h>
-
-#include "KeyPressedDialog.h"
-#include "InputEditorView.h"
-#include "InputEditorModel.h"
-#include "MainWindow.h"
-#include "qtutils.h"
-#include "../Context.h"
-#include "settings/tooltip/BalloonTip.h"
 
 InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTableView(parent), context(c)
 {
@@ -52,6 +53,7 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
 
     connect(inputEditorModel, &InputEditorModel::inputSetChanged, this, &InputEditorView::resizeAllColumns);
     connect(this, &InputEditorView::entered, this, &InputEditorView::showMarkerToolTip);
+    connect(this, &InputEditorView::entered, inputEditorModel, &InputEditorModel::setHoveredCell);
     setMouseTracking(true);
 
     /* Horizontal header */
@@ -99,6 +101,8 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
     keyDialog->withModifiers = false;
 
     currentMarkerText = "";
+
+    scrollBarWidth = verticalScrollBar()->sizeHint().width() + 20;
 }
 
 void InputEditorView::fillMenu(QMenu* frameMenu)
@@ -466,6 +470,11 @@ void InputEditorView::timerEvent(QTimerEvent* event)
 void InputEditorView::hideEvent(QHideEvent* event)
 {
     hideMarkerToolTip();
+}
+
+void InputEditorView::leaveEvent(QEvent *event)
+{
+    inputEditorModel->setHoveredCell(QModelIndex());
 }
 
 void InputEditorView::hideMarkerToolTip()

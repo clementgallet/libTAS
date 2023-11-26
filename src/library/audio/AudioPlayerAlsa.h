@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2020 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2023 Clément Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -21,6 +21,7 @@
 #define LIBTAS_AUDIOPLAYERALSA_H_INCL
 
 #include "AudioContext.h"
+
 #include <alsa/asoundlib.h>
 #include <stdint.h>
 
