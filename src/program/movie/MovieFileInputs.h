@@ -26,7 +26,6 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <regex>
 #include <set>
 #include <mutex>
 #include <stdint.h>
@@ -142,41 +141,23 @@ private:
      * threads can read and write to the list */
     std::mutex input_list_mutex;
 
-    /* Regex for the keyboard input string */
-    std::regex rek;
-
-    /* Regex for the mouse input string */
-    std::regex rem;
-
-    /* Regex for the controller input string */
-    std::regex rec;
-
-    /* Regex for the flag input string */
-    std::regex ref;
-
-    /* Regex for the framerate input string */
-    std::regex ret;
-
-    /* Regex for the realtime input string */
-    std::regex red;
-
     /* Read the keyboard input string */
-    void readKeyboardFrame(std::istringstream& input_string, AllInputs& inputs);
+    int readKeyboardFrame(std::istringstream& input_string, AllInputs& inputs);
 
     /* Read the mouse input string */
-    void readMouseFrame(std::istringstream& input_string, AllInputs& inputs);
+    int readMouseFrame(std::istringstream& input_string, AllInputs& inputs);
 
     /* Read one controller input string */
-    void readControllerFrame(std::istringstream& input_string, AllInputs& inputs, int joy);
+    int readControllerFrame(std::istringstream& input_string, AllInputs& inputs, int joy);
 
     /* Read the flag input string */
-    void readFlagFrame(std::istringstream& input_string, AllInputs& inputs);
+    int readFlagFrame(std::istringstream& input_string, AllInputs& inputs);
 
     /* Read the framerate input string */
-    void readFramerateFrame(std::istringstream& input_string, AllInputs& inputs);
+    int readFramerateFrame(std::istringstream& input_string, AllInputs& inputs);
 
     /* Read the realtime input string */
-    void readRealtimeFrame(std::istringstream& input_string, AllInputs& inputs);
+    int readRealtimeFrame(std::istringstream& input_string, AllInputs& inputs);
 
 };
 

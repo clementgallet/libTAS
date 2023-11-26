@@ -662,7 +662,11 @@ int InputEditorModel::pasteInputs(int row)
     while (std::getline(inputString, line)) {
         if (!line.empty() && (line[0] == '|')) {
             paste_ais.emplace_back();
-            movie->inputs->readFrame(line, paste_ais.back());
+            int ret = movie->inputs->readFrame(line, paste_ais.back());
+            if (ret < 0) {
+                paste_ais.pop_back();
+                break;
+            }
         }
     }
 
@@ -711,7 +715,11 @@ void InputEditorModel::pasteInputsInRange(int row, int count)
     while (std::getline(inputString, line)) {
         if (!line.empty() && (line[0] == '|')) {
             paste_ais.emplace_back();
-            movie->inputs->readFrame(line, paste_ais.back());
+            int ret = movie->inputs->readFrame(line, paste_ais.back());
+            if (ret < 0) {
+                paste_ais.pop_back();
+                break;
+            }
         }
     }
 
@@ -748,7 +756,11 @@ int InputEditorModel::pasteInsertInputs(int row)
     while (std::getline(inputString, line)) {
         if (!line.empty() && (line[0] == '|')) {
             paste_ais.emplace_back();
-            movie->inputs->readFrame(line, paste_ais.back());
+            int ret = movie->inputs->readFrame(line, paste_ais.back());
+            if (ret < 0) {
+                paste_ais.pop_back();
+                break;
+            }
         }
     }
 

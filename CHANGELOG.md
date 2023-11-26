@@ -11,6 +11,7 @@
 ### Changed
 
 * When input editor is opened, always load savestates in playback mode
+* Speedup movie loading and input pasting by not using regex
 
 ### Fixed
 

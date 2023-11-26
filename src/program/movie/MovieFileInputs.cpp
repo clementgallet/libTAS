@@ -29,14 +29,7 @@
 #include <algorithm>
 
 MovieFileInputs::MovieFileInputs(Context* c) : context(c)
-{
-    rek.assign(R"(\|K([0-9a-f]*(?::[0-9a-f]+)*)\|)", std::regex::ECMAScript|std::regex::optimize);
-    rem.assign(R"(\|M([\-0-9]+:[\-0-9]+:(?:[AR]:)?[\.1-5]{5})\|)", std::regex::ECMAScript|std::regex::optimize);
-    rec.assign(R"(\|C([1-4](?:[\-0-9]+:){6}.{15}))", std::regex::ECMAScript|std::regex::optimize);
-    ref.assign(R"(\|F(.{1,9})\|)", std::regex::ECMAScript|std::regex::optimize);
-    ret.assign(R"(\|T([0-9]+:[0-9]+)\|)", std::regex::ECMAScript|std::regex::optimize);
-    red.assign(R"(\|D([0-9]+:[0-9]+)\|)", std::regex::ECMAScript|std::regex::optimize);
-    
+{    
     clear();
 }
 
@@ -61,8 +54,9 @@ void MovieFileInputs::load()
     while (std::getline(input_stream, line)) {
         if (!line.empty() && (line[0] == '|')) {
             AllInputs ai;
-            readFrame(line, ai);
-            input_list.push_back(std::move(ai));
+            int ret = readFrame(line, ai);
+            if (ret >= 0)
+                input_list.push_back(std::move(ai));
         }
     }
 
@@ -179,108 +173,105 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
 int MovieFileInputs::readFrame(const std::string& line, AllInputs& inputs)
 {
     inputs.emptyInputs();
+    int ret = 0;
 
     std::istringstream input_string(line);
     char d;
     input_string >> d;
+    if (d != '|')
+        return -1;
 
-    /* Read keyboard inputs using regex first. If matched, read the rest of the
-     * inputs with regex as well. */
+    d = input_string.peek();
+    while (d != std::char_traits<char>::eof()) {    
+        switch (d) {
+            case 'K':
+                input_string >> d;
+                ret = readKeyboardFrame(input_string, inputs);
+                break;
+            case 'M':
+                input_string >> d;
+                ret = readMouseFrame(input_string, inputs);
+                break;
+            case 'C':
+                input_string >> d;
+                input_string >> d;
+                ret = readControllerFrame(input_string, inputs, d - '1');
+                break;
+            case 'F':
+                input_string >> d;
+                ret = readFlagFrame(input_string, inputs);
+                break;
+            case 'T':
+                input_string >> d;
+                ret = readFramerateFrame(input_string, inputs);
+                break;
+            case 'D':
+                input_string >> d;
+                ret = readRealtimeFrame(input_string, inputs);
+                break;
+            default:
+                /* Following code is for old input format (1.3.5 and earlier) */
+                ret = readKeyboardFrame(input_string, inputs);
+                if (ret < 0)
+                    return ret;
 
-    std::smatch match;
-    if (std::regex_search(line, match, rek) && match.size() > 1) {
-        std::istringstream key_string(match.str(1));
-        readKeyboardFrame(key_string, inputs);
+                if (context->config.sc.mouse_support) {
+                    ret = readMouseFrame(input_string, inputs);
+                    if (ret < 0)
+                        return ret;
+                }
 
-        /* Read mouse inputs */
-        if (std::regex_search(line, match, rem) && match.size() > 1) {
-            std::istringstream mouse_string(match.str(1));
-            readMouseFrame(mouse_string, inputs);
+                for (int joy=0; joy<context->config.sc.nb_controllers; joy++) {
+                    ret = readControllerFrame(input_string, inputs, joy);
+                    if (ret < 0)
+                        return ret;
+                }
+
+                ret = readFlagFrame(input_string, inputs);
+                if (ret < 0)
+                    return ret;
+
+                if (context->config.sc.variable_framerate) {
+                    ret = readFramerateFrame(input_string, inputs);
+                    if (ret < 0)
+                        return ret;
+                }
+                break;
         }
-
-        /* Read controller inputs */
-        std::sregex_iterator next(line.begin(), line.end(), rec);
-        std::sregex_iterator end;
-        for (; next != end; next++) {
-            std::smatch match = *next;
-            std::istringstream controller_string(match.str(1));
-
-            /* Extract joystick number */
-            char j;
-            controller_string >> j;
-
-            /* Read joystick inputs */
-            readControllerFrame(controller_string, inputs, j - '1');
-        }
-
-        /* Read flag inputs */
-        if (std::regex_search(line, match, ref) && match.size() > 1) {
-            std::istringstream flag_string(match.str(1));
-            readFlagFrame(flag_string, inputs);
-        }
-
-        /* Read framerate inputs */
-        if (std::regex_search(line, match, ret) && match.size() > 1) {
-            std::istringstream framerate_string(match.str(1));
-            readFramerateFrame(framerate_string, inputs);
-        }
-
-        /* Read realtime inputs */
-        if (std::regex_search(line, match, red) && match.size() > 1) {
-            std::istringstream realtime_string(match.str(1));
-            readRealtimeFrame(realtime_string, inputs);
-        }
-
-        return 1;
+        if (ret < 0)
+            return ret;
+        d = input_string.peek();
     }
 
-    /* Following code is for old input format (1.3.5 and earlier) */
-
-    /* Read keyboard inputs */
-    readKeyboardFrame(input_string, inputs);
-
-    /* Read mouse inputs */
-    if (context->config.sc.mouse_support) {
-        readMouseFrame(input_string, inputs);
-    }
-
-    /* Read controller inputs */
-    for (int joy=0; joy<context->config.sc.nb_controllers; joy++) {
-        readControllerFrame(input_string, inputs, joy);
-    }
-
-    /* Read flag inputs */
-    readFlagFrame(input_string, inputs);
-
-    /* Read framerate inputs */
-    if (context->config.sc.variable_framerate) {
-        readFramerateFrame(input_string, inputs);
-    }
-
-    return 1;
+    return 0;
 }
 
-void MovieFileInputs::readKeyboardFrame(std::istringstream& input_string, AllInputs& inputs)
+int MovieFileInputs::readKeyboardFrame(std::istringstream& input_string, AllInputs& inputs)
 {
     input_string >> std::hex;
     char d = input_string.peek();
     if (d == '|') {
         input_string.get();
-        return;
+        return 0;
     }
     for (int k=0; (k<AllInputs::MAXKEYS) && input_string; k++) {
         input_string >> inputs.keyboard[k] >> d;
         if (d == '|') {
             break;
         }
+        if (d != ':') return -1;
     }
+    return 0;
 }
 
-void MovieFileInputs::readMouseFrame(std::istringstream& input_string, AllInputs& inputs)
+int MovieFileInputs::readMouseFrame(std::istringstream& input_string, AllInputs& inputs)
 {
     char d;
     input_string >> std::dec;
-    input_string >> inputs.pointer_x >> d >> inputs.pointer_y >> d;
+    input_string >> inputs.pointer_x >> d;
+    if (d != ':') return -1;
+    input_string >> inputs.pointer_y >> d;
+    if (d != ':') return -1;
     input_string >> d;
     if ((d == 'R') || (d == 'A')) {
         /* Read mouse mode */
@@ -302,25 +293,31 @@ void MovieFileInputs::readMouseFrame(std::istringstream& input_string, AllInputs
     input_string >> d;
     if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B5);
     input_string >> d;
+    return 0;
 }
 
-void MovieFileInputs::readControllerFrame(std::istringstream& input_string, AllInputs& inputs, int joy)
+int MovieFileInputs::readControllerFrame(std::istringstream& input_string, AllInputs& inputs, int joy)
 {
+    if ((joy < 0) || (joy > AllInputs::MAXJOYS))
+    return -1;
+
     char d;
     input_string >> std::dec;
     if (!inputs.controllers[joy])
         inputs.controllers[joy].reset(new ControllerInputs());
     for (int axis=0; axis<ControllerInputs::MAXAXES; axis++) {
         input_string >> inputs.controllers[joy]->axes[axis] >> d;
+        if (d != ':') return -1;
     }
     for (int b=0; b<15; b++) {
         input_string >> d;
         if (d != '.') inputs.controllers[joy]->buttons |= (1 << b);
     }
     input_string >> d;
+    return 0;
 }
 
-void MovieFileInputs::readFlagFrame(std::istringstream& input_string, AllInputs& inputs)
+int MovieFileInputs::readFlagFrame(std::istringstream& input_string, AllInputs& inputs)
 {
     char d;
     input_string >> d;
@@ -340,20 +337,23 @@ void MovieFileInputs::readFlagFrame(std::istringstream& input_string, AllInputs&
         }
         input_string >> d;
     }
+    return 0;
 }
 
-void MovieFileInputs::readFramerateFrame(std::istringstream& input_string, AllInputs& inputs)
+int MovieFileInputs::readFramerateFrame(std::istringstream& input_string, AllInputs& inputs)
 {
     char d;
     input_string >> std::dec;
     input_string >> inputs.framerate_num >> d >> inputs.framerate_den >> d;
+    return 0;
 }
 
-void MovieFileInputs::readRealtimeFrame(std::istringstream& input_string, AllInputs& inputs)
+int MovieFileInputs::readRealtimeFrame(std::istringstream& input_string, AllInputs& inputs)
 {
     char d;
     input_string >> std::dec;
     input_string >> inputs.realtime_sec >> d >> inputs.realtime_nsec >> d;
+    return 0;
 }
 
 uint64_t MovieFileInputs::nbFrames()
