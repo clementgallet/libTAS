@@ -20,6 +20,7 @@
 #include "alc.h"
 #include "alsoft.h"
 #include "efx.h"
+#include "alext.h"
 
 #include "audio/AudioContext.h"
 #include "logging.h"
@@ -222,6 +223,12 @@ static ALCenum alcError = ALC_NO_ERROR;
     return ALC_TRUE;
 }
 
+/* Little helper macro */
+#define CHECK_RETURN_MY_FUNCTION(name) \
+    if (strcmp(funcname, #name) == 0) { \
+        return reinterpret_cast<void*>(my##name); \
+    }
+
 /* Override */ void* alcGetProcAddress(ALCdevice *device, const ALCchar *funcname)
 {
     DEBUGLOGCALL(LCF_SOUND);
@@ -232,28 +239,16 @@ static ALCenum alcError = ALC_NO_ERROR;
         return NULL;
     }
 
-    if (strcmp(funcname, "alcSetThreadContext") == 0) {
-        return reinterpret_cast<void*>(myalcSetThreadContext);
-    }
-    if (strcmp(funcname, "alcGetThreadContext") == 0) {
-        return reinterpret_cast<void*>(myalcGetThreadContext);
-    }
-    if (strcmp(funcname, "alcLoopbackOpenDeviceSOFT") == 0) {
-        return reinterpret_cast<void*>(myalcLoopbackOpenDeviceSOFT);
-    }
-    if (strcmp(funcname, "alcIsRenderFormatSupportedSOFT") == 0) {
-        return reinterpret_cast<void*>(myalcIsRenderFormatSupportedSOFT);
-    }
-    if (strcmp(funcname, "alcRenderSamplesSOFT") == 0) {
-        return reinterpret_cast<void*>(myalcRenderSamplesSOFT);
-    }
-    if (strcmp(funcname, "alcGetStringiSOFT") == 0) {
-        return reinterpret_cast<void*>(myalcGetStringiSOFT);
-    }
-    if (strcmp(funcname, "alcResetDeviceSOFT") == 0) {
-        return reinterpret_cast<void*>(myalcResetDeviceSOFT);
-    }
-
+    CHECK_RETURN_MY_FUNCTION(alcSetThreadContext)
+    CHECK_RETURN_MY_FUNCTION(alcGetThreadContext)
+    CHECK_RETURN_MY_FUNCTION(alcLoopbackOpenDeviceSOFT)
+    CHECK_RETURN_MY_FUNCTION(alcIsRenderFormatSupportedSOFT)
+    CHECK_RETURN_MY_FUNCTION(alcRenderSamplesSOFT)
+    CHECK_RETURN_MY_FUNCTION(alcGetStringiSOFT)
+    CHECK_RETURN_MY_FUNCTION(alcResetDeviceSOFT)
+    CHECK_RETURN_MY_FUNCTION(alcDevicePauseSOFT)
+    CHECK_RETURN_MY_FUNCTION(alcDeviceResumeSOFT)
+    
     debuglogstdio(LCF_SOUND | LCF_ERROR, "Requesting function %s", funcname);
 
     return NULL;
@@ -443,54 +438,6 @@ static const ALCchar* alcDefault = "";
             values[0] = 2;
             return;
     }
-}
-
-ALCboolean myalcSetThreadContext(ALCcontext *context)
-{
-    DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
-    return ALC_TRUE;
-}
-
-ALCcontext* myalcGetThreadContext(void)
-{
-    DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
-    if (currentContext == -1)
-        return nullptr;
-    else
-        return &dummyContext;
-}
-
-ALCdevice* myalcLoopbackOpenDeviceSOFT(const ALCchar *deviceName)
-{
-    DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
-    Global::game_info.audio |= GameInfo::OPENAL;
-    Global::game_info.tosend = true;
-    return &dummyDevice;
-}
-
-ALCboolean myalcIsRenderFormatSupportedSOFT(ALCdevice *device, ALCsizei freq, ALCenum channels, ALCenum type)
-{
-    debuglogstdio(LCF_SOUND | LCF_TODO, " call with freq %d, channels %d and type %d", __func__, freq, channels, type);
-    return ALC_TRUE;
-}
-
-void myalcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffer, ALCsizei samples)
-{
-    DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
-    audiocontext.mixAllSources(samples*audiocontext.outAlignSize);
-    memcpy(buffer, audiocontext.outSamples.data(), audiocontext.outBytes);
-}
-
-const ALCchar* myalcGetStringiSOFT(ALCdevice *device, ALCenum paramName, ALCsizei index)
-{
-    DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
-    return "";
-}
-
-ALCboolean myalcResetDeviceSOFT(ALCdevice *device, const ALCint *attribs)
-{
-    DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
-    return ALC_TRUE;
 }
 
 }

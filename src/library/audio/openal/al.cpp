@@ -18,6 +18,7 @@
  */
 
 #include "al.h"
+#include "alext.h"
 #include "alsoft.h"
 #include "efx.h"
 
@@ -111,8 +112,6 @@ DEFINE_ORIG_POINTER(alGetListeneri)
 DEFINE_ORIG_POINTER(alGetListener3i)
 DEFINE_ORIG_POINTER(alGetListeneriv)
 
-DEFINE_ORIG_POINTER(alBufferSubDataSOFT)
-
 const ALchar* alGetString(ALenum param)
 {
     CHECK_USE_ALSOFT_FUNCTION(alGetString, param)
@@ -174,6 +173,11 @@ ALboolean alIsExtensionPresent(const ALchar *extname)
         return reinterpret_cast<void*>(my##name); \
     }
 
+#define CHECK_RETURN_FUNCTION(name) \
+    if (strcmp(fname, #name) == 0) { \
+        return reinterpret_cast<void*>(name); \
+    }
+
 void* alGetProcAddress(const ALchar *fname)
 {
     debuglogstdio(LCF_SOUND, "%s call with name %s", __func__, fname);
@@ -214,6 +218,9 @@ void* alGetProcAddress(const ALchar *fname)
     CHECK_RETURN_MY_FUNCTION(alGetAuxiliaryEffectSlotiv)
     CHECK_RETURN_MY_FUNCTION(alGetAuxiliaryEffectSlotf)
     CHECK_RETURN_MY_FUNCTION(alGetAuxiliaryEffectSlotfv)
+
+    CHECK_RETURN_MY_FUNCTION(alBufferSubDataSOFT)
+    CHECK_RETURN_MY_FUNCTION(alBufferDataStatic)
 
     return nullptr;
 }
@@ -1379,90 +1386,6 @@ void alGetListeneriv(ALenum param, ALint *values)
     CHECK_USE_ALSOFT_FUNCTION(alGetListeneriv, param, values)
 
     debuglogstdio(LCF_SOUND, "Operation not supported");
-}
-
-void alBufferSubDataSOFT(ALuint buffer, ALenum format, const ALvoid *data, ALsizei offset, ALsizei length)
-{
-    debuglogstdio(LCF_SOUND, "%s call - copy buffer sub data of format %d, length %d and offset %d into buffer %d", __func__, format, length, offset, buffer);
-    CHECK_USE_ALSOFT_FUNCTION(alBufferSubDataSOFT, buffer, format, data, offset, length)
-
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
-
-    auto ab = audiocontext.getBuffer(buffer);
-    if (ab == nullptr) {
-        alSetError(AL_INVALID_VALUE);
-        return;
-    }
-
-    bool match;
-    switch(format) {
-        case AL_FORMAT_MONO8:
-            match = ab->format == AudioBuffer::SAMPLE_FMT_U8;
-            match &= ab->nbChannels == 1;
-            break;
-        case AL_FORMAT_MONO16:
-            match = ab->format == AudioBuffer::SAMPLE_FMT_S16;
-            match &= ab->nbChannels == 1;
-            break;
-        case AL_FORMAT_STEREO8:
-            match = ab->format == AudioBuffer::SAMPLE_FMT_U8;
-            match &= ab->nbChannels == 2;
-            break;
-        case AL_FORMAT_STEREO16:
-            match = ab->format == AudioBuffer::SAMPLE_FMT_S16;
-            match &= ab->nbChannels == 2;
-            break;
-        case AL_FORMAT_MONO_FLOAT32:
-            match = ab->format == AudioBuffer::SAMPLE_FMT_FLT;
-            match &= ab->nbChannels == 1;
-            break;
-        case AL_FORMAT_STEREO_FLOAT32:
-            match = ab->format == AudioBuffer::SAMPLE_FMT_FLT;
-            match &= ab->nbChannels == 2;
-            break;
-        case AL_FORMAT_MONO_DOUBLE_EXT:
-            match = ab->format == AudioBuffer::SAMPLE_FMT_DBL;
-            match &= ab->nbChannels == 1;
-            break;
-        case AL_FORMAT_STEREO_DOUBLE_EXT:
-            match = ab->format == AudioBuffer::SAMPLE_FMT_DBL;
-            match &= ab->nbChannels == 2;
-            break;
-        case AL_FORMAT_MONO_MSADPCM_SOFT:
-            match = ab->format == AudioBuffer::SAMPLE_FMT_MSADPCM;
-            match &= ab->nbChannels == 1;
-            break;
-        case AL_FORMAT_STEREO_MSADPCM_SOFT:
-            match = ab->format == AudioBuffer::SAMPLE_FMT_MSADPCM;
-            match &= ab->nbChannels == 2;
-            break;
-        default:
-            debuglogstdio(LCF_SOUND | LCF_ERROR, "Unsupported format: %d", format);
-            return;
-    }
-
-    if (!match) {
-        alSetError(AL_INVALID_ENUM);
-        return;
-    }
-
-    if (ab->format == AudioBuffer::SAMPLE_FMT_MSADPCM) {
-        if ((length % ab->blockSamples) != 0 || (offset % ab->blockSamples) != 0) {
-            alSetError(AL_INVALID_VALUE);
-            return;
-        }
-    }
-
-    uint8_t* samples = nullptr;
-    auto samplesAvail = ab->getSamples(samples, length / ab->alignSize, offset / ab->alignSize, ab->loop_point_end != 0); // not sure how to access looping here
-    if (samplesAvail * ab->alignSize != length) {
-        alSetError(AL_INVALID_VALUE);
-        return;
-    }
-
-    debuglogstdio(LCF_SOUND, "%s - do copy of length %d bytes", __func__, length);
-
-    memcpy(samples, data, length);
 }
 
 }

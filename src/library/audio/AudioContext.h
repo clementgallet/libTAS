@@ -70,6 +70,9 @@ class AudioContext
         /* Is the context a loop-back device ?*/
         bool isLoopback;
 
+        /* Is playback paused? */
+        bool paused;
+
         /* Init parameters from the config */
         void init(void);
 

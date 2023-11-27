@@ -55,6 +55,7 @@ libtas_so_SOURCES = \
     audio/fmod/fmod.cpp \
     audio/openal/al.cpp \
     audio/openal/alc.cpp \
+    audio/openal/alext.cpp \
     audio/openal/alsoft.cpp \
     audio/openal/efx.cpp \
     audio/sdl/sdlaudio.cpp \

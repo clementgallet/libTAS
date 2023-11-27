@@ -87,6 +87,7 @@ void AudioContext::init(void)
     outFrequency = Global::shared_config.audio_frequency;
     outAlignSize = outNbChannels * outBitDepth / 8;
     isLoopback = false;
+    paused = false;
 }
 
 int AudioContext::createBuffer(void)
@@ -225,6 +226,8 @@ void AudioContext::mixAllSources(struct timespec ticks)
         outSamples.assign(outBytes, 0x80);
     if (outBitDepth == 16) // Signed 16-bit samples
         outSamples.assign(outBytes, 0);
+
+    if (paused) return;
 
     pthread_t mix_thread = ThreadManager::getThreadId();
 
