@@ -86,7 +86,8 @@ int cubeb_stream_init(cubeb * context,
                       void * user_ptr)
 {
     DEBUGLOGCALL(LCF_SOUND);
-    
+
+    AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* Create the buffer and fill params */
@@ -140,6 +141,7 @@ int cubeb_stream_init(cubeb * context,
 void cubeb_stream_destroy(cubeb_stream * stream)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     int sourceId = reinterpret_cast<intptr_t>(stream);
     audiocontext.deleteSource(sourceId);
@@ -148,6 +150,7 @@ void cubeb_stream_destroy(cubeb_stream * stream)
 int cubeb_stream_start(cubeb_stream * stream)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     int sourceId = reinterpret_cast<intptr_t>(stream);
     auto source = audiocontext.getSource(sourceId);
@@ -162,6 +165,7 @@ int cubeb_stream_start(cubeb_stream * stream)
 int cubeb_stream_stop(cubeb_stream * stream)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     int sourceId = reinterpret_cast<intptr_t>(stream);
     auto source = audiocontext.getSource(sourceId);
@@ -183,6 +187,7 @@ int cubeb_stream_get_position(cubeb_stream * stream, uint64_t * position)
 {
     DEBUGLOGCALL(LCF_SOUND);
     if (position) {
+        AudioContext& audiocontext = AudioContext::get();
         std::lock_guard<std::mutex> lock(audiocontext.mutex);
         int sourceId = reinterpret_cast<intptr_t>(stream);
         auto source = audiocontext.getSource(sourceId);
@@ -197,6 +202,7 @@ int cubeb_stream_get_latency(cubeb_stream * stream, uint32_t * latency)
 {
     DEBUGLOGCALL(LCF_SOUND);
     if (latency) {
+        AudioContext& audiocontext = AudioContext::get();
         std::lock_guard<std::mutex> lock(audiocontext.mutex);
         int sourceId = reinterpret_cast<intptr_t>(stream);
         auto source = audiocontext.getSource(sourceId);
@@ -215,6 +221,7 @@ int cubeb_stream_get_input_latency(cubeb_stream * stream, uint32_t * latency)
 int cubeb_stream_set_volume(cubeb_stream * stream, float volume)
 {
     DEBUGLOGCALL(LCF_SOUND);
+    AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     int sourceId = reinterpret_cast<intptr_t>(stream);
     auto source = audiocontext.getSource(sourceId);

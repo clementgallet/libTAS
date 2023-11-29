@@ -130,6 +130,7 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
     }
 
     memcpy(obtained, desired, sizeof(SDL_AudioSpec));
+    AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     int bufferId = audiocontext.createBuffer();
@@ -370,7 +371,7 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
     if ((dev < 1) || (dev > MAX_SDL_SOURCES) || (!sourcesSDL[dev-1]))
         return;
 
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+    std::lock_guard<std::mutex> lock(AudioContext::get().mutex);
     if (pause_on == 0)
         sourcesSDL[dev-1]->state = AudioSource::SOURCE_PLAYING;
     else
@@ -410,6 +411,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
         return -1;
     }
 
+    AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* We try to reuse a buffer that has been processed from the source */
@@ -463,7 +465,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
         return 0;
     }
 
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+    std::lock_guard<std::mutex> lock(AudioContext::get().mutex);
     Uint32 qsize = sourcesSDL[dev-1]->queueSize() - sourcesSDL[dev-1]->getPosition();
     debuglogstdio(LCF_SDL | LCF_SOUND, "Returning %d", qsize);
     return qsize;
@@ -481,7 +483,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
         return;
     }
 
-    std::lock_guard<std::mutex> lock(audiocontext.mutex);
+    std::lock_guard<std::mutex> lock(AudioContext::get().mutex);
     /* We simulate clearing the queue by setting the position to the end
      * of the queue.
      */
@@ -497,7 +499,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 /* Override */ void SDL_LockAudioDevice(SDL_AudioDeviceID dev)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
-    if (ThreadManager::getThreadId() == audiocontext.audio_thread)
+    if (ThreadManager::getThreadId() == AudioContext::get().audio_thread)
         return;
     mutex.lock();
 }
@@ -511,7 +513,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 /* Override */ void SDL_UnlockAudioDevice(SDL_AudioDeviceID dev)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_SOUND);
-    if (ThreadManager::getThreadId() == audiocontext.audio_thread)
+    if (ThreadManager::getThreadId() == AudioContext::get().audio_thread)
         return;
     mutex.unlock();
 }
@@ -529,6 +531,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
     if (dev < 1 || dev > MAX_SDL_SOURCES)
         return;
 
+    AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     /* Remove the source from the audio context */
     if (sourcesSDL[dev-1]) {

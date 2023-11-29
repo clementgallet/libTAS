@@ -177,12 +177,6 @@ void __attribute__((constructor)) init(void)
         raise(SIGINT);
     }
 
-    ai.buildAndClear();
-    old_ai.buildAndClear();
-    game_ai.buildAndClear();
-    old_game_ai.buildAndClear();
-    game_unclipped_ai.buildAndClear();
-    old_game_unclipped_ai.buildAndClear();
 
     /* Initialize timers. It uses the initial time set in the config object,
      * so they must be initialized after receiving it.
@@ -191,7 +185,7 @@ void __attribute__((constructor)) init(void)
     DeterministicTimer::get().initialize(initial_sec, initial_nsec);
 
     /* Initialize sound parameters */
-    audiocontext.init();
+    AudioContext::get().init();
 
     hook_mono();
 

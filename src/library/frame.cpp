@@ -219,7 +219,19 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 {
     perfTimer.switchTimer(PerfTimer::FrameTimer);
 
-
+    /* Building and clearing the input objects is done here, because doing it
+     * in main() is too early, before they are even constructed */
+    static bool inputs_built = false;
+    if (!inputs_built) {
+        ai.buildAndClear();
+        old_ai.buildAndClear();
+        game_ai.buildAndClear();
+        old_game_ai.buildAndClear();
+        game_unclipped_ai.buildAndClear();
+        old_game_unclipped_ai.buildAndClear();
+        inputs_built = true;
+    }
+    
     static float fps, lfps = 0;
 
     ThreadManager::setCheckpointThread();
@@ -256,6 +268,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     TimeHolder timeIncrement = detTimer.enterFrameBoundary();
 
     /* Mix audio, except if the game opened a loopback context */
+    AudioContext& audiocontext = AudioContext::get();
     if (! audiocontext.isLoopback) {
         audiocontext.mixAllSources(timeIncrement);
     }

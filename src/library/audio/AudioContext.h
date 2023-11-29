@@ -42,6 +42,8 @@ class AudioContext
     public:
         AudioContext();
 
+        static AudioContext& get();
+
         /* Master volume.
          * Can be larger than 1 but output volume will be clamped to one */
         float outVolume;
@@ -118,8 +120,6 @@ class AudioContext
         std::list<std::shared_ptr<AudioBuffer>> buffers_pool;
         std::list<std::shared_ptr<AudioSource>> sources_pool;
 };
-
-extern AudioContext audiocontext;
 
 }
 

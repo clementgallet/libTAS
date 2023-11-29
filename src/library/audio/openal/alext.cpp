@@ -63,6 +63,7 @@ ALCboolean myalcIsRenderFormatSupportedSOFT(ALCdevice *device, ALCsizei freq, AL
 void myalcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffer, ALCsizei samples)
 {
     DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
+    AudioContext& audiocontext = AudioContext::get();
     audiocontext.mixAllSources(samples*audiocontext.outAlignSize);
     memcpy(buffer, audiocontext.outSamples.data(), audiocontext.outBytes);
 }
@@ -82,19 +83,20 @@ ALCboolean myalcResetDeviceSOFT(ALCdevice *device, const ALCint *attribs)
 void myalcDevicePauseSOFT(ALCdevice *device)
 {
     DEBUGLOGCALL(LCF_SOUND);
-    audiocontext.paused = true;
+    AudioContext::get().paused = true;
 }
 
 void myalcDeviceResumeSOFT(ALCdevice *device)
 {
     DEBUGLOGCALL(LCF_SOUND | LCF_TODO);
-    audiocontext.paused = false;
+    AudioContext::get().paused = false;
 }
 
 void myalBufferSubDataSOFT(ALuint buffer, ALenum format, const ALvoid *data, ALsizei offset, ALsizei length)
 {
     debuglogstdio(LCF_SOUND, "%s call - copy buffer sub data of format %d, length %d and offset %d into buffer %d", __func__, format, length, offset, buffer);
 
+    AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     auto ab = audiocontext.getBuffer(buffer);

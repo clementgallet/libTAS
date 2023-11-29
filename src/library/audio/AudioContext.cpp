@@ -37,8 +37,6 @@
 
 namespace libtas {
 
-AudioContext audiocontext;
-
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
 static int ticksToBytes(struct timespec ticks, int alignSize, int frequency)
 {
@@ -78,6 +76,11 @@ AudioContext::AudioContext(void)
     outVolume = 1.0f;
     audio_thread = 0;
     init();
+}
+
+AudioContext& AudioContext::get() {
+    static AudioContext instance;
+    return instance;
 }
 
 void AudioContext::init(void)
@@ -264,7 +267,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
     
     mutex.unlock();
 
-    if (!audiocontext.isLoopback && !Global::shared_config.audio_mute) {
+    if (!isLoopback && !Global::shared_config.audio_mute) {
         /* Play the music */
 #ifdef __linux__
         AudioPlayerAlsa::play(*this);

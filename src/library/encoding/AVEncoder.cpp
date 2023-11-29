@@ -80,6 +80,7 @@ void AVEncoder::initMuxer() {
     const char* pixfmt = ScreenCapture::getPixelFormat();
 
     /* Initialize the muxer with either framerate or video framerate */
+    AudioContext& audiocontext = AudioContext::get();
     if (Global::shared_config.variable_framerate)
         nutMuxer = new NutMuxer(width, height, Global::shared_config.video_framerate, 1, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
     else
@@ -91,6 +92,7 @@ void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
     /* If the muxer is not initialized, try to initialize it. Otherwise, store
      * that we skipped one frame and we need to encode it later.
      */
+    AudioContext& audiocontext = AudioContext::get();
     if (!nutMuxer) {
         if (ScreenCapture::isInited()) {
             initMuxer();

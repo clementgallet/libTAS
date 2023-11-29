@@ -166,6 +166,7 @@ int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int
         Global::game_info.tosend = true;
     }
 
+    AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* We create an empty buffer that holds the audio parameters. That way,
@@ -222,6 +223,7 @@ int snd_pcm_close(snd_pcm_t *pcm)
     }
 
     DEBUGLOGCALL(LCF_SOUND);
+    AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* Delete source buffers and source */
@@ -322,7 +324,7 @@ int snd_pcm_start(snd_pcm_t *pcm)
 
     DEBUGLOGCALL(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     source->state = AudioSource::SOURCE_PLAYING;
 
     return 0;
@@ -337,7 +339,7 @@ int snd_pcm_drop(snd_pcm_t *pcm)
 
     DEBUGLOGCALL(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     source->setPosition(source->queueSize());
     return 0;
 }
@@ -363,7 +365,7 @@ int snd_pcm_pause(snd_pcm_t *pcm, int enable)
     DEBUGLOGCALL(LCF_SOUND);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     if (enable)
         source->state = AudioSource::SOURCE_PAUSED;
     else
@@ -382,7 +384,7 @@ snd_pcm_state_t snd_pcm_state(snd_pcm_t *pcm)
     DEBUGLOGCALL(LCF_SOUND);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source =  AudioContext::get().getSource(sourceId);
     switch (source->state) {
         case AudioSource::SOURCE_INITIAL:
             return SND_PCM_STATE_OPEN;
@@ -410,7 +412,7 @@ int snd_pcm_resume(snd_pcm_t *pcm)
 
     DEBUGLOGCALL(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source =  AudioContext::get().getSource(sourceId);
     source->state = AudioSource::SOURCE_PLAYING;
 
     return 0;
@@ -516,7 +518,7 @@ snd_pcm_sframes_t snd_pcm_rewind(snd_pcm_t *pcm, snd_pcm_uframes_t frames)
 
     DEBUGLOGCALL(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source =  AudioContext::get().getSource(sourceId);
     snd_pcm_uframes_t pos = source->getPosition();
     if (frames <= pos) {
         source->setPosition(pos - frames);
@@ -536,7 +538,7 @@ int snd_pcm_recover(snd_pcm_t *pcm, int err, int silent)
 
     if (err == -EPIPE) {
         int sourceId = reinterpret_cast<intptr_t>(pcm);
-        auto source = audiocontext.getSource(sourceId);
+        auto source =  AudioContext::get().getSource(sourceId);
 
         if (source->state == AudioSource::SOURCE_UNDERRUN)
             source->state = AudioSource::SOURCE_PREPARED;
@@ -555,7 +557,7 @@ int snd_pcm_reset(snd_pcm_t *pcm)
     }
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source =  AudioContext::get().getSource(sourceId);
     source->setPosition(source->queueSize());
     DEBUGLOGCALL(LCF_SOUND);
     return 0;
@@ -586,7 +588,7 @@ int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 
     /* Update internal buffer parameters */
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source =  AudioContext::get().getSource(sourceId);
     auto buffer = source->buffer_queue[0];
     buffer->size = 0;
     buffer->update();
@@ -630,7 +632,7 @@ int snd_pcm_sw_params(snd_pcm_t *pcm, snd_pcm_sw_params_t *params)
 
     /* Update internal buffer parameters */
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source =  AudioContext::get().getSource(sourceId);
     auto buffer = source->buffer_queue[0];
     buffer->size = 0;
     buffer->update();
@@ -650,7 +652,7 @@ int snd_pcm_prepare(snd_pcm_t *pcm)
 
     DEBUGLOGCALL(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source =  AudioContext::get().getSource(sourceId);
     if ((source->state == AudioSource::SOURCE_INITIAL) ||
         (source->state == AudioSource::SOURCE_UNDERRUN) ||
         (source->state == AudioSource::SOURCE_STOPPED))
@@ -661,6 +663,7 @@ int snd_pcm_prepare(snd_pcm_t *pcm)
 
 static int get_latency(snd_pcm_t *pcm)
 {
+    AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = audiocontext.getSource(sourceId);
@@ -677,6 +680,7 @@ snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_ufr
     debuglogstdio(LCF_SOUND, "snd_pcm_writei call with %d frames and pcm %p", size, pcm);
 
     /* Fill audio thread id */
+    AudioContext& audiocontext = AudioContext::get();
     audiocontext.audio_thread = ThreadManager::getThreadId();
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = audiocontext.getSource(sourceId);
@@ -795,6 +799,7 @@ int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd
      * function.
      */
     // audiocontext.mutex.lock();
+    AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
@@ -854,7 +859,7 @@ snd_pcm_sframes_t snd_pcm_mmap_commit(snd_pcm_t *pcm, snd_pcm_uframes_t offset, 
 
     /* Push the mmap buffer to the source */
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     source->buffer_queue.push_back(mmap_ab);
 
     /* We should unlock the audio mutex here, but we don't (see above comment) */
@@ -946,7 +951,7 @@ int snd_pcm_hw_params_set_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, sn
     debuglogstdio(LCF_SOUND, "%s call with format %d", __func__, val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     auto buffer = source->buffer_queue[0];
 
     switch(val) {
@@ -991,7 +996,7 @@ int snd_pcm_hw_params_get_channels(const snd_pcm_hw_params_t *params, unsigned i
 
     /* We don't have the pcm parameter here, so using the last opened source */
     int sourceId = last_source;
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     auto buffer = source->buffer_queue[0];
     *val = buffer->nbChannels;
 
@@ -1034,7 +1039,7 @@ int snd_pcm_hw_params_set_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, 
     debuglogstdio(LCF_SOUND, "%s call with channels %d", __func__, val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     auto buffer = source->buffer_queue[0];
     buffer->nbChannels = val;
 
@@ -1051,7 +1056,7 @@ int snd_pcm_hw_params_set_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsi
     debuglogstdio(LCF_SOUND, "%s call with rate %d and dir %d", __func__, val, dir);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     auto buffer = source->buffer_queue[0];
     buffer->frequency = val;
 
@@ -1068,7 +1073,7 @@ int snd_pcm_hw_params_set_rate_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params,
     debuglogstdio(LCF_SOUND, "%s call with rate %d", __func__, *val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     auto buffer = source->buffer_queue[0];
     buffer->frequency = *val;
 
@@ -1099,7 +1104,7 @@ int snd_pcm_hw_params_get_rate(const snd_pcm_hw_params_t *params, unsigned int *
 
     /* We don't have the pcm parameter here, so using the last opened source */
     int sourceId = last_source;
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     auto buffer = source->buffer_queue[0];
     if (buffer->frequency != 0) {
         *val = buffer->frequency;
@@ -1171,7 +1176,7 @@ int snd_pcm_hw_params_set_period_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
     debuglogstdio(LCF_SOUND, "%s call with period time %d us and dir %d", __func__, *val, dir?*dir:-2);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     auto buffer = source->buffer_queue[0];
 
     if (buffer->frequency != 0) {
@@ -1276,7 +1281,7 @@ int snd_pcm_hw_params_get_buffer_time_max(const snd_pcm_hw_params_t *params, uns
 
     /* We don't have the pcm parameter here, so using the last opened source */
     int sourceId = last_source;
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     auto buffer = source->buffer_queue[0];
 
     /* The next operation can overflow using 32-bit ints */
@@ -1310,7 +1315,7 @@ int snd_pcm_hw_params_set_buffer_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
     debuglogstdio(LCF_SOUND, "%s call with buffer time %d", __func__, *val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     auto buffer = source->buffer_queue[0];
 
     /* Special case for 0, return the default value */
@@ -1406,7 +1411,7 @@ int snd_pcm_set_params(snd_pcm_t *pcm, snd_pcm_format_t format, snd_pcm_access_t
     DEBUGLOGCALL(LCF_SOUND);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     auto buffer = source->buffer_queue[0];
 
     switch(format) {
@@ -1554,7 +1559,7 @@ snd_pcm_sframes_t snd_pcm_bytes_to_frames(snd_pcm_t *pcm, ssize_t bytes)
 
     debuglogstdio(LCF_SOUND, "%s called with bytes %d", __func__, bytes);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     auto buffer = source->buffer_queue[0];
     return bytes / buffer->alignSize;
 }
@@ -1568,7 +1573,7 @@ ssize_t snd_pcm_frames_to_bytes(snd_pcm_t *pcm, snd_pcm_sframes_t frames)
 
     debuglogstdio(LCF_SOUND, "%s called with frames %d", __func__, frames);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = audiocontext.getSource(sourceId);
+    auto source = AudioContext::get().getSource(sourceId);
     auto buffer = source->buffer_queue[0];
     return buffer->alignSize * frames;
 }

@@ -149,7 +149,7 @@ void AllInputs::clear() {
 
 void AllInputs::buildAndClear()
 {
-    for (j=0; j<MAXJOYS; j++) {
+    for (int j=0; j<MAXJOYS; j++) {
         if (!controllers[j]) {
             controllers[j].reset(new ControllerInputs());            
         }
