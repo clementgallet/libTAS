@@ -38,7 +38,7 @@ ControllerInputs& ControllerInputs::operator=(const ControllerInputs& ci)
     return *this;
 }
 
-void ControllerInputs::emptyInputs() {
+void ControllerInputs::clear() {
     for (int i=0; i<MAXAXES; i++)
         axes[i] = 0;
     buttons = 0;

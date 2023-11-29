@@ -53,7 +53,7 @@ class ControllerInputs {
         ControllerInputs& operator=(const ControllerInputs& ci);
 
         /* Empty the state, set axes to neutral position. */
-        void emptyInputs();
+        void clear();
 
         /* Check if a controller has default values */
         bool isDefaultController() const;

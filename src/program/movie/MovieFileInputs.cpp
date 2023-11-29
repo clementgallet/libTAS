@@ -172,7 +172,7 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
 
 int MovieFileInputs::readFrame(const std::string& line, AllInputs& inputs)
 {
-    inputs.emptyInputs();
+    inputs.clear();
     int ret = 0;
 
     std::istringstream input_string(line);
@@ -411,7 +411,7 @@ int MovieFileInputs::getInputs(AllInputs& inputs, uint64_t pos)
     std::unique_lock<std::mutex> lock(input_list_mutex);
 
     if (pos >= input_list.size()) {
-        inputs.emptyInputs();
+        inputs.clear();
         return -1;
     }
 
@@ -452,7 +452,7 @@ void MovieFileInputs::clearInputs(uint64_t pos)
     std::unique_lock<std::mutex> lock(input_list_mutex);
 
     if (pos < input_list.size()) {
-        input_list[pos].emptyInputs();
+        input_list[pos].clear();
         wasModified();
     }
 }

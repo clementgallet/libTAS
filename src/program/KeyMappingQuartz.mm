@@ -180,7 +180,7 @@ void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConf
     int i,j;
     int keysym_i = 0;
 
-    ai.emptyInputs();
+    ai.clear();
 
     /* Don't get inputs if the game window is closed */
     if (window == 0) {

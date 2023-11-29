@@ -177,12 +177,12 @@ void __attribute__((constructor)) init(void)
         raise(SIGINT);
     }
 
-    ai.emptyInputs();
-    old_ai.emptyInputs();
-    game_ai.emptyInputs();
-    old_game_ai.emptyInputs();
-    game_unclipped_ai.emptyInputs();
-    old_game_unclipped_ai.emptyInputs();
+    ai.buildAndClear();
+    old_ai.buildAndClear();
+    game_ai.buildAndClear();
+    old_game_ai.buildAndClear();
+    game_unclipped_ai.buildAndClear();
+    old_game_unclipped_ai.buildAndClear();
 
     /* Initialize timers. It uses the initial time set in the config object,
      * so they must be initialized after receiving it.

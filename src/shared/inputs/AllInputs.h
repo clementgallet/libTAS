@@ -86,7 +86,10 @@ class AllInputs {
         AllInputs& operator=(const AllInputs& ai);
             
         /* Empty the state, set axes to neutral position. */
-        void emptyInputs();
+        void clear();
+
+        /* Construct all input objects and clear the state */
+        void buildAndClear();
 
         /* Check if a controller has default values */
         bool isDefaultController(int j) const;

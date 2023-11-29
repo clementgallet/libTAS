@@ -256,7 +256,7 @@ void GameLoop::init()
          */
         if (context->framecount == movie.inputs->nbFrames()) {
             AllInputs ai;
-            ai.emptyInputs();
+            ai.clear();
             movie.inputs->setInputs(ai, false);
         }
     }
@@ -632,7 +632,7 @@ void GameLoop::sleepSendPreview()
 
 void GameLoop::processInputs(AllInputs &ai)
 {
-    ai.emptyInputs();
+    ai.clear();
 
     /* Set framerate numbers here to prevent potential errors */
     if (context->config.sc.variable_framerate) {

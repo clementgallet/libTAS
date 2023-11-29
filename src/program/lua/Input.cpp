@@ -66,7 +66,7 @@ void Lua::Input::registerInputs(AllInputs* frame_ai)
 
 int Lua::Input::clear(lua_State *L)
 {
-    ai->emptyInputs();
+    ai->clear();
     return 0;
 }
 

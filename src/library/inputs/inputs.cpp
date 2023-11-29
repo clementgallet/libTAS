@@ -69,18 +69,7 @@ void updateGameInputs()
     game_ai.pointer_mask = ai.pointer_mask;
 
     for (int ji=0; ji<Global::shared_config.nb_controllers; ji++) {
-        if (!ai.controllers[ji]) {
-            if (game_ai.controllers[ji])
-                /* No need to deallocate and then allocate again on future inputs
-                 * I'm just emptying all controller inputs */
-                game_ai.controllers[ji]->emptyInputs();
-        }
-        else {
-            if (!game_ai.controllers[ji])
-                game_ai.controllers[ji].reset(new ControllerInputs());
-            
-            *game_ai.controllers[ji] = *ai.controllers[ji];
-        }
+        *game_ai.controllers[ji] = *ai.controllers[ji];
     }
 
     /* Clipping pointer inside grab window */

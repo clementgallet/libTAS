@@ -432,7 +432,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
      * won't be able to remove HUD messages during that frame. */
     if (!Global::skipping_draw && draw && Global::shared_config.osd_encode) {
         AllInputs preview_ai;
-        preview_ai.emptyInputs();
+        preview_ai.buildAndClear();
         hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
     }
 
@@ -467,7 +467,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 
     if (!Global::skipping_draw && draw && !Global::shared_config.osd_encode) {
         AllInputs preview_ai;
-        preview_ai.emptyInputs();
+        preview_ai.buildAndClear();
         hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
     }
 
@@ -628,7 +628,7 @@ static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllI
 static void receive_messages(std::function<void()> draw, RenderHUD& hud)
 {
     AllInputs preview_ai;
-    preview_ai.emptyInputs();
+    preview_ai.buildAndClear();
     std::string savestatepath;
     int slot;
 

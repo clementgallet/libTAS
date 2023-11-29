@@ -568,7 +568,7 @@ bool InputEditorModel::insertRows(int row, int count, bool duplicate, const QMod
     if (duplicate)
         movie->inputs->getInputs(ai, row);
     else
-        ai.emptyInputs();
+        ai.clear();
 
     for (int i=0; i<count; i++) {
         movie->inputs->insertInputsBefore(ai, row);
@@ -678,7 +678,7 @@ int InputEditorModel::pasteInputs(int row)
     }
 
     AllInputs newais;
-    newais.emptyInputs();
+    newais.clear();
     
     for (size_t r = 0; r < paste_ais.size(); r++) {
         movie->inputs->setInputs(paste_ais[r], row + r, true);
@@ -725,7 +725,7 @@ void InputEditorModel::pasteInputsInRange(int row, int count)
 
     size_t r = 0;
     AllInputs newais;
-    newais.emptyInputs();
+    newais.clear();
     for (int f = row; f < (row+count); f++) {
         movie->inputs->setInputs(paste_ais[r], f, true);
         newais |= paste_ais[r];
@@ -767,7 +767,7 @@ int InputEditorModel::pasteInsertInputs(int row)
     beginInsertRows(QModelIndex(), row, row + paste_ais.size() - 1);
 
     AllInputs newais;
-    newais.emptyInputs();
+    newais.clear();
     for (size_t r = 0; r < paste_ais.size(); r++) {
         movie->inputs->insertInputsBefore(paste_ais[r], row + r);
         newais |= paste_ais[r];

@@ -325,9 +325,6 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
     if (gcids[*gcid] == -1)
         return 0;
 
-    if (!game_ai.controllers[*gcid])
-        return 0;
-
     /* Check if axis is valid */
     if ((axis < 0) || (axis >= SingleInput::AXIS_LAST))
         return 0;
@@ -418,9 +415,6 @@ SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
 
     /* Check if controller is available */
     if (gcids[*gcid] == -1)
-        return 0;
-
-    if (!game_ai.controllers[*gcid])
         return 0;
 
     /* Check if button is valid */

@@ -105,7 +105,7 @@ AllInputs& AllInputs::operator=(const AllInputs& other)
     for (int j = 0; j < MAXJOYS; j++) {
         if (!other.controllers[j]) {
             if (controllers[j])
-                controllers[j]->emptyInputs();
+                controllers[j]->clear();
         }
         else {
             if (!controllers[j])
@@ -124,7 +124,7 @@ AllInputs& AllInputs::operator=(const AllInputs& other)
     return *this;
 }
 
-void AllInputs::emptyInputs() {
+void AllInputs::clear() {
     int i,j;
     for (i=0; i<MAXKEYS; i++)
         keyboard[i] = 0;
@@ -136,7 +136,7 @@ void AllInputs::emptyInputs() {
 
     for (j=0; j<MAXJOYS; j++) {
         if (controllers[j]) {
-            controllers[j]->emptyInputs();
+            controllers[j]->clear();
         }
     }
 
@@ -145,6 +145,17 @@ void AllInputs::emptyInputs() {
     framerate_num = 0;
     realtime_sec = 0;
     realtime_nsec = 0;
+}
+
+void AllInputs::buildAndClear()
+{
+    for (j=0; j<MAXJOYS; j++) {
+        if (!controllers[j]) {
+            controllers[j].reset(new ControllerInputs());            
+        }
+    }
+    
+    clear();
 }
 
 bool AllInputs::isDefaultController(int j) const
@@ -380,7 +391,17 @@ void AllInputs::send(bool preview)
     else
         sendMessage(MSGN_ALL_INPUTS);
     
-    sendData(this, sizeof(AllInputs));
+    sendData(keyboard.data(), keyboard.size() * sizeof(uint32_t));
+    sendData(&pointer_x, sizeof(int));
+    sendData(&pointer_y, sizeof(int));
+    sendData(&pointer_mode, sizeof(unsigned int));
+    sendData(&pointer_mask, sizeof(unsigned int));
+    sendData(&flags, sizeof(uint32_t));
+    sendData(&framerate_den, sizeof(uint32_t));
+    sendData(&framerate_num, sizeof(uint32_t));
+    sendData(&realtime_sec, sizeof(uint32_t));
+    sendData(&realtime_nsec, sizeof(uint32_t));
+    
     for (int j = 0; j < MAXJOYS; j++) {
         if (controllers[j]) {
             sendMessage(MSGN_CONTROLLER_INPUTS);
@@ -394,15 +415,21 @@ void AllInputs::send(bool preview)
 
 void AllInputs::recv()
 {
-    /* Reset all std::unique_ptr before loading */
-    for (int j=0; j < MAXJOYS; j++)
-        controllers[j].reset(nullptr);
-
-    receiveData(this, sizeof(AllInputs));
+    /* All AllInputs objects in game-side must have all inputs objects,
+     * so we don't need to check all the time, and because we don't need the
+     * saved space */
+    buildAndClear();
     
-    /* Reset all std::unique_ptr that have garbage data */
-    for (int j=0; j < MAXJOYS; j++)
-        controllers[j].release();
+    receiveData(keyboard.data(), keyboard.size() * sizeof(uint32_t));
+    receiveData(&pointer_x, sizeof(int));
+    receiveData(&pointer_y, sizeof(int));
+    receiveData(&pointer_mode, sizeof(unsigned int));
+    receiveData(&pointer_mask, sizeof(unsigned int));
+    receiveData(&flags, sizeof(uint32_t));
+    receiveData(&framerate_den, sizeof(uint32_t));
+    receiveData(&framerate_num, sizeof(uint32_t));
+    receiveData(&realtime_sec, sizeof(uint32_t));
+    receiveData(&realtime_nsec, sizeof(uint32_t));
     
     int message = receiveMessage();
     while (message != MSGN_END_INPUTS) {
@@ -410,7 +437,6 @@ void AllInputs::recv()
             case MSGN_CONTROLLER_INPUTS: {
                 int joy;
                 receiveData(&joy, sizeof(int));
-                controllers[joy].reset(new ControllerInputs());
                 receiveData(controllers[joy].get(), sizeof(ControllerInputs));
                 break;
             }                

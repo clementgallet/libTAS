@@ -450,9 +450,6 @@ static void generateControllerEvents(void)
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (int ji=0; ji<Global::shared_config.nb_controllers; ji++) {
-        if (!game_ai.controllers[ji])
-            continue;
-
         /* Check if we need to generate any joystick events for that
          * particular joystick. If not, we {continue;} here because
          * we must not update the joystick state (game_ai) as specified
