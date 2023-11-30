@@ -146,14 +146,17 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
     /* Write framerate inputs */
     if (context->config.sc.variable_framerate) {
         /* Zero framerate is default framerate */
-        if (inputs.framerate_num) {
-            /* Only store framerate if different from initial framerate */
-            if ((inputs.framerate_num != framerate_num) || (inputs.framerate_den != framerate_den)) {
-                input_stream.put('|');
-                input_stream.put('T');
-                input_stream << std::dec;
-                input_stream << inputs.framerate_num << ':' << inputs.framerate_den;
-            }
+        if (!inputs.framerate_num)
+            inputs.framerate_num = framerate_num;
+        if (!inputs.framerate_den)
+            inputs.framerate_den = framerate_den;
+
+        /* Only store framerate if different from initial framerate */
+        if ((inputs.framerate_num != framerate_num) || (inputs.framerate_den != framerate_den)) {
+            input_stream.put('|');
+            input_stream.put('T');
+            input_stream << std::dec;
+            input_stream << inputs.framerate_num << ':' << inputs.framerate_den;
         }
     }
 
@@ -418,9 +421,11 @@ int MovieFileInputs::getInputs(AllInputs& inputs, uint64_t pos)
     inputs = input_list[pos];
 
     /* Special case for zero framerate */
-    if (context->config.sc.variable_framerate && (!inputs.framerate_num)) {
-        inputs.framerate_num = framerate_num;
-        inputs.framerate_den = framerate_den;
+    if (context->config.sc.variable_framerate) {
+        if (!inputs.framerate_num)
+            inputs.framerate_num = framerate_num;
+        if (!inputs.framerate_den)
+            inputs.framerate_den = framerate_den;
     }
     
     if ((pos + 1) == input_list.size()) {
@@ -442,6 +447,14 @@ const AllInputs& MovieFileInputs::getInputs(uint64_t pos)
 
     if (pos >= input_list.size()) {
         pos = input_list.size();
+    }
+
+    /* Special case for zero framerate */
+    if (context->config.sc.variable_framerate) {
+        if (!input_list[pos].framerate_num)
+            input_list[pos].framerate_num = framerate_num;
+        if (!input_list[pos].framerate_den)
+            input_list[pos].framerate_den = framerate_den;
     }
 
     return input_list[pos];

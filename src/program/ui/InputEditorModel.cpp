@@ -292,7 +292,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
                 else
                     return savestate_frame;
             }
-            return QString("");
+            return QVariant();
         }
         if (index.column() == COLUMN_FRAME) {
             return row;
@@ -330,14 +330,15 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         if (si.isAnalog()) {
             /* Default framerate has a value of 0, which may be confusing,
              * so we just print `-` in place. */
-            if ((si.type == SingleInput::IT_FRAMERATE_NUM) && ((value == 0) || (value == movie->header->framerate_num)))
-                return QString('-');
-            if ((si.type == SingleInput::IT_FRAMERATE_DEN) && ((value == 0) || (value == movie->header->framerate_den)))
-                return QString('-');
+            if ((si.type == SingleInput::IT_FRAMERATE_NUM) || (si.type == SingleInput::IT_FRAMERATE_DEN)) {
+                if ((ai.framerate_num == movie->header->framerate_num) && 
+                    (ai.framerate_den == movie->header->framerate_den))
+                    return QVariant();
+            }
             if ((si.type == SingleInput::IT_REALTIME_SEC) && (value == 0))
-                return QString('-');
+                return QVariant();
             if ((si.type == SingleInput::IT_REALTIME_NSEC) && (value == 0))
-                return QString('-');
+                return QVariant();
             return QString().setNum(value);
         }
 
@@ -345,7 +346,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
             return QString(si.description.c_str());
         }
         else {
-            return QString("");
+            return QVariant();
         }
     }
 
