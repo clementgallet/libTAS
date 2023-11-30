@@ -86,11 +86,6 @@ OVERRIDE Bool XShmPutImage(
         debuglogstdio(LCF_WINDOW, "Sent X11 window id %d", i);
     }
 
-    /* We must wait until the first screen draw to use the parameters of the
-     * surface to initialize the screen capture.
-     */
-    ScreenCapture::init();
-
     /* The surface can change size independently of the window size, so we
      * must check here everytime. */
 

@@ -407,15 +407,8 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
     DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
 
     if (drawable && (!x11::gameXWindows.empty())) {
-
         Global::game_info.video |= GameInfo::OPENGL;
         Global::game_info.tosend = true;
-
-        /* If we are using SDL, we let the higher function initialize stuff */
-        if (!(Global::game_info.video & (GameInfo::SDL1 | GameInfo::SDL2 | GameInfo::SDL2_RENDERER | GameInfo::VDPAU))) {
-            /* Now that the context is created, we can init the screen capture */
-            ScreenCapture::init();
-        }
 
         checkMesa();
     }
@@ -439,15 +432,8 @@ Bool glXMakeContextCurrent( Display *dpy, GLXDrawable draw, GLXDrawable read, GL
     DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
 
     if (draw && (!x11::gameXWindows.empty())) {
-
         Global::game_info.video |= GameInfo::OPENGL;
         Global::game_info.tosend = true;
-
-        /* If we are using SDL, we let the higher function initialize stuff */
-        if (!(Global::game_info.video & (GameInfo::SDL1 | GameInfo::SDL2 | GameInfo::SDL2_RENDERER | GameInfo::VDPAU))) {
-            /* Now that the context is created, we can init the screen capture */
-            ScreenCapture::init();
-        }
 
         checkMesa();
     }

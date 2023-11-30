@@ -273,7 +273,6 @@ xcb_void_cookie_t xcb_destroy_window_checked (xcb_connection_t *c, xcb_window_t 
             /* Switch to the next game window */
             debuglogstdio(LCF_WINDOW, "   set game window to %d", x11::gameXWindows.front());
             sendXWindow(x11::gameXWindows.front());
-            ScreenCapture::init();
         }
     }
     else {
@@ -307,7 +306,6 @@ xcb_void_cookie_t xcb_destroy_window (xcb_connection_t *c, xcb_window_t window)
             /* Switch to the next game window */
             debuglogstdio(LCF_WINDOW, "   set game window to %d", x11::gameXWindows.front());
             sendXWindow(x11::gameXWindows.front());
-            ScreenCapture::init();
         }
     }
     else {

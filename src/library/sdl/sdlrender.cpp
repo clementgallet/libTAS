@@ -56,8 +56,6 @@ DECLARE_ORIG_POINTER(SDL_RenderGetScale)
 
     SDL_Renderer* renderer = orig::SDL_CreateRenderer(window, index, flags);
 
-    ScreenCapture::init();
-
     return renderer;
 }
 

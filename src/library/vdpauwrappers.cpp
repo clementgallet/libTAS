@@ -131,11 +131,6 @@ VdpStatus VdpPresentationQueueDisplay(VdpPresentationQueue presentation_queue, V
 
     vdp::vdpSurface = surface;
 
-    /* We must wait until the first screen draw to use the parameters of the
-     * surface to initialize the screen capture.
-     */
-    ScreenCapture::init();
-
     /* The surface can change size independently of the window size, so we
      * must check here everytime. */
     VdpRGBAFormat rgba_format;

@@ -193,12 +193,9 @@ VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateI
         /* Store the device */
         vk::device = *pDevice;
 
-        /* We are officially using Vulkan now. Initialize screen capture */
+        /* We are officially using Vulkan now. */
         Global::game_info.video |= GameInfo::VULKAN;
         Global::game_info.tosend = true;
-
-        ScreenCapture::fini();
-        ScreenCapture::init();
     }
     
     return res;

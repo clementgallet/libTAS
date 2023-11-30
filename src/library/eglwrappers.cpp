@@ -320,15 +320,8 @@ EGLBoolean eglMakeCurrent( EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
     DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
 
     if (draw && (!x11::gameXWindows.empty())) {
-
         Global::game_info.video |= GameInfo::EGL | GameInfo::OPENGL;
         Global::game_info.tosend = true;
-
-        /* If we are using SDL, we let the higher function initialize stuff */
-        if (!(Global::game_info.video & (GameInfo::SDL1 | GameInfo::SDL2 | GameInfo::SDL2_RENDERER))) {
-            /* Now that the context is created, we can init the screen capture */
-            ScreenCapture::init();
-        }
     }
 
     return ret;

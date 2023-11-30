@@ -113,7 +113,7 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     /* We override this function to disable vsync,
      * except when using non deterministic timer.
      */
-    if (!(Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)) {
+    if (context && !(Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)) {
         LINK_NAMESPACE_SDL2(SDL_GL_SetSwapInterval);
         orig::SDL_GL_SetSwapInterval(0);
         debuglogstdio(LCF_WINDOW, "Disable vsync !!");
@@ -123,9 +123,6 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     if (!context) {
         return context;
     }
-
-    /* Now that the context is created, we can init the screen capture */
-    ScreenCapture::init();
 
 #ifdef __unix__
     /* Alerting the user if software rendering is not active */
@@ -377,10 +374,6 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     int ret = orig::SDL_CreateWindowAndRenderer(width, height, window_flags, window, renderer);
     sdl::gameSDLWindow = *window;
 
-    /* If we are going to save the screen when savestating, we need to init
-     * our pixel access routine */
-    ScreenCapture::init();
-
     return ret;
 }
 
@@ -449,10 +442,6 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     else {
         Global::game_info.video &= ~GameInfo::OPENGL;
     }
-
-    /* If we are going to save the screen when savestating, we need to init
-     * our pixel access routine */
-    ScreenCapture::init();
 
     SDL1::SDL_Event event;
     event.type = SDL1::SDL_ACTIVEEVENT;
@@ -571,9 +560,6 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
 
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     Global::game_info.video |= GameInfo::SDL2_SURFACE;
-    /* We can't guess that the game will use SDL2 surface before updating it.
-     * so we initialize our screen capture here. */
-    ScreenCapture::init();
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_SDL2_surface renderHUD;
@@ -592,9 +578,6 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     LINK_NAMESPACE_SDL2(SDL_UpdateWindowSurface);
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
     Global::game_info.video |= GameInfo::SDL2_SURFACE;
-    /* We can't guess that the game will use SDL2 surface before updating it.
-     * so we initialize our screen capture here. */
-    ScreenCapture::init();
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_SDL2_surface renderHUD;

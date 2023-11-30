@@ -240,6 +240,9 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     /* Reset the busy loop detector */
     BusyLoopDetection::reset();
 
+    /* Initialize Screen Capture on the first real screen draw */
+    ScreenCapture::init();
+
     /* Wait for events to be processed by the game */
 #ifdef __unix__
     if (Global::shared_config.async_events & SharedConfig::ASYNC_XEVENTS_END)
