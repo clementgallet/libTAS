@@ -39,6 +39,7 @@ public:
 
 private:
     Context *context;
+    QString defaultPath; // Latest saved/loaded watch file used at default
 
 public slots:
 

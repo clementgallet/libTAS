@@ -103,14 +103,17 @@ void RamWatchWindow::slotScanPointer()
 
 void RamWatchWindow::slotSave()
 {
-    QString defaultPath(context->gamepath.c_str());
-    defaultPath.append(".wch");
+    if (defaultPath.isEmpty()) {
+        defaultPath = context->gamepath.c_str();
+        defaultPath.append(".wch");
+    }
     
     QString filename = QFileDialog::getSaveFileName(this, tr("Choose a watch file"), defaultPath, tr("watch files (*.wch)"));
     if (filename.isNull()) {
         return;
     }
 
+    defaultPath = filename;
 	QSettings watchSettings(filename, QSettings::IniFormat);
 	watchSettings.setFallbacksEnabled(false);
 
@@ -119,14 +122,17 @@ void RamWatchWindow::slotSave()
 
 void RamWatchWindow::slotLoad()
 {
-    QString defaultPath(context->gamepath.c_str());
-    defaultPath.append(".wch");
+    if (defaultPath.isEmpty()) {
+        defaultPath = context->gamepath.c_str();
+        defaultPath.append(".wch");
+    }
     
     QString filename = QFileDialog::getOpenFileName(this, tr("Choose a watch file"), defaultPath, tr("watch files (*.wch)"));
     if (filename.isNull()) {
         return;
     }
 
+    defaultPath = filename;
 	QSettings watchSettings(filename, QSettings::IniFormat);
 	watchSettings.setFallbacksEnabled(false);
 
