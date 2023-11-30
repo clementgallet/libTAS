@@ -145,18 +145,21 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
 
     /* Write framerate inputs */
     if (context->config.sc.variable_framerate) {
-        /* Zero framerate is default framerate */
-        if (!inputs.framerate_num)
-            inputs.framerate_num = framerate_num;
-        if (!inputs.framerate_den)
-            inputs.framerate_den = framerate_den;
-
         /* Only store framerate if different from initial framerate */
-        if ((inputs.framerate_num != framerate_num) || (inputs.framerate_den != framerate_den)) {
+        if ((inputs.framerate_num && (inputs.framerate_num != framerate_num)) ||
+            (inputs.framerate_den && (inputs.framerate_den != framerate_den))) {
             input_stream.put('|');
             input_stream.put('T');
             input_stream << std::dec;
-            input_stream << inputs.framerate_num << ':' << inputs.framerate_den;
+            if (inputs.framerate_num)
+                input_stream << inputs.framerate_num;
+            else
+                input_stream << framerate_num;
+            input_stream << ':';
+            if (inputs.framerate_den)
+                input_stream << inputs.framerate_den;
+            else
+                input_stream << framerate_den;
         }
     }
 
