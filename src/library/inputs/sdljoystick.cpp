@@ -373,6 +373,10 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 
     int *joyid = reinterpret_cast<int*>(joystick);
 
+    /* Check if controller built */
+    if (!game_ai.controllers[*joyid])
+        return 0;
+
     return game_ai.controllers[*joyid]->axes[axis];
 }
 
@@ -387,6 +391,10 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
         return 0;
 
     int *joyid = reinterpret_cast<int*>(joystick);
+
+    /* Check if controller built */
+    if (!game_ai.controllers[*joyid])
+        return 0;
 
     Uint8 hatState = SDL_HAT_CENTERED;
     if (game_ai.controllers[*joyid]->buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_UP))
@@ -418,6 +426,10 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
         return 0;
 
     int *joyid = reinterpret_cast<int*>(joystick);
+
+    /* Check if controller built */
+    if (!game_ai.controllers[*joyid])
+        return 0;
 
     return (game_ai.controllers[*joyid]->buttons >> button) & 0x1;
 }
