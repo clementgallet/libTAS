@@ -18,7 +18,7 @@
  */
 
 #include "hook.h"
-#include "dlhook.h"
+#include "general/dlhook.h"
 #include "logging.h"
 #include "GlobalState.h"
 

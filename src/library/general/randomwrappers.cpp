@@ -18,6 +18,7 @@
  */
 
 #include "randomwrappers.h"
+
 #include "logging.h"
 #include "hook.h"
 

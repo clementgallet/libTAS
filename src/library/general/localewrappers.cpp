@@ -18,6 +18,7 @@
  */
 
 #include "localewrappers.h"
+
 #include "logging.h"
 #include "hook.h"
 #include "global.h"

@@ -18,18 +18,18 @@
  */
 
 #include "main.h"
-#include "dlhook.h"
 #include "logging.h"
 #include "global.h"
 #include "NonDeterministicTimer.h"
 #include "DeterministicTimer.h"
 #include "frame.h" // framecount
 #include "Stack.h"
-#include "monowrappers.h"
 #include "GlobalState.h"
 #include "audio/AudioContext.h"
 #include "encoding/AVEncoder.h"
 #include "steam/isteamuser.h" // SteamSetUserDataFolder
+#include "general/dlhook.h"
+#include "general/monowrappers.h"
 #include "steam/isteamremotestorage/isteamremotestorage.h" // SteamSetRemoteStorageFolder
 #include "inputs/inputs.h"
 #include "checkpoint/ThreadManager.h"

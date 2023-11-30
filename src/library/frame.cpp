@@ -26,7 +26,7 @@
 #include "DeterministicTimer.h"
 #include "encoding/AVEncoder.h"
 #include "encoding/Screenshot.h"
-#include "timewrappers.h" // clock_gettime
+#include "general/timewrappers.h" // clock_gettime
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/SaveStateManager.h"
 #include "checkpoint/Checkpoint.h"

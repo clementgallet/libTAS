@@ -18,6 +18,8 @@
  */
 
 #include "waitwrappers.h"
+#include "sleepwrappers.h" // transfer_sleep()
+
 #include "logging.h"
 #include "checkpoint/ThreadManager.h"
 #include "DeterministicTimer.h"
@@ -25,7 +27,6 @@
 #include "GlobalState.h"
 #include "hook.h"
 #include "global.h"
-#include "sleepwrappers.h" // transfer_sleep()
 #ifdef __linux__
 #include "audio/alsa/pcm.h"
 #endif

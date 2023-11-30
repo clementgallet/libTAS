@@ -18,7 +18,7 @@
  */
 
 #include "hookpatch.h"
-#include "dlhook.h"
+#include "general/dlhook.h"
 #include "logging.h"
 #include "GlobalState.h"
 #include "../shared/sockethelpers.h"

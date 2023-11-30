@@ -18,6 +18,7 @@
  */
 
 #include "glibwrappers.h"
+
 #include "logging.h"
 #include "checkpoint/ThreadManager.h"
 #include "DeterministicTimer.h"

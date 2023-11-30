@@ -18,6 +18,7 @@
  */
 
 #include "signalwrappers.h"
+
 #include "logging.h"
 #include "GlobalState.h"
 #include "hook.h"

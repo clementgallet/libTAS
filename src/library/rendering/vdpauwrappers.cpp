@@ -18,6 +18,7 @@
  */
 
 #include "vdpauwrappers.h"
+
 #include "logging.h"
 #include "GlobalState.h"
 #include "ScreenCapture.h"

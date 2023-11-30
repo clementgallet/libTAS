@@ -18,7 +18,7 @@
  */
 
 #include "monowrappers.h"
-// #include <cstdlib>
+#include "sleepwrappers.h" // transfer_sleep()
 
 #include "logging.h"
 #include "hookpatch.h"
@@ -26,7 +26,6 @@
 #include "DeterministicTimer.h"
 #include "GlobalState.h"
 #include "checkpoint/ThreadManager.h" // isMainThread()
-#include "sleepwrappers.h" // transfer_sleep()
 
 namespace libtas {
 

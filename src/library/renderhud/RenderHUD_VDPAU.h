@@ -26,7 +26,7 @@
 #include "RenderHUD_Base_MacOS.h"
 #endif
 
-#include "vdpauwrappers.h"
+#include "rendering/vdpauwrappers.h"
 
 namespace libtas {
 #ifdef __unix__

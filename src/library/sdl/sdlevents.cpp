@@ -23,7 +23,7 @@
 
 #include "logging.h"
 #include "hook.h"
-#include "sleepwrappers.h"
+#include "general/sleepwrappers.h"
 #include "GlobalState.h"
 #include "inputs/sdlkeyboard.h"
 #include "global.h"

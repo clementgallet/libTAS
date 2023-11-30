@@ -21,8 +21,8 @@
 #include "logging.h"
 #include "frame.h"
 #include "global.h" // Global::shared_config
-#include "timewrappers.h" // clock_gettime
-#include "sleepwrappers.h" // nanosleep
+#include "general/timewrappers.h" // clock_gettime
+#include "general/sleepwrappers.h" // nanosleep
 #include "checkpoint/ThreadManager.h"
 #include "GlobalState.h"
 

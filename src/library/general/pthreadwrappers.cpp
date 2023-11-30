@@ -18,15 +18,16 @@
  */
 
 #include "pthreadwrappers.h"
+#include "tlswrappers.h"
+#include "timewrappers.h" // gettimeofday()
+
 #include "logging.h"
 #include "checkpoint/ThreadInfo.h"
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/ThreadSync.h"
 #include "DeterministicTimer.h"
-#include "tlswrappers.h"
 #include "backtrace.h"
 #include "global.h"
-#include "timewrappers.h" // gettimeofday()
 #include "GameHacks.h"
 #include "GlobalState.h"
 

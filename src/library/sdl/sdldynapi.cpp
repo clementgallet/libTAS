@@ -23,7 +23,7 @@
  * distributions are bundled with version 2.0.5 */
 #include "inputs/sdljoystick.h"
 #include "logging.h"
-#include "dlhook.h"
+#include "general/dlhook.h"
 #include "hook.h"
 #include "GlobalState.h"
 

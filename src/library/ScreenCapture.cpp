@@ -25,13 +25,13 @@
 #include "encoding/AVEncoder.h"
 #include "GlobalState.h"
 #include "sdl/sdlwindows.h" // sdl::gameSDLWindow
-#include "vulkanwrappers.h"
+#include "rendering/vulkanwrappers.h"
 
 #ifdef __unix__
 #include "xlib/xdisplay.h" // x11::gameDisplays
 #include "xlib/xwindows.h" // x11::gameXWindows
 #include "xlib/xshm.h" // x11::gameXImage
-#include "vdpauwrappers.h"
+#include "rendering/vdpauwrappers.h"
 #endif
 
 #include <SDL2/SDL.h>

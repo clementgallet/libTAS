@@ -18,6 +18,7 @@
  */
 
 #include "mallocwrappers.h"
+
 #include "logging.h"
 
 #include <cstdlib>

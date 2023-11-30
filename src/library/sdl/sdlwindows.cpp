@@ -28,13 +28,13 @@
 #include "renderhud/RenderHUD_GL.h"
 #include "renderhud/RenderHUD_SDL1.h"
 #include "renderhud/RenderHUD_SDL2_surface.h"
-#include "timewrappers.h"
+#include "general/timewrappers.h"
 #include "ScreenCapture.h"
 #include "DeterministicTimer.h"
 #include "WindowTitle.h"
 #include "encoding/AVEncoder.h"
 #ifdef __unix__
-#include "glxwrappers.h" // checkMesa()
+#include "rendering/glxwrappers.h" // checkMesa()
 #endif
 #include "checkpoint/ThreadManager.h"
 #include "global.h"

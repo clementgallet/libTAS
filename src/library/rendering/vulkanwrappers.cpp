@@ -18,6 +18,7 @@
  */
 
 #include "vulkanwrappers.h"
+
 #include "hook.h"
 #include "logging.h"
 #include "renderhud/RenderHUD.h"

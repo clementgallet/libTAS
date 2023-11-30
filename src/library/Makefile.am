@@ -8,39 +8,20 @@ libtas_so_SOURCES = \
     backtrace.cpp \
     BusyLoopDetection.cpp \
     DeterministicTimer.cpp \
-    dlhook.cpp \
-    eglwrappers.cpp \
     frame.cpp \
     GameHacks.cpp \
-    glibwrappers.cpp \
     global.cpp \
-    glxwrappers.cpp \
     GlobalState.cpp \
     hook.cpp \
     hookpatch.cpp \
-    localewrappers.cpp \
     logging.cpp \
     main.cpp \
-    mallocwrappers.cpp \
-    monowrappers.cpp \
     NonDeterministicTimer.cpp \
-    openglwrappers.cpp \
-    pthreadwrappers.cpp \
     PerfTimer.cpp \
-    randomwrappers.cpp \
     ScreenCapture.cpp \
-    signalwrappers.cpp \
-    sleepwrappers.cpp \
-    socketwrappers.cpp \
     Stack.cpp \
-    systemwrappers.cpp \
     TimeHolder.cpp \
-    timewrappers.cpp \
-    tlswrappers.cpp \
     Utils.cpp \
-    vdpauwrappers.cpp \
-    vulkanwrappers.cpp \
-    waitwrappers.cpp \
     WindowTitle.cpp \
     audio/AudioBuffer.cpp \
     audio/AudioContext.cpp \
@@ -80,6 +61,20 @@ libtas_so_SOURCES = \
     fileio/SaveFileList.cpp \
     fileio/stdiowrappers.cpp \
     fileio/URandom.cpp \
+	general/dlhook.cpp \
+	general/glibwrappers.cpp \
+	general/localewrappers.cpp \
+	general/mallocwrappers.cpp \
+	general/monowrappers.cpp \
+	general/pthreadwrappers.cpp \
+	general/randomwrappers.cpp \
+	general/signalwrappers.cpp \
+	general/sleepwrappers.cpp \
+	general/socketwrappers.cpp \
+	general/systemwrappers.cpp \
+	general/timewrappers.cpp \
+	general/tlswrappers.cpp \
+	general/waitwrappers.cpp \
     inputs/evdev.cpp \
     inputs/inputevents.cpp \
     inputs/inputs.cpp \
@@ -112,6 +107,11 @@ libtas_so_SOURCES = \
     renderhud/sdl_ttf.cpp \
     renderhud/SurfaceARGB.cpp \
     renderhud/SurfaceXImage.cpp \
+	rendering/eglwrappers.cpp \
+	rendering/glxwrappers.cpp \
+	rendering/openglwrappers.cpp \
+	rendering/vdpauwrappers.cpp \
+	rendering/vulkanwrappers.cpp \
     sdl/SDLEventQueue.cpp \
     sdl/sdldisplay.cpp \
     sdl/sdldynapi.cpp \
