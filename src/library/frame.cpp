@@ -262,7 +262,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     perfTimer.switchTimer(PerfTimer::RenderTimer);
 
     if (GameHacks::isUnity()) {
-        ThreadSync::detWait();        
+        GameHacks::unitySyncWaitAll();        
     }
     perfTimer.switchTimer(PerfTimer::FrameTimer);
 

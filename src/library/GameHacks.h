@@ -26,37 +26,34 @@
 
 namespace libtas {
 
-class GameHacks
+namespace GameHacks
 {
-    public:
-        static void setUnity();
+void setUnity();
 
-        static bool isUnity();
+bool isUnity();
         
-        static void getExecutableMemory();
+void getExecutableMemory();
 
-        static bool isUnityLoadingThread(uintptr_t addr);
+bool isUnityLoadingThread(uintptr_t addr);
 
-        /* Regsiter that the game linked `libcoreclr.so` library */
-        static void setCoreclr();
+/* Synchronize methods so that Unity jobs are running sequentially. It also
+ * supports jobs that never finish by using a timeout */
+void unitySyncNotify();
+void unitySyncWait();
+void unitySyncWaitAll();
+
+/* Regsiter that the game linked `libcoreclr.so` library */
+void setCoreclr();
     
-        /* Returns if the game linked `libcoreclr.so` library */
-        static bool hasCoreclr();
+/* Returns if the game linked `libcoreclr.so` library */
+bool hasCoreclr();
 
-        /* Regsiter the pid of the .NET finalizer thread */
-        static void setFinalizerThread(pid_t pid);
+/* Regsiter the pid of the .NET finalizer thread */
+void setFinalizerThread(pid_t pid);
 
-        /* Get the pid of the .NET finalizer thread, or 0 */
-        static pid_t getFinalizerThread();
+/* Get the pid of the .NET finalizer thread, or 0 */
+pid_t getFinalizerThread();        
         
-    private:
-        static bool unity;
-        static uintptr_t executableBase;
-        static uintptr_t executableEnd;
-        static uintptr_t unityLoadingThreadAddr;
-
-        static bool coreclr;
-        static pid_t finalizer_pid;
 };
 
 }

@@ -643,11 +643,11 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 
     debuglogstdio(LCF_WAIT, "sem_wait call with %p", sem);
     if (isWaitThread) {
-        ThreadSync::detSignal(true);
+        GameHacks::unitySyncNotify();
 
         int ret = orig::sem_wait(sem);
 
-        ThreadSync::detInit();
+        GameHacks::unitySyncWait();
         return ret;
     }
 
