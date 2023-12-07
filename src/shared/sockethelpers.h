@@ -27,11 +27,13 @@
 /* Remove the socket file and return error */
 int removeSocket();
 
+#ifndef LIBTAS_LIBRARY
 /* Initiate a socket connection with the game */
 bool initSocketProgram(pid_t fork_pid);
-
+#else
 /* Initiate a socket connection with libTAS */
 bool initSocketGame(void);
+#endif
 
 /* Close the socket connection */
 void closeSocket(void);

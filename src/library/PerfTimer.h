@@ -21,6 +21,7 @@
 #define LIBTAS_PERFTIMER_H_INCL
 
 #include "TimeHolder.h"
+#include "../shared/lcf.h"
 
 namespace libtas {
 
@@ -34,10 +35,14 @@ class PerfTimer
             FrameTimer,
             RenderTimer,
             IdleTimer,
+            WaitTimer,
+            TimeTimer,
+            SpecialTimer,
             TotalTimer,
         };
 
         void switchTimer(TimerType type);
+        TimerType currentTimer();
         void print();
 
     private:
@@ -45,6 +50,15 @@ class PerfTimer
         TimeHolder current_time[TotalTimer];
         TimeHolder elapsed[TotalTimer];
         TimerType current_type = NoTimer;
+};
+
+class PerfTimerCall
+{
+public:
+    PerfTimerCall(LogCategoryFlag lcf);
+    ~PerfTimerCall();
+private:
+    PerfTimer::TimerType type = PerfTimer::NoTimer;
 };
 
 extern PerfTimer perfTimer;

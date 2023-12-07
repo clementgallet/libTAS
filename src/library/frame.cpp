@@ -351,6 +351,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     RenderHUD::resetLua();
 
     /* Receive messages from the program */
+    perfTimer.switchTimer(PerfTimer::WaitTimer);                
     int message = receiveMessage();
     
     while (message != MSGN_START_FRAMEBOUNDARY) {
@@ -434,6 +435,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         }
         message = receiveMessage();
     }
+    perfTimer.switchTimer(PerfTimer::FrameTimer);
 
     /*** Rendering ***/
     if (!draw)
@@ -663,6 +665,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
     {
         int message = receiveMessageNonBlocking();
         if (message < 0) {
+            perfTimer.switchTimer(PerfTimer::WaitTimer);
 #ifdef __unix__
             /* We need to answer to ping messages from the window manager,
              * otherwise the game will appear as unresponsive. */
@@ -686,7 +689,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
             if (! Global::shared_config.fastforward) {
                 perfTimer.switchTimer(PerfTimer::IdleTimer);
                 NATIVECALL(usleep(100));
-                perfTimer.switchTimer(PerfTimer::FrameTimer);                
+                perfTimer.switchTimer(PerfTimer::WaitTimer);                
             }
 
             /* Catch dead children spawned for state saving */
@@ -699,6 +702,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 RenderHUD::insertMessage(msg.c_str());
                 screen_redraw(draw, hud, preview_ai);
             }
+            perfTimer.switchTimer(PerfTimer::FrameTimer);
         }
         int status;
         std::string str;

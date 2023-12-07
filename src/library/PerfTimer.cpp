@@ -20,6 +20,7 @@
 #include "PerfTimer.h"
 #include "logging.h"
 #include "GlobalState.h"
+#include "checkpoint/ThreadManager.h"
 
 #include <time.h>
 
@@ -28,7 +29,7 @@ namespace libtas {
 void PerfTimer::switchTimer(TimerType type)
 {
     /* Stop and increase old timer */
-    if (current_type != -1) {
+    if (current_type != NoTimer) {
         TimeHolder end_time;
         NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &end_time));
         
@@ -40,12 +41,39 @@ void PerfTimer::switchTimer(TimerType type)
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &current_time[current_type]));
 }
 
+PerfTimer::TimerType PerfTimer::currentTimer()
+{
+    return current_type;
+}
+
 void PerfTimer::print()
 {
     debuglogstdio(LCF_INFO, "Game timer took %d.%03d sec", elapsed[GameTimer].tv_sec, elapsed[GameTimer].tv_nsec / 1000000);
     debuglogstdio(LCF_INFO, "Frame timer took %d.%03d sec", elapsed[FrameTimer].tv_sec, elapsed[FrameTimer].tv_nsec / 1000000);
     debuglogstdio(LCF_INFO, "Render timer took %d.%03d sec", elapsed[RenderTimer].tv_sec, elapsed[RenderTimer].tv_nsec / 1000000);
     debuglogstdio(LCF_INFO, "Idle timer took %d.%03d sec", elapsed[IdleTimer].tv_sec, elapsed[IdleTimer].tv_nsec / 1000000);
+    debuglogstdio(LCF_INFO, "Wait timer took %d.%03d sec", elapsed[WaitTimer].tv_sec, elapsed[WaitTimer].tv_nsec / 1000000);
+    debuglogstdio(LCF_INFO, "Time timer took %d.%03d sec", elapsed[TimeTimer].tv_sec, elapsed[TimeTimer].tv_nsec / 1000000);
+    debuglogstdio(LCF_INFO, "Special timer took %d.%03d sec", elapsed[SpecialTimer].tv_sec, elapsed[SpecialTimer].tv_nsec / 1000000);
+
+    for (int i=0; i < TotalTimer; i++) {
+        elapsed[i].tv_sec = 0;
+        elapsed[i].tv_nsec = 0;
+    }
+}
+
+PerfTimerCall::PerfTimerCall(LogCategoryFlag lcf)
+{
+    if ((lcf & LCF_TIMEGET) && ThreadManager::isMainThread() && perfTimer.currentTimer() == PerfTimer::GameTimer) {
+        type = PerfTimer::TimeTimer;
+        perfTimer.switchTimer(PerfTimer::TimeTimer);
+    }
+}
+
+PerfTimerCall::~PerfTimerCall()
+{
+    if (perfTimer.currentTimer() == type)
+        perfTimer.switchTimer(PerfTimer::GameTimer);
 }
 
 PerfTimer perfTimer;

@@ -21,6 +21,7 @@
 #define LIBTAS_LOGGING_H_INCL
 
 #include "../shared/lcf.h"
+#include "PerfTimer.h"
 
 #include <string>
 #include <iostream>
@@ -35,7 +36,10 @@ namespace libtas {
 void debuglogfull(LogCategoryFlag lcf, const char* file, int line, ...);
 
 /* Print the debug message using stdio functions */
-#define debuglogstdio(lcf, ...) debuglogfull(lcf, __FILE__, __LINE__, __VA_ARGS__)
+#define debuglogstdio(lcf, ...) do {\
+    PerfTimerCall ptc(lcf); \
+    debuglogfull(lcf, __FILE__, __LINE__, __VA_ARGS__);\
+    } while (0)
 
 /* If we only want to print the function name... */
 #define DEBUGLOGCALL(lcf) debuglogstdio(lcf, "%s call.", __func__)
