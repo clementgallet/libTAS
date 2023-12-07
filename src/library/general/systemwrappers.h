@@ -35,8 +35,6 @@ OVERRIDE pid_t getpid (void) __THROWNL;
    and the process ID of the new process to the old process.  */
 OVERRIDE pid_t fork(void) __THROWNL;
 
-OVERRIDE int __sched_cpucount (size_t setsize, const cpu_set_t *setp) __THROW;
-
 }
 
 #endif
