@@ -32,14 +32,17 @@ namespace libtas {
 
 void Area::print(const char* prefix) const
 {
+#ifdef __unix__
     debuglogstdio(LCF_CHECKPOINT, "%s Region %c%c%c%c %p-%p (%s) with size %zu and flags %x",
     prefix,
-#ifdef __unix__
     (prot&PROT_READ)?'r':'-', (prot&PROT_WRITE)?'w':'-', (prot&PROT_EXEC)?'x':'-', (flags&AREA_SHARED)?'s':'p',
-#elif defined(__APPLE__) && defined(__MACH__)
-    (prot&VM_PROT_READ)?'r':'-', (prot&VM_PROT_WRITE)?'w':'-', (prot&VM_PROT_EXECUTE)?'x':'-', (flags&AREA_SHARED)?'s':'p',
-#endif
     addr, endAddr, name, size, flags);
+#elif defined(__APPLE__) && defined(__MACH__)
+    debuglogstdio(LCF_CHECKPOINT, "%s Region %c%c%c%c %p-%p (%s) with size %zu and flags %x",
+    prefix,
+    (prot&VM_PROT_READ)?'r':'-', (prot&VM_PROT_WRITE)?'w':'-', (prot&VM_PROT_EXECUTE)?'x':'-', (flags&AREA_SHARED)?'s':'p',
+    addr, endAddr, name, size, flags);
+#endif
 }
 
 int Area::toMmapFlag() const
