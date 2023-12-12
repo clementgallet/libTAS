@@ -106,6 +106,7 @@ static std::condition_variable unity_condition;
 static unsigned int unity_running_threads = 0;
 static unsigned int unity_nonterminating_threads = 0;
 static unsigned int unity_waiting_threads = 0;
+static unsigned int unity_job_count = 0;
 
 void GameHacks::unitySyncNotify()
 {
@@ -127,6 +128,7 @@ void GameHacks::unitySyncWait()
     GlobalNative gn;
     std::unique_lock<decltype(unity_mutex)> lock(unity_mutex);
     ++unity_waiting_threads;
+    ++unity_job_count;
     debuglogstdio(LCF_WAIT, "   Wait before running a Unity job");
     while (unity_running_threads > unity_nonterminating_threads) {
         
@@ -211,12 +213,20 @@ void GameHacks::unitySyncWaitAll()
      */
     
     debuglogstdio(LCF_WAIT, "   Wait that all Unity jobs finish");
+    unsigned int old_job_count = 0;
     unity_mutex.lock();
-    while (unity_waiting_threads || (unity_running_threads > unity_nonterminating_threads)) {
+    while (unity_job_count > old_job_count) {
+        old_job_count = unity_job_count;
         unity_mutex.unlock();
-        NATIVECALL(usleep(100));        
+        NATIVECALL(usleep(100));
         unity_mutex.lock();
+        while (unity_waiting_threads || (unity_running_threads > unity_nonterminating_threads)) {
+            unity_mutex.unlock();
+            NATIVECALL(usleep(100));
+            unity_mutex.lock();
+        }
     }
+    unity_job_count = 0;
     unity_mutex.unlock();
 }
 
