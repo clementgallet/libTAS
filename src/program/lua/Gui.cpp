@@ -71,15 +71,13 @@ int Lua::Gui::text(lua_State *L)
     int x = static_cast<int>(lua_tointeger(L, 1));
     int y = static_cast<int>(lua_tointeger(L, 2));
     std::string text = luaL_checklstring(L, 3, nullptr);
-    uint32_t fg_color = luaL_optnumber (L, 4, 0x00ffffff);
-    uint32_t bg_color = luaL_optnumber (L, 5, 0x00000000);
+    uint32_t color = luaL_optnumber (L, 4, 0xffffffff);
     
     sendMessage(MSGN_LUA_TEXT);
     sendData(&x, sizeof(int));
     sendData(&y, sizeof(int));
     sendString(text);
-    sendData(&fg_color, sizeof(uint32_t));
-    sendData(&bg_color, sizeof(uint32_t));
+    sendData(&color, sizeof(uint32_t));
     
     return 0;
 }
@@ -88,7 +86,7 @@ int Lua::Gui::pixel(lua_State *L)
 {
     int x = static_cast<int>(lua_tointeger(L, 1));
     int y = static_cast<int>(lua_tointeger(L, 2));
-    uint32_t color = luaL_optnumber (L, 3, 0x00ffffff);
+    uint32_t color = luaL_optnumber (L, 3, 0xffffffff);
     
     sendMessage(MSGN_LUA_PIXEL);
     sendData(&x, sizeof(int));
@@ -105,8 +103,8 @@ int Lua::Gui::rectangle(lua_State *L)
     int w = static_cast<int>(lua_tointeger(L, 3));
     int h = static_cast<int>(lua_tointeger(L, 4));
     int thickness = luaL_optnumber (L, 5, 1);
-    uint32_t outline_color = luaL_optnumber (L, 6, 0x00ffffff);
-    uint32_t fill_color = luaL_optnumber (L, 7, 0xffffffff);
+    uint32_t color = luaL_optnumber (L, 6, 0xffffffff);
+    int filled = luaL_optnumber (L, 7, 0);
     
     sendMessage(MSGN_LUA_RECT);
     sendData(&x, sizeof(int));
@@ -114,8 +112,8 @@ int Lua::Gui::rectangle(lua_State *L)
     sendData(&w, sizeof(int));
     sendData(&h, sizeof(int));
     sendData(&thickness, sizeof(int));
-    sendData(&outline_color, sizeof(uint32_t));
-    sendData(&fill_color, sizeof(uint32_t));
+    sendData(&color, sizeof(uint32_t));
+    sendData(&filled, sizeof(int));
     
     return 0;
 }
@@ -126,7 +124,7 @@ int Lua::Gui::line(lua_State *L)
     int y0 = static_cast<int>(lua_tointeger(L, 2));
     int x1 = static_cast<int>(lua_tointeger(L, 3));
     int y1 = static_cast<int>(lua_tointeger(L, 4));
-    uint32_t color = luaL_optnumber (L, 5, 0x00ffffff);
+    uint32_t color = luaL_optnumber (L, 5, 0xffffffff);
     
     sendMessage(MSGN_LUA_LINE);
     sendData(&x0, sizeof(int));
@@ -144,7 +142,7 @@ int Lua::Gui::ellipse(lua_State *L)
     int center_y = static_cast<int>(lua_tointeger(L, 2));
     int radius_x = static_cast<int>(lua_tointeger(L, 3));
     int radius_y = static_cast<int>(lua_tointeger(L, 4));
-    uint32_t color = luaL_optnumber (L, 5, 0x00ffffff);
+    uint32_t color = luaL_optnumber (L, 5, 0xffffffff);
     
     sendMessage(MSGN_LUA_ELLIPSE);
     sendData(&center_x, sizeof(int));

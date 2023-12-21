@@ -104,7 +104,6 @@ libtas_so_SOURCES = \
     renderhud/RenderHUD_XShm.cpp \
     renderhud/RenderHUD.cpp \
     renderhud/RenderHUD_Base_Linux.cpp \
-    renderhud/sdl_ttf.cpp \
     renderhud/SurfaceARGB.cpp \
     renderhud/SurfaceXImage.cpp \
 	rendering/eglwrappers.cpp \

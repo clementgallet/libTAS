@@ -21,13 +21,13 @@ Returns the width and height of game window.
 
 #### gui.text
 
-    none gui.text(Number x, Number y, String text, [Number color = 0x00ffffff], [Number outline_color = 0x00000000])
+    none gui.text(Number x, Number y, String text, [Number color = 0xffffffff])
     
-Draws text string `text` starting from `(x, y)`. The text will be colored using color `color` and the outline colored using `outline_color`. 
+Draws text string `text` starting from `(x, y)`. The text will be colored using color `color`.
 
 #### gui.pixel
 
-    none gui.pixel(Number x, Number y, [Number color = 0x00ffffff]) 
+    none gui.pixel(Number x, Number y, [Number color = 0xffffffff]) 
 
 Draws pixel at (x,y) using color `color`.
 
@@ -39,9 +39,9 @@ Draws an antialiased line starting from `(x0,y0)` to `(x1,y1)`, and colored with
 
 #### gui.rectangle
 
-    none gui.rectangle(Number x, Number y, Number w, Number h, [Number thickness = 1], [Number outline_color = 0x00ffffff], [Number fill_color = 0xffffffff])
+    none gui.rectangle(Number x, Number y, Number w, Number h, [Number thickness = 1], [Number color = 0xffffffff], [Number filled = 0])
 
-Draws rectangle of size `(w,h)` with top-left corner at `(x,y)`. Outline is of thickness `thickness` and is colored with color `outline_color`. The interior is filled with color `fill_color`.
+Draws rectangle of size `(w,h)` with top-left corner at `(x,y)`. Outline is of thickness `thickness` and is colored with color `color`. If `filled` is true, the rectangle is filled with the same color.
 
 #### gui.ellipse
 

@@ -81,97 +81,26 @@ void VideoPane::initLayout()
     screenLayout->addWidget(heightField, 2, 2);
 
     QGroupBox* osdBox = new QGroupBox(tr("On-screen display"));
-    QGridLayout* osdLayout = new QGridLayout;
+    QVBoxLayout* osdLayout = new QVBoxLayout;
     osdBox->setLayout(osdLayout);
 
-    /* Frame count */
     osdFrameBox = new QCheckBox(tr("Frame count"));
-
-    frameHorChoice = new QComboBox();
-    frameHorChoice->addItem("Left", SharedConfig::OSD_LEFT);
-    frameHorChoice->addItem("Center", SharedConfig::OSD_HCENTER);
-    frameHorChoice->addItem("Right", SharedConfig::OSD_RIGHT);
-
-    frameVertChoice = new QComboBox();
-    frameVertChoice->addItem("Top", SharedConfig::OSD_TOP);
-    frameVertChoice->addItem("Middle", SharedConfig::OSD_VCENTER);
-    frameVertChoice->addItem("Bottom", SharedConfig::OSD_BOTTOM);
-
-    /* Inputs */
     osdInputsBox = new QCheckBox(tr("Inputs"));
-
-    inputsHorChoice = new QComboBox();
-    inputsHorChoice->addItem("Left", SharedConfig::OSD_LEFT);
-    inputsHorChoice->addItem("Center", SharedConfig::OSD_HCENTER);
-    inputsHorChoice->addItem("Right", SharedConfig::OSD_RIGHT);
-
-    inputsVertChoice = new QComboBox();
-    inputsVertChoice->addItem("Top", SharedConfig::OSD_TOP);
-    inputsVertChoice->addItem("Middle", SharedConfig::OSD_VCENTER);
-    inputsVertChoice->addItem("Bottom", SharedConfig::OSD_BOTTOM);
-
-    /* Messages */
     osdMessagesBox = new QCheckBox(tr("Messages"));
-
-    messagesHorChoice = new QComboBox();
-    messagesHorChoice->addItem("Left", SharedConfig::OSD_LEFT);
-    messagesHorChoice->addItem("Center", SharedConfig::OSD_HCENTER);
-    messagesHorChoice->addItem("Right", SharedConfig::OSD_RIGHT);
-
-    messagesVertChoice = new QComboBox();
-    messagesVertChoice->addItem("Top", SharedConfig::OSD_TOP);
-    messagesVertChoice->addItem("Middle", SharedConfig::OSD_VCENTER);
-    messagesVertChoice->addItem("Bottom", SharedConfig::OSD_BOTTOM);
-
-    /* Watches */
     osdRamBox = new QCheckBox(tr("Ram Watches"));
-
-    watchesHorChoice = new QComboBox();
-    watchesHorChoice->addItem("Left", SharedConfig::OSD_LEFT);
-    watchesHorChoice->addItem("Center", SharedConfig::OSD_HCENTER);
-    watchesHorChoice->addItem("Right", SharedConfig::OSD_RIGHT);
-
-    watchesVertChoice = new QComboBox();
-    watchesVertChoice->addItem("Top", SharedConfig::OSD_TOP);
-    watchesVertChoice->addItem("Middle", SharedConfig::OSD_VCENTER);
-    watchesVertChoice->addItem("Bottom", SharedConfig::OSD_BOTTOM);
-
-    /* Markers */
     osdMarkersBox = new QCheckBox(tr("Markers"));
-
-    markersHorChoice = new QComboBox();
-    markersHorChoice->addItem("Left", SharedConfig::OSD_LEFT);
-    markersHorChoice->addItem("Center", SharedConfig::OSD_HCENTER);
-    markersHorChoice->addItem("Right", SharedConfig::OSD_RIGHT);
-
-    markersVertChoice = new QComboBox();
-    markersVertChoice->addItem("Top", SharedConfig::OSD_TOP);
-    markersVertChoice->addItem("Middle", SharedConfig::OSD_VCENTER);
-    markersVertChoice->addItem("Bottom", SharedConfig::OSD_BOTTOM);
-
     osdLuaBox = new QCheckBox(tr("Lua"));
     osdCrosshairBox = new QCheckBox(tr("Crosshair"));
-
     osdEncodeBox = new QCheckBox(tr("OSD on video encode"));
 
-    osdLayout->addWidget(osdFrameBox, 0, 0);
-    osdLayout->addWidget(frameHorChoice, 0, 1);
-    osdLayout->addWidget(frameVertChoice, 0, 2);
-    osdLayout->addWidget(osdInputsBox, 1, 0);
-    osdLayout->addWidget(inputsHorChoice, 1, 1);
-    osdLayout->addWidget(inputsVertChoice, 1, 2);
-    osdLayout->addWidget(osdMessagesBox, 2, 0);
-    osdLayout->addWidget(messagesHorChoice, 2, 1);
-    osdLayout->addWidget(messagesVertChoice, 2, 2);
-    osdLayout->addWidget(osdRamBox, 3, 0);
-    osdLayout->addWidget(watchesHorChoice, 3, 1);
-    osdLayout->addWidget(watchesVertChoice, 3, 2);
-    osdLayout->addWidget(osdMarkersBox, 4, 0);
-    osdLayout->addWidget(markersHorChoice, 4, 1);
-    osdLayout->addWidget(markersVertChoice, 4, 2);
-    osdLayout->addWidget(osdLuaBox, 5, 0);
-    osdLayout->addWidget(osdCrosshairBox, 6, 0);
-    osdLayout->addWidget(osdEncodeBox, 7, 0, 1, 3);
+    osdLayout->addWidget(osdFrameBox);
+    osdLayout->addWidget(osdInputsBox);
+    osdLayout->addWidget(osdMessagesBox);
+    osdLayout->addWidget(osdRamBox);
+    osdLayout->addWidget(osdMarkersBox);
+    osdLayout->addWidget(osdLuaBox);
+    osdLayout->addWidget(osdCrosshairBox);
+    osdLayout->addWidget(osdEncodeBox);
     
     renderingBox = new QGroupBox(tr("Rendering"));
     QVBoxLayout* renderingLayout = new QVBoxLayout;
@@ -216,20 +145,10 @@ void VideoPane::initSignals()
         saveConfig();
     });
     connect(osdFrameBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
-    connect(frameHorChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
-    connect(frameVertChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
     connect(osdInputsBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
-    connect(inputsHorChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
-    connect(inputsVertChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
     connect(osdMessagesBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
-    connect(messagesHorChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
-    connect(messagesVertChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
     connect(osdRamBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
-    connect(watchesHorChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
-    connect(watchesVertChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
     connect(osdMarkersBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
-    connect(markersHorChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
-    connect(markersVertChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
     connect(osdLuaBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
     connect(osdCrosshairBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
     connect(osdEncodeBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
@@ -292,50 +211,6 @@ void VideoPane::loadConfig()
     osdLuaBox->setChecked(context->config.sc.osd & SharedConfig::OSD_LUA);
     osdCrosshairBox->setChecked(context->config.sc.osd & SharedConfig::OSD_CROSSHAIR);
     osdEncodeBox->setChecked(context->config.sc.osd_encode);
-    
-    int index;
-    int hflags = SharedConfig::OSD_LEFT | SharedConfig::OSD_HCENTER | SharedConfig::OSD_RIGHT;
-    int vflags = SharedConfig::OSD_TOP | SharedConfig::OSD_VCENTER | SharedConfig::OSD_BOTTOM;
-
-    index = frameHorChoice->findData(context->config.sc.osd_frame_location & hflags);
-    if (index >= 0)
-        frameHorChoice->setCurrentIndex(index);
-
-    index = frameVertChoice->findData(context->config.sc.osd_frame_location & vflags);
-    if (index >= 0)
-        frameVertChoice->setCurrentIndex(index);
-
-    index = inputsHorChoice->findData(context->config.sc.osd_inputs_location & hflags);
-    if (index >= 0)
-        inputsHorChoice->setCurrentIndex(index);
-
-    index = inputsVertChoice->findData(context->config.sc.osd_inputs_location & vflags);
-    if (index >= 0)
-        inputsVertChoice->setCurrentIndex(index);
-
-    index = messagesHorChoice->findData(context->config.sc.osd_messages_location & hflags);
-    if (index >= 0)
-        messagesHorChoice->setCurrentIndex(index);
-
-    index = messagesVertChoice->findData(context->config.sc.osd_messages_location & vflags);
-    if (index >= 0)
-        messagesVertChoice->setCurrentIndex(index);
-
-    index = watchesHorChoice->findData(context->config.sc.osd_ramwatches_location & hflags);
-    if (index >= 0)
-        watchesHorChoice->setCurrentIndex(index);
-
-    index = watchesVertChoice->findData(context->config.sc.osd_ramwatches_location & vflags);
-    if (index >= 0)
-        watchesVertChoice->setCurrentIndex(index);
-
-    index = markersHorChoice->findData(context->config.sc.osd_markers_location & hflags);
-    if (index >= 0)
-        markersHorChoice->setCurrentIndex(index);
-
-    index = markersVertChoice->findData(context->config.sc.osd_markers_location & vflags);
-    if (index >= 0)
-        markersVertChoice->setCurrentIndex(index);
 
     rendSoftBox->setChecked(context->config.sc.opengl_soft);
     rendPerfBox->setChecked(context->config.sc.opengl_performance);
@@ -374,12 +249,6 @@ void VideoPane::saveConfig()
         context->config.sc.osd |= SharedConfig::OSD_CROSSHAIR;
         
     context->config.sc.osd_encode = osdEncodeBox->isChecked();
-
-    context->config.sc.osd_frame_location = frameHorChoice->currentData().toInt() | frameVertChoice->currentData().toInt();
-    context->config.sc.osd_inputs_location = inputsHorChoice->currentData().toInt() | inputsVertChoice->currentData().toInt();
-    context->config.sc.osd_messages_location = messagesHorChoice->currentData().toInt() | messagesVertChoice->currentData().toInt();
-    context->config.sc.osd_ramwatches_location = watchesHorChoice->currentData().toInt() | watchesVertChoice->currentData().toInt();
-    context->config.sc.osd_markers_location = markersHorChoice->currentData().toInt() | markersVertChoice->currentData().toInt();
 
     context->config.sc.opengl_soft = rendSoftBox->isChecked();
     context->config.sc.opengl_performance = rendPerfBox->isChecked();

@@ -379,10 +379,9 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
             receiveData(&x, sizeof(int));
             receiveData(&y, sizeof(int));
             std::string text = receiveString();
-            uint32_t fg, bg;
-            receiveData(&fg, sizeof(uint32_t));
-            receiveData(&bg, sizeof(uint32_t));
-            RenderHUD::insertLuaText(x, y, text, fg, bg);
+            uint32_t color;
+            receiveData(&color, sizeof(uint32_t));
+            RenderHUD::insertLuaText(x, y, text, color);
             break;
         }
         case MSGN_LUA_PIXEL:
@@ -397,16 +396,16 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         }
         case MSGN_LUA_RECT:
         {
-            int x, y, w, h, thickness;
+            int x, y, w, h, thickness, filled;
             receiveData(&x, sizeof(int));
             receiveData(&y, sizeof(int));
             receiveData(&w, sizeof(int));
             receiveData(&h, sizeof(int));
             receiveData(&thickness, sizeof(int));
-            uint32_t outline, fill;
-            receiveData(&outline, sizeof(uint32_t));
-            receiveData(&fill, sizeof(uint32_t));
-            RenderHUD::insertLuaRect(x, y, w, h, thickness, outline, fill);
+            uint32_t color;
+            receiveData(&color, sizeof(uint32_t));
+            receiveData(&filled, sizeof(int));
+            RenderHUD::insertLuaRect(x, y, w, h, thickness, color, filled);
             break;
         }
         case MSGN_LUA_LINE:

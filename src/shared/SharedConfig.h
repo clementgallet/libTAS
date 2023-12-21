@@ -90,22 +90,6 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Elements to be displayed on the OSD */
     int osd = OSD_FRAMECOUNT | OSD_INPUTS | OSD_MESSAGES | OSD_RAMWATCHES | OSD_LUA | OSD_CROSSHAIR | OSD_MARKERS;
 
-    /* OSD text location */
-    enum OSDLocation {
-        OSD_LEFT = 0x01,
-        OSD_HCENTER = 0x02,
-        OSD_RIGHT = 0x04,
-        OSD_TOP = 0x10,
-        OSD_VCENTER = 0x20,
-        OSD_BOTTOM = 0x40,
-    };
-
-    int osd_frame_location = OSD_LEFT | OSD_TOP;
-    int osd_inputs_location = OSD_LEFT | OSD_BOTTOM;
-    int osd_messages_location = OSD_RIGHT | OSD_BOTTOM;
-    int osd_ramwatches_location = OSD_RIGHT | OSD_TOP;
-    int osd_markers_location = OSD_LEFT | OSD_VCENTER;
-
     /** Sound config **/
     /* Bit depth of the buffer (usually 8 or 16) */
     int audio_bitdepth = 16;

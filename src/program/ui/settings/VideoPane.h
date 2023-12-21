@@ -65,17 +65,6 @@ private:
     QCheckBox* osdCrosshairBox;
     QCheckBox* osdEncodeBox;
 
-    QComboBox *frameHorChoice;
-    QComboBox *frameVertChoice;
-    QComboBox *inputsHorChoice;
-    QComboBox *inputsVertChoice;
-    QComboBox *messagesHorChoice;
-    QComboBox *messagesVertChoice;
-    QComboBox *watchesHorChoice;
-    QComboBox *watchesVertChoice;
-    QComboBox *markersHorChoice;
-    QComboBox *markersVertChoice;
-
     ToolTipCheckBox* rendSoftBox;
     ToolTipCheckBox* rendPerfBox;
 

@@ -38,88 +38,30 @@ std::string RenderHUD::marker;
 
 void RenderHUD::LuaText::render(RenderHUD *hud)
 {
-    hud->renderText(text.c_str(), fg_color, bg_color, x, y);
+    ImGui::GetBackgroundDrawList()->AddText(ImVec2(x, y), IM_COL32(color.r, color.g, color.b, color.a), text.c_str());
 }
 
 void RenderHUD::LuaPixel::render(RenderHUD *hud)
 {
-    hud->renderPixel(x, y, color);
+    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(x, y), ImVec2(x, y), IM_COL32(color.r, color.g, color.b, color.a));
 }
 
 void RenderHUD::LuaRect::render(RenderHUD *hud)
 {
-    hud->renderRect(x, y, w, h, thickness, outline, fill);
+    if (filled)
+        ImGui::GetBackgroundDrawList()->AddRectFilled(ImVec2(x, y), ImVec2(x+w, y+h), IM_COL32(color.r, color.g, color.b, color.a));
+    else
+        ImGui::GetBackgroundDrawList()->AddRect(ImVec2(x, y), ImVec2(x+w, y+h), IM_COL32(color.r, color.g, color.b, color.a), 0.0f, 0, thickness);
 }
 
 void RenderHUD::LuaLine::render(RenderHUD *hud)
 {
-    hud->renderLine(x0, y0, x1, y1, color);
+    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(x0, y0), ImVec2(x1, y1), IM_COL32(color.r, color.g, color.b, color.a));
 }
 
 void RenderHUD::LuaEllipse::render(RenderHUD *hud)
 {
-    hud->renderEllipse(center_x, center_y, radius_x, radius_y, color);
-}
-
-void RenderHUD::renderPixel(int x, int y, Color color)
-{
-    std::unique_ptr<SurfaceARGB> surf(new SurfaceARGB(1, 1));
-    surf->fill(color);
-    renderSurface(std::move(surf), x, y);        
-}
-
-void RenderHUD::renderRect(int x, int y, int w, int h, int t, Color outline_color, Color fill_color)
-{
-    std::unique_ptr<SurfaceARGB> surf(new SurfaceARGB(w, h));
-    surf->fill(fill_color);
-    surf->fillBorder(outline_color, t);
-    renderSurface(std::move(surf), x, y);
-}
-
-void RenderHUD::renderLine(int x0, int y0, int x1, int y1, Color color)
-{
-    std::unique_ptr<SurfaceARGB> surf(new SurfaceARGB(std::abs(x1-x0)+1, std::abs(y1-y0)+1));
-    surf->drawLine(color, ((x1-x0)*(y1-y0)) > 0);
-    renderSurface(std::move(surf), std::min(x0, x1), std::min(y0, y1));
-}
-
-void RenderHUD::renderEllipse(int center_x, int center_y, int radius_x, int radius_y, Color color)
-{
-    std::unique_ptr<SurfaceARGB> surf(new SurfaceARGB(2*radius_x+1, 2*radius_y+1));
-    surf->drawEllipse(color);
-    renderSurface(std::move(surf), center_x-radius_x, center_y-radius_y);
-}
-
-void RenderHUD::locationToCoords(int location, int& x, int& y)
-{
-    int width, height;
-    ScreenCapture::getDimensions(width, height);
-
-    if (location & SharedConfig::OSD_LEFT)         x = 5;
-    else if (location & SharedConfig::OSD_HCENTER) x = width / 2;
-    else                                           x = width - 30;
-
-    if (location & SharedConfig::OSD_TOP)          y = 5;
-    else if (location & SharedConfig::OSD_VCENTER) y = height / 2;
-    else                                           y = height - 30;
-
-    /* Add an offset if other text was displayed here */
-    int offset_index = 0;
-    if (location & SharedConfig::OSD_HCENTER)     offset_index += 1;
-    else if (location & SharedConfig::OSD_RIGHT)  offset_index += 2;
-    if (location & SharedConfig::OSD_VCENTER)     offset_index += 3;
-    else if (location & SharedConfig::OSD_BOTTOM) offset_index += 6;
-
-    y += offsets[offset_index];
-    if (location & SharedConfig::OSD_BOTTOM)
-        offsets[offset_index] -= 25;
-    else
-        offsets[offset_index] += 25;
-}
-
-void RenderHUD::resetOffsets()
-{
-    memset(offsets, 0, 9 * sizeof(int));
+    ImGui::GetBackgroundDrawList()->AddEllipse(ImVec2(center_x, center_y), radius_x, radius_y, IM_COL32(color.r, color.g, color.b, color.a));
 }
 
 void RenderHUD::drawFrame(uint64_t framecount, uint64_t nondraw_framecount)
@@ -328,26 +270,20 @@ void RenderHUD::setMarkerText(std::string text)
 void RenderHUD::drawCrosshair(const AllInputs& ai)
 {
     int size = 5;
-    renderRect(ai.pointer_x-1, ai.pointer_y-size-1, 3, 2*size+3, 0, {0, 0, 0, 255}, {0, 0, 0, 255});
-    renderRect(ai.pointer_x-size-1, ai.pointer_y-1, 2*size+3, 3, 0, {0, 0, 0, 255}, {0, 0, 0, 255});
-    renderLine(ai.pointer_x, ai.pointer_y-size, ai.pointer_x, ai.pointer_y+size, {255, 255, 255, 255});
-    renderLine(ai.pointer_x-size, ai.pointer_y, ai.pointer_x+size, ai.pointer_y, {255, 255, 255, 255});    
+    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(ai.pointer_x, ai.pointer_y-size), ImVec2(ai.pointer_x, ai.pointer_y+size), IM_COL32(255, 255, 255, 255));
+    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(ai.pointer_x-size, ai.pointer_y), ImVec2(ai.pointer_x+size, ai.pointer_y+size), IM_COL32(255, 255, 255, 255));
 }
 
-void RenderHUD::insertLuaText(int x, int y, std::string text, uint32_t fg_color, uint32_t bg_color)
+void RenderHUD::insertLuaText(int x, int y, std::string text, uint32_t color)
 {
     auto lt = new LuaText();
     lt->x = x;
     lt->y = y;
     lt->text = text;
-    lt->fg_color = {static_cast<uint8_t>((fg_color >> 16) & 0xff),
-                    static_cast<uint8_t>((fg_color >> 8) & 0xff),
-                    static_cast<uint8_t>(fg_color & 0xff),
-                    static_cast<uint8_t>((fg_color >> 24) & 0xff)};
-    lt->bg_color = {static_cast<uint8_t>((bg_color >> 16) & 0xff),
-                    static_cast<uint8_t>((bg_color >> 8) & 0xff),
-                    static_cast<uint8_t>(bg_color & 0xff),
-                    static_cast<uint8_t>((bg_color >> 24) & 0xff)};
+    lt->color = {static_cast<uint8_t>((color >> 16) & 0xff),
+                 static_cast<uint8_t>((color >> 8) & 0xff),
+                 static_cast<uint8_t>(color & 0xff),
+                 static_cast<uint8_t>((color >> 24) & 0xff)};
     lua_shapes.emplace_back(lt);
 }
 
@@ -363,7 +299,7 @@ void RenderHUD::insertLuaPixel(int x, int y, uint32_t color)
     lua_shapes.emplace_back(lp);
 }
 
-void RenderHUD::insertLuaRect(int x, int y, int w, int h, int thickness, uint32_t outline, uint32_t fill)
+void RenderHUD::insertLuaRect(int x, int y, int w, int h, int thickness, uint32_t color, int filled)
 {
     auto lr = new LuaRect();
     lr->x = x;
@@ -371,14 +307,11 @@ void RenderHUD::insertLuaRect(int x, int y, int w, int h, int thickness, uint32_
     lr->w = w;
     lr->h = h;
     lr->thickness = thickness;
-    lr->outline = {static_cast<uint8_t>((outline >> 16) & 0xff),
-                   static_cast<uint8_t>((outline >> 8) & 0xff),
-                   static_cast<uint8_t>(outline & 0xff),
-                   static_cast<uint8_t>((outline >> 24) & 0xff)};
-    lr->fill = {static_cast<uint8_t>((fill >> 16) & 0xff),
-                static_cast<uint8_t>((fill >> 8) & 0xff),
-                static_cast<uint8_t>(fill & 0xff),
-                static_cast<uint8_t>((fill >> 24) & 0xff)};
+    lr->color = {static_cast<uint8_t>((color >> 16) & 0xff),
+                   static_cast<uint8_t>((color >> 8) & 0xff),
+                   static_cast<uint8_t>(color & 0xff),
+                   static_cast<uint8_t>((color >> 24) & 0xff)};
+    lr->filled = filled;
     lua_shapes.emplace_back(lr);
 }
 

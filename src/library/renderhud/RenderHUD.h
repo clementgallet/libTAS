@@ -51,14 +51,6 @@ namespace libtas {
 class RenderHUD
 {
     public:
-        /* Main function to render something on the screen.
-         * This function does nothing in this class and must be overridden.
-         * @param surface   Surface to render
-         * @param x         x position of the text (top-left corner)
-         * @param y         y position of the text (top-left corner)
-         */
-        virtual void renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y) {}
-
         virtual void newFrame() {}
 
         virtual void render() {}
@@ -79,13 +71,13 @@ class RenderHUD
         static void resetWatches();
 
         /* Insert a lua text to be displayed */
-        static void insertLuaText(int x, int y, std::string text, uint32_t fg, uint32_t bg);
+        static void insertLuaText(int x, int y, std::string text, uint32_t color);
 
         /* Insert a lua pixel to be displayed */
         static void insertLuaPixel(int x, int y, uint32_t color);
 
         /* Insert a lua rect to be displayed */
-        static void insertLuaRect(int x, int y, int w, int h, int thickness, uint32_t outline, uint32_t fill);
+        static void insertLuaRect(int x, int y, int w, int h, int thickness, uint32_t color, int filled);
 
         /* Insert a lua line to be displayed */
         static void insertLuaLine(int x0, int y0, int x1, int y1, uint32_t color);
@@ -97,55 +89,6 @@ class RenderHUD
         static void resetLua();
 
     private:
-        /* Convert a location into screen coordinates, with an offset if text
-         * was already displayed at that position.
-         */
-        void locationToCoords(int location, int& x, int& y);
-
-        /* Reset offsets to 0 */
-        void resetOffsets();
-
-        /* Render text of specified color and outline
-         * @param text      Text to display
-         * @param fg_color  Color of the text
-         * @param bg_color  Color of the outline of the text
-         * @param x         x position of the text (top-left corner)
-         * @param y         y position of the text (top-left corner)
-         */
-        virtual void renderText(const char* text, Color fg_color, Color bg_color, int x, int y) {}
-
-        /* Render a single pixel
-         * @param x      x position of the pixel
-         * @param y      y position of the pixel
-         * @param color  Color of the pixel
-         */
-        void renderPixel(int x, int y, Color bg_color);
-
-        /* Render a rectangle
-         * @param x      x position of the pixel
-         * @param y      y position of the pixel
-         * @param color  Color of the pixel
-         */
-        void renderRect(int x, int y, int w, int h, int t, Color outline_color, Color fill_color);
-
-        /* Render a line
-         * @param x0     x position of the line beginning
-         * @param y0     y position of the line beginning
-         * @param x1     x position of the line end
-         * @param y1     y position of the line end
-         * @param color  Color of the line
-         */
-        void renderLine(int x0, int y0, int x1, int y1, Color color);
-
-        /* Render an ellipse
-         * @param center_x     x position of the center of the ellipse
-         * @param center_y     y position of the center of the ellipse
-         * @param radius_x     radius along x axis
-         * @param radius_y     radius along y axis
-         * @param color        Color of the ellipse
-         */
-        void renderEllipse(int center_x, int center_y, int radius_x, int radius_y, Color color);
-
         /*** Draw specific information on screen ***/
 
         /* Display the frame count on screen */
@@ -172,9 +115,6 @@ class RenderHUD
         /* Display crosshair on current pointer position */
         void drawCrosshair(const AllInputs& ai);
 
-        /* Location offsets when displaying multiple texts on the same location */
-        int offsets[9];
-
         /* Messages to print on screen with the creation time */
         static std::list<std::pair<std::string, TimeHolder>> messages;
 
@@ -192,8 +132,7 @@ class RenderHUD
         struct LuaText : public LuaShape
         {
             std::string text;
-            Color fg_color;
-            Color bg_color;
+            Color color;
             int x;
             int y;
             void render(RenderHUD *hud) override;
@@ -214,8 +153,8 @@ class RenderHUD
             int w;
             int h;
             int thickness;
-            Color outline;
-            Color fill;
+            Color color;
+            int filled;
             void render(RenderHUD *hud) override;
         };
 

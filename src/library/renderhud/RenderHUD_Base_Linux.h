@@ -22,8 +22,6 @@
 #ifndef LIBTAS_RENDERHUD_BASE_LINUX_H_INCL
 #define LIBTAS_RENDERHUD_BASE_LINUX_H_INCL
 
-#include "sdl_ttf.h"
-
 #include <stdint.h>
 
 namespace libtas {
@@ -37,24 +35,6 @@ class RenderHUD_Base_Linux : public RenderHUD
     public:
         virtual ~RenderHUD_Base_Linux();
 
-        /* Initialize the font located at the given path */
-        static void initFonts();
-
-    private:
-        /* Render text of specified color and outline
-         * @param text      Text to display
-         * @param fg_color  Color of the text
-         * @param bg_color  Color of the outline of the text
-         * @param x         x position of the text (top-left corner)
-         * @param y         y position of the text (top-left corner)
-         */
-        void renderText(const char* text, Color fg_color, Color bg_color, int x, int y);
-
-        static int outline_size;
-        static int font_size;
-
-        static TTF_Font* fg_font;
-        static TTF_Font* bg_font;
 };
 }
 
