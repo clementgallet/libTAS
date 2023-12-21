@@ -53,6 +53,7 @@
 #include "../shared/sockethelpers.h"
 #include "../shared/inputs/AllInputs.h"
 #include "../shared/messages.h"
+#include "../external/imgui/imgui.h"
 
 #include <iomanip>
 #include <stdint.h>
@@ -451,7 +452,8 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     if (!Global::skipping_draw && draw && Global::shared_config.osd_encode) {
         AllInputs preview_ai;
         preview_ai.buildAndClear();
-        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
+//        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
+        hud.render();
     }
 
     if (!Global::skipping_draw) {
@@ -486,7 +488,8 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     if (!Global::skipping_draw && draw && !Global::shared_config.osd_encode) {
         AllInputs preview_ai;
         preview_ai.buildAndClear();
-        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
+        //hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
+        hud.render();
     }
 
     /* Actual draw command */
@@ -588,6 +591,9 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 
     detTimer.exitFrameBoundary();
 
+    if (!Global::skipping_draw)
+        hud.newFrame();
+
     perfTimer.switchTimer(PerfTimer::GameTimer);
     
     // if ((framecount % 10000) == 9999)
@@ -634,9 +640,12 @@ static void pushQuitEvent(void)
 static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllInputs& preview_ai)
 {
     if (!Global::skipping_draw && draw) {
+        hud.newFrame();
         ScreenCapture::copySurfaceToScreen();
 
-        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
+        hud.render();
+
+//        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
 
         GlobalNoLog gnl;
         NATIVECALL(draw());
@@ -863,6 +872,36 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 std::string text = receiveString();
                 RenderHUD::setMarkerText(text);
                 screen_redraw(draw, hud, preview_ai);
+                break;
+            }
+
+            case MSGN_MOTION_NOTIFY:
+            {
+                int16_t mouse_x, mouse_y;
+                receiveData(&mouse_x, sizeof(int16_t));
+                receiveData(&mouse_y, sizeof(int16_t));
+
+                if (ImGui::GetCurrentContext()) {
+                    ImGuiIO& io = ImGui::GetIO();
+                    ImVec2 mouse_pos((float)mouse_x, (float)mouse_y);
+                    io.AddMouseSourceEvent(ImGuiMouseSource_Mouse);
+                    io.AddMousePosEvent(mouse_pos.x, mouse_pos.y);
+                    screen_redraw(draw, hud, preview_ai);
+                }
+                break;
+            }
+            
+            case MSGN_BUTTON:
+            {
+                uint8_t mouse_button, mouse_state;
+                receiveData(&mouse_button, sizeof(uint8_t));
+                receiveData(&mouse_state, sizeof(uint8_t));
+                if (ImGui::GetCurrentContext()) {
+                    ImGuiIO& io = ImGui::GetIO();
+                    io.AddMouseSourceEvent(ImGuiMouseSource_Mouse);
+                    io.AddMouseButtonEvent(mouse_button, mouse_state);
+                    screen_redraw(draw, hud, preview_ai);
+                }
                 break;
             }
 

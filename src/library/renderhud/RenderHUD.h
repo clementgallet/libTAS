@@ -59,6 +59,10 @@ class RenderHUD
          */
         virtual void renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y) {}
 
+        virtual void newFrame() {}
+
+        virtual void render() {}
+
         /* Display everything based on setting */
         void drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai);
 

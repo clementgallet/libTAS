@@ -55,6 +55,11 @@ class RenderHUD_GL : public RenderHUD_Base_MacOS
         void setGLES(bool stateGLES) {isGLES = stateGLES;}
 
         void renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y);
+        
+        void newFrame();
+
+        void render();
+
     private:
         static GLuint texture;
         static GLuint vao;

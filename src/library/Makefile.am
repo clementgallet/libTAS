@@ -184,7 +184,13 @@ libtas_so_SOURCES = \
     ../shared/inputs/SingleInput.cpp \
     ../shared/sockethelpers.cpp \
     ../external/lz4.cpp \
-    ../external/elfhacks.cpp	
+    ../external/elfhacks.cpp \
+    ../external/imgui/imgui_draw.cpp \
+    ../external/imgui/imgui_demo.cpp \
+    ../external/imgui/imgui_tables.cpp \
+    ../external/imgui/imgui_widgets.cpp \
+    ../external/imgui/imgui.cpp \
+    ../external/imgui/imgui_impl_opengl3.cpp
 
 libtas_so_CXXFLAGS = $(LIBSWRESAMPLE_CFLAGS) -fPIC -shared -fvisibility=hidden -fno-stack-protector
 libtas_so_CXXFLAGS += -DLIBTAS_LIBRARY

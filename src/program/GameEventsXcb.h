@@ -50,7 +50,7 @@ private:
     std::unique_ptr<xcb_key_symbols_t, void(*)(xcb_key_symbols_t*)> keysyms;
 
     xcb_keycode_t last_pressed_key;
-    xcb_generic_event_t *next_event;
+    std::unique_ptr<xcb_generic_event_t> next_event;
 
     /* parent window of game window */
     xcb_window_t parent_game_window = 0;

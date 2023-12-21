@@ -335,6 +335,17 @@ enum {
      */
     MSGN_SCREENSHOT,
 
+    /*
+     * Send a mouse motion event, 
+     * Argument: int16_t x, int16_t y
+     */
+    MSGN_MOTION_NOTIFY,
+
+    /*
+     * Send a mouse button event, 
+     * Argument: int8_t button, int8_t state
+     */
+    MSGN_BUTTON,
 };
 
 #endif
