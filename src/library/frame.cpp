@@ -452,7 +452,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     if (!Global::skipping_draw && draw && Global::shared_config.osd_encode) {
         AllInputs preview_ai;
         preview_ai.buildAndClear();
-//        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
+        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
         hud.render();
     }
 
@@ -488,7 +488,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     if (!Global::skipping_draw && draw && !Global::shared_config.osd_encode) {
         AllInputs preview_ai;
         preview_ai.buildAndClear();
-        //hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
+        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
         hud.render();
     }
 
@@ -643,9 +643,8 @@ static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllI
         hud.newFrame();
         ScreenCapture::copySurfaceToScreen();
 
+        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
         hud.render();
-
-//        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
 
         GlobalNoLog gnl;
         NATIVECALL(draw());

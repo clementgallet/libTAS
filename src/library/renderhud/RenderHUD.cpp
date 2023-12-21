@@ -25,6 +25,7 @@
 #include "ScreenCapture.h"
 #include "GlobalState.h"
 #include "../external/keysymdesc.h"
+#include "../external/imgui/imgui.h"
 
 #include <sstream>
 
@@ -121,10 +122,8 @@ void RenderHUD::resetOffsets()
     memset(offsets, 0, 9 * sizeof(int));
 }
 
-void RenderHUD::drawFrame(uint64_t framecount)
-{
-    Color fg_color = {255, 255, 255, 255};
-    Color bg_color = {0, 0, 0, 255};
+void RenderHUD::drawFrame(uint64_t framecount, uint64_t nondraw_framecount)
+{    
     std::string framestr = std::to_string(framecount);
     switch (Global::shared_config.recording) {
     case SharedConfig::RECORDING_READ:
@@ -138,23 +137,45 @@ void RenderHUD::drawFrame(uint64_t framecount)
         break;
     }
 
-    int x, y;
-    locationToCoords(Global::shared_config.osd_frame_location, x, y);
-    renderText(framestr.c_str(), fg_color, bg_color, x, y);
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->WorkPos, ImGuiCond_Once, ImVec2(0.0f, 0.0f));
+    if (ImGui::Begin("Framecount", nullptr, window_flags))
+    {
+        ImGui::Text(framestr.c_str());
+        if (nondraw_framecount > 0) {
+            std::string nondraw_framestr = std::to_string(nondraw_framecount);
+            ImGui::TextColored(ImVec4(0.6f, 0.0f, 0.0f, 1.0f), nondraw_framestr.c_str());
+        }
+        if (!marker.empty())
+            ImGui::Text(marker.c_str());
+    }
+    ImGui::End();
 }
 
-void RenderHUD::drawNonDrawFrame(uint64_t nondraw_framecount)
+void RenderHUD::drawInputs(const AllInputs& ai, const AllInputs& preview_ai)
 {
-    Color red_color = {255, 0, 0, 255};
-    Color bg_color = {0, 0, 0, 255};
-    std::string nondraw_framestr = std::to_string(nondraw_framecount);
-
-    int x, y;
-    locationToCoords(Global::shared_config.osd_frame_location, x, y);
-    renderText(nondraw_framestr.c_str(), red_color, bg_color, x, y);
+    std::string inputs_str = formatInputs(ai);
+    std::string preview_inputs_str = formatInputs(preview_ai);
+    
+    if (!inputs_str.empty() || !preview_inputs_str.empty()) {
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+        
+        const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y + main_viewport->WorkSize.y), ImGuiCond_Always, ImVec2(0.0f, 1.0f));
+        if (ImGui::Begin("Inputs", nullptr, window_flags))
+        {
+            if (!preview_inputs_str.empty()) {
+                ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), preview_inputs_str.c_str());
+            }
+            if (!inputs_str.empty()) {
+                ImGui::Text(inputs_str.c_str());
+            }
+        }
+        ImGui::End();
+    }
 }
 
-void RenderHUD::drawInputs(const AllInputs& ai, Color fg_color)
+std::string RenderHUD::formatInputs(const AllInputs& ai)
 {
     std::ostringstream oss;
 
@@ -221,14 +242,7 @@ void RenderHUD::drawInputs(const AllInputs& ai, Color fg_color)
         }
     }
 
-    /* Render */
-    Color bg_color = {0, 0, 0, 255};
-    std::string text = oss.str();
-    if (!text.empty()) {
-        int x, y;
-        locationToCoords(Global::shared_config.osd_inputs_location, x, y);
-        renderText(text.c_str(), fg_color, bg_color, x, y);
-    }
+    return oss.str();
 }
 
 void RenderHUD::insertMessage(const char* message)
@@ -242,9 +256,8 @@ void RenderHUD::insertMessage(const char* message)
 
 void RenderHUD::drawMessages()
 {
-    Color fg_color = {255, 255, 255, 255};
-    Color bg_color = {0, 0, 0, 255};
-
+    if (messages.empty()) return;
+    
     TimeHolder message_timeout;
     message_timeout = {2, 0};
 
@@ -252,20 +265,25 @@ void RenderHUD::drawMessages()
     TimeHolder current_time;
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &current_time));
 
-    auto iter = messages.begin();
-    while (iter != messages.end()) {
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+    
+    const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + main_viewport->WorkSize.x, main_viewport->WorkPos.y + main_viewport->WorkSize.y), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
 
-        /* Check if we must remove the message */
-        if ((current_time - iter->second) > message_timeout) {
-            iter = messages.erase(iter);
-        }
-        else {
-            int x, y;
-            locationToCoords(Global::shared_config.osd_messages_location, x, y);
-            renderText(iter->first.c_str(), fg_color, bg_color, x, y);
-            iter++;
+    if (ImGui::Begin("Messages", nullptr, window_flags)) {
+        auto iter = messages.begin();
+        while (iter != messages.end()) {
+            /* Check if we must remove the message */
+            if ((current_time - iter->second) > message_timeout) {
+                iter = messages.erase(iter);
+            }
+            else {
+                ImGui::Text(iter->first.c_str());
+                iter++;
+            }
         }
     }
+    ImGui::End();
 }
 
 void RenderHUD::insertWatch(std::string watch)
@@ -280,14 +298,19 @@ void RenderHUD::resetWatches()
 
 void RenderHUD::drawWatches()
 {
-    Color fg_color = {255, 255, 255, 255};
-    Color bg_color = {0, 0, 0, 255};
+    if (watches.empty()) return;
+    
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
+    
+    const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + main_viewport->WorkSize.x, main_viewport->WorkPos.y), ImGuiCond_Once, ImVec2(1.0f, 0.0f));
 
-    for (auto iter = watches.begin(); iter != watches.end(); iter++) {
-        int x, y;
-        locationToCoords(Global::shared_config.osd_ramwatches_location, x, y);
-        renderText(iter->c_str(), fg_color, bg_color, x, y);
+    if (ImGui::Begin("RAM Watches", nullptr, window_flags)) {
+        for (auto iter = watches.begin(); iter != watches.end(); iter++) {
+            ImGui::Text(iter->c_str());
+        }
     }
+    ImGui::End();
 }
 
 void RenderHUD::drawLua()
@@ -300,19 +323,6 @@ void RenderHUD::drawLua()
 void RenderHUD::setMarkerText(std::string text)
 {
     marker = text;
-}
-
-void RenderHUD::drawMarkers()
-{
-    if (marker.empty())
-        return;
-    
-    Color fg_color = {255, 255, 255, 255};
-    Color bg_color = {0, 0, 0, 255};
-
-    int x, y;
-    locationToCoords(Global::shared_config.osd_markers_location, x, y);
-    renderText(marker.c_str(), fg_color, bg_color, x, y);
 }
 
 void RenderHUD::drawCrosshair(const AllInputs& ai)
@@ -407,24 +417,21 @@ void RenderHUD::resetLua()
 
 void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai)
 {
-    resetOffsets();
-    if (Global::shared_config.osd & SharedConfig::OSD_FRAMECOUNT) {
-        drawFrame(framecount);
-        // hud.drawNonDrawFrame(nondraw_framecount);
+    if (!ImGui::GetCurrentContext()) {
+        return;
     }
-    if (Global::shared_config.osd & SharedConfig::OSD_INPUTS) {
-        drawInputs(ai, {255, 255, 255, 255});
-        drawInputs(preview_ai, {160, 160, 160, 255});
-    }
+
+    if (Global::shared_config.osd & SharedConfig::OSD_FRAMECOUNT)
+        drawFrame(framecount, nondraw_framecount);
+        
+    if (Global::shared_config.osd & SharedConfig::OSD_INPUTS)
+        drawInputs(ai, preview_ai);
 
     if (Global::shared_config.osd & SharedConfig::OSD_MESSAGES)
         drawMessages();
 
     if (Global::shared_config.osd & SharedConfig::OSD_RAMWATCHES)
         drawWatches();
-
-    if (Global::shared_config.osd & SharedConfig::OSD_MARKERS)
-        drawMarkers();
 
     if (Global::shared_config.osd & SharedConfig::OSD_LUA)
         drawLua();

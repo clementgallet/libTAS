@@ -149,14 +149,13 @@ class RenderHUD
         /*** Draw specific information on screen ***/
 
         /* Display the frame count on screen */
-        void drawFrame(uint64_t framecount);
+        void drawFrame(uint64_t framecount, uint64_t nondraw_framecount);
 
-        /* Display nondraw frame count on screen */
-        void drawNonDrawFrame(uint64_t nondraw_framecount);
+        /* Display inputs and preview inputs on screen */
+        void drawInputs(const AllInputs& ai, const AllInputs& preview_ai);
 
-        /* Generic function to display inputs on screen, using fg_color as the
-         * text color */
-        void drawInputs(const AllInputs& ai, Color fg_color);
+        /* Generic function to format inputs */
+        std::string formatInputs(const AllInputs& ai);
 
         /* Display messages */
         void drawMessages();
