@@ -602,12 +602,16 @@ void GameLoop::sleepSendPreview()
      * on the HUD */
 
     /* Don't preview when reading inputs */
-    if (context->config.sc.recording == SharedConfig::RECORDING_READ)
+    if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
+        sendMessage(MSGN_EXPOSE);
         return;
+    }
 
     /* Only preview if we actually print inputs */
-    if (!(context->config.sc.osd & SharedConfig::OSD_INPUTS))
+    if (!(context->config.sc.osd & SharedConfig::OSD_INPUTS)) {
+        sendMessage(MSGN_EXPOSE);
         return;
+    }
 
     static AllInputs preview_ai, last_preview_ai;
     if (gameEvents->haveFocus()) {
@@ -626,6 +630,9 @@ void GameLoop::sleepSendPreview()
     if (!(preview_ai == last_preview_ai)) {
         preview_ai.send(true);
         last_preview_ai = preview_ai;
+    }
+    else {
+        sendMessage(MSGN_EXPOSE);
     }
 }
 

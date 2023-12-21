@@ -886,7 +886,6 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                     ImVec2 mouse_pos((float)mouse_x, (float)mouse_y);
                     io.AddMouseSourceEvent(ImGuiMouseSource_Mouse);
                     io.AddMousePosEvent(mouse_pos.x, mouse_pos.y);
-                    screen_redraw(draw, hud, preview_ai);
                 }
                 break;
             }
@@ -900,7 +899,18 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                     ImGuiIO& io = ImGui::GetIO();
                     io.AddMouseSourceEvent(ImGuiMouseSource_Mouse);
                     io.AddMouseButtonEvent(mouse_button, mouse_state);
-                    screen_redraw(draw, hud, preview_ai);
+                }
+                break;
+            }
+
+            case MSGN_WHEEL:
+            {
+                int8_t mouse_orientation;
+                receiveData(&mouse_orientation, sizeof(int8_t));
+                if (ImGui::GetCurrentContext()) {
+                    ImGuiIO& io = ImGui::GetIO();
+                    io.AddMouseSourceEvent(ImGuiMouseSource_Mouse);
+                    io.AddMouseWheelEvent(0, mouse_orientation);
                 }
                 break;
             }

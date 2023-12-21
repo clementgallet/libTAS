@@ -371,6 +371,9 @@ int GameEvents::handleEvent()
 
     struct HotKey hk;
     EventType eventType = nextEvent(hk);
+    while (eventType == EVENT_TYPE_MOUSE) {
+        eventType = nextEvent(hk);
+    }
 
     int flags = ar_advance?RETURN_FLAG_ADVANCE:0;
 

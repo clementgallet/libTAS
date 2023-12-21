@@ -343,9 +343,15 @@ enum {
 
     /*
      * Send a mouse button event, 
-     * Argument: int8_t button, int8_t state
+     * Argument: uint8_t button, uint8_t state
      */
     MSGN_BUTTON,
+
+    /*
+     * Send a mouse wheel event, 
+     * Argument: int8_t orientation
+     */
+    MSGN_WHEEL,
 };
 
 #endif

@@ -67,7 +67,7 @@ void GameEventsXcb::registerGameWindow(uint32_t gameWindow)
             xcb_input_event_mask_t iem;
             int xiem;
         } se_mask;
-        se_mask.iem.deviceid = XCB_INPUT_DEVICE_ALL;
+        se_mask.iem.deviceid = XCB_INPUT_DEVICE_ALL_MASTER;
         se_mask.iem.mask_len = 1;
 
         se_mask.xiem = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS |
@@ -205,25 +205,30 @@ GameEventsXcb::EventType GameEventsXcb::nextEvent(struct HotKey &hk)
             }
             else if (response_type == XCB_GE_GENERIC) {
                 xcb_ge_generic_event_t *gev = reinterpret_cast<xcb_ge_generic_event_t *>(event.get());
-                if ((gev->event_type == XCB_INPUT_BUTTON_PRESS) || (XCB_INPUT_BUTTON_RELEASE)) {
+                if ((gev->event_type == XCB_INPUT_BUTTON_PRESS) || (gev->event_type == XCB_INPUT_BUTTON_RELEASE)) {
                     xcb_input_button_press_event_t *mev = reinterpret_cast<xcb_input_button_press_event_t*>(gev);
-                    uint8_t state = (gev->event_type == XCB_INPUT_BUTTON_PRESS);
-                    uint8_t button = 255;
-                    if (mev->detail == XCB_BUTTON_INDEX_1) { button = 0; }
-                    if (mev->detail == XCB_BUTTON_INDEX_2) { button = 1; }
-                    if (mev->detail == XCB_BUTTON_INDEX_3) { button = 2; }
-                    if (mev->detail == XCB_BUTTON_INDEX_4) { button = 3; }
-                    if (mev->detail == XCB_BUTTON_INDEX_5) { button = 4; }
+                    uint8_t state = (mev->event_type == XCB_INPUT_BUTTON_PRESS);
 
-                    if (button != 255) {
+                    if (mev->detail >= XCB_BUTTON_INDEX_1 && mev->detail <= XCB_BUTTON_INDEX_3) {
+                        uint8_t button = 255;
+                        if (mev->detail == XCB_BUTTON_INDEX_1) { button = 0; }
+                        if (mev->detail == XCB_BUTTON_INDEX_2) { button = 2; }
+                        if (mev->detail == XCB_BUTTON_INDEX_3) { button = 1; }
                         sendMessage(MSGN_BUTTON);
                         sendData(&button, sizeof(uint8_t));
-                        sendData(&state, sizeof(uint8_t));
+                        sendData(&state, sizeof(uint8_t));                            
                     }
+                    if (((mev->detail == XCB_BUTTON_INDEX_4) || (mev->detail == XCB_BUTTON_INDEX_5)) &&
+                        (mev->event_type == XCB_INPUT_BUTTON_RELEASE)) {
+                        /* Only send wheel events on release */                        
+                        int8_t orientation = (mev->detail == XCB_BUTTON_INDEX_4) ? 1 : -1;
+                        sendMessage(MSGN_WHEEL);
+                        sendData(&orientation, sizeof(int8_t));
+                    }
+                    return EVENT_TYPE_MOUSE;
                 }
                 if (gev->event_type == XCB_INPUT_MOTION) {
                     /* Collapse consecutive mouse motion events. */
-                    usleep(1000);
                     next_event.reset(xcb_poll_for_event(context->conn));
                     xcb_ge_generic_event_t *next_gev = reinterpret_cast<xcb_ge_generic_event_t *>(next_event.get());
 
@@ -241,6 +246,7 @@ GameEventsXcb::EventType GameEventsXcb::nextEvent(struct HotKey &hk)
                     sendMessage(MSGN_MOTION_NOTIFY);
                     sendData(&mouse_x, sizeof(int16_t));
                     sendData(&mouse_y, sizeof(int16_t));
+                    return EVENT_TYPE_MOUSE;
                 }
                 return EVENT_TYPE_NONE;
             }
