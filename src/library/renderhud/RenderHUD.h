@@ -115,6 +115,9 @@ class RenderHUD
         /* Display crosshair on current pointer position */
         void drawCrosshair(const AllInputs& ai);
 
+        /* Update cursor */
+        virtual void updateCursor() {}
+
         /* Messages to print on screen with the creation time */
         static std::list<std::pair<std::string, TimeHolder>> messages;
 

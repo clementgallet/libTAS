@@ -35,6 +35,8 @@ Window pointer_grab_window = None;
 
 DEFINE_ORIG_POINTER(XQueryPointer)
 DEFINE_ORIG_POINTER(XWarpPointer)
+DEFINE_ORIG_POINTER(XDefineCursor)
+DEFINE_ORIG_POINTER(XUndefineCursor)
 
 /* Override */ Bool XQueryPointer( Display* display, Window w,
         Window* root_return, Window* child_return,
@@ -129,14 +131,22 @@ DEFINE_ORIG_POINTER(XWarpPointer)
     return 0; // Not sure what to return
 }
 
-/* Override */ int XDefineCursor(Display*, Window, Cursor)
+/* Override */ int XDefineCursor(Display* d, Window w, Cursor c)
 {
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(XDefineCursor);
+        return orig::XDefineCursor(d, w, c);
+    }
     DEBUGLOGCALL(LCF_MOUSE);
     return 0; // Not sure what to return
 }
 
-/* Override */ int XUndefineCursor(Display*, Window)
+/* Override */ int XUndefineCursor(Display* d, Window w)
 {
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(XUndefineCursor);
+        return orig::XUndefineCursor(d, w);
+    }
     DEBUGLOGCALL(LCF_MOUSE);
     return 0; // Not sure what to return
 }

@@ -26,15 +26,6 @@
 #include "RenderHUD_Base_MacOS.h"
 #endif
 
-#define GL_GLEXT_PROTOTYPES
-#ifdef __unix__
-#include <GL/gl.h>
-#include <GL/glext.h>
-#elif defined(__APPLE__) && defined(__MACH__)
-#include <OpenGL/gl3.h>
-#include <OpenGL/gl3ext.h>
-#endif
-
 namespace libtas {
 #ifdef __unix__
 class RenderHUD_GL : public RenderHUD_Base_Linux
@@ -45,31 +36,17 @@ class RenderHUD_GL : public RenderHUD_Base_MacOS
     public:
         ~RenderHUD_GL();
 
-        /* Initialize texture and fbo */
-        static void init(bool stateGLES);
-
-        /* Deallocate texture and fbo */
+        /* Destroy context */
         static void fini();
 
         /* Switch renderer to OpenGL ES */
         void setGLES(bool stateGLES) {isGLES = stateGLES;}
 
-        void renderSurface(std::unique_ptr<SurfaceARGB> surf, int x, int y);
-        
         void newFrame();
 
         void render();
 
-    private:
-        static GLuint texture;
-        static GLuint vao;
-        static GLuint vbo;
-        static GLuint ebo;
-        static GLuint programID;
-        
-        static float vertices[20];
-        static GLuint indices[6];
-        
+    private:        
         bool isGLES = false;
 };
 }

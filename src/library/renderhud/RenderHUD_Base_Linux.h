@@ -22,7 +22,8 @@
 #ifndef LIBTAS_RENDERHUD_BASE_LINUX_H_INCL
 #define LIBTAS_RENDERHUD_BASE_LINUX_H_INCL
 
-#include <stdint.h>
+#include <vector>
+#include <X11/X.h>
 
 namespace libtas {
 /* This class provide a method to create a surface from
@@ -34,6 +35,13 @@ class RenderHUD_Base_Linux : public RenderHUD
 {
     public:
         virtual ~RenderHUD_Base_Linux();
+
+        /* Update cursor */
+        void updateCursor();
+
+    private:
+        std::vector<Cursor> cursors;
+        Cursor last_cursor;
 
 };
 }
