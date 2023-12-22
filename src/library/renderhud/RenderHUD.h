@@ -51,7 +51,7 @@ namespace libtas {
 class RenderHUD
 {
     public:
-        virtual void newFrame() {}
+        virtual void newFrame();
 
         virtual void render() {}
 

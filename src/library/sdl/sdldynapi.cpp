@@ -28,6 +28,7 @@
 #include "GlobalState.h"
 
 #include <dlfcn.h>
+//#include <vector>
 
 namespace libtas {
 
@@ -118,6 +119,24 @@ enum {
 
     /* Now save original pointers while replacing them with our hooks. */
     void **entries = static_cast<void **>(table);
+
+    /* TODO: Check SDL version, and try loading the system SDL instead of the
+     * bundled SDL to get a version compatible with Dear ImGui. */
+    // orig::SDL_GetVersion = reinterpret_cast<decltype(&SDL_GetVersion)>(entries[index::SDL_GetVersion]);
+    // SDL_version ver = {0, 0, 0};
+    // orig::SDL_GetVersion(&ver);
+    // 
+    // if ((ver.minor == 0) && (ver.patch < 18)) {
+    //     debuglogstdio(LCF_SDL | LCF_WARNING, "System SDL library is too old (%d.%d.%d)!", ver.major, ver.minor, ver.patch);
+    // }
+
+    /* TODO: Load the `SDL_DYNAPI_entry()` function from system SDL library */
+    
+    // std::vector<void*> full_entries;
+    // full_entries.resize(index::SDL_GetTouchName); // First function past 2.0.18
+    // orig::SDL_DYNAPI_entry(apiver, full_entries.data(), full_entries.size() * sizeof(void *));
+// #define IF_IN_BOUNDS_FULL(FUNC) if (index::FUNC < full_entries.size())
+
 #define IF_IN_BOUNDS(FUNC) if (index::FUNC * sizeof(void *) < tablesize)
 #define SDL_LINK(FUNC) IF_IN_BOUNDS(FUNC) orig::FUNC = reinterpret_cast<decltype(&FUNC)>(entries[index::FUNC]); else debuglogstdio(LCF_ERROR | LCF_SDL | LCF_HOOK, "Could not import sdl dynapi symbol %s", #FUNC);
 #define SDL_HOOK(FUNC) IF_IN_BOUNDS(FUNC) entries[index::FUNC] = reinterpret_cast<void *>(dlsym(libtas, #FUNC));

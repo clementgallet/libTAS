@@ -46,25 +46,8 @@ void RenderHUD_GL::newFrame()
         ImGui_ImplOpenGL3_Init("#version 130");
     }
     ImGui_ImplOpenGL3_NewFrame();
-    updateCursor();
 
-    /* Check on each frame to accomodate for window resizing */
-    int width, height;
-    ScreenCapture::getDimensions(width, height);
-    
-    ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize = ImVec2((float)width, (float)height);
-    io.DisplayFramebufferScale = ImVec2(1, 1);
-
-    static TimeHolder oldTime;
-    TimeHolder currentTime;
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &currentTime));
-    TimeHolder deltaTime = currentTime - oldTime;
-    io.DeltaTime = (oldTime.tv_sec == 0) ? 1.0f / 60.0f : (float) deltaTime.tv_sec + ((float) deltaTime.tv_nsec) / 1000000000.0f;
-    oldTime = currentTime;
-
-    ImGui::NewFrame();
-    ImGui::ShowDemoWindow();
+    RenderHUD::newFrame();
 }
 
 void RenderHUD_GL::render()

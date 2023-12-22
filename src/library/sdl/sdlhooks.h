@@ -333,5 +333,12 @@ SDL_HOOK(SDL_GameControllerHasRumbleTriggers)
 SDL_HOOK(SDL_GameControllerSetLED)
 SDL_HOOK(SDL_GameControllerSendEffect)
 SDL_HOOK(SDL_JoystickRumble)
+SDL_LINK(SDL_RenderSetClipRect)
+SDL_LINK(SDL_RenderIsClipEnabled)
+SDL_LINK(SDL_RenderGetClipRect)
+SDL_LINK(SDL_RenderGeometryRaw)
+SDL_LINK(SDL_SetTextureScaleMode)
+SDL_LINK(SDL_UpdateTexture)
+
 #undef SDL_HOOK
 #undef SDL_LINK

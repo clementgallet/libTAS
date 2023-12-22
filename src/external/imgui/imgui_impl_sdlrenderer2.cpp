@@ -39,10 +39,40 @@
 #endif
 
 // SDL
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #if !SDL_VERSION_ATLEAST(2,0,17)
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
 #endif
+
+#include "hook.h"
+
+namespace libtas {
+    DECLARE_ORIG_POINTER(SDL_RenderSetClipRect)
+    DECLARE_ORIG_POINTER(SDL_RenderIsClipEnabled)
+    DECLARE_ORIG_POINTER(SDL_RenderGetClipRect)
+    DECLARE_ORIG_POINTER(SDL_RenderGeometryRaw)
+    DECLARE_ORIG_POINTER(SDL_SetTextureScaleMode)
+    DECLARE_ORIG_POINTER(SDL_RenderSetViewport)
+    DECLARE_ORIG_POINTER(SDL_RenderGetScale)
+    DECLARE_ORIG_POINTER(SDL_RenderGetViewport)
+    DECLARE_ORIG_POINTER(SDL_CreateTexture)
+    DECLARE_ORIG_POINTER(SDL_UpdateTexture)
+    DECLARE_ORIG_POINTER(SDL_SetTextureBlendMode)
+    DECLARE_ORIG_POINTER(SDL_DestroyTexture)    
+}
+
+#define SDL_RenderSetClipRect libtas::orig::SDL_RenderSetClipRect
+#define SDL_RenderIsClipEnabled libtas::orig::SDL_RenderIsClipEnabled
+#define SDL_RenderGetClipRect libtas::orig::SDL_RenderGetClipRect
+#define SDL_RenderGeometryRaw libtas::orig::SDL_RenderGeometryRaw
+#define SDL_SetTextureScaleMode libtas::orig::SDL_SetTextureScaleMode
+#define SDL_RenderSetViewport libtas::orig::SDL_RenderSetViewport
+#define SDL_RenderGetScale libtas::orig::SDL_RenderGetScale
+#define SDL_RenderGetViewport libtas::orig::SDL_RenderGetViewport
+#define SDL_CreateTexture libtas::orig::SDL_CreateTexture
+#define SDL_UpdateTexture libtas::orig::SDL_UpdateTexture
+#define SDL_SetTextureBlendMode libtas::orig::SDL_SetTextureBlendMode
+#define SDL_DestroyTexture libtas::orig::SDL_DestroyTexture
 
 // SDL_Renderer data
 struct ImGui_ImplSDLRenderer2_Data
