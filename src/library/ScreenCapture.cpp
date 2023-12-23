@@ -1277,7 +1277,7 @@ int ScreenCapture::copySurfaceToScreen()
         if ((res != VK_SUCCESS) && (res != VK_SUBOPTIMAL_KHR))
             debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_ERROR, "vkAcquireNextImageKHR failed with error %d", res);
 
-        debuglogstdio(LCF_WINDOW | LCF_VULKAN, "vkAcquireNextImageKHR called again. Returns image index %d", vk::swapchainImgIndex);
+        // debuglogstdio(LCF_WINDOW | LCF_VULKAN, "vkAcquireNextImageKHR called again. Returns image index %d", vk::swapchainImgIndex);
         
         /* Create the command buffer */
         VkCommandBufferAllocateInfo allocInfo{};

@@ -101,6 +101,7 @@ libtas_so_SOURCES = \
     renderhud/RenderHUD_SDL2_renderer.cpp \
     renderhud/RenderHUD_SDL2_surface.cpp \
     renderhud/RenderHUD_VDPAU.cpp \
+    renderhud/RenderHUD_Vulkan.cpp \
     renderhud/RenderHUD_XShm.cpp \
     renderhud/RenderHUD.cpp \
     renderhud/RenderHUD_Base_Linux.cpp \

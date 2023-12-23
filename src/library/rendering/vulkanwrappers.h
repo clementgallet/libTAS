@@ -30,16 +30,23 @@ namespace libtas {
 
 /* Export several variables used for rendering */
 namespace vk {
+    extern VkAllocationCallbacks* allocator;
+    extern VkInstance instance;
     extern VkPhysicalDevice physicalDevice;
     extern VkDevice device;
     extern VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
     extern bool supportsBlit;
     extern VkQueue graphicsQueue;
+    extern uint32_t queueFamily;
+    extern VkDescriptorPool descriptorPool;
     extern VkCommandPool commandPool;
+    extern VkRenderPass renderPass;
     extern VkSwapchainKHR swapchain;
     extern VkFormat colorFormat;
     extern uint32_t swapchainImgIndex;
     extern std::vector<VkImage> swapchainImgs;
+
+    void checkVkResult(VkResult err);
 
     /* Helper function for getting memory type */
     uint32_t getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties);    
@@ -47,17 +54,26 @@ namespace vk {
 
 OVERRIDE PFN_vkVoidFunction vkGetInstanceProcAddr(VkInstance instance, const char* pName);
 
-OVERRIDE PFN_vkVoidFunction myvkGetDeviceProcAddr(VkDevice device, const char* pName);
+VkResult myvkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance);
+    
+PFN_vkVoidFunction myvkGetDeviceProcAddr(VkDevice device, const char* pName);
 
 VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInfo* pCreateInfo,
                                 const VkAllocationCallbacks* pAllocator, VkDevice* pDevice);
 
 void myvkDestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator);
 
+void vkGetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex, VkQueue* pQueue);
+
+VkResult vkCreateDescriptorPool(VkDevice device, const VkDescriptorPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorPool* pDescriptorPool);
 
 VkResult vkCreateCommandPool(VkDevice device, const VkCommandPoolCreateInfo* pCreateInfo,
     const VkAllocationCallbacks* pAllocator, VkCommandPool* pCommandPool);
 
+VkResult vkCreateRenderPass(VkDevice device, const VkRenderPassCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkRenderPass* pRenderPass);
+
+void vkCmdEndRenderPass(VkCommandBuffer commandBuffer);
+    
 VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain);
 
 VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* pImageIndex);

@@ -52,15 +52,27 @@
 
 namespace libtas {
 
+VkAllocationCallbacks* vk::allocator;
+VkInstance vk::instance;
 VkPhysicalDevice vk::physicalDevice;
 VkDevice vk::device;
 VkPhysicalDeviceMemoryProperties vk::deviceMemoryProperties;
 VkQueue vk::graphicsQueue;
+uint32_t vk::queueFamily;
+VkDescriptorPool vk::descriptorPool;
 VkCommandPool vk::commandPool;
+VkRenderPass vk::renderPass;
 VkSwapchainKHR vk::swapchain;
 VkFormat vk::colorFormat;
 uint32_t vk::swapchainImgIndex;
 std::vector<VkImage> vk::swapchainImgs;
+
+void vk::checkVkResult(VkResult err)
+{
+    if (err == 0)
+        return;
+    debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_ERROR, "Vulkan error: %d", err);
+}
 
 uint32_t vk::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties)
 {
@@ -81,6 +93,7 @@ uint32_t vk::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags propert
  * This does not matter much, because linking is done with a specific ProcAddr function anyway.
  * So, I'm prefixing them with `my` */
 namespace orig { \
+    decltype(&myvkCreateInstance) vkCreateInstance; \
     decltype(&myvkCreateDevice) vkCreateDevice; \
     decltype(&myvkDestroyDevice) vkDestroyDevice; \
     decltype(&myvkGetDeviceProcAddr) vkGetDeviceProcAddr; \
@@ -96,6 +109,10 @@ DEFINE_ORIG_POINTER(vkGetImageMemoryRequirements)
 DEFINE_ORIG_POINTER(vkAllocateMemory)
 DEFINE_ORIG_POINTER(vkBindImageMemory)
 DEFINE_ORIG_POINTER(vkCreateCommandPool)
+DEFINE_ORIG_POINTER(vkCreateDescriptorPool)
+DEFINE_ORIG_POINTER(vkCreateRenderPass)
+DEFINE_ORIG_POINTER(vkCmdEndRenderPass)
+DEFINE_ORIG_POINTER(vkGetDeviceQueue)
 DEFINE_ORIG_POINTER(vkQueueSubmit)
 DEFINE_ORIG_POINTER(vkUnmapMemory)
 DEFINE_ORIG_POINTER(vkFreeMemory)
@@ -121,6 +138,7 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     if (!real_pointer || !symbol)
         return real_pointer;
 
+    STORE_RETURN_SYMBOL_CUSTOM(vkCreateInstance)
     STORE_RETURN_SYMBOL(vkCreateSwapchainKHR)
     STORE_RETURN_SYMBOL(vkAcquireNextImageKHR)
     STORE_RETURN_SYMBOL(vkQueuePresentKHR)
@@ -133,6 +151,10 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     STORE_SYMBOL(vkAllocateMemory)
     STORE_SYMBOL(vkBindImageMemory)
     STORE_RETURN_SYMBOL(vkCreateCommandPool)
+    STORE_RETURN_SYMBOL(vkCreateDescriptorPool)
+    STORE_RETURN_SYMBOL(vkCreateRenderPass)
+    STORE_RETURN_SYMBOL(vkGetDeviceQueue)
+    STORE_RETURN_SYMBOL(vkCmdEndRenderPass)
     STORE_SYMBOL(vkQueueSubmit)
     STORE_SYMBOL(vkUnmapMemory)
     STORE_SYMBOL(vkFreeMemory)
@@ -150,6 +172,25 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     STORE_SYMBOL(vkGetSwapchainImagesKHR)
 
     return real_pointer;
+}
+
+VkResult myvkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance)
+{
+    LINK_NAMESPACE(vkCreateInstance, "vulkan");
+
+    if (GlobalState::isNative())
+        return orig::vkCreateInstance(pCreateInfo, pAllocator, pInstance);
+
+    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+
+    VkResult res = orig::vkCreateInstance(pCreateInfo, pAllocator, pInstance);
+
+    if (res == VK_SUCCESS) {
+        /* Store the instance */
+        vk::instance = *pInstance;
+    }
+
+    return res;
 }
 
 PFN_vkVoidFunction vkGetInstanceProcAddr(VkInstance instance, const char* pName)
@@ -217,6 +258,40 @@ void myvkDestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
     return orig::vkDestroyDevice(device, pAllocator);
 }
 
+void vkGetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex, VkQueue* pQueue)
+{
+    LINK_NAMESPACE(vkGetDeviceQueue, "vulkan");
+
+    if (GlobalState::isNative())
+        return orig::vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
+
+    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+
+    /* Store the queue family */
+    vk::queueFamily = queueFamilyIndex;
+
+    return orig::vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
+}
+
+VkResult vkCreateDescriptorPool(VkDevice device, const VkDescriptorPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorPool* pDescriptorPool)
+{
+    LINK_NAMESPACE(vkCreateDescriptorPool, "vulkan");
+
+    if (GlobalState::isNative())
+        return orig::vkCreateDescriptorPool(device, pCreateInfo, pAllocator, pDescriptorPool);
+
+    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+
+    VkResult res = orig::vkCreateDescriptorPool(device, pCreateInfo, pAllocator, pDescriptorPool);
+
+    if (res == VK_SUCCESS) {
+        /* Store the descriptor pool */
+        vk::descriptorPool = *pDescriptorPool;
+    }
+    
+    return res;
+}
+
 VkResult vkCreateCommandPool(VkDevice device, const VkCommandPoolCreateInfo* pCreateInfo,
     const VkAllocationCallbacks* pAllocator, VkCommandPool* pCommandPool)
 {
@@ -235,6 +310,35 @@ VkResult vkCreateCommandPool(VkDevice device, const VkCommandPoolCreateInfo* pCr
     return res;
 }
 
+VkResult vkCreateRenderPass(VkDevice device, const VkRenderPassCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkRenderPass* pRenderPass)
+{
+    LINK_NAMESPACE(vkCreateRenderPass, "vulkan");
+
+    if (GlobalState::isNative())
+        return orig::vkCreateRenderPass(device, pCreateInfo, pAllocator, pRenderPass);
+
+    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+
+    VkResult res = orig::vkCreateRenderPass(device, pCreateInfo, pAllocator, pRenderPass);
+    
+    /* Store the render pass */
+    vk::renderPass = *pRenderPass;
+    
+    return res;
+}
+
+void vkCmdEndRenderPass(VkCommandBuffer commandBuffer) {
+    LINK_NAMESPACE(vkCmdEndRenderPass, "vulkan");
+
+    if (GlobalState::isNative())
+        return orig::vkCmdEndRenderPass(commandBuffer);
+
+    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+
+    return orig::vkCmdEndRenderPass(commandBuffer);
+}
+
+    
 VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain)
 {
     LINK_NAMESPACE(vkCreateSwapchainKHR, "vulkan");
@@ -320,7 +424,7 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
             /* Present the queue with the stored image index, because we will 
              * acquire other images when presenting again. */
             pi.pImageIndices = &vk::swapchainImgIndex;
-            debuglogstdio(LCF_WINDOW | LCF_VULKAN, "vkQueuePresentKHR called again with image index %d", vk::swapchainImgIndex);
+//            debuglogstdio(LCF_WINDOW | LCF_VULKAN, "vkQueuePresentKHR called again with image index %d", vk::swapchainImgIndex);
             orig::vkQueuePresentKHR(queue, &pi);
         }
     }, renderHUD);
