@@ -22,7 +22,7 @@
 #include "hook.h"
 #include "logging.h"
 #include "renderhud/RenderHUD_Vulkan.h"
-#include "ScreenCapture.h"
+#include "screencapture/ScreenCapture.h"
 #include "frame.h"
 #include "global.h"
 #include "GlobalState.h"

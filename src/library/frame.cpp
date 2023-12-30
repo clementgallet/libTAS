@@ -31,7 +31,7 @@
 #include "checkpoint/SaveStateManager.h"
 #include "checkpoint/Checkpoint.h"
 #include "checkpoint/ThreadSync.h"
-#include "ScreenCapture.h"
+#include "screencapture/ScreenCapture.h"
 #include "WindowTitle.h"
 #include "BusyLoopDetection.h"
 #include "hook.h"

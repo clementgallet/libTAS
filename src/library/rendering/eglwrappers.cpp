@@ -24,7 +24,7 @@
 #include "global.h"
 #include "logging.h"
 #include "renderhud/RenderHUD_GL.h"
-#include "ScreenCapture.h"
+#include "screencapture/ScreenCapture.h"
 #include "frame.h"
 #include "xlib/xwindows.h" // x11::gameXWindows
 #include "GlobalState.h"

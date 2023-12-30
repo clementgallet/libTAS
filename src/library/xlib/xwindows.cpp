@@ -26,7 +26,7 @@
 
 #include "hook.h"
 #include "logging.h"
-#include "ScreenCapture.h"
+#include "screencapture/ScreenCapture.h"
 #include "WindowTitle.h"
 #include "encoding/AVEncoder.h"
 #include "backtrace.h"

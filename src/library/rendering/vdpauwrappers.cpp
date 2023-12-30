@@ -21,7 +21,7 @@
 
 #include "logging.h"
 #include "GlobalState.h"
-#include "ScreenCapture.h"
+#include "screencapture/ScreenCapture.h"
 #include "frame.h"
 #include "global.h"
 #include "renderhud/RenderHUD.h"

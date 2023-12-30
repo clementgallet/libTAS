@@ -17,14 +17,19 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_SCREENCAPTURE_H_INCL
-#define LIBTAS_SCREENCAPTURE_H_INCL
+#ifndef LIBTAS_SCREENCAPTURE_SDL2_RENDERER_H_INCL
+#define LIBTAS_SCREENCAPTURE_SDL2_RENDERER_H_INCL
+
+#include "ScreenCapture_Impl.h"
 
 #include <stdint.h>
 
+class SDL_Renderer;
+class SDL_Texture;
+
 namespace libtas {
 
-namespace ScreenCapture {
+class ScreenCapture_SDL2_Renderer : public ScreenCapture_Impl {
 
 /* Initiate the internal variables and buffers, and get the screen dimensions
  * @return 0 if successful or -1 if an error occured
@@ -34,22 +39,8 @@ int init();
 /* Create the screen buffer/surface/texture */
 void initScreenSurface();
 
-/* Called when screen is closed */
-void fini();
-
 /* Destroy the screen buffer/surface/texture */
 void destroyScreenSurface();
-
-/* Called when the screen has been resized */
-void resize(int w, int h);
-
-bool isInited();
-
-/* Get the current dimensions of the screen */
-void getDimensions(int& w, int& h);
-
-/* Get the size of the pixel array */
-int getSize();
 
 /* Get the pixel format as an string used by nut muxer. */
 const char* getPixelFormat();
@@ -70,7 +61,11 @@ int copySurfaceToScreen();
  * It is equivalent to `copySurfaceToScreen()` in most cases. */
 void restoreScreenState();
 
-}
+private:
+    SDL_Texture* screenSDLTex = nullptr;
+    SDL_Renderer* sdl_renderer = nullptr;
+
+};
 }
 
 #endif

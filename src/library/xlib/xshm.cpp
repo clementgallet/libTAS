@@ -23,7 +23,7 @@
 #include "hook.h"
 #include "logging.h"
 #include "GlobalState.h"
-#include "ScreenCapture.h"
+#include "screencapture/ScreenCapture.h"
 #include "frame.h"
 #include "renderhud/RenderHUD.h"
 #include "DeterministicTimer.h"

@@ -21,7 +21,7 @@
 
 #include "logging.h"
 #include "hook.h"
-#include "ScreenCapture.h"
+#include "screencapture/ScreenCapture.h"
 
 namespace libtas {
 

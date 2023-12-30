@@ -22,7 +22,7 @@
 #include "logging.h"
 #include "hook.h"
 #include "global.h" // Global::shared_config
-#include "ScreenCapture.h"
+#include "screencapture/ScreenCapture.h"
 #include "GlobalState.h"
 #include "../external/keysymdesc.h"
 #include "../external/imgui/imgui.h"

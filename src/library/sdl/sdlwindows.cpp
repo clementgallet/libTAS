@@ -27,7 +27,7 @@
 #include "frame.h"
 #include "renderhud/RenderHUD_GL.h"
 #include "general/timewrappers.h"
-#include "ScreenCapture.h"
+#include "screencapture/ScreenCapture.h"
 #include "DeterministicTimer.h"
 #include "WindowTitle.h"
 #include "encoding/AVEncoder.h"

@@ -18,7 +18,6 @@ libtas_so_SOURCES = \
     main.cpp \
     NonDeterministicTimer.cpp \
     PerfTimer.cpp \
-    ScreenCapture.cpp \
     Stack.cpp \
     TimeHolder.cpp \
     Utils.cpp \
@@ -106,6 +105,15 @@ libtas_so_SOURCES = \
 	rendering/openglwrappers.cpp \
 	rendering/vdpauwrappers.cpp \
 	rendering/vulkanwrappers.cpp \
+    screencapture/ScreenCapture_GL.cpp \
+    screencapture/ScreenCapture_SDL1.cpp \
+    screencapture/ScreenCapture_SDL2_Renderer.cpp \
+    screencapture/ScreenCapture_SDL2_Surface.cpp \
+    screencapture/ScreenCapture_VDPAU.cpp \
+    screencapture/ScreenCapture_Vulkan.cpp \
+    screencapture/ScreenCapture_XShm.cpp \
+    screencapture/ScreenCapture_Impl.cpp \
+    screencapture/ScreenCapture.cpp \
     sdl/SDLEventQueue.cpp \
     sdl/sdldisplay.cpp \
     sdl/sdldynapi.cpp \

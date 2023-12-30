@@ -24,7 +24,7 @@
 #include "logging.h"
 #include "frame.h"
 #include "renderhud/RenderHUD_SDL2_renderer.h"
-#include "ScreenCapture.h"
+#include "screencapture/ScreenCapture.h"
 #include "global.h"
 #include "GlobalState.h"
 

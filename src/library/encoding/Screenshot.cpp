@@ -21,7 +21,7 @@
 #include "NutMuxer.h"
 
 #include "logging.h"
-#include "ScreenCapture.h"
+#include "screencapture/ScreenCapture.h"
 #include "global.h" // Global::shared_config
 #include "GlobalState.h"
 
