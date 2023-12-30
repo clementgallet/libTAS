@@ -30,8 +30,40 @@
 
 namespace libtas {
 
+DECLARE_ORIG_POINTER(vkGetInstanceProcAddr)
+DECLARE_ORIG_POINTER(vkBeginCommandBuffer)
+DECLARE_ORIG_POINTER(vkCmdBeginRenderPass)
+DECLARE_ORIG_POINTER(vkCmdEndRenderPass)
+DECLARE_ORIG_POINTER(vkEndCommandBuffer)
+DECLARE_ORIG_POINTER(vkQueueSubmit)
+DECLARE_ORIG_POINTER(vkQueueWaitIdle)
+
+#define VKCHECKERROR(err) \
+do { if (err < 0) debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_ERROR, "Vulkan error: %d", err); } while (0)
+
 RenderHUD_Vulkan::~RenderHUD_Vulkan() {
     fini();
+}
+
+void RenderHUD_Vulkan::init() {
+    
+    ImGui_ImplVulkan_LoadFunctions([](const char* function_name, void*) { return orig::vkGetInstanceProcAddr(vk::context.instance, function_name); });
+    
+    ImGui_ImplVulkan_InitInfo init_info = {};
+    init_info.Instance = vk::context.instance;
+    init_info.PhysicalDevice = vk::context.physicalDevice;
+    init_info.Device = vk::context.device;
+    init_info.QueueFamily = vk::context.queueFamily;
+    init_info.Queue = vk::context.graphicsQueue;
+    init_info.PipelineCache = VK_NULL_HANDLE;
+    init_info.DescriptorPool = vk::context.descriptorPool;
+    init_info.Subpass = 0;
+    init_info.MinImageCount = vk::context.imageCount;
+    init_info.ImageCount = vk::context.imageCount;
+    init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    init_info.Allocator = vk::context.allocator;
+    init_info.CheckVkResultFn = vk::checkVkResult;
+    ImGui_ImplVulkan_Init(&init_info, vk::context.renderPass);
 }
 
 void RenderHUD_Vulkan::fini() {
@@ -43,33 +75,71 @@ void RenderHUD_Vulkan::newFrame()
 {
     if (!ImGui::GetCurrentContext()) {
         ImGui::CreateContext();
-        
-        ImGui_ImplVulkan_InitInfo init_info = {};
-        init_info.Instance = vk::instance;
-        init_info.PhysicalDevice = vk::physicalDevice;
-        init_info.Device = vk::device;
-        init_info.QueueFamily = vk::queueFamily;
-        init_info.Queue = vk::graphicsQueue;
-        init_info.PipelineCache = VK_NULL_HANDLE;
-        init_info.DescriptorPool = vk::descriptorPool;
-        init_info.Subpass = 0;
-        init_info.MinImageCount = 2;
-        init_info.ImageCount = 2;
-        init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-        init_info.Allocator = vk::allocator;
-        init_info.CheckVkResultFn = vk::checkVkResult;
-        ImGui_ImplVulkan_Init(&init_info, vk::renderPass);
+        init();
     }
     ImGui_ImplVulkan_NewFrame();
 
     RenderHUD::newFrame();
+    
+    /* Update semaphore index */
+    vk::context.semaphoreIndex = (vk::context.semaphoreIndex + 1) % vk::context.imageCount;
 }
 
 void RenderHUD_Vulkan::render()
 {
-    if (ImGui::GetCurrentContext()) {
-        ImGui::Render();
-//        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData());        
+    if (!ImGui::GetCurrentContext())
+        return;
+        
+    ImGui::Render();
+
+    VkResult err;
+    Vulkan_Frame* fd = &vk::context.frames[vk::context.frameIndex];
+    
+    {
+        VkCommandBufferBeginInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        err = orig::vkBeginCommandBuffer(fd->commandBuffer, &info);
+        VKCHECKERROR(err);
+    }
+    
+    {
+        VkRenderPassBeginInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        info.renderPass = vk::context.renderPass;
+        info.framebuffer = fd->framebuffer;
+        info.renderArea.extent.width = vk::context.width;
+        info.renderArea.extent.height = vk::context.height;
+        info.clearValueCount = 1;
+        info.pClearValues = &vk::context.clearValue;
+        orig::vkCmdBeginRenderPass(fd->commandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
+    }
+    
+    // Record dear imgui primitives into command buffer
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), fd->commandBuffer);
+    
+    // Submit command buffer
+    orig::vkCmdEndRenderPass(fd->commandBuffer);
+    {
+        VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        VkSubmitInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        info.waitSemaphoreCount = 0;
+        // info.pWaitSemaphores = &vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore;
+        info.pWaitDstStageMask = &wait_stage;
+        info.commandBufferCount = 1;
+        info.pCommandBuffers = &fd->commandBuffer;
+        info.signalSemaphoreCount = 0;
+        // info.pSignalSemaphores = &vk::context.frameSemaphores[vk::context.semaphoreIndex].renderCompleteSemaphore;
+    
+        err = orig::vkEndCommandBuffer(fd->commandBuffer);
+        VKCHECKERROR(err);
+//        err = orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &info, fd->fence);
+        err = orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &info, VK_NULL_HANDLE);        
+        VKCHECKERROR(err);
+        
+        /* TODO: Get rid of this. For now it is necessary */
+        orig::vkQueueWaitIdle(vk::context.graphicsQueue);
     }
 }
 

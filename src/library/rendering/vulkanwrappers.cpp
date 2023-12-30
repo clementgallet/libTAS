@@ -21,7 +21,7 @@
 
 #include "hook.h"
 #include "logging.h"
-#include "renderhud/RenderHUD.h"
+#include "renderhud/RenderHUD_Vulkan.h"
 #include "ScreenCapture.h"
 #include "frame.h"
 #include "global.h"
@@ -52,20 +52,10 @@
 
 namespace libtas {
 
-VkAllocationCallbacks* vk::allocator;
-VkInstance vk::instance;
-VkPhysicalDevice vk::physicalDevice;
-VkDevice vk::device;
-VkPhysicalDeviceMemoryProperties vk::deviceMemoryProperties;
-VkQueue vk::graphicsQueue;
-uint32_t vk::queueFamily;
-VkDescriptorPool vk::descriptorPool;
-VkCommandPool vk::commandPool;
-VkRenderPass vk::renderPass;
-VkSwapchainKHR vk::swapchain;
-VkFormat vk::colorFormat;
-uint32_t vk::swapchainImgIndex;
-std::vector<VkImage> vk::swapchainImgs;
+Vulkan_Context vk::context = {};
+
+#define VKCHECKERROR(err) \
+do { if (err < 0) debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_ERROR, "Vulkan error: %d", err); } while (0)
 
 void vk::checkVkResult(VkResult err)
 {
@@ -76,9 +66,9 @@ void vk::checkVkResult(VkResult err)
 
 uint32_t vk::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties)
 {
-	for (uint32_t i = 0; i < vk::deviceMemoryProperties.memoryTypeCount; i++) {
+	for (uint32_t i = 0; i < vk::context.deviceMemoryProperties.memoryTypeCount; i++) {
 		if ((typeBits & 1) == 1) {
-			if ((vk::deviceMemoryProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+			if ((vk::context.deviceMemoryProperties.memoryTypes[i].propertyFlags & properties) == properties) {
 				return i;
 			}
 		}
@@ -111,6 +101,7 @@ DEFINE_ORIG_POINTER(vkBindImageMemory)
 DEFINE_ORIG_POINTER(vkCreateCommandPool)
 DEFINE_ORIG_POINTER(vkCreateDescriptorPool)
 DEFINE_ORIG_POINTER(vkCreateRenderPass)
+DEFINE_ORIG_POINTER(vkCmdBeginRenderPass)
 DEFINE_ORIG_POINTER(vkCmdEndRenderPass)
 DEFINE_ORIG_POINTER(vkGetDeviceQueue)
 DEFINE_ORIG_POINTER(vkQueueSubmit)
@@ -128,6 +119,17 @@ DEFINE_ORIG_POINTER(vkFreeCommandBuffers)
 DEFINE_ORIG_POINTER(vkGetImageSubresourceLayout)
 DEFINE_ORIG_POINTER(vkMapMemory)
 DEFINE_ORIG_POINTER(vkGetSwapchainImagesKHR)
+DEFINE_ORIG_POINTER(vkCreateImageView)
+DEFINE_ORIG_POINTER(vkCreateFramebuffer)
+DEFINE_ORIG_POINTER(vkCreateFence)
+DEFINE_ORIG_POINTER(vkCreateSemaphore)
+DEFINE_ORIG_POINTER(vkDestroyRenderPass)
+DEFINE_ORIG_POINTER(vkDestroySemaphore)
+DEFINE_ORIG_POINTER(vkDestroyFence)
+DEFINE_ORIG_POINTER(vkDestroyCommandPool)
+DEFINE_ORIG_POINTER(vkDestroyImageView)
+DEFINE_ORIG_POINTER(vkDestroyFramebuffer)
+DEFINE_ORIG_POINTER(vkDestroySwapchainKHR)
 
 /* If the game uses the vkGetInstanceProcAddr functions to access to a function
  * that we hook, we must return our function and store the original pointers
@@ -142,6 +144,8 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     STORE_RETURN_SYMBOL(vkCreateSwapchainKHR)
     STORE_RETURN_SYMBOL(vkAcquireNextImageKHR)
     STORE_RETURN_SYMBOL(vkQueuePresentKHR)
+    STORE_SYMBOL(vkCreateImageView)
+    STORE_SYMBOL(vkCreateFramebuffer)    
     STORE_RETURN_SYMBOL_CUSTOM(vkCreateDevice)
     STORE_RETURN_SYMBOL_CUSTOM(vkDestroyDevice)
     STORE_RETURN_SYMBOL_CUSTOM(vkGetDeviceProcAddr)
@@ -150,17 +154,19 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     STORE_SYMBOL(vkGetImageMemoryRequirements)
     STORE_SYMBOL(vkAllocateMemory)
     STORE_SYMBOL(vkBindImageMemory)
-    STORE_RETURN_SYMBOL(vkCreateCommandPool)
+    STORE_SYMBOL(vkCreateCommandPool)
     STORE_RETURN_SYMBOL(vkCreateDescriptorPool)
-    STORE_RETURN_SYMBOL(vkCreateRenderPass)
+    STORE_SYMBOL(vkCreateRenderPass)
     STORE_RETURN_SYMBOL(vkGetDeviceQueue)
-    STORE_RETURN_SYMBOL(vkCmdEndRenderPass)
+    STORE_RETURN_SYMBOL(vkDestroySwapchainKHR)
+    STORE_SYMBOL(vkCmdBeginRenderPass)
     STORE_SYMBOL(vkQueueSubmit)
     STORE_SYMBOL(vkUnmapMemory)
     STORE_SYMBOL(vkFreeMemory)
     STORE_SYMBOL(vkDestroyImage)
     STORE_SYMBOL(vkAllocateCommandBuffers)
     STORE_SYMBOL(vkBeginCommandBuffer)
+    STORE_SYMBOL(vkCmdEndRenderPass)
     STORE_SYMBOL(vkCmdPipelineBarrier)
     STORE_SYMBOL(vkCmdBlitImage)
     STORE_SYMBOL(vkCmdCopyImage)
@@ -170,6 +176,15 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     STORE_SYMBOL(vkGetImageSubresourceLayout)
     STORE_SYMBOL(vkMapMemory)
     STORE_SYMBOL(vkGetSwapchainImagesKHR)
+    STORE_SYMBOL(vkCreateFence)
+    STORE_SYMBOL(vkCreateSemaphore)
+    STORE_SYMBOL(vkDestroyRenderPass)
+    STORE_SYMBOL(vkDestroySemaphore)
+    STORE_SYMBOL(vkDestroyFence)
+    STORE_SYMBOL(vkFreeCommandBuffers)
+    STORE_SYMBOL(vkDestroyCommandPool)
+    STORE_SYMBOL(vkDestroyImageView)
+    STORE_SYMBOL(vkDestroyFramebuffer)
 
     return real_pointer;
 }
@@ -187,7 +202,7 @@ VkResult myvkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAll
 
     if (res == VK_SUCCESS) {
         /* Store the instance */
-        vk::instance = *pInstance;
+        vk::context.instance = *pInstance;
     }
 
     return res;
@@ -224,16 +239,16 @@ VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateI
     DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
 
     /* Store physical device */
-    vk::physicalDevice = physicalDevice;
+    vk::context.physicalDevice = physicalDevice;
 
     /* Get memory properties of physical device */
-    orig::vkGetPhysicalDeviceMemoryProperties(physicalDevice, &vk::deviceMemoryProperties);
+    orig::vkGetPhysicalDeviceMemoryProperties(physicalDevice, &vk::context.deviceMemoryProperties);
 
     VkResult res = orig::vkCreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice);
 
     if (res == VK_SUCCESS) {
         /* Store the device */
-        vk::device = *pDevice;
+        vk::context.device = *pDevice;
 
         /* We are officially using Vulkan now. */
         Global::game_info.video |= GameInfo::VULKAN;
@@ -268,7 +283,7 @@ void vkGetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queue
     DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
 
     /* Store the queue family */
-    vk::queueFamily = queueFamilyIndex;
+    vk::context.queueFamily = queueFamilyIndex;
 
     return orig::vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
 }
@@ -286,59 +301,38 @@ VkResult vkCreateDescriptorPool(VkDevice device, const VkDescriptorPoolCreateInf
 
     if (res == VK_SUCCESS) {
         /* Store the descriptor pool */
-        vk::descriptorPool = *pDescriptorPool;
+        vk::context.descriptorPool = *pDescriptorPool;
     }
     
     return res;
 }
 
-VkResult vkCreateCommandPool(VkDevice device, const VkCommandPoolCreateInfo* pCreateInfo,
-    const VkAllocationCallbacks* pAllocator, VkCommandPool* pCommandPool)
+static void destroySwapchain()
 {
-    LINK_NAMESPACE(vkCreateCommandPool, "vulkan");
+    for (uint32_t i = 0; i < vk::context.imageCount; i++) {        
+        Vulkan_Frame* fd = &vk::context.frames[i];
+        Vulkan_FrameSemaphores* fsd = &vk::context.frameSemaphores[i];
 
-    if (GlobalState::isNative())
-        return orig::vkCreateCommandPool(device, pCreateInfo, pAllocator, pCommandPool);
+        orig::vkDestroySemaphore(vk::context.device, fsd->imageAcquiredSemaphore, vk::context.allocator);
+        orig::vkDestroySemaphore(vk::context.device, fsd->renderCompleteSemaphore, vk::context.allocator);
+        fsd->imageAcquiredSemaphore = fsd->renderCompleteSemaphore = VK_NULL_HANDLE;
 
-    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+        orig::vkDestroyFence(vk::context.device, fd->fence, vk::context.allocator);
+        orig::vkFreeCommandBuffers(vk::context.device, fd->commandPool, 1, &fd->commandBuffer);
+        orig::vkDestroyCommandPool(vk::context.device, fd->commandPool, vk::context.allocator);
+        fd->fence = VK_NULL_HANDLE;
+        fd->commandBuffer = VK_NULL_HANDLE;
+        fd->commandPool = VK_NULL_HANDLE;
 
-    VkResult res = orig::vkCreateCommandPool(device, pCreateInfo, pAllocator, pCommandPool);
+        orig::vkDestroyFramebuffer(vk::context.device, fd->framebuffer, vk::context.allocator);
+        orig::vkDestroyImageView(vk::context.device, fd->backbufferView, vk::context.allocator);
+        fd->framebuffer = VK_NULL_HANDLE;
+        fd->backbufferView = VK_NULL_HANDLE;
+    }
     
-    /* Store the command pool */
-    vk::commandPool = *pCommandPool;
-    
-    return res;
+    orig::vkDestroyRenderPass(vk::context.device, vk::context.renderPass, vk::context.allocator);
 }
 
-VkResult vkCreateRenderPass(VkDevice device, const VkRenderPassCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkRenderPass* pRenderPass)
-{
-    LINK_NAMESPACE(vkCreateRenderPass, "vulkan");
-
-    if (GlobalState::isNative())
-        return orig::vkCreateRenderPass(device, pCreateInfo, pAllocator, pRenderPass);
-
-    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
-
-    VkResult res = orig::vkCreateRenderPass(device, pCreateInfo, pAllocator, pRenderPass);
-    
-    /* Store the render pass */
-    vk::renderPass = *pRenderPass;
-    
-    return res;
-}
-
-void vkCmdEndRenderPass(VkCommandBuffer commandBuffer) {
-    LINK_NAMESPACE(vkCmdEndRenderPass, "vulkan");
-
-    if (GlobalState::isNative())
-        return orig::vkCmdEndRenderPass(commandBuffer);
-
-    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
-
-    return orig::vkCmdEndRenderPass(commandBuffer);
-}
-
-    
 VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain)
 {
     LINK_NAMESPACE(vkCreateSwapchainKHR, "vulkan");
@@ -354,9 +348,161 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
     newCreateInfo.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
     /* Save the color format */
-    vk::colorFormat = pCreateInfo->imageFormat;
+    vk::context.colorFormat = pCreateInfo->imageFormat;
 
-    return orig::vkCreateSwapchainKHR(device, &newCreateInfo, pAllocator, pSwapchain);
+    /* Destroy old swapchain elements */
+    if (vk::context.swapchain) {
+        destroySwapchain();
+    }
+
+    VkResult res = orig::vkCreateSwapchainKHR(device, &newCreateInfo, pAllocator, pSwapchain);    
+    
+    vk::context.swapchain = *pSwapchain;
+
+    /* Store the swapchain size */
+    vk::context.width = newCreateInfo.imageExtent.width;
+    vk::context.height = newCreateInfo.imageExtent.height;
+    
+    /* Get the currently acquired swapchain image */
+    orig::vkGetSwapchainImagesKHR(device, *pSwapchain, &vk::context.imageCount, nullptr);
+    
+    std::vector<VkImage> swapchainImgs;
+    swapchainImgs.resize(vk::context.imageCount);
+    orig::vkGetSwapchainImagesKHR(device, *pSwapchain, &vk::context.imageCount, swapchainImgs.data());
+    
+    vk::context.frames.resize(vk::context.imageCount);
+    vk::context.frameSemaphores.resize(vk::context.imageCount);
+    
+    VkResult err;
+
+    /* Create render pass */
+    {
+        VkAttachmentDescription attachment = {};
+        attachment.format = vk::context.colorFormat;
+        attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+        attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+        attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        VkAttachmentReference color_attachment = {};
+        color_attachment.attachment = 0;
+        color_attachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        VkSubpassDescription subpass = {};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &color_attachment;
+        VkSubpassDependency dependency = {};
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass = 0;
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.srcAccessMask = 0;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        VkRenderPassCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        info.attachmentCount = 1;
+        info.pAttachments = &attachment;
+        info.subpassCount = 1;
+        info.pSubpasses = &subpass;
+        info.dependencyCount = 1;
+        info.pDependencies = &dependency;
+        err = orig::vkCreateRenderPass(vk::context.device, &info, vk::context.allocator, &vk::context.renderPass);
+        VKCHECKERROR(err);
+    }
+    
+    /* Create command pools, command buffers, fences and semaphores */
+    for (uint32_t i = 0; i < vk::context.imageCount; i++) {
+        Vulkan_Frame* fd = &vk::context.frames[i];
+        Vulkan_FrameSemaphores* fsd = &vk::context.frameSemaphores[i];
+            
+        fd->backbuffer = swapchainImgs[i];
+        {
+            VkCommandPoolCreateInfo info = {};
+            info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+            info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+            info.queueFamilyIndex = vk::context.queueFamily;
+            err = orig::vkCreateCommandPool(vk::context.device, &info, vk::context.allocator, &fd->commandPool);
+            VKCHECKERROR(err);            
+        }
+        {
+            VkCommandBufferAllocateInfo info = {};
+            info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            info.commandPool = fd->commandPool;
+            info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            info.commandBufferCount = 1;
+            err = orig::vkAllocateCommandBuffers(vk::context.device, &info, &fd->commandBuffer);
+            VKCHECKERROR(err);
+        }
+        {
+            VkFenceCreateInfo info = {};
+            info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+            info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+            err = orig::vkCreateFence(vk::context.device, &info, vk::context.allocator, &fd->fence);
+            VKCHECKERROR(err);
+        }
+        {
+            VkSemaphoreCreateInfo info = {};
+            info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+            err = orig::vkCreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->imageAcquiredSemaphore);
+            VKCHECKERROR(err);
+            err = orig::vkCreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->renderCompleteSemaphore);
+            VKCHECKERROR(err);
+        }
+        
+        // Create The Image Views
+        {
+            VkImageViewCreateInfo info = {};
+            info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            info.format = vk::context.colorFormat;
+            info.components.r = VK_COMPONENT_SWIZZLE_R;
+            info.components.g = VK_COMPONENT_SWIZZLE_G;
+            info.components.b = VK_COMPONENT_SWIZZLE_B;
+            info.components.a = VK_COMPONENT_SWIZZLE_A;
+            VkImageSubresourceRange image_range = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+            info.subresourceRange = image_range;
+            info.image = fd->backbuffer;
+            err = orig::vkCreateImageView(vk::context.device, &info, vk::context.allocator, &fd->backbufferView);
+            VKCHECKERROR(err);
+        }
+        
+        /* Create Framebuffer */
+        {
+            VkImageView attachment[1];
+            VkFramebufferCreateInfo info = {};
+            info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            info.renderPass = vk::context.renderPass;
+            info.attachmentCount = 1;
+            info.pAttachments = attachment;
+            info.width = vk::context.width;
+            info.height = vk::context.height;
+            info.layers = 1;
+            attachment[0] = fd->backbufferView;
+            VkResult err = orig::vkCreateFramebuffer(device, &info, vk::context.allocator, &fd->framebuffer);
+            VKCHECKERROR(err);
+        }
+    }
+    
+    return res;
+}
+
+void vkDestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAllocationCallbacks* pAllocator)
+{
+    LINK_NAMESPACE(vkDestroySwapchainKHR, "vulkan");
+
+    if (GlobalState::isNative())
+        return orig::vkDestroySwapchainKHR(device, swapchain, pAllocator);
+
+    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+
+    if (vk::context.swapchain == swapchain) {
+        destroySwapchain();
+        vk::context.swapchain = VK_NULL_HANDLE;
+    }
+
+    return orig::vkDestroySwapchainKHR(device, swapchain, pAllocator);
 }
 
 VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* pImageIndex)
@@ -370,18 +516,14 @@ VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64
 
     VkResult res = orig::vkAcquireNextImageKHR(device, swapchain, timeout, semaphore, fence, pImageIndex);
     
-    debuglogstdio(LCF_WINDOW | LCF_VULKAN, "   obtained index %d", *pImageIndex);
-
-    /* Store swapchain and image index */
-    vk::swapchain = swapchain;
-    vk::swapchainImgIndex = *pImageIndex;
+    /* Store image index */
+    vk::context.frameIndex = *pImageIndex;
     return res;
 }
 
 VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
 {
     LINK_NAMESPACE(vkQueuePresentKHR, "vulkan");
-    LINK_NAMESPACE(vkGetSwapchainImagesKHR, "vulkan");
 
     if (GlobalState::isNative())
         return orig::vkQueuePresentKHR(queue, pPresentInfo);
@@ -389,7 +531,7 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
     DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
 
     /* Store the graphic queue */
-    vk::graphicsQueue = queue;
+    vk::context.graphicsQueue = queue;
 
     /* We check that only one swapchain is being presented.
      * Otherwise, I don't know what to do. */
@@ -397,15 +539,8 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
         debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_WARNING, "Multiple swapchains are being presented");
     }
 
-    /* Get the currently acquired swapchain image
-     * TODO: we don't need to get this on every call. */
-    uint32_t count;
-    orig::vkGetSwapchainImagesKHR(vk::device, vk::swapchain, &count, nullptr);
-    vk::swapchainImgs.resize(count);
-    orig::vkGetSwapchainImagesKHR(vk::device, vk::swapchain, &count, vk::swapchainImgs.data());
-
     /* Start the frame boundary and pass the function to draw */
-    static RenderHUD renderHUD;
+    static RenderHUD_Vulkan renderHUD;
     frameBoundary([&] () {
         static bool first = true;
         
@@ -423,7 +558,7 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
 
             /* Present the queue with the stored image index, because we will 
              * acquire other images when presenting again. */
-            pi.pImageIndices = &vk::swapchainImgIndex;
+            pi.pImageIndices = &vk::context.frameIndex;
 //            debuglogstdio(LCF_WINDOW | LCF_VULKAN, "vkQueuePresentKHR called again with image index %d", vk::swapchainImgIndex);
             orig::vkQueuePresentKHR(queue, &pi);
         }

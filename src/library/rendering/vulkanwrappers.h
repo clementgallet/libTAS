@@ -28,23 +28,50 @@
 
 namespace libtas {
 
+
+/* Structs taken from ImGui_ImplVulkanH_* versions */
+struct Vulkan_Frame
+{
+    VkCommandPool       commandPool;
+    VkCommandBuffer     commandBuffer;
+    VkFence             fence;
+    VkImage             backbuffer;
+    VkImageView         backbufferView;
+    VkFramebuffer       framebuffer;
+};
+
+struct Vulkan_FrameSemaphores
+{
+    VkSemaphore         imageAcquiredSemaphore;
+    VkSemaphore         renderCompleteSemaphore;
+};
+
+struct Vulkan_Context
+{
+    VkAllocationCallbacks* allocator;
+    VkInstance instance;
+    VkPhysicalDevice physicalDevice;
+    VkDevice device;
+    VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
+    VkQueue graphicsQueue;
+    uint32_t queueFamily;
+    VkDescriptorPool descriptorPool;
+    VkFormat colorFormat;
+    int                 width;
+    int                 height;
+    VkSwapchainKHR      swapchain;
+    VkRenderPass        renderPass;
+    VkClearValue        clearValue;
+    uint32_t            frameIndex;             // Current frame being rendered to (0 <= FrameIndex < FrameInFlightCount)
+    uint32_t            imageCount;             // Number of simultaneous in-flight frames (returned by vkGetSwapchainImagesKHR, usually derived from min_image_count)
+    uint32_t            semaphoreIndex;         // Current set of swapchain wait semaphores we're using (needs to be distinct from per frame data)
+    std::vector<Vulkan_Frame> frames;
+    std::vector<Vulkan_FrameSemaphores> frameSemaphores;
+};
+
 /* Export several variables used for rendering */
 namespace vk {
-    extern VkAllocationCallbacks* allocator;
-    extern VkInstance instance;
-    extern VkPhysicalDevice physicalDevice;
-    extern VkDevice device;
-    extern VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-    extern bool supportsBlit;
-    extern VkQueue graphicsQueue;
-    extern uint32_t queueFamily;
-    extern VkDescriptorPool descriptorPool;
-    extern VkCommandPool commandPool;
-    extern VkRenderPass renderPass;
-    extern VkSwapchainKHR swapchain;
-    extern VkFormat colorFormat;
-    extern uint32_t swapchainImgIndex;
-    extern std::vector<VkImage> swapchainImgs;
+    extern Vulkan_Context context;
 
     void checkVkResult(VkResult err);
 
@@ -67,15 +94,10 @@ void vkGetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queue
 
 VkResult vkCreateDescriptorPool(VkDevice device, const VkDescriptorPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorPool* pDescriptorPool);
 
-VkResult vkCreateCommandPool(VkDevice device, const VkCommandPoolCreateInfo* pCreateInfo,
-    const VkAllocationCallbacks* pAllocator, VkCommandPool* pCommandPool);
-
-VkResult vkCreateRenderPass(VkDevice device, const VkRenderPassCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkRenderPass* pRenderPass);
-
-void vkCmdEndRenderPass(VkCommandBuffer commandBuffer);
-    
 VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain);
 
+void vkDestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAllocationCallbacks* pAllocator);
+    
 VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* pImageIndex);
 
 VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo);

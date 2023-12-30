@@ -36,12 +36,14 @@ class RenderHUD_Vulkan : public RenderHUD_Base_MacOS
     public:
         ~RenderHUD_Vulkan();
 
+        void init();
+
         /* Destroy context */
         static void fini();
 
         void newFrame();
 
-        void render();
+        void render();        
 };
 }
 

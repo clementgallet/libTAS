@@ -191,7 +191,8 @@ libtas_so_SOURCES = \
     ../external/imgui/imgui_widgets.cpp \
     ../external/imgui/imgui.cpp \
     ../external/imgui/imgui_impl_opengl3.cpp \
-    ../external/imgui/imgui_impl_sdlrenderer2.cpp
+    ../external/imgui/imgui_impl_sdlrenderer2.cpp \
+    ../external/imgui/imgui_impl_vulkan.cpp
 
 libtas_so_CXXFLAGS = $(LIBSWRESAMPLE_CFLAGS) -fPIC -shared -fvisibility=hidden -fno-stack-protector
 libtas_so_CXXFLAGS += -DLIBTAS_LIBRARY
