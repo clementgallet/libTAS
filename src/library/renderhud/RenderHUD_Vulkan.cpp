@@ -124,19 +124,23 @@ void RenderHUD_Vulkan::render()
         VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         VkSubmitInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        info.waitSemaphoreCount = 0;
-        // info.pWaitSemaphores = &vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore;
         info.pWaitDstStageMask = &wait_stage;
         info.commandBufferCount = 1;
         info.pCommandBuffers = &fd->commandBuffer;
-        info.signalSemaphoreCount = 0;
-        // info.pSignalSemaphores = &vk::context.frameSemaphores[vk::context.semaphoreIndex].renderCompleteSemaphore;
+        info.waitSemaphoreCount = 1;
+        info.pWaitSemaphores = &vk::context.currentSemaphore;
+        info.signalSemaphoreCount = 1;
+        info.pSignalSemaphores = &vk::context.frameSemaphores[vk::context.semaphoreIndex].osdCompleteSemaphore;
     
         err = orig::vkEndCommandBuffer(fd->commandBuffer);
         VKCHECKERROR(err);
-//        err = orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &info, fd->fence);
-        err = orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &info, VK_NULL_HANDLE);        
+
+        debuglogstdio(LCF_VULKAN, "    vkQueueSubmit wait on %llx and signal %llx and semindex %d", info.pWaitSemaphores[0], info.pSignalSemaphores[0], vk::context.semaphoreIndex);
+
+        err = orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &info, VK_NULL_HANDLE);
         VKCHECKERROR(err);
+
+        vk::context.currentSemaphore = vk::context.frameSemaphores[vk::context.semaphoreIndex].osdCompleteSemaphore;
         
         /* TODO: Get rid of this. For now it is necessary */
         orig::vkQueueWaitIdle(vk::context.graphicsQueue);

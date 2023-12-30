@@ -314,8 +314,9 @@ static void destroySwapchain()
         Vulkan_FrameSemaphores* fsd = &vk::context.frameSemaphores[i];
 
         orig::vkDestroySemaphore(vk::context.device, fsd->imageAcquiredSemaphore, vk::context.allocator);
-        orig::vkDestroySemaphore(vk::context.device, fsd->renderCompleteSemaphore, vk::context.allocator);
-        fsd->imageAcquiredSemaphore = fsd->renderCompleteSemaphore = VK_NULL_HANDLE;
+        orig::vkDestroySemaphore(vk::context.device, fsd->screenCompleteSemaphore, vk::context.allocator);
+        orig::vkDestroySemaphore(vk::context.device, fsd->osdCompleteSemaphore, vk::context.allocator);
+        fsd->imageAcquiredSemaphore = fsd->screenCompleteSemaphore = fsd->osdCompleteSemaphore = VK_NULL_HANDLE;
 
         orig::vkDestroyFence(vk::context.device, fd->fence, vk::context.allocator);
         orig::vkFreeCommandBuffers(vk::context.device, fd->commandPool, 1, &fd->commandBuffer);
@@ -447,7 +448,9 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
             info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
             err = orig::vkCreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->imageAcquiredSemaphore);
             VKCHECKERROR(err);
-            err = orig::vkCreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->renderCompleteSemaphore);
+            err = orig::vkCreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->screenCompleteSemaphore);
+            VKCHECKERROR(err);
+            err = orig::vkCreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->osdCompleteSemaphore);
             VKCHECKERROR(err);
         }
         
@@ -539,29 +542,31 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
         debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_WARNING, "Multiple swapchains are being presented");
     }
 
+    if (pPresentInfo->waitSemaphoreCount == 0) {
+        vk::context.currentSemaphore = VK_NULL_HANDLE;
+    }
+    else if (pPresentInfo->waitSemaphoreCount == 1) {
+        vk::context.currentSemaphore = pPresentInfo->pWaitSemaphores[0];
+    }
+    else {
+        debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_ERROR, "   Waiting on multiple semaphores");            
+        vk::context.currentSemaphore = VK_NULL_HANDLE;
+    }
+
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_Vulkan renderHUD;
     frameBoundary([&] () {
-        static bool first = true;
-        
-        if (first) {
-            first = false;
-            orig::vkQueuePresentKHR(queue, pPresentInfo);    
-        }
-        else {
-            VkPresentInfoKHR pi = *pPresentInfo;
+        VkPresentInfoKHR pi = *pPresentInfo;
 
-            /* After the first time, don't wait on any semaphore because rendering
-             * is already completed. */
-            pi.waitSemaphoreCount = 0;
-            pi.pWaitSemaphores = nullptr;
+        /* Wait on the last semaphore that was used by our code */
+        pi.waitSemaphoreCount = 1;
+        pi.pWaitSemaphores = &vk::context.currentSemaphore;
 
-            /* Present the queue with the stored image index, because we will 
-             * acquire other images when presenting again. */
-            pi.pImageIndices = &vk::context.frameIndex;
-//            debuglogstdio(LCF_WINDOW | LCF_VULKAN, "vkQueuePresentKHR called again with image index %d", vk::swapchainImgIndex);
-            orig::vkQueuePresentKHR(queue, &pi);
-        }
+        /* Present the queue with the stored image index, because we will 
+         * acquire other images when presenting again. */
+        pi.pImageIndices = &vk::context.frameIndex;
+        // debuglogstdio(LCF_WINDOW | LCF_VULKAN, "    vkQueuePresentKHR wait on semaphore %llx", vk::context.currentSemaphore);
+        orig::vkQueuePresentKHR(queue, &pi);
     }, renderHUD);
 
     return VK_SUCCESS;

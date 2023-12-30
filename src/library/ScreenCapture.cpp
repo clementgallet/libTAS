@@ -938,10 +938,25 @@ int ScreenCapture::copyScreenToSurface()
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &cmdBuffer;
+        if (!vk::context.currentSemaphore) {
+            debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_ERROR, "    No semaphore to wait on");
+            submitInfo.waitSemaphoreCount = 0;
+            submitInfo.pWaitSemaphores = VK_NULL_HANDLE;            
+        }
+        else {
+            submitInfo.waitSemaphoreCount = 1;
+            submitInfo.pWaitSemaphores = &vk::context.currentSemaphore;
+        }
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = &vk::context.frameSemaphores[vk::context.semaphoreIndex].screenCompleteSemaphore;
+
+        debuglogstdio(LCF_VULKAN, "    vkQueueSubmit wait on %llx and signal %llx and semindex %d", submitInfo.pWaitSemaphores[0], submitInfo.pSignalSemaphores[0], vk::context.semaphoreIndex);
 
         if ((res = orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE)) != VK_SUCCESS) {
             debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkEndCommandBuffer failed with error %d", res);
         }
+
+        vk::context.currentSemaphore = submitInfo.pSignalSemaphores[0];
 
         orig::vkQueueWaitIdle(vk::context.graphicsQueue);
     }
@@ -1262,11 +1277,11 @@ int ScreenCapture::copySurfaceToScreen()
         LINK_NAMESPACE(vkFreeCommandBuffers, "vulkan");
 
         /* Acquire an image from the swapchain */
-        VkResult res = orig::vkAcquireNextImageKHR(vk::context.device, vk::context.swapchain, UINT64_MAX, VK_NULL_HANDLE, VK_NULL_HANDLE, &vk::context.frameIndex);
+        VkResult res = orig::vkAcquireNextImageKHR(vk::context.device, vk::context.swapchain, UINT64_MAX, vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore, VK_NULL_HANDLE, &vk::context.frameIndex);
         if ((res != VK_SUCCESS) && (res != VK_SUBOPTIMAL_KHR))
-            debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_ERROR, "vkAcquireNextImageKHR failed with error %d", res);
+            debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkAcquireNextImageKHR failed with error %d", res);
 
-        // debuglogstdio(LCF_WINDOW | LCF_VULKAN, "vkAcquireNextImageKHR called again. Returns image index %d", vk::swapchainImgIndex);
+        debuglogstdio(LCF_VULKAN, "vkAcquireNextImageKHR signals %llx and returns image index %d", vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore, vk::context.frameIndex);
         
         VkCommandBuffer cmdBuffer = vk::context.frames[vk::context.frameIndex].commandBuffer;
         VkImage backbuffer = vk::context.frames[vk::context.frameIndex].backbuffer;
@@ -1381,10 +1396,18 @@ int ScreenCapture::copySurfaceToScreen()
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &cmdBuffer;
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = &vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore;
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = &vk::context.frameSemaphores[vk::context.semaphoreIndex].screenCompleteSemaphore;
+
+        debuglogstdio(LCF_VULKAN, "    vkQueueSubmit wait on %llx and signal %llx and semindex %d", submitInfo.pWaitSemaphores[0], submitInfo.pSignalSemaphores[0], vk::context.semaphoreIndex);
 
         if ((res = orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE)) != VK_SUCCESS) {
             debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkEndCommandBuffer failed with error %d", res);
         }
+
+        vk::context.currentSemaphore = vk::context.frameSemaphores[vk::context.semaphoreIndex].screenCompleteSemaphore;
 
         orig::vkQueueWaitIdle(vk::context.graphicsQueue);
     }

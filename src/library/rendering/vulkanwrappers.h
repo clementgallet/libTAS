@@ -43,7 +43,8 @@ struct Vulkan_Frame
 struct Vulkan_FrameSemaphores
 {
     VkSemaphore         imageAcquiredSemaphore;
-    VkSemaphore         renderCompleteSemaphore;
+    VkSemaphore         screenCompleteSemaphore;
+    VkSemaphore         osdCompleteSemaphore;
 };
 
 struct Vulkan_Context
@@ -65,6 +66,7 @@ struct Vulkan_Context
     uint32_t            frameIndex;             // Current frame being rendered to (0 <= FrameIndex < FrameInFlightCount)
     uint32_t            imageCount;             // Number of simultaneous in-flight frames (returned by vkGetSwapchainImagesKHR, usually derived from min_image_count)
     uint32_t            semaphoreIndex;         // Current set of swapchain wait semaphores we're using (needs to be distinct from per frame data)
+    VkSemaphore         currentSemaphore;
     std::vector<Vulkan_Frame> frames;
     std::vector<Vulkan_FrameSemaphores> frameSemaphores;
 };
