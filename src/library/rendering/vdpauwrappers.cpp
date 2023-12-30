@@ -24,7 +24,7 @@
 #include "ScreenCapture.h"
 #include "frame.h"
 #include "global.h"
-#include "renderhud/RenderHUD_VDPAU.h"
+#include "renderhud/RenderHUD.h"
 #include "DeterministicTimer.h"
 #include "backtrace.h"
 #include "xlib/xwindows.h" // x11::gameXWindows
@@ -106,8 +106,6 @@ VdpStatus VdpPresentationQueueCreate(VdpDevice device, VdpPresentationQueueTarge
     Global::game_info.video |= GameInfo::VDPAU;
     Global::game_info.tosend = true;
 
-    RenderHUD_VDPAU::setDevice(device);
-
     return orig::VdpPresentationQueueCreate(device, presentation_queue_target, presentation_queue);
 }
 
@@ -142,8 +140,7 @@ VdpStatus VdpPresentationQueueDisplay(VdpPresentationQueue presentation_queue, V
     ScreenCapture::resize(uw, uh);
 
     /* Start the frame boundary and pass the function to draw */
-    static RenderHUD_VDPAU renderHUD;
-    renderHUD.setSurface(surface);
+    static RenderHUD renderHUD;
     frameBoundary([&] () {orig::VdpPresentationQueueDisplay(presentation_queue, surface, clip_width, clip_height, earliest_presentation_time);}, renderHUD);
 
     return VDP_STATUS_OK;

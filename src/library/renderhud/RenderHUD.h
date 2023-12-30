@@ -24,8 +24,6 @@
 #ifndef LIBTAS_RENDERHUD_H_INCL
 #define LIBTAS_RENDERHUD_H_INCL
 
-#include "SurfaceARGB.h"
-
 #include "TimeHolder.h"
 #include "../shared/inputs/AllInputs.h"
 
@@ -135,7 +133,7 @@ class RenderHUD
         struct LuaText : public LuaShape
         {
             std::string text;
-            Color color;
+            uint32_t color;
             int x;
             int y;
             void render(RenderHUD *hud) override;
@@ -145,7 +143,7 @@ class RenderHUD
         {
             int x;
             int y;
-            Color color;
+            uint32_t color;
             void render(RenderHUD *hud) override;
         };
 
@@ -156,7 +154,7 @@ class RenderHUD
             int w;
             int h;
             int thickness;
-            Color color;
+            uint32_t color;
             int filled;
             void render(RenderHUD *hud) override;
         };
@@ -167,7 +165,7 @@ class RenderHUD
             int y0;
             int x1;
             int y1;
-            Color color;
+            uint32_t color;
             void render(RenderHUD *hud) override;
         };
 
@@ -177,7 +175,7 @@ class RenderHUD
             int center_y;
             int radius_x;
             int radius_y;
-            Color color;
+            uint32_t color;
             void render(RenderHUD *hud) override;
         };
 

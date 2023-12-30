@@ -97,16 +97,10 @@ libtas_so_SOURCES = \
     inputs/xinput.cpp \
     inputs/xpointer.cpp \
     renderhud/RenderHUD_GL.cpp \
-    renderhud/RenderHUD_SDL1.cpp \
     renderhud/RenderHUD_SDL2_renderer.cpp \
-    renderhud/RenderHUD_SDL2_surface.cpp \
-    renderhud/RenderHUD_VDPAU.cpp \
     renderhud/RenderHUD_Vulkan.cpp \
-    renderhud/RenderHUD_XShm.cpp \
     renderhud/RenderHUD.cpp \
     renderhud/RenderHUD_Base_Linux.cpp \
-    renderhud/SurfaceARGB.cpp \
-    renderhud/SurfaceXImage.cpp \
 	rendering/eglwrappers.cpp \
 	rendering/glxwrappers.cpp \
 	rendering/openglwrappers.cpp \

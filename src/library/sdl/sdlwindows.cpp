@@ -26,8 +26,6 @@
 #include "hook.h"
 #include "frame.h"
 #include "renderhud/RenderHUD_GL.h"
-#include "renderhud/RenderHUD_SDL1.h"
-#include "renderhud/RenderHUD_SDL2_surface.h"
 #include "general/timewrappers.h"
 #include "ScreenCapture.h"
 #include "DeterministicTimer.h"
@@ -469,7 +467,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
-    static RenderHUD_SDL1 renderHUD;
+    static RenderHUD renderHUD;
     frameBoundary([&] () {orig::SDL_Flip(screen);}, renderHUD);
 
     return 0;
@@ -486,7 +484,7 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with %d rects", __func__, numrects);
 
     /* Start the frame boundary and pass the function to draw */
-    static RenderHUD_SDL1 renderHUD;
+    static RenderHUD renderHUD;
     frameBoundary([&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, renderHUD);
 }
 
@@ -500,7 +498,7 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with pos (%d,%d) and size (%u,%u)", __func__, x, y, w, h);
 
     /* Start the frame boundary and pass the function to draw */
-    static RenderHUD_SDL1 renderHUD;
+    static RenderHUD renderHUD;
     frameBoundary([&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, renderHUD);
 }
 
@@ -562,7 +560,7 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     Global::game_info.video |= GameInfo::SDL2_SURFACE;
 
     /* Start the frame boundary and pass the function to draw */
-    static RenderHUD_SDL2_surface renderHUD;
+    static RenderHUD renderHUD;
     frameBoundary([&] () {orig::SDL_UpdateWindowSurface(window);}, renderHUD);
 
     return 0;
@@ -580,7 +578,7 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     Global::game_info.video |= GameInfo::SDL2_SURFACE;
 
     /* Start the frame boundary and pass the function to draw */
-    static RenderHUD_SDL2_surface renderHUD;
+    static RenderHUD renderHUD;
     frameBoundary([&] () {orig::SDL_UpdateWindowSurface(window);}, renderHUD);
 
     return 0;

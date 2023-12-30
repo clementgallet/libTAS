@@ -38,30 +38,30 @@ std::string RenderHUD::marker;
 
 void RenderHUD::LuaText::render(RenderHUD *hud)
 {
-    ImGui::GetBackgroundDrawList()->AddText(ImVec2(x, y), IM_COL32(color.r, color.g, color.b, color.a), text.c_str());
+    ImGui::GetBackgroundDrawList()->AddText(ImVec2(x, y), color, text.c_str());
 }
 
 void RenderHUD::LuaPixel::render(RenderHUD *hud)
 {
-    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(x, y), ImVec2(x, y), IM_COL32(color.r, color.g, color.b, color.a));
+    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(x, y), ImVec2(x, y), color);
 }
 
 void RenderHUD::LuaRect::render(RenderHUD *hud)
 {
     if (filled)
-        ImGui::GetBackgroundDrawList()->AddRectFilled(ImVec2(x, y), ImVec2(x+w, y+h), IM_COL32(color.r, color.g, color.b, color.a));
+        ImGui::GetBackgroundDrawList()->AddRectFilled(ImVec2(x, y), ImVec2(x+w, y+h), color);
     else
-        ImGui::GetBackgroundDrawList()->AddRect(ImVec2(x, y), ImVec2(x+w, y+h), IM_COL32(color.r, color.g, color.b, color.a), 0.0f, 0, thickness);
+        ImGui::GetBackgroundDrawList()->AddRect(ImVec2(x, y), ImVec2(x+w, y+h), color, 0.0f, 0, thickness);
 }
 
 void RenderHUD::LuaLine::render(RenderHUD *hud)
 {
-    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(x0, y0), ImVec2(x1, y1), IM_COL32(color.r, color.g, color.b, color.a));
+    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(x0, y0), ImVec2(x1, y1), color);
 }
 
 void RenderHUD::LuaEllipse::render(RenderHUD *hud)
 {
-    ImGui::GetBackgroundDrawList()->AddEllipse(ImVec2(center_x, center_y), radius_x, radius_y, IM_COL32(color.r, color.g, color.b, color.a));
+    ImGui::GetBackgroundDrawList()->AddEllipse(ImVec2(center_x, center_y), radius_x, radius_y, color);
 }
 
 void RenderHUD::drawFrame(uint64_t framecount, uint64_t nondraw_framecount)
@@ -280,10 +280,10 @@ void RenderHUD::insertLuaText(int x, int y, std::string text, uint32_t color)
     lt->x = x;
     lt->y = y;
     lt->text = text;
-    lt->color = {static_cast<uint8_t>((color >> 16) & 0xff),
+    lt->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
                  static_cast<uint8_t>((color >> 8) & 0xff),
                  static_cast<uint8_t>(color & 0xff),
-                 static_cast<uint8_t>((color >> 24) & 0xff)};
+                 static_cast<uint8_t>((color >> 24) & 0xff));
     lua_shapes.emplace_back(lt);
 }
 
@@ -292,10 +292,10 @@ void RenderHUD::insertLuaPixel(int x, int y, uint32_t color)
     auto lp = new LuaPixel;
     lp->x = x;
     lp->y = y;
-    lp->color = {static_cast<uint8_t>((color >> 16) & 0xff),
+    lp->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
                  static_cast<uint8_t>((color >> 8) & 0xff),
                  static_cast<uint8_t>(color & 0xff),
-                 static_cast<uint8_t>((color >> 24) & 0xff)};
+                 static_cast<uint8_t>((color >> 24) & 0xff));
     lua_shapes.emplace_back(lp);
 }
 
@@ -307,10 +307,10 @@ void RenderHUD::insertLuaRect(int x, int y, int w, int h, int thickness, uint32_
     lr->w = w;
     lr->h = h;
     lr->thickness = thickness;
-    lr->color = {static_cast<uint8_t>((color >> 16) & 0xff),
+    lr->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
                    static_cast<uint8_t>((color >> 8) & 0xff),
                    static_cast<uint8_t>(color & 0xff),
-                   static_cast<uint8_t>((color >> 24) & 0xff)};
+                   static_cast<uint8_t>((color >> 24) & 0xff));
     lr->filled = filled;
     lua_shapes.emplace_back(lr);
 }
@@ -322,10 +322,10 @@ void RenderHUD::insertLuaLine(int x0, int y0, int x1, int y1, uint32_t color)
     ll->y0 = y0;
     ll->x1 = x1;
     ll->y1 = y1;
-    ll->color = {static_cast<uint8_t>((color >> 16) & 0xff),
+    ll->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
                  static_cast<uint8_t>((color >> 8) & 0xff),
                  static_cast<uint8_t>(color & 0xff),
-                 static_cast<uint8_t>((color >> 24) & 0xff)};
+                 static_cast<uint8_t>((color >> 24) & 0xff));
     lua_shapes.emplace_back(ll);
 }
 
@@ -336,10 +336,10 @@ void RenderHUD::insertLuaEllipse(int center_x, int center_y, int radius_x, int r
     le->center_y = center_y;
     le->radius_x = radius_x;
     le->radius_y = radius_y;
-    le->color = {static_cast<uint8_t>((color >> 16) & 0xff),
+    le->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
                  static_cast<uint8_t>((color >> 8) & 0xff),
                  static_cast<uint8_t>(color & 0xff),
-                 static_cast<uint8_t>((color >> 24) & 0xff)};
+                 static_cast<uint8_t>((color >> 24) & 0xff));
     lua_shapes.emplace_back(le);
 }
 

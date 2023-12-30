@@ -26,11 +26,7 @@
 #include <X11/X.h>
 
 namespace libtas {
-/* This class provide a method to create a surface from
- * a text, based on the sdl_ttf library. This library was modified so
- * that it does not depend on SDL anymore. It returns now a standard
- * 32-bit surface using the ARGB mask, encapsulated in a SurfaceARGB object.
- */
+/* Specific methods for Linux */
 class RenderHUD_Base_Linux : public RenderHUD
 {
     public:

@@ -25,7 +25,7 @@
 #include "GlobalState.h"
 #include "ScreenCapture.h"
 #include "frame.h"
-#include "renderhud/RenderHUD_XShm.h"
+#include "renderhud/RenderHUD.h"
 #include "DeterministicTimer.h"
 #include "global.h"
 #include "../shared/sockethelpers.h"
@@ -93,7 +93,7 @@ OVERRIDE Bool XShmPutImage(
     ScreenCapture::resize(image->width, image->height);
 
     /* Start the frame boundary and pass the function to draw */
-    static RenderHUD_XShm renderHUD;
+    static RenderHUD renderHUD;
     frameBoundary([&] () {orig::XShmPutImage(dpy, d, gc, image, src_x, src_y, dst_x, dst_y, src_width, src_height, send_event);}, renderHUD);
 
     return True;
