@@ -198,7 +198,12 @@ VkResult myvkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAll
 
     DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
 
-    VkResult res = orig::vkCreateInstance(pCreateInfo, pAllocator, pInstance);
+    VkInstanceCreateInfo createInfo = *pCreateInfo;
+    // createInfo.enabledLayerCount = 1;
+    // const char* layer = "VK_LAYER_KHRONOS_validation";
+    // createInfo.ppEnabledLayerNames = &layer;
+    
+    VkResult res = orig::vkCreateInstance(&createInfo, pAllocator, pInstance);
 
     if (res == VK_SUCCESS) {
         /* Store the instance */
@@ -309,6 +314,8 @@ VkResult vkCreateDescriptorPool(VkDevice device, const VkDescriptorPoolCreateInf
 
 static void destroySwapchain()
 {
+    RenderHUD_Vulkan::fini();
+
     for (uint32_t i = 0; i < vk::context.imageCount; i++) {        
         Vulkan_Frame* fd = &vk::context.frames[i];
         Vulkan_FrameSemaphores* fsd = &vk::context.frameSemaphores[i];
@@ -319,10 +326,12 @@ static void destroySwapchain()
         fsd->imageAcquiredSemaphore = fsd->screenCompleteSemaphore = fsd->osdCompleteSemaphore = VK_NULL_HANDLE;
 
         orig::vkDestroyFence(vk::context.device, fd->fence, vk::context.allocator);
-        orig::vkFreeCommandBuffers(vk::context.device, fd->commandPool, 1, &fd->commandBuffer);
+        orig::vkFreeCommandBuffers(vk::context.device, fd->commandPool, 1, &fd->screenCommandBuffer);
+        orig::vkFreeCommandBuffers(vk::context.device, fd->commandPool, 1, &fd->osdCommandBuffer);
         orig::vkDestroyCommandPool(vk::context.device, fd->commandPool, vk::context.allocator);
         fd->fence = VK_NULL_HANDLE;
-        fd->commandBuffer = VK_NULL_HANDLE;
+        fd->screenCommandBuffer = VK_NULL_HANDLE;
+        fd->osdCommandBuffer = VK_NULL_HANDLE;
         fd->commandPool = VK_NULL_HANDLE;
 
         orig::vkDestroyFramebuffer(vk::context.device, fd->framebuffer, vk::context.allocator);
@@ -433,7 +442,16 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
             info.commandPool = fd->commandPool;
             info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
             info.commandBufferCount = 1;
-            err = orig::vkAllocateCommandBuffers(vk::context.device, &info, &fd->commandBuffer);
+            err = orig::vkAllocateCommandBuffers(vk::context.device, &info, &fd->screenCommandBuffer);
+            VKCHECKERROR(err);
+        }
+        {
+            VkCommandBufferAllocateInfo info = {};
+            info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            info.commandPool = fd->commandPool;
+            info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            info.commandBufferCount = 1;
+            err = orig::vkAllocateCommandBuffers(vk::context.device, &info, &fd->osdCommandBuffer);
             VKCHECKERROR(err);
         }
         {
@@ -567,6 +585,10 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
         pi.pImageIndices = &vk::context.frameIndex;
         // debuglogstdio(LCF_WINDOW | LCF_VULKAN, "    vkQueuePresentKHR wait on semaphore %llx", vk::context.currentSemaphore);
         orig::vkQueuePresentKHR(queue, &pi);
+        
+        /* TODO: Use fence to delay waiting on queue */
+        orig::vkQueueWaitIdle(vk::context.graphicsQueue);
+
     }, renderHUD);
 
     return VK_SUCCESS;

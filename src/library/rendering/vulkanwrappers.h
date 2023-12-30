@@ -33,7 +33,8 @@ namespace libtas {
 struct Vulkan_Frame
 {
     VkCommandPool       commandPool;
-    VkCommandBuffer     commandBuffer;
+    VkCommandBuffer     screenCommandBuffer;
+    VkCommandBuffer     osdCommandBuffer;
     VkFence             fence;
     VkImage             backbuffer;
     VkImageView         backbufferView;

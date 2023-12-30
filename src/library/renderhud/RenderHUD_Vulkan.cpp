@@ -67,8 +67,10 @@ void RenderHUD_Vulkan::init() {
 }
 
 void RenderHUD_Vulkan::fini() {
-    ImGui_ImplVulkan_Shutdown();
-    ImGui::DestroyContext();
+    if (ImGui::GetCurrentContext()) {
+        ImGui_ImplVulkan_Shutdown();
+        ImGui::DestroyContext();
+    }
 }
 
 void RenderHUD_Vulkan::newFrame()
@@ -99,7 +101,7 @@ void RenderHUD_Vulkan::render()
         VkCommandBufferBeginInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        err = orig::vkBeginCommandBuffer(fd->commandBuffer, &info);
+        err = orig::vkBeginCommandBuffer(fd->osdCommandBuffer, &info);
         VKCHECKERROR(err);
     }
     
@@ -112,27 +114,27 @@ void RenderHUD_Vulkan::render()
         info.renderArea.extent.height = vk::context.height;
         info.clearValueCount = 1;
         info.pClearValues = &vk::context.clearValue;
-        orig::vkCmdBeginRenderPass(fd->commandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
+        orig::vkCmdBeginRenderPass(fd->osdCommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
     }
     
     // Record dear imgui primitives into command buffer
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), fd->commandBuffer);
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), fd->osdCommandBuffer);
     
     // Submit command buffer
-    orig::vkCmdEndRenderPass(fd->commandBuffer);
+    orig::vkCmdEndRenderPass(fd->osdCommandBuffer);
     {
         VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         VkSubmitInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         info.pWaitDstStageMask = &wait_stage;
         info.commandBufferCount = 1;
-        info.pCommandBuffers = &fd->commandBuffer;
+        info.pCommandBuffers = &fd->osdCommandBuffer;
         info.waitSemaphoreCount = 1;
         info.pWaitSemaphores = &vk::context.currentSemaphore;
         info.signalSemaphoreCount = 1;
         info.pSignalSemaphores = &vk::context.frameSemaphores[vk::context.semaphoreIndex].osdCompleteSemaphore;
     
-        err = orig::vkEndCommandBuffer(fd->commandBuffer);
+        err = orig::vkEndCommandBuffer(fd->osdCommandBuffer);
         VKCHECKERROR(err);
 
         debuglogstdio(LCF_VULKAN, "    vkQueueSubmit wait on %llx and signal %llx and semindex %d", info.pWaitSemaphores[0], info.pSignalSemaphores[0], vk::context.semaphoreIndex);
@@ -141,9 +143,6 @@ void RenderHUD_Vulkan::render()
         VKCHECKERROR(err);
 
         vk::context.currentSemaphore = vk::context.frameSemaphores[vk::context.semaphoreIndex].osdCompleteSemaphore;
-        
-        /* TODO: Get rid of this. For now it is necessary */
-        orig::vkQueueWaitIdle(vk::context.graphicsQueue);
     }
 }
 

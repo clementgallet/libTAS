@@ -120,7 +120,6 @@ DECLARE_ORIG_POINTER(vkCmdPipelineBarrier)
 DECLARE_ORIG_POINTER(vkCmdBlitImage)
 DECLARE_ORIG_POINTER(vkCmdCopyImage)
 DECLARE_ORIG_POINTER(vkEndCommandBuffer)
-DECLARE_ORIG_POINTER(vkQueueWaitIdle)
 DECLARE_ORIG_POINTER(vkQueueSubmit)
 DECLARE_ORIG_POINTER(vkFreeCommandBuffers)
 DECLARE_ORIG_POINTER(vkGetImageSubresourceLayout)
@@ -389,11 +388,6 @@ void ScreenCapture::initScreenSurface()
         }
     }
     else if (Global::game_info.video & GameInfo::VULKAN) {
-        LINK_NAMESPACE(vkCreateImage, "vulkan");
-        LINK_NAMESPACE(vkGetImageMemoryRequirements, "vulkan");
-        LINK_NAMESPACE(vkAllocateMemory, "vulkan");
-        LINK_NAMESPACE(vkBindImageMemory, "vulkan");
-        
         VkResult res;
         
         /* Create the image info */
@@ -409,7 +403,7 @@ void ScreenCapture::initScreenSurface()
         imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         imageInfo.tiling = VK_IMAGE_TILING_LINEAR;
-        imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
         
         /* Create the image */
         if ((res = orig::vkCreateImage(vk::context.device, &imageInfo, nullptr, &vkScreenImage)) != VK_SUCCESS) {
@@ -490,12 +484,10 @@ void ScreenCapture::destroyScreenSurface()
     
     /* Delete the Vulkan image */
     if (vkScreenImageMemory != VK_NULL_HANDLE) {
-        LINK_NAMESPACE(vkFreeMemory, "vulkan");
         orig::vkFreeMemory(vk::context.device, vkScreenImageMemory, nullptr);
         vkScreenImageMemory = VK_NULL_HANDLE;
     }
     if (vkScreenImage != VK_NULL_HANDLE) {
-        LINK_NAMESPACE(vkDestroyImage, "vulkan");
         orig::vkDestroyImage(vk::context.device, vkScreenImage, nullptr);
         vkScreenImage = VK_NULL_HANDLE;
     }
@@ -814,18 +806,9 @@ int ScreenCapture::copyScreenToSurface()
 #endif
 
     else if (Global::game_info.video & GameInfo::VULKAN) {
-        LINK_NAMESPACE(vkAllocateCommandBuffers, "vulkan");
-        LINK_NAMESPACE(vkBeginCommandBuffer, "vulkan");
-        LINK_NAMESPACE(vkCmdPipelineBarrier, "vulkan");
-        LINK_NAMESPACE(vkCmdCopyImage, "vulkan");
-        LINK_NAMESPACE(vkEndCommandBuffer, "vulkan");
-        LINK_NAMESPACE(vkQueueWaitIdle, "vulkan");
-        LINK_NAMESPACE(vkQueueSubmit, "vulkan");
-        LINK_NAMESPACE(vkFreeCommandBuffers, "vulkan");
-
         VkResult res;
         
-        VkCommandBuffer cmdBuffer = vk::context.frames[vk::context.frameIndex].commandBuffer;
+        VkCommandBuffer cmdBuffer = vk::context.frames[vk::context.frameIndex].screenCommandBuffer;
         VkImage backbuffer = vk::context.frames[vk::context.frameIndex].backbuffer;
 
         VkCommandBufferBeginInfo cmdBufInfo{};
@@ -957,8 +940,6 @@ int ScreenCapture::copyScreenToSurface()
         }
 
         vk::context.currentSemaphore = submitInfo.pSignalSemaphores[0];
-
-        orig::vkQueueWaitIdle(vk::context.graphicsQueue);
     }
     
     return size;
@@ -1109,11 +1090,7 @@ int ScreenCapture::getPixelsFromSurface(uint8_t **pixels, bool draw)
     }
 #endif
 
-    else if (Global::game_info.video & GameInfo::VULKAN) {
-        LINK_NAMESPACE(vkGetImageSubresourceLayout, "vulkan");
-        LINK_NAMESPACE(vkMapMemory, "vulkan");
-        LINK_NAMESPACE(vkUnmapMemory, "vulkan");
-        
+    else if (Global::game_info.video & GameInfo::VULKAN) {        
         VkResult res;
 
         /* Get layout of the image (including row pitch) */
@@ -1265,17 +1242,6 @@ int ScreenCapture::copySurfaceToScreen()
 #endif
 
     else if (Global::game_info.video & GameInfo::VULKAN) {
-        LINK_NAMESPACE(vkAcquireNextImageKHR, "vulkan");
-        LINK_NAMESPACE(vkAllocateCommandBuffers, "vulkan");
-        LINK_NAMESPACE(vkBeginCommandBuffer, "vulkan");
-        LINK_NAMESPACE(vkCmdPipelineBarrier, "vulkan");
-        LINK_NAMESPACE(vkCmdBlitImage, "vulkan");
-        LINK_NAMESPACE(vkCmdCopyImage, "vulkan");
-        LINK_NAMESPACE(vkEndCommandBuffer, "vulkan");
-        LINK_NAMESPACE(vkQueueWaitIdle, "vulkan");
-        LINK_NAMESPACE(vkQueueSubmit, "vulkan");
-        LINK_NAMESPACE(vkFreeCommandBuffers, "vulkan");
-
         /* Acquire an image from the swapchain */
         VkResult res = orig::vkAcquireNextImageKHR(vk::context.device, vk::context.swapchain, UINT64_MAX, vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore, VK_NULL_HANDLE, &vk::context.frameIndex);
         if ((res != VK_SUCCESS) && (res != VK_SUBOPTIMAL_KHR))
@@ -1283,7 +1249,7 @@ int ScreenCapture::copySurfaceToScreen()
 
         debuglogstdio(LCF_VULKAN, "vkAcquireNextImageKHR signals %llx and returns image index %d", vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore, vk::context.frameIndex);
         
-        VkCommandBuffer cmdBuffer = vk::context.frames[vk::context.frameIndex].commandBuffer;
+        VkCommandBuffer cmdBuffer = vk::context.frames[vk::context.frameIndex].screenCommandBuffer;
         VkImage backbuffer = vk::context.frames[vk::context.frameIndex].backbuffer;
 
         VkCommandBufferBeginInfo cmdBufInfo{};
@@ -1408,8 +1374,6 @@ int ScreenCapture::copySurfaceToScreen()
         }
 
         vk::context.currentSemaphore = vk::context.frameSemaphores[vk::context.semaphoreIndex].screenCompleteSemaphore;
-
-        orig::vkQueueWaitIdle(vk::context.graphicsQueue);
     }
 
     return 0;
