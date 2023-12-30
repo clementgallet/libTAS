@@ -131,6 +131,23 @@ DEFINE_ORIG_POINTER(vkDestroyImageView)
 DEFINE_ORIG_POINTER(vkDestroyFramebuffer)
 DEFINE_ORIG_POINTER(vkDestroySwapchainKHR)
 
+
+#define VKFUNCSKIPDRAW(NAME, DECL, ARGS) \
+DEFINE_ORIG_POINTER(NAME)\
+void NAME DECL\
+{\
+    DEBUGLOGCALL(LCF_VULKAN);\
+    if (!Global::skipping_draw)\
+        return orig::NAME ARGS;\
+}
+
+VKFUNCSKIPDRAW(vkCmdDraw, (VkCommandBuffer commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance), (commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance))
+VKFUNCSKIPDRAW(vkCmdDrawIndirect, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride), (commandBuffer, buffer, offset, drawCount, stride))
+VKFUNCSKIPDRAW(vkCmdDrawIndirectCount, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride), (commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride))
+VKFUNCSKIPDRAW(vkCmdDrawIndexed, (VkCommandBuffer commandBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance), (commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance))
+VKFUNCSKIPDRAW(vkCmdDrawIndexedIndirect, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride), (commandBuffer, buffer, offset, drawCount, stride))
+VKFUNCSKIPDRAW(vkCmdDrawIndexedIndirectCount, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride), (commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride))
+
 /* If the game uses the vkGetInstanceProcAddr functions to access to a function
  * that we hook, we must return our function and store the original pointers
  * so that we can call the real function.
@@ -185,6 +202,10 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     STORE_SYMBOL(vkDestroyCommandPool)
     STORE_SYMBOL(vkDestroyImageView)
     STORE_SYMBOL(vkDestroyFramebuffer)
+    STORE_RETURN_SYMBOL(vkCmdDraw)
+    STORE_RETURN_SYMBOL(vkCmdDrawIndirect)
+    STORE_RETURN_SYMBOL(vkCmdDrawIndexed)
+    STORE_RETURN_SYMBOL(vkCmdDrawIndexedIndirect)
 
     return real_pointer;
 }
@@ -226,7 +247,6 @@ PFN_vkVoidFunction vkGetInstanceProcAddr(VkInstance instance, const char* pName)
 PFN_vkVoidFunction myvkGetDeviceProcAddr(VkDevice device, const char* pName)
 {
     debuglogstdio(LCF_HOOK | LCF_VULKAN, "%s call with symbol %s", __func__, pName);
-    LINK_NAMESPACE(vkGetDeviceProcAddr, "vulkan");
 
     if (!orig::vkGetDeviceProcAddr) return nullptr;
 
@@ -236,8 +256,6 @@ PFN_vkVoidFunction myvkGetDeviceProcAddr(VkDevice device, const char* pName)
 VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInfo* pCreateInfo,
                                 const VkAllocationCallbacks* pAllocator, VkDevice* pDevice)
 {
-    LINK_NAMESPACE(vkCreateDevice, "vulkan");
-
     if (GlobalState::isNative())
         return orig::vkCreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice);
 
@@ -265,8 +283,6 @@ VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateI
 
 void myvkDestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
 {
-    LINK_NAMESPACE(vkDestroyDevice, "vulkan");
-
     if (GlobalState::isNative())
         return orig::vkDestroyDevice(device, pAllocator);
 
@@ -280,8 +296,6 @@ void myvkDestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
 
 void vkGetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex, VkQueue* pQueue)
 {
-    LINK_NAMESPACE(vkGetDeviceQueue, "vulkan");
-
     if (GlobalState::isNative())
         return orig::vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
 
@@ -295,8 +309,6 @@ void vkGetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queue
 
 VkResult vkCreateDescriptorPool(VkDevice device, const VkDescriptorPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorPool* pDescriptorPool)
 {
-    LINK_NAMESPACE(vkCreateDescriptorPool, "vulkan");
-
     if (GlobalState::isNative())
         return orig::vkCreateDescriptorPool(device, pCreateInfo, pAllocator, pDescriptorPool);
 
@@ -345,8 +357,6 @@ static void destroySwapchain()
 
 VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain)
 {
-    LINK_NAMESPACE(vkCreateSwapchainKHR, "vulkan");
-
     if (GlobalState::isNative())
         return orig::vkCreateSwapchainKHR(device, pCreateInfo, pAllocator, pSwapchain);
 
@@ -511,8 +521,6 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
 
 void vkDestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAllocationCallbacks* pAllocator)
 {
-    LINK_NAMESPACE(vkDestroySwapchainKHR, "vulkan");
-
     if (GlobalState::isNative())
         return orig::vkDestroySwapchainKHR(device, swapchain, pAllocator);
 
@@ -528,12 +536,31 @@ void vkDestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAl
 
 VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* pImageIndex)
 {
-    LINK_NAMESPACE(vkAcquireNextImageKHR, "vulkan");
-
     if (GlobalState::isNative())
         return orig::vkAcquireNextImageKHR(device, swapchain, timeout, semaphore, fence, pImageIndex);
 
     DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+
+    if (Global::skipping_draw) {
+        /* We don't acquire an image, so that we don't need to call vkQueuePresentKHR()
+         * later. However, this function also signal either a semaphore or a
+         * fence, so we still need to signal either one. There does not seem to
+         * be specific functions for that, so I'm using an empty command submitted
+         * to a queue. */
+        VkSubmitInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        info.commandBufferCount = 0;
+        info.waitSemaphoreCount = 0;
+        if (semaphore) {
+            info.signalSemaphoreCount = 1;
+            info.pSignalSemaphores = &semaphore;
+        }
+        else {
+            info.signalSemaphoreCount = 0;
+        }
+        orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &info, fence);
+        return VK_SUCCESS;
+    }
 
     VkResult res = orig::vkAcquireNextImageKHR(device, swapchain, timeout, semaphore, fence, pImageIndex);
     
@@ -544,8 +571,6 @@ VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64
 
 VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
 {
-    LINK_NAMESPACE(vkQueuePresentKHR, "vulkan");
-
     if (GlobalState::isNative())
         return orig::vkQueuePresentKHR(queue, pPresentInfo);
 
@@ -569,6 +594,18 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
     else {
         debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_ERROR, "   Waiting on multiple semaphores");            
         vk::context.currentSemaphore = VK_NULL_HANDLE;
+    }
+
+    if (Global::skipping_draw) {        
+        /* If skipping draw, we must still wait on all semaphores, so we push an
+        * empty command */
+        VkSubmitInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        info.commandBufferCount = 0;
+        info.waitSemaphoreCount = pPresentInfo->waitSemaphoreCount;
+        info.pWaitSemaphores = pPresentInfo->pWaitSemaphores;
+        info.signalSemaphoreCount = 0;
+        orig::vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
     }
 
     /* Start the frame boundary and pass the function to draw */

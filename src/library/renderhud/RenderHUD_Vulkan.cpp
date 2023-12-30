@@ -137,7 +137,7 @@ void RenderHUD_Vulkan::render()
         err = orig::vkEndCommandBuffer(fd->osdCommandBuffer);
         VKCHECKERROR(err);
 
-        debuglogstdio(LCF_VULKAN, "    vkQueueSubmit wait on %llx and signal %llx and semindex %d", info.pWaitSemaphores[0], info.pSignalSemaphores[0], vk::context.semaphoreIndex);
+        // debuglogstdio(LCF_VULKAN, "    vkQueueSubmit wait on %llx and signal %llx and semindex %d", info.pWaitSemaphores[0], info.pSignalSemaphores[0], vk::context.semaphoreIndex);
 
         err = orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &info, VK_NULL_HANDLE);
         VKCHECKERROR(err);

@@ -164,10 +164,6 @@ static bool skipDraw(float fps)
             break;
     }
 
-    /* Skipping frames in Vulkan currently results in softlock. */
-    if (Global::game_info.video & GameInfo::VULKAN)
-        return false;
-
     unsigned int skip_freq = 1;
 
     /* I want to display about 8 effective frames per second, so I divide
