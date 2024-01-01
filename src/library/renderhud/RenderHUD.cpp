@@ -24,6 +24,7 @@
 #include "global.h" // Global::shared_config
 #include "screencapture/ScreenCapture.h"
 #include "GlobalState.h"
+#include "LogWindow.h"
 #include "../external/keysymdesc.h"
 #include "../external/imgui/imgui.h"
 
@@ -371,7 +372,6 @@ void RenderHUD::newFrame()
     oldTime = currentTime;
 
     ImGui::NewFrame();
-    ImGui::ShowDemoWindow();
 }
 
 void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai)
@@ -397,6 +397,10 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
 
     if (Global::shared_config.osd & SharedConfig::OSD_CROSSHAIR)
         drawCrosshair(ai);
+        
+    ImGui::ShowDemoWindow();
+
+    LogWindow::draw(nullptr);
 }
 
 }

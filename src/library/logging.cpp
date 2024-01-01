@@ -22,6 +22,7 @@
 #include "frame.h" // For framecount
 #include "global.h" // Global::shared_config
 #include "GlobalState.h"
+#include "renderhud/LogWindow.h"
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
 
@@ -100,9 +101,6 @@ void debuglogfull(LogCategoryFlag lcf, const char* file, int line, ...)
     }
     size = strlen(s);
 
-    snprintf(s + size, maxsize-size-1, "[libTAS f:%" PRIu64 "] ", framecount);
-    size = strlen(s);
-
     pid_t tid;
     if (Global::is_fork)
         /* For forked processes, the thread manager have wrong pid values (those of parent process) */
@@ -110,7 +108,11 @@ void debuglogfull(LogCategoryFlag lcf, const char* file, int line, ...)
     else
         tid = ThreadManager::getThreadTid();
 
-    snprintf(s + size, maxsize-size-1, "Thread %d %s ", tid, Global::is_fork?"(fork)":(ThreadManager::isMainThread()?"(main)":""));
+    snprintf(s + size, maxsize-size-1, "[f:%" PRIu64 " t:%d%s] ", framecount, tid, Global::is_fork?"F":(ThreadManager::isMainThread()?"M":""));
+
+    /* We append the string in multiple parts to the log window twice, to
+     * not show the color characters */
+    LogWindow::addLog(s + size, s + strlen(s), false);
 
     size = strlen(s);
 
@@ -119,6 +121,8 @@ void debuglogfull(LogCategoryFlag lcf, const char* file, int line, ...)
         strncat(s, ANSI_COLOR_RESET, maxsize-size-1);
         size = strlen(s);
     }
+
+    int beg_size = size;
 
     if (lcf & LCF_ERROR) {
         snprintf(s + size, maxsize-size-1, "ERROR (%s:%d): ", file, line);
@@ -139,6 +143,8 @@ void debuglogfull(LogCategoryFlag lcf, const char* file, int line, ...)
     size = strlen(s);
 
     strncat(s, "\n", maxsize-size-1);
+
+    LogWindow::addLog(s + beg_size, s + strlen(s), true);
 
     /* We need to use a non-locking function here, because of the following
      * situation (encountered in Towerfall):
