@@ -25,8 +25,11 @@
 #include "screencapture/ScreenCapture.h"
 #include "GlobalState.h"
 #include "LogWindow.h"
+#include "xlib/xdisplay.h" // x11::gameDisplays
+#include "xlib/xwindows.h" // x11::gameXWindows
 #include "../external/keysymdesc.h"
 #include "../external/imgui/imgui.h"
+#include "../external/imgui/imgui_impl_xlib.h"
 
 #include <sstream>
 
@@ -349,28 +352,33 @@ void RenderHUD::resetLua()
     lua_shapes.clear();
 }
 
+bool RenderHUD::init()
+{
+    if (!ImGui::GetCurrentContext()) {
+        if (x11::gameXWindows.empty())
+            return false;
+        
+        /* TODO: select one display? */
+        for (int i=0; i<GAMEDISPLAYNUM; i++) {
+            if (x11::gameDisplays[i]) {
+                ImGui::CreateContext();
+                GlobalNative gn;
+                ImGui_ImplXlib_Init(x11::gameDisplays[i], x11::gameXWindows.front());
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
 void RenderHUD::newFrame()
 {
     if (!ImGui::GetCurrentContext())
         return;
 
-    updateCursor();
-
-    /* Check on each frame to accomodate for window resizing */
-    int width, height;
-    ScreenCapture::getDimensions(width, height);
-    
-    ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize = ImVec2((float)width, (float)height);
-    io.DisplayFramebufferScale = ImVec2(1, 1);
-
-    static TimeHolder oldTime;
-    TimeHolder currentTime;
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &currentTime));
-    TimeHolder deltaTime = currentTime - oldTime;
-    io.DeltaTime = (oldTime.tv_sec == 0) ? 1.0f / 60.0f : (float) deltaTime.tv_sec + ((float) deltaTime.tv_nsec) / 1000000000.0f;
-    oldTime = currentTime;
-
+    GlobalNative gn;
+    ImGui_ImplXlib_NewFrame();
     ImGui::NewFrame();
 }
 

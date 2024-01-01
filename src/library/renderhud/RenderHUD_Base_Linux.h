@@ -22,22 +22,12 @@
 #ifndef LIBTAS_RENDERHUD_BASE_LINUX_H_INCL
 #define LIBTAS_RENDERHUD_BASE_LINUX_H_INCL
 
-#include <vector>
-#include <X11/X.h>
-
 namespace libtas {
 /* Specific methods for Linux */
 class RenderHUD_Base_Linux : public RenderHUD
 {
     public:
         virtual ~RenderHUD_Base_Linux();
-
-        /* Update cursor */
-        void updateCursor();
-
-    private:
-        std::vector<Cursor> cursors;
-        Cursor last_cursor;
 
 };
 }

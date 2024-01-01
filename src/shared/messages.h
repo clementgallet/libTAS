@@ -334,24 +334,6 @@ enum {
      * Argument: size_t (string length) then char[len]
      */
     MSGN_SCREENSHOT,
-
-    /*
-     * Send a mouse motion event, 
-     * Argument: int16_t x, int16_t y
-     */
-    MSGN_MOTION_NOTIFY,
-
-    /*
-     * Send a mouse button event, 
-     * Argument: uint8_t button, uint8_t state
-     */
-    MSGN_BUTTON,
-
-    /*
-     * Send a mouse wheel event, 
-     * Argument: int8_t orientation
-     */
-    MSGN_WHEEL,
 };
 
 #endif

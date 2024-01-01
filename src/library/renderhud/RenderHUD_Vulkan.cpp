@@ -76,8 +76,10 @@ void RenderHUD_Vulkan::fini() {
 void RenderHUD_Vulkan::newFrame()
 {
     if (!ImGui::GetCurrentContext()) {
-        ImGui::CreateContext();
-        init();
+        if (RenderHUD::init())
+            init();
+        else
+            return;
     }
     ImGui_ImplVulkan_NewFrame();
 

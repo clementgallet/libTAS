@@ -33,6 +33,11 @@ DEFINE_ORIG_POINTER(XIQueryDevice)
 
 int XISelectEvents(Display* dpy, Window win, XIEventMask *masks, int num_masks)
 {
+    LINK_NAMESPACE_FULLNAME(XISelectEvents, "libXi.so.6");
+    if (GlobalState::isNative()) {
+        return orig::XISelectEvents(dpy, win, masks, num_masks);
+    }
+
     DEBUGLOGCALL(LCF_WINDOW);
 
     /* Only check if not using SDL */
@@ -66,7 +71,6 @@ int XISelectEvents(Display* dpy, Window win, XIEventMask *masks, int num_masks)
         }
     }
 
-    LINK_NAMESPACE_FULLNAME(XISelectEvents, "libXi.so.6");
     return orig::XISelectEvents(dpy, win, masks, num_masks);
 }
 

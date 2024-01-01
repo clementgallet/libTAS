@@ -32,6 +32,7 @@
 #include "global.h"
 #include "GlobalState.h"
 #include "../external/X11/XInput2.h"
+#include "../external/imgui/imgui_impl_xlib.h"
 
 namespace libtas {
 
@@ -146,6 +147,9 @@ void pushNativeXlibEvents(Display *display)
                     SubstructureNotifyMask | SubstructureRedirectMask, &reply));
             }
         }
+        
+        if (ImGui::GetCurrentContext())
+            NATIVECALL(ImGui_ImplXlib_ProcessEvent(&event));
 
         if (!isEventFiltered(&event)) {
             xlibEventQueueList.insert(display, &event);

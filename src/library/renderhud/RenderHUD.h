@@ -86,6 +86,9 @@ class RenderHUD
         /* Clear all lua drawings */
         static void resetLua();
 
+    protected:
+        bool init();
+
     private:
         /*** Draw specific information on screen ***/
 

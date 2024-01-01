@@ -68,8 +68,10 @@ void RenderHUD_SDL2_renderer::newFrame()
         if ((ver.minor == 0) && (ver.patch < 18))
             return;
         
-        ImGui::CreateContext();
-        ImGui_ImplSDLRenderer2_Init(renderer);
+        if (RenderHUD::init())
+            ImGui_ImplSDLRenderer2_Init(renderer);
+        else
+            return;
     }
     ImGui_ImplSDLRenderer2_NewFrame();
 

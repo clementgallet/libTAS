@@ -83,15 +83,6 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
 
     long event_mask = 0;
 
-    /* Remove events we want to disable from the mask */
-    if (valuemask & CWEventMask) {
-        event_mask = attributes->event_mask;
-        if (!(Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
-            attributes->event_mask &= ~(KeyPressMask | KeyReleaseMask);
-            attributes->event_mask &= ~(ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
-        }
-    }
-
     Window w = orig::XCreateWindow(display, parent, x, y, width, height, border_width, depth, klass, visual, valuemask, attributes);
     debuglogstdio(LCF_WINDOW, "   window id is %d", w);
 
@@ -286,12 +277,6 @@ int XSelectInput(Display *display, Window w, long event_mask)
     /* Add the mask in our event queue */
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
     queue->setMask(w, event_mask);
-
-    /* Remove events we want to disable from the mask */
-    if (!(Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
-        event_mask &= ~(KeyPressMask | KeyReleaseMask);
-        event_mask &= ~(ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
-    }
 
     return orig::XSelectInput(display, w, event_mask);
 }
@@ -508,12 +493,6 @@ int XChangeWindowAttributes(Display *display, Window w, unsigned long valuemask,
     if (valuemask & CWEventMask) {
         std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
         queue->setMask(w, attributes->event_mask);
-
-        /* Remove events we want to disable from the mask */
-        if (!(Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS)) {
-            attributes->event_mask &= ~(KeyPressMask | KeyReleaseMask);
-            attributes->event_mask &= ~(ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
-        }
     }
 
     return orig::XChangeWindowAttributes(display, w, valuemask, attributes);

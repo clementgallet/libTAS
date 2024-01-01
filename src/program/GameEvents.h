@@ -77,7 +77,6 @@ protected:
         EVENT_TYPE_EXPOSE,
         EVENT_TYPE_INPUT_SET,
         EVENT_TYPE_INPUT_TOGGLE,
-        EVENT_TYPE_MOUSE,
     };
 
     virtual EventType nextEvent(struct HotKey &hk) = 0;

@@ -27,7 +27,6 @@
 
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>
-#include <xcb/xinput.h>
 
 #include <string>
 #include <iostream>
@@ -62,18 +61,6 @@ void GameEventsXcb::registerGameWindow(uint32_t gameWindow)
         if (error) {
             std::cerr << "error in xcb_change_window_attributes: " << error->error_code << std::endl;
         }
-
-        struct {
-            xcb_input_event_mask_t iem;
-            int xiem;
-        } se_mask;
-        se_mask.iem.deviceid = XCB_INPUT_DEVICE_ALL_MASTER;
-        se_mask.iem.mask_len = 1;
-
-        se_mask.xiem = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS |
-            XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE |
-            XCB_INPUT_XI_EVENT_MASK_MOTION;
-        xcb_input_xi_select_events(context->conn, context->game_window, 1, &se_mask.iem);
 
         /* Also get parent window of game window for focus */
         xcb_query_tree_cookie_t qt_cookie = xcb_query_tree(context->conn, context->game_window);
@@ -202,53 +189,6 @@ GameEventsXcb::EventType GameEventsXcb::nextEvent(struct HotKey &hk)
                 else
                     /* This input is not a hotkey, skipping to the next */
                     continue;
-            }
-            else if (response_type == XCB_GE_GENERIC) {
-                xcb_ge_generic_event_t *gev = reinterpret_cast<xcb_ge_generic_event_t *>(event.get());
-                if ((gev->event_type == XCB_INPUT_BUTTON_PRESS) || (gev->event_type == XCB_INPUT_BUTTON_RELEASE)) {
-                    xcb_input_button_press_event_t *mev = reinterpret_cast<xcb_input_button_press_event_t*>(gev);
-                    uint8_t state = (mev->event_type == XCB_INPUT_BUTTON_PRESS);
-
-                    if (mev->detail >= XCB_BUTTON_INDEX_1 && mev->detail <= XCB_BUTTON_INDEX_3) {
-                        uint8_t button = 255;
-                        if (mev->detail == XCB_BUTTON_INDEX_1) { button = 0; }
-                        if (mev->detail == XCB_BUTTON_INDEX_2) { button = 2; }
-                        if (mev->detail == XCB_BUTTON_INDEX_3) { button = 1; }
-                        sendMessage(MSGN_BUTTON);
-                        sendData(&button, sizeof(uint8_t));
-                        sendData(&state, sizeof(uint8_t));                            
-                    }
-                    if (((mev->detail == XCB_BUTTON_INDEX_4) || (mev->detail == XCB_BUTTON_INDEX_5)) &&
-                        (mev->event_type == XCB_INPUT_BUTTON_RELEASE)) {
-                        /* Only send wheel events on release */                        
-                        int8_t orientation = (mev->detail == XCB_BUTTON_INDEX_4) ? 1 : -1;
-                        sendMessage(MSGN_WHEEL);
-                        sendData(&orientation, sizeof(int8_t));
-                    }
-                    return EVENT_TYPE_MOUSE;
-                }
-                if (gev->event_type == XCB_INPUT_MOTION) {
-                    /* Collapse consecutive mouse motion events. */
-                    next_event.reset(xcb_poll_for_event(context->conn));
-                    xcb_ge_generic_event_t *next_gev = reinterpret_cast<xcb_ge_generic_event_t *>(next_event.get());
-
-                    while (next_event &&
-                        ((next_event->response_type & ~0x80) == XCB_GE_GENERIC) && 
-                        (next_gev->event_type == XCB_INPUT_MOTION)) {
-                        event = std::move(next_event);
-                        gev = next_gev;
-                        next_event.reset(xcb_poll_for_event(context->conn));
-                        next_gev = reinterpret_cast<xcb_ge_generic_event_t *>(next_event.get());
-                    }
-                    xcb_input_motion_event_t *mev = reinterpret_cast<xcb_input_motion_event_t*>(gev);
-                    int16_t mouse_x = mev->event_x >> 16;
-                    int16_t mouse_y = mev->event_y >> 16;
-                    sendMessage(MSGN_MOTION_NOTIFY);
-                    sendData(&mouse_x, sizeof(int16_t));
-                    sendData(&mouse_y, sizeof(int16_t));
-                    return EVENT_TYPE_MOUSE;
-                }
-                return EVENT_TYPE_NONE;
             }
             else {
                 switch (response_type) {

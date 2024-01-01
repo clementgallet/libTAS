@@ -53,7 +53,6 @@
 #include "../shared/sockethelpers.h"
 #include "../shared/inputs/AllInputs.h"
 #include "../shared/messages.h"
-#include "../external/imgui/imgui.h"
 
 #include <iomanip>
 #include <stdint.h>
@@ -866,46 +865,6 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 std::string text = receiveString();
                 RenderHUD::setMarkerText(text);
                 screen_redraw(draw, hud, preview_ai);
-                break;
-            }
-
-            case MSGN_MOTION_NOTIFY:
-            {
-                int16_t mouse_x, mouse_y;
-                receiveData(&mouse_x, sizeof(int16_t));
-                receiveData(&mouse_y, sizeof(int16_t));
-
-                if (ImGui::GetCurrentContext()) {
-                    ImGuiIO& io = ImGui::GetIO();
-                    ImVec2 mouse_pos((float)mouse_x, (float)mouse_y);
-                    io.AddMouseSourceEvent(ImGuiMouseSource_Mouse);
-                    io.AddMousePosEvent(mouse_pos.x, mouse_pos.y);
-                }
-                break;
-            }
-            
-            case MSGN_BUTTON:
-            {
-                uint8_t mouse_button, mouse_state;
-                receiveData(&mouse_button, sizeof(uint8_t));
-                receiveData(&mouse_state, sizeof(uint8_t));
-                if (ImGui::GetCurrentContext()) {
-                    ImGuiIO& io = ImGui::GetIO();
-                    io.AddMouseSourceEvent(ImGuiMouseSource_Mouse);
-                    io.AddMouseButtonEvent(mouse_button, mouse_state);
-                }
-                break;
-            }
-
-            case MSGN_WHEEL:
-            {
-                int8_t mouse_orientation;
-                receiveData(&mouse_orientation, sizeof(int8_t));
-                if (ImGui::GetCurrentContext()) {
-                    ImGuiIO& io = ImGui::GetIO();
-                    io.AddMouseSourceEvent(ImGuiMouseSource_Mouse);
-                    io.AddMouseWheelEvent(0, mouse_orientation);
-                }
                 break;
             }
 

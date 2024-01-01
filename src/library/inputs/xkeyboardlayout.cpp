@@ -20,7 +20,7 @@
 #include "xkeyboardlayout.h"
 
 #include "logging.h"
-#include "backtrace.h"
+#include "GlobalState.h"
 
 #include <X11/keysym.h>
 #include <X11/XF86keysym.h>
@@ -148,8 +148,16 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
     return sym;
 }
 
+DEFINE_ORIG_POINTER(XkbKeycodeToKeysym)
+
 /* Override */ KeySym XkbKeycodeToKeysym(Display *dpy, KeyCode kc, int group, int level)
 {
+    if (GlobalState::isNative()) {
+        /* ImGui uses this function */
+        LINK_NAMESPACE_GLOBAL(XkbKeycodeToKeysym);
+        return orig::XkbKeycodeToKeysym(dpy, kc, group, level);
+    }
+
     debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, (int)kc);
     KeySym sym = (level == 1) ? Xlib_default_keymap_shifted[kc] : Xlib_default_keymap[kc];
     debuglogstdio(LCF_KEYBOARD, "   returning %d", sym);
@@ -175,10 +183,18 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
     return kc;
 }
 
+DEFINE_ORIG_POINTER(XLookupString)
+
 /* Override */ int XLookupString(XKeyEvent *event_struct, char *buffer_return, int bytes_buffer, KeySym *keysym_return, void *status_in_out)
 {
+    if (GlobalState::isNative()) {
+        /* ImGui uses this function */
+        LINK_NAMESPACE_GLOBAL(XLookupString);
+        return orig::XLookupString(event_struct, buffer_return, bytes_buffer, keysym_return, status_in_out);
+    }
+
     debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, event_struct->keycode);
-    // printBacktrace();
+
     KeyCode keycode = event_struct->keycode;
     if (keysym_return) {
         if (event_struct->state & ShiftMask)
@@ -280,8 +296,16 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
     return 0;
 }
 
+DEFINE_ORIG_POINTER(Xutf8LookupString)
+
 /* Override */ int Xutf8LookupString(XIC ic, XKeyPressedEvent *event, char *buffer_return, int bytes_buffer, KeySym *keysym_return, Status *status_return)
 {
+    if (GlobalState::isNative()) {
+        /* ImGui uses this function */
+        LINK_NAMESPACE_GLOBAL(Xutf8LookupString);
+        return orig::Xutf8LookupString(ic, event, buffer_return, bytes_buffer, keysym_return, status_return);
+    }
+
     debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
     KeyCode keycode = event->keycode;
     KeySym keysym = (event->state & ShiftMask) ? Xlib_default_keymap_shifted[keycode] : Xlib_default_keymap[keycode];

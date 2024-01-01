@@ -346,16 +346,16 @@ struct ModTranslate {
 };
 
 static std::array<ModTranslate, 10> mod_translate {{
-    {XK_Shift_L, 1<<0, KMOD_LSHIFT},
-    {XK_Shift_R, 1<<0, KMOD_RSHIFT},
-    {XK_Control_L, 1<<2, KMOD_LCTRL},
-    {XK_Control_R, 1<<2, KMOD_RCTRL},
-    {XK_Meta_L, 1<<6, KMOD_LGUI},
-    {XK_Meta_R, 1<<6, KMOD_RGUI},
-    {XK_Alt_L, 1<<3, KMOD_LALT},
-    {XK_Alt_R, 1<<3, KMOD_RALT},
-    {XK_Caps_Lock, 1<<1, KMOD_CAPS},
-    {XK_Shift_Lock, 1<<4, KMOD_NUM},
+    {XK_Shift_L, 1<<0 /* ShiftMask */, KMOD_LSHIFT},
+    {XK_Shift_R, 1<<0 /* ShiftMask */, KMOD_RSHIFT},
+    {XK_Control_L, 1<<2 /* ControlMask */, KMOD_LCTRL},
+    {XK_Control_R, 1<<2 /* ControlMask */, KMOD_RCTRL},
+    {XK_Meta_L, 1<<6 /* Mod4Mask */, KMOD_LGUI},
+    {XK_Meta_R, 1<<6 /* Mod4Mask */, KMOD_RGUI},
+    {XK_Alt_L, 1<<3 /* Mod1Mask */, KMOD_LALT},
+    {XK_Alt_R, 1<<3 /* Mod1Mask */, KMOD_RALT},
+    {XK_Caps_Lock, 1<<1 /* LockMask */, KMOD_CAPS},
+    {XK_Shift_Lock, 1<<4 /* Mod2Mask */, KMOD_NUM},
 }};
 
 unsigned int xkeyboardToXMod(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard) {
