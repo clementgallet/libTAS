@@ -131,7 +131,7 @@ libTAS_CXXFLAGS = $(QT5_CFLAGS) $(LIBLUA_CFLAGS) -fno-stack-protector -Wno-float
 libTAS_LDADD = $(QT5_LIBS) $(LIBLUA_LIBS) $(PROGRAM_LIBS)
 
 .h_moc.cpp:
-	@MOC@ -o $@ $(CPPFLAGS) $<
+	@MOC@ -o $@ $<
 
 SUFFIXES = .h _moc.cpp
 
