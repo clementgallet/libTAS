@@ -117,11 +117,6 @@ AS_IF([test "x$have_libswresample" = "xyes"], [
     AC_SUBST(LIBSWRESAMPLE_CFLAGS)
 ])
 
-CPPFLAGS='-I/usr/include/freetype2'
-AC_CHECK_HEADERS([fontconfig/fontconfig.h ft2build.h], [], [AC_MSG_ERROR(The fontconfig and freetype headers are required!)])
-AC_SEARCH_LIBS([FcInitLoadConfigAndFonts], [fontconfig], [], [AC_MSG_ERROR(The fontconfig library is required!)])
-AC_SEARCH_LIBS([FT_Open_Face], [freetype], [], [AC_MSG_ERROR(The freetype library is required!)])
-
 LIBRARY_LIBS=$LIBS
 LIBS=
 
@@ -144,9 +139,6 @@ case $host in
         AC_SEARCH_LIBS([XGetXCBConnection], [X11-xcb], [], [AC_MSG_ERROR(The 32-bit x11-xcb library is required!)])
         AC_SEARCH_LIBS([pthread_exit], [pthread], [], [AC_MSG_ERROR(The 32-bit pthread library is required!)])
         AC_SEARCH_LIBS([snd_pcm_close], [asound], [], [AC_MSG_ERROR(The 32-bit asound library is required!)])
-
-   	    AC_SEARCH_LIBS([FcConfigAppFontAddFile], [fontconfig], [], [AC_MSG_ERROR(The 32-bit fontconfig library is required!)])
-   	    AC_SEARCH_LIBS([FT_Bitmap_Convert], [freetype], [], [AC_MSG_ERROR(The 32-bit freetype library is required!)])
 
         LIBRARY32_LIBS=$LIBS
         LIBS=

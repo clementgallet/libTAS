@@ -33,12 +33,11 @@ You can download the latest stable version of the software in the [Releases](htt
 
 * `libc6`, `libgcc1`, `libstdc++6`
 * `libqt5core5a`, `libqt5gui5`, `libqt5widgets5` with Qt version at least 5.6
-* `libx11-6`, `libxcb1`, `libxcb-keysyms1`, `libxcb-xinput0`, `libxcb-xkb1`, `libxcb-cursor0`
+* `libx11-6`, `libxcb1`, `libxcb-keysyms1`, `libxcb-xinput0`, `libxcb-xkb1`
 * `liblua5.4-0` or `liblua5.3-0`
 * `ffmpeg`
 * `file`
 * `libswresample2` or `libswresample3` or `libswresample4`, `libasound2`
-* `libfontconfig1`, `libfreetype6`
 
 Installing with the debian package will install all the required packages as well.
 
@@ -52,13 +51,8 @@ An PKGBUILD is available for Arch Linux on the [AUR](https://aur.archlinux.org/p
 
 You will need to download and install the following to build libTAS:
 
-* Deb: `apt-get install build-essential automake pkg-config libx11-dev libx11-xcb-dev qtbase5-dev qt5-default libsdl2-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xinput-dev libxcb-xkb-dev libxcb-cursor-dev libxcb-randr0-dev libudev-dev liblua5.4-dev libasound2-dev libavutil-dev libswresample-dev ffmpeg`
+* Deb: `apt-get install build-essential automake pkg-config libx11-dev libx11-xcb-dev qtbase5-dev qt5-default libsdl2-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xinput-dev libxcb-xkb-dev libxcb-randr0-dev libudev-dev liblua5.4-dev libasound2-dev libavutil-dev libswresample-dev ffmpeg`
 * Arch: `pacman -S base-devel automake pkgconf qt5-base xcb-util-cursor alsa-lib lua ffmpeg sdl2`
-
-To enable HUD on the game screen, you will also need:
-
-* Deb: `apt-get install libfreetype6-dev libfontconfig1-dev`
-* Arch: `pacman -S fontconfig freetype2`
 
 ### Cloning
 
@@ -72,8 +66,6 @@ To enable HUD on the game screen, you will also need:
 autoconf will detect the presence of these libraries and disable the corresponding features if necessary.
 If you want to manually enable/disable a feature, you must add at the end of the `build.sh` command:
 
-- `--disable-hud`: enable/disable displaying informations on the game screen
-
 Be careful that you must compile your code in the same arch as the game. If you have an amd64 system and you only have access to a i386 game, you can cross-compile the code to i386 (see below).
 
 ### Install
@@ -84,9 +76,9 @@ Be careful that you must compile your code in the same arch as the game. If you 
 
 If you have an amd64 system and you want to run both i386 or amd64 games, you can install libTAS 32-bit library together with the amd64 build. To do that, you can build using `./build.sh --with-i386`, which will produce an additional `libtas32.so` (32-bit) library together with amd64 builds of `libTAS` GUI and `libtas.so` library.
 
-You will need the 32-bit version of libraries `libX11`, `libX11-xcb`, `libasound`, `libavutil`, `libswresample`, the 32-bit version of the headers for `libavutil`, `libswresample`, and also librairies `libfreetype` and `libfontconfig` for the HUD feature. You will also need your compiler to be able to cross-compile, by installing `g++-multilib` if using g++ compiler. When running a game, libTAS will choose automatically the right `libtas.so` library based on the game arch.
+You will need the 32-bit version of libraries `libX11`, `libX11-xcb`, `libasound`, `libavutil`, `libswresample`, the 32-bit version of the headers for `libavutil`, `libswresample`. You will also need your compiler to be able to cross-compile, by installing `g++-multilib` if using g++ compiler. When running a game, libTAS will choose automatically the right `libtas.so` library based on the game arch.
 
-* Deb: `apt-get install libx11-6:i386 libx11-xcb1:i386 libasound2:i386 libavutil56:i386 libavutil-dev:i386 libswresample-dev:i386 libswresample3:i386 libfreetype6:i386 libfontconfig1:i386`
+* Deb: `apt-get install libx11-6:i386 libx11-xcb1:i386 libasound2:i386 libavutil56:i386 libavutil-dev:i386 libswresample-dev:i386 libswresample3:i386`
 
 ## Run
 
