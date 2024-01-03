@@ -17,19 +17,20 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_IMGUI_LOGWINDOW_H_INCL
-#define LIBTAS_IMGUI_LOGWINDOW_H_INCL
+#ifndef LIBTAS_IMGUI_WATCHESWINDOW_H_INCL
+#define LIBTAS_IMGUI_WATCHESWINDOW_H_INCL
+
+#include <string>
 
 namespace libtas {
 
-namespace LogWindow
+namespace WatchesWindow
 {
-    void clear();
+    void insert(std::string watch);
 
-    void addLog(const char* beg, const char* end, bool newline);
+    void reset();
 
     void draw(bool* p_open);
-
 }
 
 }

@@ -17,19 +17,16 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_IMGUI_LOGWINDOW_H_INCL
-#define LIBTAS_IMGUI_LOGWINDOW_H_INCL
+#ifndef LIBTAS_IMGUI_CROSSHAIR_H_INCL
+#define LIBTAS_IMGUI_CROSSHAIR_H_INCL
+
+#include "../shared/inputs/AllInputs.h"
 
 namespace libtas {
 
-namespace LogWindow
+namespace Crosshair
 {
-    void clear();
-
-    void addLog(const char* beg, const char* end, bool newline);
-
-    void draw(bool* p_open);
-
+    void draw(const AllInputs& ai);
 }
 
 }

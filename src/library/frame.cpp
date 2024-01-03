@@ -41,6 +41,10 @@
 #include "sdl/sdlwindows.h"
 #include "sdl/sdlevents.h"
 #include "sdl/SDLEventQueue.h"
+#include "renderhud/FrameWindow.h"
+#include "renderhud/LuaDraw.h"
+#include "renderhud/MessageWindow.h"
+#include "renderhud/WatchesWindow.h"
 
 #ifdef __unix__
 #include "xlib/xevents.h"
@@ -343,8 +347,8 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     sendMessage(MSGB_START_FRAMEBOUNDARY);
 
     /* Reset ramwatches and lua drawings */
-    RenderHUD::resetWatches();
-    RenderHUD::resetLua();
+    WatchesWindow::reset();
+    LuaDraw::reset();
 
     /* Receive messages from the program */
     perfTimer.switchTimer(PerfTimer::WaitTimer);                
@@ -356,7 +360,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         {
             /* Get ramwatch from the program */
             std::string ramwatch = receiveString();
-            RenderHUD::insertWatch(ramwatch);
+            WatchesWindow::insert(ramwatch);
             break;
         }
         case MSGN_LUA_RESOLUTION:
@@ -376,7 +380,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
             std::string text = receiveString();
             uint32_t color;
             receiveData(&color, sizeof(uint32_t));
-            RenderHUD::insertLuaText(x, y, text, color);
+            LuaDraw::insertText(x, y, text, color);
             break;
         }
         case MSGN_LUA_PIXEL:
@@ -386,7 +390,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
             receiveData(&y, sizeof(int));
             uint32_t color;
             receiveData(&color, sizeof(uint32_t));
-            RenderHUD::insertLuaPixel(x, y, color);
+            LuaDraw::insertPixel(x, y, color);
             break;
         }
         case MSGN_LUA_RECT:
@@ -400,7 +404,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
             uint32_t color;
             receiveData(&color, sizeof(uint32_t));
             receiveData(&filled, sizeof(int));
-            RenderHUD::insertLuaRect(x, y, w, h, thickness, color, filled);
+            LuaDraw::insertRect(x, y, w, h, thickness, color, filled);
             break;
         }
         case MSGN_LUA_LINE:
@@ -412,7 +416,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
             receiveData(&y1, sizeof(int));
             uint32_t color;
             receiveData(&color, sizeof(uint32_t));
-            RenderHUD::insertLuaLine(x0, y0, x1, y1, color);
+            LuaDraw::insertLine(x0, y0, x1, y1, color);
             break;
         }
         case MSGN_LUA_ELLIPSE:
@@ -424,7 +428,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
             receiveData(&radius_y, sizeof(int));
             uint32_t color;
             receiveData(&color, sizeof(uint32_t));
-            RenderHUD::insertLuaEllipse(center_x, center_y, radius_x, radius_y, color);
+            LuaDraw::insertEllipse(center_x, center_y, radius_x, radius_y, color);
             break;
         }
         }
@@ -443,11 +447,17 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     /* If we want HUD to appear in encodes, we need to draw it before saving
      * the window surface/texture/etc. This has the small drawback that we
      * won't be able to remove HUD messages during that frame. */
-    if (!Global::skipping_draw && draw && Global::shared_config.osd_encode) {
-        AllInputs preview_ai;
-        preview_ai.buildAndClear();
-        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
-        hud.render();
+    if (!Global::skipping_draw && Global::shared_config.osd_encode) {
+        if (draw) {
+            AllInputs preview_ai;
+            preview_ai.buildAndClear();
+            hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
+            hud.render();            
+        }
+        else {
+            /* We must indicate Dear ImGui that the frame ends without drawing */
+            hud.endFrame();
+        }
     }
 
     if (!Global::skipping_draw) {
@@ -479,11 +489,17 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         }
     }
 
-    if (!Global::skipping_draw && draw && !Global::shared_config.osd_encode) {
-        AllInputs preview_ai;
-        preview_ai.buildAndClear();
-        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
-        hud.render();
+    if (!Global::skipping_draw && !Global::shared_config.osd_encode) {
+        if (draw) {
+            AllInputs preview_ai;
+            preview_ai.buildAndClear();
+            hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
+            hud.render();            
+        }
+        else {
+            /* We must indicate Dear ImGui that the frame ends without drawing */
+            hud.endFrame();
+        }
     }
 
     /* Actual draw command */
@@ -659,7 +675,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
         std::string msg = "State ";
         msg += std::to_string(slot);
         msg += " saved";
-        RenderHUD::insertMessage(msg.c_str());
+        MessageWindow::insert(msg.c_str());
         screen_redraw(draw, hud, preview_ai);
     }
 
@@ -701,7 +717,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 std::string msg = "State ";
                 msg += std::to_string(slot);
                 msg += " saved";
-                RenderHUD::insertMessage(msg.c_str());
+                MessageWindow::insert(msg.c_str());
                 screen_redraw(draw, hud, preview_ai);
             }
             perfTimer.switchTimer(PerfTimer::FrameTimer);
@@ -813,14 +829,12 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
 
                     /* Print the successful message, unless we are saving in a fork */
                     if (!(Global::shared_config.savestate_settings & SharedConfig::SS_FORK)) {
-                        if (Global::shared_config.osd & SharedConfig::OSD_MESSAGES) {
-                            std::string msg;
-                            msg = "State ";
-                            msg += std::to_string(slot);
-                            msg += " saved";
-                            RenderHUD::insertMessage(msg.c_str());
-                            screen_redraw(draw, hud, preview_ai);
-                        }
+                        std::string msg;
+                        msg = "State ";
+                        msg += std::to_string(slot);
+                        msg += " saved";
+                        MessageWindow::insert(msg.c_str());
+                        screen_redraw(draw, hud, preview_ai);
                     }
 
                 }
@@ -855,7 +869,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 break;
 
             case MSGN_OSD_MSG:
-                RenderHUD::insertMessage(receiveString().c_str());
+                MessageWindow::insert(receiveString().c_str());
                 screen_redraw(draw, hud, preview_ai);
                 break;
 
@@ -863,7 +877,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
             {
                 /* Get marker text from the program */
                 std::string text = receiveString();
-                RenderHUD::setMarkerText(text);
+                FrameWindow::setMarkerText(text);
                 screen_redraw(draw, hud, preview_ai);
                 break;
             }

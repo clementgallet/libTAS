@@ -17,18 +17,19 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_IMGUI_LOGWINDOW_H_INCL
-#define LIBTAS_IMGUI_LOGWINDOW_H_INCL
+#ifndef LIBTAS_IMGUI_INPUTSWINDOW_H_INCL
+#define LIBTAS_IMGUI_INPUTSWINDOW_H_INCL
+
+#include "../shared/inputs/AllInputs.h"
+#include <string>
 
 namespace libtas {
 
-namespace LogWindow
+namespace InputsWindow
 {
-    void clear();
-
-    void addLog(const char* beg, const char* end, bool newline);
-
-    void draw(bool* p_open);
+    void draw(const AllInputs& ai, const AllInputs& preview_ai, bool* p_open);
+    
+    std::string formatInputs(const AllInputs& ai);
 
 }
 

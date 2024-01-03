@@ -17,18 +17,20 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_IMGUI_LOGWINDOW_H_INCL
-#define LIBTAS_IMGUI_LOGWINDOW_H_INCL
+#ifndef LIBTAS_IMGUI_MESSAGEWINDOW_H_INCL
+#define LIBTAS_IMGUI_MESSAGEWINDOW_H_INCL
+
+#include <string>
 
 namespace libtas {
 
-namespace LogWindow
+namespace MessageWindow
 {
+    void draw();
+    
+    void insert(const char* message);
+
     void clear();
-
-    void addLog(const char* beg, const char* end, bool newline);
-
-    void draw(bool* p_open);
 
 }
 

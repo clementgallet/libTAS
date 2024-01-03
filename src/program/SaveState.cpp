@@ -134,7 +134,7 @@ int SaveState::save(Context* context, const MovieFile& m)
         op.close();
     }
 
-    if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
+    if (context->config.sc.osd) {
         sendMessage(MSGN_OSD_MSG);
         sendString(saving_msg);
     }
@@ -185,7 +185,7 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
             }
         }
 
-        if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
+        if (context->config.sc.osd) {
             sendMessage(MSGN_OSD_MSG);
             sendString(no_state_msg);
         }
@@ -193,7 +193,7 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
     }
 
     if (invalid) {
-        if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
+        if (context->config.sc.osd) {
             sendMessage(MSGN_OSD_MSG);
             sendString(std::string("State invalid because new threads were created"));
         }
@@ -225,7 +225,7 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
         /* Checking if the savestate movie is a prefix of our movie */
         if (!movie || !m.isPrefix(*movie)) {
             /* Not a prefix, we don't allow loading */
-            if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
+            if (context->config.sc.osd) {
                 sendMessage(MSGN_OSD_MSG);
                 sendString(std::string("Savestate inputs mismatch"));
             }
@@ -233,7 +233,7 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
         }
     }
 
-    if (context->config.sc.osd & SharedConfig::OSD_MESSAGES) {
+    if (context->config.sc.osd) {
         std::string msg;
         sendMessage(MSGN_OSD_MSG);
         sendString(loading_msg);
@@ -297,7 +297,7 @@ int SaveState::postLoad(Context* context, MovieFile& m, bool branch, bool inputE
         m.header->length_nsec = context->current_time_nsec;
     }
 
-    if (didLoad && (context->config.sc.osd & SharedConfig::OSD_MESSAGES)) {
+    if (didLoad && (context->config.sc.osd)) {
         sendMessage(MSGN_OSD_MSG);
         sendString(loaded_msg);
     }

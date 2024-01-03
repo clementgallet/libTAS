@@ -17,21 +17,17 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_IMGUI_LOGWINDOW_H_INCL
-#define LIBTAS_IMGUI_LOGWINDOW_H_INCL
+#include "Crosshair.h"
+
+#include "../external/imgui/imgui.h"
 
 namespace libtas {
 
-namespace LogWindow
+void Crosshair::draw(const AllInputs& ai)
 {
-    void clear();
-
-    void addLog(const char* beg, const char* end, bool newline);
-
-    void draw(bool* p_open);
-
+    int size = 5;
+    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(ai.pointer_x, ai.pointer_y-size), ImVec2(ai.pointer_x, ai.pointer_y+size), IM_COL32(255, 255, 255, 255));
+    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(ai.pointer_x-size, ai.pointer_y), ImVec2(ai.pointer_x+size, ai.pointer_y+size), IM_COL32(255, 255, 255, 255));
 }
 
 }
-
-#endif

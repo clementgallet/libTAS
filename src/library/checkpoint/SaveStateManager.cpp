@@ -37,7 +37,7 @@
 #include "audio/AudioPlayerCoreAudio.h"
 #endif
 #include "fileio/FileHandleList.h"
-#include "renderhud/RenderHUD.h"
+#include "renderhud/MessageWindow.h"
 #ifdef __unix__
 #include "xlib/xdisplay.h" // x11::gameDisplays
 #endif
@@ -668,7 +668,7 @@ void SaveStateManager::printError(int err)
 
     if (err < 0) {
         debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, errors[-err]);
-        RenderHUD::insertMessage(errors[-err]);
+        MessageWindow::insert(errors[-err]);
     }
 }
 

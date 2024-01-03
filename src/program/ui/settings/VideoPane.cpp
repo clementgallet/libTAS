@@ -84,22 +84,10 @@ void VideoPane::initLayout()
     QVBoxLayout* osdLayout = new QVBoxLayout;
     osdBox->setLayout(osdLayout);
 
-    osdFrameBox = new QCheckBox(tr("Frame count"));
-    osdInputsBox = new QCheckBox(tr("Inputs"));
-    osdMessagesBox = new QCheckBox(tr("Messages"));
-    osdRamBox = new QCheckBox(tr("Ram Watches"));
-    osdMarkersBox = new QCheckBox(tr("Markers"));
-    osdLuaBox = new QCheckBox(tr("Lua"));
-    osdCrosshairBox = new QCheckBox(tr("Crosshair"));
+    osdMenuBox = new QCheckBox(tr("Main Menu"));
     osdEncodeBox = new QCheckBox(tr("OSD on video encode"));
 
-    osdLayout->addWidget(osdFrameBox);
-    osdLayout->addWidget(osdInputsBox);
-    osdLayout->addWidget(osdMessagesBox);
-    osdLayout->addWidget(osdRamBox);
-    osdLayout->addWidget(osdMarkersBox);
-    osdLayout->addWidget(osdLuaBox);
-    osdLayout->addWidget(osdCrosshairBox);
+    osdLayout->addWidget(osdMenuBox);
     osdLayout->addWidget(osdEncodeBox);
     
     renderingBox = new QGroupBox(tr("Rendering"));
@@ -144,13 +132,7 @@ void VideoPane::initSignals()
         screenCustomRadio->setChecked(true);
         saveConfig();
     });
-    connect(osdFrameBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
-    connect(osdInputsBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
-    connect(osdMessagesBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
-    connect(osdRamBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
-    connect(osdMarkersBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
-    connect(osdLuaBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
-    connect(osdCrosshairBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
+    connect(osdMenuBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
     connect(osdEncodeBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
 
     connect(rendSoftBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
@@ -203,13 +185,7 @@ void VideoPane::loadConfig()
         }
     }
     
-    osdFrameBox->setChecked(context->config.sc.osd & SharedConfig::OSD_FRAMECOUNT);
-    osdInputsBox->setChecked(context->config.sc.osd & SharedConfig::OSD_INPUTS);
-    osdMessagesBox->setChecked(context->config.sc.osd & SharedConfig::OSD_MESSAGES);
-    osdRamBox->setChecked(context->config.sc.osd & SharedConfig::OSD_RAMWATCHES);
-    osdMarkersBox->setChecked(context->config.sc.osd & SharedConfig::OSD_MARKERS);
-    osdLuaBox->setChecked(context->config.sc.osd & SharedConfig::OSD_LUA);
-    osdCrosshairBox->setChecked(context->config.sc.osd & SharedConfig::OSD_CROSSHAIR);
+    osdMenuBox->setChecked(context->config.sc.osd);
     osdEncodeBox->setChecked(context->config.sc.osd_encode);
 
     rendSoftBox->setChecked(context->config.sc.opengl_soft);
@@ -232,22 +208,7 @@ void VideoPane::saveConfig()
         context->config.sc.screen_height = heightField->value();
     }
     
-    context->config.sc.osd = 0;
-    if (osdFrameBox->isChecked())
-        context->config.sc.osd |= SharedConfig::OSD_FRAMECOUNT;
-    if (osdInputsBox->isChecked())
-        context->config.sc.osd |= SharedConfig::OSD_INPUTS;
-    if (osdMessagesBox->isChecked())
-        context->config.sc.osd |= SharedConfig::OSD_MESSAGES;
-    if (osdRamBox->isChecked())
-        context->config.sc.osd |= SharedConfig::OSD_RAMWATCHES;
-    if (osdMarkersBox->isChecked())
-        context->config.sc.osd |= SharedConfig::OSD_MARKERS;
-    if (osdLuaBox->isChecked())
-        context->config.sc.osd |= SharedConfig::OSD_LUA;
-    if (osdCrosshairBox->isChecked())
-        context->config.sc.osd |= SharedConfig::OSD_CROSSHAIR;
-        
+    context->config.sc.osd = osdMenuBox->isChecked();
     context->config.sc.osd_encode = osdEncodeBox->isChecked();
 
     context->config.sc.opengl_soft = rendSoftBox->isChecked();

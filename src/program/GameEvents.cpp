@@ -191,7 +191,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
 
             /* Handle errors */
             if (error == SaveState::EINVALID) {
-                if (!(context->config.sc.osd & SharedConfig::OSD_MESSAGES))
+                if (!(context->config.sc.osd))
                     emit alertToShow(QString("State invalid because new threads were created"));
                 return false;
             }
@@ -232,7 +232,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
             }
 
             if (error == SaveState::ENOSTATE) {
-                if (!(context->config.sc.osd & SharedConfig::OSD_MESSAGES))
+                if (!(context->config.sc.osd))
                     emit alertToShow(QString("There is no savestate to load in this slot"));
                 return false;
             }
@@ -243,7 +243,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
             }
 
             if (error == SaveState::EINPUTMISMATCH) {
-                if (!(context->config.sc.osd & SharedConfig::OSD_MESSAGES)) {
+                if (!(context->config.sc.osd)) {
                     emit alertToShow(QString("Trying to load a state in read-only but the inputs mismatch"));
                 }
                 return false;                

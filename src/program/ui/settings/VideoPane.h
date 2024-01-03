@@ -56,13 +56,7 @@ private:
     QSpinBox* widthField;
     QSpinBox* heightField;
     
-    QCheckBox* osdFrameBox;
-    QCheckBox* osdInputsBox;
-    QCheckBox* osdMessagesBox;
-    QCheckBox* osdRamBox;
-    QCheckBox* osdMarkersBox;
-    QCheckBox* osdLuaBox;
-    QCheckBox* osdCrosshairBox;
+    QCheckBox* osdMenuBox;
     QCheckBox* osdEncodeBox;
 
     ToolTipCheckBox* rendSoftBox;

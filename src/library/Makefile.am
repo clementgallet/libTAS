@@ -95,7 +95,13 @@ libtas_so_SOURCES = \
     inputs/xkeyboardlayout.cpp \
     inputs/xinput.cpp \
     inputs/xpointer.cpp \
+    renderhud/Crosshair.cpp \
+    renderhud/FrameWindow.cpp \
+    renderhud/InputsWindow.cpp \
     renderhud/LogWindow.cpp \
+    renderhud/LuaDraw.cpp \
+    renderhud/MessageWindow.cpp \
+    renderhud/WatchesWindow.cpp \
     renderhud/RenderHUD_GL.cpp \
     renderhud/RenderHUD_SDL2_renderer.cpp \
     renderhud/RenderHUD_Vulkan.cpp \

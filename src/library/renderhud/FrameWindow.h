@@ -17,19 +17,18 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_IMGUI_LOGWINDOW_H_INCL
-#define LIBTAS_IMGUI_LOGWINDOW_H_INCL
+#ifndef LIBTAS_IMGUI_FRAMEWINDOW_H_INCL
+#define LIBTAS_IMGUI_FRAMEWINDOW_H_INCL
+
+#include <string>
 
 namespace libtas {
 
-namespace LogWindow
+namespace FrameWindow
 {
-    void clear();
+    void setMarkerText(std::string text);
 
-    void addLog(const char* beg, const char* end, bool newline);
-
-    void draw(bool* p_open);
-
+    void draw(uint64_t framecount, uint64_t nondraw_framecount, bool* p_open);
 }
 
 }
