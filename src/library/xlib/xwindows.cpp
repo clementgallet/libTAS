@@ -43,22 +43,15 @@ namespace libtas {
 
 DEFINE_ORIG_POINTER(XCreateWindow)
 DEFINE_ORIG_POINTER(XCreateSimpleWindow)
-DEFINE_ORIG_POINTER(XDestroyWindow)
 DEFINE_ORIG_POINTER(XMapWindow)
-DEFINE_ORIG_POINTER(XUnmapWindow)
 DEFINE_ORIG_POINTER(XMapRaised)
 DEFINE_ORIG_POINTER(XStoreName)
 DEFINE_ORIG_POINTER(XSetWMName)
-DEFINE_ORIG_POINTER(XSelectInput)
-DEFINE_ORIG_POINTER(XMoveWindow)
 DEFINE_ORIG_POINTER(XResizeWindow)
 DEFINE_ORIG_POINTER(XConfigureWindow)
 DEFINE_ORIG_POINTER(XGetWindowAttributes)
-DEFINE_ORIG_POINTER(XChangeWindowAttributes)
 DEFINE_ORIG_POINTER(XQueryExtension)
 DEFINE_ORIG_POINTER(XChangeProperty)
-DEFINE_ORIG_POINTER(XSetWMHints)
-DEFINE_ORIG_POINTER(XTranslateCoordinates)
 
 std::list<Window> x11::gameXWindows;
 Window x11::rootWindow;
@@ -153,7 +146,6 @@ static void sendXWindow(Window w)
 int XDestroyWindow(Display *display, Window w)
 {
     debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, w);
-    LINK_NAMESPACE_GLOBAL(XDestroyWindow);
 
     /* If current game window, switch to another one on the list */
     if (!x11::gameXWindows.empty() && w == x11::gameXWindows.front()) {
@@ -180,7 +172,7 @@ int XDestroyWindow(Display *display, Window w)
         }
     }
 
-    return orig::XDestroyWindow(display, w);
+    RETURN_NATIVE(XDestroyWindow, (display, w), nullptr);
 }
 
 int XMapWindow(Display *display, Window w)
@@ -207,11 +199,7 @@ int XMapWindow(Display *display, Window w)
 int XUnmapWindow(Display *display, Window w)
 {
     debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, w);
-    LINK_NAMESPACE_GLOBAL(XUnmapWindow);
-
-    int ret = orig::XUnmapWindow(display, w);
-
-    return ret;
+    RETURN_NATIVE(XUnmapWindow, (display, w), nullptr);
 }
 
 int XMapRaised(Display *display, Window w)
@@ -272,13 +260,12 @@ void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
 int XSelectInput(Display *display, Window w, long event_mask)
 {
     debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, w);
-    LINK_NAMESPACE_GLOBAL(XSelectInput);
 
     /* Add the mask in our event queue */
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
     queue->setMask(w, event_mask);
 
-    return orig::XSelectInput(display, w, event_mask);
+    RETURN_NATIVE(XSelectInput, (display, w, event_mask), nullptr);
 }
 
 int XMoveWindow(Display* display, Window w, int x, int y)
@@ -289,37 +276,28 @@ int XMoveWindow(Display* display, Window w, int x, int y)
         return 0;
     }
 
-    LINK_NAMESPACE_GLOBAL(XMoveWindow);
-    return orig::XMoveWindow(display, w, x, y);
+    RETURN_NATIVE(XMoveWindow, (display, w, x, y), nullptr);
 }
 
 int XResizeWindow(Display* display, Window w, unsigned int width, unsigned int height)
 {
-    LINK_NAMESPACE_GLOBAL(XResizeWindow);
-    int ret = orig::XResizeWindow(display, w, width, height);
-
-    if (GlobalState::isNative())
-        return ret;
+    RETURN_IF_NATIVE(XResizeWindow, (display, w, width, height), nullptr);
 
     debuglogstdio(LCF_WINDOW, "%s called with window %d, new size: %d x %d", __func__, w, width, height);
     ScreenCapture::resize(width, height);
-    return ret;
+    RETURN_NATIVE(XResizeWindow, (display, w, width, height), nullptr);
 }
 
 int XMoveResizeWindow(Display* display, Window w, int x, int y, unsigned int width, unsigned int height)
 {
-    LINK_NAMESPACE_GLOBAL(XResizeWindow);
-    int ret = orig::XResizeWindow(display, w, width, height);
-
-    if (GlobalState::isNative())
-        return ret;
+    RETURN_IF_NATIVE(XResizeWindow, (display, w, width, height), nullptr);
 
     debuglogstdio(LCF_WINDOW, "%s called with window %d, new position: %d - %d, new size: %d x %d", __func__, w, x, y, width, height);
 
     if (!x11::gameXWindows.empty() && (x11::gameXWindows.front() == w)) {
         ScreenCapture::resize(width, height);
     }
-    return ret;
+    RETURN_NATIVE(XResizeWindow, (display, w, width, height), nullptr);
 }
 
 int XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindowChanges* values)
@@ -434,9 +412,7 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
 
 int XSetWMHints(Display* display, Window w, XWMHints* wm_hints)
 {
-    LINK_NAMESPACE_GLOBAL(XSetWMHints);
-    if (GlobalState::isNative())
-        return orig::XSetWMHints(display, w, wm_hints);
+    RETURN_IF_NATIVE(XSetWMHints, (display, w, wm_hints), nullptr);
 
     debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, w);
 
@@ -445,14 +421,12 @@ int XSetWMHints(Display* display, Window w, XWMHints* wm_hints)
         wm_hints->input = True;
     }
 
-    return orig::XSetWMHints(display, w, wm_hints);
+    RETURN_NATIVE(XSetWMHints, (display, w, wm_hints), nullptr);
 }
 
 Bool XTranslateCoordinates(Display* display, Window src_w, Window dest_w, int src_x, int src_y, int* dest_x_return, int* dest_y_return, Window* child_return)
 {
-    LINK_NAMESPACE_GLOBAL(XTranslateCoordinates);
-    if (GlobalState::isNative())
-        return orig::XTranslateCoordinates(display, src_w, dest_w, src_x, src_y, dest_x_return, dest_y_return, child_return);
+    RETURN_IF_NATIVE(XTranslateCoordinates, (display, src_w, dest_w, src_x, src_y, dest_x_return, dest_y_return, child_return), nullptr);
 
     debuglogstdio(LCF_WINDOW, "%s called with src_w %d, dest_w %d, src_x %d, src_y %d", __func__, src_w, dest_w, src_x, src_y);
 
@@ -462,7 +436,7 @@ Bool XTranslateCoordinates(Display* display, Window src_w, Window dest_w, int sr
         if (child_return) *child_return = src_w;
         return True;
     }
-    return orig::XTranslateCoordinates(display, src_w, dest_w, src_x, src_y, dest_x_return, dest_y_return, child_return);
+    RETURN_NATIVE(XTranslateCoordinates, (display, src_w, dest_w, src_x, src_y, dest_x_return, dest_y_return, child_return), nullptr);
 }
 
 Status XGetWindowAttributes(Display* display, Window w, XWindowAttributes* window_attributes_return)
@@ -483,10 +457,7 @@ Status XGetWindowAttributes(Display* display, Window w, XWindowAttributes* windo
 
 int XChangeWindowAttributes(Display *display, Window w, unsigned long valuemask, XSetWindowAttributes *attributes)
 {
-    LINK_NAMESPACE_GLOBAL(XChangeWindowAttributes);
-    if (GlobalState::isNative())
-        return orig::XChangeWindowAttributes(display, w, valuemask, attributes);
-
+    RETURN_IF_NATIVE(XChangeWindowAttributes, (display, w, valuemask, attributes), nullptr);
     debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, w);
 
     /* Add the mask in our event queue */
@@ -495,7 +466,7 @@ int XChangeWindowAttributes(Display *display, Window w, unsigned long valuemask,
         queue->setMask(w, attributes->event_mask);
     }
 
-    return orig::XChangeWindowAttributes(display, w, valuemask, attributes);
+    RETURN_NATIVE(XChangeWindowAttributes, (display, w, valuemask, attributes), nullptr);
 }
 
 }

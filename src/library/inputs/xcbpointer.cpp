@@ -33,9 +33,6 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(xcb_warp_pointer_checked)
-DEFINE_ORIG_POINTER(xcb_warp_pointer)
-
 /* Override */ xcb_query_pointer_cookie_t xcb_query_pointer (xcb_connection_t *c, xcb_window_t window)
 {
     DEBUGLOGCALL(LCF_MOUSE);
@@ -78,10 +75,7 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
                           int16_t           dst_x,
                           int16_t           dst_y)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(xcb_warp_pointer_checked);
-        return orig::xcb_warp_pointer_checked(c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y);
-    }
+    RETURN_IF_NATIVE(xcb_warp_pointer_checked, (c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y), nullptr);
 
     debuglogstdio(LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dst_window, dst_x, dst_y);
 
@@ -143,8 +137,7 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
         }
     }
 
-    LINK_NAMESPACE_GLOBAL(xcb_warp_pointer_checked);
-    return orig::xcb_warp_pointer_checked(c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y);
+    RETURN_NATIVE(xcb_warp_pointer_checked, (c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y), nullptr);
 }
 
 /* Override */ xcb_void_cookie_t
@@ -158,10 +151,7 @@ xcb_warp_pointer (xcb_connection_t *c,
                   int16_t           dst_x,
                   int16_t           dst_y)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(xcb_warp_pointer);
-        return orig::xcb_warp_pointer(c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y);
-    }
+    RETURN_IF_NATIVE(xcb_warp_pointer, (c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y), nullptr);
     
     debuglogstdio(LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dst_window, dst_x, dst_y);
 
@@ -223,8 +213,7 @@ xcb_warp_pointer (xcb_connection_t *c,
         }
     }
 
-    LINK_NAMESPACE_GLOBAL(xcb_warp_pointer);
-    return orig::xcb_warp_pointer(c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y);
+    RETURN_NATIVE(xcb_warp_pointer, (c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y), nullptr);
 }
 
 /* Override */ xcb_grab_pointer_cookie_t

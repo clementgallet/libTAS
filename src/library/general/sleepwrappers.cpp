@@ -34,8 +34,6 @@
 namespace libtas {
 
 DEFINE_ORIG_POINTER(nanosleep)
-DEFINE_ORIG_POINTER(clock_nanosleep)
-DEFINE_ORIG_POINTER(sched_yield)
 
 /* Advance time when sleep call, depending on config and main thread.
  * Returns if the call was transfered.
@@ -65,7 +63,7 @@ bool transfer_sleep(const struct timespec &ts)
 
 /* Override */ void SDL_Delay(unsigned int sleep)
 {
-    LINK_NAMESPACE_GLOBAL(nanosleep);
+    RETURN_IF_NATIVE(SDL_Delay, (sleep), nullptr);
 
     struct timespec ts;
     ts.tv_sec = sleep / 1000;
@@ -79,7 +77,7 @@ bool transfer_sleep(const struct timespec &ts)
     debuglogstdio(LCF_SDL | LCF_SLEEP, "%s call - sleep for %d ms", __func__, sleep);
 
     if (! transfer_sleep(ts))
-        orig::nanosleep(&ts, NULL);
+        RETURN_NATIVE(SDL_Delay, (sleep), nullptr);
 }
 
 /* Override */ int usleep(useconds_t usec)
@@ -137,10 +135,7 @@ bool transfer_sleep(const struct timespec &ts)
 			    const struct timespec *req,
 			    struct timespec *rem)
 {
-    LINK_NAMESPACE_GLOBAL(clock_nanosleep);
-    if (GlobalState::isNative()) {
-        return orig::clock_nanosleep(clock_id, flags, req, rem);
-    }
+    RETURN_IF_NATIVE(clock_nanosleep, (clock_id, flags, req, rem), nullptr);
 
     TimeHolder sleeptime;
     sleeptime = *req;
@@ -156,18 +151,14 @@ bool transfer_sleep(const struct timespec &ts)
     debuglogstdio(LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, sleeptime.tv_sec, sleeptime.tv_nsec);
 
     if (! transfer_sleep(sleeptime))
-        return orig::clock_nanosleep(clock_id, flags, req, rem);
+        RETURN_NATIVE(clock_nanosleep, (clock_id, flags, req, rem), nullptr);
 
     return 0;
 }
 
 /* Override */ int sched_yield(void) __THROW
 {
-    LINK_NAMESPACE_GLOBAL(sched_yield);
-
-    if (GlobalState::isNative()) {
-        return orig::sched_yield();
-    }
+    RETURN_IF_NATIVE(sched_yield, (), nullptr);
 
     DEBUGLOGCALL(LCF_SLEEP);
 
@@ -176,7 +167,7 @@ bool transfer_sleep(const struct timespec &ts)
             DeterministicTimer::get().fakeAdvanceTimer({0, 1000000});
     }
 
-    return orig::sched_yield();
+    RETURN_NATIVE(sched_yield, (), nullptr);
 }
 
 }

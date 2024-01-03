@@ -27,21 +27,14 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(rename)
-DEFINE_ORIG_POINTER(remove)
-DEFINE_ORIG_POINTER(unlink)
-
 int rename (const char *oldf, const char *newf) __THROW
 {
-    LINK_NAMESPACE_GLOBAL(rename);
-
-    if (GlobalState::isNative())
-        return orig::rename(oldf, newf);
-
+    RETURN_IF_NATIVE(rename, (oldf, newf), nullptr);
+    
     debuglogstdio(LCF_FILEIO, "%s call with old %s and new %s", __func__, oldf?oldf:"<NULL>", newf?newf:"<NULL>");
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
-        return orig::rename(oldf, newf);
+        RETURN_NATIVE(rename, (oldf, newf), nullptr);
 
     /* Check if file is a savefile */
     int ret = SaveFileList::renameSaveFile(oldf, newf);
@@ -49,21 +42,18 @@ int rename (const char *oldf, const char *newf) __THROW
         return ret;
     }
 
-    return orig::rename(oldf, newf);
+    RETURN_NATIVE(rename, (oldf, newf), nullptr);
 }
 
 /* Remove file FILENAME.  */
 int remove (const char *filename) __THROW
 {
-    LINK_NAMESPACE_GLOBAL(remove);
-
-    if (GlobalState::isNative())
-        return orig::remove(filename);
+    RETURN_IF_NATIVE(remove, (filename), nullptr);
 
     debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, filename?filename:"<NULL>");
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
-        return orig::remove(filename);
+        RETURN_NATIVE(remove, (filename), nullptr);
 
     /* Check if file is a savefile */
     int ret = SaveFileList::removeSaveFile(filename);
@@ -71,21 +61,18 @@ int remove (const char *filename) __THROW
         return ret;
     }
 
-    return orig::remove(filename);
+    RETURN_NATIVE(remove, (filename), nullptr);
 }
 
 /* Remove the link NAME.  */
 int unlink (const char *name) __THROW
 {
-    LINK_NAMESPACE_GLOBAL(unlink);
-
-    if (GlobalState::isNative())
-        return orig::unlink(name);
+    RETURN_IF_NATIVE(unlink, (name), nullptr);
 
     debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, name?name:"<NULL>");
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
-        return orig::unlink(name);
+        RETURN_NATIVE(unlink, (name), nullptr);
 
     /* Check if file is a savefile */
     int ret = SaveFileList::removeSaveFile(name);
@@ -93,7 +80,7 @@ int unlink (const char *name) __THROW
         return ret;
     }
 
-    return orig::unlink(name);
+    RETURN_NATIVE(unlink, (name), nullptr);
 }
 
 }

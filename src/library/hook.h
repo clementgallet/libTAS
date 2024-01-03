@@ -58,6 +58,23 @@ namespace orig { \
     decltype(&FUNC) FUNC; \
 }
 
+/* Macro to return the native function if Native global state is set 
+ * Useful when the original function is only used inside the hooked function */
+#define RETURN_IF_NATIVE(FUNC, ARGS, LIB) \
+do { \
+    static decltype(&FUNC) orig_##FUNC; \
+    link_function((void**)&orig_##FUNC, #FUNC, LIB); \
+    if (GlobalState::isNative()) return orig_##FUNC ARGS; \
+} while (0)
+
+#define RETURN_NATIVE(FUNC, ARGS, LIB) \
+{ \
+    static decltype(&FUNC) orig_##FUNC; \
+    link_function((void**)&orig_##FUNC, #FUNC, LIB); \
+    return orig_##FUNC ARGS; \
+}
+
+
 #ifdef __unix__
 #define LINK_NAMESPACE(FUNC,LIB) link_function((void**)&orig::FUNC, #FUNC, "lib" LIB ".so")
 #define LINK_NAMESPACE_FULLNAME(FUNC,LIB) link_function((void**)&orig::FUNC, #FUNC, LIB)

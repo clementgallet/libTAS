@@ -39,98 +39,6 @@ namespace libtas {
 static int buffer_size = 4096; // in samples
 static int avail_min = 0;
 
-DEFINE_ORIG_POINTER(snd_pcm_open)
-DEFINE_ORIG_POINTER(snd_pcm_open_lconf)
-DEFINE_ORIG_POINTER(snd_pcm_open_fallback)
-
-DEFINE_ORIG_POINTER(snd_pcm_poll_descriptors_count)
-DEFINE_ORIG_POINTER(snd_pcm_poll_descriptors)
-DEFINE_ORIG_POINTER(snd_pcm_poll_descriptors_revents)
-
-DEFINE_ORIG_POINTER(snd_pcm_info)
-DEFINE_ORIG_POINTER(snd_pcm_sw_params_current)
-DEFINE_ORIG_POINTER(snd_pcm_sw_params)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_sizeof)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_any)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_current)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_access)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_access)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_format)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_format_mask)
-
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate_near)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_rate_resample)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_rate)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_rate_min)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_rate_max)
-
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_period_size)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_period_time_min)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_period_time_near)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_period_size_near)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_periods_near)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_periods)
-
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_buffer_size)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_buffer_size_min)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_buffer_size_max)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_buffer_time_max)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_buffer_size_near)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_buffer_time_near)
-
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_channels)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_channels_min)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_get_channels_max)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_set_channels)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_malloc)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_free)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_copy)
-DEFINE_ORIG_POINTER(snd_pcm_get_params)
-DEFINE_ORIG_POINTER(snd_pcm_set_params)
-
-DEFINE_ORIG_POINTER(snd_pcm_prepare)
-DEFINE_ORIG_POINTER(snd_pcm_writei)
-DEFINE_ORIG_POINTER(snd_pcm_readi)
-DEFINE_ORIG_POINTER(snd_pcm_nonblock)
-DEFINE_ORIG_POINTER(snd_pcm_close)
-DEFINE_ORIG_POINTER(snd_pcm_recover)
-DEFINE_ORIG_POINTER(snd_pcm_reset)
-DEFINE_ORIG_POINTER(snd_pcm_status)
-
-DEFINE_ORIG_POINTER(snd_pcm_mmap_begin)
-DEFINE_ORIG_POINTER(snd_pcm_mmap_commit)
-
-DEFINE_ORIG_POINTER(snd_pcm_start)
-DEFINE_ORIG_POINTER(snd_pcm_drop)
-DEFINE_ORIG_POINTER(snd_pcm_state)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_can_pause)
-DEFINE_ORIG_POINTER(snd_pcm_pause)
-DEFINE_ORIG_POINTER(snd_pcm_resume)
-DEFINE_ORIG_POINTER(snd_pcm_wait)
-DEFINE_ORIG_POINTER(snd_pcm_delay)
-DEFINE_ORIG_POINTER(snd_pcm_avail)
-DEFINE_ORIG_POINTER(snd_pcm_avail_update)
-DEFINE_ORIG_POINTER(snd_pcm_rewind)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_rate)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_format)
-DEFINE_ORIG_POINTER(snd_pcm_hw_params_test_channels)
-
-DEFINE_ORIG_POINTER(snd_pcm_sw_params_sizeof)
-DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_start_threshold)
-DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_stop_threshold)
-DEFINE_ORIG_POINTER(snd_pcm_sw_params_set_avail_min)
-
-DEFINE_ORIG_POINTER(snd_pcm_get_chmap)
-
-DEFINE_ORIG_POINTER(snd_pcm_format_mask_malloc)
-DEFINE_ORIG_POINTER(snd_pcm_format_mask_free)
-DEFINE_ORIG_POINTER(snd_pcm_format_mask_test)
-
-DEFINE_ORIG_POINTER(snd_pcm_bytes_to_frames)
-DEFINE_ORIG_POINTER(snd_pcm_frames_to_bytes)
-
 static int get_latency(snd_pcm_t *pcm);
 
 static int last_source;
@@ -139,10 +47,7 @@ static bool block_mode = true;
 
 int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int mode)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_open);
-        return orig::snd_pcm_open(pcm, name, stream, mode);
-    }
+    RETURN_IF_NATIVE(snd_pcm_open, (pcm, name, stream, mode), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 
@@ -193,10 +98,7 @@ int snd_pcm_open_lconf(snd_pcm_t **pcm, const char *name,
     		       snd_pcm_stream_t stream, int mode,
     		       snd_config_t *lconf)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_open_lconf);
-        return orig::snd_pcm_open_lconf(pcm, name, stream, mode, lconf);
-    }
+    RETURN_IF_NATIVE(snd_pcm_open_lconf, (pcm, name, stream, mode, lconf), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     return snd_pcm_open(pcm, name, stream, mode);
@@ -206,10 +108,7 @@ int snd_pcm_open_fallback(snd_pcm_t **pcm, snd_config_t *root,
     			  const char *name, const char *orig_name,
     			  snd_pcm_stream_t stream, int mode)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_open_fallback);
-        return orig::snd_pcm_open_fallback(pcm, root, name, orig_name, stream, mode);
-    }
+    RETURN_IF_NATIVE(snd_pcm_open_fallback, (pcm, root, name, orig_name, stream, mode), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     return snd_pcm_open(pcm, name, stream, mode);
@@ -217,10 +116,7 @@ int snd_pcm_open_fallback(snd_pcm_t **pcm, snd_config_t *root,
 
 int snd_pcm_close(snd_pcm_t *pcm)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_close);
-        return orig::snd_pcm_close(pcm);
-    }
+    RETURN_IF_NATIVE(snd_pcm_close, (pcm), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     AudioContext& audiocontext = AudioContext::get();
@@ -242,10 +138,7 @@ int snd_pcm_close(snd_pcm_t *pcm)
 
 int snd_pcm_poll_descriptors_count(snd_pcm_t *pcm)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_poll_descriptors_count);
-        return orig::snd_pcm_poll_descriptors_count(pcm);
-    }
+    RETURN_IF_NATIVE(snd_pcm_poll_descriptors_count, (pcm), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     return 1;
@@ -253,10 +146,7 @@ int snd_pcm_poll_descriptors_count(snd_pcm_t *pcm)
 
 int snd_pcm_poll_descriptors(snd_pcm_t *pcm, struct pollfd *pfds, unsigned int space)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_poll_descriptors);
-        return orig::snd_pcm_poll_descriptors(pcm, pfds, space);
-    }
+    RETURN_IF_NATIVE(snd_pcm_poll_descriptors, (pcm, pfds, space), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 
@@ -272,10 +162,7 @@ int snd_pcm_poll_descriptors(snd_pcm_t *pcm, struct pollfd *pfds, unsigned int s
 
 int snd_pcm_poll_descriptors_revents(snd_pcm_t *pcm, struct pollfd *pfds, unsigned int nfds, unsigned short *revents)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_poll_descriptors_revents);
-        return orig::snd_pcm_poll_descriptors_revents(pcm, pfds, nfds, revents);
-    }
+    RETURN_IF_NATIVE(snd_pcm_poll_descriptors_revents, (pcm, pfds, nfds, revents), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 
@@ -288,10 +175,7 @@ int snd_pcm_poll_descriptors_revents(snd_pcm_t *pcm, struct pollfd *pfds, unsign
 
 int snd_pcm_info(snd_pcm_t *pcm, snd_pcm_info_t *info)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_info);
-        return orig::snd_pcm_info(pcm, info);
-    }
+    RETURN_IF_NATIVE(snd_pcm_info, (pcm, info), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     return 0;
@@ -299,10 +183,7 @@ int snd_pcm_info(snd_pcm_t *pcm, snd_pcm_info_t *info)
 
 int snd_pcm_nonblock(snd_pcm_t *pcm, int nonblock)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_nonblock);
-        return orig::snd_pcm_nonblock(pcm, nonblock);
-    }
+    RETURN_IF_NATIVE(snd_pcm_nonblock, (pcm, nonblock), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with %s mode", __func__, nonblock==0?"block":((nonblock==1)?"nonblock":"abort"));
     if (nonblock == 0) {
@@ -317,10 +198,7 @@ int snd_pcm_nonblock(snd_pcm_t *pcm, int nonblock)
 
 int snd_pcm_start(snd_pcm_t *pcm)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_start);
-        return orig::snd_pcm_start(pcm);
-    }
+    RETURN_IF_NATIVE(snd_pcm_start, (pcm), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
@@ -332,10 +210,7 @@ int snd_pcm_start(snd_pcm_t *pcm)
 
 int snd_pcm_drop(snd_pcm_t *pcm)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_drop);
-        return orig::snd_pcm_drop(pcm);
-    }
+    RETURN_IF_NATIVE(snd_pcm_drop, (pcm), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
@@ -346,10 +221,7 @@ int snd_pcm_drop(snd_pcm_t *pcm)
 
 int snd_pcm_hw_params_can_pause(const snd_pcm_hw_params_t *params)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_can_pause);
-        return orig::snd_pcm_hw_params_can_pause(params);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_can_pause, (params), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     return 1;
@@ -357,10 +229,7 @@ int snd_pcm_hw_params_can_pause(const snd_pcm_hw_params_t *params)
 
 int snd_pcm_pause(snd_pcm_t *pcm, int enable)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_pause);
-        return orig::snd_pcm_pause(pcm, enable);
-    }
+    RETURN_IF_NATIVE(snd_pcm_pause, (pcm, enable), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 
@@ -376,10 +245,7 @@ int snd_pcm_pause(snd_pcm_t *pcm, int enable)
 
 snd_pcm_state_t snd_pcm_state(snd_pcm_t *pcm)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_state);
-        return orig::snd_pcm_state(pcm);
-    }
+    RETURN_IF_NATIVE(snd_pcm_state, (pcm), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 
@@ -405,10 +271,7 @@ snd_pcm_state_t snd_pcm_state(snd_pcm_t *pcm)
 
 int snd_pcm_resume(snd_pcm_t *pcm)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_resume);
-        return orig::snd_pcm_resume(pcm);
-    }
+    RETURN_IF_NATIVE(snd_pcm_resume, (pcm), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
@@ -420,10 +283,8 @@ int snd_pcm_resume(snd_pcm_t *pcm)
 
 int snd_pcm_wait(snd_pcm_t *pcm, int timeout)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_wait);
-        return orig::snd_pcm_wait(pcm, timeout);
-    }
+    RETURN_IF_NATIVE(snd_pcm_wait, (pcm, timeout), nullptr);
+
     debuglogstdio(LCF_SOUND, "%s called with timeout %d", __func__, timeout);
 
     /* Check for no more available samples */
@@ -468,10 +329,7 @@ int snd_pcm_wait(snd_pcm_t *pcm, int timeout)
 
 int snd_pcm_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delayp)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_delay);
-        return orig::snd_pcm_delay(pcm, delayp);
-    }
+    RETURN_IF_NATIVE(snd_pcm_delay, (pcm, delayp), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     *delayp = get_latency(pcm);
@@ -481,10 +339,7 @@ int snd_pcm_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delayp)
 
 snd_pcm_sframes_t snd_pcm_avail(snd_pcm_t *pcm)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_avail);
-        return orig::snd_pcm_avail(pcm);
-    }
+    RETURN_IF_NATIVE(snd_pcm_avail, (pcm), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     snd_pcm_sframes_t avail = buffer_size - get_latency(pcm);
@@ -496,10 +351,7 @@ snd_pcm_sframes_t snd_pcm_avail(snd_pcm_t *pcm)
 
 snd_pcm_sframes_t snd_pcm_avail_update(snd_pcm_t *pcm)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_avail_update);
-        return orig::snd_pcm_avail_update(pcm);
-    }
+    RETURN_IF_NATIVE(snd_pcm_avail_update, (pcm), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     snd_pcm_sframes_t avail = buffer_size - get_latency(pcm);
@@ -511,10 +363,7 @@ snd_pcm_sframes_t snd_pcm_avail_update(snd_pcm_t *pcm)
 
 snd_pcm_sframes_t snd_pcm_rewind(snd_pcm_t *pcm, snd_pcm_uframes_t frames)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_rewind);
-        return orig::snd_pcm_rewind(pcm, frames);
-    }
+    RETURN_IF_NATIVE(snd_pcm_rewind, (pcm, frames), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
@@ -529,10 +378,7 @@ snd_pcm_sframes_t snd_pcm_rewind(snd_pcm_t *pcm, snd_pcm_uframes_t frames)
 
 int snd_pcm_recover(snd_pcm_t *pcm, int err, int silent)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_recover);
-        return orig::snd_pcm_recover(pcm, err, silent);
-    }
+    RETURN_IF_NATIVE(snd_pcm_recover, (pcm, err, silent), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 
@@ -551,10 +397,7 @@ int snd_pcm_recover(snd_pcm_t *pcm, int err, int silent)
 
 int snd_pcm_reset(snd_pcm_t *pcm)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_reset);
-        return orig::snd_pcm_reset(pcm);
-    }
+    RETURN_IF_NATIVE(snd_pcm_reset, (pcm), nullptr);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source =  AudioContext::get().getSource(sourceId);
@@ -565,10 +408,7 @@ int snd_pcm_reset(snd_pcm_t *pcm)
 
 int snd_pcm_status(snd_pcm_t *pcm, snd_pcm_status_t *status)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_status);
-        return orig::snd_pcm_status(pcm, status);
-    }
+    RETURN_IF_NATIVE(snd_pcm_status, (pcm, status), nullptr);
 
     // int sourceId = reinterpret_cast<intptr_t>(pcm);
     // auto source = audiocontext.getSource(sourceId);
@@ -579,10 +419,7 @@ int snd_pcm_status(snd_pcm_t *pcm, snd_pcm_status_t *status)
 
 int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params);
-        return orig::snd_pcm_hw_params(pcm, params);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params, (pcm, params), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 
@@ -601,10 +438,7 @@ int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 
 int snd_pcm_hw_params_current(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_current);
-        return orig::snd_pcm_hw_params_current(pcm, params);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_current, (pcm, params), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     return 0;
@@ -612,10 +446,7 @@ int snd_pcm_hw_params_current(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 
 int snd_pcm_sw_params_current(snd_pcm_t *pcm, snd_pcm_sw_params_t *params)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_sw_params_current);
-        return orig::snd_pcm_sw_params_current(pcm, params);
-    }
+    RETURN_IF_NATIVE(snd_pcm_sw_params_current, (pcm, params), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     return 0;
@@ -623,10 +454,7 @@ int snd_pcm_sw_params_current(snd_pcm_t *pcm, snd_pcm_sw_params_t *params)
 
 int snd_pcm_sw_params(snd_pcm_t *pcm, snd_pcm_sw_params_t *params)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_sw_params);
-        return orig::snd_pcm_sw_params(pcm, params);
-    }
+    RETURN_IF_NATIVE(snd_pcm_sw_params, (pcm, params), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 
@@ -645,10 +473,7 @@ int snd_pcm_sw_params(snd_pcm_t *pcm, snd_pcm_sw_params_t *params)
 
 int snd_pcm_prepare(snd_pcm_t *pcm)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_prepare);
-        return orig::snd_pcm_prepare(pcm);
-    }
+    RETURN_IF_NATIVE(snd_pcm_prepare, (pcm), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
@@ -672,10 +497,7 @@ static int get_latency(snd_pcm_t *pcm)
 
 snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_uframes_t size)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_writei);
-        return orig::snd_pcm_writei(pcm, buffer, size);
-    }
+    RETURN_IF_NATIVE(snd_pcm_writei, (pcm, buffer, size), nullptr);
 
     debuglogstdio(LCF_SOUND, "snd_pcm_writei call with %d frames and pcm %p", size, pcm);
 
@@ -762,10 +584,7 @@ snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_ufr
 
 snd_pcm_sframes_t snd_pcm_readi(snd_pcm_t *pcm, void *buffer, snd_pcm_uframes_t size)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_readi);
-        return orig::snd_pcm_readi(pcm, buffer, size);
-    }
+    RETURN_IF_NATIVE(snd_pcm_readi, (pcm, buffer, size), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with %d bytes", __func__, size);
     return static_cast<snd_pcm_sframes_t>(size);
@@ -776,10 +595,7 @@ std::shared_ptr<AudioBuffer> mmap_ab;
 
 int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd_pcm_uframes_t *offset, snd_pcm_uframes_t *frames)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_mmap_begin);
-        return orig::snd_pcm_mmap_begin(pcm, areas, offset, frames);
-    }
+    RETURN_IF_NATIVE(snd_pcm_mmap_begin, (pcm, areas, offset, frames), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with %d frames", __func__, *frames);
 
@@ -852,10 +668,7 @@ int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd
 
 snd_pcm_sframes_t snd_pcm_mmap_commit(snd_pcm_t *pcm, snd_pcm_uframes_t offset, snd_pcm_uframes_t frames)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_mmap_commit);
-        return orig::snd_pcm_mmap_commit(pcm, offset, frames);
-    }
+    RETURN_IF_NATIVE(snd_pcm_mmap_commit, (pcm, offset, frames), nullptr);
 
     /* Push the mmap buffer to the source */
     int sourceId = reinterpret_cast<intptr_t>(pcm);
@@ -872,10 +685,7 @@ snd_pcm_sframes_t snd_pcm_mmap_commit(snd_pcm_t *pcm, snd_pcm_uframes_t offset, 
 
 int snd_pcm_hw_params_any(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_any);
-        return orig::snd_pcm_hw_params_any(pcm, params);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_any, (pcm, params), nullptr);
 
     params = reinterpret_cast<snd_pcm_hw_params_t*>(pcm);
     DEBUGLOGCALL(LCF_SOUND);
@@ -884,10 +694,7 @@ int snd_pcm_hw_params_any(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 
 size_t snd_pcm_hw_params_sizeof(void)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_sizeof);
-        return orig::snd_pcm_hw_params_sizeof();
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_sizeof, (), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     return 8;
@@ -895,10 +702,7 @@ size_t snd_pcm_hw_params_sizeof(void)
 
 int snd_pcm_hw_params_malloc(snd_pcm_hw_params_t **ptr)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_malloc);
-        return orig::snd_pcm_hw_params_malloc(ptr);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_malloc, (ptr), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     *ptr = reinterpret_cast<snd_pcm_hw_params_t*>(1); // Set a non-null value
@@ -907,20 +711,14 @@ int snd_pcm_hw_params_malloc(snd_pcm_hw_params_t **ptr)
 
 void snd_pcm_hw_params_free(snd_pcm_hw_params_t *obj)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_free);
-        return orig::snd_pcm_hw_params_free(obj);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_free, (obj), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 }
 
 void snd_pcm_hw_params_copy(snd_pcm_hw_params_t *dst, const snd_pcm_hw_params_t *src)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_copy);
-        return orig::snd_pcm_hw_params_copy(dst, src);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_copy, (dst, src), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 }
@@ -928,10 +726,7 @@ void snd_pcm_hw_params_copy(snd_pcm_hw_params_t *dst, const snd_pcm_hw_params_t 
 static snd_pcm_access_t current_access = SND_PCM_ACCESS_RW_INTERLEAVED;
 int snd_pcm_hw_params_set_access(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_access_t access)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_access);
-        return orig::snd_pcm_hw_params_set_access(pcm, params, access);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_set_access, (pcm, params, access), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with access %d", __func__, access);
     if ((access != SND_PCM_ACCESS_RW_INTERLEAVED) && (access != SND_PCM_ACCESS_MMAP_INTERLEAVED)) {
@@ -943,10 +738,7 @@ int snd_pcm_hw_params_set_access(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, sn
 
 int snd_pcm_hw_params_set_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_format_t val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_format);
-        return orig::snd_pcm_hw_params_set_format(pcm, params, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_set_format, (pcm, params, val), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with format %d", __func__, val);
 
@@ -977,20 +769,14 @@ int snd_pcm_hw_params_set_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, sn
 
 void snd_pcm_hw_params_get_format_mask(snd_pcm_hw_params_t *params, snd_pcm_format_mask_t *mask)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_format_mask);
-        return orig::snd_pcm_hw_params_get_format_mask(params, mask);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_get_format_mask, (params, mask), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 }
 
 int snd_pcm_hw_params_get_channels(const snd_pcm_hw_params_t *params, unsigned int *val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_channels);
-        return orig::snd_pcm_hw_params_get_channels(params, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_get_channels, (params, val), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 
@@ -1005,10 +791,7 @@ int snd_pcm_hw_params_get_channels(const snd_pcm_hw_params_t *params, unsigned i
 
 int snd_pcm_hw_params_get_channels_min(const snd_pcm_hw_params_t *params, unsigned int *val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_channels_min);
-        return orig::snd_pcm_hw_params_get_channels_min(params, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_get_channels_min, (params, val), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 
@@ -1018,10 +801,7 @@ int snd_pcm_hw_params_get_channels_min(const snd_pcm_hw_params_t *params, unsign
 
 int snd_pcm_hw_params_get_channels_max(const snd_pcm_hw_params_t *params, unsigned int *val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_channels_max);
-        return orig::snd_pcm_hw_params_get_channels_max(params, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_get_channels_max, (params, val), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 
@@ -1031,10 +811,7 @@ int snd_pcm_hw_params_get_channels_max(const snd_pcm_hw_params_t *params, unsign
 
 int snd_pcm_hw_params_set_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_channels);
-        return orig::snd_pcm_hw_params_set_channels(pcm, params, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_set_channels, (pcm, params, val), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with channels %d", __func__, val);
 
@@ -1048,10 +825,7 @@ int snd_pcm_hw_params_set_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, 
 
 int snd_pcm_hw_params_set_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_rate);
-        return orig::snd_pcm_hw_params_set_rate(pcm, params, val, dir);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_set_rate, (pcm, params, val, dir), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with rate %d and dir %d", __func__, val, dir);
 
@@ -1065,10 +839,7 @@ int snd_pcm_hw_params_set_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsi
 
 int snd_pcm_hw_params_set_rate_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_rate_near);
-        return orig::snd_pcm_hw_params_set_rate_near(pcm, params, val, dir);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_set_rate_near, (pcm, params, val, dir), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with rate %d", __func__, *val);
 
@@ -1082,10 +853,7 @@ int snd_pcm_hw_params_set_rate_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params,
 
 int snd_pcm_hw_params_set_rate_resample(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_rate_resample);
-        return orig::snd_pcm_hw_params_set_rate_resample(pcm, params, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_set_rate_resample, (pcm, params, val), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with val %d", __func__, val);
 
@@ -1095,10 +863,7 @@ int snd_pcm_hw_params_set_rate_resample(snd_pcm_t *pcm, snd_pcm_hw_params_t *par
 
 int snd_pcm_hw_params_get_rate(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_rate);
-        return orig::snd_pcm_hw_params_get_rate(params, val, dir);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_get_rate, (params, val, dir), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 
@@ -1116,10 +881,7 @@ int snd_pcm_hw_params_get_rate(const snd_pcm_hw_params_t *params, unsigned int *
 
 int snd_pcm_hw_params_get_rate_min(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_rate_min);
-        return orig::snd_pcm_hw_params_get_rate_min(params, val, dir);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_get_rate_min, (params, val, dir), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     *val = 11025;
@@ -1128,10 +890,7 @@ int snd_pcm_hw_params_get_rate_min(const snd_pcm_hw_params_t *params, unsigned i
 
 int snd_pcm_hw_params_get_rate_max(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_rate_max);
-        return orig::snd_pcm_hw_params_get_rate_max(params, val, dir);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_get_rate_max, (params, val, dir), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     *val = 48000;
@@ -1143,10 +902,7 @@ static int periods = 2;
 
 int snd_pcm_hw_params_get_period_size(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *frames, int *dir)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_period_size);
-        return orig::snd_pcm_hw_params_get_period_size(params, frames, dir);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_get_period_size, (params, frames, dir), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     *frames = buffer_size / periods;
@@ -1156,10 +912,7 @@ int snd_pcm_hw_params_get_period_size(const snd_pcm_hw_params_t *params, snd_pcm
 
 int snd_pcm_hw_params_get_period_time_min(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_period_time_min);
-        return orig::snd_pcm_hw_params_get_period_time_min(params, val, dir);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_get_period_time_min, (params, val, dir), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     *val = 0;
@@ -1169,10 +922,8 @@ int snd_pcm_hw_params_get_period_time_min(const snd_pcm_hw_params_t *params, uns
 
 int snd_pcm_hw_params_set_period_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_period_time_near);
-        return orig::snd_pcm_hw_params_set_period_time_near(pcm, params, val, dir);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_set_period_time_near, (pcm, params, val, dir), nullptr);
+
     debuglogstdio(LCF_SOUND, "%s call with period time %d us and dir %d", __func__, *val, dir?*dir:-2);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
@@ -1195,10 +946,8 @@ int snd_pcm_hw_params_set_period_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 
 int snd_pcm_hw_params_set_period_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val, int *dir)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_period_size_near);
-        return orig::snd_pcm_hw_params_set_period_size_near(pcm, params, val, dir);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_set_period_size_near, (pcm, params, val, dir), nullptr);
+
     debuglogstdio(LCF_SOUND, "%s call with period size %d and dir %d", __func__, *val, dir?*dir:-2);
     
     periods = buffer_size / *val;
@@ -1212,10 +961,7 @@ int snd_pcm_hw_params_set_period_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 
 int snd_pcm_hw_params_set_periods_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_periods_near);
-        return orig::snd_pcm_hw_params_set_periods_near(pcm, params, val, dir);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_set_periods_near, (pcm, params, val, dir), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with period %d and dir %d", __func__, *val, dir?*dir:-2);
     periods = *val;
@@ -1224,10 +970,7 @@ int snd_pcm_hw_params_set_periods_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *para
 
 int snd_pcm_hw_params_get_periods(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_periods);
-        return orig::snd_pcm_hw_params_get_periods(params, val, dir);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_get_periods, (params, val, dir), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     *val = periods;
@@ -1236,10 +979,7 @@ int snd_pcm_hw_params_get_periods(const snd_pcm_hw_params_t *params, unsigned in
 
 int snd_pcm_hw_params_get_buffer_size(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_buffer_size);
-        return orig::snd_pcm_hw_params_get_buffer_size(params, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_get_buffer_size, (params, val), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     *val = buffer_size;
@@ -1248,10 +988,7 @@ int snd_pcm_hw_params_get_buffer_size(const snd_pcm_hw_params_t *params, snd_pcm
 
 int snd_pcm_hw_params_get_buffer_size_min(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_buffer_size_min);
-        return orig::snd_pcm_hw_params_get_buffer_size_min(params, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_get_buffer_size_min, (params, val), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     *val = BUFFER_SIZE_MIN;
@@ -1260,10 +997,7 @@ int snd_pcm_hw_params_get_buffer_size_min(const snd_pcm_hw_params_t *params, snd
 
 int snd_pcm_hw_params_get_buffer_size_max(const snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_buffer_size_max);
-        return orig::snd_pcm_hw_params_get_buffer_size_max(params, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_get_buffer_size_max, (params, val), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     *val = 4096;
@@ -1272,10 +1006,7 @@ int snd_pcm_hw_params_get_buffer_size_max(const snd_pcm_hw_params_t *params, snd
 
 int snd_pcm_hw_params_get_buffer_time_max(const snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_buffer_time_max);
-        return orig::snd_pcm_hw_params_get_buffer_time_max(params, val, dir);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_get_buffer_time_max, (params, val, dir), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 
@@ -1291,10 +1022,7 @@ int snd_pcm_hw_params_get_buffer_time_max(const snd_pcm_hw_params_t *params, uns
 
 int snd_pcm_hw_params_set_buffer_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_uframes_t *val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_buffer_size_near);
-        return orig::snd_pcm_hw_params_set_buffer_size_near(pcm, params, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_set_buffer_size_near, (pcm, params, val), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with buffer size %d", __func__, *val);
     if (*val < BUFFER_SIZE_MIN) {
@@ -1307,10 +1035,7 @@ int snd_pcm_hw_params_set_buffer_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 
 int snd_pcm_hw_params_set_buffer_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_set_buffer_time_near);
-        return orig::snd_pcm_hw_params_set_buffer_time_near(pcm, params, val, dir);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_set_buffer_time_near, (pcm, params, val, dir), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with buffer time %d", __func__, *val);
 
@@ -1342,10 +1067,7 @@ int snd_pcm_hw_params_set_buffer_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 
 int snd_pcm_hw_params_test_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_test_rate);
-        return orig::snd_pcm_hw_params_test_rate(pcm, params, val, dir);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_test_rate, (pcm, params, val, dir), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with val %d", __func__, val);
     return 0;
@@ -1353,10 +1075,7 @@ int snd_pcm_hw_params_test_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, uns
 
 int snd_pcm_hw_params_test_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, snd_pcm_format_t val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_test_format);
-        return orig::snd_pcm_hw_params_test_format(pcm, params, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_test_format, (pcm, params, val), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with val %d", __func__, val);
     return 0;
@@ -1364,10 +1083,7 @@ int snd_pcm_hw_params_test_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, s
 
 int snd_pcm_hw_params_test_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_test_channels);
-        return orig::snd_pcm_hw_params_test_channels(pcm, params, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_test_channels, (pcm, params, val), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with val %d", __func__, val);
     return 0;
@@ -1375,10 +1091,7 @@ int snd_pcm_hw_params_test_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params,
 
 int snd_pcm_hw_params_get_access(const snd_pcm_hw_params_t *params, snd_pcm_access_t *access)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_hw_params_get_access);
-        return orig::snd_pcm_hw_params_get_access(params, access);
-    }
+    RETURN_IF_NATIVE(snd_pcm_hw_params_get_access, (params, access), nullptr);
 
     *access = current_access;
     DEBUGLOGCALL(LCF_SOUND);
@@ -1387,10 +1100,7 @@ int snd_pcm_hw_params_get_access(const snd_pcm_hw_params_t *params, snd_pcm_acce
 
 int snd_pcm_get_params(snd_pcm_t *pcm, snd_pcm_uframes_t *bs, snd_pcm_uframes_t *ps)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_get_params);
-        return orig::snd_pcm_get_params(pcm, bs, ps);
-    }
+    RETURN_IF_NATIVE(snd_pcm_get_params, (pcm, bs, ps), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 
@@ -1403,10 +1113,7 @@ int snd_pcm_get_params(snd_pcm_t *pcm, snd_pcm_uframes_t *bs, snd_pcm_uframes_t 
 
 int snd_pcm_set_params(snd_pcm_t *pcm, snd_pcm_format_t format, snd_pcm_access_t access, unsigned int channels, unsigned int rate, int soft_resample, unsigned int latency)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_set_params);
-        return orig::snd_pcm_set_params(pcm, format, access, channels, rate, soft_resample, latency);
-    }
+    RETURN_IF_NATIVE(snd_pcm_set_params, (pcm, format, access, channels, rate, soft_resample, latency), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 
@@ -1450,10 +1157,7 @@ int snd_pcm_set_params(snd_pcm_t *pcm, snd_pcm_format_t format, snd_pcm_access_t
 
 size_t snd_pcm_sw_params_sizeof(void)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_sw_params_sizeof);
-        return orig::snd_pcm_sw_params_sizeof();
-    }
+    RETURN_IF_NATIVE(snd_pcm_sw_params_sizeof, (), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     return 8;
@@ -1462,10 +1166,7 @@ size_t snd_pcm_sw_params_sizeof(void)
 
 int snd_pcm_sw_params_set_start_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_sw_params_set_start_threshold);
-        return orig::snd_pcm_sw_params_set_start_threshold(pcm, params, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_sw_params_set_start_threshold, (pcm, params, val), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with start threshold %d", __func__, val);
     return 0;
@@ -1473,10 +1174,7 @@ int snd_pcm_sw_params_set_start_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *p
 
 int snd_pcm_sw_params_set_stop_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_sw_params_set_stop_threshold);
-        return orig::snd_pcm_sw_params_set_stop_threshold(pcm, params, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_sw_params_set_stop_threshold, (pcm, params, val), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with stop threshold %d", __func__, val);
     return 0;
@@ -1484,10 +1182,7 @@ int snd_pcm_sw_params_set_stop_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *pa
 
 int snd_pcm_sw_params_set_avail_min(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_sw_params_set_avail_min);
-        return orig::snd_pcm_sw_params_set_avail_min(pcm, params, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_sw_params_set_avail_min, (pcm, params, val), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s call with val %d", __func__, val);
     avail_min = val;
@@ -1496,10 +1191,7 @@ int snd_pcm_sw_params_set_avail_min(snd_pcm_t *pcm, snd_pcm_sw_params_t *params,
 
 snd_pcm_chmap_t *snd_pcm_get_chmap(snd_pcm_t *pcm)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_get_chmap);
-        return orig::snd_pcm_get_chmap(pcm);
-    }
+    RETURN_IF_NATIVE(snd_pcm_get_chmap, (pcm), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     int channels = 2; // TODO!!
@@ -1513,10 +1205,7 @@ snd_pcm_chmap_t *snd_pcm_get_chmap(snd_pcm_t *pcm)
 
 int snd_pcm_format_mask_malloc(snd_pcm_format_mask_t **ptr)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_format_mask_malloc);
-        return orig::snd_pcm_format_mask_malloc(ptr);
-    }
+    RETURN_IF_NATIVE(snd_pcm_format_mask_malloc, (ptr), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     *ptr = reinterpret_cast<snd_pcm_format_mask_t*>(1); // Set a non-null value
@@ -1525,20 +1214,14 @@ int snd_pcm_format_mask_malloc(snd_pcm_format_mask_t **ptr)
 
 void snd_pcm_format_mask_free(snd_pcm_format_mask_t *obj)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_format_mask_free);
-        return orig::snd_pcm_format_mask_free(obj);
-    }
+    RETURN_IF_NATIVE(snd_pcm_format_mask_free, (obj), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
 }
 
 int snd_pcm_format_mask_test(const snd_pcm_format_mask_t *mask, snd_pcm_format_t val)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_format_mask_test);
-        return orig::snd_pcm_format_mask_test(mask, val);
-    }
+    RETURN_IF_NATIVE(snd_pcm_format_mask_test, (mask, val), nullptr);
 
     DEBUGLOGCALL(LCF_SOUND);
     if ((val == SND_PCM_FORMAT_U8) ||
@@ -1552,10 +1235,7 @@ int snd_pcm_format_mask_test(const snd_pcm_format_mask_t *mask, snd_pcm_format_t
 
 snd_pcm_sframes_t snd_pcm_bytes_to_frames(snd_pcm_t *pcm, ssize_t bytes)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_bytes_to_frames);
-        return orig::snd_pcm_bytes_to_frames(pcm, bytes);
-    }
+    RETURN_IF_NATIVE(snd_pcm_bytes_to_frames, (pcm, bytes), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s called with bytes %d", __func__, bytes);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
@@ -1566,10 +1246,7 @@ snd_pcm_sframes_t snd_pcm_bytes_to_frames(snd_pcm_t *pcm, ssize_t bytes)
 
 ssize_t snd_pcm_frames_to_bytes(snd_pcm_t *pcm, snd_pcm_sframes_t frames)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(snd_pcm_format_mask_free);
-        return orig::snd_pcm_frames_to_bytes(pcm, frames);
-    }
+    RETURN_IF_NATIVE(snd_pcm_frames_to_bytes, (pcm, frames), nullptr);
 
     debuglogstdio(LCF_SOUND, "%s called with frames %d", __func__, frames);
     int sourceId = reinterpret_cast<intptr_t>(pcm);

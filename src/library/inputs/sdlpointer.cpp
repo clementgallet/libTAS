@@ -126,7 +126,7 @@ void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
     old_ai.pointer_y = y;
 
     LINK_NAMESPACE_SDL2(SDL_WarpMouseInWindow);
-    NATIVECALL(orig::SDL_WarpMouseInWindow(window, x, y));
+    NATIVECALL(orig::SDL_WarpMouseInWindow(window, x, y));    
 }
 
 int SDL_WarpMouseGlobal(int x, int y)

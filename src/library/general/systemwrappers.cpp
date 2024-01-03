@@ -33,18 +33,12 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(getpid)
 DEFINE_ORIG_POINTER(fork)
 DEFINE_ORIG_POINTER(sched_getaffinity)
 
 /* Override */ pid_t getpid (void) __THROW
 {
-    LINK_NAMESPACE_GLOBAL(getpid);
-    pid_t pid = orig::getpid();
-    
-    if (GlobalState::isNative()) {
-        return pid;
-    }
+    RETURN_IF_NATIVE(getpid, (), nullptr);
 
     DEBUGLOGCALL(LCF_SYSTEM);
 
@@ -55,12 +49,14 @@ DEFINE_ORIG_POINTER(sched_getaffinity)
     void* return_address =  __builtin_return_address(0);
     char** symbols = backtrace_symbols(&return_address, 1);
     if (symbols != nullptr) {
-        if (strstr(symbols[0], "libhl.so") || strstr(symbols[0], "PapersPlease(+0x"))
-            pid = 1234;
+        if (strstr(symbols[0], "libhl.so") || strstr(symbols[0], "PapersPlease(+0x")) {
+            free(symbols);
+            return 1234;
+        }
         free(symbols);
     }
 
-    return pid;
+    RETURN_NATIVE(getpid, (), nullptr);
 }
 
 /* Override */  pid_t fork(void) __THROWNL

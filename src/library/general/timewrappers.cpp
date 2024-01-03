@@ -34,8 +34,6 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(clock_gettime)
-
 /* Override */ time_t time(time_t* t) __THROW
 {
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
@@ -67,10 +65,7 @@ DEFINE_ORIG_POINTER(clock_gettime)
 
 /* Override */ int clock_gettime (clockid_t clock_id, struct timespec *tp) __THROW
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(clock_gettime);
-        return orig::clock_gettime(clock_id, tp);
-    }
+    RETURN_IF_NATIVE(clock_gettime, (clock_id, tp), nullptr);
 
     DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
 

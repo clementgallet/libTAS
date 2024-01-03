@@ -148,15 +148,10 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
     return sym;
 }
 
-DEFINE_ORIG_POINTER(XkbKeycodeToKeysym)
-
 /* Override */ KeySym XkbKeycodeToKeysym(Display *dpy, KeyCode kc, int group, int level)
 {
-    if (GlobalState::isNative()) {
-        /* ImGui uses this function */
-        LINK_NAMESPACE_GLOBAL(XkbKeycodeToKeysym);
-        return orig::XkbKeycodeToKeysym(dpy, kc, group, level);
-    }
+    /* ImGui uses this function */
+    RETURN_IF_NATIVE(XkbKeycodeToKeysym, (dpy, kc, group, level), nullptr);
 
     debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, (int)kc);
     KeySym sym = (level == 1) ? Xlib_default_keymap_shifted[kc] : Xlib_default_keymap[kc];
@@ -183,15 +178,10 @@ DEFINE_ORIG_POINTER(XkbKeycodeToKeysym)
     return kc;
 }
 
-DEFINE_ORIG_POINTER(XLookupString)
-
 /* Override */ int XLookupString(XKeyEvent *event_struct, char *buffer_return, int bytes_buffer, KeySym *keysym_return, void *status_in_out)
 {
-    if (GlobalState::isNative()) {
-        /* ImGui uses this function */
-        LINK_NAMESPACE_GLOBAL(XLookupString);
-        return orig::XLookupString(event_struct, buffer_return, bytes_buffer, keysym_return, status_in_out);
-    }
+    /* ImGui uses this function */
+    RETURN_IF_NATIVE(XLookupString, (event_struct, buffer_return, bytes_buffer, keysym_return, status_in_out), nullptr);
 
     debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, event_struct->keycode);
 
@@ -296,15 +286,9 @@ DEFINE_ORIG_POINTER(XLookupString)
     return 0;
 }
 
-DEFINE_ORIG_POINTER(Xutf8LookupString)
-
 /* Override */ int Xutf8LookupString(XIC ic, XKeyPressedEvent *event, char *buffer_return, int bytes_buffer, KeySym *keysym_return, Status *status_return)
 {
-    if (GlobalState::isNative()) {
-        /* ImGui uses this function */
-        LINK_NAMESPACE_GLOBAL(Xutf8LookupString);
-        return orig::Xutf8LookupString(ic, event, buffer_return, bytes_buffer, keysym_return, status_return);
-    }
+    RETURN_IF_NATIVE(Xutf8LookupString, (ic, event, buffer_return, bytes_buffer, keysym_return, status_return), nullptr);
 
     debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
     KeyCode keycode = event->keycode;

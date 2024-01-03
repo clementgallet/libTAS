@@ -25,8 +25,6 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(XineramaQueryScreens)
-
 XineramaScreenInfo *XineramaQueryScreens(Display *dpy, int *number)
 {
     DEBUGLOGCALL(LCF_WINDOW);
@@ -41,8 +39,7 @@ XineramaScreenInfo *XineramaQueryScreens(Display *dpy, int *number)
         info->height = Global::shared_config.screen_height;
         return info;
     }
-    LINK_NAMESPACE_FULLNAME(XineramaQueryScreens, "libXinerama.so.1");
-    return orig::XineramaQueryScreens(dpy, number);
+    RETURN_NATIVE(XineramaQueryScreens, (dpy, number), "libXinerama.so.1");
 }
 
 }

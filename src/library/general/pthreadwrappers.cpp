@@ -41,26 +41,16 @@
 namespace libtas {
 
 DEFINE_ORIG_POINTER(pthread_create)
-DEFINE_ORIG_POINTER(pthread_exit)
-DEFINE_ORIG_POINTER(pthread_join)
 DEFINE_ORIG_POINTER(pthread_detach)
-DEFINE_ORIG_POINTER(pthread_tryjoin_np)
-DEFINE_ORIG_POINTER(pthread_timedjoin_np)
 DEFINE_ORIG_POINTER(pthread_cond_init)
 DEFINE_ORIG_POINTER(pthread_cond_wait)
 DEFINE_ORIG_POINTER(pthread_cond_timedwait)
 DEFINE_ORIG_POINTER(pthread_cond_signal)
 DEFINE_ORIG_POINTER(pthread_cond_broadcast)
-DEFINE_ORIG_POINTER(pthread_setcancelstate)
-DEFINE_ORIG_POINTER(pthread_setcanceltype)
-DEFINE_ORIG_POINTER(pthread_cancel)
-DEFINE_ORIG_POINTER(pthread_testcancel)
 DEFINE_ORIG_POINTER(sem_wait)
 DEFINE_ORIG_POINTER(sem_timedwait)
 DEFINE_ORIG_POINTER(sem_trywait)
 DEFINE_ORIG_POINTER(sem_post)
-DEFINE_ORIG_POINTER(pthread_attr_setstack)
-DEFINE_ORIG_POINTER(pthread_condattr_setclock)
 DEFINE_ORIG_POINTER(pthread_condattr_getclock)
 DEFINE_ORIG_POINTER(pthread_setname_np)
 #if defined(__APPLE__) && defined(__MACH__)
@@ -262,10 +252,7 @@ static void *pthread_native_start(void *arg)
 
 /* Override */ void pthread_exit (void *retval)
 {
-    LINK_NAMESPACE(pthread_exit, "pthread");
-
-    if (GlobalState::isNative())
-        return orig::pthread_exit(retval);
+    RETURN_IF_NATIVE(pthread_exit, (retval), "libpthread.so");
 
     debuglogstdio(LCF_THREAD, "Thread has exited.");
 
@@ -278,16 +265,13 @@ static void *pthread_native_start(void *arg)
     }
     else {
         ThreadManager::threadExit(retval);
-        orig::pthread_exit(retval);
+        RETURN_NATIVE(pthread_exit, (retval), nullptr);
     }
 }
 
 /* Override */ int pthread_join (pthread_t pthread_id, void **thread_return)
 {
-    LINK_NAMESPACE(pthread_join, "pthread");
-    if (GlobalState::isNative()) {
-        return orig::pthread_join(pthread_id, thread_return);
-    }
+    RETURN_IF_NATIVE(pthread_join, (pthread_id, thread_return), "libpthread.so");
 
     ThreadSync::waitForThreadsToFinishInitialization();
 
@@ -321,7 +305,7 @@ static void *pthread_native_start(void *arg)
 
 /* Override */ int pthread_detach (pthread_t pthread_id) __THROW
 {
-    LINK_NAMESPACE(pthread_detach, "pthread");
+    LINK_NAMESPACE(pthread_detach, "libpthread.so");
     if (GlobalState::isNative()) {
         return orig::pthread_detach(pthread_id);
     }
@@ -349,10 +333,7 @@ static void *pthread_native_start(void *arg)
 
 /* Override */ int pthread_tryjoin_np(pthread_t pthread_id, void **retval) __THROW
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE(pthread_tryjoin_np, "pthread");
-        return orig::pthread_tryjoin_np(pthread_id, retval);
-    }
+    RETURN_IF_NATIVE(pthread_tryjoin_np, (pthread_id, retval), "libpthread.so");
 
     ThreadSync::wrapperExecutionLockLock();
     ThreadSync::waitForThreadsToFinishInitialization();
@@ -391,10 +372,7 @@ static void *pthread_native_start(void *arg)
 
 /* Override */ int pthread_timedjoin_np(pthread_t pthread_id, void **retval, const struct timespec *abstime)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE(pthread_timedjoin_np, "pthread");
-        return orig::pthread_timedjoin_np(pthread_id, retval, abstime);
-    }
+    RETURN_IF_NATIVE(pthread_timedjoin_np, (pthread_id, retval, abstime), "libpthread.so");
 
     ThreadSync::wrapperExecutionLockLock();
     ThreadSync::waitForThreadsToFinishInitialization();
@@ -606,30 +584,26 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 
 /* Override */ int pthread_setcancelstate (int state, int *oldstate)
 {
-    LINK_NAMESPACE(pthread_setcancelstate, "pthread");
     DEBUGLOGCALL(LCF_THREAD | LCF_TODO);
-    return orig::pthread_setcancelstate(state, oldstate);
+    RETURN_NATIVE(pthread_setcancelstate, (state, oldstate), "libpthread.so");
 }
 
 /* Override */ int pthread_setcanceltype (int type, int *oldtype)
 {
-    LINK_NAMESPACE(pthread_setcanceltype, "pthread");
     DEBUGLOGCALL(LCF_THREAD | LCF_TODO);
-    return orig::pthread_setcanceltype(type, oldtype);
+    RETURN_NATIVE(pthread_setcanceltype, (type, oldtype), "libpthread.so");
 }
 
 /* Override */ int pthread_cancel (pthread_t pthread_id)
 {
-    LINK_NAMESPACE(pthread_cancel, "pthread");
     debuglogstdio(LCF_THREAD | LCF_TODO, "Cancel thread %d", ThreadManager::getThreadTid(pthread_id));
-    return orig::pthread_cancel(pthread_id);
+    RETURN_NATIVE(pthread_cancel, (pthread_id), "libpthread.so");
 }
 
 /* Override */ void pthread_testcancel (void)
 {
-    LINK_NAMESPACE(pthread_testcancel, "pthread");
     DEBUGLOGCALL(LCF_THREAD | LCF_TODO);
-    return orig::pthread_testcancel();
+    RETURN_NATIVE(pthread_testcancel, (), "libpthread.so");
 }
 
 /* Override */ int sem_wait (sem_t *sem)
@@ -656,9 +630,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 
 /* Override */ int sem_timedwait (sem_t * sem, const struct timespec *abstime)
 {
-    LINK_NAMESPACE(sem_timedwait, "pthread");
-    if (GlobalState::isNative())
-        return orig::sem_timedwait(sem, abstime);
+    RETURN_IF_NATIVE(sem_timedwait, (sem, abstime), "libpthread.so");
 
     debuglogstdio(LCF_WAIT | LCF_TODO, "%s call with sem %p and timeout %d.%010d sec", __func__, static_cast<void*>(sem), abstime->tv_sec, abstime->tv_nsec);
 
@@ -682,7 +654,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         debuglogstdio(LCF_WAIT, " New abs time is %d.%010d sec", new_abstime.tv_sec, new_abstime.tv_nsec);
     }
 
-    return orig::sem_timedwait(sem, &new_abstime);
+    RETURN_NATIVE(sem_timedwait, (sem, &new_abstime), "libpthread.so");
 }
 
 /* Override */ int sem_trywait (sem_t *sem) __THROW
@@ -707,9 +679,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 
 int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize) __THROW
 {
-    LINK_NAMESPACE(pthread_attr_setstack, "pthread");
-    if (GlobalState::isNative())
-        return orig::pthread_attr_setstack(attr, stackaddr, stacksize);
+    RETURN_IF_NATIVE(pthread_attr_setstack, (attr, stackaddr, stacksize), "libpthread.so");
 
     debuglogstdio(LCF_THREAD, "%s called with addr %p and size %d", __func__, stackaddr, stacksize);
     // int ret = orig::pthread_attr_setstack(attr, stackaddr, stacksize);
@@ -720,11 +690,8 @@ int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksiz
 
 int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) __THROW
 {
-    LINK_NAMESPACE(pthread_condattr_setclock, "pthread");
     debuglogstdio(LCF_THREAD | LCF_WAIT, "%s called with clock %d", __func__, clock_id);
-
-    int ret = orig::pthread_condattr_setclock(attr, clock_id);
-    return ret;
+    RETURN_NATIVE(pthread_condattr_setclock, (attr, clock_id), "libpthread.so");    
 }
 
 #ifdef __unix__

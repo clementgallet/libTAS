@@ -38,13 +38,8 @@ DEFINE_ORIG_POINTER(sigprocmask)
 DEFINE_ORIG_POINTER(sigsuspend)
 DEFINE_ORIG_POINTER(sigaction)
 DEFINE_ORIG_POINTER(sigpending)
-DEFINE_ORIG_POINTER(sigwait)
-DEFINE_ORIG_POINTER(sigwaitinfo)
-DEFINE_ORIG_POINTER(sigtimedwait)
-DEFINE_ORIG_POINTER(sigaltstack)
 DEFINE_ORIG_POINTER(pthread_sigmask)
 DEFINE_ORIG_POINTER(pthread_kill)
-DEFINE_ORIG_POINTER(pthread_sigqueue)
 
 static int origUsrMaskProcess = 0;
 static thread_local int origUsrMaskThread = 0;
@@ -250,39 +245,31 @@ static thread_local int origUsrMaskThread = 0;
 /* Override */ int sigpending (sigset_t *set) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
-    LINK_NAMESPACE_GLOBAL(sigpending);
-    return orig::sigpending(set);
+    RETURN_NATIVE(sigpending, (set), nullptr);
 }
 
 /* Override */ int sigwait (const sigset_t *set, int *sig)
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
-    LINK_NAMESPACE_GLOBAL(sigwait);
-    return orig::sigwait(set, sig);
+    RETURN_NATIVE(sigwait, (set, sig), nullptr);
 }
 
 /* Override */ int sigwaitinfo (const sigset_t *set, siginfo_t *info)
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
-    LINK_NAMESPACE_GLOBAL(sigwaitinfo);
-    return orig::sigwaitinfo(set, info);
+    RETURN_NATIVE(sigwaitinfo, (set, info), nullptr);
 }
 
 /* Override */ int sigtimedwait (const sigset_t *set,
     siginfo_t *info, const struct timespec *timeout)
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
-    LINK_NAMESPACE_GLOBAL(sigtimedwait);
-    return orig::sigtimedwait(set, info, timeout);
+    RETURN_NATIVE(sigtimedwait, (set, info, timeout), nullptr);
 }
 
 /* Override */ int sigaltstack (const stack_t *ss, stack_t *oss) __THROW
 {
-    LINK_NAMESPACE_GLOBAL(sigaltstack);
-
-    if (GlobalState::isNative()) {
-        return orig::sigaltstack(ss, oss);
-    }
+    RETURN_IF_NATIVE(sigaltstack, (ss, oss), nullptr);
 
     DEBUGLOGCALL(LCF_SIGNAL);
 
@@ -293,9 +280,7 @@ static thread_local int origUsrMaskThread = 0;
         debuglogstdio(LCF_SIGNAL, "    Getting altstack with base address %p and size %d", oss->ss_sp, oss->ss_size);
     }
 
-    int ret = orig::sigaltstack(ss, oss);
-
-    return ret;
+    RETURN_NATIVE(sigaltstack, (ss, oss), nullptr);
 }
 
 /* Override */ int pthread_sigmask (int how, const sigset_t *newmask,
@@ -419,8 +404,7 @@ static thread_local int origUsrMaskThread = 0;
                  const union sigval value) __THROW
 {
     DEBUGLOGCALL(LCF_SIGNAL | LCF_THREAD);
-    LINK_NAMESPACE_GLOBAL(pthread_sigqueue);
-    return orig::pthread_sigqueue(threadid, signo, value);
+    RETURN_NATIVE(pthread_sigqueue, (threadid, signo, value), nullptr);
 }
 
 }

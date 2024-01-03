@@ -29,7 +29,6 @@
 namespace libtas {
 
 DEFINE_ORIG_POINTER(setlocale)
-DEFINE_ORIG_POINTER(getenv)
 
 static const char* config_locale()
 {
@@ -73,10 +72,7 @@ static const char* config_locale()
 
 char *getenv (const char *name) __THROW
 {
-    LINK_NAMESPACE_GLOBAL(getenv);
-    if (GlobalState::isNative()) {
-        return orig::getenv(name);
-    }
+    RETURN_IF_NATIVE(getenv, (name), nullptr);
 
     debuglogstdio(LCF_LOCALE, "%s called with name %s", __func__, name);
     if (0 == strncmp(name, "LANG", 4)) {
@@ -85,10 +81,7 @@ char *getenv (const char *name) __THROW
             return mylocale;
         }
     }
-    char* ret = orig::getenv(name);
-    debuglogstdio(LCF_LOCALE, "  returning %s", ret);
-
-    return ret;
+    RETURN_NATIVE(getenv, (name), nullptr);
 }
 
 }

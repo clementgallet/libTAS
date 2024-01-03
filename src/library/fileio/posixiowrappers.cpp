@@ -46,14 +46,7 @@ DEFINE_ORIG_POINTER(openat)
 DEFINE_ORIG_POINTER(openat64)
 DEFINE_ORIG_POINTER(creat)
 DEFINE_ORIG_POINTER(creat64)
-DEFINE_ORIG_POINTER(close)
 DEFINE_ORIG_POINTER(access)
-DEFINE_ORIG_POINTER(__xstat)
-DEFINE_ORIG_POINTER(__lxstat)
-DEFINE_ORIG_POINTER(__fxstat)
-DEFINE_ORIG_POINTER(__xstat64)
-DEFINE_ORIG_POINTER(__lxstat64)
-DEFINE_ORIG_POINTER(__fxstat64)
 DEFINE_ORIG_POINTER(dup)
 DEFINE_ORIG_POINTER(dup2)
 
@@ -425,15 +418,12 @@ int creat64 (const char *file, mode_t mode)
 
 int close (int fd)
 {
-    LINK_NAMESPACE_GLOBAL(close);
-
-    if (GlobalState::isNative())
-        return orig::close(fd);
+    RETURN_IF_NATIVE(close, (fd), nullptr);
 
     debuglogstdio(LCF_FILEIO, "%s call", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
-        return orig::close(fd);
+        RETURN_NATIVE(close, (fd), nullptr);
 
 #ifdef __linux__
     /* Check for urandom */
@@ -451,7 +441,7 @@ int close (int fd)
         if (ret != 1)
             return ret;
 
-        return orig::close(fd);
+        RETURN_NATIVE(close, (fd), nullptr);
     }
 
     return 0;
@@ -505,15 +495,12 @@ int access(const char *name, int type) __THROW
 
 int __xstat(int ver, const char *path, struct stat *buf) __THROW
 {
-    LINK_NAMESPACE_GLOBAL(__xstat);
-
-    if (GlobalState::isNative())
-        return orig::__xstat(ver, path, buf);
+    RETURN_IF_NATIVE(__xstat, (ver, path, buf), nullptr);
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
-        return orig::__xstat(ver, path, buf);
+        RETURN_NATIVE(__xstat, (ver, path, buf), nullptr);
 
 #ifdef __linux__
     /* Check if joystick device */
@@ -543,20 +530,17 @@ int __xstat(int ver, const char *path, struct stat *buf) __THROW
         }
     }
 
-    return orig::__xstat(ver, path, buf);
+    RETURN_NATIVE(__xstat, (ver, path, buf), nullptr);
 }
 
 int __xstat64(int ver, const char *path, struct stat64 *buf) __THROW
 {
-    LINK_NAMESPACE_GLOBAL(__xstat64);
-
-    if (GlobalState::isNative())
-        return orig::__xstat64(ver, path, buf);
+    RETURN_IF_NATIVE(__xstat64, (ver, path, buf), nullptr);
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
-        return orig::__xstat64(ver, path, buf);
+        RETURN_NATIVE(__xstat64, (ver, path, buf), nullptr);
 
 #ifdef __linux__
     /* Check if joystick device */
@@ -586,20 +570,17 @@ int __xstat64(int ver, const char *path, struct stat64 *buf) __THROW
         }
     }
 
-    return orig::__xstat64(ver, path, buf);
+    RETURN_NATIVE(__xstat64, (ver, path, buf), nullptr);
 }
 
 int __lxstat(int ver, const char *path, struct stat *buf) __THROW
 {
-    LINK_NAMESPACE_GLOBAL(__lxstat);
-
-    if (GlobalState::isNative())
-        return orig::__lxstat(ver, path, buf);
-
+    RETURN_IF_NATIVE(__lxstat, (ver, path, buf), nullptr);
+    
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
-        return orig::__lxstat(ver, path, buf);
+        RETURN_NATIVE(__lxstat, (ver, path, buf), nullptr);
 
 #ifdef __linux__
     /* Check if joystick device */
@@ -629,20 +610,17 @@ int __lxstat(int ver, const char *path, struct stat *buf) __THROW
         }
     }
 
-    return orig::__lxstat(ver, path, buf);
+    RETURN_NATIVE(__lxstat, (ver, path, buf), nullptr);
 }
 
 int __lxstat64(int ver, const char *path, struct stat64 *buf) __THROW
 {
-    LINK_NAMESPACE_GLOBAL(__lxstat64);
-
-    if (GlobalState::isNative())
-        return orig::__lxstat64(ver, path, buf);
+    RETURN_IF_NATIVE(__lxstat64, (ver, path, buf), nullptr);
 
     debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
-        return orig::__lxstat64(ver, path, buf);
+        RETURN_NATIVE(__lxstat64, (ver, path, buf), nullptr);
 
 #ifdef __linux__
     /* Check if joystick device */
@@ -672,29 +650,23 @@ int __lxstat64(int ver, const char *path, struct stat64 *buf) __THROW
         }
     }
 
-    return orig::__lxstat64(ver, path, buf);
+    RETURN_NATIVE(__lxstat64, (ver, path, buf), nullptr);
 }
 
 int __fxstat(int ver, int fd, struct stat *buf) __THROW
 {
-    LINK_NAMESPACE_GLOBAL(__fxstat);
-
-    if (GlobalState::isNative())
-        return orig::__fxstat(ver, fd, buf);
+    RETURN_IF_NATIVE(__fxstat, (ver, fd, buf), nullptr);
 
     debuglogstdio(LCF_FILEIO, "%s call with fd %d", __func__, fd);
-    return orig::__fxstat(ver, fd, buf);
+    RETURN_NATIVE(__fxstat, (ver, fd, buf), nullptr);
 }
 
 int __fxstat64(int ver, int fd, struct stat64 *buf) __THROW
 {
-    LINK_NAMESPACE_GLOBAL(__fxstat64);
-
-    if (GlobalState::isNative())
-        return orig::__fxstat64(ver, fd, buf);
+    RETURN_IF_NATIVE(__fxstat64, (ver, fd, buf), nullptr);
 
     debuglogstdio(LCF_FILEIO, "%s call with fd %d", __func__, fd);
-    return orig::__fxstat64(ver, fd, buf);
+    RETURN_NATIVE(__fxstat64, (ver, fd, buf), nullptr);
 }
 
 int dup (int fd) __THROW

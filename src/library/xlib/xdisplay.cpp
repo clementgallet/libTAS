@@ -29,9 +29,6 @@
 namespace libtas {
 
 DEFINE_ORIG_POINTER(XOpenDisplay)
-DEFINE_ORIG_POINTER(XCloseDisplay)
-DEFINE_ORIG_POINTER(XDisplayHeight)
-DEFINE_ORIG_POINTER(XDisplayWidth)
 
 Display* x11::gameDisplays[GAMEDISPLAYNUM] = {};
 
@@ -71,7 +68,6 @@ Display *XOpenDisplay(const char *display_name)
 int XCloseDisplay(Display *display)
 {
     DEBUGLOGCALL(LCF_WINDOW);
-    LINK_NAMESPACE_GLOBAL(XCloseDisplay);
 
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i] == display) {
@@ -83,7 +79,7 @@ int XCloseDisplay(Display *display)
     /* Delete event queue */
     xlibEventQueueList.deleteQueue(display);
 
-    return orig::XCloseDisplay(display);
+    RETURN_NATIVE(XCloseDisplay, (display), nullptr);
 }
 
 int XDisplayHeight(Display* display, int screen_number)
@@ -94,8 +90,7 @@ int XDisplayHeight(Display* display, int screen_number)
         return Global::shared_config.screen_height;
     }
 
-    LINK_NAMESPACE_GLOBAL(XDisplayHeight);
-    return orig::XDisplayHeight(display, screen_number);
+    RETURN_NATIVE(XDisplayHeight, (display, screen_number), nullptr);
 }
 
 int XDisplayWidth(Display* display, int screen_number)
@@ -105,9 +100,8 @@ int XDisplayWidth(Display* display, int screen_number)
     if (Global::shared_config.screen_width) {
         return Global::shared_config.screen_width;
     }
-
-    LINK_NAMESPACE_GLOBAL(XDisplayWidth);
-    return orig::XDisplayWidth(display, screen_number);
+    
+    RETURN_NATIVE(XDisplayWidth, (display, screen_number), nullptr);
 }
 
 }

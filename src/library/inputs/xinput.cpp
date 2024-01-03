@@ -28,15 +28,9 @@ namespace libtas {
 
 int xinput_opcode;
 
-DEFINE_ORIG_POINTER(XISelectEvents)
-DEFINE_ORIG_POINTER(XIQueryDevice)
-
 int XISelectEvents(Display* dpy, Window win, XIEventMask *masks, int num_masks)
 {
-    LINK_NAMESPACE_FULLNAME(XISelectEvents, "libXi.so.6");
-    if (GlobalState::isNative()) {
-        return orig::XISelectEvents(dpy, win, masks, num_masks);
-    }
+    RETURN_IF_NATIVE(XISelectEvents, (dpy, win, masks, num_masks), "libXi.so.6");
 
     DEBUGLOGCALL(LCF_WINDOW);
 
@@ -71,7 +65,7 @@ int XISelectEvents(Display* dpy, Window win, XIEventMask *masks, int num_masks)
         }
     }
 
-    return orig::XISelectEvents(dpy, win, masks, num_masks);
+    RETURN_NATIVE(XISelectEvents, (dpy, win, masks, num_masks), "libXi.so.6");
 }
 
 XIDeviceInfo* XIQueryDevice(Display* dpy, int deviceid, int* ndevices_return)

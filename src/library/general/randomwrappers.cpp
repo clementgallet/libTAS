@@ -25,34 +25,7 @@
 namespace libtas {
 
 DEFINE_ORIG_POINTER(random)
-DEFINE_ORIG_POINTER(srandom)
-DEFINE_ORIG_POINTER(initstate)
-DEFINE_ORIG_POINTER(setstate)
-DEFINE_ORIG_POINTER(random_r)
-DEFINE_ORIG_POINTER(srandom_r)
-DEFINE_ORIG_POINTER(initstate_r)
-DEFINE_ORIG_POINTER(setstate_r)
 DEFINE_ORIG_POINTER(rand)
-DEFINE_ORIG_POINTER(srand)
-DEFINE_ORIG_POINTER(rand_r)
-DEFINE_ORIG_POINTER(drand48)
-DEFINE_ORIG_POINTER(erand48)
-DEFINE_ORIG_POINTER(lrand48)
-DEFINE_ORIG_POINTER(nrand48)
-DEFINE_ORIG_POINTER(mrand48)
-DEFINE_ORIG_POINTER(jrand48)
-DEFINE_ORIG_POINTER(srand48)
-DEFINE_ORIG_POINTER(seed48)
-DEFINE_ORIG_POINTER(lcong48)
-DEFINE_ORIG_POINTER(drand48_r)
-DEFINE_ORIG_POINTER(erand48_r)
-DEFINE_ORIG_POINTER(lrand48_r)
-DEFINE_ORIG_POINTER(nrand48_r)
-DEFINE_ORIG_POINTER(mrand48_r)
-DEFINE_ORIG_POINTER(jrand48_r)
-DEFINE_ORIG_POINTER(srand48_r)
-DEFINE_ORIG_POINTER(seed48_r)
-DEFINE_ORIG_POINTER(lcong48_r)
 
 /* Override */ long int random (void) __THROW
 {
@@ -66,16 +39,14 @@ DEFINE_ORIG_POINTER(lcong48_r)
 /* Override */ void srandom (unsigned int seed) __THROW
 {
     debuglogstdio(LCF_RANDOM, "%s call with seed %u", __func__, seed);
-    LINK_NAMESPACE_GLOBAL(srandom);
-    return orig::srandom(seed);
+    RETURN_NATIVE(srandom, (seed), nullptr);
 }
 
 /* Override */ char *initstate (unsigned int seed, char *statebuf,
             size_t statelen) __THROW
 {
     debuglogstdio(LCF_RANDOM, "%s call with seed %u", __func__, seed);
-    LINK_NAMESPACE_GLOBAL(initstate);
-    return orig::initstate(seed, statebuf, statelen);
+    RETURN_NATIVE(initstate, (seed, statebuf, statelen), nullptr);
 }
 
 #ifdef __unix__
@@ -85,38 +56,33 @@ DEFINE_ORIG_POINTER(lcong48_r)
 #endif
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(setstate);
-    return orig::setstate(statebuf);
+    RETURN_NATIVE(setstate, (statebuf), nullptr);
 }
 
 /* Override */ int random_r (struct random_data *buf,
              int32_t *result) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(random_r);
-    return orig::random_r(buf, result);
+    RETURN_NATIVE(random_r, (buf, result), nullptr);
 }
 
 /* Override */ int srandom_r (unsigned int seed, struct random_data *buf) __THROW
 {
     debuglogstdio(LCF_RANDOM, "%s call with seed %u", __func__, seed);
-    LINK_NAMESPACE_GLOBAL(srandom_r);
-    return orig::srandom_r(seed, buf);
+    RETURN_NATIVE(srandom_r, (seed, buf), nullptr);
 }
 
 /* Override */ int initstate_r (unsigned int seed, char *statebuf, size_t statelen,
             struct random_data *buf) __THROW
 {
     debuglogstdio(LCF_RANDOM, "%s call with seed %u", __func__, seed);
-    LINK_NAMESPACE_GLOBAL(initstate_r);
-    return orig::initstate_r(seed, statebuf, statelen, buf);
+    RETURN_NATIVE(initstate_r, (seed, statebuf, statelen, buf), nullptr);
 }
 
 /* Override */ int setstate_r (char *statebuf, struct random_data *buf) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(setstate_r);
-    return orig::setstate_r(statebuf, buf);
+    RETURN_NATIVE(setstate_r, (statebuf, buf), nullptr);
 }
 
 /* Override */ int rand (void) __THROW
@@ -131,146 +97,126 @@ DEFINE_ORIG_POINTER(lcong48_r)
 /* Override */ void srand (unsigned int seed) __THROW
 {
     debuglogstdio(LCF_RANDOM, "%s call with seed %u", __func__, seed);
-    LINK_NAMESPACE_GLOBAL(srand);
-    return orig::srand(seed);
+    RETURN_NATIVE(srand, (seed), nullptr);
 }
 
 /* Override */ int rand_r (unsigned int *seed) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(rand_r);
-    return orig::rand_r(seed);
+    RETURN_NATIVE(rand_r, (seed), nullptr);
 }
 
 /* Override */ double drand48 (void) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(drand48);
-    return orig::drand48();
+    RETURN_NATIVE(drand48, (), nullptr);
 }
 
 /* Override */ double erand48 (unsigned short int xsubi[3]) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(erand48);
-    return orig::erand48(xsubi);
+    RETURN_NATIVE(erand48, (xsubi), nullptr);
 }
 
 /* Override */ long int lrand48 (void) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(lrand48);
-    return orig::lrand48();
+    RETURN_NATIVE(lrand48, (), nullptr);
 }
 
 /* Override */ long int nrand48 (unsigned short int xsubi[3]) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(nrand48);
-    return orig::nrand48(xsubi);
+    RETURN_NATIVE(nrand48, (xsubi), nullptr);
 }
 
 /* Override */ long int mrand48 (void) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(mrand48);
-    return orig::mrand48();
+    RETURN_NATIVE(mrand48, (), nullptr);
 }
 
 /* Override */ long int jrand48 (unsigned short int xsubi[3]) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(jrand48);
-    return orig::jrand48(xsubi);
+    RETURN_NATIVE(jrand48, (xsubi), nullptr);
 }
 
 /* Override */ void srand48 (long int seedval) __THROW
 {
     debuglogstdio(LCF_RANDOM, "%s call with seed %ld", __func__, seedval);
-    LINK_NAMESPACE_GLOBAL(srand48);
-    return orig::srand48(seedval);
+    RETURN_NATIVE(srand48, (seedval), nullptr);
 }
 
 /* Override */ unsigned short int *seed48 (unsigned short int seed16v[3]) __THROW
 {
     debuglogstdio(LCF_RANDOM, "%s call with seed %d %d %d", __func__, seed16v[0], seed16v[1], seed16v[2]);
-    LINK_NAMESPACE_GLOBAL(seed48);
-    return orig::seed48(seed16v);
+    RETURN_NATIVE(seed48, (seed16v), nullptr);
 }
 
 /* Override */ void lcong48 (unsigned short int param[7]) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(lcong48);
-    return orig::lcong48(param);
+    RETURN_NATIVE(lcong48, (param), nullptr);
 }
 
 /* Override */ int drand48_r (struct drand48_data *buffer, double *result) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(drand48_r);
-    return orig::drand48_r(buffer, result);
+    RETURN_NATIVE(drand48_r, (buffer, result), nullptr);
 }
 
 /* Override */ int erand48_r (unsigned short int xsubi[3],
               struct drand48_data *buffer, double *result) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(erand48_r);
-    return orig::erand48_r(xsubi, buffer, result);
+    RETURN_NATIVE(erand48_r, (xsubi, buffer, result), nullptr);
 }
 
 /* Override */ int lrand48_r (struct drand48_data *buffer, long int *result) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(lrand48_r);
-    return orig::lrand48_r(buffer, result);
+    RETURN_NATIVE(lrand48_r, (buffer, result), nullptr);
 }
 
 /* Override */ int nrand48_r (unsigned short int xsubi[3],
               struct drand48_data *buffer, long int *result) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(nrand48_r);
-    return orig::nrand48_r(xsubi, buffer, result);
+    RETURN_NATIVE(nrand48_r, (xsubi, buffer, result), nullptr);
 }
 
 /* Override */ int mrand48_r (struct drand48_data *buffer, long int *result) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(mrand48_r);
-    return orig::mrand48_r(buffer, result);
+    RETURN_NATIVE(mrand48_r, (buffer, result), nullptr);
 }
 
 /* Override */ int jrand48_r (unsigned short int xsubi[3],
               struct drand48_data *buffer, long int *result) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(jrand48_r);
-    return orig::jrand48_r(xsubi, buffer, result);
+    RETURN_NATIVE(jrand48_r, (xsubi, buffer, result), nullptr);
 }
 
 /* Override */ int srand48_r (long int seedval, struct drand48_data *buffer) __THROW
 {
     debuglogstdio(LCF_RANDOM, "%s call with seed %ld", __func__, seedval);
-    LINK_NAMESPACE_GLOBAL(srand48_r);
-    return orig::srand48_r(seedval, buffer);
+    RETURN_NATIVE(srand48_r, (seedval, buffer), nullptr);
 }
 
 /* Override */ int seed48_r (unsigned short int seed16v[3],
              struct drand48_data *buffer) __THROW
 {
     debuglogstdio(LCF_RANDOM, "%s call with seed %d %d %d", __func__, seed16v[0], seed16v[1], seed16v[2]);
-    LINK_NAMESPACE_GLOBAL(seed48_r);
-    return orig::seed48_r(seed16v, buffer);
+    RETURN_NATIVE(seed48_r, (seed16v, buffer), nullptr);
 }
 
 /* Override */ int lcong48_r (unsigned short int param[7],
               struct drand48_data *buffer) __THROW
 {
     DEBUGLOGCALL(LCF_RANDOM);
-    LINK_NAMESPACE_GLOBAL(lcong48_r);
-    return orig::lcong48_r(param, buffer);
+    RETURN_NATIVE(lcong48_r, (param, buffer), nullptr);
 }
 
 }

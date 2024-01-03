@@ -34,9 +34,6 @@ namespace libtas {
 Window pointer_grab_window = None;
 
 DEFINE_ORIG_POINTER(XQueryPointer)
-DEFINE_ORIG_POINTER(XWarpPointer)
-DEFINE_ORIG_POINTER(XDefineCursor)
-DEFINE_ORIG_POINTER(XUndefineCursor)
 
 /* Override */ Bool XQueryPointer( Display* display, Window w,
         Window* root_return, Window* child_return,
@@ -133,20 +130,14 @@ DEFINE_ORIG_POINTER(XUndefineCursor)
 
 /* Override */ int XDefineCursor(Display* d, Window w, Cursor c)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(XDefineCursor);
-        return orig::XDefineCursor(d, w, c);
-    }
+    RETURN_IF_NATIVE(XDefineCursor, (d, w, c), nullptr);
     DEBUGLOGCALL(LCF_MOUSE);
     return 0; // Not sure what to return
 }
 
 /* Override */ int XUndefineCursor(Display* d, Window w)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(XUndefineCursor);
-        return orig::XUndefineCursor(d, w);
-    }
+    RETURN_IF_NATIVE(XUndefineCursor, (d, w), nullptr);
     DEBUGLOGCALL(LCF_MOUSE);
     return 0; // Not sure what to return
 }
@@ -155,11 +146,8 @@ DEFINE_ORIG_POINTER(XUndefineCursor)
     int src_x, int src_y, unsigned int src_width, unsigned int src_height,
     int dest_x, int dest_y)
 {
-    if (GlobalState::isNative()) {
-        LINK_NAMESPACE_GLOBAL(XWarpPointer);
-        return orig::XWarpPointer(d, src_w, dest_w, src_x, src_y, src_width, src_height, dest_x, dest_y);
-    }
-    
+    RETURN_IF_NATIVE(XWarpPointer, (d, src_w, dest_w, src_x, src_y, src_width, src_height, dest_x, dest_y), nullptr);
+
     debuglogstdio(LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dest_w, dest_x, dest_y);
 
     /* We have to generate an MotionNotify event. */
@@ -220,8 +208,7 @@ DEFINE_ORIG_POINTER(XUndefineCursor)
         }
     }
 
-    LINK_NAMESPACE_GLOBAL(XWarpPointer);
-    return orig::XWarpPointer(d, src_w, dest_w, src_x, src_y, src_width, src_height, dest_x, dest_y);
+    RETURN_NATIVE(XWarpPointer, (d, src_w, dest_w, src_x, src_y, src_width, src_height, dest_x, dest_y), nullptr);
 }
 
 }

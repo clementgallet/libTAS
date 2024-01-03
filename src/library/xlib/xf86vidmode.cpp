@@ -25,9 +25,6 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(XF86VidModeGetModeLine)
-DEFINE_ORIG_POINTER(XF86VidModeGetAllModeLines)
-
 Bool XF86VidModeGetModeLine(Display* dpy, int screen, int* dotclock, XF86VidModeModeLine* modeline)
 {
     DEBUGLOGCALL(LCF_WINDOW);
@@ -52,8 +49,7 @@ Bool XF86VidModeGetModeLine(Display* dpy, int screen, int* dotclock, XF86VidMode
         return True;
     }
 
-    LINK_NAMESPACE_FULLNAME(XF86VidModeGetModeLine, "libXxf86vm.so.1");
-    return orig::XF86VidModeGetModeLine(dpy, screen, dotclock, modeline);        
+    RETURN_NATIVE(XF86VidModeGetModeLine, (dpy, screen, dotclock, modeline), "libXxf86vm.so.1");
 }
 
 Bool XF86VidModeGetAllModeLines(Display *dpy, int screen, int *modecount_return, XF86VidModeModeInfo ***modesinfo)
@@ -94,8 +90,7 @@ Bool XF86VidModeGetAllModeLines(Display *dpy, int screen, int *modecount_return,
         return True;
     }
 
-    LINK_NAMESPACE_FULLNAME(XF86VidModeGetAllModeLines, "libXxf86vm.so.1");
-    return orig::XF86VidModeGetAllModeLines(dpy, screen, modecount_return, modesinfo);
+    RETURN_NATIVE(XF86VidModeGetAllModeLines, (dpy, screen, modecount_return, modesinfo), "libXxf86vm.so.1");
 }
 
 }

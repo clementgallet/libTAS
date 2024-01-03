@@ -24,13 +24,10 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(XInternAtom)
-
 Atom XInternAtom(Display* display, const char* atom_name, Bool only_if_exists)
 {
     debuglogstdio(LCF_WINDOW, "%s call with atom %s", __func__, atom_name);
-    LINK_NAMESPACE_GLOBAL(XInternAtom);
-    return orig::XInternAtom(display, atom_name, only_if_exists);
+    RETURN_NATIVE(XInternAtom, (display, atom_name, only_if_exists), nullptr);
 }
 
 static const char * const atom_names[NB_XATOMS] =
