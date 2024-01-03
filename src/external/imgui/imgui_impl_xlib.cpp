@@ -2,7 +2,7 @@
 // This needs to be used along with a Renderer (e.g. DirectX11, OpenGL3, Vulkan..)
 
 // Implemented features:
-//  [ ] Platform: Clipboard support.
+//  [X] Platform: Clipboard support.
 //  [X] Platform: Mouse support.
 //  [ ] Platform: TouchScreen support.
 //  [X] Platform: Keyboard support.
@@ -26,10 +26,10 @@
 #include "imgui_impl_xlib.h"
 
 // Clang warnings with -Weverything
-// #if defined(__clang__)
-// #pragma clang diagnostic push
+#if defined(__clang__)
+#pragma clang diagnostic push
 // #pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"  // warning: implicit conversion from 'xxx' to 'float' may lose precision
-// #endif
+#endif
 
 // Xlib
 #include <X11/X.h>
@@ -43,37 +43,43 @@
 #include <X11/cursorfont.h>
 
 #include <time.h> // clock_gettime()
-#include <iostream>
+#include <limits.h>
+#include <stdlib.h>
 
 #ifdef X_HAVE_UTF8_STRING
 #include <locale.h>
 #endif
 
-// #include <SDL2/SDL.h>
-// #include <SDL2/SDL_syswm.h>
-// #if defined(__APPLE__)
-// #include <TargetConditionals.h>
-// #endif
-// #include "hook.h"
-
-// SDL Data
+// Xlib Data
 struct ImGui_ImplXlib_Data
 {
     Display*        Dpy;
     Window          Win;
     int             Xi2Opcode;
     XIM             IM;
-    XIC             IC;
-    
+    XIC             IC;    
     timespec        Time;
-    // Uint32          MouseWindowID;
     int             MouseButtonsDown;
     Cursor          MouseCursors[ImGuiMouseCursor_COUNT];
     Cursor          LastMouseCursor;
-    // int             PendingMouseLeaveFrame;
-    // char*           ClipboardTextData;
+    char*           ClipboardTextData;
+    bool            SelectionWaiting;
+    Atom            XA_CLIPBOARD;
+    Atom            XA_SELECTION;
+    Atom            XA_TARGETS;
+    Atom            XA_INCR;
+    Atom*           XA_MIME;
+    unsigned int    MimeCount;
 
     ImGui_ImplXlib_Data()   { memset((void*)this, 0, sizeof(*this)); }
+};
+
+static const char *text_mime_types[] = {
+    "text/plain;charset=utf-8",
+    "text/plain",
+    "TEXT",
+    "UTF8_STRING",
+    "STRING"
 };
 
 // Backend data stored in io.BackendPlatformUserData to allow support for multiple Dear ImGui contexts
@@ -86,33 +92,79 @@ static ImGui_ImplXlib_Data* ImGui_ImplXlib_GetBackendData()
 }
 
 // Functions
-// static const char* ImGui_ImplXlib_GetClipboardText(void*)
-// {
-//     ImGui_ImplXlib_Data* bd = ImGui_ImplXlib_GetBackendData();
-//     if (bd->ClipboardTextData)
-//         SDL_free(bd->ClipboardTextData);
-//     bd->ClipboardTextData = SDL_GetClipboardText();
-//     return bd->ClipboardTextData;
-// }
-// 
-// static void ImGui_ImplXlib_SetClipboardText(void*, const char* text)
-// {
-//     SDL_SetClipboardText(text);
-// }
+static const char* ImGui_ImplXlib_GetClipboardText(void*)
+{
+    ImGui_ImplXlib_Data* bd = ImGui_ImplXlib_GetBackendData();
+    
+    // Get the window that holds the selection 
+    Window owner = XGetSelectionOwner(bd->Dpy, bd->XA_CLIPBOARD);
+    
+    if (owner == None)
+    {
+        if (bd->ClipboardTextData)
+        {
+            free (bd->ClipboardTextData);
+            bd->ClipboardTextData = nullptr;
+        }
+    }
+    else if (owner == bd->Win)
+    {
+        // The copied text is from us, nothing to do
+    }
+    else
+    {
+        if (bd->ClipboardTextData)
+        {
+            free (bd->ClipboardTextData);
+            bd->ClipboardTextData = nullptr;
+        }
+        
+        /* Request that the selection owner copy the data to our window */
+        owner = bd->Win;
+        XConvertSelection(bd->Dpy, bd->XA_CLIPBOARD, bd->XA_MIME[1], bd->XA_SELECTION, owner, CurrentTime);
+        XSync(bd->Dpy, 0);
 
-// Note: native IME will only display if user calls SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1") _before_ SDL_CreateWindow().
-// static void ImGui_ImplXlib_SetPlatformImeData(ImGuiViewport*, ImGuiPlatformImeData* data)
-// {
-//     if (data->WantVisible)
-//     {
-//         SDL_Rect r;
-//         r.x = (int)data->InputPos.x;
-//         r.y = (int)data->InputPos.y;
-//         r.w = 1;
-//         r.h = (int)data->InputLineHeight;
-//         SDL_SetTextInputRect(&r);
-//     }
-// }
+        // waitStart = SDL_GetTicks();
+        bd->SelectionWaiting = true;
+        XEvent event;
+        // TODO: Add a timeout
+        while (bd->SelectionWaiting) {
+            XNextEvent(bd->Dpy, &event);
+            ImGui_ImplXlib_ProcessEvent(&event);
+        }
+
+        Atom seln_type;
+        int seln_format;
+        unsigned long count;
+        unsigned long overflow;
+        unsigned char *src = nullptr;
+
+        if (XGetWindowProperty(bd->Dpy, owner, bd->XA_SELECTION, 0, INT_MAX / 4, False,
+               bd->XA_MIME[1], &seln_type, &seln_format, &count, &overflow, &src) == Success) {
+
+            if (seln_type == bd->XA_MIME[1]) {
+                bd->ClipboardTextData = strndup((char *)src, count);
+            } else if (seln_type == bd->XA_INCR) {
+                /* FIXME: Need to implement the X11 INCR protocol */
+            }
+            XFree(src);
+        }
+    }
+    return bd->ClipboardTextData;
+}
+
+static void ImGui_ImplXlib_SetClipboardText(void*, const char* text)
+{
+    ImGui_ImplXlib_Data* bd = ImGui_ImplXlib_GetBackendData();
+
+    IM_ASSERT(bd->XA_CLIPBOARD != None && "Couldn't access X clipboard!");
+
+    if (bd->ClipboardTextData)
+        free(bd->ClipboardTextData);
+    
+    bd->ClipboardTextData = strdup(text);
+    XSetSelectionOwner(bd->Dpy, bd->XA_CLIPBOARD, bd->Win, CurrentTime);
+}
 
 static ImGuiKey ImGui_ImplXlib_KeySymToImGuiKey(KeySym keysym)
 {
@@ -356,6 +408,62 @@ bool ImGui_ImplXlib_ProcessEvent(XEvent* event)
 #endif
             return true;
         }
+        case SelectionNotify:
+        {
+            bd->SelectionWaiting = false;
+            return true;
+        }
+        case SelectionRequest:
+        {
+            const XSelectionRequestEvent *req = &event->xselectionrequest;
+            // char *atom_name;
+            // atom_name = XGetAtomName(bd->Dpy, req->target);
+            // std::cerr << "window CLIPBOARD: SelectionRequest requestor = " << req->requestor << ", target = " << req->target << ", mime_type = " << atom_name << std::endl;
+            // if (atom_name) {
+            //     XFree(atom_name);
+            // }
+                
+            XEvent sevent;
+            sevent.xany.type = SelectionNotify;
+            sevent.xselection.selection = req->selection;
+            sevent.xselection.target = None;
+            sevent.xselection.property = None;
+            sevent.xselection.requestor = req->requestor;
+            sevent.xselection.time = req->time;
+
+            if (req->target == bd->XA_TARGETS)
+            {
+                XChangeProperty(bd->Dpy, req->requestor, req->property,
+                                    4 /* XA_ATOM */, 32, PropModeReplace,
+                                    (unsigned char*)bd->XA_MIME, 6);
+                sevent.xselection.property = req->property;
+                sevent.xselection.target = bd->XA_TARGETS;
+            }
+            else if (bd->ClipboardTextData)
+            {
+                for (unsigned int i = 0; i < sizeof(text_mime_types)/sizeof(text_mime_types[0]); i++)
+                {
+                    if (req->target != bd->XA_MIME[i])
+                        continue;
+
+                    XChangeProperty(bd->Dpy, req->requestor, req->property,
+                        req->target, 8, PropModeReplace,
+                        (unsigned char*)bd->ClipboardTextData, strlen(bd->ClipboardTextData));
+                        sevent.xselection.property = req->property;
+                        sevent.xselection.target = req->target;
+                        
+                    break;
+                }
+            }
+
+            XSendEvent(bd->Dpy, req->requestor, 0, 0, &sevent);
+            XSync(bd->Dpy, False);
+            return true;
+        }
+        case SelectionClear:
+        {
+            return true;
+        }
     }
     return false;
 }
@@ -365,37 +473,37 @@ bool ImGui_ImplXlib_Init(Display* display, Window window)
     ImGuiIO& io = ImGui::GetIO();
     IM_ASSERT(io.BackendPlatformUserData == nullptr && "Already initialized a platform backend!");
 
-    // Check and store if we are on a SDL backend that supports global mouse position
-    // ("wayland" and "rpi" don't support it, but we chose to use a white-list instead of a black-list)
-//     bool mouse_can_use_global_state = false;
-// #if SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE
-//     const char* sdl_backend = SDL_GetCurrentVideoDriver();
-//     const char* global_mouse_whitelist[] = { "windows", "cocoa", "x11", "DIVE", "VMAN" };
-//     for (int n = 0; n < IM_ARRAYSIZE(global_mouse_whitelist); n++)
-//         if (strncmp(sdl_backend, global_mouse_whitelist[n], strlen(global_mouse_whitelist[n])) == 0)
-//             mouse_can_use_global_state = true;
-// #endif
-
     // Setup backend capabilities flags
     ImGui_ImplXlib_Data* bd = IM_NEW(ImGui_ImplXlib_Data)();
     io.BackendPlatformUserData = (void*)bd;
     io.BackendPlatformName = "imgui_impl_xlib";
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;       // We can honor GetMouseCursor() values (optional)
-    // io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;        // We can honor io.WantSetMousePos requests (optional, rarely used)
+    io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;        // We can honor io.WantSetMousePos requests (optional, rarely used)
 
     bd->Dpy = display;
     bd->Win = window;
 
-    // io.SetClipboardTextFn = ImGui_ImplXlib_SetClipboardText;
-    // io.GetClipboardTextFn = ImGui_ImplXlib_GetClipboardText;
-    // io.ClipboardUserData = nullptr;
-    // io.SetPlatformImeDataFn = ImGui_ImplXlib_SetPlatformImeData;
+    io.SetClipboardTextFn = ImGui_ImplXlib_SetClipboardText;
+    io.GetClipboardTextFn = ImGui_ImplXlib_GetClipboardText;
+    io.ClipboardUserData = nullptr;
+
+    // Store all used atoms
+    bd->XA_SELECTION = XInternAtom(bd->Dpy, "IMGUI_SELECTION", 0);
+    bd->XA_TARGETS = XInternAtom(bd->Dpy, "TARGETS", 0);
+    bd->XA_INCR = XInternAtom(bd->Dpy, "INCR", 0);
+    bd->XA_CLIPBOARD = XInternAtom(bd->Dpy, "CLIPBOARD", 0);
+
+    bd->MimeCount = sizeof(text_mime_types)/sizeof(text_mime_types[0]) + 1;
+    bd->XA_MIME = (Atom*)malloc(bd->MimeCount * sizeof(Atom));
+    bd->XA_MIME[0] = bd->XA_TARGETS;
+    for (unsigned int i = 1; i < bd->MimeCount; i++) {
+        bd->XA_MIME[i] = XInternAtom(bd->Dpy, text_mime_types[i-1], 0);
+    }
 
     // Select keyboard/focus events
-    // XSelectInput(display, window, KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | ButtonMotionMask | FocusChangeMask);
     XSelectInput(display, window, KeyPressMask | KeyReleaseMask | FocusChangeMask);
 
-    // Setup XInput for keyboard/mouse inputs
+    // Setup XInput for mouse inputs
     int xi2_opcode, xi2_event, xi2_error;
     Bool ret = XQueryExtension(display, "XInputExtension", &xi2_opcode, &xi2_event, &xi2_error);
 
@@ -418,12 +526,9 @@ bool ImGui_ImplXlib_Init(Display* display, Window window)
 
     // Setup XIM
 #ifdef X_HAVE_UTF8_STRING
-
     XSetLocaleModifiers("");
     bd->IM = XOpenIM(display, NULL, NULL, NULL);
-
     bd->IC = XCreateIC(bd->IM, XNClientWindow, window, XNFocusWindow, window, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, NULL);
-
 #endif
 
     // Load mouse cursors
@@ -437,42 +542,6 @@ bool ImGui_ImplXlib_Init(Display* display, Window window)
     bd->MouseCursors[ImGuiMouseCursor_Hand] = XCreateFontCursor(display, XC_hand2);
     bd->MouseCursors[ImGuiMouseCursor_NotAllowed] = XCreateFontCursor(display, XC_pirate);
 
-    // Set platform dependent data in viewport
-    // Our mouse update function expect PlatformHandle to be filled for the main viewport
-//     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-//     main_viewport->PlatformHandleRaw = nullptr;
-//     SDL_SysWMinfo info;
-//     SDL_VERSION(&info.version);
-//     if (SDL_GetWindowWMInfo(window, &info))
-//     {
-// #if defined(SDL_VIDEO_DRIVER_WINDOWS)
-//         main_viewport->PlatformHandleRaw = (void*)info.info.win.window;
-// #elif defined(__APPLE__) && defined(SDL_VIDEO_DRIVER_COCOA)
-//         main_viewport->PlatformHandleRaw = (void*)info.info.cocoa.window;
-// #endif
-//     }
-
-    // From 2.0.5: Set SDL hint to receive mouse click events on window focus, otherwise SDL doesn't emit the event.
-    // Without this, when clicking to gain focus, our widgets wouldn't activate even though they showed as hovered.
-    // (This is unfortunately a global SDL setting, so enabling it might have a side-effect on your application.
-    // It is unlikely to make a difference, but if your app absolutely needs to ignore the initial on-focus click:
-    // you can ignore SDL_MOUSEBUTTONDOWN events coming right after a SDL_WINDOWEVENT_FOCUS_GAINED)
-// #ifdef SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH
-//     SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
-// #endif
-
-    // From 2.0.18: Enable native IME.
-    // IMPORTANT: This is used at the time of SDL_CreateWindow() so this will only affects secondary windows, if any.
-    // For the main window to be affected, your application needs to call this manually before calling SDL_CreateWindow().
-// #ifdef SDL_HINT_IME_SHOW_UI
-//     SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
-// #endif
-
-    // From 2.0.22: Disable auto-capture, this is preventing drag and drop across multiple windows (see #5710)
-// #ifdef SDL_HINT_MOUSE_AUTO_CAPTURE
-//     SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
-// #endif
-
     return true;
 }
 
@@ -484,8 +553,8 @@ void ImGui_ImplXlib_Shutdown()
 
     if (bd->IC)
         XDestroyIC(bd->IC); 
-    // if (bd->ClipboardTextData)
-    //     SDL_free(bd->ClipboardTextData);
+    if (bd->ClipboardTextData)
+        free(bd->ClipboardTextData);
     for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_COUNT; cursor_n++)
         XFreeCursor(bd->Dpy, bd->MouseCursors[cursor_n]);
     bd->LastMouseCursor = 0;
@@ -496,36 +565,32 @@ void ImGui_ImplXlib_Shutdown()
     IM_DELETE(bd);
 }
 
-// static void ImGui_ImplXlib_UpdateMouseData()
-// {
-//     ImGui_ImplXlib_Data* bd = ImGui_ImplXlib_GetBackendData();
-//     ImGuiIO& io = ImGui::GetIO();
-// 
-//     // We forward mouse input when hovered or captured (via SDL_MOUSEMOTION) or when focused (below)
-// #if SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE
-//     // SDL_CaptureMouse() let the OS know e.g. that our imgui drag outside the SDL window boundaries shouldn't e.g. trigger other operations outside
-//     SDL_CaptureMouse((bd->MouseButtonsDown != 0) ? SDL_TRUE : SDL_FALSE);
-//     SDL_Window* focused_window = SDL_GetKeyboardFocus();
-//     const bool is_app_focused = (bd->Window == focused_window);
-// #else
-//     const bool is_app_focused = (SDL_GetWindowFlags(bd->Window) & SDL_WINDOW_INPUT_FOCUS) != 0; // SDL 2.0.3 and non-windowed systems: single-viewport only
-// #endif
-//     if (is_app_focused)
-//     {
-//         // (Optional) Set OS mouse position from Dear ImGui if requested (rarely used, only when ImGuiConfigFlags_NavEnableSetMousePos is enabled by user)
-//         if (io.WantSetMousePos)
-//             SDL_WarpMouseInWindow(bd->Window, (int)io.MousePos.x, (int)io.MousePos.y);
-// 
-//         // (Optional) Fallback to provide mouse position when focused (SDL_MOUSEMOTION already provides this when hovered or captured)
-//         if (bd->MouseButtonsDown == 0)
-//         {
-//             int window_x, window_y, mouse_x_global, mouse_y_global;
-//             SDL_GetGlobalMouseState(&mouse_x_global, &mouse_y_global);
-//             SDL_GetWindowPosition(bd->Window, &window_x, &window_y);
-//             io.AddMousePosEvent((float)(mouse_x_global - window_x), (float)(mouse_y_global - window_y));
-//         }
-//     }
-// }
+static void ImGui_ImplXlib_UpdateMouseData()
+{
+    ImGui_ImplXlib_Data* bd = ImGui_ImplXlib_GetBackendData();
+    ImGuiIO& io = ImGui::GetIO();
+
+    Window focus;
+    int revert;
+    XGetInputFocus(bd->Dpy, &focus, &revert);
+    bool is_app_focused = (focus == bd->Win);
+    if (is_app_focused)
+    {
+        // (Optional) Set OS mouse position from Dear ImGui if requested (rarely used, only when ImGuiConfigFlags_NavEnableSetMousePos is enabled by user)
+        if (io.WantSetMousePos)
+            XWarpPointer(bd->Dpy, None, bd->Win, 0, 0, 0, 0, (int)io.MousePos.x, (int)io.MousePos.y);
+
+        // (Optional) Fallback to provide mouse position when focused (SDL_MOUSEMOTION already provides this when hovered or captured)
+        // if (bd->MouseButtonsDown == 0)
+        // {
+        //     int window_x, window_y, mouse_x_global, mouse_y_global;
+        //     Window root, child;
+        //     unsigned int mask;
+        //     if (True == XQueryPointer(bd->Dpy, bd->Win, &root, &child, &mouse_x_global, &mouse_y_global, &window_x, &window_y, &mask))
+        //         io.AddMousePosEvent((float)(mouse_x_global - window_x), (float)(mouse_y_global - window_y));
+        // }
+    }
+}
 
 static void ImGui_ImplXlib_UpdateMouseCursor()
 {
@@ -583,14 +648,7 @@ void ImGui_ImplXlib_NewFrame()
         io.DeltaTime = (float)(1.0f / 60.0f);
     bd->Time = current_time;
     
-    // if (bd->PendingMouseLeaveFrame && bd->PendingMouseLeaveFrame >= ImGui::GetFrameCount() && bd->MouseButtonsDown == 0)
-    // {
-    //     bd->MouseWindowID = 0;
-    //     bd->PendingMouseLeaveFrame = 0;
-    //     io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
-    // }
-
-    // ImGui_ImplXlib_UpdateMouseData();
+    ImGui_ImplXlib_UpdateMouseData();
     ImGui_ImplXlib_UpdateMouseCursor();
 }
 

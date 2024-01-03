@@ -30,6 +30,8 @@
 
 namespace libtas {
 
+DEFINE_ORIG_POINTER(XGetInputFocus)
+
 /* Override */ int XQueryKeymap( Display* display, char keymap[32])
 {
     DEBUGLOGCALL(LCF_KEYBOARD);
@@ -79,6 +81,11 @@ namespace libtas {
 
 /* Override */ int XGetInputFocus(Display* display, Window* focus_return, int* revert_to_return)
 {
+    if (GlobalState::isNative()) {
+        LINK_NAMESPACE_GLOBAL(XGetInputFocus);
+        return orig::XGetInputFocus(display, focus_return, revert_to_return);
+    }
+
     DEBUGLOGCALL(LCF_KEYBOARD);
     /* Returing the game Xlib window */
     if (focus_return && !x11::gameXWindows.empty()) {
