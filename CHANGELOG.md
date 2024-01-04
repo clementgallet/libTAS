@@ -9,6 +9,7 @@
 * Set corresponding radio button when changing a screen resolution value
 * Save and intersect pointermaps
 * Check for more Steam interface versions
+* [ImGui] Show redraw fps on main menu
 
 ### Changed
 

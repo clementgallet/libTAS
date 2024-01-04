@@ -8,6 +8,7 @@ libtas_so_SOURCES = \
     backtrace.cpp \
     BusyLoopDetection.cpp \
     DeterministicTimer.cpp \
+    FPSMonitor.cpp \
     frame.cpp \
     GameHacks.cpp \
     global.cpp \

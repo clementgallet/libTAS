@@ -30,6 +30,7 @@
 #include "global.h" // Global::shared_config
 #include "xlib/xdisplay.h" // x11::gameDisplays
 #include "xlib/xwindows.h" // x11::gameXWindows
+#include "FPSMonitor.h"
 #include "../external/imgui/imgui.h"
 #include "../external/imgui/imgui_impl_xlib.h"
 
@@ -105,6 +106,10 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
                 ImGui::MenuItem("Demo", nullptr, &show_demo);
                 ImGui::EndMenu();
             }
+            
+            ImGui::Separator();
+            float fps = FPSMonitor::tickRedraw();
+            ImGui::Text("FPS: %2.1f", fps);
             ImGui::EndMainMenuBar();
         }        
     }

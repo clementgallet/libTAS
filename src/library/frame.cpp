@@ -34,6 +34,7 @@
 #include "screencapture/ScreenCapture.h"
 #include "WindowTitle.h"
 #include "BusyLoopDetection.h"
+#include "FPSMonitor.h"
 #include "hook.h"
 #include "GameHacks.h"
 #include "PerfTimer.h"
@@ -75,70 +76,6 @@ static uint64_t nondraw_framecount = 0;
 static bool didASavestate = false;
 
 static void receive_messages(std::function<void()> draw, RenderHUD& hud);
-
-/* Compute real and logical fps */
-static void computeFPS(float& fps, float& lfps)
-{
-    /* Do We have enough values to compute fps? */
-    static bool can_output = false;
-
-    /* Frequency of FPS computing (every n frames) */
-    static int fps_refresh_freq = 15;
-
-    /* Computations include values from past n calls */
-    static const int history_length = 10;
-
-    static std::array<uint64_t, history_length> lastFrames;
-    static std::array<TimeHolder, history_length> lastTimes;
-    static std::array<TimeHolder, history_length> lastTicks;
-
-    static int refresh_counter = 0;
-    static int compute_counter = 0;
-
-    /* Immedialty reset fps computing frequency if not fast-forwarding */
-    if (!Global::shared_config.fastforward) {
-        fps_refresh_freq = 10;
-    }
-
-    if (++refresh_counter >= fps_refresh_freq) {
-        refresh_counter = 0;
-
-        /* Update frame */
-        uint64_t lastFrame = lastFrames[compute_counter];
-        lastFrames[compute_counter] = framecount;
-
-        /* Update current time */
-        TimeHolder lastTime = lastTimes[compute_counter];
-        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastTimes[compute_counter]));
-
-        /* Update current ticks */
-        TimeHolder lastTick = lastTicks[compute_counter];
-        lastTicks[compute_counter] = DeterministicTimer::get().getTicks();
-
-        uint64_t deltaFrames = framecount - lastFrame;
-
-        /* Compute real fps (number of drawn screens per second) */
-        TimeHolder deltaTime = lastTimes[compute_counter] - lastTime;
-
-        /* Compute logical fps (number of drawn screens per timer second) */
-        TimeHolder deltaTicks = lastTicks[compute_counter] - lastTick;
-
-        if (++compute_counter >= history_length) {
-            compute_counter = 0;
-            can_output = true;
-        }
-
-        if (can_output) {
-            fps = static_cast<float>(deltaFrames) * 1000000000.0f / (deltaTime.tv_sec * 1000000000.0f + deltaTime.tv_nsec);
-            lfps = static_cast<float>(deltaFrames) * 1000000000.0f / (deltaTicks.tv_sec * 1000000000.0f + deltaTicks.tv_nsec);
-
-            /* Update fps computing frequency if fast-forwarding */
-            if (Global::shared_config.fastforward) {
-                fps_refresh_freq = static_cast<int>(fps) / 4;
-            }
-        }
-    }
-}
 
 /* Deciding if we actually draw the frame */
 static bool skipDraw(float fps)
@@ -306,7 +243,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 
     /* Compute new FPS values */
     if (draw) {
-        computeFPS(fps, lfps);
+        FPSMonitor::tickFrame(framecount, &fps, &lfps);
     }
 
     /* Send information to the game and notify for the beginning of the frame
