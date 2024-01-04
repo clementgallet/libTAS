@@ -31,6 +31,8 @@
 #include "xlib/xdisplay.h" // x11::gameDisplays
 #include "xlib/xwindows.h" // x11::gameXWindows
 #include "FPSMonitor.h"
+#include "general/timewrappers.h" // clock_gettime
+#include "TimeHolder.h"
 #include "../external/imgui/imgui.h"
 #include "../external/imgui/imgui_impl_xlib.h"
 
@@ -62,6 +64,9 @@ void RenderHUD::newFrame()
     if (!ImGui::GetCurrentContext())
         return;
 
+    if (framesBeforeIdle > 0)
+        framesBeforeIdle--;
+
     GlobalNative gn;
     ImGui_ImplXlib_NewFrame();
     ImGui::NewFrame();
@@ -72,7 +77,7 @@ void RenderHUD::endFrame()
     if (!ImGui::GetCurrentContext())
         return;
 
-    ImGui::EndFrame();    
+    ImGui::EndFrame();
 }
 
 void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai)
@@ -139,6 +144,39 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
 
     if (show_demo)
         ImGui::ShowDemoWindow(&show_demo);
+}
+
+int RenderHUD::framesBeforeIdle = 0;
+
+void RenderHUD::userInputs()
+{
+    /* The more complex ImGui interactions need 2-3 frames to operate */
+    framesBeforeIdle = 3;
+}
+
+bool RenderHUD::doRender()
+{
+    if (framesBeforeIdle > 0)
+        return true;
+        
+    /* Idling with 100ms steps between renders */
+    static const TimeHolder stepTime({0, 100000000});
+    static TimeHolder lastTime{}; // -> member, update on render
+    
+    if (lastTime.tv_sec == 0) {
+        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastTime));
+        return true;
+    }
+
+    TimeHolder currentTime;
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &currentTime));
+    
+    TimeHolder deltaTime = currentTime - lastTime;
+    if (deltaTime > stepTime) {
+        lastTime = currentTime;
+        return true;
+    }
+    return false;
 }
 
 }

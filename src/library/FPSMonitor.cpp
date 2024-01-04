@@ -22,8 +22,8 @@
 #include "GlobalState.h"
 #include "DeterministicTimer.h"
 #include "general/timewrappers.h" // clock_gettime
+#include "TimeHolder.h"
 
-// #include <iomanip>
 #include <array>
 #include <stdint.h>
 
@@ -103,19 +103,21 @@ float FPSMonitor::tickRedraw()
     static int compute_counter = 0;
 
     /* Update current time */
-    TimeHolder lastTime = lastTimes[compute_counter];
+    const TimeHolder lastTime = lastTimes[compute_counter];
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastTimes[compute_counter]));
-
-    if (lastTime.tv_sec == 0)
-        /* We didn't fill yet the whole array */
-        return 0.0f;
-        
-    /* Compute real fps (number of ticks per second) */
-    TimeHolder deltaTime = lastTimes[compute_counter] - lastTime;
+    const TimeHolder currentTime = lastTimes[compute_counter];
 
     if (++compute_counter >= history_length) {
         compute_counter = 0;
     }
+
+    if (lastTime.tv_sec == 0) {
+        /* We didn't fill yet the whole array */
+        return 0.0f;
+    }
+        
+    /* Compute real fps (number of ticks per second) */
+    TimeHolder deltaTime = currentTime - lastTime;
 
     return static_cast<float>(history_length) * 1000000000.0f / (deltaTime.tv_sec * 1000000000.0f + deltaTime.tv_nsec);
 }

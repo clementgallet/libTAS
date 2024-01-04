@@ -583,18 +583,21 @@ static void pushQuitEvent(void)
 #endif
 }
 
-
 static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllInputs& preview_ai)
 {
     if (!Global::skipping_draw && draw) {
-        hud.newFrame();
-        ScreenCapture::copySurfaceToScreen();
-
-        hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
-        hud.render();
-
-        GlobalNoLog gnl;
-        NATIVECALL(draw());
+        
+        /* Idle to save CPU/GPU process */
+        if (hud.doRender()) {
+            hud.newFrame();
+            ScreenCapture::copySurfaceToScreen();
+            
+            hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
+            hud.render();
+            
+            GlobalNoLog gnl;
+            NATIVECALL(draw());            
+        }
     }
 }
 
@@ -613,7 +616,6 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
         msg += std::to_string(slot);
         msg += " saved";
         MessageWindow::insert(msg.c_str());
-        screen_redraw(draw, hud, preview_ai);
     }
 
     while (1)
@@ -655,7 +657,6 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 msg += std::to_string(slot);
                 msg += " saved";
                 MessageWindow::insert(msg.c_str());
-                screen_redraw(draw, hud, preview_ai);
             }
             perfTimer.switchTimer(PerfTimer::FrameTimer);
         }
@@ -707,7 +708,6 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
 
             case MSGN_PREVIEW_INPUTS:
                 preview_ai.recv();
-                screen_redraw(draw, hud, preview_ai);
                 break;
 
             case MSGN_SAVESTATE_PATH:
@@ -771,7 +771,6 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                         msg += std::to_string(slot);
                         msg += " saved";
                         MessageWindow::insert(msg.c_str());
-                        screen_redraw(draw, hud, preview_ai);
                     }
 
                 }
@@ -807,7 +806,6 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
 
             case MSGN_OSD_MSG:
                 MessageWindow::insert(receiveString().c_str());
-                screen_redraw(draw, hud, preview_ai);
                 break;
 
             case MSGN_MARKER:
@@ -815,7 +813,6 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 /* Get marker text from the program */
                 std::string text = receiveString();
                 FrameWindow::setMarkerText(text);
-                screen_redraw(draw, hud, preview_ai);
                 break;
             }
 

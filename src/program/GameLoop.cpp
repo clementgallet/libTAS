@@ -583,7 +583,7 @@ bool GameLoop::startFrameMessages()
 void GameLoop::sleepSendPreview()
 {
     /* Sleep a bit to not surcharge the processor */
-    struct timespec tim = {0, 17L*1000L*1000L};
+    struct timespec tim = {0, 33L*1000L*1000L};
     nanosleep(&tim, NULL);
 
     /* Send marker text if it has changed */
@@ -631,9 +631,8 @@ void GameLoop::sleepSendPreview()
         preview_ai.send(true);
         last_preview_ai = preview_ai;
     }
-    else {
-        sendMessage(MSGN_EXPOSE);
-    }
+
+    sendMessage(MSGN_EXPOSE);
 }
 
 

@@ -10,6 +10,7 @@
 * Save and intersect pointermaps
 * Check for more Steam interface versions
 * [ImGui] Show redraw fps on main menu
+* [ImGui] Idling when no activity
 
 ### Changed
 

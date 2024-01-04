@@ -48,17 +48,31 @@ namespace libtas {
 class RenderHUD
 {
     public:
+        /* Called at the beginning of a new frame */
         virtual void newFrame();
 
-        void endFrame();
-
+        /* Add all hud elements for rendering */
+        void drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai);
+        
+        /* Called at the end of a frame to render the hud */
         virtual void render() {}
 
-        /* Display everything based on setting */
-        void drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai);
+        /* Called at the end of a frame if we decide to not render the hud */
+        void endFrame();
+
+        /* Called to notify that the current frame had user interaction, and
+         * we must not idle */
+        static void userInputs();
+
+        /* Indicate if we need to render or idle */
+        bool doRender();
 
     protected:
         bool init();
+        
+    private:
+        /* How many future draws we need before start idling */
+        static int framesBeforeIdle;
 };
 }
 

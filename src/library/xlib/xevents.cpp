@@ -31,6 +31,7 @@
 #include "frame.h"
 #include "global.h"
 #include "GlobalState.h"
+#include "renderhud/RenderHUD.h"
 #include "../external/X11/XInput2.h"
 #include "../external/imgui/imgui_impl_xlib.h"
 
@@ -148,8 +149,12 @@ void pushNativeXlibEvents(Display *display)
             }
         }
         
-        if (ImGui::GetCurrentContext())
-            NATIVECALL(ImGui_ImplXlib_ProcessEvent(&event));
+        if (ImGui::GetCurrentContext()) {
+            GlobalNative gn;
+            /* Redirect events to ImGui, and notify if it was interested in the event */
+            if (ImGui_ImplXlib_ProcessEvent(&event))
+                RenderHUD::userInputs();
+        }
 
         if (!isEventFiltered(&event)) {
             xlibEventQueueList.insert(display, &event);

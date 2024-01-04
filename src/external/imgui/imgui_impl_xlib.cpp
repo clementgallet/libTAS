@@ -359,7 +359,7 @@ bool ImGui_ImplXlib_ProcessEvent(XEvent* event)
                 }
             }
             XFreeEventData(event->xcookie.display, cookie);
-            return true;
+            return false;
         }
         case KeyPress:
         case KeyRelease:
