@@ -32,6 +32,7 @@
 #include "StateHeader.h"
 #include "ReservedMemory.h"
 #include "SaveState.h"
+#include "TimeHolder.h"
 
 #include "logging.h"
 #include "global.h"

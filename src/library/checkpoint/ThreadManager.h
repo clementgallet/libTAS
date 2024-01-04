@@ -24,8 +24,6 @@
 
 #include "ThreadInfo.h"
 
-#include "TimeHolder.h"
-
 #include <set>
 #include <map>
 #include <vector>

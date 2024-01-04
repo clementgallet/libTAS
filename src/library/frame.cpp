@@ -46,6 +46,7 @@
 #include "renderhud/LuaDraw.h"
 #include "renderhud/MessageWindow.h"
 #include "renderhud/WatchesWindow.h"
+#include "renderhud/RenderHUD.h"
 
 #ifdef __unix__
 #include "xlib/xevents.h"

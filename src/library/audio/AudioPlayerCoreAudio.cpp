@@ -18,6 +18,7 @@
  */
 
 #include "AudioPlayerCoreAudio.h"
+#include "AudioContext.h"
 
 #include "logging.h"
 #include "global.h" // Global::shared_config

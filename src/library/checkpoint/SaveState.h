@@ -23,9 +23,11 @@
 #define LIBTAS_SAVESTATE_H
 
 #include "MemArea.h"
-#include "StateHeader.h"
 
 namespace libtas {
+    
+struct StateHeader;
+
 class SaveState
 {
     public:

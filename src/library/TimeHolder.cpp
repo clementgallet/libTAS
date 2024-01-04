@@ -23,19 +23,18 @@
 
 namespace libtas {
 
-TimeHolder TimeHolder::shiftadd(TimeHolder& pow, TimeHolder& mult, int m)
+void TimeHolder::shiftadd(TimeHolder& pow, int m)
 {
     if (m == 0)
-        return mult;
+        return;
     if ((m & 0x01) != 0) {
-        mult = mult + pow;
-        mult.normalize();
+        *this += pow;
+        normalize();
     }
     pow.tv_sec <<= 1;
     pow.tv_nsec <<= 1;
     pow.normalize();
-    m >>= 1;
-    return shiftadd(pow, mult, m);
+    return shiftadd(pow, m>>1);
 }
 
 void TimeHolder::normalize()

@@ -22,9 +22,13 @@
 #ifndef LIBTAS_PROCSELFMAPS_H
 #define LIBTAS_PROCSELFMAPS_H
 
-#include "MemArea.h"
+#include <cstdint>
+#include <sys/types.h>
 
 namespace libtas {
+    
+struct Area;
+
 class ProcSelfMaps
 {
     public:

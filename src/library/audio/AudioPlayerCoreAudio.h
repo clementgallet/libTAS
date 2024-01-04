@@ -20,13 +20,14 @@
 #ifndef LIBTAS_AUDIOPLAYERCOREAUDIO_H_INCL
 #define LIBTAS_AUDIOPLAYERCOREAUDIO_H_INCL
 
-#include "AudioContext.h"
-
 #include <AudioToolbox/AudioToolbox.h>
 #include <vector>
 #include <stdint.h>
 
 namespace libtas {
+
+class AudioContext;
+
 /* Class in charge of sending the mixed samples to the audio device */
 class AudioPlayerCoreAudio
 {

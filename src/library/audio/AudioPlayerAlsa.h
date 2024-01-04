@@ -20,12 +20,14 @@
 #ifndef LIBTAS_AUDIOPLAYERALSA_H_INCL
 #define LIBTAS_AUDIOPLAYERALSA_H_INCL
 
-#include "AudioContext.h"
-
 #include <alsa/asoundlib.h>
 #include <stdint.h>
+#include <vector>
 
 namespace libtas {
+
+class AudioContext;
+
 /* Class in charge of sending the mixed samples to the audio device */
 class AudioPlayerAlsa
 {

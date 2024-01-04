@@ -24,6 +24,7 @@
 #include "logging.h"
 #include "Utils.h"
 #include "GlobalState.h"
+#include "MemArea.h"
 
 #include <fcntl.h>
 #include <unistd.h>

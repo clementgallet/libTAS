@@ -23,6 +23,7 @@
 #include "efx.h"
 
 #include "audio/AudioContext.h"
+#include "audio/AudioBuffer.h"
 #include "logging.h"
 #include "global.h"
 

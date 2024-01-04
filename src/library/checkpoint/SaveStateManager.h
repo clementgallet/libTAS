@@ -20,10 +20,6 @@
 #ifndef LIBTAS_SAVESTATE_MANAGER_H
 #define LIBTAS_SAVESTATE_MANAGER_H
 
-#include "ThreadInfo.h"
-
-#include "TimeHolder.h"
-
 #include <set>
 #include <map>
 #include <vector>
@@ -34,6 +30,9 @@
 #include <semaphore.h>
 
 namespace libtas {
+
+struct ThreadInfo;
+
 namespace SaveStateManager {
 
 /* List of error codes */
@@ -45,6 +44,7 @@ enum Error {
     ESTATE_NOTSAMETHREADS = -4, // Thread list has changed
     ESTATE_NOTCOMPLETE = -5, // State still being saved
 };
+
 
 void init();
 

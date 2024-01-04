@@ -41,11 +41,12 @@ class TimeHolder : public timespec
             this->tv_nsec = th.tv_nsec;
         }
 
-        bool operator!() const {
+        bool operator!() const
+        {
             return this->tv_sec == 0 && this->tv_nsec == 0;
         }
 
-        bool operator!=(const timespec& th)
+        bool operator!=(const timespec& th) const
         {
             return ((this->tv_sec != th.tv_sec) || (this->tv_nsec != th.tv_nsec));
         }
@@ -57,7 +58,7 @@ class TimeHolder : public timespec
             return *this;
         }
 
-        TimeHolder operator+(const timespec& th)
+        TimeHolder operator+(const timespec& th) 
         {
             TimeHolder sum;
             sum.tv_sec = this->tv_sec + th.tv_sec;
@@ -82,7 +83,7 @@ class TimeHolder : public timespec
             return *this;
         }
 
-        TimeHolder operator-(const timespec& th)
+        TimeHolder operator-(const timespec& th) const
         {
             TimeHolder diff;
             diff.tv_sec = this->tv_sec - th.tv_sec;
@@ -91,14 +92,15 @@ class TimeHolder : public timespec
             return diff;
         }
 
-        TimeHolder operator*(const int& m)
+        TimeHolder operator*(const int& m) const
         {
             TimeHolder orig = *this;
             TimeHolder mult;
             mult.tv_sec = 0;
             mult.tv_nsec = 0;
 
-            return shiftadd(orig, mult, m);
+            mult.shiftadd(orig, m);
+            return mult;
         }
 
         bool operator>(const timespec& th ) const
@@ -109,7 +111,7 @@ class TimeHolder : public timespec
         /* Use a shift and add algorithm for multiplying a TimeHolder
          * by an integer, so that we should never overflow the tv_nsec value
          */
-        TimeHolder shiftadd(TimeHolder& pow, TimeHolder& mult, int m);
+        void shiftadd(TimeHolder& pow, int m);
 
         /* Bring the tv_nsec value inside the range [0,999999999] */
         void normalize();

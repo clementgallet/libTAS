@@ -19,6 +19,7 @@
 
 #include "AudioSource.h"
 #include "AudioConverter.h"
+#include "AudioBuffer.h"
 #ifdef __unix__
 #include "AudioConverterSwr.h"
 #elif defined(__APPLE__) && defined(__MACH__)

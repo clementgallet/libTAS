@@ -18,6 +18,8 @@
  */
 
 #include "AudioContext.h"
+#include "AudioBuffer.h"
+#include "AudioSource.h"
 #ifdef __linux__
 #include "AudioPlayerAlsa.h"
 #elif defined(__APPLE__) && defined(__MACH__)

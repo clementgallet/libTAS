@@ -18,6 +18,7 @@
  */
 
 #include "DecoderMSADPCM.h"
+#include "BinaryIStream.h"
 
 #include "logging.h"
 

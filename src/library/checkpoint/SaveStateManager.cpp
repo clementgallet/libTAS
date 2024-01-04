@@ -25,6 +25,7 @@
 #include "Checkpoint.h"
 #include "AltStack.h"
 #include "ReservedMemory.h"
+#include "ThreadInfo.h"
 
 #include "general/timewrappers.h" // clock_gettime
 #include "logging.h"

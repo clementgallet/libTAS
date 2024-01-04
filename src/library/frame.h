@@ -20,13 +20,12 @@
 #ifndef LIBTAS_FRAME_H_INCL
 #define LIBTAS_FRAME_H_INCL
 
-#include "renderhud/RenderHUD.h"
-
 #include <functional>
 #include <stdint.h>
 
 namespace libtas {
 
+class RenderHUD;
 extern uint64_t framecount;
 
 /* Called to initiate a frame boundary.

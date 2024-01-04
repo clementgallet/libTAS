@@ -24,11 +24,13 @@
 #ifndef LIBTAS_DECODERMSADPCM_H_INCL
 #define LIBTAS_DECODERMSADPCM_H_INCL
 
-#include "BinaryIStream.h"
-
 #include <vector>
+#include <cstdint>
 
 namespace libtas {
+    
+class BinaryIStream;
+    
 namespace DecoderMSADPCM
 {
     /**

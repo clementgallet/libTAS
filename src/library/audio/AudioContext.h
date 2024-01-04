@@ -20,9 +20,6 @@
 #ifndef LIBTAS_AUDIOCONTEXT_H_INCL
 #define LIBTAS_AUDIOCONTEXT_H_INCL
 
-#include "AudioBuffer.h"
-#include "AudioSource.h"
-
 #include <vector>
 #include <memory>
 #include <list>
@@ -37,6 +34,10 @@ namespace libtas {
  * For now, only one object is created, even if openAL can
  * deal with multiple contexts, or SDL can open multiple devices.
  */
+
+class AudioBuffer;
+class AudioSource;
+
 class AudioContext
 {
     public:
