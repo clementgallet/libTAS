@@ -112,10 +112,8 @@ const std::string& SaveState::getMoviePath() const
 
 int SaveState::save(Context* context, const MovieFile& m)
 {    
-    if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
-        /* Save the movie file */
-        m.copyTo(*movie);
-    }
+    /* Save the movie file */
+    m.copyTo(*movie);
     
     /* Send the savestate index */
     sendMessage(MSGN_SAVESTATE_INDEX);
@@ -167,21 +165,13 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
         if ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&
             (access(movie_path.c_str(), F_OK) == 0)) {
 
-            /* If there is no savestate but a movie file, offer to load
-             * the movie and fast-forward to the savestate movie frame.
-             */
+            /* Load the savestate movie from disk */
+            MovieFile savedmovie(context);
+            int ret = savedmovie.loadSavestateMovie(movie_path);
 
-            if ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&
-                (access(movie_path.c_str(), F_OK) == 0)) {
-
-                /* Load the savestate movie from disk */
-                MovieFile savedmovie(context);
-                int ret = savedmovie.loadSavestateMovie(movie_path);
-
-                /* Checking if our movie is a prefix of the savestate movie */
-                if ((ret == 0) && savedmovie.inputs->isPrefix(m.inputs, context->framecount)) {
-                    return ENOSTATEMOVIEPREFIX;
-                }
+            /* Checking if our movie is a prefix of the savestate movie */
+            if ((ret == 0) && savedmovie.inputs->isPrefix(m.inputs, context->framecount)) {
+                return ENOSTATEMOVIEPREFIX;
             }
         }
 

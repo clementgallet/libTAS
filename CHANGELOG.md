@@ -25,6 +25,7 @@
 * Disable backtrack savestate when encoding
 * Fix hookpatching a function that starts with CALL instruction
 * Update hookpatch method
+* Fix no-recording backup movie not stored in savestates
 
 ## [1.4.5] - 2023-10-22
 ### Added

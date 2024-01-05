@@ -311,7 +311,7 @@ void Config::load(const std::string& gamepath) {
     sc.nb_controllers = settings.value("nb_controllers", sc.nb_controllers).toInt();
     sc.screen_width = settings.value("screen_width", sc.screen_width).toInt();
     sc.screen_height = settings.value("screen_height", sc.screen_height).toInt();
-    sc.osd = settings.value("osd", sc.osd).toInt();
+    sc.osd = settings.value("osd", sc.osd).toBool();
     sc.osd_encode = settings.value("osd_encode", sc.osd_encode).toBool();
     sc.prevent_savefiles = settings.value("prevent_savefiles", sc.prevent_savefiles).toBool();
     sc.recycle_threads = settings.value("recycle_threads", sc.recycle_threads).toBool();
