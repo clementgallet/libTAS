@@ -70,16 +70,6 @@ void SaveState::buildPaths(Context* context)
 
 void SaveState::buildMessages(bool branch)
 {
-    if (saving_msg.empty()) {
-        if (is_backtrack) {
-            saving_msg = "Saving backtrack state";
-        }
-        else {
-            saving_msg = "Saving state ";
-            saving_msg += std::to_string(id);
-        }
-    }
-
     if (no_state_msg.empty()) {
         no_state_msg = "No savestate in slot ";
         no_state_msg += std::to_string(id);
@@ -130,11 +120,6 @@ int SaveState::save(Context* context, const MovieFile& m)
         opm.close();
         std::ofstream op(pages_path);
         op.close();
-    }
-
-    if (context->config.sc.osd) {
-        sendMessage(MSGN_OSD_MSG);
-        sendString(saving_msg);
     }
 
     sendMessage(MSGN_SAVESTATE);

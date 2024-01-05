@@ -100,9 +100,6 @@ private:
     /* Build all savestate paths */
     void buildPaths(Context* context);
 
-    /* Savestate saving message */
-    std::string saving_msg;
-    
     /* Savestate saved message */
     std::string saved_msg;
 

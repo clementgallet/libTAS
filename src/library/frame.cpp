@@ -584,20 +584,34 @@ static void pushQuitEvent(void)
 #endif
 }
 
-static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllInputs& preview_ai)
+static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllInputs& preview_ai, bool noidle)
 {
     if (!Global::skipping_draw && draw) {
         
         /* Idle to save CPU/GPU process */
-        if (hud.doRender()) {
+        int redraw_count = 0;
+        /* Fully displaying new elements take at least 2 redraws */
+        if (noidle)
+            redraw_count = 2;
+        /* Decide here if we redraw or idle */
+        else if (hud.doRender()) redraw_count = 1;
+        
+        for (int r = 0; r < redraw_count-1; r++) {
+            /* We don't need to draw everything, just the ImGui to update for
+             * new elements */
+            hud.newFrame();
+            hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
+            hud.endFrame();
+        }
+        if (redraw_count > 0) {
+            /* Now the real redraw */
             hud.newFrame();
             ScreenCapture::copySurfaceToScreen();
-            
             hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
             hud.render();
             
             GlobalNoLog gnl;
-            NATIVECALL(draw());            
+            NATIVECALL(draw());
         }
     }
 }
@@ -704,7 +718,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 break;
 
             case MSGN_EXPOSE:
-                screen_redraw(draw, hud, preview_ai);
+                screen_redraw(draw, hud, preview_ai, false);
                 break;
 
             case MSGN_PREVIEW_INPUTS:
@@ -724,6 +738,15 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 break;
 
             case MSGN_SAVESTATE:
+                {
+                    std::string saving_msg = "Saving state ";
+                    saving_msg += std::to_string(slot);
+                    MessageWindow::insert(saving_msg.c_str());
+                    // Force redraw because screen refresh won't happen during savestate
+                    screen_redraw(draw, hud, preview_ai, true);
+                    screen_redraw(draw, hud, preview_ai, true);
+                }
+
                 status = SaveStateManager::checkpoint(slot);
 
                 if (status == 0) {
@@ -759,7 +782,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                     sendFrameCountTime();
 
                     /* Screen should have changed after loading */
-                    screen_redraw(draw, hud, preview_ai);
+                    screen_redraw(draw, hud, preview_ai, false);
                 }
                 else if (status == 0) {
                     /* Tell the program that the saving succeeded */
@@ -783,6 +806,9 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 break;
 
             case MSGN_LOADSTATE:
+                // Force redraw because screen refresh won't happen during state loading
+                screen_redraw(draw, hud, preview_ai, true);
+
                 status = SaveStateManager::restore(slot);
 
                 SaveStateManager::printError(status);
