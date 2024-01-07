@@ -66,7 +66,7 @@ void MessageWindow::draw()
                 iter = messages.erase(iter);
             }
             else {
-                ImGui::Text(iter->first.c_str());
+                ImGui::TextUnformatted(iter->first.c_str());
                 iter++;
             }
         }

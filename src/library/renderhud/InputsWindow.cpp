@@ -40,10 +40,10 @@ void InputsWindow::draw(const AllInputs& ai, const AllInputs& preview_ai, bool* 
         if (ImGui::Begin("Inputs", nullptr, window_flags))
         {
             if (!preview_inputs_str.empty()) {
-                ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), preview_inputs_str.c_str());
+                ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "%s", preview_inputs_str.c_str());
             }
             if (!inputs_str.empty()) {
-                ImGui::Text(inputs_str.c_str());
+                ImGui::TextUnformatted(inputs_str.c_str());
             }
         }
         ImGui::End();

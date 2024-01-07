@@ -52,7 +52,7 @@ void WatchesWindow::draw(bool* p_open = nullptr)
 
     if (ImGui::Begin("RAM Watches", p_open, window_flags)) {
         for (auto iter = watches.begin(); iter != watches.end(); iter++) {
-            ImGui::Text(iter->c_str());
+            ImGui::TextUnformatted(iter->c_str());
         }
     }
     ImGui::End();
