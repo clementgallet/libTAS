@@ -86,10 +86,10 @@ class AudioContext
         void deleteBuffer(int id);
 
         /* Returns if a buffer id correspond to an existing buffer */
-        bool isBuffer(int id);
+        bool isBuffer(int id) const;
 
         /* Return the buffer of requested id, or nullptr if not exists */
-        std::shared_ptr<AudioBuffer> getBuffer(int id);
+        std::shared_ptr<AudioBuffer> getBuffer(int id) const;
 
         /* Create a new source object and return an id of the source or -1 if it failed */
         int createSource(void);
@@ -98,10 +98,10 @@ class AudioContext
         void deleteSource(int id);
 
         /* Returns if a source id correspond to an existing source */
-        bool isSource(int id);
+        bool isSource(int id) const;
 
         /* Return the source of requested id, or nullptr if not exists */
-        std::shared_ptr<AudioSource> getSource(int id);
+        std::shared_ptr<AudioSource> getSource(int id) const;
 
         /* Mix all source that are playing */
         void mixAllSources(struct timespec ticks);
@@ -112,6 +112,10 @@ class AudioContext
 
         /* Game thread that fills audio buffer */
         pthread_t audio_thread;
+
+        /* Get the source and buffer lists for debug */
+        const std::list<std::shared_ptr<AudioBuffer>> getBufferList() const {return buffers;}
+        const std::list<std::shared_ptr<AudioSource>> getSourceList() const {return sources;}
 
     private:
         std::list<std::shared_ptr<AudioBuffer>> buffers;

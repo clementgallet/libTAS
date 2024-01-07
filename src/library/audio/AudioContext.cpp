@@ -130,7 +130,7 @@ void AudioContext::deleteBuffer(int id)
         });
 }
 
-bool AudioContext::isBuffer(int id)
+bool AudioContext::isBuffer(int id) const
 {
     for (auto const& buffer : buffers) {
         if (buffer->id == id)
@@ -140,7 +140,7 @@ bool AudioContext::isBuffer(int id)
     return false;
 }
 
-std::shared_ptr<AudioBuffer> AudioContext::getBuffer(int id)
+std::shared_ptr<AudioBuffer> AudioContext::getBuffer(int id) const
 {
     for (auto& buffer : buffers) {
         if (buffer->id == id)
@@ -186,7 +186,7 @@ void AudioContext::deleteSource(int id)
         });
 }
 
-bool AudioContext::isSource(int id)
+bool AudioContext::isSource(int id) const
 {
     for (auto& source : sources) {
         if (source->id == id)
@@ -196,7 +196,7 @@ bool AudioContext::isSource(int id)
     return false;
 }
 
-std::shared_ptr<AudioSource> AudioContext::getSource(int id)
+std::shared_ptr<AudioSource> AudioContext::getSource(int id) const
 {
     for (auto& source : sources) {
         if (source->id == id)

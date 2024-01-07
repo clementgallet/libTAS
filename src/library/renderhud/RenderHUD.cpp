@@ -25,6 +25,7 @@
 #include "LuaDraw.h"
 #include "MessageWindow.h"
 #include "WatchesWindow.h"
+#include "AudioDebug.h"
 
 #include "GlobalState.h"
 #include "global.h" // Global::shared_config
@@ -93,6 +94,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
     static bool show_lua = true;
     static bool show_crosshair = false;
     static bool show_log = false;
+    static bool show_audio = false;
     static bool show_demo = false;
     
     if (Global::shared_config.osd) {
@@ -108,6 +110,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
             }
             if (ImGui::BeginMenu("Debug")) {
                 ImGui::MenuItem("Log", nullptr, &show_log);
+                ImGui::MenuItem("Audio", nullptr, &show_audio);
                 ImGui::MenuItem("Demo", nullptr, &show_demo);
                 ImGui::EndMenu();
             }
@@ -141,6 +144,9 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         
     if (show_log)
         LogWindow::draw(&show_log);
+
+    if (show_audio)
+        AudioDebug::draw(&show_audio);
 
     if (show_demo)
         ImGui::ShowDemoWindow(&show_demo);
