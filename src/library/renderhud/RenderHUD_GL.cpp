@@ -53,9 +53,43 @@ void RenderHUD_GL::newFrame()
     RenderHUD::newFrame();
 }
 
+void RenderHUD_GL::endFrame()
+{
+    if (!ImGui::GetCurrentContext())
+        return;
+
+    RenderHUD::endFrame();
+}
+
 void RenderHUD_GL::render()
 {
     if (ImGui::GetCurrentContext()) {
+
+        if (ScreenCapture::isInited()) {
+            ScreenCapture::clearScreen();
+
+            /* Create the window that will hold the game texture */
+            int w = 0, h = 0;
+            ScreenCapture::getDimensions(w, h);
+
+            /* Remove padding so that the texture is aligned with the window */
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+            ImGui::SetNextWindowSize(ImVec2(w, h));
+            if (ImGui::Begin("Game window", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize)) {
+                ImVec2 pos = ImGui::GetCursorScreenPos();
+                
+                ImGui::GetWindowDrawList()->AddImage(
+                    reinterpret_cast<void*>(ScreenCapture::screenTexture()), 
+                    ImVec2(pos.x, pos.y), 
+                    ImVec2(pos.x + w, pos.y + h), 
+                    ImVec2(0, 1), 
+                    ImVec2(1, 0)
+                );                
+            }
+            ImGui::End();
+            ImGui::PopStyleVar(1);
+        }
+        
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());        
     }

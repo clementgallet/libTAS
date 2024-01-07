@@ -167,4 +167,25 @@ void ScreenCapture::restoreScreenState()
     }
 }
 
+void ScreenCapture::clearScreen()
+{
+    if (!inited)
+        return;
+
+    if (impl) {
+        return impl->clearScreen();
+    }
+}
+
+uint32_t ScreenCapture::screenTexture()
+{
+    if (!inited)
+        return 0;
+
+    if (impl) {
+        return impl->screenTexture();
+    }
+    return 0;
+}
+
 }

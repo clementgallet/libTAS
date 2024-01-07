@@ -12,6 +12,7 @@
 * [ImGui] Show redraw fps on main menu
 * [ImGui] Idling when no activity
 * [ImGui] New audio debug window
+* [ImGui] Show game inside a window (OpenGL)
 
 ### Changed
 

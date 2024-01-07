@@ -36,25 +36,19 @@
 
 #include <string.h>
 
-#define STORE_SYMBOL(str) \
-    if (!strcmp(reinterpret_cast<const char*>(symbol), #str)) { \
-        orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
-        return reinterpret_cast<void*>(orig::str); \
+#define STORE_RETURN_SYMBOL_DETAILED(FUNC_STR, ORIG_FUNC, NEW_FUNC) \
+    if (!strcmp(reinterpret_cast<const char*>(symbol), FUNC_STR)) { \
+        ORIG_FUNC = reinterpret_cast<decltype(ORIG_FUNC)>(real_pointer); \
+        if (NEW_FUNC) { \
+            debuglogstdio(LCF_OGL,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(NEW_FUNC), real_pointer); \
+            return reinterpret_cast<void*>(NEW_FUNC); \
+        } \
+        return reinterpret_cast<void*>(ORIG_FUNC); \
     }
 
-#define STORE_RETURN_SYMBOL(str) \
-    if (!strcmp(reinterpret_cast<const char*>(symbol), #str)) { \
-        orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
-        debuglogstdio(LCF_OGL,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(libtas::str), real_pointer); \
-        return reinterpret_cast<void*>(libtas::str); \
-    }
-
-#define STORE_RETURN_SYMBOL_CUSTOM(str) \
-    if (!strcmp(reinterpret_cast<const char*>(symbol), #str)) { \
-        orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
-        debuglogstdio(LCF_OGL,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(my##str), real_pointer); \
-        return reinterpret_cast<void*>(my##str); \
-    }
+#define STORE_SYMBOL(FUNC) STORE_RETURN_SYMBOL_DETAILED(#FUNC, orig::FUNC, NULL)
+#define STORE_RETURN_SYMBOL(FUNC) STORE_RETURN_SYMBOL_DETAILED(#FUNC, orig::FUNC, libtas::FUNC)
+#define STORE_RETURN_SYMBOL_CUSTOM(FUNC) STORE_RETURN_SYMBOL_DETAILED(#FUNC, orig::FUNC, my##FUNC)
 
 namespace libtas {
 
@@ -230,6 +224,20 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
     STORE_SYMBOL(glDeleteRenderbuffers)
     STORE_SYMBOL(glRenderbufferStorage)
     STORE_SYMBOL(glFramebufferRenderbuffer)
+
+    /* Old extension that became core. I load into the same function pointers
+     * for easier usage */
+    STORE_RETURN_SYMBOL_DETAILED("glBindFramebufferEXT", orig::glBindFramebuffer, NULL)
+    STORE_RETURN_SYMBOL_DETAILED("glGenFramebuffersEXT", orig::glGenFramebuffers, NULL)
+    STORE_RETURN_SYMBOL_DETAILED("glFramebufferTexture2DEXT", orig::glFramebufferTexture2D, NULL)
+    STORE_RETURN_SYMBOL_DETAILED("glGenRenderbuffersEXT", orig::glGenRenderbuffers, NULL)
+    STORE_RETURN_SYMBOL_DETAILED("glBindRenderbufferEXT", orig::glBindRenderbuffer, NULL)
+    STORE_RETURN_SYMBOL_DETAILED("glRenderbufferStorageEXT", orig::glRenderbufferStorage, NULL)
+    STORE_RETURN_SYMBOL_DETAILED("glFramebufferRenderbufferEXT", orig::glFramebufferRenderbuffer, NULL)
+    STORE_RETURN_SYMBOL_DETAILED("glDeleteRenderbuffersEXT", orig::glDeleteRenderbuffers, NULL)
+    STORE_RETURN_SYMBOL_DETAILED("glDeleteFramebuffersEXT", orig::glDeleteFramebuffers, NULL)
+    STORE_RETURN_SYMBOL_DETAILED("glBlitFramebufferEXT", orig::glBlitFramebuffer, myglBlitFramebuffer)
+
     STORE_SYMBOL(glDisable)
     STORE_SYMBOL(glIsEnabled)
     STORE_SYMBOL(glGetIntegerv)

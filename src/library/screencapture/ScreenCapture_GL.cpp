@@ -33,7 +33,14 @@
 #include <OpenGL/gl3ext.h>
 #endif
 
-
+#define GL_CALL(FUNC, ARGS) \
+do { \
+    LINK_NAMESPACE(FUNC, "GL"); \
+    orig::FUNC ARGS; \
+    GLenum error; \
+    if ((error = orig::glGetError()) != GL_NO_ERROR) \
+        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, #FUNC " failed with error %d", error); \
+} while (0) \
 
 namespace libtas {
 
@@ -54,6 +61,13 @@ DECLARE_ORIG_POINTER(glIsEnabled)
 DECLARE_ORIG_POINTER(glGetIntegerv)
 DECLARE_ORIG_POINTER(glGetError)
 DECLARE_ORIG_POINTER(glPixelStorei)
+DECLARE_ORIG_POINTER(glFramebufferTexture2D)
+DECLARE_ORIG_POINTER(glTexImage2D)
+DECLARE_ORIG_POINTER(glTexParameteri)
+DECLARE_ORIG_POINTER(glBindTexture)
+DECLARE_ORIG_POINTER(glGenTextures)
+DECLARE_ORIG_POINTER(glDeleteTextures)
+DECLARE_ORIG_POINTER(glClear)
 
 int ScreenCapture_GL::init()
 {
@@ -67,62 +81,38 @@ int ScreenCapture_GL::init()
 
 void ScreenCapture_GL::initScreenSurface()
 {
-    /* Generate FBO and RBO */
-    LINK_NAMESPACE(glGenFramebuffers, "GL");
-    LINK_NAMESPACE(glBindFramebuffer, "GL");
-    LINK_NAMESPACE(glGenRenderbuffers, "GL");
-    LINK_NAMESPACE(glBindRenderbuffer, "GL");
-    LINK_NAMESPACE(glRenderbufferStorage, "GL");
-    LINK_NAMESPACE(glFramebufferRenderbuffer, "GL");
-    LINK_NAMESPACE(glGetIntegerv, "GL");
-    LINK_NAMESPACE(glGetError, "GL");
-
     /* Reset error flag */
-    GLenum error;
+    LINK_NAMESPACE(glGetError, "GL");
     orig::glGetError();
 
+    /* Generate FBO and RBO */
     GLint draw_buffer, read_buffer;
-    orig::glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glGetIntegerv failed with error %d", error);
-
-    orig::glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glGetIntegerv failed with error %d", error);
+    GL_CALL(glGetIntegerv, (GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer));
+    GL_CALL(glGetIntegerv, (GL_READ_FRAMEBUFFER_BINDING, &read_buffer));
 
     if (screenFBO == 0) {
-        orig::glGenFramebuffers(1, &screenFBO);
-        if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glGenFramebuffers failed with error %d", error);
+        GL_CALL(glGenFramebuffers, (1, &screenFBO));
     }
-    orig::glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
+
+    GL_CALL(glBindFramebuffer, (GL_FRAMEBUFFER, screenFBO));
+    
+    GL_CALL(glGenTextures, (1, &screenTex));
+    GL_CALL(glBindTexture, (GL_TEXTURE_2D, screenTex));
+    GL_CALL(glTexImage2D, (GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL));
+    GL_CALL(glTexParameteri, (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    GL_CALL(glTexParameteri, (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    GL_CALL(glFramebufferTexture2D, (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTex, 0));
 
     if (screenRBO == 0) {
-        orig::glGenRenderbuffers(1, &screenRBO);
-        if ((error = orig::glGetError()) != GL_NO_ERROR)
-            debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glGenRenderbuffers failed with error %d", error);
+        GL_CALL(glGenRenderbuffers, (1, &screenRBO));
     }
-    orig::glBindRenderbuffer(GL_RENDERBUFFER, screenRBO);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindRenderbuffer failed with error %d", error);
 
-    orig::glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, width, height);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glRenderbufferStorage failed with error %d", error);
+    GL_CALL(glBindRenderbuffer, (GL_RENDERBUFFER, screenRBO));
+    GL_CALL(glRenderbufferStorage, (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height));
+    GL_CALL(glFramebufferRenderbuffer, (GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, screenRBO));
 
-    orig::glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, screenRBO);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glFramebufferRenderbuffer failed with error %d", error);
-
-    orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw_buffer);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
-
-    orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
+    GL_CALL(glBindFramebuffer, (GL_DRAW_FRAMEBUFFER, draw_buffer));        
+    GL_CALL(glBindFramebuffer, (GL_READ_FRAMEBUFFER, read_buffer));
 
     gllinepixels.resize(pitch);
 }
@@ -140,6 +130,16 @@ void ScreenCapture_GL::destroyScreenSurface()
         orig::glDeleteRenderbuffers(1, &screenRBO);
         screenRBO = 0;
     }
+    if (screenTex != 0) {
+        LINK_NAMESPACE(glDeleteTextures, "GL");
+        orig::glDeleteTextures(1, &screenTex);
+        screenTex = 0;
+    }
+}
+
+uint32_t ScreenCapture_GL::screenTexture()
+{
+    return screenTex;
 }
 
 const char* ScreenCapture_GL::getPixelFormat()
@@ -151,48 +151,32 @@ int ScreenCapture_GL::copyScreenToSurface()
 {
     GlobalNative gn;
 
-    LINK_NAMESPACE(glReadPixels, "GL");
-    LINK_NAMESPACE(glBindFramebuffer, "GL");
-    LINK_NAMESPACE(glBlitFramebuffer, "GL");
     LINK_NAMESPACE(glEnable, "GL");
     LINK_NAMESPACE(glDisable, "GL");
     LINK_NAMESPACE(glIsEnabled, "GL");
     LINK_NAMESPACE(glGetIntegerv, "GL");
-
-    GLenum error;
+    LINK_NAMESPACE(glClear, "GL");
 
     /* Disable sRGB if needed */
     GLboolean isFramebufferSrgb = orig::glIsEnabled(GL_FRAMEBUFFER_SRGB);
     if (isFramebufferSrgb)
         orig::glDisable(GL_FRAMEBUFFER_SRGB);
-
+    
     /* Copy the original draw/read framebuffers */
     GLint draw_buffer, read_buffer;
     orig::glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer);
     orig::glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
-
+    
     orig::glGetError();
-    orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
-
-    orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, screenFBO);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
-
-    orig::glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBlitFramebuffer failed with error %d", error);
-
+    
+    GL_CALL(glBindFramebuffer, (GL_READ_FRAMEBUFFER, 0));
+    GL_CALL(glBindFramebuffer, (GL_DRAW_FRAMEBUFFER, screenFBO));
+    GL_CALL(glBlitFramebuffer, (0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST));
+    
     /* Restore the original draw/read framebuffers */
-    orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw_buffer);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
-
-    orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
-
+    GL_CALL(glBindFramebuffer, (GL_DRAW_FRAMEBUFFER, draw_buffer));
+    GL_CALL(glBindFramebuffer, (GL_READ_FRAMEBUFFER, read_buffer));
+    
     if (isFramebufferSrgb)
         orig::glEnable(GL_FRAMEBUFFER_SRGB);
 
@@ -210,17 +194,12 @@ int ScreenCapture_GL::getPixelsFromSurface(uint8_t **pixels, bool draw)
 
     GlobalNative gn;
 
-    LINK_NAMESPACE(glReadPixels, "GL");
     LINK_NAMESPACE(glBindBuffer, "GL");
-    LINK_NAMESPACE(glBindFramebuffer, "GL");
-    LINK_NAMESPACE(glBlitFramebuffer, "GL");
     LINK_NAMESPACE(glEnable, "GL");
     LINK_NAMESPACE(glDisable, "GL");
     LINK_NAMESPACE(glIsEnabled, "GL");
     LINK_NAMESPACE(glGetIntegerv, "GL");
     LINK_NAMESPACE(glPixelStorei, "GL");
-
-    GLenum error;
 
     /* Disable sRGB if needed */
     GLboolean isFramebufferSrgb = orig::glIsEnabled(GL_FRAMEBUFFER_SRGB);
@@ -241,9 +220,7 @@ int ScreenCapture_GL::getPixelsFromSurface(uint8_t **pixels, bool draw)
 
     orig::glGetError();
 
-    orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
+    GL_CALL(glBindFramebuffer, (GL_READ_FRAMEBUFFER, screenFBO));
 
     if (pixel_buffer != 0)
         orig::glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
@@ -251,9 +228,7 @@ int ScreenCapture_GL::getPixelsFromSurface(uint8_t **pixels, bool draw)
     if (pack_row != 0)
         orig::glPixelStorei(GL_PACK_ROW_LENGTH, 0);
 
-    orig::glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, winpixels.data());
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glReadPixels failed with error %d", error);
+    GL_CALL(glReadPixels, (0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, winpixels.data()));
 
     if (pack_row != 0)
         orig::glPixelStorei(GL_PACK_ROW_LENGTH, pack_row);
@@ -261,9 +236,7 @@ int ScreenCapture_GL::getPixelsFromSurface(uint8_t **pixels, bool draw)
     if (pixel_buffer != 0)
         orig::glBindBuffer(GL_PIXEL_PACK_BUFFER, pixel_buffer);
 
-    orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
+    GL_CALL(glBindFramebuffer, (GL_READ_FRAMEBUFFER, read_buffer));
 
     /*
      * Flip image horizontally in place
@@ -288,50 +261,39 @@ int ScreenCapture_GL::copySurfaceToScreen()
 {
     GlobalNative gn;
 
-    LINK_NAMESPACE(glBindFramebuffer, "GL");
-    LINK_NAMESPACE(glBlitFramebuffer, "GL");
-    LINK_NAMESPACE(glEnable, "GL");
-    LINK_NAMESPACE(glDisable, "GL");
-    LINK_NAMESPACE(glIsEnabled, "GL");
-    LINK_NAMESPACE(glGetIntegerv, "GL");
-
-    GLenum error;
-
-    GLboolean isFramebufferSrgb = orig::glIsEnabled(GL_FRAMEBUFFER_SRGB);
-    if (isFramebufferSrgb)
-        orig::glDisable(GL_FRAMEBUFFER_SRGB);
-
-    /* Copy the original draw/read framebuffers */
-    GLint draw_buffer, read_buffer;
-    orig::glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer);
-    orig::glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
-
-    orig::glGetError();
-    orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
-
-    orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
-
-    orig::glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBlitFramebuffer failed with error %d", error);
-
-    /* Restore the original draw/read framebuffers */
-    orig::glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw_buffer);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
-
-    orig::glBindFramebuffer(GL_READ_FRAMEBUFFER, read_buffer);
-    if ((error = orig::glGetError()) != GL_NO_ERROR)
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, "glBindFramebuffer failed with error %d", error);
-
-    if (isFramebufferSrgb)
-        orig::glEnable(GL_FRAMEBUFFER_SRGB);
+    // LINK_NAMESPACE(glEnable, "GL");
+    // LINK_NAMESPACE(glDisable, "GL");
+    // LINK_NAMESPACE(glIsEnabled, "GL");
+    // LINK_NAMESPACE(glGetIntegerv, "GL");
+    // 
+    // GLboolean isFramebufferSrgb = orig::glIsEnabled(GL_FRAMEBUFFER_SRGB);
+    // if (isFramebufferSrgb)
+    //     orig::glDisable(GL_FRAMEBUFFER_SRGB);
+    // 
+    // /* Copy the original draw/read framebuffers */
+    // GLint draw_buffer, read_buffer;
+    // orig::glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer);
+    // orig::glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
+    // 
+    // orig::glGetError();
+    // GL_CALL(glBindFramebuffer, (GL_READ_FRAMEBUFFER, screenFBO));
+    // GL_CALL(glBindFramebuffer, (GL_DRAW_FRAMEBUFFER, 0));
+    // GL_CALL(glBlitFramebuffer, (0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST));
+    // 
+    // /* Restore the original draw/read framebuffers */
+    // GL_CALL(glBindFramebuffer, (GL_DRAW_FRAMEBUFFER, draw_buffer));
+    // GL_CALL(glBindFramebuffer, (GL_READ_FRAMEBUFFER, read_buffer));
+    // 
+    // if (isFramebufferSrgb)
+    //     orig::glEnable(GL_FRAMEBUFFER_SRGB);
 
     return 0;
+}
+
+void ScreenCapture_GL::clearScreen()
+{
+    LINK_NAMESPACE(glClear, "GL");
+    orig::glClear(GL_COLOR_BUFFER_BIT);
 }
 
 }

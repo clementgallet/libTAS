@@ -74,6 +74,11 @@ public:
      * It is equivalent to `copySurfaceToScreen()` in most cases. */
     virtual void restoreScreenState() {}
 
+    virtual void clearScreen() {}
+
+    /* Return an opaque identifier of the screen texture that was rendered to */
+    virtual uint32_t screenTexture() {return 0;}
+
 protected:
     
     /* Stored pixel array for use with the video encoder */

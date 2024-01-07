@@ -44,6 +44,8 @@ class RenderHUD_GL : public RenderHUD_Base_MacOS
 
         void newFrame();
 
+        void endFrame();
+
         void render();
 
     private:        

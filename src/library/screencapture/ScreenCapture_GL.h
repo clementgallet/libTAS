@@ -54,6 +54,10 @@ public:
     /* Copy back the stored screen buffer/surface/texture into the screen. */
     int copySurfaceToScreen();
 
+    void clearScreen();
+
+    uint32_t screenTexture();
+
 private:    
     /* Single line of pixels to swap GL array that has different reference point */
     std::vector<uint8_t> gllinepixels;
@@ -63,7 +67,9 @@ private:
 
     /* OpenGL render buffer */
     uint32_t screenRBO = 0;
-
+    
+    /* OpenGL screen texture */
+    uint32_t screenTex = 0;
 };
 }
 
