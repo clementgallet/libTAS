@@ -431,6 +431,11 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         if (draw) {
             AllInputs preview_ai;
             preview_ai.buildAndClear();
+            
+            /* If we draw the game into an ImGui window, we need to clear the
+             * background here first */
+            if (hud.renderGameWindow())
+                ScreenCapture::clearScreen();
             hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
             hud.render();            
         }
@@ -606,7 +611,12 @@ static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllI
         if (redraw_count > 0) {
             /* Now the real redraw */
             hud.newFrame();
-            ScreenCapture::copySurfaceToScreen();
+
+            /* Render the game onto the full window, or inside an ImGui window */
+            if (hud.renderGameWindow())
+                ScreenCapture::clearScreen();
+            else
+                ScreenCapture::copySurfaceToScreen();
             hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
             hud.render();
             

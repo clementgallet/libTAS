@@ -74,10 +74,11 @@ public:
      * It is equivalent to `copySurfaceToScreen()` in most cases. */
     static void restoreScreenState();
 
-    static void clearScreen();
-
     /* Return an opaque identifier of the screen texture that was rendered to */
-    static uint32_t screenTexture();
+    static uint64_t screenTexture();
+
+    /* Clear the screen */
+    static void clearScreen();
 
 protected:
     

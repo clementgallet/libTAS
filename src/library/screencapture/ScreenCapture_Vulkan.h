@@ -56,10 +56,17 @@ public:
     /* Copy back the stored screen buffer/surface/texture into the screen. */
     int copySurfaceToScreen();
 
+    void clearScreen();
+
+    uint64_t screenTexture();
+
 private:
         
     /* Vulkan screen image */
     VkImage vkScreenImage = VK_NULL_HANDLE;
+    VkImageView vkScreenImageView = VK_NULL_HANDLE;
+    VkSampler vkScreenSampler = VK_NULL_HANDLE;
+    VkDescriptorSet vkScreenDescriptorSet = VK_NULL_HANDLE;
     VkDeviceMemory vkScreenImageMemory = VK_NULL_HANDLE;
 }; 
 }

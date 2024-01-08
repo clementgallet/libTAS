@@ -66,6 +66,16 @@ class RenderHUD
 
         /* Indicate if we need to render or idle */
         bool doRender();
+        
+        /* Does the backend supports rendering the game inside an ImGui window? */
+        virtual bool supportsGameWindow() {return false;}
+
+        /* Returns if the game is rendered inside an ImGui window */
+        bool renderGameWindow();
+        
+        /* Where is the origin point? */
+        virtual bool invertedOrigin() {return false;}
+        
 
     protected:
         bool init();
@@ -73,6 +83,9 @@ class RenderHUD
     private:
         /* How many future draws we need before start idling */
         static int framesBeforeIdle;
+        
+        /* True if we render the game inside an ImGui window */
+        bool show_game_window = true;
 };
 }
 

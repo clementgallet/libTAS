@@ -13,6 +13,7 @@
 * [ImGui] Idling when no activity
 * [ImGui] New audio debug window
 * [ImGui] Show game inside a window (OpenGL)
+* [ImGui] Show game inside a window (Vulkan)
 
 ### Changed
 

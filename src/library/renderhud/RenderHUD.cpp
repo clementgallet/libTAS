@@ -32,6 +32,7 @@
 #include "xlib/xdisplay.h" // x11::gameDisplays
 #include "xlib/xwindows.h" // x11::gameXWindows
 #include "FPSMonitor.h"
+#include "screencapture/ScreenCapture.h"
 #include "general/timewrappers.h" // clock_gettime
 #include "TimeHolder.h"
 #include "../external/imgui/imgui.h"
@@ -87,6 +88,31 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         return;
     }
 
+    /* Show game window if backend supports it */
+    /* Must be placed **before** offering the option to enable/disable it */
+    if (renderGameWindow() && ScreenCapture::isInited()) {
+        /* Create the window that will hold the game texture */
+        int w = 0, h = 0;
+        ScreenCapture::getDimensions(w, h);
+
+        /* Remove padding so that the texture is aligned with the window */
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::SetNextWindowSize(ImVec2(w, h));
+        if (ImGui::Begin("Game window", &show_game_window, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize)) {
+            ImVec2 pos = ImGui::GetCursorScreenPos();
+            
+            ImGui::GetWindowDrawList()->AddImage(
+                reinterpret_cast<void*>(ScreenCapture::screenTexture()), 
+                ImVec2(pos.x, pos.y), 
+                ImVec2(pos.x + w, pos.y + h), 
+                ImVec2(0, invertedOrigin()?1:0), 
+                ImVec2(1, invertedOrigin()?0:1)
+            );                
+        }
+        ImGui::End();
+        ImGui::PopStyleVar(1);
+    }
+
     static bool show_framecount = true;
     static bool show_inputs = true;
     static bool show_messages = true;
@@ -100,6 +126,8 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
     if (Global::shared_config.osd) {
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("Display")) {
+                ImGui::MenuItem("Detach game window", nullptr, &show_game_window, supportsGameWindow());
+                ImGui::Separator();
                 ImGui::MenuItem("Frame", nullptr, &show_framecount);
                 ImGui::MenuItem("Inputs", nullptr, &show_inputs);
                 ImGui::MenuItem("Messages", nullptr, &show_messages);
@@ -183,6 +211,15 @@ bool RenderHUD::doRender()
         return true;
     }
     return false;
+}
+
+/* Returns if the game is rendered inside an ImGui window */
+bool RenderHUD::renderGameWindow()
+{
+    if (!supportsGameWindow())
+        return false;
+        
+    return show_game_window;    
 }
 
 }

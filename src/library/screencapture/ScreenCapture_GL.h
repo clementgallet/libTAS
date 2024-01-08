@@ -56,7 +56,7 @@ public:
 
     void clearScreen();
 
-    uint32_t screenTexture();
+    uint64_t screenTexture();
 
 private:    
     /* Single line of pixels to swap GL array that has different reference point */

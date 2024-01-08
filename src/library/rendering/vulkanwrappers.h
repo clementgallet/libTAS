@@ -34,6 +34,7 @@ struct Vulkan_Frame
 {
     VkCommandPool       commandPool;
     VkCommandBuffer     screenCommandBuffer;
+    VkCommandBuffer     clearCommandBuffer;
     VkCommandBuffer     osdCommandBuffer;
     VkFence             fence;
     VkImage             backbuffer;
@@ -45,6 +46,7 @@ struct Vulkan_FrameSemaphores
 {
     VkSemaphore         imageAcquiredSemaphore;
     VkSemaphore         screenCompleteSemaphore;
+    VkSemaphore         clearCompleteSemaphore;
     VkSemaphore         osdCompleteSemaphore;
 };
 

@@ -48,6 +48,11 @@ class RenderHUD_GL : public RenderHUD_Base_MacOS
 
         void render();
 
+        /* Does the backend supports rendering the game inside an ImGui window? */
+        bool supportsGameWindow() {return true;}
+
+        bool invertedOrigin() {return true;}
+
     private:        
         bool isGLES = false;
 };

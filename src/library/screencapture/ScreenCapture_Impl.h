@@ -77,7 +77,7 @@ public:
     virtual void clearScreen() {}
 
     /* Return an opaque identifier of the screen texture that was rendered to */
-    virtual uint32_t screenTexture() {return 0;}
+    virtual uint64_t screenTexture() {return 0;}
 
 protected:
     

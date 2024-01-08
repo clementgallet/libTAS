@@ -53,22 +53,23 @@ int ScreenCapture::init()
             impl = new ScreenCapture_SDL2_Surface();
         }
         else if (Global::game_info.video & GameInfo::OPENGL) {
-            impl = new ScreenCapture_GL();        
+            impl = new ScreenCapture_GL();
         }
         else if (Global::game_info.video & GameInfo::SDL1) {
-            impl = new ScreenCapture_SDL1();        
+            impl = new ScreenCapture_SDL1();
         }
         else if (Global::game_info.video & GameInfo::VULKAN) {
-            impl = new ScreenCapture_Vulkan();        
+            impl = new ScreenCapture_Vulkan();
         }
     }
     
     if (impl) {
-        impl->init();
+        int ret = impl->init();
+        if (ret < 0) return ret;
         inited = true;
+        return 0;
     }
-    
-    return 0;
+    return -1;
 }
 
 void ScreenCapture::fini()
@@ -173,11 +174,11 @@ void ScreenCapture::clearScreen()
         return;
 
     if (impl) {
-        return impl->clearScreen();
+        impl->clearScreen();
     }
 }
 
-uint32_t ScreenCapture::screenTexture()
+uint64_t ScreenCapture::screenTexture()
 {
     if (!inited)
         return 0;

@@ -43,7 +43,12 @@ class RenderHUD_Vulkan : public RenderHUD_Base_MacOS
 
         void newFrame();
 
-        void render();        
+        void render();
+        
+        /* Does the backend supports rendering the game inside an ImGui window? */
+        bool supportsGameWindow() {return true;}
+
+        bool invertedOrigin() {return false;}
 };
 }
 

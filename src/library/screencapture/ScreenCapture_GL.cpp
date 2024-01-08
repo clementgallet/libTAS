@@ -137,7 +137,7 @@ void ScreenCapture_GL::destroyScreenSurface()
     }
 }
 
-uint32_t ScreenCapture_GL::screenTexture()
+uint64_t ScreenCapture_GL::screenTexture()
 {
     return screenTex;
 }
@@ -261,31 +261,31 @@ int ScreenCapture_GL::copySurfaceToScreen()
 {
     GlobalNative gn;
 
-    // LINK_NAMESPACE(glEnable, "GL");
-    // LINK_NAMESPACE(glDisable, "GL");
-    // LINK_NAMESPACE(glIsEnabled, "GL");
-    // LINK_NAMESPACE(glGetIntegerv, "GL");
-    // 
-    // GLboolean isFramebufferSrgb = orig::glIsEnabled(GL_FRAMEBUFFER_SRGB);
-    // if (isFramebufferSrgb)
-    //     orig::glDisable(GL_FRAMEBUFFER_SRGB);
-    // 
-    // /* Copy the original draw/read framebuffers */
-    // GLint draw_buffer, read_buffer;
-    // orig::glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer);
-    // orig::glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
-    // 
-    // orig::glGetError();
-    // GL_CALL(glBindFramebuffer, (GL_READ_FRAMEBUFFER, screenFBO));
-    // GL_CALL(glBindFramebuffer, (GL_DRAW_FRAMEBUFFER, 0));
-    // GL_CALL(glBlitFramebuffer, (0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST));
-    // 
-    // /* Restore the original draw/read framebuffers */
-    // GL_CALL(glBindFramebuffer, (GL_DRAW_FRAMEBUFFER, draw_buffer));
-    // GL_CALL(glBindFramebuffer, (GL_READ_FRAMEBUFFER, read_buffer));
-    // 
-    // if (isFramebufferSrgb)
-    //     orig::glEnable(GL_FRAMEBUFFER_SRGB);
+    LINK_NAMESPACE(glEnable, "GL");
+    LINK_NAMESPACE(glDisable, "GL");
+    LINK_NAMESPACE(glIsEnabled, "GL");
+    LINK_NAMESPACE(glGetIntegerv, "GL");
+    
+    GLboolean isFramebufferSrgb = orig::glIsEnabled(GL_FRAMEBUFFER_SRGB);
+    if (isFramebufferSrgb)
+        orig::glDisable(GL_FRAMEBUFFER_SRGB);
+    
+    /* Copy the original draw/read framebuffers */
+    GLint draw_buffer, read_buffer;
+    orig::glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer);
+    orig::glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
+    
+    orig::glGetError();
+    GL_CALL(glBindFramebuffer, (GL_READ_FRAMEBUFFER, screenFBO));
+    GL_CALL(glBindFramebuffer, (GL_DRAW_FRAMEBUFFER, 0));
+    GL_CALL(glBlitFramebuffer, (0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST));
+    
+    /* Restore the original draw/read framebuffers */
+    GL_CALL(glBindFramebuffer, (GL_DRAW_FRAMEBUFFER, draw_buffer));
+    GL_CALL(glBindFramebuffer, (GL_READ_FRAMEBUFFER, read_buffer));
+    
+    if (isFramebufferSrgb)
+        orig::glEnable(GL_FRAMEBUFFER_SRGB);
 
     return 0;
 }

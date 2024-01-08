@@ -120,6 +120,7 @@ DEFINE_ORIG_POINTER(vkGetImageSubresourceLayout)
 DEFINE_ORIG_POINTER(vkMapMemory)
 DEFINE_ORIG_POINTER(vkGetSwapchainImagesKHR)
 DEFINE_ORIG_POINTER(vkCreateImageView)
+DEFINE_ORIG_POINTER(vkCreateSampler)
 DEFINE_ORIG_POINTER(vkCreateFramebuffer)
 DEFINE_ORIG_POINTER(vkCreateFence)
 DEFINE_ORIG_POINTER(vkCreateSemaphore)
@@ -128,8 +129,10 @@ DEFINE_ORIG_POINTER(vkDestroySemaphore)
 DEFINE_ORIG_POINTER(vkDestroyFence)
 DEFINE_ORIG_POINTER(vkDestroyCommandPool)
 DEFINE_ORIG_POINTER(vkDestroyImageView)
+DEFINE_ORIG_POINTER(vkDestroySampler)
 DEFINE_ORIG_POINTER(vkDestroyFramebuffer)
 DEFINE_ORIG_POINTER(vkDestroySwapchainKHR)
+DEFINE_ORIG_POINTER(vkCmdClearColorImage)
 
 
 #define VKFUNCSKIPDRAW(NAME, DECL, ARGS) \
@@ -162,6 +165,7 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     STORE_RETURN_SYMBOL(vkAcquireNextImageKHR)
     STORE_RETURN_SYMBOL(vkQueuePresentKHR)
     STORE_SYMBOL(vkCreateImageView)
+    STORE_SYMBOL(vkCreateSampler)
     STORE_SYMBOL(vkCreateFramebuffer)    
     STORE_RETURN_SYMBOL_CUSTOM(vkCreateDevice)
     STORE_RETURN_SYMBOL_CUSTOM(vkDestroyDevice)
@@ -201,7 +205,9 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     STORE_SYMBOL(vkFreeCommandBuffers)
     STORE_SYMBOL(vkDestroyCommandPool)
     STORE_SYMBOL(vkDestroyImageView)
+    STORE_SYMBOL(vkDestroySampler)
     STORE_SYMBOL(vkDestroyFramebuffer)
+    STORE_SYMBOL(vkCmdClearColorImage)
     STORE_RETURN_SYMBOL(vkCmdDraw)
     STORE_RETURN_SYMBOL(vkCmdDrawIndirect)
     STORE_RETURN_SYMBOL(vkCmdDrawIndexed)
@@ -334,15 +340,18 @@ static void destroySwapchain()
 
         orig::vkDestroySemaphore(vk::context.device, fsd->imageAcquiredSemaphore, vk::context.allocator);
         orig::vkDestroySemaphore(vk::context.device, fsd->screenCompleteSemaphore, vk::context.allocator);
+        orig::vkDestroySemaphore(vk::context.device, fsd->clearCompleteSemaphore, vk::context.allocator);
         orig::vkDestroySemaphore(vk::context.device, fsd->osdCompleteSemaphore, vk::context.allocator);
-        fsd->imageAcquiredSemaphore = fsd->screenCompleteSemaphore = fsd->osdCompleteSemaphore = VK_NULL_HANDLE;
+        fsd->imageAcquiredSemaphore = fsd->screenCompleteSemaphore = fsd->clearCompleteSemaphore = fsd->osdCompleteSemaphore = VK_NULL_HANDLE;
 
         orig::vkDestroyFence(vk::context.device, fd->fence, vk::context.allocator);
         orig::vkFreeCommandBuffers(vk::context.device, fd->commandPool, 1, &fd->screenCommandBuffer);
+        orig::vkFreeCommandBuffers(vk::context.device, fd->commandPool, 1, &fd->clearCommandBuffer);
         orig::vkFreeCommandBuffers(vk::context.device, fd->commandPool, 1, &fd->osdCommandBuffer);
         orig::vkDestroyCommandPool(vk::context.device, fd->commandPool, vk::context.allocator);
         fd->fence = VK_NULL_HANDLE;
         fd->screenCommandBuffer = VK_NULL_HANDLE;
+        fd->clearCommandBuffer = VK_NULL_HANDLE;
         fd->osdCommandBuffer = VK_NULL_HANDLE;
         fd->commandPool = VK_NULL_HANDLE;
 
@@ -461,6 +470,15 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
             info.commandPool = fd->commandPool;
             info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
             info.commandBufferCount = 1;
+            err = orig::vkAllocateCommandBuffers(vk::context.device, &info, &fd->clearCommandBuffer);
+            VKCHECKERROR(err);
+        }
+        {
+            VkCommandBufferAllocateInfo info = {};
+            info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            info.commandPool = fd->commandPool;
+            info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            info.commandBufferCount = 1;
             err = orig::vkAllocateCommandBuffers(vk::context.device, &info, &fd->osdCommandBuffer);
             VKCHECKERROR(err);
         }
@@ -477,6 +495,8 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
             err = orig::vkCreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->imageAcquiredSemaphore);
             VKCHECKERROR(err);
             err = orig::vkCreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->screenCompleteSemaphore);
+            VKCHECKERROR(err);
+            err = orig::vkCreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->clearCompleteSemaphore);
             VKCHECKERROR(err);
             err = orig::vkCreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->osdCompleteSemaphore);
             VKCHECKERROR(err);
