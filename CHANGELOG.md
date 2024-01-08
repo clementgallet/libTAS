@@ -29,6 +29,7 @@
 * Update hookpatch method
 * Fix no-recording backup movie not stored in savestates
 * [ImGui] Force redraw before state saving/loading
+* Support glViewport() for OpenGL resizing
 
 ## [1.4.5] - 2023-10-22
 ### Added

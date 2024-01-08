@@ -118,6 +118,7 @@ DECLARE_ORIG_POINTER(glBlendFunc)
 DECLARE_ORIG_POINTER(glDeleteBuffers)
 DECLARE_ORIG_POINTER(glDeleteVertexArrays)
 DECLARE_ORIG_POINTER(glDeleteProgram)
+DECLARE_ORIG_POINTER(glViewport)
 
 DECLARE_ORIG_POINTER(glClear)
 DECLARE_ORIG_POINTER(glBegin)
@@ -371,6 +372,7 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
 
     STORE_RETURN_SYMBOL_CUSTOM(glEnable);
     // STORE_RETURN_SYMBOL_CUSTOM(glDisable);
+    STORE_RETURN_SYMBOL(glViewport);
 
     return real_pointer;
 }

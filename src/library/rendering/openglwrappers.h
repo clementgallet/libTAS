@@ -92,6 +92,9 @@ void myglTexParameteri(GLenum target, GLenum pname, GLint param);
 
 OVERRIDE void glEnable(GLenum cap);
 void myglEnable(GLenum cap);
+OVERRIDE void glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+void myglViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+
 // OVERRIDE void glDisable(GLenum cap);
 // void myglDisable(GLenum cap);
 

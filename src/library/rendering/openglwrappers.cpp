@@ -20,6 +20,7 @@
 #include "openglwrappers.h"
 
 #include "global.h"
+#include "GlobalState.h"
 #include "logging.h"
 #include "frame.h"
 #include "screencapture/ScreenCapture.h"
@@ -77,19 +78,22 @@ DEFINE_ORIG_POINTER(glBlendFunc)
 DEFINE_ORIG_POINTER(glDeleteBuffers)
 DEFINE_ORIG_POINTER(glDeleteVertexArrays)
 DEFINE_ORIG_POINTER(glDeleteProgram)
+DEFINE_ORIG_POINTER(glViewport)
 
 #define GLFUNCSKIPDRAW(NAME, DECL, ARGS) \
 DEFINE_ORIG_POINTER(NAME)\
 void NAME DECL\
 {\
-    DEBUGLOGCALL(LCF_OGL);\
     LINK_NAMESPACE(NAME, "GL");\
+    if (GlobalState::isNative()) return orig::NAME ARGS;\
+    DEBUGLOGCALL(LCF_OGL);\
     if (!Global::skipping_draw)\
         return orig::NAME ARGS;\
 }\
 \
 void my##NAME DECL\
 {\
+    if (GlobalState::isNative()) return orig::NAME ARGS;\
     DEBUGLOGCALL(LCF_OGL);\
     if (!Global::skipping_draw)\
         return orig::NAME ARGS ;\
@@ -248,6 +252,7 @@ void glEnable(GLenum cap)
 
 void myglEnable(GLenum cap)
 {
+    if (GlobalState::isNative()) return orig::glEnable(cap);
     DEBUGLOGCALL(LCF_OGL);
     if (Global::shared_config.opengl_performance) {
         switch (cap) {
@@ -259,6 +264,20 @@ void myglEnable(GLenum cap)
         }
     }
     return orig::glEnable(cap);
+}
+
+void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    LINK_NAMESPACE(glViewport, "GL");
+    return myglViewport(x, y, width, height);
+}
+
+void myglViewport(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    if (GlobalState::isNative()) return orig::glViewport(x, y, width, height);
+    debuglogstdio(LCF_OGL, "glViewport called with %d : %d", width, height);
+    ScreenCapture::resize(width, height);
+    return orig::glViewport(x, y, width, height);
 }
 
 }

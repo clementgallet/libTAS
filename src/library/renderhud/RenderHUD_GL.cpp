@@ -48,6 +48,7 @@ void RenderHUD_GL::newFrame()
         else
             return;
     }
+    GlobalNative gn;
     ImGui_ImplOpenGL3_NewFrame();
 
     RenderHUD::newFrame();
@@ -91,6 +92,7 @@ void RenderHUD_GL::render()
         }
         
         ImGui::Render();
+        GlobalNative gn;
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());        
     }
 }
