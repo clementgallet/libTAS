@@ -174,7 +174,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         LogWindow::draw(&show_log);
 
     if (show_audio)
-        AudioDebug::draw(&show_audio);
+        AudioDebug::draw(framecount, &show_audio);
 
     if (show_demo)
         ImGui::ShowDemoWindow(&show_demo);

@@ -20,11 +20,13 @@
 #ifndef LIBTAS_IMGUI_AUDIODEBUG_H_INCL
 #define LIBTAS_IMGUI_AUDIODEBUG_H_INCL
 
+#include <cstdint>
+
 namespace libtas {
 
 namespace AudioDebug
 {
-    void draw(bool* p_open);
+    void draw(uint64_t framecount, bool* p_open);
 
 }
 

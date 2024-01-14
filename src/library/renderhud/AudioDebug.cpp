@@ -23,10 +23,32 @@
 #include "audio/AudioSource.h"
 #include "audio/AudioBuffer.h"
 #include "../external/imgui/imgui.h"
+#include "global.h"
+
+#include <cinttypes>
 
 namespace libtas {
 
-void AudioDebug::draw(bool* p_open = nullptr)
+static const char* formatToString(AudioBuffer::SampleFormat format)
+{
+    switch (format) {
+        case AudioBuffer::SAMPLE_FMT_U8:
+            return "u8";
+        case AudioBuffer::SAMPLE_FMT_S16:
+            return "s16";
+        case AudioBuffer::SAMPLE_FMT_S32:
+            return "s32";
+        case AudioBuffer::SAMPLE_FMT_FLT:
+            return "float";
+        case AudioBuffer::SAMPLE_FMT_DBL:
+            return "double";
+        case AudioBuffer::SAMPLE_FMT_MSADPCM:
+            return "MS-ADPCM";
+    }
+    return "unknown";
+}
+
+void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
 {
     if (!ImGui::Begin("Audio Debug", p_open))
     {
@@ -36,29 +58,35 @@ void AudioDebug::draw(bool* p_open = nullptr)
 
     const AudioContext& audiocontext = AudioContext::get();
     auto sources = audiocontext.getSourceList();
-    const float sampleByUnit = 200.0f;
+    const float msPerUnit = 4.0f;
     
     ImGui::SeparatorText("Active Sources");
     
-    /* Compute numbre of sources and minimum of consumed samples to align properly */
-    int consumedSamples = 0;
+    /* Compute number of sources and maximum of consumed and non-consumed
+     * miliseconds to align properly */
+    float consumedMS = 0;
+    float nonConsumedMS = 0;
     int activeSources = 0;
     for (const auto& source : sources) {
         if (source->state == AudioSource::SOURCE_PLAYING) {
             activeSources++;
-            if (source->getPosition() > consumedSamples)
-                consumedSamples = source->getPosition();
+            if (source->buffer_queue.size() != 0) {
+                float ms = 1000.0f * (float)source->getPosition() / (float)source->buffer_queue[0]->frequency;
+                if (ms > consumedMS)
+                    consumedMS = ms;
+
+                ms = 1000.0f * (float)(source->queueSize() - source->getPosition()) / (float)source->buffer_queue[0]->frequency;
+                if (ms > nonConsumedMS)
+                    nonConsumedMS = ms;
+            }
         }
     }
     
     /* Compute maximum of non-consumed samples to align properly */
-    int nonConsumedSamples = 0;
     for (const auto& source : sources)
-    if ((source->queueSize() - source->getPosition()) > nonConsumedSamples)
-    nonConsumedSamples = (source->queueSize() - source->getPosition());
     
-    ImGui::SetNextWindowScroll(ImVec2((float)consumedSamples / sampleByUnit, 0.0f));
-    ImGui::SetNextWindowContentSize(ImVec2((float)(consumedSamples + nonConsumedSamples) / sampleByUnit + ImGui::GetContentRegionAvail().x, 0.0f));
+    ImGui::SetNextWindowScroll(ImVec2((float)consumedMS / msPerUnit, 0.0f));
+    ImGui::SetNextWindowContentSize(ImVec2((float)(consumedMS + nonConsumedMS) / msPerUnit + ImGui::GetContentRegionAvail().x, 0.0f));
     
     /* Add padding so that we can always scroll so that current source position
     * is at the center */
@@ -66,53 +94,93 @@ void AudioDebug::draw(bool* p_open = nullptr)
     
     ImGuiStyle& style = ImGui::GetStyle();
     // float child_height = activeSources * ImGui::GetFrameHeightWithSpacing() + style.ScrollbarSize + style.WindowPadding.y * 2.0f;
-    float child_height = activeSources * ImGui::GetFrameHeightWithSpacing() + style.ScrollbarSize;
-            
-    if (ImGui::BeginChild("Active Sources", ImVec2(0, child_height), ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_HorizontalScrollbar)) {
+    float child_height = (activeSources+1) * ImGui::GetFrameHeightWithSpacing();
     
+    if (ImGui::BeginChild("Active Sources", ImVec2(0, child_height), ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_None)) {
+    
+        /* Print frame lines */
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+        
+        /* I am supposed to write the following line, but setting the window scroll
+         * can have some rounding difference, that would make the line oscillating
+         * by one pixel. Reading from the actual scrolled value remove the oscillation */
+        //float centerPosX = (float)consumedMS / msPerUnit + leftPadding;
+        float centerPosX = ImGui::GetScrollX() + leftPadding;
+        ImGui::GetWindowDrawList()->AddLine(ImVec2(pos.x+centerPosX, pos.y), ImVec2(pos.x+centerPosX, pos.y+child_height), 0x80ffffff, 1.0f);
+        
+        float sizeMS = ImGui::GetWindowSize().x * msPerUnit;
+        int sizeFrame = (sizeMS * Global::shared_config.framerate_num) / (1000 * Global::shared_config.framerate_den);
+        
+        const int stepFrame = 20;
+        int64_t firstFrame = framecount - (sizeFrame / 2);
+        int64_t lastFrame = framecount + (sizeFrame / 2);
+        firstFrame = firstFrame - (firstFrame % stepFrame);
+        if (firstFrame < 0) firstFrame = 0;
+        
+        for (int64_t f = firstFrame; f < lastFrame; f += stepFrame) {
+            float framePos = centerPosX + (f - (int64_t)framecount) * 1000 * Global::shared_config.framerate_den / (Global::shared_config.framerate_num * msPerUnit);
+            ImGui::GetWindowDrawList()->AddLine(ImVec2(pos.x+framePos, pos.y), ImVec2(pos.x+framePos, pos.y+ImGui::GetTextLineHeight()), 0x80ffffff, 1.0f);
+            char frame_string[21];
+            sprintf(frame_string, "%" PRId64, f);
+            ImGui::GetWindowDrawList()->AddText(ImVec2(pos.x+framePos+5.0f, pos.y), 0x80ffffff, frame_string, nullptr);
+        }
+        
+        ImGui::NewLine();
+
         for (const auto& source : sources) {
             if (!(source->state == AudioSource::SOURCE_PLAYING))
                 continue;
-    
+            
             ImGui::SetCursorPosX(ImGui::GetScrollX());
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Source %d", source->id);
+            
+            if (source->buffer_queue.size() == 0)
+                continue;
+            
             ImGui::SameLine();
     
-            int alignedSamplePos = consumedSamples + leftPadding * sampleByUnit - source->getPosition();
+            int alignedSamplePos = consumedMS + leftPadding * msPerUnit - (1000.0f * (float)source->getPosition() / (float)source->buffer_queue[0]->frequency);
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
             for (size_t i = 0; i < source->buffer_queue.size(); i++) {
     
-                ImGui::SetCursorPosX((float)alignedSamplePos / sampleByUnit);
+                ImGui::SetCursorPosX((float)alignedSamplePos / msPerUnit);
     
                 const auto& buffer = source->buffer_queue[i];
                 char buffer_name[16];
                 sprintf(buffer_name, "%d", buffer->id);
                 
+                float bufferMS = 1000.0f * (float)buffer->sampleSize / (float)buffer->frequency;
+                
                 float hue = buffer->id * 0.13f;
                 float r, g, b;
                 ImGui::ColorConvertHSVtoRGB(hue, 0.6f, 0.6f, r, g, b);
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(r, g, b, 1.0f));
-                ImGui::ColorConvertHSVtoRGB(hue, 0.7f, 0.7f, r, g, b);                
+                ImGui::ColorConvertHSVtoRGB(hue, 0.7f, 0.7f, r, g, b);
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(r, g, b, 1.0f));
-                ImGui::ColorConvertHSVtoRGB(hue, 0.8f, 0.8f, r, g, b);                
+                ImGui::ColorConvertHSVtoRGB(hue, 0.8f, 0.8f, r, g, b);
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(r, g, b, 1.0f));
-                ImGui::Button(buffer_name, ImVec2((float)buffer->sampleSize / sampleByUnit - 10.0f, 0.0f));
+                ImGui::Button(buffer_name, ImVec2(bufferMS / msPerUnit - 10.0f, 0.0f));
+                if (ImGui::BeginItemTooltip())
+                {
+                    ImGui::Text("Id: %d", buffer->id);
+                    ImGui::Text("Sample size: %d", buffer->sampleSize);
+                    ImGui::Text("Length: %f sec", (float)buffer->sampleSize / (float)buffer->frequency);
+                    ImGui::EndTooltip();
+                }
                 ImGui::PopStyleColor(3);
                 ImGui::SameLine();
     
-                alignedSamplePos += buffer->sampleSize;
+                alignedSamplePos += bufferMS;
             }
             ImGui::PopStyleVar(1);
             ImGui::NewLine();
         }
-        // ImGui::SetScrollFromPosX(ImGui::GetCursorStartPos().x + (float)consumedSamples/10.0f);
     }
     ImGui::EndChild();
     
     ImGui::SeparatorText("Inactive Sources");
 
-    // child_height = (sources.size() - activeSources) * ImGui::GetFrameHeightWithSpacing() + style.ScrollbarSize + style.WindowPadding.y * 2.0f;
     child_height = (sources.size() - activeSources) * ImGui::GetFrameHeightWithSpacing() + style.ScrollbarSize;
 
     if (ImGui::BeginChild("Inactive Sources", ImVec2(0, child_height), ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_HorizontalScrollbar)) {
@@ -130,15 +198,24 @@ void AudioDebug::draw(bool* p_open = nullptr)
                 char buffer_name[16];
                 sprintf(buffer_name, "%d", buffer->id);
 
+                float bufferMS = 1000.0f * (float)buffer->sampleSize / (float)buffer->frequency;
+
                 float hue = buffer->id * 0.13f;
                 float r, g, b;
                 ImGui::ColorConvertHSVtoRGB(hue, 0.6f, 0.6f, r, g, b);
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(r, g, b, 1.0f));
-                ImGui::ColorConvertHSVtoRGB(hue, 0.7f, 0.7f, r, g, b);                
+                ImGui::ColorConvertHSVtoRGB(hue, 0.7f, 0.7f, r, g, b);
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(r, g, b, 1.0f));
-                ImGui::ColorConvertHSVtoRGB(hue, 0.8f, 0.8f, r, g, b);                
+                ImGui::ColorConvertHSVtoRGB(hue, 0.8f, 0.8f, r, g, b);
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(r, g, b, 1.0f));
-                ImGui::Button(buffer_name, ImVec2((float)buffer->sampleSize / sampleByUnit - 10.0f, 0.0f));
+                ImGui::Button(buffer_name, ImVec2(bufferMS / msPerUnit - 10.0f, 0.0f));
+                if (ImGui::BeginItemTooltip())
+                {
+                    ImGui::Text("Id: %d", buffer->id);
+                    ImGui::Text("Sample size: %d", buffer->sampleSize);
+                    ImGui::Text("Length: %f sec", (float)buffer->sampleSize / (float)buffer->frequency);
+                    ImGui::EndTooltip();
+                }
                 ImGui::PopStyleColor(3);
                 ImGui::SameLine();
             }
