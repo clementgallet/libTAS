@@ -72,6 +72,7 @@ struct Vulkan_Context
     VkSemaphore         currentSemaphore;
     std::vector<Vulkan_Frame> frames;
     std::vector<Vulkan_FrameSemaphores> frameSemaphores;
+    bool                swapchainRebuild;
 };
 
 /* Export several variables used for rendering */

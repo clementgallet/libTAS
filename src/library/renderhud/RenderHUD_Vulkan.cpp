@@ -96,6 +96,8 @@ void RenderHUD_Vulkan::render()
         
     ImGui::Render();
 
+    if (vk::context.swapchainRebuild) return;
+
     VkResult err;
     Vulkan_Frame* fd = &vk::context.frames[vk::context.frameIndex];
     

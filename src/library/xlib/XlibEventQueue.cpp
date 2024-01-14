@@ -106,15 +106,22 @@ int XlibEventQueue::insert(XEvent* event)
     }
     
     /* Check if the window can produce such event */
-    auto mask = eventMasks.find(event->xany.window);
-    if (mask != eventMasks.end()) {
-        if (!isTypeOfMask(event->type, mask->second))
+    
+    /* We are supposed to check if the parent window has SubstructureNotifyMask
+     * so that current window can receive ConfigureNotify events, but I'm lazy,
+     * so we are always returning those events */
+
+    if (event->type != ConfigureNotify) {
+        auto mask = eventMasks.find(event->xany.window);
+        if (mask != eventMasks.end()) {
+            if (!isTypeOfMask(event->type, mask->second))
             return 0;            
-    }
-    else {
-        /* Check unmaskable events */
-        if (!isTypeOfMask(event->type, 0))
+        }
+        else {
+            /* Check unmaskable events */
+            if (!isTypeOfMask(event->type, 0))
             return 0;
+        }        
     }
 
     /* Check the size of the queue */

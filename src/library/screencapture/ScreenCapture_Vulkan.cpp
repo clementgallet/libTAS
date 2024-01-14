@@ -57,6 +57,9 @@ int ScreenCapture_Vulkan::init()
     if (ScreenCapture_Impl::init() < 0)
         return -1;
     
+    width = vk::context.width;
+    height = vk::context.height;
+    
     pixelSize = 4;
     
     return ScreenCapture_Impl::postInit();
@@ -187,6 +190,8 @@ const char* ScreenCapture_Vulkan::getPixelFormat()
 
 int ScreenCapture_Vulkan::copyScreenToSurface()
 {
+    if (vk::context.swapchainRebuild) return -1;
+
     GlobalNative gn;
 
     VkResult res;
@@ -374,8 +379,11 @@ static void acquireImage()
 {
     /* Acquire an image from the swapchain */
     VkResult res = orig::vkAcquireNextImageKHR(vk::context.device, vk::context.swapchain, UINT64_MAX, vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore, VK_NULL_HANDLE, &vk::context.frameIndex);
-    if ((res != VK_SUCCESS) && (res != VK_SUBOPTIMAL_KHR))
-        debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkAcquireNextImageKHR failed with error %d", res);
+    if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR) {
+        debuglogstdio(LCF_VULKAN | LCF_WARNING, "vkAcquireNextImageKHR failed with error %d", res);
+        vk::context.swapchainRebuild = true;
+        return;
+    }
     
     // debuglogstdio(LCF_VULKAN, "vkAcquireNextImageKHR signals %llx and returns image index %d", vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore, vk::context.frameIndex);
 
@@ -423,12 +431,17 @@ static void EndCommandAndSubmitQueue(VkCommandBuffer cmdBuffer, VkSemaphore* sem
 
 int ScreenCapture_Vulkan::copySurfaceToScreen()
 {
+    if (vk::context.swapchainRebuild) return -1;
+
     GlobalNative gn;
 
     VkCommandBuffer cmdBuffer = vk::context.frames[vk::context.frameIndex].screenCommandBuffer;
     VkImage backbuffer = vk::context.frames[vk::context.frameIndex].backbuffer;
 
     acquireImage();
+
+    if (vk::context.swapchainRebuild) return -1;
+
     beginCommand(cmdBuffer);
         
     /* Transition destination image to transfer destination layout */
@@ -533,6 +546,8 @@ int ScreenCapture_Vulkan::copySurfaceToScreen()
 void ScreenCapture_Vulkan::clearScreen()
 {
     GlobalNative gn;
+
+    if (vk::context.swapchainRebuild) return;
     
     VkCommandBuffer cmdBuffer = vk::context.frames[vk::context.frameIndex].clearCommandBuffer;
     VkImage backbuffer = vk::context.frames[vk::context.frameIndex].backbuffer;
@@ -543,6 +558,9 @@ void ScreenCapture_Vulkan::clearScreen()
      * the current semaphore that we should wait on */
     if (vk::context.currentSemaphore != vk::context.frameSemaphores[vk::context.semaphoreIndex].screenCompleteSemaphore)
         acquireImage();
+
+    if (vk::context.swapchainRebuild) return;
+
     beginCommand(cmdBuffer);
 
     /* Transition destination image to transfer destination layout */

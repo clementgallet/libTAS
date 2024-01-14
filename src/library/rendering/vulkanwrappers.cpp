@@ -332,6 +332,7 @@ VkResult vkCreateDescriptorPool(VkDevice device, const VkDescriptorPoolCreateInf
 
 static void destroySwapchain()
 {
+    ScreenCapture::fini();
     RenderHUD_Vulkan::fini();
 
     for (uint32_t i = 0; i < vk::context.imageCount; i++) {        
@@ -387,6 +388,7 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
     VkResult res = orig::vkCreateSwapchainKHR(device, &newCreateInfo, pAllocator, pSwapchain);    
     
     vk::context.swapchain = *pSwapchain;
+    vk::context.swapchainRebuild = false;
 
     /* Store the swapchain size */
     vk::context.width = newCreateInfo.imageExtent.width;
@@ -630,7 +632,12 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_Vulkan renderHUD;
+    
+    VkResult ret;
     frameBoundary([&] () {
+        if (vk::context.swapchainRebuild)
+            return;
+        
         VkPresentInfoKHR pi = *pPresentInfo;
 
         /* Wait on the last semaphore that was used by our code */
@@ -641,14 +648,19 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
          * acquire other images when presenting again. */
         pi.pImageIndices = &vk::context.frameIndex;
         // debuglogstdio(LCF_WINDOW | LCF_VULKAN, "    vkQueuePresentKHR wait on semaphore %llx", vk::context.currentSemaphore);
-        orig::vkQueuePresentKHR(queue, &pi);
+        ret = orig::vkQueuePresentKHR(queue, &pi);
+        
+        if (ret == VK_ERROR_OUT_OF_DATE_KHR || ret == VK_SUBOPTIMAL_KHR) {
+            vk::context.swapchainRebuild = true;
+            return;
+        }
         
         /* TODO: Use fence to delay waiting on queue */
         orig::vkQueueWaitIdle(vk::context.graphicsQueue);
 
     }, renderHUD);
 
-    return VK_SUCCESS;
+    return ret;
 }
 
 }

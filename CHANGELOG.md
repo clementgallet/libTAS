@@ -31,6 +31,7 @@
 * Fix no-recording backup movie not stored in savestates
 * [ImGui] Force redraw before state saving/loading
 * Support glViewport() for OpenGL resizing
+* Support rebuilding swapchain after window resize (#558)
 
 ## [1.4.5] - 2023-10-22
 ### Added
