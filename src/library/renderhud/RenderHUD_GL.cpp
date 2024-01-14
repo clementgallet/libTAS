@@ -34,8 +34,10 @@ RenderHUD_GL::~RenderHUD_GL() {
 }
 
 void RenderHUD_GL::fini() {
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui::DestroyContext();
+    if (ImGui::GetCurrentContext()) {
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui::DestroyContext();
+    }
 }
 
 void RenderHUD_GL::newFrame()
