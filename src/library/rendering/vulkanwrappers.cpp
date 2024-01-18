@@ -259,6 +259,9 @@ PFN_vkVoidFunction myvkGetDeviceProcAddr(VkDevice device, const char* pName)
     return reinterpret_cast<void(*)()>(store_orig_and_return_my_symbol(pName, reinterpret_cast<void*>(orig::vkGetDeviceProcAddr(device, pName))));
 }
 
+#define GETPROCADDR(symbol) \
+orig::symbol = reinterpret_cast<decltype(orig::symbol)>(orig::vkGetDeviceProcAddr(vk::context.device, #symbol));
+
 VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInfo* pCreateInfo,
                                 const VkAllocationCallbacks* pAllocator, VkDevice* pDevice)
 {
@@ -282,6 +285,49 @@ VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateI
         /* We are officially using Vulkan now. */
         Global::game_info.video |= GameInfo::VULKAN;
         Global::game_info.tosend = true;
+        
+        /* Get the address of all functions that we will be using */
+        GETPROCADDR(vkCreateImageView)
+        GETPROCADDR(vkCreateSampler)
+        GETPROCADDR(vkCreateFramebuffer)    
+        GETPROCADDR(vkGetPhysicalDeviceMemoryProperties)
+        GETPROCADDR(vkCreateImage)
+        GETPROCADDR(vkGetImageMemoryRequirements)
+        GETPROCADDR(vkAllocateMemory)
+        GETPROCADDR(vkBindImageMemory)
+        GETPROCADDR(vkCreateCommandPool)
+        GETPROCADDR(vkCreateDescriptorPool)
+        GETPROCADDR(vkDestroyDescriptorPool)
+        GETPROCADDR(vkCreateRenderPass)
+        GETPROCADDR(vkDestroySwapchainKHR)
+        GETPROCADDR(vkCmdBeginRenderPass)
+        GETPROCADDR(vkQueueSubmit)
+        GETPROCADDR(vkUnmapMemory)
+        GETPROCADDR(vkFreeMemory)
+        GETPROCADDR(vkDestroyImage)
+        GETPROCADDR(vkAllocateCommandBuffers)
+        GETPROCADDR(vkBeginCommandBuffer)
+        GETPROCADDR(vkCmdEndRenderPass)
+        GETPROCADDR(vkCmdPipelineBarrier)
+        GETPROCADDR(vkCmdBlitImage)
+        GETPROCADDR(vkCmdCopyImage)
+        GETPROCADDR(vkEndCommandBuffer)
+        GETPROCADDR(vkQueueWaitIdle)
+        GETPROCADDR(vkFreeCommandBuffers)
+        GETPROCADDR(vkGetImageSubresourceLayout)
+        GETPROCADDR(vkMapMemory)
+        GETPROCADDR(vkGetSwapchainImagesKHR)
+        GETPROCADDR(vkCreateFence)
+        GETPROCADDR(vkCreateSemaphore)
+        GETPROCADDR(vkDestroyRenderPass)
+        GETPROCADDR(vkDestroySemaphore)
+        GETPROCADDR(vkDestroyFence)
+        GETPROCADDR(vkFreeCommandBuffers)
+        GETPROCADDR(vkDestroyCommandPool)
+        GETPROCADDR(vkDestroyImageView)
+        GETPROCADDR(vkDestroySampler)
+        GETPROCADDR(vkDestroyFramebuffer)
+        GETPROCADDR(vkCmdClearColorImage)
     }
     
     return res;

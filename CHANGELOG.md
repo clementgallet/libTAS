@@ -32,6 +32,8 @@
 * [ImGui] Force redraw before state saving/loading
 * Support glViewport() for OpenGL resizing
 * Support rebuilding swapchain after window resize (#558)
+* Get all Vulkan function addresses in advance, so that we don't rely on the
+  game getting those 
 
 ## [1.4.5] - 2023-10-22
 ### Added
