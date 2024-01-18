@@ -52,7 +52,7 @@ struct Vulkan_FrameSemaphores
 
 struct Vulkan_Context
 {
-    VkAllocationCallbacks* allocator;
+    const VkAllocationCallbacks* allocator;
     VkInstance instance;
     VkPhysicalDevice physicalDevice;
     VkDevice device;

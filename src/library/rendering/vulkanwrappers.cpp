@@ -100,6 +100,7 @@ DEFINE_ORIG_POINTER(vkAllocateMemory)
 DEFINE_ORIG_POINTER(vkBindImageMemory)
 DEFINE_ORIG_POINTER(vkCreateCommandPool)
 DEFINE_ORIG_POINTER(vkCreateDescriptorPool)
+DEFINE_ORIG_POINTER(vkDestroyDescriptorPool)
 DEFINE_ORIG_POINTER(vkCreateRenderPass)
 DEFINE_ORIG_POINTER(vkCmdBeginRenderPass)
 DEFINE_ORIG_POINTER(vkCmdEndRenderPass)
@@ -176,7 +177,8 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     STORE_SYMBOL(vkAllocateMemory)
     STORE_SYMBOL(vkBindImageMemory)
     STORE_SYMBOL(vkCreateCommandPool)
-    STORE_RETURN_SYMBOL(vkCreateDescriptorPool)
+    STORE_SYMBOL(vkCreateDescriptorPool)
+    STORE_SYMBOL(vkDestroyDescriptorPool)
     STORE_SYMBOL(vkCreateRenderPass)
     STORE_RETURN_SYMBOL(vkGetDeviceQueue)
     STORE_RETURN_SYMBOL(vkDestroySwapchainKHR)
@@ -235,6 +237,7 @@ VkResult myvkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAll
     if (res == VK_SUCCESS) {
         /* Store the instance */
         vk::context.instance = *pInstance;
+        vk::context.allocator = pAllocator;
     }
 
     return res;
@@ -328,6 +331,23 @@ VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateI
         GETPROCADDR(vkDestroySampler)
         GETPROCADDR(vkDestroyFramebuffer)
         GETPROCADDR(vkCmdClearColorImage)
+        
+        /* Create the descriptor pool that will create descriptor sets for the
+         * font texture and game window texture */
+        {
+            VkDescriptorPoolSize pool_sizes[] =
+            {
+                { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2 },
+            };
+            VkDescriptorPoolCreateInfo pool_info = {};
+            pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+            pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+            pool_info.maxSets = 2;
+            pool_info.poolSizeCount = 1;
+            pool_info.pPoolSizes = pool_sizes;
+            VkResult err = orig::vkCreateDescriptorPool(vk::context.device, &pool_info, vk::context.allocator, &vk::context.descriptorPool);
+            VKCHECKERROR(err);
+        }
     }
     
     return res;
@@ -339,6 +359,11 @@ void myvkDestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
         return orig::vkDestroyDevice(device, pAllocator);
 
     DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+
+    if (vk::context.descriptorPool) {
+        orig::vkDestroyDescriptorPool(device, vk::context.descriptorPool, pAllocator);
+        vk::context.descriptorPool = VK_NULL_HANDLE;
+    }
 
     /* Stop the screen capture */
     ScreenCapture::fini();
@@ -357,23 +382,6 @@ void vkGetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queue
     vk::context.queueFamily = queueFamilyIndex;
 
     return orig::vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
-}
-
-VkResult vkCreateDescriptorPool(VkDevice device, const VkDescriptorPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorPool* pDescriptorPool)
-{
-    if (GlobalState::isNative())
-        return orig::vkCreateDescriptorPool(device, pCreateInfo, pAllocator, pDescriptorPool);
-
-    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
-
-    VkResult res = orig::vkCreateDescriptorPool(device, pCreateInfo, pAllocator, pDescriptorPool);
-
-    if (res == VK_SUCCESS) {
-        /* Store the descriptor pool */
-        vk::context.descriptorPool = *pDescriptorPool;
-    }
-    
-    return res;
 }
 
 static void destroySwapchain()

@@ -34,6 +34,7 @@
 * Support rebuilding swapchain after window resize (#558)
 * Get all Vulkan function addresses in advance, so that we don't rely on the
   game getting those 
+* Use our own Vulkan descriptor pool to control the descriptor set count
 
 ## [1.4.5] - 2023-10-22
 ### Added
