@@ -21,6 +21,7 @@
 #define LIBTAS_GAMELOOP_H_INCLUDED
 
 #include <QtCore/QObject>
+#include <cstdint>
 
 #include "movie/MovieFile.h"
 #include "../shared/GameInfo.h"
@@ -63,6 +64,9 @@ private:
     bool startFrameMessages();
 
     void sleepSendPreview();
+
+    /* Get the address of a symbol in the game executable */
+    uint64_t getSymbolAddress(const char* symbol);
 
     void processInputs(AllInputs &ai);
 

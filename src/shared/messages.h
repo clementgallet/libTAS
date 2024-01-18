@@ -334,6 +334,12 @@ enum {
      * Argument: size_t (string length) then char[len]
      */
     MSGN_SCREENSHOT,
+    
+    /* Send the address of the SDL_DYNAPI_entry() function within the game
+     * executable if present
+     * Argument: uint64_t addr
+     */
+    MSGN_SDL_DYNAPI_ADDR,
 };
 
 #endif

@@ -35,6 +35,7 @@
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/SaveStateManager.h"
 #include "checkpoint/Checkpoint.h"
+#include "sdl/sdldynapi.h"
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
 #include "../shared/SharedConfig.h"
@@ -118,19 +119,16 @@ void __attribute__((constructor)) init(void)
     /* Receive information from the program */
     int message = receiveMessage();
     while (message != MSGN_END_INIT) {
-        std::string basesavestatepath;
-        std::string steamuserdatapath;
-        std::string steamremotestorage;
-        int index;
-        int config_size;
         switch (message) {
-            case MSGN_CONFIG_SIZE:
+            case MSGN_CONFIG_SIZE: {
                 debuglogstdio(LCF_SOCKET, "Receiving config size");
+                int config_size;
                 receiveData(&config_size, sizeof(int));
                 if (config_size != sizeof(SharedConfig)) {
                     debuglogstdio(LCF_SOCKET | LCF_ERROR, "Shared config size mismatch between program and library!");                    
                 }
                 break;
+            }
             case MSGN_CONFIG:
                 debuglogstdio(LCF_SOCKET, "Receiving config");
                 receiveData(&Global::shared_config, sizeof(SharedConfig));
@@ -141,31 +139,42 @@ void __attribute__((constructor)) init(void)
                 debuglogstdio(LCF_SOCKET, "File %s", AVEncoder::dumpfile);
                 receiveCString(AVEncoder::ffmpeg_options);
                 break;
-            case MSGN_BASE_SAVESTATE_PATH:
-                basesavestatepath = receiveString();
+            case MSGN_BASE_SAVESTATE_PATH: {
+                std::string basesavestatepath = receiveString();
                 Checkpoint::setBaseSavestatePath(basesavestatepath);
-                break;
-            case MSGN_BASE_SAVESTATE_INDEX:
+                break;                
+            }
+            case MSGN_BASE_SAVESTATE_INDEX: {
+                int index;
                 receiveData(&index, sizeof(int));
                 Checkpoint::setBaseSavestateIndex(index);
                 break;
+            }
             case MSGN_ENCODING_SEGMENT:
                 receiveData(&AVEncoder::segment_number, sizeof(int));
                 break;
-            case MSGN_STEAM_USER_DATA_PATH:
-                steamuserdatapath = receiveString();
+            case MSGN_STEAM_USER_DATA_PATH: {
+                std::string steamuserdatapath = receiveString();
                 SteamSetUserDataFolder(steamuserdatapath);
                 break;
-            case MSGN_STEAM_REMOTE_STORAGE:
-                steamremotestorage = receiveString();
+            }
+            case MSGN_STEAM_REMOTE_STORAGE: {
+                std::string steamremotestorage = receiveString();
                 SteamSetRemoteStorageFolder(steamremotestorage);
                 break;
+            }
             case MSGN_INITIAL_FRAMECOUNT_TIME:
                 /* Set the framecount and time to their initial values */
                 receiveData(&framecount, sizeof(uint64_t));
                 receiveData(&initial_sec, sizeof(uint64_t));
                 receiveData(&initial_nsec, sizeof(uint64_t));
                 break;
+            case MSGN_SDL_DYNAPI_ADDR: {
+                uint64_t addr;
+                receiveData(&addr, sizeof(uint64_t));
+                setDynapiAddr(addr);
+                break;
+            }
             default:
                 debuglogstdio(LCF_ERROR | LCF_SOCKET, "Unknown socket message %d", message);
                 exit(1);

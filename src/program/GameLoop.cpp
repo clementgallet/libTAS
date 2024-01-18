@@ -385,8 +385,34 @@ void GameLoop::initProcessMessages()
     sendMessage(MSGN_ENCODING_SEGMENT);
     sendData(&encoding_segment, sizeof(int));
 
+    /* Sometime games have trouble finding the address of the orginal function
+     * `SDL_DYNAPI_entry()` that we hook, so we send right away the symbol
+     * address if there is one */
+    uint64_t sdl_addr = getSymbolAddress("SDL_DYNAPI_entry");
+    if (sdl_addr != 0) {
+        sendMessage(MSGN_SDL_DYNAPI_ADDR);
+        sendData(&sdl_addr, sizeof(uint64_t));
+    }
+
     /* End message */
     sendMessage(MSGN_END_INIT);
+}
+
+uint64_t GameLoop::getSymbolAddress(const char* symbol)
+{
+    std::ostringstream cmd;
+    cmd << "readelf -Ws '" << context->gamepath << "' | grep " << symbol << " | awk '{print $2}'";
+
+    FILE *addrstr = popen(cmd.str().c_str(), "r");
+    uint64_t addr = 0;
+    if (addrstr != NULL) {
+        std::array<char,17> buf;
+        if (fgets(buf.data(), buf.size(), addrstr) != nullptr) {
+            addr = std::strtoull(buf.data(), nullptr, 16);
+        }
+        pclose(addrstr);
+    }
+    return addr;
 }
 
 bool GameLoop::startFrameMessages()
@@ -521,20 +547,7 @@ bool GameLoop::startFrameMessages()
 
         case MSGB_SYMBOL_ADDRESS: {
             std::string sym = receiveString();
-            
-            std::ostringstream cmd;
-            cmd << "readelf -Ws '" << context->gamepath << "' | grep " << sym << " | awk '{print $2}'";
-
-            FILE *addrstr = popen(cmd.str().c_str(), "r");
-            uint64_t addr = 0;
-            if (addrstr != NULL) {
-                std::array<char,17> buf;
-                if (fgets(buf.data(), buf.size(), addrstr) != nullptr) {
-                    addr = std::strtoull(buf.data(), nullptr, 16);
-                    std::cerr << "Asked for symbol " << sym << ", returns " << addr << std::endl;
-                }
-                pclose(addrstr);
-            }
+            uint64_t addr = getSymbolAddress(sym.c_str());
             sendData(&addr, sizeof(uint64_t));
             break;
         }

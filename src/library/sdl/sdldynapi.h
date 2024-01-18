@@ -26,6 +26,8 @@
 
 namespace libtas {
 
+void setDynapiAddr(uint64_t addr);
+
 /**
  * This function initializes the SDL jump table.
  */
