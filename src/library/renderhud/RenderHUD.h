@@ -85,7 +85,7 @@ class RenderHUD
         static int framesBeforeIdle;
         
         /* True if we render the game inside an ImGui window */
-        bool show_game_window = true;
+        bool show_game_window = false;
 };
 }
 
