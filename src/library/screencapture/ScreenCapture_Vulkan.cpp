@@ -245,7 +245,7 @@ const char* ScreenCapture_Vulkan::getPixelFormat()
         case VK_FORMAT_R16G16B16A16_UINT:
         case VK_FORMAT_R16G16B16A16_SINT:
         case VK_FORMAT_R16G16B16A16_SFLOAT:
-            return "RBA\x40"
+            return "RBA\x40";
         default:
             debuglogstdio(LCF_DUMP | LCF_VULKAN | LCF_ERROR, "  Unsupported pixel format %d", vk::context.colorFormat);
             return "RGBA";
