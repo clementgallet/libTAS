@@ -369,6 +369,7 @@ int ScreenCapture_Vulkan::copyScreenToSurface()
         debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkEndCommandBuffer failed with error %d", res);
     }
 
+    VkPipelineStageFlags stageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.commandBufferCount = 1;
@@ -376,11 +377,12 @@ int ScreenCapture_Vulkan::copyScreenToSurface()
     if (!vk::context.currentSemaphore) {
         debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_ERROR, "    No semaphore to wait on");
         submitInfo.waitSemaphoreCount = 0;
-        submitInfo.pWaitSemaphores = VK_NULL_HANDLE;            
+        submitInfo.pWaitSemaphores = VK_NULL_HANDLE;
     }
     else {
         submitInfo.waitSemaphoreCount = 1;
         submitInfo.pWaitSemaphores = &vk::context.currentSemaphore;
+        submitInfo.pWaitDstStageMask = &stageFlags;
     }
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = &vk::context.frameSemaphores[vk::context.semaphoreIndex].screenCompleteSemaphore;
@@ -475,12 +477,14 @@ static void EndCommandAndSubmitQueue(VkCommandBuffer cmdBuffer, VkSemaphore* sem
         debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkEndCommandBuffer failed with error %d", res);
     }
     
+    VkPipelineStageFlags stageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &cmdBuffer;
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = &vk::context.currentSemaphore;
+    submitInfo.pWaitDstStageMask = &stageFlags;
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = sem;
     

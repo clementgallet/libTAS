@@ -127,10 +127,10 @@ void RenderHUD_Vulkan::render()
     // Submit command buffer
     orig::vkCmdEndRenderPass(fd->osdCommandBuffer);
     {
-        VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        VkPipelineStageFlags stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         VkSubmitInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        info.pWaitDstStageMask = &wait_stage;
+        info.pWaitDstStageMask = &stageFlags;
         info.commandBufferCount = 1;
         info.pCommandBuffers = &fd->osdCommandBuffer;
         info.waitSemaphoreCount = 1;

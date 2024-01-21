@@ -623,6 +623,7 @@ VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64
          * fence, so we still need to signal either one. There does not seem to
          * be specific functions for that, so I'm using an empty command submitted
          * to a queue. */
+        VkPipelineStageFlags stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         VkSubmitInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         info.commandBufferCount = 0;
@@ -630,6 +631,7 @@ VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64
         if (semaphore) {
             info.signalSemaphoreCount = 1;
             info.pSignalSemaphores = &semaphore;
+            info.pWaitDstStageMask = &stageFlags;
         }
         else {
             info.signalSemaphoreCount = 0;
@@ -675,11 +677,13 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
     if (Global::skipping_draw) {        
         /* If skipping draw, we must still wait on all semaphores, so we push an
         * empty command */
+        VkPipelineStageFlags stageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         VkSubmitInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         info.commandBufferCount = 0;
         info.waitSemaphoreCount = pPresentInfo->waitSemaphoreCount;
         info.pWaitSemaphores = pPresentInfo->pWaitSemaphores;
+        info.pWaitDstStageMask = &stageFlags;
         info.signalSemaphoreCount = 0;
         orig::vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
     }
