@@ -44,6 +44,8 @@ static const char* formatToString(AudioBuffer::SampleFormat format)
             return "double";
         case AudioBuffer::SAMPLE_FMT_MSADPCM:
             return "MS-ADPCM";
+        default:
+            return "unknown";
     }
     return "unknown";
 }
@@ -81,9 +83,6 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
             }
         }
     }
-    
-    /* Compute maximum of non-consumed samples to align properly */
-    for (const auto& source : sources)
     
     ImGui::SetNextWindowScroll(ImVec2((float)consumedMS / msPerUnit, 0.0f));
     ImGui::SetNextWindowContentSize(ImVec2((float)(consumedMS + nonConsumedMS) / msPerUnit + ImGui::GetContentRegionAvail().x, 0.0f));

@@ -20,8 +20,6 @@
 #ifndef LIBTAS_IMGUI_MESSAGEWINDOW_H_INCL
 #define LIBTAS_IMGUI_MESSAGEWINDOW_H_INCL
 
-#include <string>
-
 namespace libtas {
 
 namespace MessageWindow

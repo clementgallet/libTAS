@@ -21,6 +21,7 @@
 #define LIBTAS_IMGUI_FRAMEWINDOW_H_INCL
 
 #include <string>
+#include <cstdint>
 
 namespace libtas {
 
