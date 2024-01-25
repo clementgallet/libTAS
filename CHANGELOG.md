@@ -14,6 +14,7 @@
 * [ImGui] New audio debug window
 * [ImGui] Show game inside a window (OpenGL)
 * [ImGui] Show game inside a window (Vulkan)
+* Add lua memory.baseAddress() function (#561)
 
 ### Changed
 

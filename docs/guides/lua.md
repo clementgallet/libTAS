@@ -217,6 +217,14 @@ Writes the value `value` to address `address`.
 
 Writes the value `value` to address `address`.
 
+#### memory.baseAddress
+
+    Number memory.baseAddress(String file)
+
+Returns the base address of the file mapped in memory whose name is `file`. The
+file can either be specified as absolute path, or the filename. Returns `0` if
+the file could not be found.
+
 ### Movie functions
 
 #### movie.currentFrame

@@ -85,6 +85,9 @@ namespace Memory {
     
     /* Write a double */
     int writed(lua_State *L);
+    
+    /* Returns base address of a file */
+    int baseAddress(lua_State *L);
 }
 }
 

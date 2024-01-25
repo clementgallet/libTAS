@@ -20,6 +20,7 @@
 #include "Memory.h"
 
 #include "ramsearch/MemAccess.h"
+#include "ramsearch/BaseAddresses.h"
 
 #include <iostream>
 extern "C" {
@@ -46,6 +47,7 @@ static const luaL_Reg memory_functions[] =
     { "write64", Lua::Memory::write64},
     { "writef", Lua::Memory::writef},
     { "writed", Lua::Memory::writed},
+    { "baseAddress", Lua::Memory::baseAddress},
     { NULL, NULL }
 };
 
@@ -138,3 +140,11 @@ int Lua::Memory::write##NAME(lua_State *L) \
 
 WRITEFUNCNUMBER(f, float)
 WRITEFUNCNUMBER(d, double)
+
+int Lua::Memory::baseAddress(lua_State *L)
+{
+    std::string text = luaL_checklstring(L, 1, nullptr);
+    uintptr_t addr = BaseAddresses::getBaseAddress(text);
+    lua_pushinteger(L, static_cast<lua_Integer>(addr));
+    return 1;
+}
