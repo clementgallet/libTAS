@@ -30,14 +30,14 @@ DEFINE_ORIG_POINTER(FMOD_EventSystem_GetSystemObject)
 DEFINE_ORIG_POINTER(FMOD_System_SetOutput)
 DEFINE_ORIG_POINTER(_ZN4FMOD6System9setOutputE15FMOD_OUTPUTTYPE)
 
-int FMOD_System_Create(void **system)
+int FMOD_System_Create(void **system, int version)
 {
     DEBUGLOGCALL(LCF_SOUND);
 
     LINK_NAMESPACE(FMOD_System_Create, "fmod");
     LINK_NAMESPACE(FMOD_System_SetOutput, "fmod");
 
-    int ret = orig::FMOD_System_Create(system);
+    int ret = orig::FMOD_System_Create(system, version);
 
     /* We force the output to be ALSA */
     orig::FMOD_System_SetOutput(*system, 11 /* FMOD_OUTPUTTYPE_ALSA */);

@@ -24,7 +24,7 @@
 
 namespace libtas {
 
-OVERRIDE int FMOD_System_Create(void **system);
+OVERRIDE int FMOD_System_Create(void **system, int version);
 
 OVERRIDE int FMOD_EventSystem_Create(void **eventsystem);
 OVERRIDE int FMOD_EventSystem_GetSystemObject(void *eventsystem, void **system);
