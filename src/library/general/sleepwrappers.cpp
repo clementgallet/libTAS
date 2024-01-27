@@ -63,7 +63,7 @@ bool transfer_sleep(const struct timespec &ts)
 
 /* Override */ void SDL_Delay(unsigned int sleep)
 {
-    RETURN_IF_NATIVE(SDL_Delay, (sleep), nullptr);
+    LINK_NAMESPACE_GLOBAL(nanosleep);
 
     struct timespec ts;
     ts.tv_sec = sleep / 1000;
@@ -77,7 +77,7 @@ bool transfer_sleep(const struct timespec &ts)
     debuglogstdio(LCF_SDL | LCF_SLEEP, "%s call - sleep for %d ms", __func__, sleep);
 
     if (! transfer_sleep(ts))
-        RETURN_NATIVE(SDL_Delay, (sleep), nullptr);
+        orig::nanosleep(&ts, NULL);
 }
 
 /* Override */ int usleep(useconds_t usec)
