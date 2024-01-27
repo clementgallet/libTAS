@@ -171,6 +171,15 @@ int openSaveFile(const char *file, int oflag)
 
 int closeSaveFile(int fd)
 {
+    /* During process termination, it can call very late close() calls, and the
+     * C++ objects will be destroyed already. Maintaining the savefile list is
+     * not important anymore, so we are returning immediately.
+     * We return 0 here to indicate that we don't want the game to call
+     * close(), because on detruction of each savefile, it may write back the 
+     * content to the original file if `write_savefiles_on_exit` setting is set. */
+    if (Global::is_exiting)
+        return 0;
+
     std::lock_guard<std::mutex> lock(getSaveFileListMutex());
 
     auto& savefiles = getSaveFileList();
@@ -185,6 +194,9 @@ int closeSaveFile(int fd)
 
 int closeSaveFile(FILE *stream)
 {
+    if (Global::is_exiting)
+        return 0;    
+
     std::lock_guard<std::mutex> lock(getSaveFileListMutex());
 
     auto& savefiles = getSaveFileList();
