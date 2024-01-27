@@ -150,16 +150,7 @@ int extractBinaryType(std::string path)
     cmd += path;
     cmd += "\"";
 
-    std::string outputstr("");
-
-    FILE *output = popen(cmd.c_str(), "r");
-    if (output != NULL) {
-        std::array<char,1000> buf;
-        if (fgets(buf.data(), buf.size(), output) != 0) {
-            outputstr = std::string(buf.data());
-        }
-        pclose(output);
-    }
+    std::string outputstr = queryCmd(cmd);
 
     if (outputstr.find("ELF 32-bit") != std::string::npos) {
         return BT_ELF32 | macappflag;
@@ -211,19 +202,7 @@ std::string extractMacOSExecutable(std::string path)
         plist_cmd += path;
         plist_cmd += "/Contents/Info.plist\" CFBundleExecutable";
         
-        std::string outputstr("");
-        FILE *output = popen(plist_cmd.c_str(), "r");
-        if (output != NULL) {
-            std::array<char,1000> buf;
-            if (fgets(buf.data(), buf.size(), output) != 0) {
-                outputstr = std::string(buf.data());
-            }
-            pclose(output);
-        }
-
-        /* Trim the value */
-        size_t end = outputstr.find_last_not_of(" \n\r\t\f\v");
-        outputstr = (end == std::string::npos) ? "" : outputstr.substr(0, end + 1);
+        std::string outputstr = queryCmd(plist_cmd);
 
         /* Build path to executable */
         std::string executable_path = path;
@@ -238,4 +217,22 @@ std::string extractMacOSExecutable(std::string path)
     }
 
     return "";
+}
+
+std::string queryCmd(const std::string& cmd)
+{
+    std::string outputstr;
+    FILE *output = popen(cmd.c_str(), "r");
+    if (output != NULL) {
+        char buf[256];
+        if (fgets(buf, 256, output) != 0) {
+            outputstr = buf;
+        }
+        pclose(output);
+    }
+
+    /* Trim the value */
+    size_t end = outputstr.find_last_not_of(" \n\r\t\f\v");
+    outputstr = (end == std::string::npos) ? "" : outputstr.substr(0, end + 1);
+    return outputstr;
 }

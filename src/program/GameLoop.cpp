@@ -23,6 +23,7 @@
 #include "GameLoop.h"
 #include "GameThread.h"
 #include "GameEvents.h"
+#include "AutoDetect.h"
 
 #ifdef __unix__
 #include "GameEventsXcb.h"
@@ -202,25 +203,14 @@ void GameLoop::init()
     /* Init savestate list */
     SaveStateList::init(context);
 
-    /* We fork here so that the child process calls the game */
-    fork_pid = fork();
-    if (fork_pid == 0) {
-        GameThread::launch(context);
-    }
-
     /* Compute the MD5 hash of the game binary */
     context->md5_game.clear();
     std::ostringstream cmd;
     cmd << "md5sum -b \"" << context->gamepath << "\" 2> /dev/null";
 
-    FILE *md5str = popen(cmd.str().c_str(), "r");
-    if (md5str != NULL) {
-        std::array<char,33> buf;
-        if (fgets(buf.data(), buf.size(), md5str) != nullptr) {
-            context->md5_game.assign(buf.data());
-        }
-        pclose(md5str);
-    }
+    context->md5_game = queryCmd(cmd.str());
+    if (context->md5_game.size() > 32)
+        context->md5_game.resize(32);
 
     /* Only open the movie if we did not restart */
     if (context->status != Context::RESTARTING) {
@@ -246,6 +236,19 @@ void GameLoop::init()
         else {
             movie.clear();
         }
+    }
+
+    /* Detect common game engines and load some known settings. This is done
+     * before forking, because it can modify settings used by both the game
+     * process (env variables, commandline-options) and the libtas program
+     * (shared config sent to the game on startup) */
+    AutoDetect::game_engine(context);
+
+    /* We fork here so that the child process calls the game. This is done after,
+     * loading the movie so that it benefits from the movie settings. */
+    fork_pid = fork();
+    if (fork_pid == 0) {
+        GameThread::launch(context);
     }
 
     /* We must add a blank frame in most cases */
@@ -403,15 +406,7 @@ uint64_t GameLoop::getSymbolAddress(const char* symbol)
     std::ostringstream cmd;
     cmd << "readelf -Ws '" << context->gamepath << "' | grep " << symbol << " | awk '{print $2}'";
 
-    FILE *addrstr = popen(cmd.str().c_str(), "r");
-    uint64_t addr = 0;
-    if (addrstr != NULL) {
-        std::array<char,17> buf;
-        if (fgets(buf.data(), buf.size(), addrstr) != nullptr) {
-            addr = std::strtoull(buf.data(), nullptr, 16);
-        }
-        pclose(addrstr);
-    }
+    uint64_t addr = std::strtoull(queryCmd(cmd.str()).c_str(), nullptr, 16);    
     return addr;
 }
 

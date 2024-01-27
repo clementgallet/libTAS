@@ -43,6 +43,7 @@ libTAS_QTSOURCES = \
 libTAS_MOCSOURCES = $(libTAS_QTSOURCES:.h=_moc.cpp)
 
 libTAS_SOURCES = \
+    AutoDetect.cpp \
     AutoSave.cpp \
     Config.cpp \
     GameEvents.cpp \

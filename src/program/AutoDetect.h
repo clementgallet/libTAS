@@ -17,28 +17,25 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_GAMETHREAD_H_INCLUDED
-#define LIBTAS_GAMETHREAD_H_INCLUDED
-
-#include <list>
-#include <string>
+#ifndef LIBTAS_AUTODETECT_H_INCLUDED
+#define LIBTAS_AUTODETECT_H_INCLUDED
 
 /* Forward declaration */
+class MovieFile;
 struct Context;
 
-namespace GameThread {
-    /* Set the different environment variables, then start the game executable with
-     * our library to be injected using the LD_PRELOAD trick.
-     * Because this function eventually calls execl, it does not return.
-     * So, it is called from a child process using fork().
-     */
-    void launch(Context *context);
-
-    /* Set all environment variables before launching the game process */
-    void set_env_variables(Context *context, int gameArch);
+namespace AutoDetect {
     
-    /* Build the list of all arguments to be passed to `sh` for running the game */
-    std::list<std::string> build_arg_list(Context *context, int gameArch);
+    /* Detect and returns the game executable arch */
+    int arch(Context *context);
+
+    /* Auto-detect the local directory containing the bundle libraries shipped
+     * with the game, so that in most cases users don't have to specify it. */
+    void game_libraries(Context *context);
+
+    /* Auto-detect game engine and apply settings to common engines */
+    void game_engine(Context *context);
+
 }
 
 #endif

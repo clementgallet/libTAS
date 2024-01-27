@@ -180,18 +180,10 @@ bool ErrorChecking::checkArchType(Context* context)
 
         std::string cmd = "which ";
         cmd += winename;
-        FILE *output = popen(cmd.c_str(), "r");
-        if (output != NULL) {
-            std::array<char,256> buf;
-            fgets(buf.data(), buf.size(), output);
-            int ret = pclose(output);
-            if (ret != 0) {
-                critical(QString("Trying to execute a Windows executable, but %1 cannot be found").arg(winename.c_str()), context->interactive);
-                return false;
-            }
-        }
-        else {
-            critical(QString("Coundn't popen to locate wine"), context->interactive);
+        
+        std::string winepath = queryCmd(cmd);
+        if (winepath.empty()) {
+            critical(QString("Trying to execute a Windows executable, but %1 cannot be found").arg(winename.c_str()), context->interactive);
             return false;
         }
     }
@@ -209,18 +201,9 @@ bool ErrorChecking::checkArchType(Context* context)
             break;
         }
 
-        FILE *output = popen(cmd.c_str(), "r");
-        if (output != NULL) {
-            std::array<char,256> buf;
-            fgets(buf.data(), buf.size(), output);
-            int ret = pclose(output);
-            if (ret != 0) {
-                critical(QString("Trying to start a game with attached debugger, but debugger cannot be found"), context->interactive);
-                return false;
-            }
-        }
-        else {
-            critical(QString("Coundn't popen to locate debugger"), context->interactive);
+        std::string gdbpath = queryCmd(cmd);
+        if (gdbpath.empty()) {
+            critical(QString("Trying to start a game with attached debugger, but debugger cannot be found"), context->interactive);
             return false;
         }
     }
