@@ -718,7 +718,6 @@ int pthread_setname_np (const char *name)
         GlobalState::setNoLog(true);
     }
     if (strstr(name, ":disk$")) {
-        debuglogstdio(LCF_THREAD | LCF_ERROR, "GPU native thread");
         GlobalState::setNative(true);
         GlobalState::setNoLog(true);
     }

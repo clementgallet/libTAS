@@ -148,7 +148,7 @@ void setDynapiAddr(uint64_t addr)
 // #define IF_IN_BOUNDS_FULL(FUNC) if (index::FUNC < full_entries.size())
 
 #define IF_IN_BOUNDS(FUNC) if (index::FUNC * sizeof(void *) < tablesize)
-#define SDL_LINK(FUNC) IF_IN_BOUNDS(FUNC) orig::FUNC = reinterpret_cast<decltype(&FUNC)>(entries[index::FUNC]); else debuglogstdio(LCF_ERROR | LCF_SDL | LCF_HOOK, "Could not import sdl dynapi symbol %s", #FUNC);
+#define SDL_LINK(FUNC) IF_IN_BOUNDS(FUNC) orig::FUNC = reinterpret_cast<decltype(&FUNC)>(entries[index::FUNC]); else debuglogstdio(LCF_SDL | LCF_HOOK, "sdl dynapi symbol %s will not be imported", #FUNC);
 #define SDL_HOOK(FUNC) IF_IN_BOUNDS(FUNC) entries[index::FUNC] = reinterpret_cast<void *>(dlsym(libtas, #FUNC));
 #include "sdlhooks.h"
 
