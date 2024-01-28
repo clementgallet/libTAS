@@ -39,6 +39,7 @@
 #include "../external/imgui/imgui_impl_xlib.h"
 
 #include <sstream>
+#include <math.h>
 
 namespace libtas {
 
@@ -82,6 +83,14 @@ void RenderHUD::endFrame()
     ImGui::EndFrame();
 }
 
+static void aspectRatioCallback(ImGuiSizeCallbackData* data)
+{
+    float aspect_ratio = *(float*)data->UserData;
+    float newx = ((data->DesiredSize.y - ImGui::GetFrameHeight()) * aspect_ratio);
+    data->DesiredSize.x = roundf((data->DesiredSize.x + newx) / 2.0);
+    data->DesiredSize.y = roundf((data->DesiredSize.x / aspect_ratio) + ImGui::GetFrameHeight());
+}
+
 void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai)
 {
     if (!ImGui::GetCurrentContext()) {
@@ -97,14 +106,19 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
 
         /* Remove padding so that the texture is aligned with the window */
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-        ImGui::SetNextWindowSize(ImVec2(w, h));
-        if (ImGui::Begin("Game window", &show_game_window, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize)) {
+        ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Once);
+        
+        /* Enforce aspect ratio */
+        float aspect_ratio = (float)w / (float)h;
+        ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, FLT_MAX), aspectRatioCallback, (void*)&aspect_ratio);
+        if (ImGui::Begin("Game window", &show_game_window, ImGuiWindowFlags_NoScrollbar)) {
             ImVec2 pos = ImGui::GetCursorScreenPos();
             
+            ImVec2 avail_size = ImGui::GetContentRegionAvail();
             ImGui::GetWindowDrawList()->AddImage(
                 reinterpret_cast<void*>(ScreenCapture::screenTexture()), 
                 ImVec2(pos.x, pos.y), 
-                ImVec2(pos.x + w, pos.y + h), 
+                ImVec2(pos.x + avail_size.x, pos.y + avail_size.y), 
                 ImVec2(0, invertedOrigin()?1:0), 
                 ImVec2(1, invertedOrigin()?0:1)
             );                

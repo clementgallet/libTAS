@@ -16,6 +16,7 @@
 * [ImGui] Show game inside a window (Vulkan)
 * Add lua memory.baseAddress() function (#561)
 * Autodetect game engine and enforce some settings
+* [ImGui] When detached, game window can be resized
 
 ### Changed
 
