@@ -276,7 +276,6 @@ void myglViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     if (GlobalState::isNative()) return orig::glViewport(x, y, width, height);
     debuglogstdio(LCF_OGL, "glViewport called with %d : %d", width, height);
-    ScreenCapture::resize(width, height);
     return orig::glViewport(x, y, width, height);
 }
 
