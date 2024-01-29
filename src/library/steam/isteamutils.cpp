@@ -135,6 +135,24 @@ bool ISteamUtils::BOverlayNeedsPresent()
 	return false;
 }
 
-
+DUMMY_STEAM_IMPL(ISteamUtils::CheckFileSignature, (const char *szFileName), SteamAPICall_t, 1)
+DUMMY_STEAM_IMPL(ISteamUtils::ShowGamepadTextInput, ( EGamepadTextInputMode eInputMode, EGamepadTextInputLineMode eLineInputMode, const char *pchDescription, unsigned int unCharMax, const char *pchExistingText ), bool, false)
+DUMMY_STEAM_IMPL(ISteamUtils::GetEnteredGamepadTextLength, (), unsigned int, 0)
+DUMMY_STEAM_IMPL(ISteamUtils::GetEnteredGamepadTextInput, ( char *pchText, unsigned int cchText ), bool, false)
+DUMMY_STEAM_IMPL(ISteamUtils::GetSteamUILanguage, (), const char *, "")
+DUMMY_STEAM_IMPL(ISteamUtils::IsSteamRunningInVR, (), bool, false)
+DUMMY_STEAM_IMPL(ISteamUtils::SetOverlayNotificationInset, ( int nHorizontalInset, int nVerticalInset ), void, )
+DUMMY_STEAM_IMPL(ISteamUtils::IsSteamInBigPictureMode, (), bool, false)
+DUMMY_STEAM_IMPL(ISteamUtils::StartVRDashboard, (), void, )
+DUMMY_STEAM_IMPL(ISteamUtils::IsVRHeadsetStreamingEnabled, (), bool, false)
+DUMMY_STEAM_IMPL(ISteamUtils::SetVRHeadsetStreamingEnabled, (bool bEnabled), void,)
+DUMMY_STEAM_IMPL(ISteamUtils::IsSteamChinaLauncher, (), bool, false)
+DUMMY_STEAM_IMPL(ISteamUtils::InitFilterText, (uint32_t unFilterOptions), bool, false)
+DUMMY_STEAM_IMPL(ISteamUtils::FilterText, ( ETextFilteringContext eContext, CSteamID sourceSteamID, const char *pchInputMessage, char *pchOutFilteredText, uint32_t nByteSizeOutFilteredText ), int, 0)
+DUMMY_STEAM_IMPL(ISteamUtils::GetIPv6ConnectivityState, ( ESteamIPv6ConnectivityProtocol eProtocol ), ESteamIPv6ConnectivityState, 0)
+DUMMY_STEAM_IMPL(ISteamUtils::IsSteamRunningOnSteamDeck, (), bool, false)
+DUMMY_STEAM_IMPL(ISteamUtils::ShowFloatingGamepadTextInput, ( EFloatingGamepadTextInputMode eKeyboardMode, int nTextFieldXPosition, int nTextFieldYPosition, int nTextFieldWidth, int nTextFieldHeight ), bool, false)
+DUMMY_STEAM_IMPL(ISteamUtils::SetGameLauncherMode, (bool bLauncherMode), void, )
+DUMMY_STEAM_IMPL(ISteamUtils::DismissFloatingGamepadTextInput, (), bool, false)
 
 }

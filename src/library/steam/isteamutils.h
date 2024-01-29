@@ -13,6 +13,11 @@
 
 namespace libtas {
 
+enum EFloatingGamepadTextInputMode {};
+enum ETextFilteringContext {};
+typedef int ESteamIPv6ConnectivityState;
+enum ESteamIPv6ConnectivityProtocol {};
+
 //-----------------------------------------------------------------------------
 // Purpose: interface to user independent utility functions
 //-----------------------------------------------------------------------------
@@ -98,41 +103,78 @@ public:
 	// //   k_ECheckFileSignatureFileNotFound - The file does not exist on disk.
 	// //   k_ECheckFileSignatureInvalidSignature - The file exists, and the signing tab has been set for this file, but the file is either not signed or the signature does not match.
 	// //   k_ECheckFileSignatureValidSignature - The file is signed and the signature is valid.
-	// virtual SteamAPICall_t CheckFileSignature( const char *szFileName );
+	virtual SteamAPICall_t CheckFileSignature( const char *szFileName );
 	//
 	// // Activates the Big Picture text input dialog which only supports gamepad input
-	// virtual bool ShowGamepadTextInput( EGamepadTextInputMode eInputMode, EGamepadTextInputLineMode eLineInputMode, const char *pchDescription, unsigned int unCharMax, const char *pchExistingText );
+	virtual bool ShowGamepadTextInput( EGamepadTextInputMode eInputMode, EGamepadTextInputLineMode eLineInputMode, const char *pchDescription, unsigned int unCharMax, const char *pchExistingText );
 	//
 	// // Returns previously entered text & length
-	// virtual unsigned int GetEnteredGamepadTextLength();
-	// virtual bool GetEnteredGamepadTextInput( char *pchText, unsigned int cchText );
+	virtual unsigned int GetEnteredGamepadTextLength();
+	virtual bool GetEnteredGamepadTextInput( char *pchText, unsigned int cchText );
 	//
 	// // returns the language the steam client is running in, you probably want ISteamApps::GetCurrentGameLanguage instead, this is for very special usage cases
-	// virtual const char *GetSteamUILanguage();
+	virtual const char *GetSteamUILanguage();
 	//
 	// // returns true if Steam itself is running in VR mode
-	// virtual bool IsSteamRunningInVR();
+	virtual bool IsSteamRunningInVR();
 	//
 	// // Sets the inset of the overlay notification from the corner specified by SetOverlayNotificationPosition.
-	// virtual void SetOverlayNotificationInset( int nHorizontalInset, int nVerticalInset );
+	virtual void SetOverlayNotificationInset( int nHorizontalInset, int nVerticalInset );
 	//
 	// // returns true if Steam & the Steam Overlay are running in Big Picture mode
 	// // Games much be launched through the Steam client to enable the Big Picture overlay. During development,
 	// // a game can be added as a non-steam game to the developers library to test this feature
-	// virtual bool IsSteamInBigPictureMode();
+	virtual bool IsSteamInBigPictureMode();
 	//
 	// // ask SteamUI to create and render its OpenVR dashboard
-	// virtual void StartVRDashboard();
+	virtual void StartVRDashboard();
 	//
 	// // Returns true if the HMD content will be streamed via Steam In-Home Streaming
-	// virtual bool IsVRHeadsetStreamingEnabled();
+	virtual bool IsVRHeadsetStreamingEnabled();
 	//
 	// // Set whether the HMD content will be streamed via Steam In-Home Streaming
 	// // If this is set to true, then the scene in the HMD headset will be streamed, and remote input will not be allowed.
 	// // If this is set to false, then the application window will be streamed instead, and remote input will be allowed.
 	// // The default is true unless "VRHeadsetStreaming" "0" is in the extended appinfo for a game.
 	// // (this is useful for games that have asymmetric multiplayer gameplay)
-	// virtual void SetVRHeadsetStreamingEnabled( bool bEnabled );
+	virtual void SetVRHeadsetStreamingEnabled( bool bEnabled );
+    
+    // Returns whether this steam client is a Steam China specific client, vs the global client.
+    virtual bool IsSteamChinaLauncher();
+
+    // Initializes text filtering, loading dictionaries for the language the game is running in.
+    //   unFilterOptions are reserved for future use and should be set to 0
+    // Returns false if filtering is unavailable for the game's language, in which case FilterText() will act as a passthrough.
+    //
+    // Users can customize the text filter behavior in their Steam Account preferences:
+    // https://store.steampowered.com/account/preferences#CommunityContentPreferences
+    virtual bool InitFilterText( uint32_t unFilterOptions = 0 );
+
+    // Filters the provided input message and places the filtered result into pchOutFilteredText, using legally required filtering and additional filtering based on the context and user settings
+    //   eContext is the type of content in the input string
+    //   sourceSteamID is the Steam ID that is the source of the input string (e.g. the player with the name, or who said the chat text)
+    //   pchInputText is the input string that should be filtered, which can be ASCII or UTF-8
+    //   pchOutFilteredText is where the output will be placed, even if no filtering is performed
+    //   nByteSizeOutFilteredText is the size (in bytes) of pchOutFilteredText, should be at least strlen(pchInputText)+1
+    // Returns the number of characters (not bytes) filtered
+    virtual int FilterText( ETextFilteringContext eContext, CSteamID sourceSteamID, const char *pchInputMessage, char *pchOutFilteredText, uint32_t nByteSizeOutFilteredText );
+
+    // Return what we believe your current ipv6 connectivity to "the internet" is on the specified protocol.
+    // This does NOT tell you if the Steam client is currently connected to Steam via ipv6.
+    virtual ESteamIPv6ConnectivityState GetIPv6ConnectivityState( ESteamIPv6ConnectivityProtocol eProtocol );
+
+    // returns true if currently running on the Steam Deck device
+    virtual bool IsSteamRunningOnSteamDeck();
+
+    // Opens a floating keyboard over the game content and sends OS keyboard keys directly to the game.
+    // The text field position is specified in pixels relative the origin of the game window and is used to position the floating keyboard in a way that doesn't cover the text field
+    virtual bool ShowFloatingGamepadTextInput( EFloatingGamepadTextInputMode eKeyboardMode, int nTextFieldXPosition, int nTextFieldYPosition, int nTextFieldWidth, int nTextFieldHeight );
+
+    // In game launchers that don't have controller support you can call this to have Steam Input translate the controller input into mouse/kb to navigate the launcher
+    virtual void SetGameLauncherMode( bool bLauncherMode );
+
+    // Dismisses the floating keyboard.
+    virtual bool DismissFloatingGamepadTextInput();
 };
 
 }

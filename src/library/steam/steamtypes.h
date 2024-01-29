@@ -11,6 +11,12 @@
 
 namespace libtas {
 
+#define DUMMY_STEAM_IMPL(NAME, ARGS, RETTYPE, RET) \
+RETTYPE NAME ARGS {\
+    DEBUGLOGCALL(LCF_STEAM);\
+    return RET;\
+}
+
 typedef int HSteamUser;
 typedef int HSteamPipe;
 typedef unsigned int HAuthTicket;
