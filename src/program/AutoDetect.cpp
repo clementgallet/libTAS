@@ -101,8 +101,8 @@ void AutoDetect::game_engine(Context *context)
         if (stat(data.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)) {
             std::cout << "Unity game detected" << std::endl;
             std::ostringstream oss;
-            oss << "strings " << data;
-            oss << "/Resources/unity_builtin_extra | head -n 1";
+            oss << "strings '" << data;
+            oss << "/Resources/unity_builtin_extra' | head -n 1";
 
             std::string version = queryCmd(oss.str());
             if (!version.empty())
@@ -140,17 +140,12 @@ void AutoDetect::game_engine(Context *context)
     /* Check for Godot:
      * Look at symbols inside the game executable and count `godot_*` */
     std::ostringstream oss;
-    oss << "readelf -WsC " << context->gamepath;
-    oss << " | grep godot_ | wc -l ";
+    oss << "readelf -WsC '" << context->gamepath;
+    oss << "' | grep godot_ | wc -l ";
 
     std::string godotcount = queryCmd(oss.str());
     if (!godotcount.empty() && (std::strtoul(godotcount.c_str(), nullptr, 10) > 100)) {
         std::cout << "Godot game detected" << std::endl;
-
-        std::string cmd = context->gamepath;
-        cmd += " --version";
-        std::string godotversion = queryCmd(cmd);
-        std::cout << "   Version " << godotversion << std::endl;
 
         /* Check for --audio-driver command-line option */
         if (context->config.gameargs.find("--audio-driver") == std::string::npos) {
