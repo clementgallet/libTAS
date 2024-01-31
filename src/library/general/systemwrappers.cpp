@@ -23,6 +23,7 @@
 #include "global.h"
 #include "GlobalState.h"
 #include "backtrace.h"
+#include "GameHacks.h"
 #ifdef __unix__
 #include "xlib/xdisplay.h" // x11::gameDisplays
 #endif
@@ -86,6 +87,22 @@ DEFINE_ORIG_POINTER(sched_getaffinity)
         GlobalState::setNative(true);
     }
     return pid;
+}
+
+/* Override */ int sched_getcpu (void) __THROW
+{
+    /* Disable the feature for .NET games compiled with dotnet. This is because
+     * it performs a speedcheck on startup where it determines the cost of this
+     * call compared to TLS access, aiming at caching the value.
+     * See <https://github.com/dotnet/runtime/blob/bfa39b303ab33306b66ec24c72ccc8fc4fe17bb2/src/libraries/System.Private.CoreLib/src/System/Threading/ProcessorIdCache.cs#L58-L143> */
+    
+    DEBUGLOGCALL(LCF_SYSTEM);
+
+    /* GameHacks::hasCoreclr() alone may not recognize dotnet games */
+    if (GameHacks::hasCoreclr() || GameHacks::getFinalizerThread() != 0)
+        return -1;
+
+    RETURN_NATIVE(sched_getcpu, (), nullptr);
 }
 
 }

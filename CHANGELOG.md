@@ -17,6 +17,7 @@
 * Add lua memory.baseAddress() function (#561)
 * Autodetect game engine and enforce some settings
 * [ImGui] When detached, game window can be resized
+* Disable a dotnet speed check (#590)
 
 ### Changed
 

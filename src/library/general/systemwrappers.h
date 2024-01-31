@@ -35,6 +35,8 @@ OVERRIDE pid_t getpid (void) __THROWNL;
    and the process ID of the new process to the old process.  */
 OVERRIDE pid_t fork(void) __THROWNL;
 
+/* Get index of currently used CPU.  */
+OVERRIDE int sched_getcpu (void) __THROW;
 }
 
 #endif
