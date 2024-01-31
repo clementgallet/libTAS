@@ -26,9 +26,10 @@
 #include "general/dlhook.h"
 #include "hook.h"
 #include "GlobalState.h"
+#include "../external/elfhacks.h"
 
+#include <execinfo.h>
 #include <dlfcn.h>
-//#include <vector>
 
 namespace libtas {
 
@@ -56,74 +57,45 @@ void setDynapiAddr(uint64_t addr)
 /* Override */ Sint32 SDL_DYNAPI_entry(Uint32 apiver, void *table, Uint32 tablesize) {
     DEBUGLOGCALL(LCF_SDL);
 
-    char* libtaspath;
-    NATIVECALL(libtaspath = getenv("SDL_DYNAMIC_API"));
-    void *libtas;
-    NATIVECALL(libtas = dlopen(libtaspath, RTLD_LAZY | RTLD_NOLOAD));
-    if (libtas == nullptr) {
-        debuglogstdio(LCF_SDL | LCF_ERROR, "Could not find already loaded libtas.so!");
-        return 1;
+    /* Try finding the original SDL_DYNAPI_entry function. The more generic way
+     * is to determine in which file the calling function is located with  
+     * dladdr(), and look into this file for the symbol `SDL_DYNAPI_entry`.
+     *
+     * For some reason, the code below does not find the symbol inside Unity
+     * executables, even if bash command `readelf` shows the symbol...
+     * So in this case, we received the symbol address from libtas program. */
+
+    if (!orig::SDL_DYNAPI_entry) {
+        Dl_info info;
+        if (dladdr(__builtin_return_address(0), &info)) {
+            /* Get the dynamic library name of our caller */
+
+            debuglogstdio(LCF_SDL, "   Try extracting original SDL_DYNAPI_entry function from file %s", info.dli_fname);
+            eh_obj_t obj;
+            int ret = eh_find_obj(&obj, info.dli_fname);
+            if (ret == 0) {
+                eh_find_sym(&obj, "SDL_DYNAPI_entry", (void **) &orig::SDL_DYNAPI_entry);
+                eh_destroy_obj(&obj);
+            }
+        }
     }
 
-    /* Try finding the original SDL_DYNAPI_entry function, except if we 
-     * received it from libtas program already */
-    if (!orig::SDL_DYNAPI_entry) {
-        /* First try to use functions from the main executable in case it is
-        * statically linked with a modified version of SDL.  If this fails, the
-        * LINK_NAMESPACE below will use the dynamic library instead. */
-        void* h;
-        #ifdef __unix__
-        NATIVECALL(h = dlopen(nullptr, RTLD_DEEPBIND));
-        #elif defined(__APPLE__) && defined(__MACH__)
-        NATIVECALL(h = dlopen(nullptr, RTLD_FIRST));
-        #endif
-        NATIVECALL(orig::SDL_DYNAPI_entry = reinterpret_cast<decltype(orig::SDL_DYNAPI_entry)>(dlsym(h, "SDL_DYNAPI_entry")));
-        
-        /* This looks weird to use dlopen/dlsym to find the current function pointer,
-        * but in games that bundle their own libSDL (e.g. Iconoclasts), even using
-        * pointer `libtas::SDL_DYNAPI_entry` does not refer to this function but to 
-        * the game's one. */
-        
-        void *current_func;
-        NATIVECALL(current_func = dlsym(libtas, "SDL_DYNAPI_entry"));
-        if (current_func == nullptr) {
-            debuglogstdio(LCF_SDL | LCF_ERROR, "Could not find own SDL_DYNAPI_entry function!");
-            return 1;
-        }
-        
-        /* Check if the function pointer we found is this function. In that case,
-        * invalide the pointer, so we use the second method. */
-        if (reinterpret_cast<void*>(orig::SDL_DYNAPI_entry) == current_func) {
-            orig::SDL_DYNAPI_entry = nullptr;
-        }
-        
-        /* We cannot call any SDL functions until dynapi is setup, including the
-        * get_sdlversion in LINK_NAMESPACE_SDLX.  However, dynapi was not
-        * introduced until 2.0.2, so we can assume SDL2 for now.
-        * 
-        * We don't use the full library name first, because it is supposed to be already
-        * accessible. Some games or frameworks don't use the exact library name.
-        */
-        LINK_NAMESPACE_FULLNAME(SDL_DYNAPI_entry, "libSDL2");
+    if (!orig::SDL_DYNAPI_entry) {        
+        /* We couldn't find the SDL library that is supposed to be used by the
+        * game, so we load the system SDL library instead */
+        debuglogstdio(LCF_SDL | LCF_WARNING, "   Could not find the original SDL_DYNAPI_entry function, using the system one");
+        LINK_NAMESPACE_SDL2(SDL_DYNAPI_entry);
         
         if (!orig::SDL_DYNAPI_entry) {
-            
-            /* We couldn't find the SDL library that is supposed to be used by the
-            * game, so we load the system SDL library instead */
-            debuglogstdio(LCF_SDL | LCF_WARNING, "Could not find the original SDL_DYNAPI_entry function, using the system one");
-            LINK_NAMESPACE_SDL2(SDL_DYNAPI_entry);
-            
-            if (!orig::SDL_DYNAPI_entry) {
-                debuglogstdio(LCF_SDL | LCF_ERROR, "Could not find any SDL_DYNAPI_entry function!");
-                return 1;
-            }
+            debuglogstdio(LCF_SDL | LCF_ERROR, "   Could not find any SDL_DYNAPI_entry function!");
+            return 1;
         }
     }
     
     /* Get the original pointers. */
     Sint32 res = orig::SDL_DYNAPI_entry(apiver, table, tablesize);
     if (res != 0) {
-        debuglogstdio(LCF_SDL | LCF_ERROR, "The original SDL_DYNAPI_entry failed!");
+        debuglogstdio(LCF_SDL | LCF_ERROR, "   The original SDL_DYNAPI_entry failed!");
         return res;
     }
 
@@ -147,12 +119,21 @@ void setDynapiAddr(uint64_t addr)
     // orig::SDL_DYNAPI_entry(apiver, full_entries.data(), full_entries.size() * sizeof(void *));
 // #define IF_IN_BOUNDS_FULL(FUNC) if (index::FUNC < full_entries.size())
 
+    char* libtaspath;
+    NATIVECALL(libtaspath = getenv("SDL_DYNAMIC_API"));
+    void *libtaslib;
+    NATIVECALL(libtaslib = dlopen(libtaspath, RTLD_LAZY | RTLD_NOLOAD));
+    if (libtaslib == nullptr) {
+        debuglogstdio(LCF_SDL | LCF_ERROR, "   Could not find already loaded libtas.so!");
+        return 1;
+    }
+
 #define IF_IN_BOUNDS(FUNC) if (index::FUNC * sizeof(void *) < tablesize)
 #define SDL_LINK(FUNC) IF_IN_BOUNDS(FUNC) orig::FUNC = reinterpret_cast<decltype(&FUNC)>(entries[index::FUNC]); else debuglogstdio(LCF_SDL | LCF_HOOK, "sdl dynapi symbol %s will not be imported", #FUNC);
-#define SDL_HOOK(FUNC) IF_IN_BOUNDS(FUNC) entries[index::FUNC] = reinterpret_cast<void *>(dlsym(libtas, #FUNC));
+#define SDL_HOOK(FUNC) IF_IN_BOUNDS(FUNC) entries[index::FUNC] = reinterpret_cast<void *>(dlsym(libtaslib, #FUNC));
 #include "sdlhooks.h"
 
-    dlclose(libtas);
+    dlclose(libtaslib);
     return res;
 }
 
