@@ -232,7 +232,7 @@ void GameHacks::unitySyncWaitAll()
 
 void GameHacks::setCoreclr()
 {
-    debuglogstdio(LCF_HOOK | LCF_ERROR, "   detected coreclr");
+    debuglogstdio(LCF_HOOK, "   detected coreclr");
     coreclr = true;
 }
 
@@ -243,7 +243,7 @@ bool GameHacks::hasCoreclr()
 
 void GameHacks::setFinalizerThread(pid_t pid)
 {
-    debuglogstdio(LCF_HOOK | LCF_ERROR, "   set finalizer to %d", pid);
+    debuglogstdio(LCF_HOOK, "   set finalizer to %d", pid);
     finalizer_pid = pid;
 }
 
