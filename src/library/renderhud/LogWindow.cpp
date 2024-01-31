@@ -21,12 +21,15 @@
 
 #include "../external/imgui/imgui.h"
 
+#include <mutex>
+
 namespace libtas {
 
 static ImGuiTextBuffer buffer;
 static ImGuiTextFilter filter;
 static ImVector<int> lineOffsets; // Index to lines offset. We maintain this with AddLog() calls.
 static bool autoScroll;  // Keep scrolling if already at the bottom.
+static std::mutex mutex;
 
 void LogWindow::clear()
 {
@@ -37,6 +40,8 @@ void LogWindow::clear()
 
 void LogWindow::addLog(const char* beg, const char* end, bool newline)
 {
+    /* Logs can be added from multiple threads */
+    std::lock_guard<std::mutex> lock(mutex);
     buffer.append(beg, end);
     /* We always push a string with at most one `\n` character at the end */
     if (newline)

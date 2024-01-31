@@ -42,6 +42,7 @@
 * Use our own Vulkan descriptor pool to control the descriptor set count
 * Add correct Vulkan pixel size, and fill fourCC values for encoding
 * Add hidden version argument to FMOD_System_Create (#560)
+* Protect adding logs to ImGui
 
 ## [1.4.5] - 2023-10-22
 ### Added
