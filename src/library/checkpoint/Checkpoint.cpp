@@ -697,9 +697,12 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
 
     saved_area.print("Restore");
 
-    /* Add write permission to the area */
-    if (!(saved_area.prot & PROT_WRITE)) {
-        MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot | PROT_WRITE) == 0)
+    /* Add read/write permission to the area.
+     * Because adding write permission increases the commit charge, it can fail
+     * on very large uncommitted memory (Celeste64 -> 274GB memory segment).
+     * So, I will call mprotect() on individual memory pages when needed */
+    if (!(saved_area.prot & PROT_READ)) {
+        MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot | PROT_READ) == 0)
     }
 
     if (spmfd != -1) {
@@ -744,8 +747,12 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
          * on one stage, advancing to the next stage, loading the state and 
          * advancing to next stage again. */
         if (flag == Area::NO_PAGE) {
-            if (page_present && (!Utils::isZeroPage(static_cast<void*>(curAddr))))
+            if (page_present && (!Utils::isZeroPage(static_cast<void*>(curAddr)))) {
+                if (!(saved_area.prot & PROT_WRITE)) {
+                    MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
+                }
                 memset(static_cast<void*>(curAddr), 0, 4096);
+            }
         }
         else if (flag == Area::ZERO_PAGE) {
             if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
@@ -754,6 +761,9 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
                  * page was not modified since. In that case, we can skip the memset. */
                 if (soft_dirty ||
                     parent_state.getPageFlag(curAddr) != Area::ZERO_PAGE) {
+                    if (!(saved_area.prot & PROT_WRITE)) {
+                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
+                    }
                     memset(static_cast<void*>(curAddr), 0, 4096);
                 }
             }
@@ -761,44 +771,52 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
                 /* Only memset if the page is not zero, to prevent an actual
                  * allocation if the page was allocated but never used. */
                 if (!Utils::isZeroPage(static_cast<void*>(curAddr))) {
+                    if (!(saved_area.prot & PROT_WRITE)) {
+                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
+                    }
                     memset(static_cast<void*>(curAddr), 0, 4096);
                 }
             }
         }
-        else if (flag == Area::BASE_PAGE) {
-            /* The memory page of the loading savestate is the same as the base
-             * savestate. We must check if we actually need to read from the
-             * base savestate or if the page already contains the correct values.
-             */
-
-            char parent_flag = parent_state.getPageFlag(curAddr);
-
-            if (parent_flag != Area::BASE_PAGE) {
-                /* Memory page has been modified between the two savestates.
-                 * We must read from the base savestate.
-                 */
-                base_state.getPageFlag(curAddr);
-                base_state.queuePageLoad(curAddr);
+        else {
+            if (!(saved_area.prot & PROT_WRITE)) {
+                MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
             }
-            else {
-                if (soft_dirty) {
-                    /* Memory page has been modified after parent state.
+            if (flag == Area::BASE_PAGE) {
+                /* The memory page of the loading savestate is the same as the base
+                 * savestate. We must check if we actually need to read from the
+                 * base savestate or if the page already contains the correct values.
+                 */
+
+                char parent_flag = parent_state.getPageFlag(curAddr);
+
+                if (parent_flag != Area::BASE_PAGE) {
+                    /* Memory page has been modified between the two savestates.
                      * We must read from the base savestate.
                      */
                     base_state.getPageFlag(curAddr);
                     base_state.queuePageLoad(curAddr);
                 }
+                else {
+                    if (soft_dirty) {
+                        /* Memory page has been modified after parent state.
+                         * We must read from the base savestate.
+                         */
+                        base_state.getPageFlag(curAddr);
+                        base_state.queuePageLoad(curAddr);
+                    }
+                }
             }
-        }
-        else {
-            saved_state.queuePageLoad(curAddr);
+            else {
+                saved_state.queuePageLoad(curAddr);
+            }
         }
     }
     base_state.finishLoad();
     saved_state.finishLoad();
 
     /* Recover permission to the area */
-    if (!(saved_area.prot & PROT_WRITE)) {
+    if (!(saved_area.prot & PROT_WRITE) || !(saved_area.prot & PROT_READ)) {
         MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot) == 0)
     }
 }
