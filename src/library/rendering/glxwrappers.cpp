@@ -18,6 +18,7 @@
  */
 
 #include "glxwrappers.h"
+#include "openglloader.h"
 #include "openglwrappers.h"
 
 #include "hook.h"
@@ -30,151 +31,35 @@
 #include "global.h"
 #include "GlobalState.h"
 
+#define GLX_GLXEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
 #include <GL/glext.h>
 
 #include <string.h>
 
-#define STORE_RETURN_SYMBOL_DETAILED(FUNC_STR, ORIG_FUNC, NEW_FUNC) \
+#define RETURN_SYMBOL_DETAILED(FUNC_STR, NEW_FUNC) \
     if (!strcmp(reinterpret_cast<const char*>(symbol), FUNC_STR)) { \
-        ORIG_FUNC = reinterpret_cast<decltype(ORIG_FUNC)>(real_pointer); \
         if (NEW_FUNC) { \
             debuglogstdio(LCF_OGL,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(NEW_FUNC), real_pointer); \
             return reinterpret_cast<void*>(NEW_FUNC); \
         } \
-        return reinterpret_cast<void*>(ORIG_FUNC); \
+        return real_pointer; \
     }
 
-#define STORE_SYMBOL(FUNC) STORE_RETURN_SYMBOL_DETAILED(#FUNC, orig::FUNC, NULL)
-#define STORE_RETURN_SYMBOL(FUNC) STORE_RETURN_SYMBOL_DETAILED(#FUNC, orig::FUNC, libtas::FUNC)
-#define STORE_RETURN_SYMBOL_CUSTOM(FUNC) STORE_RETURN_SYMBOL_DETAILED(#FUNC, orig::FUNC, my##FUNC)
+#define RETURN_SYMBOL(FUNC) RETURN_SYMBOL_DETAILED(#FUNC, libtas::FUNC)
+#define RETURN_SYMBOL_CUSTOM(FUNC) RETURN_SYMBOL_DETAILED(#FUNC, my##FUNC)
+#define REPLACE_SYMBOL(FUNC_STR, ORIG_FUNC, NEW_FUNC) \
+    if (!strcmp(reinterpret_cast<const char*>(symbol), FUNC_STR)) { \
+        ORIG_FUNC = reinterpret_cast<decltype(ORIG_FUNC)>(real_pointer); \
+    } \
+    RETURN_SYMBOL_DETAILED(FUNC_STR, NEW_FUNC)
 
 namespace libtas {
 
 DEFINE_ORIG_POINTER(glXGetProcAddress)
 DEFINE_ORIG_POINTER(glXGetProcAddressARB)
 DEFINE_ORIG_POINTER(glXGetProcAddressEXT)
-DEFINE_ORIG_POINTER(glXMakeCurrent)
-DEFINE_ORIG_POINTER(glXMakeContextCurrent)
-DEFINE_ORIG_POINTER(glXSwapBuffers)
-DEFINE_ORIG_POINTER(glXSwapIntervalEXT)
-DEFINE_ORIG_POINTER(glXSwapIntervalSGI)
-DEFINE_ORIG_POINTER(glXSwapIntervalMESA)
-DEFINE_ORIG_POINTER(glXGetSwapIntervalMESA)
-DEFINE_ORIG_POINTER(glXQueryExtensionsString)
-DEFINE_ORIG_POINTER(glXQueryDrawable)
-DEFINE_ORIG_POINTER(glXCreateContextAttribsARB)
-DEFINE_ORIG_POINTER(glXDestroyContext)
-
-DECLARE_ORIG_POINTER(glGetString)
-DECLARE_ORIG_POINTER(glBlitFramebuffer)
-DECLARE_ORIG_POINTER(glTexParameterf)
-DECLARE_ORIG_POINTER(glTexParameteri)
-DECLARE_ORIG_POINTER(glEnable)
-DECLARE_ORIG_POINTER(glReadPixels)
-DECLARE_ORIG_POINTER(glGenFramebuffers)
-DECLARE_ORIG_POINTER(glBindFramebuffer)
-DECLARE_ORIG_POINTER(glDeleteFramebuffers)
-DECLARE_ORIG_POINTER(glGenRenderbuffers)
-DECLARE_ORIG_POINTER(glBindRenderbuffer)
-DECLARE_ORIG_POINTER(glDeleteRenderbuffers)
-DECLARE_ORIG_POINTER(glRenderbufferStorage)
-DECLARE_ORIG_POINTER(glFramebufferRenderbuffer)
-DECLARE_ORIG_POINTER(glDisable)
-DECLARE_ORIG_POINTER(glIsEnabled)
-DECLARE_ORIG_POINTER(glGetIntegerv)
-DECLARE_ORIG_POINTER(glGetError)
-DECLARE_ORIG_POINTER(glGenTextures)
-DECLARE_ORIG_POINTER(glDeleteTextures)
-DECLARE_ORIG_POINTER(glBindTexture)
-DECLARE_ORIG_POINTER(glBindSampler)
-DECLARE_ORIG_POINTER(glTexImage2D)
-DECLARE_ORIG_POINTER(glActiveTexture)
-DECLARE_ORIG_POINTER(glFramebufferTexture2D)
-DECLARE_ORIG_POINTER(glUseProgram)
-DECLARE_ORIG_POINTER(glPixelStorei)
-
-DECLARE_ORIG_POINTER(glGenBuffers)
-DECLARE_ORIG_POINTER(glGenVertexArrays)
-DECLARE_ORIG_POINTER(glBindVertexArray)
-DECLARE_ORIG_POINTER(glBindBuffer)
-DECLARE_ORIG_POINTER(glBufferData)
-DECLARE_ORIG_POINTER(glVertexAttribPointer)
-DECLARE_ORIG_POINTER(glEnableVertexAttribArray)
-DECLARE_ORIG_POINTER(glCreateShader)
-DECLARE_ORIG_POINTER(glShaderSource)
-DECLARE_ORIG_POINTER(glCompileShader)
-DECLARE_ORIG_POINTER(glGetShaderiv)
-DECLARE_ORIG_POINTER(glGetShaderInfoLog)
-DECLARE_ORIG_POINTER(glCreateProgram)
-DECLARE_ORIG_POINTER(glAttachShader)
-DECLARE_ORIG_POINTER(glLinkProgram)
-DECLARE_ORIG_POINTER(glGetProgramiv)
-DECLARE_ORIG_POINTER(glGetProgramInfoLog)
-DECLARE_ORIG_POINTER(glDetachShader)
-DECLARE_ORIG_POINTER(glDeleteShader)
-DECLARE_ORIG_POINTER(glBlendFunc)
-DECLARE_ORIG_POINTER(glDeleteBuffers)
-DECLARE_ORIG_POINTER(glDeleteVertexArrays)
-DECLARE_ORIG_POINTER(glDeleteProgram)
-DECLARE_ORIG_POINTER(glViewport)
-
-DECLARE_ORIG_POINTER(glClear)
-DECLARE_ORIG_POINTER(glBegin)
-DECLARE_ORIG_POINTER(glEnd)
-DECLARE_ORIG_POINTER(glVertex2d)
-DECLARE_ORIG_POINTER(glVertex2f)
-DECLARE_ORIG_POINTER(glVertex2i)
-DECLARE_ORIG_POINTER(glVertex2s)
-DECLARE_ORIG_POINTER(glVertex3d)
-DECLARE_ORIG_POINTER(glVertex3f)
-DECLARE_ORIG_POINTER(glVertex3i)
-DECLARE_ORIG_POINTER(glVertex3s)
-DECLARE_ORIG_POINTER(glVertex4d)
-DECLARE_ORIG_POINTER(glVertex4f)
-DECLARE_ORIG_POINTER(glVertex4i)
-DECLARE_ORIG_POINTER(glVertex4s)
-DECLARE_ORIG_POINTER(glVertex2dv)
-DECLARE_ORIG_POINTER(glVertex2fv)
-DECLARE_ORIG_POINTER(glVertex2iv)
-DECLARE_ORIG_POINTER(glVertex2sv)
-DECLARE_ORIG_POINTER(glVertex3dv)
-DECLARE_ORIG_POINTER(glVertex3fv)
-DECLARE_ORIG_POINTER(glVertex3iv)
-DECLARE_ORIG_POINTER(glVertex3sv)
-DECLARE_ORIG_POINTER(glVertex4dv)
-DECLARE_ORIG_POINTER(glVertex4fv)
-DECLARE_ORIG_POINTER(glVertex4iv)
-DECLARE_ORIG_POINTER(glVertex4sv)
-
-DECLARE_ORIG_POINTER(glDrawArrays)
-DECLARE_ORIG_POINTER(glDrawElements)
-DECLARE_ORIG_POINTER(glMultiDrawArrays)
-DECLARE_ORIG_POINTER(glMultiDrawElements)
-DECLARE_ORIG_POINTER(glDrawRangeElements)
-DECLARE_ORIG_POINTER(glDrawElementsBaseVertex)
-DECLARE_ORIG_POINTER(glDrawRangeElementsBaseVertex)
-DECLARE_ORIG_POINTER(glDrawElementsInstancedBaseVertex)
-DECLARE_ORIG_POINTER(glMultiDrawElementsBaseVertex)
-DECLARE_ORIG_POINTER(glDrawArraysInstancedBaseInstance)
-DECLARE_ORIG_POINTER(glDrawElementsInstancedBaseInstance)
-DECLARE_ORIG_POINTER(glDrawElementsInstancedBaseVertexBaseInstance)
-
-DECLARE_ORIG_POINTER(glDrawTransformFeedback)
-DECLARE_ORIG_POINTER(glDrawTransformFeedbackStream)
-DECLARE_ORIG_POINTER(glDrawTransformFeedbackInstanced)
-DECLARE_ORIG_POINTER(glDrawTransformFeedbackStreamInstanced)
-
-DECLARE_ORIG_POINTER(glDrawArraysInstancedARB)
-DECLARE_ORIG_POINTER(glDrawElementsInstancedARB)
-DECLARE_ORIG_POINTER(glDrawArraysInstancedEXT)
-DECLARE_ORIG_POINTER(glDrawElementsInstancedEXT)
-DECLARE_ORIG_POINTER(glDrawRangeElementsEXT)
-DECLARE_ORIG_POINTER(glMultiDrawArraysEXT)
-DECLARE_ORIG_POINTER(glMultiDrawElementsEXT)
-DECLARE_ORIG_POINTER(glDrawArraysEXT)
-
 void checkMesa()
 {
     /* Check only once */
@@ -183,9 +68,9 @@ void checkMesa()
     checked = true;
 
     /* Get OpenGL vendor and renderer */
-    LINK_NAMESPACE(glGetString, "GL");
-    const char* vendor = reinterpret_cast<const char*>(orig::glGetString(GL_VENDOR));
-    const char* renderer = reinterpret_cast<const char*>(orig::glGetString(GL_RENDERER));
+    LINK_GL_POINTER(GetString);
+    const char* vendor = reinterpret_cast<const char*>(glProcs.GetString(GL_VENDOR));
+    const char* renderer = reinterpret_cast<const char*>(glProcs.GetString(GL_RENDERER));
 
     if (!vendor) {
         checked = false;
@@ -214,83 +99,33 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
     if (!real_pointer || !symbol)
         return real_pointer;
 
-    /* Store function pointers that are used in other files */
-    STORE_SYMBOL(glGetString)
-    STORE_SYMBOL(glReadPixels)
-    STORE_SYMBOL(glGenFramebuffers)
-    STORE_SYMBOL(glBindFramebuffer)
-    STORE_SYMBOL(glDeleteFramebuffers)
-    STORE_SYMBOL(glGenRenderbuffers)
-    STORE_SYMBOL(glBindRenderbuffer)
-    STORE_SYMBOL(glDeleteRenderbuffers)
-    STORE_SYMBOL(glRenderbufferStorage)
-    STORE_SYMBOL(glFramebufferRenderbuffer)
 
     /* Old extension that became core. I load into the same function pointers
      * for easier usage */
-    STORE_RETURN_SYMBOL_DETAILED("glBindFramebufferEXT", orig::glBindFramebuffer, NULL)
-    STORE_RETURN_SYMBOL_DETAILED("glGenFramebuffersEXT", orig::glGenFramebuffers, NULL)
-    STORE_RETURN_SYMBOL_DETAILED("glFramebufferTexture2DEXT", orig::glFramebufferTexture2D, NULL)
-    STORE_RETURN_SYMBOL_DETAILED("glGenRenderbuffersEXT", orig::glGenRenderbuffers, NULL)
-    STORE_RETURN_SYMBOL_DETAILED("glBindRenderbufferEXT", orig::glBindRenderbuffer, NULL)
-    STORE_RETURN_SYMBOL_DETAILED("glRenderbufferStorageEXT", orig::glRenderbufferStorage, NULL)
-    STORE_RETURN_SYMBOL_DETAILED("glFramebufferRenderbufferEXT", orig::glFramebufferRenderbuffer, NULL)
-    STORE_RETURN_SYMBOL_DETAILED("glDeleteRenderbuffersEXT", orig::glDeleteRenderbuffers, NULL)
-    STORE_RETURN_SYMBOL_DETAILED("glDeleteFramebuffersEXT", orig::glDeleteFramebuffers, NULL)
-    STORE_RETURN_SYMBOL_DETAILED("glBlitFramebufferEXT", orig::glBlitFramebuffer, myglBlitFramebuffer)
-
-    STORE_SYMBOL(glDisable)
-    STORE_SYMBOL(glIsEnabled)
-    STORE_SYMBOL(glGetIntegerv)
-    STORE_SYMBOL(glGetError)
-
-    STORE_SYMBOL(glGenTextures)
-    STORE_SYMBOL(glDeleteTextures)
-    STORE_SYMBOL(glBindTexture)
-    STORE_SYMBOL(glBindSampler)
-    STORE_SYMBOL(glTexImage2D)
-    STORE_SYMBOL(glActiveTexture)
-    STORE_SYMBOL(glFramebufferTexture2D)
-    STORE_SYMBOL(glUseProgram)
-    STORE_SYMBOL(glPixelStorei)
-
-    STORE_SYMBOL(glGenBuffers)
-    STORE_SYMBOL(glGenVertexArrays)
-    STORE_SYMBOL(glBindVertexArray)
-    STORE_SYMBOL(glBindBuffer)
-    STORE_SYMBOL(glBufferData)
-    STORE_SYMBOL(glVertexAttribPointer)
-    STORE_SYMBOL(glEnableVertexAttribArray)
-    STORE_SYMBOL(glCreateShader)
-    STORE_SYMBOL(glShaderSource)
-    STORE_SYMBOL(glCompileShader)
-    STORE_SYMBOL(glGetShaderiv)
-    STORE_SYMBOL(glGetShaderInfoLog)
-    STORE_SYMBOL(glCreateProgram)
-    STORE_SYMBOL(glAttachShader)
-    STORE_SYMBOL(glLinkProgram)
-    STORE_SYMBOL(glGetProgramiv)
-    STORE_SYMBOL(glGetProgramInfoLog)
-    STORE_SYMBOL(glDetachShader)
-    STORE_SYMBOL(glDeleteShader)
-    STORE_SYMBOL(glBlendFunc)
-    STORE_SYMBOL(glDeleteBuffers)
-    STORE_SYMBOL(glDeleteVertexArrays)
-    STORE_SYMBOL(glDeleteProgram)
+    REPLACE_SYMBOL("glBindFramebufferEXT", glProcs.BindFramebuffer, NULL)
+    REPLACE_SYMBOL("glGenFramebuffersEXT", glProcs.GenFramebuffers, NULL)
+    REPLACE_SYMBOL("glFramebufferTexture2DEXT", glProcs.FramebufferTexture2D, NULL)
+    REPLACE_SYMBOL("glGenRenderbuffersEXT", glProcs.GenRenderbuffers, NULL)
+    REPLACE_SYMBOL("glBindRenderbufferEXT", glProcs.BindRenderbuffer, NULL)
+    REPLACE_SYMBOL("glRenderbufferStorageEXT", glProcs.RenderbufferStorage, NULL)
+    REPLACE_SYMBOL("glFramebufferRenderbufferEXT", glProcs.FramebufferRenderbuffer, NULL)
+    REPLACE_SYMBOL("glDeleteRenderbuffersEXT", glProcs.DeleteRenderbuffers, NULL)
+    REPLACE_SYMBOL("glDeleteFramebuffersEXT", glProcs.DeleteFramebuffers, NULL)
+    REPLACE_SYMBOL("glBlitFramebufferEXT", glProcs.BlitFramebuffer, myglBlitFramebuffer)
 
     /* Store function pointers and return our function */
-    STORE_RETURN_SYMBOL(glXMakeCurrent)
-    STORE_RETURN_SYMBOL(glXMakeContextCurrent)
-    STORE_RETURN_SYMBOL(glXSwapBuffers)
-    STORE_RETURN_SYMBOL(glXQueryDrawable)
-    STORE_RETURN_SYMBOL(glXSwapIntervalEXT)
-    STORE_RETURN_SYMBOL(glXSwapIntervalSGI)
-    STORE_RETURN_SYMBOL(glXSwapIntervalMESA)
-    STORE_RETURN_SYMBOL(glXGetSwapIntervalMESA)
-    STORE_RETURN_SYMBOL(glXSwapIntervalSGI)
-    STORE_RETURN_SYMBOL(glXQueryExtensionsString)
-    STORE_RETURN_SYMBOL(glXCreateContextAttribsARB)
-    STORE_RETURN_SYMBOL(glXDestroyContext)
+    RETURN_SYMBOL(glXMakeCurrent)
+    RETURN_SYMBOL(glXMakeContextCurrent)
+    RETURN_SYMBOL(glXSwapBuffers)
+    RETURN_SYMBOL(glXQueryDrawable)
+    RETURN_SYMBOL(glXSwapIntervalEXT)
+    RETURN_SYMBOL(glXSwapIntervalSGI)
+    RETURN_SYMBOL(glXSwapIntervalMESA)
+    RETURN_SYMBOL(glXGetSwapIntervalMESA)
+    RETURN_SYMBOL(glXSwapIntervalSGI)
+    RETURN_SYMBOL(glXQueryExtensionsString)
+    RETURN_SYMBOL(glXCreateContextAttribsARB)
+    RETURN_SYMBOL(glXDestroyContext)
 
     /* Some games like Super Meat Boy defines the glDrawArrays function in the
      * executable, so even if we preload our glDrawArrays function, it will still
@@ -298,81 +133,81 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
      * other name. This is not a problem because games should not call these
      * opengl functions directly but by using a glGetProcAddress function.
      */
-    STORE_RETURN_SYMBOL_CUSTOM(glClear)
+    RETURN_SYMBOL_CUSTOM(glClear)
 
-    STORE_RETURN_SYMBOL_CUSTOM(glBegin);
-    STORE_RETURN_SYMBOL_CUSTOM(glEnd);
+    RETURN_SYMBOL_CUSTOM(glBegin);
+    RETURN_SYMBOL_CUSTOM(glEnd);
 
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex2d);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex2f);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex2i);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex2s);
+    RETURN_SYMBOL_CUSTOM(glVertex2d);
+    RETURN_SYMBOL_CUSTOM(glVertex2f);
+    RETURN_SYMBOL_CUSTOM(glVertex2i);
+    RETURN_SYMBOL_CUSTOM(glVertex2s);
 
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex3d);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex3f);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex3i);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex3s);
+    RETURN_SYMBOL_CUSTOM(glVertex3d);
+    RETURN_SYMBOL_CUSTOM(glVertex3f);
+    RETURN_SYMBOL_CUSTOM(glVertex3i);
+    RETURN_SYMBOL_CUSTOM(glVertex3s);
 
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex4d);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex4f);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex4i);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex4s);
+    RETURN_SYMBOL_CUSTOM(glVertex4d);
+    RETURN_SYMBOL_CUSTOM(glVertex4f);
+    RETURN_SYMBOL_CUSTOM(glVertex4i);
+    RETURN_SYMBOL_CUSTOM(glVertex4s);
 
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex2dv);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex2fv);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex2iv);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex2sv);
+    RETURN_SYMBOL_CUSTOM(glVertex2dv);
+    RETURN_SYMBOL_CUSTOM(glVertex2fv);
+    RETURN_SYMBOL_CUSTOM(glVertex2iv);
+    RETURN_SYMBOL_CUSTOM(glVertex2sv);
 
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex3dv);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex3fv);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex3iv);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex3sv);
+    RETURN_SYMBOL_CUSTOM(glVertex3dv);
+    RETURN_SYMBOL_CUSTOM(glVertex3fv);
+    RETURN_SYMBOL_CUSTOM(glVertex3iv);
+    RETURN_SYMBOL_CUSTOM(glVertex3sv);
 
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex4dv);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex4fv);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex4iv);
-    STORE_RETURN_SYMBOL_CUSTOM(glVertex4sv);
+    RETURN_SYMBOL_CUSTOM(glVertex4dv);
+    RETURN_SYMBOL_CUSTOM(glVertex4fv);
+    RETURN_SYMBOL_CUSTOM(glVertex4iv);
+    RETURN_SYMBOL_CUSTOM(glVertex4sv);
 
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawArrays)
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawElements)
-    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawArrays)
-    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawElements)
+    RETURN_SYMBOL_CUSTOM(glDrawArrays)
+    RETURN_SYMBOL_CUSTOM(glDrawElements)
+    RETURN_SYMBOL_CUSTOM(glMultiDrawArrays)
+    RETURN_SYMBOL_CUSTOM(glMultiDrawElements)
 
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawRangeElements);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsBaseVertex);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawRangeElementsBaseVertex);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseVertex);
-    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawElementsBaseVertex);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedBaseInstance);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseInstance);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseVertexBaseInstance);
+    RETURN_SYMBOL_CUSTOM(glDrawRangeElements);
+    RETURN_SYMBOL_CUSTOM(glDrawElementsBaseVertex);
+    RETURN_SYMBOL_CUSTOM(glDrawRangeElementsBaseVertex);
+    RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseVertex);
+    RETURN_SYMBOL_CUSTOM(glMultiDrawElementsBaseVertex);
+    RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedBaseInstance);
+    RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseInstance);
+    RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedBaseVertexBaseInstance);
 
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedback);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackStream);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackInstanced);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackStreamInstanced);
+    RETURN_SYMBOL_CUSTOM(glDrawTransformFeedback);
+    RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackStream);
+    RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackInstanced);
+    RETURN_SYMBOL_CUSTOM(glDrawTransformFeedbackStreamInstanced);
 
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedARB);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedARB);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedEXT);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedEXT);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawRangeElementsEXT);
-    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawArraysEXT);
-    STORE_RETURN_SYMBOL_CUSTOM(glMultiDrawElementsEXT);
-    STORE_RETURN_SYMBOL_CUSTOM(glDrawArraysEXT);
+    RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedARB);
+    RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedARB);
+    RETURN_SYMBOL_CUSTOM(glDrawArraysInstancedEXT);
+    RETURN_SYMBOL_CUSTOM(glDrawElementsInstancedEXT);
+    RETURN_SYMBOL_CUSTOM(glDrawRangeElementsEXT);
+    RETURN_SYMBOL_CUSTOM(glMultiDrawArraysEXT);
+    RETURN_SYMBOL_CUSTOM(glMultiDrawElementsEXT);
+    RETURN_SYMBOL_CUSTOM(glDrawArraysEXT);
 
-    STORE_RETURN_SYMBOL_CUSTOM(glBlitFramebuffer);
+    RETURN_SYMBOL_CUSTOM(glBlitFramebuffer);
 
-    STORE_RETURN_SYMBOL_CUSTOM(glTexParameterf);
-    STORE_RETURN_SYMBOL_CUSTOM(glTexParameteri);
-    // STORE_RETURN_SYMBOL_CUSTOM(glTexParameterfv);
-    // STORE_RETURN_SYMBOL_CUSTOM(glTexParameteriv);
-    // STORE_RETURN_SYMBOL_CUSTOM(glTexParameterIiv);
-    // STORE_RETURN_SYMBOL_CUSTOM(glTexParameterIuiv);
+    RETURN_SYMBOL_CUSTOM(glTexParameterf);
+    RETURN_SYMBOL_CUSTOM(glTexParameteri);
+    // RETURN_SYMBOL_CUSTOM(glTexParameterfv);
+    // RETURN_SYMBOL_CUSTOM(glTexParameteriv);
+    // RETURN_SYMBOL_CUSTOM(glTexParameterIiv);
+    // RETURN_SYMBOL_CUSTOM(glTexParameterIuiv);
 
-    STORE_RETURN_SYMBOL_CUSTOM(glEnable);
-    // STORE_RETURN_SYMBOL_CUSTOM(glDisable);
-    STORE_RETURN_SYMBOL(glViewport);
+    RETURN_SYMBOL_CUSTOM(glEnable);
+    // RETURN_SYMBOL_CUSTOM(glDisable);
+    RETURN_SYMBOL(glViewport);
 
     return real_pointer;
 }
@@ -384,6 +219,8 @@ void(*glXGetProcAddress (const GLubyte *procName))()
 
     if (!orig::glXGetProcAddress) return nullptr;
 
+    gl_load_procs(reinterpret_cast<GLGetProcAddressProc>(orig::glXGetProcAddress));
+
     return reinterpret_cast<void(*)()>(store_orig_and_return_my_symbol(procName, reinterpret_cast<void*>(orig::glXGetProcAddress(procName))));
 }
 
@@ -393,6 +230,8 @@ __GLXextFuncPtr glXGetProcAddressARB (const GLubyte *procName)
     LINK_NAMESPACE(glXGetProcAddressARB, "GL");
 
     if (!orig::glXGetProcAddressARB) return nullptr;
+
+    gl_load_procs(reinterpret_cast<GLGetProcAddressProc>(orig::glXGetProcAddressARB));
 
     return reinterpret_cast<__GLXextFuncPtr>(store_orig_and_return_my_symbol(procName, reinterpret_cast<void*>(orig::glXGetProcAddressARB(procName))));
 }
@@ -404,14 +243,16 @@ void* glXGetProcAddressEXT (const GLubyte *procName)
 
     if (!orig::glXGetProcAddressEXT) return nullptr;
 
+    gl_load_procs(reinterpret_cast<GLGetProcAddressProc>(orig::glXGetProcAddressEXT));
+
     return store_orig_and_return_my_symbol(procName, orig::glXGetProcAddressEXT(procName));
 }
 
 Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
 {
-    LINK_NAMESPACE(glXMakeCurrent, "GL");
+    LINK_GL_POINTER(XMakeCurrent);
 
-    Bool ret = orig::glXMakeCurrent(dpy, drawable, ctx);
+    Bool ret = glProcs.XMakeCurrent(dpy, drawable, ctx);
     if (GlobalState::isNative())
         return ret;
 
@@ -434,9 +275,9 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
 
 Bool glXMakeContextCurrent( Display *dpy, GLXDrawable draw, GLXDrawable read, GLXContext ctx )
 {
-    LINK_NAMESPACE(glXMakeContextCurrent, "GL");
+    LINK_GL_POINTER(XMakeContextCurrent);
 
-    Bool ret = orig::glXMakeContextCurrent(dpy, draw, read, ctx);
+    Bool ret = glProcs.XMakeContextCurrent(dpy, draw, read, ctx);
     if (GlobalState::isNative())
         return ret;
 
@@ -454,16 +295,16 @@ Bool glXMakeContextCurrent( Display *dpy, GLXDrawable draw, GLXDrawable read, GL
 
 void glXSwapBuffers( Display *dpy, XID drawable )
 {
-    LINK_NAMESPACE(glXSwapBuffers, "GL");
+    LINK_GL_POINTER(XSwapBuffers);
 
     if (GlobalState::isNative())
-        return orig::glXSwapBuffers(dpy, drawable);
+        return glProcs.XSwapBuffers(dpy, drawable);
 
     DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_GL renderHUD;
-    frameBoundary([&] () {orig::glXSwapBuffers(dpy, drawable);}, renderHUD);
+    frameBoundary([&] () {glProcs.XSwapBuffers(dpy, drawable);}, renderHUD);
 }
 
 static int swapInterval = 0;
@@ -471,16 +312,16 @@ static int swapInterval = 0;
 void glXSwapIntervalEXT (Display *dpy, GLXDrawable drawable, int interval)
 {
     debuglogstdio(LCF_OGL, "%s call with interval %d", __func__, interval);
-    LINK_NAMESPACE(glXSwapIntervalEXT, "GL");
+    LINK_GL_POINTER(XSwapIntervalEXT);
 
     swapInterval = interval;
 
     /* When using non deterministic timer, we let the game set vsync */
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME) {
-        orig::glXSwapIntervalEXT(dpy, drawable, interval);
+        glProcs.XSwapIntervalEXT(dpy, drawable, interval);
     }
     else {
-        orig::glXSwapIntervalEXT(dpy, drawable, 0);
+        glProcs.XSwapIntervalEXT(dpy, drawable, 0);
     }
 
 }
@@ -488,13 +329,13 @@ void glXSwapIntervalEXT (Display *dpy, GLXDrawable drawable, int interval)
 int glXSwapIntervalSGI (int interval)
 {
     debuglogstdio(LCF_OGL, "%s call with interval %d", __func__, interval);
-    LINK_NAMESPACE(glXSwapIntervalSGI, "GL");
+    LINK_GL_POINTER(XSwapIntervalSGI);
 
     swapInterval = interval;
 
     /* When using non deterministic timer, we let the game set vsync */
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME) {
-        return orig::glXSwapIntervalSGI(interval);
+        return glProcs.XSwapIntervalSGI(interval);
     }
 
     /* Cave Story + does use glXSwapIntervalSGI() without checking if the
@@ -512,7 +353,7 @@ int glXSwapIntervalSGI (int interval)
         return 0;
     }
 
-    int ret = orig::glXSwapIntervalSGI(1);
+    int ret = glProcs.XSwapIntervalSGI(1);
     debuglogstdio(LCF_OGL, "   ret %d", ret);
     return ret;
 }
@@ -520,16 +361,16 @@ int glXSwapIntervalSGI (int interval)
 int glXSwapIntervalMESA (unsigned int interval)
 {
     debuglogstdio(LCF_OGL, "%s call with interval %d", __func__, interval);
-    LINK_NAMESPACE(glXSwapIntervalMESA, "GL");
+    LINK_GL_POINTER(XSwapIntervalMESA);
 
     swapInterval = interval;
 
     /* When using non deterministic timer, we let the game set vsync */
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME) {
-        return orig::glXSwapIntervalMESA(interval);
+        return glProcs.XSwapIntervalMESA(interval);
     }
     else {
-        return orig::glXSwapIntervalMESA(0);
+        return glProcs.XSwapIntervalMESA(0);
     }
 }
 
@@ -556,8 +397,8 @@ GLX_EXT_visual_rating GLX_MESA_copy_sub_buffer GLX_MESA_query_renderer \
 GLX_OML_swap_method GLX_SGIS_multisample GLX_SGIX_fbconfig \
 GLX_SGIX_pbuffer GLX_SGIX_visual_select_group GLX_SGI_make_current_read";
 
-    LINK_NAMESPACE(glXQueryExtensionsString, "GL");
-    return orig::glXQueryExtensionsString(dpy, screen);
+    LINK_GL_POINTER(XQueryExtensionsString);
+    return glProcs.XQueryExtensionsString(dpy, screen);
 }
     
 void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value)
@@ -573,14 +414,14 @@ void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigne
         return;
     }
 
-    LINK_NAMESPACE(glXQueryDrawable, "GL");
-    return orig::glXQueryDrawable(dpy, draw, attribute, value);
+    LINK_GL_POINTER(XQueryDrawable);
+    return glProcs.XQueryDrawable(dpy, draw, attribute, value);
 }
 
 GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int *attrib_list)
 {
     DEBUGLOGCALL(LCF_OGL);
-    LINK_NAMESPACE(glXCreateContextAttribsARB, "GL");
+    LINK_GL_POINTER(XCreateContextAttribsARB);
     int i = 0;
     while (attrib_list[i] != 0) {
         if (attrib_list[i] == GLX_CONTEXT_MAJOR_VERSION_ARB) {
@@ -607,15 +448,15 @@ GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXCont
 
         i += 2;
     }
-    return orig::glXCreateContextAttribsARB (dpy, config, share_context, direct, attrib_list);
+    return glProcs.XCreateContextAttribsARB (dpy, config, share_context, direct, attrib_list);
 }
 
 void glXDestroyContext(Display * dpy,  GLXContext ctx)
 {
     DEBUGLOGCALL(LCF_WINDOW | LCF_OGL);
-    LINK_NAMESPACE(glXDestroyContext, "GL");
+    LINK_GL_POINTER(XDestroyContext);
     ScreenCapture::fini();
-    return orig::glXDestroyContext(dpy, ctx);
+    return glProcs.XDestroyContext(dpy, ctx);
 }
 
 }

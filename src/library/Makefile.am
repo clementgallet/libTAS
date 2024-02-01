@@ -61,20 +61,20 @@ libtas_so_SOURCES = \
     fileio/SaveFileList.cpp \
     fileio/stdiowrappers.cpp \
     fileio/URandom.cpp \
-	general/dlhook.cpp \
-	general/glibwrappers.cpp \
-	general/localewrappers.cpp \
-	general/mallocwrappers.cpp \
-	general/monowrappers.cpp \
-	general/pthreadwrappers.cpp \
-	general/randomwrappers.cpp \
-	general/signalwrappers.cpp \
-	general/sleepwrappers.cpp \
-	general/socketwrappers.cpp \
-	general/systemwrappers.cpp \
-	general/timewrappers.cpp \
-	general/tlswrappers.cpp \
-	general/waitwrappers.cpp \
+    general/dlhook.cpp \
+    general/glibwrappers.cpp \
+    general/localewrappers.cpp \
+    general/mallocwrappers.cpp \
+    general/monowrappers.cpp \
+    general/pthreadwrappers.cpp \
+    general/randomwrappers.cpp \
+    general/signalwrappers.cpp \
+    general/sleepwrappers.cpp \
+    general/socketwrappers.cpp \
+    general/systemwrappers.cpp \
+    general/timewrappers.cpp \
+    general/tlswrappers.cpp \
+    general/waitwrappers.cpp \
     inputs/evdev.cpp \
     inputs/inputevents.cpp \
     inputs/inputs.cpp \
@@ -109,11 +109,12 @@ libtas_so_SOURCES = \
     renderhud/RenderHUD_Vulkan.cpp \
     renderhud/RenderHUD.cpp \
     renderhud/RenderHUD_Base_Linux.cpp \
-	rendering/eglwrappers.cpp \
-	rendering/glxwrappers.cpp \
-	rendering/openglwrappers.cpp \
-	rendering/vdpauwrappers.cpp \
-	rendering/vulkanwrappers.cpp \
+    rendering/eglwrappers.cpp \
+    rendering/glxwrappers.cpp \
+    rendering/openglloader.cpp \
+    rendering/openglwrappers.cpp \
+    rendering/vdpauwrappers.cpp \
+    rendering/vulkanwrappers.cpp \
     screencapture/ScreenCapture_GL.cpp \
     screencapture/ScreenCapture_SDL1.cpp \
     screencapture/ScreenCapture_SDL2_Renderer.cpp \

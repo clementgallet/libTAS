@@ -23,6 +23,7 @@
 #include "hook.h"
 
 #define GL_GLEXT_PROTOTYPES
+#define GLX_GLXEXT_PROTOTYPES
 #include <GL/glx.h>
 #include <GL/glxext.h>
 
