@@ -250,6 +250,11 @@ void* glXGetProcAddressEXT (const GLubyte *procName)
 
 Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
 {
+    /* Load all GL functions here, in case the game links directly to GL
+     * functions without using glXGetProcAddress() */
+    LINK_NAMESPACE(glXGetProcAddress, "GL");
+    gl_load_procs(reinterpret_cast<GLGetProcAddressProc>(orig::glXGetProcAddress));
+
     LINK_GL_POINTER(XMakeCurrent);
 
     Bool ret = glProcs.XMakeCurrent(dpy, drawable, ctx);
@@ -275,6 +280,11 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
 
 Bool glXMakeContextCurrent( Display *dpy, GLXDrawable draw, GLXDrawable read, GLXContext ctx )
 {
+    /* Load all GL functions here, in case the game links directly to GL
+     * functions without using glXGetProcAddress() */
+    LINK_NAMESPACE(glXGetProcAddress, "GL");
+    gl_load_procs(reinterpret_cast<GLGetProcAddressProc>(orig::glXGetProcAddress));
+
     LINK_GL_POINTER(XMakeContextCurrent);
 
     Bool ret = glProcs.XMakeContextCurrent(dpy, draw, read, ctx);
