@@ -112,7 +112,8 @@ void debuglogfull(LogCategoryFlag lcf, const char* file, int line, ...)
 
     /* We append the string in multiple parts to the log window twice, to
      * not show the color characters */
-    LogWindow::addLog(s + size, s + strlen(s), false);
+    if (!(lcf & LCF_CHECKPOINT))
+        LogWindow::addLog(s + size, s + strlen(s), false);
 
     size = strlen(s);
 
@@ -144,7 +145,8 @@ void debuglogfull(LogCategoryFlag lcf, const char* file, int line, ...)
 
     strncat(s, "\n", maxsize-size-1);
 
-    LogWindow::addLog(s + beg_size, s + strlen(s), true);
+    if (!(lcf & LCF_CHECKPOINT))
+        LogWindow::addLog(s + beg_size, s + strlen(s), true);
 
     /* We need to use a non-locking function here, because of the following
      * situation (encountered in Towerfall):
