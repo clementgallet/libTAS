@@ -82,6 +82,10 @@ struct Area {
     
     char name[FILENAMESIZE];
 
+    explicit operator bool() const {
+        return (addr != nullptr);
+    }
+
     void print(const char* prefix) const;
 
     int toMmapFlag() const;

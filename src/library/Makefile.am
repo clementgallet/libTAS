@@ -45,7 +45,8 @@ libtas_so_SOURCES = \
     checkpoint/MemArea.cpp \
     checkpoint/ProcSelfMaps.cpp \
     checkpoint/ReservedMemory.cpp \
-    checkpoint/SaveState.cpp \
+    checkpoint/SaveStateLoading.cpp \
+    checkpoint/SaveStateSaving.cpp \
     checkpoint/SaveStateManager.cpp \
     checkpoint/ThreadLocalStorage.cpp \
     checkpoint/ThreadManager.cpp \

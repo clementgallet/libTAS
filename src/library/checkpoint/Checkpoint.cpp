@@ -31,7 +31,8 @@
 #endif
 #include "StateHeader.h"
 #include "ReservedMemory.h"
-#include "SaveState.h"
+#include "SaveStateSaving.h"
+#include "SaveStateLoading.h"
 #include "TimeHolder.h"
 
 #include "logging.h"
@@ -39,7 +40,6 @@
 #include "GlobalState.h"
 #include "Utils.h"
 #include "renderhud/RenderHUD.h"
-#include "../external/lz4.h"
 #include "../shared/sockethelpers.h"
 #ifdef __unix__
 #include "../external/xcbint.h"
@@ -91,10 +91,10 @@ static ucontext_t ss_ucontext;
 
 static void readAllAreas();
 static int reallocateArea(Area *saved_area, Area *current_area);
-static void readAnArea(SaveState &saved_area, int spmfd, SaveState &parent_state, SaveState &base_state);
+static void readAnArea(SaveStateLoading &saved_area, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state);
 
 static void writeAllAreas(bool base);
-static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state, bool base);
+static size_t writeAnArea(SaveStateSaving state, int spmfd, SaveStateLoading &parent_state, bool base);
 
 void Checkpoint::setSavestatePath(std::string path)
 {
@@ -383,7 +383,7 @@ void Checkpoint::handler(int signum, siginfo_t *info, void *ucontext)
 
 static void readAllAreas()
 {
-    SaveState saved_state(pagemappath, pagespath, getPagemapFd(ss_index), getPagesFd(ss_index));
+    SaveStateLoading saved_state(pagemappath, pagespath, getPagemapFd(ss_index), getPagesFd(ss_index));
 
     int spmfd = -1;
     if (Global::shared_config.savestate_settings & (SharedConfig::SS_INCREMENTAL | SharedConfig::SS_PRESENT)) {
@@ -417,7 +417,7 @@ static void readAllAreas()
     bool not_eof = memMapLayout.getNextArea(&current_area);
 
     /* Reallocate areas to match the savestate areas. Nothing is written yet */
-    while ((saved_area.addr != nullptr) || not_eof) {
+    while (saved_area || not_eof) {
 
         /* Check for matching areas */
         int cmp = reallocateArea(&saved_area, &current_area);
@@ -441,14 +441,14 @@ static void readAllAreas()
     saved_area = saved_state.nextArea();
     
     /* Load base and parent savestates */
-    SaveState parent_state(parentpagemappath, parentpagespath, getPagemapFd(parent_ss_index), getPagesFd(parent_ss_index));
-    SaveState base_state(basepagemappath, basepagespath, getPagemapFd(base_ss_index), getPagesFd(base_ss_index));
+    SaveStateLoading parent_state(parentpagemappath, parentpagespath, getPagemapFd(parent_ss_index), getPagesFd(parent_ss_index));
+    SaveStateLoading base_state(basepagemappath, basepagespath, getPagemapFd(base_ss_index), getPagesFd(base_ss_index));
 
     /* If the loading savestate and the parent savestate are the same, pass the
-     * same SaveState object to readAnArea because two SaveState objects
+     * same SaveStateLoading object to readAnArea because two SaveStateLoading objects
      * handling the same file descriptor will mess up the file offset. */
     bool same_state = (ss_index == parent_ss_index);
-    while (saved_area.addr != nullptr) {
+    while (saved_area) {
         readAnArea(saved_state, spmfd, same_state?saved_state:parent_state, base_state);
         saved_area = saved_state.nextArea();
     }
@@ -629,7 +629,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
     return 0;
 }
 
-static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_state, SaveState &base_state)
+static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state)
 {
     const Area& saved_area = saved_state.getArea();
 
@@ -909,34 +909,24 @@ static void writeAllAreas(bool base)
     savestate_size += sizeof(sh);
 
     /* Load the parent savestate if any. */
-    SaveState parent_state(parentpagemappath, parentpagespath, getPagemapFd(parent_ss_index), getPagesFd(parent_ss_index));
+    SaveStateSaving state(pmfd, pfd, spmfd);
+    SaveStateLoading parent_state(parentpagemappath, parentpagespath, getPagemapFd(parent_ss_index), getPagesFd(parent_ss_index));
 
-    /* Parse the memory mapping layout.
-     * We don't allocate memory here, we are using our special allocated
-     * memory section that won't be saved in the savestate.
-     */
+    /* Read the memory mapping */
 #ifdef __unix__
     ProcSelfMaps memMapLayout;
 #elif defined(__APPLE__) && defined(__MACH__)
     MachVmMaps memMapLayout;
 #endif
 
-    /* Remove write and add read flags from all memory areas we will be dumping */
+    /* Read the first current area */
     Area area;
-    while (memMapLayout.getNextArea(&area)) {
-        if (!area.isSkipped()) {
-            //MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ) & ~PROT_WRITE) == 0)
-//            debuglogstdio(LCF_CHECKPOINT, "   mprotect on addr %p", area.addr);
-
-            MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ)) == 0)
-            MYASSERT(madvise(area.addr, area.size, MADV_SEQUENTIAL) == 0);
-        }
-    }
-
-    /* Dump all memory areas */
-    memMapLayout.reset();
-    while (memMapLayout.getNextArea(&area)) {
-        savestate_size += writeAnArea(pmfd, pfd, spmfd, area, parent_state, base);
+    bool not_eof = memMapLayout.getNextArea(&area);
+    
+    while (not_eof) {
+        state.processArea(area);
+        savestate_size += writeAnArea(state, spmfd, parent_state, base);
+        not_eof = memMapLayout.getNextArea(&area);
     }
 
     /* Add the last null (eof) area */
@@ -948,15 +938,6 @@ static void writeAllAreas(bool base)
     if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
         /* Clear soft-dirty bits */
         Utils::writeAll(crfd, "4\n", 2);
-    }
-
-    /* Recover area protection and advise */
-    memMapLayout.reset();
-    while (memMapLayout.getNextArea(&area)) {
-        if (!area.isSkipped()) {
-            MYASSERT(mprotect(area.addr, area.size, area.prot) == 0)
-            MYASSERT(madvise(area.addr, area.size, MADV_NORMAL) == 0);
-        }
     }
 
     if (crfd != 1) {
@@ -1004,29 +985,18 @@ static void writeAllAreas(bool base)
 }
 
 /* Write a memory area into the savestate. Returns the size of the area in bytes */
-static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &parent_state, bool base)
+static size_t writeAnArea(SaveStateSaving state, int spmfd, SaveStateLoading &parent_state, bool base)
 {
-    size_t area_size = 0;
-
-    /* Save the position of the first area page in the pages file */
-    area.page_offset = lseek(pfd, 0, SEEK_CUR);
-    MYASSERT(area.page_offset != -1)
-
-    /* Write the area struct */
-    area.skip = area.isSkipped();
-    
-    if (Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT)
-        area.uncommitted = area.isUncommitted(spmfd);
-    else
-        area.uncommitted = false;
-    
-    Utils::writeAll(pmfd, &area, sizeof(area));
-    area_size += sizeof(area);
+    Area area = state.getArea();    
+    size_t area_size = sizeof(area);
 
     if (area.skip || area.uncommitted)
         return area_size;
 
     area.print("Save");
+    if (!(area.prot & PROT_READ)) {
+        MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ)) == 0)
+    }
 
     if (spmfd != -1) {
         /* Seek at the beginning of the area pagemap */
@@ -1045,24 +1015,8 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
     /* Current index in the pagemaps array */
     int pagemap_i = 512;
 
-    /* Chunk of savestate pagemap values */
-    char ss_pagemaps[4096];
-
-    /* Current index in the savestate pagemap array */
-    int ss_pagemap_i = 0;
-
-    /* Compressed chunk */
-    char compressed_page[LZ4_COMPRESSBOUND(4096)];
-
     char* endAddr = static_cast<char*>(area.endAddr);
     for (char* curAddr = static_cast<char*>(area.addr); curAddr < endAddr; curAddr += 4096, page_i++) {
-
-        /* We write a chunk of savestate pagemaps if it is full */
-        if (ss_pagemap_i >= 4096) {
-            Utils::writeAll(pmfd, ss_pagemaps, 4096);
-            ss_pagemap_i = 0;
-            area_size += 4096;
-        }
 
         /* We read pagemap flags in chunks to avoid too many read syscalls. */
         if ((spmfd != -1) && (pagemap_i >= 512)) {
@@ -1078,12 +1032,12 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
 
         /* Check if page is present */
         if ((Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT) && (!page_present)) {
-            ss_pagemaps[ss_pagemap_i++] = Area::NO_PAGE;
+            state.savePageFlag(Area::NO_PAGE);
         }
 
         /* Check if page is zero (only check on anonymous memory)*/
         else if ((area.flags & Area::AREA_ANON) && Utils::isZeroPage(static_cast<void*>(curAddr))) {
-            ss_pagemaps[ss_pagemap_i++] = Area::ZERO_PAGE;
+            state.savePageFlag(Area::ZERO_PAGE);
         }
 
         /* Check if page was not modified since last savestate */
@@ -1095,52 +1049,29 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
                     /* Parent does not have the page or parent stores the memory page,
                      * saving the full page. */
 
-                    int compressed_size = 0;
-                    if (Global::shared_config.savestate_settings & SharedConfig::SS_COMPRESSED) {
-                        compressed_size = LZ4_compress_default(curAddr, compressed_page, 4096, LZ4_COMPRESSBOUND(4096));
-                    }
-                    if (compressed_size != 0) {
-                        ss_pagemaps[ss_pagemap_i++] = Area::COMPRESSED_PAGE;
-                        Utils::writeAll(pfd, &compressed_size, sizeof(int));
-                        Utils::writeAll(pfd, compressed_page, compressed_size);
-                        area_size += compressed_size;
-                    }
-                    else {
-                        ss_pagemaps[ss_pagemap_i++] = Area::FULL_PAGE;
-                        Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
-                        area_size += 4096;
-                    }
+                    area_size += state.savePage(curAddr);
                 }
                 else {
-                    ss_pagemaps[ss_pagemap_i++] = parent_flag;
+                    state.savePageFlag(parent_flag);
                 }
             }
             else {
-                ss_pagemaps[ss_pagemap_i++] = Area::BASE_PAGE;
+                state.savePageFlag(Area::BASE_PAGE);
             }
         }
         else {
-            int compressed_size = 0;
-            if (Global::shared_config.savestate_settings & SharedConfig::SS_COMPRESSED) {
-                compressed_size = LZ4_compress_default(curAddr, compressed_page, 4096, LZ4_COMPRESSBOUND(4096));
-            }
-            if (compressed_size != 0) {
-                ss_pagemaps[ss_pagemap_i++] = Area::COMPRESSED_PAGE;
-                Utils::writeAll(pfd, &compressed_size, sizeof(int));
-                Utils::writeAll(pfd, compressed_page, compressed_size);
-                area_size += compressed_size;
-            }
-            else {
-                ss_pagemaps[ss_pagemap_i++] = Area::FULL_PAGE;
-                Utils::writeAll(pfd, static_cast<void*>(curAddr), 4096);
-                area_size += 4096;
-            }
+            area_size += state.savePage(curAddr);
         }
     }
 
-    /* Writing the last savestate pagemap chunk */
-    Utils::writeAll(pmfd, ss_pagemaps, ss_pagemap_i);
-    area_size += ss_pagemap_i;
+    state.finishSave();
+
+    /* Add the number of page flags to the total size */
+    area_size += nb_pages;
+
+    if (!(area.prot & PROT_READ)) {
+        MYASSERT(mprotect(area.addr, area.size, area.prot) == 0)
+    }
 
     return area_size;
 }

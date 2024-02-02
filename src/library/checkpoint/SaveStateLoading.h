@@ -19,46 +19,47 @@
     Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
 */
 
-#ifndef LIBTAS_SAVESTATE_H
-#define LIBTAS_SAVESTATE_H
+#ifndef LIBTAS_SAVESTATELOADING_H
+#define LIBTAS_SAVESTATELOADING_H
 
 #include "MemArea.h"
+#include "../external/lz4.h"
 
 namespace libtas {
     
 struct StateHeader;
 
-class SaveState
+class SaveStateLoading
 {
     public:
-        SaveState(const char* pagemappath, const char* pagespath, int pagemapfd, int pagesfd);
-        ~SaveState();
+        SaveStateLoading(const char* pagemappath, const char* pagespath, int pagemapfd, int pagesfd);
+        ~SaveStateLoading();
 
-	// Also resets back to first area
-	void readHeader(StateHeader& sh);
+    // Also resets back to first area
+    void readHeader(StateHeader& sh);
 
-	Area getArea();
-	Area nextArea();
+    Area getArea();
+    Area nextArea();
 
-	// Reset back to first area
-	void restart();
+    // Reset back to first area
+    void restart();
 
     char getPageFlag(char* addr);
-	char getNextPageFlag();
-	void queuePageLoad(char* addr);
-	void finishLoad();
+    char getNextPageFlag();
+    void queuePageLoad(char* addr);
+    void finishLoad();
 
     explicit operator bool() const {
         return (pmfd != -1);
     }
 
     private:
-	char nextFlag();
+    char nextFlag();
 
-	char flags[4096];
+    char flags[4096];
     char current_flag;
-	int flag_i;
-	int flags_remaining;
+    int flag_i;
+    int flags_remaining;
 
     int pmfd, pfd;
 
@@ -68,8 +69,9 @@ class SaveState
 
     int compressed_length;
     char* queued_addr;
-	off_t queued_offset;
-	int queued_size;
+    off_t queued_offset;
+    int queued_size;
+    LZ4_streamDecode_t lz4s;
 };
 }
 

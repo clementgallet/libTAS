@@ -28,6 +28,7 @@
 * Default monotonic time to 1s to prevent weird behaviours on some Unity games
 * Improve the way to detect the location of SDL_DYNAPI_entry address
 * Improve "Skip unmapped pages" by detecting uncommitted segments
+* Cleaner state saving code and compress with stream instead of packets
 
 ### Fixed
 

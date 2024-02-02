@@ -19,7 +19,7 @@
     Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
 */
 
-#include "SaveState.h"
+#include "SaveStateLoading.h"
 #include "StateHeader.h"
 
 #include "Utils.h"
@@ -33,7 +33,7 @@
 
 namespace libtas {
 
-SaveState::SaveState(const char* pagemappath, const char* pagespath, int pagemapfd, int pagesfd)
+SaveStateLoading::SaveStateLoading(const char* pagemappath, const char* pagespath, int pagemapfd, int pagesfd)
 {
     queued_size = 0;
 
@@ -61,10 +61,11 @@ SaveState::SaveState(const char* pagemappath, const char* pagespath, int pagemap
         MYASSERT(pfd != -1)
     }
 
+    memset(&lz4s, 0, sizeof(LZ4_streamDecode_t));
     restart();
 }
 
-SaveState::~SaveState()
+SaveStateLoading::~SaveStateLoading()
 {
     if (!(Global::shared_config.savestate_settings & SharedConfig::SS_RAM) && (pmfd > 0)) {
         NATIVECALL(close(pmfd));
@@ -72,7 +73,7 @@ SaveState::~SaveState()
     }
 }
 
-void SaveState::readHeader(StateHeader& sh)
+void SaveStateLoading::readHeader(StateHeader& sh)
 {
     lseek(pmfd, 0, SEEK_SET);
     Utils::readAll(pmfd, &sh, sizeof(sh));
@@ -80,8 +81,10 @@ void SaveState::readHeader(StateHeader& sh)
     restart();
 }
 
-void SaveState::restart()
+void SaveStateLoading::restart()
 {
+    LZ4_setStreamDecode(&lz4s, nullptr, 0);
+    
     /* Seek after the savestate header */
     lseek(pmfd, sizeof(StateHeader), SEEK_SET);
     flags_remaining = 0;
@@ -90,7 +93,7 @@ void SaveState::restart()
     nextArea();
 }
 
-char SaveState::nextFlag()
+char SaveStateLoading::nextFlag()
 {
     if (flag_i == 4096) {
     	MYASSERT(flags_remaining > 0);
@@ -107,7 +110,7 @@ char SaveState::nextFlag()
     return current_flag;
 }
 
-Area SaveState::nextArea()
+Area SaveStateLoading::nextArea()
 {
     if (flags_remaining > 0)
         lseek(pmfd, flags_remaining, SEEK_CUR);
@@ -123,12 +126,12 @@ Area SaveState::nextArea()
     return area;
 }
 
-Area SaveState::getArea()
+Area SaveStateLoading::getArea()
 {
     return area;
 }
 
-char SaveState::getPageFlag(char* addr)
+char SaveStateLoading::getPageFlag(char* addr)
 {
     /* If we already gathered the flag for this address, return it again */
     if (addr == (current_addr - 4096))
@@ -169,7 +172,7 @@ char SaveState::getPageFlag(char* addr)
 
 /* Like getPageFlag(), but assumes you're going through the addresses
  * sequentially.  This means it can skip some checks and be a little faster. */
-char SaveState::getNextPageFlag()
+char SaveStateLoading::getNextPageFlag()
 {
     char flag = nextFlag();
     if (flag == Area::FULL_PAGE) {
@@ -184,7 +187,7 @@ char SaveState::getNextPageFlag()
     return flag;
 }
 
-void SaveState::finishLoad()
+void SaveStateLoading::finishLoad()
 {
     if (queued_size > 0) {
         lseek(pfd, queued_offset, SEEK_SET);
@@ -193,7 +196,7 @@ void SaveState::finishLoad()
     }
 }
 
-void SaveState::queuePageLoad(char* addr)
+void SaveStateLoading::queuePageLoad(char* addr)
 {
     MYASSERT(addr + 4096 == current_addr);
 
@@ -214,7 +217,7 @@ void SaveState::queuePageLoad(char* addr)
     else if (current_flag == Area::COMPRESSED_PAGE) {
         char compressed[LZ4_COMPRESSBOUND(4096)];
         Utils::readAll(pfd, compressed, compressed_length);
-        LZ4_decompress_safe(compressed, addr, compressed_length, 4096);
+        LZ4_decompress_safe_continue (&lz4s, compressed, addr, compressed_length, 4096);
     }
 }
 
