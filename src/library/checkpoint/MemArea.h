@@ -73,6 +73,7 @@ struct Area {
     unsigned int long devminor;
     ino_t inodenum;
     bool skip;
+    bool uncommitted;
     off_t page_offset; // position of the first area page in the pages file (in bytes)
     
     enum {
@@ -84,6 +85,11 @@ struct Area {
     void print(const char* prefix) const;
 
     int toMmapFlag() const;
+    
+    bool isSkipped() const;
+    
+    /* Returns if the area is guaranteed to be uncommitted based only on /proc/PID/maps values */
+    bool isUncommitted(int spmfd) const;
 };
 }
 

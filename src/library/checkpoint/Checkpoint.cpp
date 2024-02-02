@@ -89,8 +89,6 @@ static int base_ss_index = -1;
 /* Savestate ucontext (must be stored outside the alt stack) */
 static ucontext_t ss_ucontext;
 
-static bool skipArea(const Area *area);
-
 static void readAllAreas();
 static int reallocateArea(Area *saved_area, Area *current_area);
 static void readAnArea(SaveState &saved_area, int spmfd, SaveState &parent_state, SaveState &base_state);
@@ -190,7 +188,7 @@ int Checkpoint::checkCheckpoint()
     bool not_eof = memMapLayout.getNextArea(&area);
 
     while (not_eof) {
-        if (!skipArea(&area)) {
+        if (!area.isSkipped()) {
             savestate_size += area.size;
         }
         not_eof = memMapLayout.getNextArea(&area);
@@ -381,63 +379,6 @@ void Checkpoint::handler(int signum, siginfo_t *info, void *ucontext)
 
         writeAllAreas(false);
     }
-}
-
-static bool skipArea(const Area *area)
-{
-    /* If it's readable, but it's VDSO, it will be dangerous to restore it.
-    * In 32-bit mode later Red Hat RHEL Linux 2.6.9 releases use 0xffffe000,
-    * the last page of virtual memory.  Note 0xffffe000 >= HIGHEST_VA
-    * implies we're in 32-bit mode.
-    */
-    if (area->addr >= HIGHEST_VA && area->addr == (void*)0xffffe000) {
-        return true;
-    }
-#ifdef __x86_64__
-
-    /* And in 64-bit mode later Red Hat RHEL Linux 2.6.9 releases
-    * use 0xffffffffff600000 for VDSO.
-    */
-    if (area->addr >= HIGHEST_VA && area->addr == (void*)0xffffffffff600000) {
-        return true;
-    }
-#endif // ifdef __x86_64__
-
-    if (area->size == 0) {
-        /* Kernel won't let us munmap this.  But we don't need to restore it. */
-        return true;
-    }
-
-    if (0 == strcmp(area->name, "[vsyscall]") ||
-    0 == strcmp(area->name, "[vectors]") ||
-    0 == strcmp(area->name, "[vvar]") ||
-    0 == strcmp(area->name, "[vdso]")) {
-        return true;
-    }
-
-    /* Don't save our reserved memory */
-    if ((area->addr == ReservedMemory::getAddr(0)) && (area->size == ReservedMemory::getSize())) {
-        return true;
-    }
-
-    /* Don't save area that cannot be promoted to read/write */
-    if ((area->max_prot & (PROT_WRITE|PROT_READ)) != (PROT_WRITE|PROT_READ)) {
-        return false;
-    }
-    
-    /* Save area if write permission */
-    if (area->prot & PROT_WRITE) {
-        return false;
-    }
-
-    /* Save anonymous area even if write protection off, because some
-     * games or libs could change protections
-     */
-    if (area->flags & Area::AREA_ANON) {
-        return false;
-    }
-
-    return true;
 }
 
 static void readAllAreas()
@@ -695,6 +636,10 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
     if (saved_area.skip)
         return;
 
+    /* Skip if both saved and current area are uncommitted */
+    if (saved_area.uncommitted && saved_area.isUncommitted(spmfd))
+        return;
+
     saved_area.print("Restore");
 
     /* Add read/write permission to the area.
@@ -710,10 +655,10 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
     }
 
     /* Number of pages in the area */
-    int nb_pages = saved_area.size / 4096;
+    size_t nb_pages = saved_area.size / 4096;
 
     /* Index of the current area page */
-    int page_i = 0;
+    size_t page_i = 0;
 
     /* Chunk of pagemap values */
     uint64_t pagemaps[512];
@@ -733,7 +678,7 @@ static void readAnArea(SaveState &saved_state, int spmfd, SaveState &parent_stat
             pagemap_i = 0;
         }
 
-        char flag = saved_state.getNextPageFlag();
+        char flag = saved_area.uncommitted ? Area::NO_PAGE : saved_state.getNextPageFlag();
 
         /* Gather the flag for the page map */
         uint64_t page = (spmfd != -1)?pagemaps[pagemap_i++]:-1;
@@ -979,7 +924,7 @@ static void writeAllAreas(bool base)
     /* Remove write and add read flags from all memory areas we will be dumping */
     Area area;
     while (memMapLayout.getNextArea(&area)) {
-        if (!skipArea(&area)) {
+        if (!area.isSkipped()) {
             //MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ) & ~PROT_WRITE) == 0)
 //            debuglogstdio(LCF_CHECKPOINT, "   mprotect on addr %p", area.addr);
 
@@ -1008,7 +953,7 @@ static void writeAllAreas(bool base)
     /* Recover area protection and advise */
     memMapLayout.reset();
     while (memMapLayout.getNextArea(&area)) {
-        if (!skipArea(&area)) {
+        if (!area.isSkipped()) {
             MYASSERT(mprotect(area.addr, area.size, area.prot) == 0)
             MYASSERT(madvise(area.addr, area.size, MADV_NORMAL) == 0);
         }
@@ -1068,11 +1013,17 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
     MYASSERT(area.page_offset != -1)
 
     /* Write the area struct */
-    area.skip = skipArea(&area);
+    area.skip = area.isSkipped();
+    
+    if (Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT)
+        area.uncommitted = area.isUncommitted(spmfd);
+    else
+        area.uncommitted = false;
+    
     Utils::writeAll(pmfd, &area, sizeof(area));
     area_size += sizeof(area);
 
-    if (area.skip)
+    if (area.skip || area.uncommitted)
         return area_size;
 
     area.print("Save");
@@ -1083,10 +1034,10 @@ static size_t writeAnArea(int pmfd, int pfd, int spmfd, Area &area, SaveState &p
     }
 
     /* Number of pages in the area */
-    int nb_pages = area.size / 4096;
+    size_t nb_pages = area.size / 4096;
 
     /* Index of the current area page */
-    int page_i = 0;
+    size_t page_i = 0;
 
     /* Chunk of pagemap values */
     uint64_t pagemaps[512];

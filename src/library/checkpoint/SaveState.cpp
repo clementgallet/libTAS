@@ -115,7 +115,7 @@ Area SaveState::nextArea()
     next_pfd_offset = area.page_offset;
     current_addr = static_cast<char*>(area.addr);
     flag_i = 4096;
-    if (area.skip) {
+    if (area.skip || area.uncommitted) {
         flags_remaining = 0;
     } else {
         flags_remaining = area.size / 4096;
@@ -147,7 +147,7 @@ char SaveState::getPageFlag(char* addr)
     if (addr < static_cast<char*>(area.addr))
         return Area::NONE;
 
-    if (area.skip)
+    if (area.skip || area.uncommitted)
         return Area::NONE;
 
     char flag;
