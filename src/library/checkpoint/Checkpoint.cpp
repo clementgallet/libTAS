@@ -1049,7 +1049,7 @@ static size_t writeAnArea(SaveStateSaving state, int spmfd, SaveStateLoading &pa
                     /* Parent does not have the page or parent stores the memory page,
                      * saving the full page. */
 
-                    area_size += state.savePage(curAddr);
+                    area_size += state.queuePageSave(curAddr);
                 }
                 else {
                     state.savePageFlag(parent_flag);
@@ -1060,7 +1060,7 @@ static size_t writeAnArea(SaveStateSaving state, int spmfd, SaveStateLoading &pa
             }
         }
         else {
-            area_size += state.savePage(curAddr);
+            area_size += state.queuePageSave(curAddr);
         }
     }
 

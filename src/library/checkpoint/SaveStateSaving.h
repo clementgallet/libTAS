@@ -43,7 +43,7 @@ public:
     void savePageFlag(char flag);
     
     /* Save the entire memory page and the associated page flag */
-    int savePage(char* addr);
+    int queuePageSave(char* addr);
     
     /* Finish processing a memory area */
     void finishSave();
@@ -61,6 +61,10 @@ private:
     LZ4_stream_t lz4s;
 
     int pmfd, pfd, spmfd;
+
+    /* Address and size of the memory segment that is queued to be saved */
+    char* queued_addr;
+    int queued_size;
 
     Area area;
 };

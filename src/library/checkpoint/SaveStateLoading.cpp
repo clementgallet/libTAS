@@ -207,7 +207,8 @@ void SaveStateLoading::queuePageLoad(char* addr)
                 queued_size += 4096;
                 return;
         	} else {
-                finishLoad();
+                lseek(pfd, queued_offset, SEEK_SET);
+                Utils::readAll(pfd, queued_addr, queued_size);
         	}
         }
         queued_offset = (next_pfd_offset - 4096);

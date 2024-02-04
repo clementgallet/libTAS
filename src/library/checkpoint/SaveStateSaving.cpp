@@ -36,6 +36,7 @@ namespace libtas {
 SaveStateSaving::SaveStateSaving(int pagemapfd, int pagesfd, int selfpagemapfd)
 {
     ss_pagemap_i = 0;
+    queued_size = 0;
 
     pmfd = pagemapfd;
     pfd = pagesfd;
@@ -79,27 +80,45 @@ void SaveStateSaving::savePageFlag(char flag)
     ss_pagemaps[ss_pagemap_i++] = flag;
 }
 
-int SaveStateSaving::savePage(char* addr)
+int SaveStateSaving::queuePageSave(char* addr)
 {
-    int compressed_size = 0;
+    int returned_size = 0;
     if (Global::shared_config.savestate_settings & SharedConfig::SS_COMPRESSED) {
-        compressed_size = LZ4_compress_fast_continue(&lz4s, addr, compressed_page, 4096, LZ4_COMPRESSBOUND(4096), 1);
+        returned_size = LZ4_compress_fast_continue(&lz4s, addr, compressed_page, 4096, LZ4_COMPRESSBOUND(4096), 1);
     }
-    if (compressed_size != 0) {
+    if (returned_size != 0) {
         savePageFlag(Area::COMPRESSED_PAGE);
-        Utils::writeAll(pfd, &compressed_size, sizeof(int));
-        Utils::writeAll(pfd, compressed_page, compressed_size);
+        Utils::writeAll(pfd, &returned_size, sizeof(int));
+        Utils::writeAll(pfd, compressed_page, returned_size);
+        return returned_size;
     }
-    else {
-        compressed_size = 4096;
-        savePageFlag(Area::FULL_PAGE);
-        Utils::writeAll(pfd, static_cast<void*>(addr), 4096);
+
+    /* Save regular memory page */
+    savePageFlag(Area::FULL_PAGE);
+    
+    /* Try to queue the page save, to reduce the number of calls */
+    if (queued_size > 0) {
+        if (addr == queued_addr + queued_size) {
+            queued_size += 4096;
+            return 0;
+        } else {
+            Utils::writeAll(pfd, queued_addr, queued_size);
+            returned_size = queued_size;
+        }
     }
-    return compressed_size;
+    queued_addr = addr;
+    queued_size = 4096;
+
+    return returned_size;
 }
 
 void SaveStateSaving::finishSave()
 {
+    if (queued_size > 0) {
+        Utils::writeAll(pfd, queued_addr, queued_size);
+        queued_size = 0;
+    }
+    
     /* Writing the last savestate pagemap chunk */
     Utils::writeAll(pmfd, ss_pagemaps, ss_pagemap_i);
 }

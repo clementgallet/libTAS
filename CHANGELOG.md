@@ -29,6 +29,7 @@
 * Improve the way to detect the location of SDL_DYNAPI_entry address
 * Improve "Skip unmapped pages" by detecting uncommitted segments
 * Cleaner state saving code and compress with stream instead of packets
+* Queue saving memory pages for less write() calls
 
 ### Fixed
 
