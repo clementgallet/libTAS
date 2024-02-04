@@ -26,7 +26,7 @@
 #include <cstddef> // size_t
 
 #define ONE_MB 1024 * 1024
-#define RESTORE_TOTAL_SIZE 5 * ONE_MB
+#define RESTORE_TOTAL_SIZE 10 * ONE_MB
 
 namespace libtas {
 namespace ReservedMemory {
@@ -35,13 +35,15 @@ namespace ReservedMemory {
         PAGES_ADDR = 11*sizeof(int),
         SS_SLOTS_ADDR = 22*sizeof(int),
         PSM_ADDR = 22*sizeof(int)+11*sizeof(bool),
-        STACK_ADDR = ONE_MB,
+        COMPRESSED_ADDR = ONE_MB,
+        STACK_ADDR = 6 * ONE_MB,
     };
     enum Sizes {
         PAGEMAPS_SIZE = PAGES_ADDR - PAGEMAPS_ADDR,
         PAGES_SIZE = SS_SLOTS_ADDR - PAGES_ADDR,
         SS_SLOTS_SIZE = PSM_ADDR - SS_SLOTS_ADDR,
-        PSM_SIZE = STACK_ADDR - PSM_ADDR,
+        PSM_SIZE = COMPRESSED_ADDR - PSM_ADDR,
+        COMPRESSED_SIZE = STACK_ADDR - COMPRESSED_ADDR,
         STACK_SIZE = RESTORE_TOTAL_SIZE - STACK_ADDR,
     };
 

@@ -20,7 +20,7 @@
 */
 
 #include "SaveStateSaving.h"
-// #include "StateHeader.h"
+#include "ReservedMemory.h"
 
 #include "Utils.h"
 #include "logging.h"
@@ -37,6 +37,11 @@ SaveStateSaving::SaveStateSaving(int pagemapfd, int pagesfd, int selfpagemapfd)
 {
     ss_pagemap_i = 0;
     queued_size = 0;
+
+    queued_compressed_base_addr = static_cast<char*>(ReservedMemory::getAddr(ReservedMemory::PAGEMAPS_ADDR));
+    queued_compressed_max_size = ReservedMemory::COMPRESSED_SIZE;
+    queued_compressed_size = 0;
+    queued_target_addr = nullptr;
 
     pmfd = pagemapfd;
     pfd = pagesfd;
@@ -83,14 +88,36 @@ void SaveStateSaving::savePageFlag(char flag)
 int SaveStateSaving::queuePageSave(char* addr)
 {
     int returned_size = 0;
+    
     if (Global::shared_config.savestate_settings & SharedConfig::SS_COMPRESSED) {
-        returned_size = LZ4_compress_fast_continue(&lz4s, addr, compressed_page, 4096, LZ4_COMPRESSBOUND(4096), 1);
-    }
-    if (returned_size != 0) {
-        savePageFlag(Area::COMPRESSED_PAGE);
-        Utils::writeAll(pfd, &returned_size, sizeof(int));
-        Utils::writeAll(pfd, compressed_page, returned_size);
-        return returned_size;
+        /* Try to compress the memory page */
+        if ((queued_compressed_size > 0) && (addr != queued_target_addr)) {
+            /* Flush current buffer */
+            returned_size = flushCompressedSave();
+        }
+            
+        /* Append the compressed data to the current stream */
+        int compressed_size = LZ4_compress_fast_continue(&lz4s, addr, queued_compressed_base_addr + queued_compressed_size + sizeof(int), 4096, queued_compressed_max_size - (queued_compressed_size + sizeof(int)), 1);
+        if (compressed_size) {
+            /* Flush the uncompressed buffer if any */
+            returned_size = flushSave();
+
+            savePageFlag(Area::COMPRESSED_PAGE);
+            memcpy(queued_compressed_base_addr + queued_compressed_size, &compressed_size, sizeof(int));
+            queued_compressed_size += compressed_size + sizeof(int);
+            queued_target_addr = addr + 4096;
+
+            /* Check for remaining size */
+            if ((queued_compressed_max_size - queued_compressed_size) < LZ4_COMPRESSBOUND(4096)) {
+                returned_size += flushCompressedSave();
+            }
+            return returned_size;
+        }
+        else {
+            /* Could not compress the memory page. Write the whole buffer and 
+             * fallback to the second part of the code to write the regular page */
+            returned_size += flushCompressedSave();
+        }
     }
 
     /* Save regular memory page */
@@ -102,8 +129,7 @@ int SaveStateSaving::queuePageSave(char* addr)
             queued_size += 4096;
             return 0;
         } else {
-            Utils::writeAll(pfd, queued_addr, queued_size);
-            returned_size = queued_size;
+            returned_size += flushSave();
         }
     }
     queued_addr = addr;
@@ -112,15 +138,41 @@ int SaveStateSaving::queuePageSave(char* addr)
     return returned_size;
 }
 
-void SaveStateSaving::finishSave()
+int SaveStateSaving::flushSave()
 {
     if (queued_size > 0) {
         Utils::writeAll(pfd, queued_addr, queued_size);
+        int returned_size = queued_size;
         queued_size = 0;
+        return returned_size;
     }
+    return 0;
+}
+
+int SaveStateSaving::flushCompressedSave()
+{
+    if (queued_compressed_size > 0) {
+        Utils::writeAll(pfd, queued_compressed_base_addr, queued_compressed_size);
+        int returned_size = queued_compressed_size;
+        queued_compressed_size = 0;
+        return returned_size;        
+    }
+    return 0;
+}
+
+int SaveStateSaving::finishSave()
+{
+    int returned_size = 0;
+    
+    /* We don't care about the following order of the saves, because code
+     * guarantees that at most one of those has non-zero queue size. */
+    returned_size += flushSave();
+    returned_size += flushCompressedSave();
     
     /* Writing the last savestate pagemap chunk */
     Utils::writeAll(pmfd, ss_pagemaps, ss_pagemap_i);
+    
+    return returned_size;
 }
 
 }

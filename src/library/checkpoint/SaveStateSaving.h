@@ -46,25 +46,39 @@ public:
     int queuePageSave(char* addr);
     
     /* Finish processing a memory area */
-    void finishSave();
+    int finishSave();
 
 private:
+
+    /* Flush the queue of noncompressed data, and returns the number of written bytes */
+    int flushSave();
+    
+    /* Flush the queue of compressed data, and returns the number of written bytes */
+    int flushCompressedSave();
+
     /* Chunk of savestate pagemap values */
     char ss_pagemaps[4096];
 
     /* Current index in the savestate pagemap array */
     int ss_pagemap_i = 0;
 
-    /* Compressed chunk */
-    char compressed_page[LZ4_COMPRESSBOUND(4096)];
-    
     LZ4_stream_t lz4s;
 
+    /* File descriptors */
     int pmfd, pfd, spmfd;
 
     /* Address and size of the memory segment that is queued to be saved */
     char* queued_addr;
     int queued_size;
+
+    /* Address and size of the whole memory section available to store
+     * compressed pages. */
+    char* queued_compressed_base_addr;
+    int queued_compressed_max_size;
+
+    /* Target address and size of the compressed memory segments that are queued to be saved */
+    char* queued_target_addr;
+    int queued_compressed_size;
 
     Area area;
 };

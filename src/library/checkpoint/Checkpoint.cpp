@@ -1064,7 +1064,7 @@ static size_t writeAnArea(SaveStateSaving state, int spmfd, SaveStateLoading &pa
         }
     }
 
-    state.finishSave();
+    area_size += state.finishSave();
 
     /* Add the number of page flags to the total size */
     area_size += nb_pages;
