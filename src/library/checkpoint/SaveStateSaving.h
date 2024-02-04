@@ -43,18 +43,18 @@ public:
     void savePageFlag(char flag);
     
     /* Save the entire memory page and the associated page flag */
-    int queuePageSave(char* addr);
+    size_t queuePageSave(char* addr);
     
     /* Finish processing a memory area */
-    int finishSave();
+    size_t finishSave();
 
 private:
 
     /* Flush the queue of noncompressed data, and returns the number of written bytes */
-    int flushSave();
+    size_t flushSave();
     
     /* Flush the queue of compressed data, and returns the number of written bytes */
-    int flushCompressedSave();
+    size_t flushCompressedSave();
 
     /* Chunk of savestate pagemap values */
     char ss_pagemaps[4096];
@@ -69,7 +69,7 @@ private:
 
     /* Address and size of the memory segment that is queued to be saved */
     char* queued_addr;
-    int queued_size;
+    size_t queued_size;
 
     /* Address and size of the whole memory section available to store
      * compressed pages. */

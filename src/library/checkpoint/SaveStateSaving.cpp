@@ -85,9 +85,9 @@ void SaveStateSaving::savePageFlag(char flag)
     ss_pagemaps[ss_pagemap_i++] = flag;
 }
 
-int SaveStateSaving::queuePageSave(char* addr)
+size_t SaveStateSaving::queuePageSave(char* addr)
 {
-    int returned_size = 0;
+    size_t returned_size = 0;
     
     if (Global::shared_config.savestate_settings & SharedConfig::SS_COMPRESSED) {
         /* Try to compress the memory page */
@@ -125,7 +125,7 @@ int SaveStateSaving::queuePageSave(char* addr)
     
     /* Try to queue the page save, to reduce the number of calls */
     if (queued_size > 0) {
-        if (addr == queued_addr + queued_size) {
+        if (addr == (queued_addr + queued_size)) {
             queued_size += 4096;
             return 0;
         } else {
@@ -138,7 +138,7 @@ int SaveStateSaving::queuePageSave(char* addr)
     return returned_size;
 }
 
-int SaveStateSaving::flushSave()
+size_t SaveStateSaving::flushSave()
 {
     if (queued_size > 0) {
         Utils::writeAll(pfd, queued_addr, queued_size);
@@ -149,7 +149,7 @@ int SaveStateSaving::flushSave()
     return 0;
 }
 
-int SaveStateSaving::flushCompressedSave()
+size_t SaveStateSaving::flushCompressedSave()
 {
     if (queued_compressed_size > 0) {
         Utils::writeAll(pfd, queued_compressed_base_addr, queued_compressed_size);
@@ -160,9 +160,9 @@ int SaveStateSaving::flushCompressedSave()
     return 0;
 }
 
-int SaveStateSaving::finishSave()
+size_t SaveStateSaving::finishSave()
 {
-    int returned_size = 0;
+    size_t returned_size = 0;
     
     /* We don't care about the following order of the saves, because code
      * guarantees that at most one of those has non-zero queue size. */
