@@ -45,7 +45,10 @@ void RenderHUD_GL::newFrame()
     if (!ImGui::GetCurrentContext()) {
         if (RenderHUD::init())
             /* TODO: check shader version and EGL support */
-            ImGui_ImplOpenGL3_Init("#version 130");
+            if (isGLES)
+                ImGui_ImplOpenGL3_Init("#version 100");
+            else
+                ImGui_ImplOpenGL3_Init("#version 130");
         else
             return;
     }
