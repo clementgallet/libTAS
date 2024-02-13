@@ -22,6 +22,7 @@
 
 #include <QtCore/QAbstractTableModel>
 #include <vector>
+#include <sstream>
 #include <stdint.h>
 
 /* Forward declaration */
@@ -105,11 +106,8 @@ public:
     /* Clear input */
     void clearInput(int row);
 
-    /* Clear clipboard before copying inputs */
-    void clearClipboard();
-
-    /* Copy selected inputs */
-    void copyInputs(int row, int count);
+    /* Copy selected inputs into the stream */
+    void copyInputs(int row, int count, std::ostringstream& inputString);
 
     /* Paste selected inputs. Returns the number of pasted inputs */
     int pasteInputs(int row);

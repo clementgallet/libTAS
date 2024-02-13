@@ -626,27 +626,13 @@ void InputEditorModel::removeMarker(int frame)
     movie->editor->markers.erase(frame);
 }
 
-void InputEditorModel::clearClipboard()
+void InputEditorModel::copyInputs(int row, int count, std::ostringstream& inputString)
 {
-    QClipboard *clipboard = QGuiApplication::clipboard();
-    clipboard->clear();
-}
-
-void InputEditorModel::copyInputs(int row, int count)
-{
-    std::ostringstream inputString;
-
     /* Translate inputs into a string */
     for (int r=row; r < row+count; r++) {
         const AllInputs& ai = movie->inputs->getInputs(r);
         movie->inputs->writeFrame(inputString, ai);
     }
-
-    /* Append text from the existing clipboard text */
-    QClipboard *clipboard = QGuiApplication::clipboard();
-    QString clipText = clipboard->text();
-    clipText.append(inputString.str().c_str());
-    clipboard->setText(clipText);
 }
 
 int InputEditorModel::pasteInputs(int row)

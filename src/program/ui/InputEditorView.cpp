@@ -31,6 +31,8 @@
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QMessageBox>
+#include <QtGui/QClipboard>
+#include <QtGui/QGuiApplication>
 
 #include <stdint.h>
 
@@ -853,8 +855,12 @@ void InputEditorView::copyInputs()
     if (!selectionModel()->hasSelection())
         return;
 
-    inputEditorModel->clearClipboard();
-    applyToSelectedRanges([this](int min, int max){inputEditorModel->copyInputs(min, max-min+1);});
+    std::ostringstream inputString;
+    applyToSelectedRanges([this, &inputString](int min, int max){inputEditorModel->copyInputs(min, max-min+1, inputString);});
+    
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    QString clipText(inputString.str().c_str());
+    clipboard->setText(clipText);
 }
 
 void InputEditorView::cutInputs()
@@ -862,8 +868,8 @@ void InputEditorView::cutInputs()
     if (!selectionModel()->hasSelection())
         return;
 
-    inputEditorModel->clearClipboard();
-    applyToSelectedRanges([this](int min, int max){inputEditorModel->copyInputs(min, max-min+1);});
+    copyInputs();
+    
     /* Removing rows must be done in reversed order so that row indices are valid */
     applyToSelectedRangesReversed([this](int min, int max){inputEditorModel->removeRows(min, max-min+1);});
 }
