@@ -98,6 +98,9 @@ OVERRIDE xcb_void_cookie_t xcb_unmap_window_checked (xcb_connection_t *c, xcb_wi
 
 OVERRIDE xcb_void_cookie_t xcb_unmap_window (xcb_connection_t *c, xcb_window_t window);
 
+OVERRIDE xcb_void_cookie_t xcb_configure_window_checked (xcb_connection_t *c, xcb_window_t window, uint16_t value_mask, const void *value_list);
+
+OVERRIDE xcb_void_cookie_t xcb_configure_window (xcb_connection_t *c, xcb_window_t window, uint16_t value_mask, const void *value_list);
 
 }
 

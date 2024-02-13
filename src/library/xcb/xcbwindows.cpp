@@ -22,6 +22,7 @@
 #include "XcbEventQueue.h"
 
 #include "hook.h"
+#include "GlobalState.h"
 #include "logging.h"
 #include "screencapture/ScreenCapture.h"
 #include "xlib/xwindows.h" // x11::gameXWindows
@@ -42,6 +43,10 @@ DEFINE_ORIG_POINTER(xcb_map_window_checked)
 DEFINE_ORIG_POINTER(xcb_map_window)
 DEFINE_ORIG_POINTER(xcb_unmap_window_checked)
 DEFINE_ORIG_POINTER(xcb_unmap_window)
+DEFINE_ORIG_POINTER(xcb_configure_window_checked)
+DEFINE_ORIG_POINTER(xcb_configure_window)
+
+
 
 OVERRIDE xcb_void_cookie_t
 xcb_create_window_checked (xcb_connection_t *c,
@@ -374,6 +379,107 @@ xcb_void_cookie_t xcb_unmap_window (xcb_connection_t *c, xcb_window_t window)
     debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, window);
     LINK_NAMESPACE_GLOBAL(xcb_unmap_window);
     xcb_void_cookie_t ret = orig::xcb_unmap_window(c, window);
+    return ret;
+}
+
+xcb_void_cookie_t xcb_configure_window_checked (xcb_connection_t *c, xcb_window_t window, uint16_t value_mask, const void *value_list)
+{
+    LINK_NAMESPACE_GLOBAL(xcb_configure_window_checked);
+    if (GlobalState::isNative())
+        return orig::xcb_configure_window_checked(c, window, value_mask, value_list);
+
+    debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, window);
+
+    /* Disable window movement and get new size */
+    uint32_t new_width = 0, new_height = 0;
+    uint32_t new_list[16] = {};
+    
+    if (!x11::gameXWindows.empty() && (x11::gameXWindows.front() == window)) {
+        /* Search through the value list */
+        int index = 0;
+        int new_index = 0;
+        for (int v = 0; v < 16; v++) {
+            uint16_t mask = (1 << v);
+            if (!(value_mask & mask))
+                continue;
+
+            /* Don't preserve window movement settings */
+            if ((mask == XCB_CONFIG_WINDOW_X) || (mask == XCB_CONFIG_WINDOW_Y)) {
+                index++;
+                continue;
+            }
+            
+            if (mask == XCB_CONFIG_WINDOW_WIDTH)
+                new_width = ((uint32_t*)value_list)[index];
+
+            if (mask == XCB_CONFIG_WINDOW_HEIGHT)
+                new_height = ((uint32_t*)value_list)[index];
+            
+            new_list[new_index] = ((uint32_t*)value_list)[index];
+            new_index++;
+            index++;
+        }
+        value_mask &= ~(XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
+    }
+
+    xcb_void_cookie_t ret = orig::xcb_configure_window_checked(c, window, value_mask, new_list);
+
+    /* Check if size has changed */
+    if (new_width && new_height) {
+        debuglogstdio(LCF_WINDOW, "    New size: %d x %d", new_width, new_height);
+        ScreenCapture::resize(new_width, new_height);
+    }
+    return ret;
+}
+
+xcb_void_cookie_t xcb_configure_window (xcb_connection_t *c, xcb_window_t window, uint16_t value_mask, const void *value_list)
+{
+    LINK_NAMESPACE_GLOBAL(xcb_configure_window);
+    if (GlobalState::isNative())
+        return orig::xcb_configure_window(c, window, value_mask, value_list);
+
+    debuglogstdio(LCF_WINDOW, "%s called with window %d", __func__, window);
+
+    /* Disable window movement and get new size */
+    uint32_t new_width = 0, new_height = 0;
+    uint32_t new_list[16] = {};
+    
+    if (!x11::gameXWindows.empty() && (x11::gameXWindows.front() == window)) {
+        /* Search through the value list */
+        int index = 0;
+        int new_index = 0;
+        for (int v = 0; v < 16; v++) {
+            uint16_t mask = (1 << v);
+            if (!(value_mask & mask))
+                continue;
+
+            /* Don't preserve window movement settings */
+            if ((mask == XCB_CONFIG_WINDOW_X) || (mask == XCB_CONFIG_WINDOW_Y)) {
+                index++;
+                continue;
+            }
+            
+            if (mask == XCB_CONFIG_WINDOW_WIDTH)
+                new_width = ((uint32_t*)value_list)[index];
+
+            if (mask == XCB_CONFIG_WINDOW_HEIGHT)
+                new_height = ((uint32_t*)value_list)[index];
+            
+            new_list[new_index] = ((uint32_t*)value_list)[index];
+            new_index++;
+            index++;
+        }
+        
+        value_mask &= ~(XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
+    }
+
+    xcb_void_cookie_t ret = orig::xcb_configure_window(c, window, value_mask, new_list);
+
+    /* Check if size has changed */
+    if (new_width && new_height) {
+        debuglogstdio(LCF_WINDOW, "    New size: %d x %d", new_width, new_height);
+        ScreenCapture::resize(new_width, new_height);
+    }
     return ret;
 }
 
