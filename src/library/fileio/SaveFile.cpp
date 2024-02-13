@@ -300,6 +300,7 @@ int SaveFile::open(int flags)
 #else
             NATIVECALL(fd = ::open(filename.c_str(), flags));
 #endif
+            removed = false;
         }
     }
     else {
