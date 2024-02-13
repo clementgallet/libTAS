@@ -207,7 +207,7 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
 
     RETURN_SYMBOL_CUSTOM(glEnable);
     // RETURN_SYMBOL_CUSTOM(glDisable);
-    RETURN_SYMBOL(glViewport);
+    RETURN_SYMBOL_CUSTOM(glViewport);
 
     return real_pointer;
 }
