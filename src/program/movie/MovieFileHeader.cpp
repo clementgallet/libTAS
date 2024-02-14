@@ -32,8 +32,8 @@ MovieFileHeader::MovieFileHeader(Context* c) : context(c)
 void MovieFileHeader::clear()
 {
     /* For new movies, will be overwritten when loading a moviefile */
-    framerate_num = context->config.sc.framerate_num;
-    framerate_den = context->config.sc.framerate_den;
+    framerate_num = context->config.sc.initial_framerate_num;
+    framerate_den = context->config.sc.initial_framerate_den;
 }
 
 void MovieFileHeader::load()
@@ -63,8 +63,8 @@ void MovieFileHeader::load()
             framerate_den = 1;
         }
 
-        context->config.sc.framerate_num = framerate_num;
-        context->config.sc.framerate_den = framerate_den;
+        context->config.sc.initial_framerate_num = framerate_num;
+        context->config.sc.initial_framerate_den = framerate_den;
         
         context->config.auto_restart = config.value("auto_restart").toBool();
         context->config.sc.variable_framerate = config.value("variable_framerate").toBool();
@@ -87,8 +87,8 @@ void MovieFileHeader::load()
     length_nsec = config.value("length_nsec").toULongLong();
     /* If no movie length field, compute from frame count and framerate */
     if (!length_sec && !length_nsec) {
-        length_sec = (uint64_t)(context->config.sc.movie_framecount) * context->config.sc.framerate_den / context->config.sc.framerate_num;
-        length_nsec = ((1000000000ull * (uint64_t)context->config.sc.movie_framecount * context->config.sc.framerate_den) / context->config.sc.framerate_num) % 1000000000ull;
+        length_sec = (uint64_t)(context->config.sc.movie_framecount) * context->config.sc.initial_framerate_den / context->config.sc.initial_framerate_num;
+        length_nsec = ((1000000000ull * (uint64_t)context->config.sc.movie_framecount * context->config.sc.initial_framerate_den) / context->config.sc.initial_framerate_num) % 1000000000ull;
     }
 
     context->rerecord_count = config.value("rerecord_count").toUInt();

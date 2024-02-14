@@ -194,6 +194,8 @@ libtas_so_SOURCES = \
     xlib/xwindows.cpp \
     ../shared/inputs/AllInputs.cpp \
     ../shared/inputs/ControllerInputs.cpp \
+    ../shared/inputs/MiscInputs.cpp \
+    ../shared/inputs/MouseInputs.cpp \
     ../shared/inputs/SingleInput.cpp \
     ../shared/sockethelpers.cpp \
     ../external/lz4.cpp \

@@ -47,6 +47,18 @@ enum {
     MSGN_ALL_INPUTS,
 
     /*
+     * Send pointer inputs
+     * Argument: MouseInputs
+     */
+    MSGN_POINTER_INPUTS,
+    
+    /*
+     * Send misc inputs
+     * Argument: MiscInputs
+     */
+    MSGN_MISC_INPUTS,
+    
+    /*
      * Send a controller id and inputs
      * Argument: int, ControllerInputs
      */

@@ -22,6 +22,10 @@
 #include "utils.h"
 #include "Context.h"
 #include "../shared/version.h"
+#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/ControllerInputs.h"
+#include "../shared/inputs/MiscInputs.h"
+#include "../shared/inputs/MouseInputs.h"
 
 #include <QtCore/QSettings>
 #include <iostream>
@@ -89,17 +93,17 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
     }
 
     /* Write mouse inputs */
-    if (context->config.sc.mouse_support) {
+    if (context->config.sc.mouse_support && inputs.pointer) {
         input_stream.put('|');
         input_stream.put('M');
         input_stream << std::dec;
-        input_stream << inputs.pointer_x << ':' << inputs.pointer_y << ':';
-        input_stream << ((inputs.pointer_mode == SingleInput::POINTER_MODE_RELATIVE)?"R:":"A:");
-        input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B1))?'1':'.');
-        input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B2))?'2':'.');
-        input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B3))?'3':'.');
-        input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B4))?'4':'.');
-        input_stream.put((inputs.pointer_mask&(1<<SingleInput::POINTER_B5))?'5':'.');
+        input_stream << inputs.pointer->x << ':' << inputs.pointer->y << ':';
+        input_stream << ((inputs.pointer->mode == SingleInput::POINTER_MODE_RELATIVE)?"R:":"A:");
+        input_stream.put((inputs.pointer->mask&(1<<SingleInput::POINTER_B1))?'1':'.');
+        input_stream.put((inputs.pointer->mask&(1<<SingleInput::POINTER_B2))?'2':'.');
+        input_stream.put((inputs.pointer->mask&(1<<SingleInput::POINTER_B3))?'3':'.');
+        input_stream.put((inputs.pointer->mask&(1<<SingleInput::POINTER_B4))?'4':'.');
+        input_stream.put((inputs.pointer->mask&(1<<SingleInput::POINTER_B5))?'5':'.');
     }
 
     /* Write controller inputs */
@@ -131,44 +135,44 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
         input_stream.put((inputs.controllers[joy]->buttons&(1<<SingleInput::BUTTON_DPAD_RIGHT))?'r':'.');
     }
 
-    /* Write flag inputs */
-    if (inputs.flags) {
-        input_stream << '|';
-        input_stream << 'F';
-        if (inputs.flags & (1 << SingleInput::FLAG_RESTART)) input_stream.put('R');
-        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED)) input_stream.put('1');
-        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER2_ADDED_REMOVED)) input_stream.put('2');
-        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER3_ADDED_REMOVED)) input_stream.put('3');
-        if (inputs.flags & (1 << SingleInput::FLAG_CONTROLLER4_ADDED_REMOVED)) input_stream.put('4');
-        if (inputs.flags & (1 << SingleInput::FLAG_FOCUS_UNFOCUS)) input_stream.put('F');
-    }
-
-    /* Write framerate inputs */
-    if (context->config.sc.variable_framerate) {
+    if (inputs.misc) {
+        /* Write flag inputs */
+        if (inputs.misc->flags) {
+            input_stream << '|';
+            input_stream << 'F';
+            if (inputs.misc->flags & (1 << SingleInput::FLAG_RESTART)) input_stream.put('R');
+            if (inputs.misc->flags & (1 << SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED)) input_stream.put('1');
+            if (inputs.misc->flags & (1 << SingleInput::FLAG_CONTROLLER2_ADDED_REMOVED)) input_stream.put('2');
+            if (inputs.misc->flags & (1 << SingleInput::FLAG_CONTROLLER3_ADDED_REMOVED)) input_stream.put('3');
+            if (inputs.misc->flags & (1 << SingleInput::FLAG_CONTROLLER4_ADDED_REMOVED)) input_stream.put('4');
+            if (inputs.misc->flags & (1 << SingleInput::FLAG_FOCUS_UNFOCUS)) input_stream.put('F');
+        }
+        
+        /* Write framerate inputs */
         /* Only store framerate if different from initial framerate */
-        if ((inputs.framerate_num && (inputs.framerate_num != framerate_num)) ||
-            (inputs.framerate_den && (inputs.framerate_den != framerate_den))) {
+        if ((inputs.misc->framerate_num && (inputs.misc->framerate_num != framerate_num)) ||
+            (inputs.misc->framerate_den && (inputs.misc->framerate_den != framerate_den))) {
             input_stream.put('|');
             input_stream.put('T');
             input_stream << std::dec;
-            if (inputs.framerate_num)
-                input_stream << inputs.framerate_num;
+            if (inputs.misc->framerate_num)
+            input_stream << inputs.misc->framerate_num;
             else
-                input_stream << framerate_num;
+            input_stream << framerate_num;
             input_stream << ':';
-            if (inputs.framerate_den)
-                input_stream << inputs.framerate_den;
+            if (inputs.misc->framerate_den)
+            input_stream << inputs.misc->framerate_den;
             else
-                input_stream << framerate_den;
+            input_stream << framerate_den;
         }
-    }
-
-    /* Write realtime inputs */
-    if (inputs.realtime_sec) {
-        input_stream.put('|');
-        input_stream.put('D');
-        input_stream << std::dec;
-        input_stream << inputs.realtime_sec << ':' << inputs.realtime_nsec;
+        
+        /* Write realtime inputs */
+        if (inputs.misc->realtime_sec) {
+            input_stream.put('|');
+            input_stream.put('D');
+            input_stream << std::dec;
+            input_stream << inputs.misc->realtime_sec << ':' << inputs.misc->realtime_nsec;
+        }
     }
 
     input_stream << '|' << std::endl;
@@ -272,32 +276,36 @@ int MovieFileInputs::readKeyboardFrame(std::istringstream& input_string, AllInpu
 
 int MovieFileInputs::readMouseFrame(std::istringstream& input_string, AllInputs& inputs)
 {
+    if (!inputs.pointer)
+        inputs.pointer.reset(new MouseInputs{});
+
     char d;
     input_string >> std::dec;
-    input_string >> inputs.pointer_x >> d;
+    input_string >> inputs.pointer->x >> d;
     if (d != ':') return -1;
-    input_string >> inputs.pointer_y >> d;
+    input_string >> inputs.pointer->y >> d;
     if (d != ':') return -1;
     input_string >> d;
     if ((d == 'R') || (d == 'A')) {
         /* Read mouse mode */
-        if (d == 'R') inputs.pointer_mode = SingleInput::POINTER_MODE_RELATIVE;
-        else inputs.pointer_mode = SingleInput::POINTER_MODE_ABSOLUTE;
+        if (d == 'R') inputs.pointer->mode = SingleInput::POINTER_MODE_RELATIVE;
+        else inputs.pointer->mode = SingleInput::POINTER_MODE_ABSOLUTE;
         input_string >> d;
         input_string >> d;
     }
     else {
-        inputs.pointer_mode = SingleInput::POINTER_MODE_ABSOLUTE;
+        inputs.pointer->mode = SingleInput::POINTER_MODE_ABSOLUTE;
     }
-    if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B1);
+    inputs.pointer->mask = 0;
+    if (d != '.') inputs.pointer->mask |= (1 << SingleInput::POINTER_B1);
     input_string >> d;
-    if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B2);
+    if (d != '.') inputs.pointer->mask |= (1 << SingleInput::POINTER_B2);
     input_string >> d;
-    if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B3);
+    if (d != '.') inputs.pointer->mask |= (1 << SingleInput::POINTER_B3);
     input_string >> d;
-    if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B4);
+    if (d != '.') inputs.pointer->mask |= (1 << SingleInput::POINTER_B4);
     input_string >> d;
-    if (d != '.') inputs.pointer_mask |= (1 << SingleInput::POINTER_B5);
+    if (d != '.') inputs.pointer->mask |= (1 << SingleInput::POINTER_B5);
     input_string >> d;
     return 0;
 }
@@ -310,7 +318,7 @@ int MovieFileInputs::readControllerFrame(std::istringstream& input_string, AllIn
     char d;
     input_string >> std::dec;
     if (!inputs.controllers[joy])
-        inputs.controllers[joy].reset(new ControllerInputs());
+        inputs.controllers[joy].reset(new ControllerInputs{});
     for (int axis=0; axis<ControllerInputs::MAXAXES; axis++) {
         input_string >> inputs.controllers[joy]->axes[axis] >> d;
         if (d != ':') return -1;
@@ -325,21 +333,24 @@ int MovieFileInputs::readControllerFrame(std::istringstream& input_string, AllIn
 
 int MovieFileInputs::readFlagFrame(std::istringstream& input_string, AllInputs& inputs)
 {
+    if (!inputs.misc)
+        inputs.misc.reset(new MiscInputs{});
+    
     char d;
     input_string >> d;
     while (input_string && (d != '|')) {
         switch (d) {
-            case 'R': inputs.flags |= (1 << SingleInput::FLAG_RESTART); break;
-            case '1': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED); break;
-            case '2': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER2_ADDED_REMOVED); break;
-            case '3': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER3_ADDED_REMOVED); break;
-            case '4': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER4_ADDED_REMOVED); break;
-            case 'F': inputs.flags |= (1 << SingleInput::FLAG_FOCUS_UNFOCUS); break;
+            case 'R': inputs.misc->flags |= (1 << SingleInput::FLAG_RESTART); break;
+            case '1': inputs.misc->flags |= (1 << SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED); break;
+            case '2': inputs.misc->flags |= (1 << SingleInput::FLAG_CONTROLLER2_ADDED_REMOVED); break;
+            case '3': inputs.misc->flags |= (1 << SingleInput::FLAG_CONTROLLER3_ADDED_REMOVED); break;
+            case '4': inputs.misc->flags |= (1 << SingleInput::FLAG_CONTROLLER4_ADDED_REMOVED); break;
+            case 'F': inputs.misc->flags |= (1 << SingleInput::FLAG_FOCUS_UNFOCUS); break;
             /* Old unused flags */
-            case 'I': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED); break;
-            case 'L': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER2_ADDED_REMOVED); break;
-            case 'U': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER3_ADDED_REMOVED); break;
-            case 'O': inputs.flags |= (1 << SingleInput::FLAG_CONTROLLER4_ADDED_REMOVED); break;
+            case 'I': inputs.misc->flags |= (1 << SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED); break;
+            case 'L': inputs.misc->flags |= (1 << SingleInput::FLAG_CONTROLLER2_ADDED_REMOVED); break;
+            case 'U': inputs.misc->flags |= (1 << SingleInput::FLAG_CONTROLLER3_ADDED_REMOVED); break;
+            case 'O': inputs.misc->flags |= (1 << SingleInput::FLAG_CONTROLLER4_ADDED_REMOVED); break;
         }
         input_string >> d;
     }
@@ -348,17 +359,21 @@ int MovieFileInputs::readFlagFrame(std::istringstream& input_string, AllInputs& 
 
 int MovieFileInputs::readFramerateFrame(std::istringstream& input_string, AllInputs& inputs)
 {
+    if (!inputs.misc)
+        inputs.misc.reset(new MiscInputs{});
     char d;
     input_string >> std::dec;
-    input_string >> inputs.framerate_num >> d >> inputs.framerate_den >> d;
+    input_string >> inputs.misc->framerate_num >> d >> inputs.misc->framerate_den >> d;
     return 0;
 }
 
 int MovieFileInputs::readRealtimeFrame(std::istringstream& input_string, AllInputs& inputs)
 {
+    if (!inputs.misc)
+        inputs.misc.reset(new MiscInputs{});
     char d;
     input_string >> std::dec;
-    input_string >> inputs.realtime_sec >> d >> inputs.realtime_nsec >> d;
+    input_string >> inputs.misc->realtime_sec >> d >> inputs.misc->realtime_nsec >> d;
     return 0;
 }
 
@@ -424,11 +439,11 @@ int MovieFileInputs::getInputs(AllInputs& inputs, uint64_t pos)
     inputs = input_list[pos];
 
     /* Special case for zero framerate */
-    if (context->config.sc.variable_framerate) {
-        if (!inputs.framerate_num)
-            inputs.framerate_num = framerate_num;
-        if (!inputs.framerate_den)
-            inputs.framerate_den = framerate_den;
+    if (inputs.misc) {
+        if (!inputs.misc->framerate_num)
+            inputs.misc->framerate_num = framerate_num;
+        if (!inputs.misc->framerate_den)
+            inputs.misc->framerate_den = framerate_den;
     }
     
     if ((pos + 1) == input_list.size()) {
@@ -453,11 +468,11 @@ const AllInputs& MovieFileInputs::getInputs(uint64_t pos)
     }
 
     /* Special case for zero framerate */
-    if (context->config.sc.variable_framerate) {
-        if (!input_list[pos].framerate_num)
-            input_list[pos].framerate_num = framerate_num;
-        if (!input_list[pos].framerate_den)
-            input_list[pos].framerate_den = framerate_den;
+    if (input_list[pos].misc) {
+        if (!input_list[pos].misc->framerate_num)
+            input_list[pos].misc->framerate_num = framerate_num;
+        if (!input_list[pos].misc->framerate_den)
+            input_list[pos].misc->framerate_den = framerate_den;
     }
 
     return input_list[pos];

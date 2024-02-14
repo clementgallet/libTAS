@@ -108,7 +108,7 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
         ImGui::GetWindowDrawList()->AddLine(ImVec2(pos.x+centerPosX, pos.y), ImVec2(pos.x+centerPosX, pos.y+child_height), 0x80ffffff, 1.0f);
         
         float sizeMS = ImGui::GetWindowSize().x * msPerUnit;
-        int sizeFrame = (sizeMS * Global::shared_config.framerate_num) / (1000 * Global::shared_config.framerate_den);
+        int sizeFrame = (sizeMS * Global::shared_config.initial_framerate_num) / (1000 * Global::shared_config.initial_framerate_den);
         
         const int stepFrame = 20;
         int64_t firstFrame = framecount - (sizeFrame / 2);
@@ -117,7 +117,7 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
         if (firstFrame < 0) firstFrame = 0;
         
         for (int64_t f = firstFrame; f < lastFrame; f += stepFrame) {
-            float framePos = centerPosX + (f - (int64_t)framecount) * 1000 * Global::shared_config.framerate_den / (Global::shared_config.framerate_num * msPerUnit);
+            float framePos = centerPosX + (f - (int64_t)framecount) * 1000 * Global::shared_config.initial_framerate_den / (Global::shared_config.initial_framerate_num * msPerUnit);
             ImGui::GetWindowDrawList()->AddLine(ImVec2(pos.x+framePos, pos.y), ImVec2(pos.x+framePos, pos.y+ImGui::GetTextLineHeight()), 0x80ffffff, 1.0f);
             char frame_string[21];
             sprintf(frame_string, "%" PRId64, f);

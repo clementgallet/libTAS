@@ -22,6 +22,8 @@
 
 #include "SingleInput.h"
 #include "ControllerInputs.h"
+#include "MouseInputs.h"
+#include "MiscInputs.h"
 
 #include <array>
 #include <set>
@@ -56,26 +58,11 @@ class AllInputs {
 
         std::array<uint32_t,MAXKEYS> keyboard;
 
-        /* Pointer coordinates relative to the origin of the game window */
-        int pointer_x;
-        int pointer_y;
-
-        /* Absolute or relative mode */
-        unsigned int pointer_mode;
-
-        /* Pointer buttons */
-        unsigned int pointer_mask;
+        std::unique_ptr<MouseInputs> pointer;
 
         std::array<std::unique_ptr<ControllerInputs>,MAXJOYS> controllers;
 
-        /* Flags */
-        uint32_t flags;
-
-        /* Framerate values */
-        uint32_t framerate_den, framerate_num;
-
-        /* Realtime values */
-        uint32_t realtime_sec, realtime_nsec;
+        std::unique_ptr<MiscInputs> misc;
 
         /* Operator needed for comparing movies */
         bool operator==(const AllInputs& other) const;

@@ -248,12 +248,12 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     fpsNumField = new QSpinBox();
     fpsNumField->setMaximum(std::numeric_limits<int>::max());
     fpsNumField->setMinimum(1);
-    connect(fpsNumField, QOverload<int>::of(&QSpinBox::valueChanged),[=](int i){context->config.sc.framerate_num = i;});
+    connect(fpsNumField, QOverload<int>::of(&QSpinBox::valueChanged),[=](int i){context->current_framerate_num = i;});
 
     fpsDenField = new QSpinBox();
     fpsDenField->setMaximum(std::numeric_limits<int>::max());
     fpsDenField->setMinimum(1);
-    connect(fpsDenField, QOverload<int>::of(&QSpinBox::valueChanged),[=](int i){context->config.sc.framerate_den = i;});
+    connect(fpsDenField, QOverload<int>::of(&QSpinBox::valueChanged),[=](int i){context->current_framerate_den = i;});
 
     fpsValues = new QLabel("Current FPS: - / -");
 
@@ -962,8 +962,8 @@ void MainWindow::updateMovieParams()
     movieFrameCount->setValue(context->config.sc.movie_framecount);
     rerecordCount->setValue(context->rerecord_count);
     authorField->setText(gameLoop->movie.header->authors.c_str());
-    fpsNumField->setValue(context->config.sc.framerate_num);
-    fpsDenField->setValue(context->config.sc.framerate_den);
+    fpsNumField->setValue(context->config.sc.initial_framerate_num);
+    fpsDenField->setValue(context->config.sc.initial_framerate_den);
     elapsedTimeSec->setValue(context->config.sc.initial_monotonic_time_sec);
     elapsedTimeNsec->setValue(context->config.sc.initial_monotonic_time_nsec);
     realTimeSec->setValue(context->config.sc.initial_time_sec);
@@ -1067,8 +1067,8 @@ void MainWindow::slotLaunch(bool attach_gdb)
     gameLoop->movie.header->authors = authorField->text().toStdString();
 
     /* Set a few parameters */
-    context->config.sc.framerate_num = fpsNumField->value();
-    context->config.sc.framerate_den = fpsDenField->value();
+    context->config.sc.initial_framerate_num = fpsNumField->value();
+    context->config.sc.initial_framerate_den = fpsDenField->value();
     context->config.sc.initial_monotonic_time_sec = elapsedTimeSec->value();
     context->config.sc.initial_monotonic_time_nsec = elapsedTimeNsec->value();
     context->config.sc.initial_time_sec = realTimeSec->value();
@@ -1385,6 +1385,6 @@ void MainWindow::alertDialog(QString alert_msg)
 
 void MainWindow::updateFramerate()
 {
-    fpsNumField->setValue(context->config.sc.framerate_num);
-    fpsDenField->setValue(context->config.sc.framerate_den);
+    fpsNumField->setValue(context->current_framerate_num);
+    fpsDenField->setValue(context->current_framerate_den);
 }

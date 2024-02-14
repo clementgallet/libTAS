@@ -124,6 +124,8 @@ libTAS_SOURCES = \
     ramsearch/RamWatchDetailedBuilder.cpp \
     ../shared/inputs/AllInputs.cpp \
     ../shared/inputs/ControllerInputs.cpp \
+    ../shared/inputs/MiscInputs.cpp \
+    ../shared/inputs/MouseInputs.cpp \
     ../shared/inputs/SingleInput.cpp \
     ../shared/sockethelpers.cpp \
     $(libTAS_MOCSOURCES)

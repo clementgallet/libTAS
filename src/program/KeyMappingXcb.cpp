@@ -351,20 +351,27 @@ void KeyMappingXcb::buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig&
                 }
 
                 if (si.type == SingleInput::IT_FLAG) {
-                    ai.flags |= (1 << si.value);
+                    if (!ai.misc)
+                        ai.misc.reset(new MiscInputs{});
+                    
+                    ai.misc->flags |= (1 << si.value);
                 }
 
                 if (sc.mouse_support) {
+                    if (si.type >= SingleInput::IT_POINTER_B1 && si.type <= SingleInput::IT_POINTER_B5)
+                        if (!ai.pointer)
+                            ai.pointer.reset(new MouseInputs{});
+
                     if (si.type == SingleInput::IT_POINTER_B1)
-                        ai.pointer_mask |= (0x1u << SingleInput::POINTER_B1);
+                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B1);
                     if (si.type == SingleInput::IT_POINTER_B2)
-                        ai.pointer_mask |= (0x1u << SingleInput::POINTER_B2);
+                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B2);
                     if (si.type == SingleInput::IT_POINTER_B3)
-                        ai.pointer_mask |= (0x1u << SingleInput::POINTER_B3);
+                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B3);
                     if (si.type == SingleInput::IT_POINTER_B4)
-                        ai.pointer_mask |= (0x1u << SingleInput::POINTER_B4);
+                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B4);
                     if (si.type == SingleInput::IT_POINTER_B5)
-                        ai.pointer_mask |= (0x1u << SingleInput::POINTER_B5);
+                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B5);
                 }
 
                 if (si.inputTypeIsController()) {
@@ -380,7 +387,7 @@ void KeyMappingXcb::buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig&
                         continue;
 
                     if (!ai.controllers[controller_i])
-                        ai.controllers[controller_i].reset(new ControllerInputs());
+                        ai.controllers[controller_i].reset(new ControllerInputs{});
                     int controller_axis = si.type & SingleInput::IT_CONTROLLER_AXIS_MASK;
                     int controller_type = si.type & SingleInput::IT_CONTROLLER_TYPE_MASK;
                     if (controller_axis) {
@@ -407,7 +414,10 @@ void KeyMappingXcb::buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig&
             return;
         }
 
-        ai.pointer_mode = sc.mouse_mode_relative?SingleInput::POINTER_MODE_RELATIVE:SingleInput::POINTER_MODE_ABSOLUTE;
+        if (!ai.pointer)
+            ai.pointer.reset(new MouseInputs{});
+
+        ai.pointer->mode = sc.mouse_mode_relative?SingleInput::POINTER_MODE_RELATIVE:SingleInput::POINTER_MODE_ABSOLUTE;
         if (sc.mouse_mode_relative) {
             xcb_get_geometry_reply_t* geometry_reply = xcb_get_geometry_reply(conn, geometry_cookie, &error);
             if (error) {
@@ -416,8 +426,8 @@ void KeyMappingXcb::buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig&
                 free(error);
                 return;
             }
-            ai.pointer_x = pointer_reply->win_x - geometry_reply->width/2;
-            ai.pointer_y = pointer_reply->win_y - geometry_reply->height/2;
+            ai.pointer->x = pointer_reply->win_x - geometry_reply->width/2;
+            ai.pointer->y = pointer_reply->win_y - geometry_reply->height/2;
 
             /* Warp pointer if needed */
             if (mouse_warp)
@@ -426,21 +436,21 @@ void KeyMappingXcb::buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig&
             free(geometry_reply);
         }
         else {
-            ai.pointer_x = pointer_reply->win_x;
-            ai.pointer_y = pointer_reply->win_y;
+            ai.pointer->x = pointer_reply->win_x;
+            ai.pointer->y = pointer_reply->win_y;
         }
 
         /* We only care about the five mouse buttons */
         if (pointer_reply->mask & XCB_BUTTON_MASK_1)
-            ai.pointer_mask |= (0x1u << SingleInput::POINTER_B1);
+            ai.pointer->mask |= (0x1u << SingleInput::POINTER_B1);
         if (pointer_reply->mask & XCB_BUTTON_MASK_2)
-            ai.pointer_mask |= (0x1u << SingleInput::POINTER_B2);
+            ai.pointer->mask |= (0x1u << SingleInput::POINTER_B2);
         if (pointer_reply->mask & XCB_BUTTON_MASK_3)
-            ai.pointer_mask |= (0x1u << SingleInput::POINTER_B3);
+            ai.pointer->mask |= (0x1u << SingleInput::POINTER_B3);
         if (pointer_reply->mask & XCB_BUTTON_MASK_4)
-            ai.pointer_mask |= (0x1u << SingleInput::POINTER_B4);
+            ai.pointer->mask |= (0x1u << SingleInput::POINTER_B4);
         if (pointer_reply->mask & XCB_BUTTON_MASK_5)
-            ai.pointer_mask |= (0x1u << SingleInput::POINTER_B5);
+            ai.pointer->mask |= (0x1u << SingleInput::POINTER_B5);
 
         free(pointer_reply);
     }

@@ -55,15 +55,15 @@ std::string InputsWindow::formatInputs(const AllInputs& ai)
     std::ostringstream oss;
 
     /* Flags */
-    if (ai.flags & (1 << SingleInput::FLAG_RESTART)) {
+    if (ai.misc->flags & (1 << SingleInput::FLAG_RESTART)) {
         oss << "[Restart] ";
     }
     for (int i=0; i<4; i++) {
-        if (ai.flags & (1 << (SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED+i))) {
+        if (ai.misc->flags & (1 << (SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED+i))) {
             oss << "[J" << i << " added/removed] ";
         }
     }
-    if (ai.flags & (1 << SingleInput::FLAG_FOCUS_UNFOCUS)) {
+    if (ai.misc->flags & (1 << SingleInput::FLAG_FOCUS_UNFOCUS)) {
         oss << "[Un/Focus] ";
     }
 
@@ -84,20 +84,20 @@ std::string InputsWindow::formatInputs(const AllInputs& ai)
 
     /* Mouse */
     if (Global::shared_config.mouse_support) {
-        if (ai.pointer_x != -1) {
-            oss << "[M " << ai.pointer_x << ":" << ai.pointer_y << ":";
-            oss << ((ai.pointer_mode==SingleInput::POINTER_MODE_RELATIVE)?"R":"A");
+        if (ai.pointer->x != -1) {
+            oss << "[M " << ai.pointer->x << ":" << ai.pointer->y << ":";
+            oss << ((ai.pointer->mode==SingleInput::POINTER_MODE_RELATIVE)?"R":"A");
             oss << "] ";
         }
-        if (ai.pointer_mask & (1 << SingleInput::POINTER_B1))
+        if (ai.pointer->mask & (1 << SingleInput::POINTER_B1))
             oss << "[M b1] ";
-        if (ai.pointer_mask & (1 << SingleInput::POINTER_B2))
+        if (ai.pointer->mask & (1 << SingleInput::POINTER_B2))
             oss << "[M b2] ";
-        if (ai.pointer_mask & (1 << SingleInput::POINTER_B3))
+        if (ai.pointer->mask & (1 << SingleInput::POINTER_B3))
             oss << "[M b3] ";
-        if (ai.pointer_mask & (1 << SingleInput::POINTER_B4))
+        if (ai.pointer->mask & (1 << SingleInput::POINTER_B4))
             oss << "[M b4] ";
-        if (ai.pointer_mask & (1 << SingleInput::POINTER_B5))
+        if (ai.pointer->mask & (1 << SingleInput::POINTER_B5))
             oss << "[M b5] ";
     }
 

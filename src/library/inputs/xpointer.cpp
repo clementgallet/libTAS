@@ -49,12 +49,21 @@ DEFINE_ORIG_POINTER(XQueryPointer)
                                    win_x_return, win_y_return, mask_return);
     }
     *root_return = x11::rootWindow;
-    *root_x_return = game_ai.pointer_x;
-    *root_y_return = game_ai.pointer_y;
+    if (game_ai.pointer) {
+        *root_x_return = game_ai.pointer->x;
+        *root_y_return = game_ai.pointer->y;
+        *win_x_return = game_ai.pointer->x;
+        *win_y_return = game_ai.pointer->y;
+        *mask_return = SingleInput::toXlibPointerMask(game_ai.pointer->mask);
+    }
+    else {
+        *root_x_return = 0;
+        *root_y_return = 0;
+        *win_x_return = 0;
+        *win_y_return = 0;
+        *mask_return = 0;
+    }
     *child_return = 0;
-    *win_x_return = game_ai.pointer_x;
-    *win_y_return = game_ai.pointer_y;
-    *mask_return = SingleInput::toXlibPointerMask(game_ai.pointer_mask);
     return 1;
 }
 
@@ -76,22 +85,22 @@ DEFINE_ORIG_POINTER(XQueryPointer)
         clipping_w = clip_attr.width;
         clipping_h = clip_attr.height;
 
-        if (game_ai.pointer_x < clipping_x) {
-            debuglogstdio(LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer_x, clipping_x);
-            game_ai.pointer_x = clipping_x;
+        if (game_ai.pointer->x < clipping_x) {
+            debuglogstdio(LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer->x, clipping_x);
+            game_ai.pointer->x = clipping_x;
         }
-        else if (game_ai.pointer_x >= (clipping_x + clipping_w)) {
-            debuglogstdio(LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer_x, clipping_x + clipping_w - 1);
-            game_ai.pointer_x = clipping_x + clipping_w - 1;
+        else if (game_ai.pointer->x >= (clipping_x + clipping_w)) {
+            debuglogstdio(LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer->x, clipping_x + clipping_w - 1);
+            game_ai.pointer->x = clipping_x + clipping_w - 1;
         }
 
-        if (game_ai.pointer_y < clipping_y) {
-            debuglogstdio(LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer_y, clipping_y);
-            game_ai.pointer_y = clipping_y;
+        if (game_ai.pointer->y < clipping_y) {
+            debuglogstdio(LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer->y, clipping_y);
+            game_ai.pointer->y = clipping_y;
         }
-        else if (game_ai.pointer_y >= (clipping_y + clipping_h)) {
-            debuglogstdio(LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer_y, clipping_y + clipping_h - 1);
-            game_ai.pointer_y = clipping_y + clipping_h - 1;
+        else if (game_ai.pointer->y >= (clipping_y + clipping_h)) {
+            debuglogstdio(LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer->y, clipping_y + clipping_h - 1);
+            game_ai.pointer->y = clipping_y + clipping_h - 1;
         }
     }
     return GrabSuccess;
@@ -154,11 +163,11 @@ DEFINE_ORIG_POINTER(XQueryPointer)
     if (!x11::gameXWindows.empty()) {
         XEvent event;
         event.xmotion.type = MotionNotify;
-        event.xmotion.state = SingleInput::toXlibPointerMask(game_ai.pointer_mask);
+        event.xmotion.state = SingleInput::toXlibPointerMask(game_ai.pointer->mask);
         if (dest_w == None) {
             /* Relative warp */
-            event.xmotion.x = game_ai.pointer_x + dest_x;
-            event.xmotion.y = game_ai.pointer_y + dest_y;
+            event.xmotion.x = game_ai.pointer->x + dest_x;
+            event.xmotion.y = game_ai.pointer->y + dest_y;
         }
         else {
             /* Absolute warp */
@@ -173,19 +182,19 @@ DEFINE_ORIG_POINTER(XQueryPointer)
         event.xmotion.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
         xlibEventQueueList.insert(&event);
-        debuglogstdio(LCF_EVENTS | LCF_MOUSE, "Generate Xlib event MotionNotify with new position (%d,%d)", game_ai.pointer_x, game_ai.pointer_y);
+        debuglogstdio(LCF_EVENTS | LCF_MOUSE, "Generate Xlib event MotionNotify with new position (%d,%d)", game_ai.pointer->x, game_ai.pointer->y);
     }
 
     /* Update the pointer coordinates */
     if (dest_w == None) {
         /* Relative warp */
-        game_ai.pointer_x += dest_x;
-        game_ai.pointer_y += dest_y;
+        game_ai.pointer->x += dest_x;
+        game_ai.pointer->y += dest_y;
     }
     else {
         /* Absolute warp */
-        game_ai.pointer_x = dest_x;
-        game_ai.pointer_y = dest_y;
+        game_ai.pointer->x = dest_x;
+        game_ai.pointer->y = dest_y;
     }
 
     if (Global::shared_config.mouse_prevent_warp) {
@@ -198,13 +207,13 @@ DEFINE_ORIG_POINTER(XQueryPointer)
     if (Global::shared_config.mouse_support) {
         if (dest_w == None) {
             /* Relative warp */
-            old_ai.pointer_x += dest_x;
-            old_ai.pointer_y += dest_y;
+            old_ai.pointer->x += dest_x;
+            old_ai.pointer->y += dest_y;
         }
         else {
             /* Absolute warp */
-            old_ai.pointer_x = dest_x;
-            old_ai.pointer_y = dest_y;
+            old_ai.pointer->x = dest_x;
+            old_ai.pointer->y = dest_y;
         }
     }
 

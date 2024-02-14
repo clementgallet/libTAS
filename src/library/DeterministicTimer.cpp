@@ -277,20 +277,6 @@ void DeterministicTimer::exitFrameBoundary()
         }
     }
 
-    /* Update baseTimeIncrement if variable framerate */
-    if (Global::shared_config.variable_framerate) {
-        TimeHolder newTimeIncrement;
-        newTimeIncrement.tv_sec = Global::shared_config.framerate_den / Global::shared_config.framerate_num;
-        newTimeIncrement.tv_nsec = 1000000000 * (uint64_t)(Global::shared_config.framerate_den % Global::shared_config.framerate_num) / Global::shared_config.framerate_num;
-
-        /* Check if we changed framerate, and reset fractional part if so. */
-        if (newTimeIncrement != baseTimeIncrement) {
-            baseTimeIncrement = newTimeIncrement;
-            fractional_increment = 1000000000 * (uint64_t)(Global::shared_config.framerate_den % Global::shared_config.framerate_num) % Global::shared_config.framerate_num;
-            fractional_part = 0;
-        }
-    }
-
     insideFrameBoundary = false;
     frame_mutex.unlock();
 }
@@ -315,10 +301,10 @@ TimeHolder DeterministicTimer::enterFrameBoundary()
     TimeHolder timeIncrement = baseTimeIncrement;
 
     fractional_part += fractional_increment;
-    while (fractional_part >= Global::shared_config.framerate_num)
+    while (fractional_part >= framerate_num)
     {
         timeIncrement.tv_nsec++;
-        fractional_part -= Global::shared_config.framerate_num;
+        fractional_part -= framerate_num;
     }
 
     /* If we have less delay than the length of a frame, we advance ticks by
@@ -345,10 +331,10 @@ void DeterministicTimer::fakeAdvanceTimer(struct timespec extraTicks) {
 void DeterministicTimer::fakeAdvanceTimerFrame() {
     TimeHolder timeIncrement = baseTimeIncrement;
     unsigned int fake_fractional_part = fractional_part + fractional_increment;
-    while (fake_fractional_part >= Global::shared_config.framerate_num)
+    while (fake_fractional_part >= framerate_num)
     {
         timeIncrement.tv_nsec++;
-        fake_fractional_part -= Global::shared_config.framerate_num;
+        fake_fractional_part -= framerate_num;
     }
 
     timeIncrement.tv_nsec+=1000000;
@@ -365,12 +351,7 @@ void DeterministicTimer::initialize(uint64_t initial_sec, uint64_t initial_nsec)
     realtime_delta = {Global::shared_config.initial_time_sec, Global::shared_config.initial_time_nsec};
     realtime_delta -= ticks;
 
-    if (Global::shared_config.framerate_num > 0) {
-        baseTimeIncrement.tv_sec = Global::shared_config.framerate_den / Global::shared_config.framerate_num;
-        baseTimeIncrement.tv_nsec = 1000000000 * (uint64_t)(Global::shared_config.framerate_den % Global::shared_config.framerate_num) / Global::shared_config.framerate_num;
-        fractional_increment = 1000000000 * (uint64_t)(Global::shared_config.framerate_den % Global::shared_config.framerate_num) % Global::shared_config.framerate_num;
-        fractional_part = 0;
-    }
+    setFramerate(Global::shared_config.initial_framerate_num, Global::shared_config.initial_framerate_den);
 
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastEnterTime));
 
@@ -392,10 +373,35 @@ bool DeterministicTimer::isInsideFrameBoundary()
 
 void DeterministicTimer::setRealTime(uint32_t new_realtime_sec, uint32_t new_realtime_nsec)
 {
+    if (!new_realtime_sec && !new_realtime_nsec)
+        return;
+
     TimeHolder th_real;
     th_real.tv_sec = new_realtime_sec;
     th_real.tv_nsec = new_realtime_nsec;
     realtime_delta = th_real - ticks;
+}
+
+void DeterministicTimer::setFramerate(uint32_t new_framerate_num, uint32_t new_framerate_den)
+{
+    if (!new_framerate_num)
+        new_framerate_num = Global::shared_config.initial_framerate_num;
+
+    if (!new_framerate_den)
+        new_framerate_den = Global::shared_config.initial_framerate_den;
+    
+    if ((framerate_num != new_framerate_num) || (framerate_den != new_framerate_den)) {
+        framerate_num = new_framerate_num;
+        framerate_den = new_framerate_den;
+
+        /* Update baseTimeIncrement */
+        baseTimeIncrement.tv_sec = framerate_den / framerate_num;
+        baseTimeIncrement.tv_nsec = 1000000000ULL * (uint64_t)(framerate_den % framerate_num) / framerate_num;
+
+        /* Rreset fractional part */
+        fractional_increment = 1000000000ULL * (uint64_t)(framerate_den % framerate_num) % framerate_num;
+        fractional_part = 0;
+    }
 }
 
 bool DeterministicTimer::isTimeCallMonotonic(SharedConfig::TimeCallType type)

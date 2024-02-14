@@ -98,7 +98,7 @@ bool AudioPlayerCoreAudio::init(AudioContext& ac)
     strdesc.mBytesPerPacket = strdesc.mBytesPerFrame * strdesc.mFramesPerPacket;
 
     /* Setup cyclic buffer */
-    int buffer_size = (2*ac.outFrequency*Global::shared_config.framerate_den/Global::shared_config.framerate_num);
+    int buffer_size = (2*ac.outFrequency*Global::shared_config.initial_framerate_den/Global::shared_config.initial_framerate_num);
 
     cyclicBuffer.data.resize(2*buffer_size*strdesc.mBytesPerFrame);
     cyclicBuffer.beg = 0;

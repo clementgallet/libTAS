@@ -139,7 +139,7 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
         mode->w = Global::shared_config.screen_width;
         mode->h = Global::shared_config.screen_height;
     }
-    mode->refresh_rate = Global::shared_config.framerate_num / Global::shared_config.framerate_den;
+    mode->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
 
     debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
     return ret;
@@ -157,7 +157,7 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
         mode->w = Global::shared_config.screen_width;
         mode->h = Global::shared_config.screen_height;
     }
-    mode->refresh_rate = Global::shared_config.framerate_num / Global::shared_config.framerate_den;
+    mode->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
 
     debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
     return ret;
@@ -181,7 +181,7 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
         mode->w = Global::shared_config.screen_width;
         mode->h = Global::shared_config.screen_height;
     }
-    mode->refresh_rate = Global::shared_config.framerate_num / Global::shared_config.framerate_den;
+    mode->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
 
     debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
     return ret;
@@ -210,7 +210,7 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
             dm = closest;
         }
     }
-    dm->refresh_rate = Global::shared_config.framerate_num / Global::shared_config.framerate_den;
+    dm->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
 
     return dm;
 }

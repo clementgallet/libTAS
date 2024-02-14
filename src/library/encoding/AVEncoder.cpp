@@ -84,7 +84,7 @@ void AVEncoder::initMuxer() {
     if (Global::shared_config.variable_framerate)
         nutMuxer = new NutMuxer(width, height, Global::shared_config.video_framerate, 1, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
     else
-        nutMuxer = new NutMuxer(width, height, Global::shared_config.framerate_num, Global::shared_config.framerate_den, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
+        nutMuxer = new NutMuxer(width, height, Global::shared_config.initial_framerate_num, Global::shared_config.initial_framerate_den, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
 }
 
 void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {

@@ -84,6 +84,9 @@ public:
     /* Are we inside a frame boudary */
     bool isInsideFrameBoundary();
 
+    /* Set a new value for the framerate */
+    void setFramerate(uint32_t new_framerate_num, uint32_t new_framerate_den);
+
     /* Set a new value for the realtime clock */
     void setRealTime(uint32_t new_realtime_sec, uint32_t new_realtime_nsec);
 
@@ -112,6 +115,9 @@ private:
      * realtime timer (which starts at user specified value, and which can
      * be modified during the run by the user) */
     TimeHolder realtime_delta;
+
+    /* Framerate values that can be modified during the game execution */
+    uint32_t framerate_num, framerate_den;
 
     /*
      * Extra ticks to add to GetTicks().

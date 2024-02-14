@@ -69,9 +69,9 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Which flags prevent triggering a debug message */
     LogCategoryFlag excludeFlags = LCF_NONE;
 
-    /* Framerate at which the game is running, as a fraction */
-    unsigned int framerate_num = 60;
-    unsigned int framerate_den = 1;
+    /* Initial framerate at which the game is running, as a fraction */
+    unsigned int initial_framerate_num = 60;
+    unsigned int initial_framerate_den = 1;
 
     /* Number of SDL controllers to (virtually) plug in */
     int nb_controllers = 0;

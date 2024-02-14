@@ -116,7 +116,7 @@ void GameLoop::start()
         processInputs(ai);
 
         /* Set the status to restart */
-        if (ai.flags & (1 << SingleInput::FLAG_RESTART)) {
+        if (ai.misc && (ai.misc->flags & (1 << SingleInput::FLAG_RESTART))) {
             context->status = Context::RESTARTING;
         }
 
@@ -648,12 +648,6 @@ void GameLoop::processInputs(AllInputs &ai)
 {
     ai.clear();
 
-    /* Set framerate numbers here to prevent potential errors */
-    if (context->config.sc.variable_framerate) {
-        ai.framerate_num = context->config.sc.framerate_num;
-        ai.framerate_den = context->config.sc.framerate_den;
-    }
-
     /* Don't record inputs if we are quitting */
     if (context->status == Context::QUITTING)
         return;
@@ -677,16 +671,21 @@ void GameLoop::processInputs(AllInputs &ai)
             }
 
             /* Add framerate if necessary */
-            if (context->config.sc.variable_framerate) {
-                ai.framerate_num = context->config.sc.framerate_num;
-                ai.framerate_den = context->config.sc.framerate_den;
+            if ((context->current_framerate_num != context->config.sc.initial_framerate_num) || 
+            (context->current_framerate_num != context->config.sc.initial_framerate_num)) {
+                if (!ai.misc)
+                    ai.misc.reset(new MiscInputs{});
+                ai.misc->framerate_num = context->current_framerate_num;
+                ai.misc->framerate_den = context->current_framerate_den;
             }
 
             /* Add realtime if necessary */
             if ((context->new_realtime_sec != context->current_realtime_sec) || 
                 (context->new_realtime_nsec != context->current_realtime_nsec)) {
-                ai.realtime_sec = context->new_realtime_sec;
-                ai.realtime_nsec = context->new_realtime_nsec;
+                if (!ai.misc)
+                    ai.misc.reset(new MiscInputs{});
+                ai.misc->realtime_sec = context->new_realtime_sec;
+                ai.misc->realtime_nsec = context->new_realtime_nsec;
             }
 
             /* Call lua onInput() here so that a script can modify inputs */
@@ -764,29 +763,37 @@ void GameLoop::processInputs(AllInputs &ai)
             }
 
             if (ret >= 0) { // read succeeded
+
                 /* Update framerate */
-                if (context->config.sc.variable_framerate &&
-                    ((context->config.sc.framerate_num != ai.framerate_num) ||
-                    (context->config.sc.framerate_den != ai.framerate_den))) {
-                    context->config.sc.framerate_num = ai.framerate_num;
-                    context->config.sc.framerate_den = ai.framerate_den;
-                    emit updateFramerate();
+                uint32_t new_framerate_num = 0;
+                uint32_t new_framerate_den = 0;
+                
+                if (ai.misc) {
+                    new_framerate_num = ai.misc->framerate_num;
+                    new_framerate_den = ai.misc->framerate_den;
                 }
                 
-                /* Update realtime */
-                if (ai.realtime_sec) {
-                    context->current_realtime_sec = ai.realtime_sec;
-                    context->current_realtime_nsec = ai.realtime_nsec;
-                    context->new_realtime_sec = ai.realtime_sec;
-                    context->new_realtime_nsec = ai.realtime_nsec;
+                if (!new_framerate_num)
+                    new_framerate_num = context->config.sc.initial_framerate_num;
+
+                if (!new_framerate_den)
+                    new_framerate_den = context->config.sc.initial_framerate_den;
+
+                if ((context->current_framerate_num != new_framerate_num) ||
+                    (context->current_framerate_den != new_framerate_den)) {
+                    
+                    context->current_framerate_num = new_framerate_num;
+                    context->current_framerate_den = new_framerate_den;
+                    emit updateFramerate();
                 }
-            }
-            else {
-                /* ai is empty, fill the framerate values */
-                if (context->config.sc.variable_framerate) {
-                    ai.framerate_num = context->config.sc.framerate_num;
-                    ai.framerate_den = context->config.sc.framerate_den;
-                }                
+
+                /* Update realtime */
+                if (ai.misc && ai.misc->realtime_sec) {
+                    context->current_realtime_sec = ai.misc->realtime_sec;
+                    context->current_realtime_nsec = ai.misc->realtime_nsec;
+                    context->new_realtime_sec = ai.misc->realtime_sec;
+                    context->new_realtime_nsec = ai.misc->realtime_nsec;
+                }
             }
 
             /* Call lua onInput() here so that a script can modify inputs */

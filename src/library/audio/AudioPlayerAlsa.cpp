@@ -91,7 +91,7 @@ bool AudioPlayerAlsa::init(AudioContext& ac)
         return false;
     }
 
-    snd_pcm_uframes_t buffer_size = (Global::shared_config.framerate_num>0)?(2*ac.outFrequency*Global::shared_config.framerate_den/Global::shared_config.framerate_num):(2*ac.outFrequency/30);
+    snd_pcm_uframes_t buffer_size = (Global::shared_config.initial_framerate_num>0)?(2*ac.outFrequency*Global::shared_config.initial_framerate_den/Global::shared_config.initial_framerate_num):(2*ac.outFrequency/30);
     debuglogstdio(LCF_SOUND, "  Buffer size is %d", buffer_size);
     if (snd_pcm_hw_params_set_buffer_size_near(phandle, hw_params, &buffer_size) < 0) {
         debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_rate_near failed");

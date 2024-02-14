@@ -716,14 +716,12 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
 
             case MSGN_ALL_INPUTS:
                 ai.recv();
-                /* Update framerate if necessary (do we actually need to?) */
-                if (Global::shared_config.variable_framerate) {
-                    Global::shared_config.framerate_num = ai.framerate_num;
-                    Global::shared_config.framerate_den = ai.framerate_den;
-                }
+
+                /* Update framerate */
+                DeterministicTimer::get().setFramerate(ai.misc->framerate_num, ai.misc->framerate_den);
+
                 /* Set new realtime value */
-                if (ai.realtime_sec)
-                    DeterministicTimer::get().setRealTime(ai.realtime_sec, ai.realtime_nsec);
+                DeterministicTimer::get().setRealTime(ai.misc->realtime_sec, ai.misc->realtime_nsec);
                 
                 break;
 

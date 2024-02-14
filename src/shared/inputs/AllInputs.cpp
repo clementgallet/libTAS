@@ -19,6 +19,8 @@
 
 #include "AllInputs.h"
 #include "ControllerInputs.h"
+#include "MouseInputs.h"
+#include "MiscInputs.h"
 #include "../shared/messages.h"
 #include "../shared/sockethelpers.h"
 
@@ -33,24 +35,24 @@ bool AllInputs::operator==(const AllInputs& other) const
 {
     if (keyboard != other.keyboard)
         return false;
+    
+    if (pointer && other.pointer) {
+        if (!(*pointer == *other.pointer))
+            return false;
+    }
         
-    if (!((pointer_x == other.pointer_x) &&
-        (pointer_y == other.pointer_y) &&
-        (pointer_mask == other.pointer_mask)))
-        return false;
-
     for (int j = 0; j < MAXJOYS; j++) {
         if (controllers[j] && other.controllers[j]) {
             if (!(*controllers[j] == *other.controllers[j]))
                 return false;
         }
     }
+
+    if (misc && other.misc) {
+        return (*misc == *other.misc);
+    }
     
-    return ((flags == other.flags) &&
-        (framerate_den == other.framerate_den) &&
-        (framerate_num == other.framerate_num) &&
-        (realtime_sec == other.realtime_sec) &&
-        (realtime_nsec == other.realtime_nsec));
+    return true;
 }
 
 AllInputs& AllInputs::operator|=(const AllInputs& ai)
@@ -75,32 +77,37 @@ AllInputs& AllInputs::operator|=(const AllInputs& ai)
         }
     }
     
-    pointer_x |= ai.pointer_x;
-    pointer_y |= ai.pointer_y;
-    pointer_mode |= ai.pointer_mode;
-    pointer_mask |= ai.pointer_mask;
+    if (pointer && ai.pointer) {
+        *pointer |= *ai.pointer;
+    }
+    
     for (int j=0; j<MAXJOYS; j++) {
         if (controllers[j] && ai.controllers[j]) {
             *controllers[j] |= *ai.controllers[j];
         }
     }
 
-    flags |= ai.flags;
-    framerate_den |= ai.framerate_den;
-    framerate_num |= ai.framerate_num;
-    realtime_sec |= ai.realtime_sec;
-    realtime_nsec |= ai.realtime_nsec;
+    if (misc && ai.misc) {
+        *misc |= *ai.misc;
+    }
 
     return *this;
 }
 
 AllInputs& AllInputs::operator=(const AllInputs& other)
 {
-    keyboard = other.keyboard;        
-    pointer_x = other.pointer_x;
-    pointer_y = other.pointer_y;
-    pointer_mode = other.pointer_mode;
-    pointer_mask = other.pointer_mask;
+    keyboard = other.keyboard;
+    
+    if (!other.pointer) {
+        if (pointer)
+            pointer->clear();
+    }
+    else {
+        if (!pointer)
+            pointer.reset(new MouseInputs{});
+        
+        *pointer = *other.pointer;
+    }
 
     for (int j = 0; j < MAXJOYS; j++) {
         if (!other.controllers[j]) {
@@ -109,17 +116,22 @@ AllInputs& AllInputs::operator=(const AllInputs& other)
         }
         else {
             if (!controllers[j])
-                controllers[j].reset(new ControllerInputs());
+                controllers[j].reset(new ControllerInputs{});
             
             *controllers[j] = *other.controllers[j];
         }
     }
-    
-    flags = other.flags;
-    framerate_den = other.framerate_den;
-    framerate_num = other.framerate_num;
-    realtime_sec = other.realtime_sec;
-    realtime_nsec = other.realtime_nsec;    
+
+    if (!other.misc) {
+        if (misc)
+            misc->clear();
+    }
+    else {
+        if (!misc)
+            misc.reset(new MiscInputs{});
+        
+        *misc = *other.misc;
+    }
     
     return *this;
 }
@@ -129,10 +141,8 @@ void AllInputs::clear() {
     for (i=0; i<MAXKEYS; i++)
         keyboard[i] = 0;
 
-    pointer_x = 0;
-    pointer_y = 0;
-    pointer_mode = SingleInput::POINTER_MODE_ABSOLUTE;
-    pointer_mask = 0;
+    if (pointer)
+        pointer->clear();
 
     for (j=0; j<MAXJOYS; j++) {
         if (controllers[j]) {
@@ -140,20 +150,23 @@ void AllInputs::clear() {
         }
     }
 
-    flags = 0;
-    framerate_den = 0;
-    framerate_num = 0;
-    realtime_sec = 0;
-    realtime_nsec = 0;
+    if (misc)
+        misc->clear();
 }
 
 void AllInputs::buildAndClear()
 {
+    if (!pointer)
+        pointer.reset(new MouseInputs{});
+
     for (int j=0; j<MAXJOYS; j++) {
         if (!controllers[j]) {
-            controllers[j].reset(new ControllerInputs());            
+            controllers[j].reset(new ControllerInputs{});            
         }
     }
+
+    if (!misc)
+        misc.reset(new MiscInputs{});
     
     clear();
 }
@@ -180,33 +193,27 @@ int AllInputs::getInput(const SingleInput &si) const
 
         /* Mouse inputs */
         case SingleInput::IT_POINTER_X:
-            return pointer_x;
         case SingleInput::IT_POINTER_Y:
-            return pointer_y;
         case SingleInput::IT_POINTER_MODE:
-            return pointer_mode;
         case SingleInput::IT_POINTER_B1:
         case SingleInput::IT_POINTER_B2:
         case SingleInput::IT_POINTER_B3:
         case SingleInput::IT_POINTER_B4:
         case SingleInput::IT_POINTER_B5:
-            return (pointer_mask >> (si.type - SingleInput::IT_POINTER_B1)) & 0x1;
+            if (pointer)
+                return pointer->getInput(si);
+            else
+                break;
 
-        /* Flag inputs */
         case SingleInput::IT_FLAG:
-            return (flags >> si.value) & 0x1;
-
-        /* Framerate inputs */
         case SingleInput::IT_FRAMERATE_NUM:
-            return framerate_num;
         case SingleInput::IT_FRAMERATE_DEN:
-            return framerate_den;
-
-        /* Realtime inputs */
         case SingleInput::IT_REALTIME_SEC:
-            return realtime_sec;
         case SingleInput::IT_REALTIME_NSEC:
-            return realtime_nsec;
+            if (misc)
+                return misc->getInput(si);
+            else
+                break;
 
         default:
             /* Controller inputs */
@@ -255,50 +262,27 @@ void AllInputs::setInput(const SingleInput &si, int value)
         }
         break;
 
-    /* Mouse inputs */
+        /* Mouse inputs */
         case SingleInput::IT_POINTER_X:
-            pointer_x = value;
-            break;
         case SingleInput::IT_POINTER_Y:
-            pointer_y = value;
-            break;
         case SingleInput::IT_POINTER_MODE:
-            pointer_mode = value;
-            break;
         case SingleInput::IT_POINTER_B1:
         case SingleInput::IT_POINTER_B2:
         case SingleInput::IT_POINTER_B3:
         case SingleInput::IT_POINTER_B4:
         case SingleInput::IT_POINTER_B5:
-            if (value)
-                pointer_mask |= (0x1u << (si.type - SingleInput::IT_POINTER_B1));
-            else
-                pointer_mask &= ~(0x1u << (si.type - SingleInput::IT_POINTER_B1));
-            break;
+            if (!pointer)
+                pointer.reset(new MouseInputs{});
+            return pointer->setInput(si, value);
             
-        /* Flag input */
         case SingleInput::IT_FLAG:
-            if (value)
-                flags |= (0x1 << si.value);
-            else
-                flags &= ~(0x1 << si.value);
-            break;
-
-        /* Framerate inputs */
         case SingleInput::IT_FRAMERATE_NUM:
-            framerate_num = value;
-            break;
         case SingleInput::IT_FRAMERATE_DEN:
-            framerate_den = value;
-            break;
-
-        /* Realtime inputs */
         case SingleInput::IT_REALTIME_SEC:
-            realtime_sec = value;
-            break;
         case SingleInput::IT_REALTIME_NSEC:
-            realtime_nsec = value;
-            break;
+            if (!misc)
+                misc.reset(new MiscInputs{});
+            return misc->setInput(si, value);
 
         default:
             /* Controller inputs */
@@ -332,50 +316,11 @@ void AllInputs::extractInputs(std::set<SingleInput> &input_set) const
         }
     }
 
-    if (pointer_x) {
-        si = {SingleInput::IT_POINTER_X, 1, ""};
-        input_set.insert(si);
-    }
-    if (pointer_y) {
-        si = {SingleInput::IT_POINTER_Y, 1, ""};
-        input_set.insert(si);
-    }
-    if (pointer_mode) {
-        si = {SingleInput::IT_POINTER_MODE, 1, ""};
-        input_set.insert(si);
-    }
-    for (int b=0; b<5; b++) {
-        if (pointer_mask & (1 << b)) {
-            si = {SingleInput::IT_POINTER_B1 + b, 1, ""};
-            input_set.insert(si);
-        }
-    }
+    if (pointer)
+        pointer->extractInputs(input_set);
 
-    if (flags) {
-        uint32_t temp_flags = flags;
-        for (unsigned int i=0; temp_flags!=0; i++, temp_flags >>= 1) {
-            if (temp_flags & 0x1) {
-                si = {SingleInput::IT_FLAG, i, ""};
-                input_set.insert(si);
-            }
-        }
-    }
-
-    if (framerate_num) {
-        si = {SingleInput::IT_FRAMERATE_NUM, 1, ""};
-        input_set.insert(si);
-    }
-    if (framerate_den) {
-        si = {SingleInput::IT_FRAMERATE_DEN, 1, ""};
-        input_set.insert(si);
-    }
-
-    if (realtime_sec) {
-        si = {SingleInput::IT_REALTIME_SEC, 1, ""};
-        input_set.insert(si);
-        si = {SingleInput::IT_REALTIME_NSEC, 1, ""};
-        input_set.insert(si);
-    }
+    if (misc)
+        misc->extractInputs(input_set);
 
     for (int c = 0; c < AllInputs::MAXJOYS; c++) {
         if (controllers[c]) {
@@ -392,15 +337,11 @@ void AllInputs::send(bool preview)
         sendMessage(MSGN_ALL_INPUTS);
     
     sendData(keyboard.data(), keyboard.size() * sizeof(uint32_t));
-    sendData(&pointer_x, sizeof(int));
-    sendData(&pointer_y, sizeof(int));
-    sendData(&pointer_mode, sizeof(unsigned int));
-    sendData(&pointer_mask, sizeof(unsigned int));
-    sendData(&flags, sizeof(uint32_t));
-    sendData(&framerate_den, sizeof(uint32_t));
-    sendData(&framerate_num, sizeof(uint32_t));
-    sendData(&realtime_sec, sizeof(uint32_t));
-    sendData(&realtime_nsec, sizeof(uint32_t));
+
+    if (pointer) {
+        sendMessage(MSGN_POINTER_INPUTS);
+        sendData(pointer.get(), sizeof(MouseInputs));        
+    }
     
     for (int j = 0; j < MAXJOYS; j++) {
         if (controllers[j]) {
@@ -408,6 +349,11 @@ void AllInputs::send(bool preview)
             sendData(&j, sizeof(int));
             sendData(controllers[j].get(), sizeof(ControllerInputs));
         }
+    }
+
+    if (misc) {
+        sendMessage(MSGN_MISC_INPUTS);
+        sendData(misc.get(), sizeof(MiscInputs));        
     }
     
     sendMessage(MSGN_END_INPUTS);
@@ -421,25 +367,24 @@ void AllInputs::recv()
     buildAndClear();
     
     receiveData(keyboard.data(), keyboard.size() * sizeof(uint32_t));
-    receiveData(&pointer_x, sizeof(int));
-    receiveData(&pointer_y, sizeof(int));
-    receiveData(&pointer_mode, sizeof(unsigned int));
-    receiveData(&pointer_mask, sizeof(unsigned int));
-    receiveData(&flags, sizeof(uint32_t));
-    receiveData(&framerate_den, sizeof(uint32_t));
-    receiveData(&framerate_num, sizeof(uint32_t));
-    receiveData(&realtime_sec, sizeof(uint32_t));
-    receiveData(&realtime_nsec, sizeof(uint32_t));
     
     int message = receiveMessage();
     while (message != MSGN_END_INPUTS) {
         switch (message) {
+            case MSGN_POINTER_INPUTS:
+                receiveData(pointer.get(), sizeof(MouseInputs));
+                break;
+            
             case MSGN_CONTROLLER_INPUTS: {
                 int joy;
                 receiveData(&joy, sizeof(int));
                 receiveData(controllers[joy].get(), sizeof(ControllerInputs));
                 break;
-            }                
+            }
+
+            case MSGN_MISC_INPUTS:
+                receiveData(misc.get(), sizeof(MiscInputs));
+                break;
         }
         message = receiveMessage();
     }

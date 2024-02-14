@@ -139,8 +139,8 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("logging_status", sc.logging_status);
     settings.setValue("includeFlags", sc.includeFlags);
     settings.setValue("excludeFlags", sc.excludeFlags);
-    settings.setValue("framerate_num", sc.framerate_num);
-    settings.setValue("framerate_den", sc.framerate_den);
+    settings.setValue("framerate_num", sc.initial_framerate_num);
+    settings.setValue("framerate_den", sc.initial_framerate_den);
     settings.setValue("mouse_support", sc.mouse_support);
     settings.setValue("mouse_mode_relative", sc.mouse_mode_relative);
     settings.setValue("mouse_prevent_warp", sc.mouse_prevent_warp);
@@ -303,8 +303,8 @@ void Config::load(const std::string& gamepath) {
     sc.logging_status = settings.value("logging_status", sc.logging_status).toInt();
     sc.includeFlags = settings.value("includeFlags", sc.includeFlags).toInt();
     sc.excludeFlags = settings.value("excludeFlags", sc.excludeFlags).toInt();
-    sc.framerate_num = settings.value("framerate_num", sc.framerate_num).toUInt();
-    sc.framerate_den = settings.value("framerate_den", sc.framerate_den).toUInt();
+    sc.initial_framerate_num = settings.value("framerate_num", sc.initial_framerate_num).toUInt();
+    sc.initial_framerate_den = settings.value("framerate_den", sc.initial_framerate_den).toUInt();
     sc.mouse_support = settings.value("mouse_support", sc.mouse_support).toBool();
     sc.mouse_mode_relative = settings.value("mouse_mode_relative", sc.mouse_mode_relative).toBool();
     sc.mouse_prevent_warp = settings.value("mouse_prevent_warp", sc.mouse_prevent_warp).toBool();

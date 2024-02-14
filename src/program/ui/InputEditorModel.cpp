@@ -331,8 +331,10 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
             /* Default framerate has a value of 0, which may be confusing,
              * so we just print `-` in place. */
             if ((si.type == SingleInput::IT_FRAMERATE_NUM) || (si.type == SingleInput::IT_FRAMERATE_DEN)) {
-                if ((ai.framerate_num == movie->header->framerate_num) && 
-                    (ai.framerate_den == movie->header->framerate_den))
+                if (!ai.misc)
+                    return QVariant();
+                if ((ai.misc->framerate_num == movie->header->framerate_num) && 
+                    (ai.misc->framerate_den == movie->header->framerate_den))
                     return QVariant();
             }
             if ((si.type == SingleInput::IT_REALTIME_SEC) && (value == 0))

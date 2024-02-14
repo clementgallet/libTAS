@@ -233,20 +233,27 @@ void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConf
                 }
 
                 if (si.type == SingleInput::IT_FLAG) {
-                    ai.flags |= (1 << si.value);
+                    if (!ai.misc)
+                        ai.misc.reset(new MiscInputs{});
+                    
+                    ai.misc->flags |= (1 << si.value);
                 }
 
                 if (sc.mouse_support) {
+                    if (si.type >= SingleInput::IT_POINTER_B1 && si.type <= SingleInput::IT_POINTER_B5)
+                        if (!ai.pointer)
+                            ai.pointer.reset(new MouseInputs{});
+                    
                     if (si.type == SingleInput::IT_POINTER_B1)
-                        ai.pointer_mask |= (0x1u << SingleInput::POINTER_B1);
+                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B1);
                     if (si.type == SingleInput::IT_POINTER_B2)
-                        ai.pointer_mask |= (0x1u << SingleInput::POINTER_B2);
+                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B2);
                     if (si.type == SingleInput::IT_POINTER_B3)
-                        ai.pointer_mask |= (0x1u << SingleInput::POINTER_B3);
+                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B3);
                     if (si.type == SingleInput::IT_POINTER_B4)
-                        ai.pointer_mask |= (0x1u << SingleInput::POINTER_B4);
+                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B4);
                     if (si.type == SingleInput::IT_POINTER_B5)
-                        ai.pointer_mask |= (0x1u << SingleInput::POINTER_B5);
+                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B5);
                 }
 
                 if (si.inputTypeIsController()) {
@@ -262,7 +269,7 @@ void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConf
                         continue;
 
                     if (!ai.controllers[controller_i])
-                        ai.controllers[controller_i].reset(new ControllerInputs());
+                        ai.controllers[controller_i].reset(new ControllerInputs{});
                     int controller_axis = si.type & SingleInput::IT_CONTROLLER_AXIS_MASK;
                     int controller_type = si.type & SingleInput::IT_CONTROLLER_TYPE_MASK;
                     if (controller_axis) {
@@ -295,13 +302,16 @@ void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConf
         const NSUInteger cocoaButtons = [NSEvent pressedMouseButtons];
         const NSPoint cocoaLocation = [NSEvent mouseLocation];
 
-        ai.pointer_mode = sc.mouse_mode_relative?SingleInput::POINTER_MODE_RELATIVE:SingleInput::POINTER_MODE_ABSOLUTE;
-        ai.pointer_x = static_cast<int>(cocoaLocation.x - bounds.origin.x);
-        ai.pointer_y = static_cast<int>(cocoaLocation.y - bounds.origin.y);
+        if (!ai.pointer)
+            ai.pointer.reset(new MouseInputs{});
+
+        ai.pointer->mode = sc.mouse_mode_relative?SingleInput::POINTER_MODE_RELATIVE:SingleInput::POINTER_MODE_ABSOLUTE;
+        ai.pointer->x = static_cast<int>(cocoaLocation.x - bounds.origin.x);
+        ai.pointer->y = static_cast<int>(cocoaLocation.y - bounds.origin.y);
         
         if (sc.mouse_mode_relative) {
-            ai.pointer_x = static_cast<int>(cocoaLocation.x - bounds.size.width/2);
-            ai.pointer_y = static_cast<int>(cocoaLocation.y - bounds.size.height/2);
+            ai.pointer->x = static_cast<int>(cocoaLocation.x - bounds.size.width/2);
+            ai.pointer->y = static_cast<int>(cocoaLocation.y - bounds.size.height/2);
 
             /* Warp pointer if needed */
             if (mouse_warp) {
@@ -311,21 +321,21 @@ void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConf
             }
         }
         else {
-            ai.pointer_x = static_cast<int>(cocoaLocation.x - bounds.size.width/2);
-            ai.pointer_y = static_cast<int>(cocoaLocation.y - bounds.size.height/2);
+            ai.pointer->x = static_cast<int>(cocoaLocation.x - bounds.size.width/2);
+            ai.pointer->y = static_cast<int>(cocoaLocation.y - bounds.size.height/2);
         }
 
         /* We only care about the five mouse buttons */
         if (cocoaButtons & (1 << 0))
-            ai.pointer_mask |= (0x1u << SingleInput::POINTER_B1);
+            ai.pointer->mask |= (0x1u << SingleInput::POINTER_B1);
         if (cocoaButtons & (1 << 1))
-            ai.pointer_mask |= (0x1u << SingleInput::POINTER_B2);
+            ai.pointer->mask |= (0x1u << SingleInput::POINTER_B2);
         if (cocoaButtons & (1 << 2))
-            ai.pointer_mask |= (0x1u << SingleInput::POINTER_B3);
+            ai.pointer->mask |= (0x1u << SingleInput::POINTER_B3);
         if (cocoaButtons & (1 << 3))
-            ai.pointer_mask |= (0x1u << SingleInput::POINTER_B4);
+            ai.pointer->mask |= (0x1u << SingleInput::POINTER_B4);
         if (cocoaButtons & (1 << 4))
-            ai.pointer_mask |= (0x1u << SingleInput::POINTER_B5);
+            ai.pointer->mask |= (0x1u << SingleInput::POINTER_B5);
     }
 }
 

@@ -56,7 +56,7 @@ int Screenshot::save(const std::string& screenshotfile, bool draw) {
     const char* pixfmt = ScreenCapture::getPixelFormat();
 
     /* Initialize the muxer. Audio parameters don't matter here for screenshot */
-    NutMuxer* nutMuxer = new NutMuxer(width, height, Global::shared_config.framerate_num, Global::shared_config.framerate_den, pixfmt, 44100, 1, 1, ffmpeg_pipe);
+    NutMuxer* nutMuxer = new NutMuxer(width, height, Global::shared_config.initial_framerate_num, Global::shared_config.initial_framerate_den, pixfmt, 44100, 1, 1, ffmpeg_pipe);
 
     /* Access to the screen pixels, or last screen pixels if not a draw frame */
     uint8_t* pixels = nullptr;

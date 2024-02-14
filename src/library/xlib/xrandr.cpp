@@ -70,7 +70,7 @@ XRRScreenResources *XRRGetScreenResources (Display *dpy, Window window)
         sr_mode.vSyncEnd = Global::shared_config.screen_width + 9;
         sr_mode.vTotal = Global::shared_config.screen_width + 45;
         unsigned int dots = sr_mode.hTotal * sr_mode.vTotal;
-        sr_mode.dotClock = dots * Global::shared_config.framerate_num / Global::shared_config.framerate_den - dots / 2;
+        sr_mode.dotClock = dots * Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den - dots / 2;
         sr_mode.name = const_cast<char*>(mode_name);
         sr_mode.nameLength = strlen(mode_name);
 
@@ -84,7 +84,7 @@ XRRScreenResources *XRRGetScreenResources (Display *dpy, Window window)
     /* Replace the monitor refresh rate */
     for (int m = 0; m < sr->nmode; m++) {
         unsigned int dots = sr->modes[m].hTotal * sr->modes[m].vTotal;
-        sr->modes[m].dotClock = dots * Global::shared_config.framerate_num / Global::shared_config.framerate_den - dots / 2;
+        sr->modes[m].dotClock = dots * Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den - dots / 2;
     }
     return sr;
 }
