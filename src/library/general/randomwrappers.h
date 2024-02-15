@@ -24,8 +24,13 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <sys/types.h> // ssize_t
 
 namespace libtas {
+
+/* Write LENGTH bytes of randomness starting at BUFFER.  Return the
+   number of bytes written, or -1 on error.  */
+OVERRIDE ssize_t getrandom (void *buffer, size_t length, unsigned int flags);
 
 /* These are the functions that actually do things.  The `random', `srandom',
    `initstate' and `setstate' functions are those from BSD Unices.

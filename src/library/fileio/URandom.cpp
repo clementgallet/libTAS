@@ -35,21 +35,28 @@ static int writefd = -1;
 static FILE* stream = nullptr;
 static uint64_t prng_state = 0;
 
-static void urandom_handler(int signum)
+uint64_t urandom_rand()
 {
-    debuglogstdio(LCF_FILEIO | LCF_RANDOM, "Filling urandom fd");
     if (!prng_state)
         prng_state = Global::shared_config.initial_time_sec;
     
+    /* Use xorshift64* algorithm to generate pseudo-random values */
+    uint64_t r = prng_state;	/* The state must be seeded with a nonzero value. */
+    r ^= r >> 12;
+    r ^= r << 25;
+    r ^= r >> 27;
+    prng_state = r;
+    r *= 0x2545F4914F6CDD1DULL;
+    return r;
+}
+
+static void urandom_handler(int signum)
+{
+    debuglogstdio(LCF_FILEIO | LCF_RANDOM, "Filling urandom fd");
+    
     int err = 0;
     do {
-        /* Use xorshift64* algorithm to generate pseudo-random values */
-        uint64_t r = prng_state;	/* The state must be seeded with a nonzero value. */
-    	r ^= r >> 12;
-    	r ^= r << 25;
-    	r ^= r >> 27;
-    	prng_state = r;
-        r *= 0x2545F4914F6CDD1DULL;
+        uint64_t r = urandom_rand();
         err = write(writefd, &r, sizeof(uint64_t));
     } while (err != -1);
 }

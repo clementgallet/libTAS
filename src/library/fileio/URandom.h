@@ -21,8 +21,12 @@
 #define LIBTAS_URANDOM_H_INCLUDED
 
 #include <cstdio>
+#include <cstdint>
 
 namespace libtas {
+
+/* Generate a single random 64-bit value */ 
+uint64_t urandom_rand();
 
 /* Creates a fd implementing our own deterministic /dev/urandom */
 int urandom_create_fd();
