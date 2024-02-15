@@ -19,9 +19,29 @@
 
 #include "sdldynapi.h"
 
-/* Define some SDL functions that appear in version 2.0.6, because still many
- * distributions are bundled with version 2.0.5 */
+/* Define some SDL functions that appear in later versions, so that 
+ * distributions that are bundled with old version can still compile this */
 #include "inputs/sdljoystick.h"
+
+#if !SDL_VERSION_ATLEAST(2,0,5)
+OVERRIDE int SDL_GetDisplayUsableBounds(int displayIndex, SDL_Rect * rect);
+#endif
+
+#if !SDL_VERSION_ATLEAST(2,0,12)
+typedef enum
+{
+    SDL_ScaleModeNearest, /**< nearest pixel sampling */
+    SDL_ScaleModeLinear,  /**< linear filtering */
+    SDL_ScaleModeBest     /**< anisotropic filtering */
+} SDL_ScaleMode;
+OVERRIDE int SDL_SetTextureScaleMode(SDL_Texture * texture, SDL_ScaleMode scaleMode);
+#endif
+
+#if !SDL_VERSION_ATLEAST(2,0,17)
+struct SDL_Vertex;
+OVERRIDE int SDL_RenderGeometry(SDL_Renderer *renderer, SDL_Texture *texture, const SDL_Vertex *vertices, int num_vertices, const int *indices, int num_indices);
+#endif
+
 #include "logging.h"
 #include "general/dlhook.h"
 #include "hook.h"

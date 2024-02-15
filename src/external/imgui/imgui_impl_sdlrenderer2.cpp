@@ -40,8 +40,20 @@
 
 // SDL
 #include <SDL2/SDL.h>
+#if !SDL_VERSION_ATLEAST(2,0,12)
+typedef enum
+{
+    SDL_ScaleModeNearest, /**< nearest pixel sampling */
+    SDL_ScaleModeLinear,  /**< linear filtering */
+    SDL_ScaleModeBest     /**< anisotropic filtering */
+} SDL_ScaleMode;
+
+extern int SDL_SetTextureScaleMode(SDL_Texture * texture, SDL_ScaleMode scaleMode);
+#endif
+
 #if !SDL_VERSION_ATLEAST(2,0,17)
-#error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
+struct SDL_Vertex;
+extern int SDL_RenderGeometry(SDL_Renderer *renderer, SDL_Texture *texture, const SDL_Vertex *vertices, int num_vertices, const int *indices, int num_indices);
 #endif
 
 #include "hook.h"
