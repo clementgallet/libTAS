@@ -66,6 +66,7 @@ void updateGameInputs()
         }
     }
 
+    game_ai.pointer->wheel = ai.pointer->wheel;
     game_ai.pointer->mask = ai.pointer->mask;
 
     for (int ji=0; ji<Global::shared_config.nb_controllers; ji++) {

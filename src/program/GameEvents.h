@@ -75,13 +75,13 @@ protected:
         EVENT_TYPE_RELEASE,
         EVENT_TYPE_FOCUS_OUT,
         EVENT_TYPE_EXPOSE,
-        EVENT_TYPE_INPUT_SET,
-        EVENT_TYPE_INPUT_TOGGLE,
+        EVENT_TYPE_WHEEL_UP,
+        EVENT_TYPE_WHEEL_DOWN,
     };
 
-    virtual EventType nextEvent(struct HotKey &hk) = 0;
+    virtual EventType nextEvent(HotKey &hk) = 0;
 
-    bool processEvent(EventType type, struct HotKey &hk);
+    bool processEvent(EventType type, const HotKey &hk);
 
 signals:
     void alertToShow(QString str);

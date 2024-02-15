@@ -84,8 +84,8 @@ std::string InputsWindow::formatInputs(const AllInputs& ai)
 
     /* Mouse */
     if (Global::shared_config.mouse_support) {
-        if (ai.pointer->x != -1) {
-            oss << "[M " << ai.pointer->x << ":" << ai.pointer->y << ":";
+        if (ai.pointer->x != 0 || ai.pointer->y != 0 || ai.pointer->wheel != 0) {
+            oss << "[M " << ai.pointer->x << ":" << ai.pointer->y << ":" << ai.pointer->wheel << ":";
             oss << ((ai.pointer->mode==SingleInput::POINTER_MODE_RELATIVE)?"R":"A");
             oss << "] ";
         }

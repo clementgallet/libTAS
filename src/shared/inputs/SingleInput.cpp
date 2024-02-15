@@ -31,7 +31,7 @@
 
 bool SingleInput::isAnalog() const
 {
-    if ((type == IT_POINTER_X) || (type == IT_POINTER_Y))
+    if ((type == IT_POINTER_X) || (type == IT_POINTER_Y) || (type == IT_POINTER_WHEEL))
         return true;
     if ((type == IT_FRAMERATE_NUM) || (type == IT_FRAMERATE_DEN))
         return true;

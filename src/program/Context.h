@@ -82,6 +82,9 @@ struct Context {
     int64_t new_realtime_sec;
     int64_t new_realtime_nsec;
 
+    /* accumulated values of the mouse wheel, to be able to send wheel inputs */
+    int mouse_wheel;
+
     /* config */
     Config config;
 

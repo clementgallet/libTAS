@@ -27,6 +27,7 @@
 
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>
+#include <xcb/xinput.h>
 
 #include <string>
 #include <iostream>
@@ -62,6 +63,16 @@ void GameEventsXcb::registerGameWindow(uint32_t gameWindow)
             std::cerr << "error in xcb_change_window_attributes: " << error->error_code << std::endl;
         }
 
+        struct {
+            xcb_input_event_mask_t iem;
+            int xiem;
+        } se_mask;
+        se_mask.iem.deviceid = XCB_INPUT_DEVICE_ALL_MASTER;
+        se_mask.iem.mask_len = 1;
+
+        se_mask.xiem = XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS;
+        xcb_input_xi_select_events(context->conn, context->game_window, 1, &se_mask.iem);
+        
         /* Also get parent window of game window for focus */
         xcb_query_tree_cookie_t qt_cookie = xcb_query_tree(context->conn, context->game_window);
         xcb_query_tree_reply_t *reply = xcb_query_tree_reply(context->conn, qt_cookie, &error);
@@ -196,8 +207,16 @@ GameEventsXcb::EventType GameEventsXcb::nextEvent(struct HotKey &hk)
                         return EVENT_TYPE_FOCUS_OUT;
                     case XCB_EXPOSE:
                         return EVENT_TYPE_EXPOSE;
-                    default:
-                        return EVENT_TYPE_NONE;
+                    case XCB_GE_GENERIC: {
+                        xcb_ge_generic_event_t *gev = reinterpret_cast<xcb_ge_generic_event_t *>(event.get());
+                        if (gev->event_type == XCB_INPUT_BUTTON_PRESS) {
+                            xcb_input_button_press_event_t *mev = reinterpret_cast<xcb_input_button_press_event_t*>(gev);
+                            if (mev->detail == XCB_BUTTON_INDEX_4)
+                                return EVENT_TYPE_WHEEL_UP;
+                            if (mev->detail == XCB_BUTTON_INDEX_5)
+                                return EVENT_TYPE_WHEEL_DOWN;
+                        }
+                    }
                 }
             }
         }

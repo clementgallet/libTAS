@@ -172,6 +172,7 @@ KeyMapping::KeyMapping(void* c)
     /* Mouse mapping */
     input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_POINTER_X, 1, "Mouse X coord"});
     input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_POINTER_Y, 1, "Mouse Y coord"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_POINTER_WHEEL, 1, "Mouse wheel"});
     input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_POINTER_MODE, 1, "Mouse rel"});
 
     /* Framerate mapping */

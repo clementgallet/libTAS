@@ -32,6 +32,9 @@ class MouseInputs {
         int x;
         int y;
 
+        /* Pointer vertical wheel */
+        int wheel;
+
         /* Absolute or relative mode */
         unsigned int mode;
 
@@ -42,7 +45,7 @@ class MouseInputs {
         inline bool operator==(const MouseInputs& other) const
         {
             return ((x == other.x) && (y == other.y) &&
-             (mode == other.mode) && (mask == other.mask));
+             (mode == other.mode) && (mask == other.mask) && (wheel == other.wheel));
         }
 
         /* OR all elements of the struct, so that unique inputs can be queried */

@@ -69,6 +69,7 @@ AS_IF([test "x$enable_i386_lib" != "xyes"], [
     AC_SEARCH_LIBS([xcb_connect], [xcb], [], [AC_MSG_ERROR(The xcb library is required!)])
     AC_SEARCH_LIBS([xcb_xkb_use_extension], [xcb-xkb], [], [AC_MSG_ERROR(The xcb-xkb library is required!)])
     AC_SEARCH_LIBS([xcb_key_symbols_alloc], [xcb-keysyms], [], [AC_MSG_ERROR(The xcb-keysyms library is required!)])
+    AC_SEARCH_LIBS([xcb_input_xi_select_events], [xcb-xinput], [], [AC_MSG_ERROR(The xcb-xinput library is required!)])
 
     AC_SEARCH_LIBS([pthread_create], [pthread], [], [AC_MSG_ERROR(The pthread library is required!)])
 

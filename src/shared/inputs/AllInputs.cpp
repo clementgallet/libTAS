@@ -194,6 +194,7 @@ int AllInputs::getInput(const SingleInput &si) const
         /* Mouse inputs */
         case SingleInput::IT_POINTER_X:
         case SingleInput::IT_POINTER_Y:
+        case SingleInput::IT_POINTER_WHEEL:
         case SingleInput::IT_POINTER_MODE:
         case SingleInput::IT_POINTER_B1:
         case SingleInput::IT_POINTER_B2:
@@ -265,6 +266,7 @@ void AllInputs::setInput(const SingleInput &si, int value)
         /* Mouse inputs */
         case SingleInput::IT_POINTER_X:
         case SingleInput::IT_POINTER_Y:
+        case SingleInput::IT_POINTER_WHEEL:
         case SingleInput::IT_POINTER_MODE:
         case SingleInput::IT_POINTER_B1:
         case SingleInput::IT_POINTER_B2:

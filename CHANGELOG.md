@@ -19,6 +19,7 @@
 * [ImGui] When detached, game window can be resized
 * Disable a dotnet speed check (#590)
 * Hook getrandom()
+* Implement mouse wheel input
 
 ### Changed
 

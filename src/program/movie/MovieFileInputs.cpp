@@ -104,6 +104,7 @@ int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inp
         input_stream.put((inputs.pointer->mask&(1<<SingleInput::POINTER_B3))?'3':'.');
         input_stream.put((inputs.pointer->mask&(1<<SingleInput::POINTER_B4))?'4':'.');
         input_stream.put((inputs.pointer->mask&(1<<SingleInput::POINTER_B5))?'5':'.');
+        input_stream << ":" << inputs.pointer->wheel;
     }
 
     /* Write controller inputs */
@@ -306,7 +307,12 @@ int MovieFileInputs::readMouseFrame(std::istringstream& input_string, AllInputs&
     if (d != '.') inputs.pointer->mask |= (1 << SingleInput::POINTER_B4);
     input_string >> d;
     if (d != '.') inputs.pointer->mask |= (1 << SingleInput::POINTER_B5);
+
     input_string >> d;
+
+    /* Check for optional wheel value */
+    if (d == ':')
+        input_string >> inputs.pointer->wheel >> d;
     return 0;
 }
 

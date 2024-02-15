@@ -1061,6 +1061,23 @@ void generateMouseButtonEvents(void)
 #endif
         }
     }
+    
+    /* Check if we got a change in mouse wheel */
+    if (!game_ai.pointer->wheel)
+        return;
+
+    if (Global::game_info.mouse & GameInfo::SDL2) {
+        SDL_Event event2;
+        event2.type = SDL_MOUSEWHEEL;
+        event2.wheel.timestamp = timestamp;
+        event2.wheel.windowID = 1;
+        event2.wheel.which = 0; // TODO: Mouse instance id. No idea what to put here...
+        event2.wheel.x = 0; // Only vertical wheel is supported
+        event2.wheel.y = game_ai.pointer->wheel;
+        event2.wheel.direction = SDL_MOUSEWHEEL_FLIPPED;
+        sdlEventQueue.insert(&event2);
+        debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEWHEEL with new value (%d)", game_ai.pointer->wheel);
+    }
 }
 
 /* Generate focus/unfocus event */

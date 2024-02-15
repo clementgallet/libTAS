@@ -25,6 +25,7 @@ MouseInputs& MouseInputs::operator|=(const MouseInputs& mi)
 {
     x |= mi.x;
     y |= mi.y;
+    wheel |= mi.wheel;
     mode |= mi.mode;
     mask |= mi.mask;
     return *this;
@@ -34,6 +35,7 @@ MouseInputs& MouseInputs::operator=(const MouseInputs& mi)
 {
     x = mi.x;
     y = mi.y;
+    wheel = mi.wheel;
     mode = mi.mode;
     mask = mi.mask;
     return *this;
@@ -42,6 +44,7 @@ MouseInputs& MouseInputs::operator=(const MouseInputs& mi)
 void MouseInputs::clear() {
     x = 0;
     y = 0;
+    wheel = 0;
     mode = SingleInput::POINTER_MODE_ABSOLUTE;
     mask = 0;
 }
@@ -54,6 +57,8 @@ int MouseInputs::getInput(const SingleInput &si) const
             return x;
         case SingleInput::IT_POINTER_Y:
             return y;
+        case SingleInput::IT_POINTER_WHEEL:
+            return wheel;
         case SingleInput::IT_POINTER_MODE:
             return mode;
         case SingleInput::IT_POINTER_B1:
@@ -74,6 +79,9 @@ void MouseInputs::setInput(const SingleInput &si, int value)
             break;
         case SingleInput::IT_POINTER_Y:
             y = value;
+            break;
+        case SingleInput::IT_POINTER_WHEEL:
+            wheel = value;
             break;
         case SingleInput::IT_POINTER_MODE:
             mode = value;
@@ -101,6 +109,10 @@ void MouseInputs::extractInputs(std::set<SingleInput> &input_set) const
     }
     if (y) {
         si = {SingleInput::IT_POINTER_Y, 1, ""};
+        input_set.insert(si);
+    }
+    if (wheel) {
+        si = {SingleInput::IT_POINTER_WHEEL, 1, ""};
         input_set.insert(si);
     }
     if (mode) {

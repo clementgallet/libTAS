@@ -176,7 +176,7 @@ void KeyMappingQuartz::default_input(int tab, int input_index)
     }
 }
 
-void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig& sc, bool mouse_warp){
+void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig& sc, bool mouse_warp, int mouse_wheel){
     int i,j;
     int keysym_i = 0;
 
@@ -324,6 +324,8 @@ void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConf
             ai.pointer->x = static_cast<int>(cocoaLocation.x - bounds.size.width/2);
             ai.pointer->y = static_cast<int>(cocoaLocation.y - bounds.size.height/2);
         }
+
+        ai.pointer->wheel = mouse_wheel;
 
         /* We only care about the five mouse buttons */
         if (cocoaButtons & (1 << 0))

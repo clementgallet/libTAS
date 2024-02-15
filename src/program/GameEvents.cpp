@@ -38,11 +38,11 @@ GameEvents::GameEvents(Context* c, MovieFile* m) : context(c), movie(m) {}
 void GameEvents::init()
 {
     ar_ticks = -1;
-    ar_delay = 50;
+    ar_delay = 25;
     ar_freq = 2;
 }
 
-bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
+bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
 {
     switch (type) {
 
@@ -54,6 +54,14 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
         /* Send an expose message to the game so that he can redrawn the screen */
         if (!context->config.sc.running)
             sendMessage(MSGN_EXPOSE);
+        return false;
+
+    case EVENT_TYPE_WHEEL_UP:
+        context->mouse_wheel -= 1;
+        return false;
+
+    case EVENT_TYPE_WHEEL_DOWN:
+        context->mouse_wheel += 1;
         return false;
 
     case EVENT_TYPE_PRESS:
@@ -95,7 +103,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, struct HotKey &hk)
             context->config.sc_modified = true;
 
             /* Make frame advance auto-repeat faster */
-            ar_freq = 1;
+            ar_freq = 2 - context->config.sc.fastforward;
 
             return false;
 
@@ -370,22 +378,26 @@ int GameEvents::handleEvent()
     }
 
     struct HotKey hk;
-    EventType eventType = nextEvent(hk);
-
+    EventType eventType = EVENT_TYPE_NONE;
     int flags = ar_advance?RETURN_FLAG_ADVANCE:0;
+    
+    do {
+        eventType = nextEvent(hk);
 
-    if (eventType) {
-        flags |= RETURN_FLAG_EVENT;
-        flags |= RETURN_FLAG_UPDATE; // For now, mark all events for update
-        if (processEvent(eventType, hk))
-            flags |= RETURN_FLAG_ADVANCE;
-    }
-    else {
-        uint64_t input_framecount = movie->inputs->processEvent();
-        while (input_framecount != UINT64_MAX) {
-            emit inputsEdited(input_framecount);
-            input_framecount = movie->inputs->processEvent();
+        if (eventType != EVENT_TYPE_NONE) {
+            flags |= RETURN_FLAG_EVENT;
+            flags |= RETURN_FLAG_UPDATE; // For now, mark all events for update
+            if (processEvent(eventType, hk))
+                flags |= RETURN_FLAG_ADVANCE;
         }
-    }
+        else {
+            uint64_t input_framecount = movie->inputs->processEvent();
+            while (input_framecount != UINT64_MAX) {
+                emit inputsEdited(input_framecount);
+                input_framecount = movie->inputs->processEvent();
+            }
+        }
+    } while (eventType != EVENT_TYPE_NONE);
+
     return flags;
 }

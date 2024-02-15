@@ -194,7 +194,7 @@ class KeyMapping {
          * - Get the mouse state
          * - Warp mouse pointer if needed
          */
-        virtual void buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig& sc, bool mouse_warp) = 0;
+        virtual void buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig& sc, bool mouse_warp, int mouse_wheel) = 0;
 };
 
 #endif // LIBTAS_KEYMAPPING_H_INCLUDED
