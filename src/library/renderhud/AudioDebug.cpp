@@ -26,6 +26,7 @@
 #include "global.h"
 
 #include <cinttypes>
+#include <cmath>
 
 namespace libtas {
 
@@ -60,7 +61,6 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
 
     const AudioContext& audiocontext = AudioContext::get();
     auto sources = audiocontext.getSourceList();
-    const float msPerUnit = 4.0f;
     
     ImGui::SeparatorText("Active Sources");
     
@@ -68,6 +68,7 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
      * miliseconds to align properly */
     float consumedMS = 0;
     float nonConsumedMS = 0;
+    float minBufferMS = 1000000.0f;
     int activeSources = 0;
     for (const auto& source : sources) {
         if (source->state == AudioSource::SOURCE_PLAYING) {
@@ -80,12 +81,26 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
                 ms = 1000.0f * (float)(source->queueSize() - source->getPosition()) / (float)source->buffer_queue[0]->frequency;
                 if (ms > nonConsumedMS)
                     nonConsumedMS = ms;
+                    
+                for (size_t i = 0; i < source->buffer_queue.size(); i++) {
+                    const auto& buffer = source->buffer_queue[i];
+                    float bufferMS = 1000.0f * (float)buffer->sampleSize / (float)buffer->frequency;
+                    minBufferMS = std::min(minBufferMS, bufferMS);
+                }
             }
         }
     }
     
-    ImGui::SetNextWindowScroll(ImVec2((float)consumedMS / msPerUnit, 0.0f));
-    ImGui::SetNextWindowContentSize(ImVec2((float)(consumedMS + nonConsumedMS) / msPerUnit + ImGui::GetContentRegionAvail().x, 0.0f));
+    /* Determine the level of zoom depending on the buffer size */
+    float msPerUnit = (minBufferMS != 1000000.0f) ? (minBufferMS / 25.0f) : 10.0f;
+    
+    /* Get ranges to avoid potential zoom/dezoom */
+    msPerUnit = std::scalbn(1.0, std::ilogb(msPerUnit));
+
+    int stepFrame = msPerUnit * 16;
+
+    ImGui::SetNextWindowScroll(ImVec2(consumedMS / msPerUnit, 0.0f));
+    ImGui::SetNextWindowContentSize(ImVec2((consumedMS + nonConsumedMS) / msPerUnit + ImGui::GetContentRegionAvail().x, 0.0f));
     
     /* Add padding so that we can always scroll so that current source position
     * is at the center */
@@ -110,7 +125,6 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
         float sizeMS = ImGui::GetWindowSize().x * msPerUnit;
         int sizeFrame = (sizeMS * Global::shared_config.initial_framerate_num) / (1000 * Global::shared_config.initial_framerate_den);
         
-        const int stepFrame = 20;
         int64_t firstFrame = framecount - (sizeFrame / 2);
         int64_t lastFrame = framecount + (sizeFrame / 2);
         firstFrame = firstFrame - (firstFrame % stepFrame);
@@ -159,7 +173,7 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(r, g, b, 1.0f));
                 ImGui::ColorConvertHSVtoRGB(hue, 0.8f, 0.8f, r, g, b);
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(r, g, b, 1.0f));
-                ImGui::Button(buffer_name, ImVec2(bufferMS / msPerUnit - 10.0f, 0.0f));
+                ImGui::Button(buffer_name, ImVec2(std::max(bufferMS / msPerUnit, 8.0f) - 5.0f, 0.0f));
                 if (ImGui::BeginItemTooltip())
                 {
                     ImGui::Text("Id: %d", buffer->id);
@@ -207,7 +221,7 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(r, g, b, 1.0f));
                 ImGui::ColorConvertHSVtoRGB(hue, 0.8f, 0.8f, r, g, b);
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(r, g, b, 1.0f));
-                ImGui::Button(buffer_name, ImVec2(bufferMS / msPerUnit - 10.0f, 0.0f));
+                ImGui::Button(buffer_name, ImVec2(std::max(bufferMS / msPerUnit, 8.0f) - 5.0f, 0.0f));
                 if (ImGui::BeginItemTooltip())
                 {
                     ImGui::Text("Id: %d", buffer->id);
