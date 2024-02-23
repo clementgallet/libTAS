@@ -410,10 +410,10 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
         if (value.toInt() == ai.getInput(si))
             return false;
 
-        /* Update the pause frame if we changed an earlier frame */
-        if ((context->pause_frame != 0) && !context->config.editor_rewind_seek
-                                        && (row < context->pause_frame)) {
-            context->pause_frame = row;
+        /* Update the seek frame if we changed an earlier frame */
+        if ((context->seek_frame) && !context->config.editor_rewind_seek
+                                        && (row < context->seek_frame)) {
+            context->seek_frame = row;
         }
 
         /* Modifying the movie is only performed by the main thread */
@@ -497,9 +497,9 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
     }
 
     /* Update the pause frame if we changed an earlier frame */
-    if ((context->pause_frame != 0) && !context->config.editor_rewind_seek
-                                    && (row < context->pause_frame)) {
-        context->pause_frame = row;
+    if ((context->seek_frame) && !context->config.editor_rewind_seek
+        && (row < context->seek_frame)) {
+        context->seek_frame = row;
     }
 
     /* Modifying the movie is only performed by the main thread */
@@ -1066,11 +1066,11 @@ bool InputEditorModel::rewind(uint64_t framecount, bool toggle)
     if (framecount > state_framecount) {
         /* Seek to either the modified frame or the current frame */
         if (toggle && context->config.editor_rewind_seek)
-            context->pause_frame = current_framecount;
+            context->seek_frame = current_framecount;
         else
-            context->pause_frame = framecount;
+            context->seek_frame = framecount;
 
-        /* Freeze scroll until pause_frame is reached */
+        /* Freeze scroll until seek_frame is reached */
         freeze_scroll = true;
 
         if (context->config.editor_rewind_fastforward)

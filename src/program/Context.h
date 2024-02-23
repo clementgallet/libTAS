@@ -118,6 +118,9 @@ struct Context {
     /* A frame number when the game pauses */
     uint64_t pause_frame = 0;
 
+    /* A frame number that we are seeking to */
+    uint64_t seek_frame = 0;
+
     /* Can we use incremental savestates? */
     bool is_soft_dirty = false;
 

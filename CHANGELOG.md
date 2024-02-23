@@ -20,6 +20,7 @@
 * Disable a dotnet speed check (#590)
 * Hook getrandom()
 * Implement mouse wheel input
+* RMB + wheel does advance and rewind frames (#594)
 
 ### Changed
 

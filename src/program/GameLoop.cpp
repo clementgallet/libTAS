@@ -152,6 +152,17 @@ void GameLoop::start()
             }
         }
 
+        if (context->seek_frame == (context->framecount + 1)) {
+            /* Disable seek frame */
+            context->seek_frame = 0;
+
+            /* Pause and disable fast-forward */
+            context->config.sc.running = false;
+            context->config.sc.fastforward = false;
+            context->config.sc_modified = true;
+            emit sharedConfigChanged();
+        }
+
         Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackFrame);
 
         endFrameMessages(ai);

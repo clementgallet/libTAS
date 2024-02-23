@@ -72,6 +72,15 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
             /* Advance a frame */
             if (context->config.sc.running) {
                 context->config.sc.running = false;
+                
+                /* Disable seeking */
+                if (context->seek_frame) {
+                    context->seek_frame = 0;
+
+                    /* Disable fast-forward */
+                    context->config.sc.fastforward = false;
+                }
+                
                 emit sharedConfigChanged();
                 context->config.sc_modified = true;
             }
@@ -81,6 +90,15 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
         case HOTKEY_PLAYPAUSE:
             /* Toggle between play and pause */
             context->config.sc.running = !context->config.sc.running;
+
+            /* Disable seeking */
+            if (!context->config.sc.running && context->seek_frame) {
+                context->seek_frame = 0;
+
+                /* Disable fast-forward */
+                context->config.sc.fastforward = false;
+            }
+
             emit sharedConfigChanged();
             context->config.sc_modified = true;
             return false;
@@ -230,7 +248,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
                 /* Fast-forward to savestate frame */
                 context->config.sc.recording = SharedConfig::RECORDING_READ;
                 context->config.sc.movie_framecount = movie->inputs->nbFrames();
-                context->pause_frame = movie->header->savestate_framecount;
+                context->seek_frame = movie->header->savestate_framecount;
                 context->config.sc.running = true;
                 context->config.sc_modified = true;
 

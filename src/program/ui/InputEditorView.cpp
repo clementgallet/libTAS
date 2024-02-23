@@ -219,19 +219,10 @@ void InputEditorView::update()
     /* Check if scroll is frozen because of a rewind. Disable scroll freeze when
      * reaching the paused frame. */
     if (inputEditorModel->isScrollFreeze()) {
-        static bool last_running = false;
-        if (context->pause_frame == 0) {
+        if (context->seek_frame == 0) {
             inputEditorModel->setScrollFreeze(false);
             autoScroll = false;
         }
-        /* If user has paused during rewind, we must disable scroll freeze and
-         * scroll to current frame if necessary */
-        else if (!context->config.sc.running && last_running) {
-            context->pause_frame = 0;
-            inputEditorModel->setScrollFreeze(false);
-        }
-
-        last_running = context->config.sc.running;
 
         if (inputEditorModel->isScrollFreeze())
             return;
@@ -395,6 +386,12 @@ void InputEditorView::wheelEvent(QWheelEvent *event)
             context->hotkey_pressed_queue.push(HOTKEY_FRAMEADVANCE);
             context->hotkey_released_queue.push(HOTKEY_FRAMEADVANCE);
         }
+    }
+    else if (event->angleDelta().y() > 0) {
+        /* Only rewind when paused, which should prevent rewinding during the end
+         * of another rewind */
+        if (context->framecount > 0 && !context->config.sc.running)
+            inputEditorModel->rewind(context->framecount - 1, false);
     }
     
     event->accept();
