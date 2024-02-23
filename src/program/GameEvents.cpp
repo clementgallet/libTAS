@@ -397,7 +397,7 @@ int GameEvents::handleEvent()
                 input_framecount = movie->inputs->processEvent();
             }
         }
-    } while (eventType != EVENT_TYPE_NONE);
+    } while (eventType != EVENT_TYPE_NONE && !(flags & RETURN_FLAG_ADVANCE));
 
     return flags;
 }

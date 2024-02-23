@@ -384,6 +384,22 @@ void InputEditorView::mouseDoubleClickEvent(QMouseEvent *event)
     event->accept();
 }
 
+void InputEditorView::wheelEvent(QWheelEvent *event)
+{
+    if (event->buttons() != Qt::RightButton)
+        return QTableView::wheelEvent(event);
+
+    if (event->angleDelta().y() < 0) {
+        /* Push a single frame advance event */
+        if (context->hotkey_pressed_queue.empty() || context->hotkey_pressed_queue.back() != HOTKEY_FRAMEADVANCE) {
+            context->hotkey_pressed_queue.push(HOTKEY_FRAMEADVANCE);
+            context->hotkey_released_queue.push(HOTKEY_FRAMEADVANCE);
+        }
+    }
+    
+    event->accept();
+}
+
 void InputEditorView::showMarkerToolTip(const QModelIndex &index)
 {
     /* Hide previous tooltip */
@@ -641,6 +657,17 @@ void InputEditorView::mainMenu(QPoint pos)
 {
     /* Storing the index of the section where context menu was shown */
     // contextSection = inputEditorView->verticalHeader()->logicalIndexAt(pos);
+
+    /* Get the table cell under the mouse position */
+    const QModelIndex index = indexAt(pos);
+    if (!index.isValid()) {
+        return;
+    }
+
+    /* Disable context menu for non-frame columns */
+    if (index.column() != InputEditorModel::COLUMN_FRAME) {
+        return;
+    }
 
     /* Display the context menu */
     menu->popup(viewport()->mapToGlobal(pos));

@@ -69,6 +69,11 @@ public:
         queue_.push_back(item);
     }
 
+    const T& back(void)
+    {
+        return queue_.back();
+    }
+
     ConcurrentQueue()=default;
     ConcurrentQueue(const ConcurrentQueue&) = delete;            // disable copying
     ConcurrentQueue& operator=(const ConcurrentQueue&) = delete; // disable assignment
