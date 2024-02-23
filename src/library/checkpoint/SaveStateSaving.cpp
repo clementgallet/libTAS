@@ -38,7 +38,7 @@ SaveStateSaving::SaveStateSaving(int pagemapfd, int pagesfd, int selfpagemapfd)
     ss_pagemap_i = 0;
     queued_size = 0;
 
-    queued_compressed_base_addr = static_cast<char*>(ReservedMemory::getAddr(ReservedMemory::PAGEMAPS_ADDR));
+    queued_compressed_base_addr = static_cast<char*>(ReservedMemory::getAddr(ReservedMemory::COMPRESSED_ADDR));
     queued_compressed_max_size = ReservedMemory::COMPRESSED_SIZE;
     queued_compressed_size = 0;
     queued_target_addr = nullptr;
