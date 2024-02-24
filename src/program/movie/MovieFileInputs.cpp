@@ -577,6 +577,7 @@ uint64_t MovieFileInputs::processEvent()
 
         AllInputs& ai = input_list[ie.framecount];        
         ai.setInput(ie.si, ie.value);
+        wasModified();
         return ie.framecount;
     }
     return UINT64_MAX;
