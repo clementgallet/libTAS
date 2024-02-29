@@ -90,6 +90,8 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
 
     /* Vertical header */
     verticalHeader()->setVisible(false);
+    verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    verticalHeader()->setMinimumSectionSize(fontMetrics().height());
     verticalHeader()->setDefaultSectionSize(verticalHeader()->minimumSectionSize());
 
     /* Track vertical scrolling */
