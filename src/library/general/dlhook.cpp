@@ -148,7 +148,11 @@ __attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
         return orig::dlopen(file, mode);
     }
 
-    if (file != nullptr && std::strstr(file, "libpulse") != nullptr) {
+    /* Block access to pulseaudio so that games will default to ALSA.
+     * For some Unity games using libAkSoundEngine.so it will crash, but we
+     * hooked to library functions to enforce ALSA, so we can safely allow
+     * opening libpulse */
+    if (file != nullptr && std::strstr(file, "libpulse") != nullptr && !(Global::game_info.audio & GameInfo::AKAUDIO)) {
         debuglogstdio(LCF_HOOK, "%s blocked access to library %s", __func__, file);
         return nullptr;
     }
