@@ -31,6 +31,7 @@
 #include <memory>
 #include <mutex>
 #include <condition_variable>
+#include <sys/mman.h> // PROT_READ, PROT_WRITE, etc.
 
 namespace libtas {
 
@@ -70,11 +71,15 @@ void GameHacks::getExecutableMemory()
     }
     
     if (!area.addr) {
-        debuglogstdio(LCF_ERROR, "Could not detect the game executable memory mapping!");
-        /* Put non-zero numbers so that this is not triggered again */
-        executableBase = 1;
-        executableEnd = 1;
-        return;
+        /* Try again */
+        memMapLayout.reset();
+        while (memMapLayout.getNextArea(&area)) {
+            if ((area.flags & Area::AREA_FILE) && (area.flags & Area::AREA_PRIV) && (area.prot == PROT_READ))
+                break;
+        }
+        
+        debuglogstdio(LCF_WARNING, "Game executable has non-default mapping! We found this:");
+        debuglogstdio(LCF_WARNING, "Region %p-%p (%s) with size %zu", area.addr, area.endAddr, area.name, area.size);
     }
 
     executableBase = reinterpret_cast<uintptr_t>(area.addr);

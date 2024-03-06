@@ -48,6 +48,8 @@ struct GameInfo {
         ALSA = 0x8000,
         XCBEVENTS = 0x10000,
         VULKAN = 0x20000,
+        AKAUDIO = 0x40000,
+        FMOD = 0x80000,
     };
 
     int video = UNKNOWN;
