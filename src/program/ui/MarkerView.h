@@ -17,41 +17,54 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_INPUTEDITORWINDOW_H_INCLUDED
-#define LIBTAS_INPUTEDITORWINDOW_H_INCLUDED
+#ifndef LIBTAS_MARKERVIEW_H_INCLUDED
+#define LIBTAS_MARKERVIEW_H_INCLUDED
 
-#include <QtWidgets/QDialog>
-#include <QtWidgets/QMainWindow>
+#include <QtWidgets/QTableView>
+#include <QtWidgets/QMenu>
 
 /* Forward declaration */
 struct Context;
-class InputEditorView;
-class MarkerView;
+class MarkerModel;
 
-class InputEditorWindow : public QMainWindow {
+class MarkerView : public QTableView {
     Q_OBJECT
 
 public:
-    InputEditorWindow(Context *c, QWidget *parent = Q_NULLPTR);
-    void resetInputs();
-    QSize sizeHint() const override;
+    MarkerView(Context *c, QWidget *parent, QWidget *gp);
 
-    /* Update UI elements when config has changed */
-    void update_config();
-    
-    InputEditorView *inputEditorView;
-    MarkerView *markerView;
+    /* Fill menu action */
+    void fillMenu();
+
+    void resetMarkers();
+    MarkerModel *markerModel;
 
 public slots:
-    void isWindowVisible(bool &visible);
-    
-    
+    void mainMenu(QPoint pos);
+    void seekSlot();
+    void scrollSlot();
+    void removeSlot();
+
+protected:
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
+
+signals:
+    void seekSignal(unsigned long long frame);
+    void scrollSignal(unsigned long long frame);
+
+private slots:
+
 private:
+    unsigned long long getMarkerFrameFromSelection();
+
     Context *context;
-    QAction* scrollingAct;
-    QAction* rewindAct;
-    QAction* fastforwardAct;
-    QAction* markerPauseAct;
+    QMenu *menu;
+
+    QAction *seekAct;
+    QAction *scrollAct;
+    QAction *editAct;
+    QAction *editFrameAct;
+    QAction *removeAct;
 };
 
 #endif

@@ -1110,3 +1110,8 @@ void InputEditorModel::setHoveredCell(const QModelIndex &i)
     emit headerDataChanged(Qt::Horizontal, old.column(), old.column());
     emit headerDataChanged(Qt::Horizontal, hoveredIndex.column(), hoveredIndex.column());
 }
+
+void InputEditorModel::seekToFrame(unsigned long long frame)
+{
+    rewind(frame, false);
+}

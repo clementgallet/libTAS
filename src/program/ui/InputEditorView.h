@@ -72,6 +72,7 @@ public slots:
     void updateMenu();
 
     void moveAgainSection(int logicalIndex, int oldVisualIndex, int newVisualIndex);
+    void scrollToFrame(unsigned long long frame);
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
@@ -87,6 +88,10 @@ protected:
 private slots:
     void resizeAllColumns();
     void showMarkerToolTip(const QModelIndex &index);
+
+signals:
+    void addMarkerSignal(int frame, QString text);
+    void removeMarkerSignal(int frame);
 
 private:
     Context *context;

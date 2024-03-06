@@ -21,6 +21,7 @@
 * Hook getrandom()
 * Implement mouse wheel input
 * RMB + wheel does advance and rewind frames (#594)
+* Add a Markers table in input editor
 
 ### Changed
 

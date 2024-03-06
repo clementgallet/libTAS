@@ -243,20 +243,28 @@ void InputEditorView::update()
 
     /* If autoscroll is enable, scroll to make the current frame visible */
     if (autoScroll) {
-        /* Place the current frame at about a quarter of the visible frames */
-        int visibleFrames = bottomrow - toprow;
-        int firstVisibleFrame = context->framecount - 1 - visibleFrames/4;
-        if (firstVisibleFrame < 0) firstVisibleFrame = 0;
-
-        /* Get the first visible column */
-        int leftcol = columnAt(rect().left());
-
-        /* Scrolling triggers the signal to our manualScroll() slot, which
-         * we don't want, so we disable the connection */
-        disconnect(verticalScrollBar(), &QAbstractSlider::valueChanged, this, &InputEditorView::manualScroll);
-        scrollTo(inputEditorModel->index(firstVisibleFrame, leftcol), QAbstractItemView::PositionAtTop);
-        connect(verticalScrollBar(), &QAbstractSlider::valueChanged, this, &InputEditorView::manualScroll);
+        scrollToFrame(context->framecount);
     }
+}
+
+void InputEditorView::scrollToFrame(unsigned long long frame)
+{
+    int toprow = verticalScrollBar()->value();
+    int bottomrow = toprow + verticalScrollBar()->pageStep();
+
+    /* Place the current frame at about a quarter of the visible frames */
+    int visibleFrames = bottomrow - toprow;
+    int firstVisibleFrame = frame - 1 - visibleFrames/4;
+    if (firstVisibleFrame < 0) firstVisibleFrame = 0;
+
+    /* Get the first visible column */
+    int leftcol = columnAt(rect().left());
+
+    /* Scrolling triggers the signal to our manualScroll() slot, which
+     * we don't want, so we disable the connection */
+    disconnect(verticalScrollBar(), &QAbstractSlider::valueChanged, this, &InputEditorView::manualScroll);
+    scrollTo(inputEditorModel->index(firstVisibleFrame, leftcol), QAbstractItemView::PositionAtTop);
+    connect(verticalScrollBar(), &QAbstractSlider::valueChanged, this, &InputEditorView::manualScroll);
 }
 
 void InputEditorView::resetInputs()
@@ -702,7 +710,7 @@ void InputEditorView::addMarkerFrame(int frame)
         &ok);
 
     if (ok) {
-        inputEditorModel->addMarker(frame, newText.toStdString());
+        emit addMarkerSignal(frame, newText);
     }
     
     InputEditorView::updateMenu();
@@ -716,7 +724,7 @@ void InputEditorView::removeMarker()
     if (indexes.count() == 0)
         return;
 
-    inputEditorModel->removeMarker(indexes[0].row());
+    emit removeMarkerSignal(indexes[0].row());
     
     InputEditorView::updateMenu();
 }

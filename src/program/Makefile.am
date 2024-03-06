@@ -20,6 +20,8 @@ libTAS_QTSOURCES = \
     ui/LuaConsoleWindow.h \
     ui/LuaConsoleModel.h \
     ui/MainWindow.h \
+    ui/MarkerModel.h \
+    ui/MarkerView.h \
     ui/PointerScanModel.h \
     ui/PointerScanWindow.h \
     ui/RamSearchModel.h \
@@ -86,6 +88,8 @@ libTAS_SOURCES = \
     ui/LuaConsoleWindow.cpp \
     ui/LuaConsoleModel.cpp \
     ui/MainWindow.cpp \
+    ui/MarkerModel.cpp \
+    ui/MarkerView.cpp \
     ui/PointerScanModel.cpp \
     ui/PointerScanWindow.cpp \
     ui/RamSearchModel.cpp \

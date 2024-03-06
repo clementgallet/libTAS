@@ -19,13 +19,18 @@
 
 #include "InputEditorWindow.h"
 #include "InputEditorView.h"
+#include "InputEditorModel.h"
+#include "MarkerView.h"
+#include "MarkerModel.h"
 #include "MainWindow.h"
 
 #include "Context.h"
 
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QMenu>
+#include <QtWidgets/QGroupBox>
 
 InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(parent), context(c)
 {
@@ -33,6 +38,25 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(
 
     /* Table */
     inputEditorView = new InputEditorView(c, this, parent);
+
+    /* Markers */
+    markerView = new MarkerView(c, this, parent);
+
+    /* Signals */
+    connect(markerView, &MarkerView::seekSignal, inputEditorView->inputEditorModel, &InputEditorModel::seekToFrame);
+    connect(markerView, &MarkerView::scrollSignal, inputEditorView, &InputEditorView::scrollToFrame);
+    connect(inputEditorView, &InputEditorView::addMarkerSignal, markerView->markerModel, &MarkerModel::addMarker);
+    connect(inputEditorView, &InputEditorView::removeMarkerSignal, markerView->markerModel, &MarkerModel::removeMarker);
+
+
+    QGroupBox* markerBox = new QGroupBox(tr("Markers"));
+    QVBoxLayout* markerLayout = new QVBoxLayout;
+    markerLayout->addWidget(markerView);
+    markerBox->setLayout(markerLayout);
+
+    /* Side View */
+    QVBoxLayout *sideLayout = new QVBoxLayout;
+    sideLayout->addWidget(markerBox);
 
     /* Main menu */
     QMenu* menu = menuBar()->addMenu(tr("Frames"));
@@ -62,6 +86,7 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(
     /* Layout */
     QHBoxLayout *mainLayout = new QHBoxLayout;
     mainLayout->addWidget(inputEditorView);
+    mainLayout->addLayout(sideLayout);
 
     QWidget *centralWidget = new QWidget;
     centralWidget->setLayout(mainLayout);
@@ -74,6 +99,8 @@ void InputEditorWindow::update_config()
 {
     scrollingAct->setChecked(!context->config.editor_autoscroll);
     rewindAct->setChecked(context->config.editor_rewind_seek);
+    fastforwardAct->setChecked(!context->config.editor_rewind_fastforward);
+    markerPauseAct->setChecked(context->config.editor_marker_pause);
 }
 
 QSize InputEditorWindow::sizeHint() const
@@ -85,6 +112,7 @@ QSize InputEditorWindow::sizeHint() const
 void InputEditorWindow::resetInputs()
 {
     inputEditorView->resetInputs();
+    markerView->resetMarkers();
 }
 
 void InputEditorWindow::isWindowVisible(bool &visible)

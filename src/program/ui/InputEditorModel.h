@@ -162,6 +162,9 @@ public slots:
     /* Save the new hovered cell */
     void setHoveredCell(const QModelIndex &index);
 
+    /* Seek to marker frame */
+    void seekToFrame(unsigned long long frame);
+
 private:
     Context *context;
     MovieFile *movie;
