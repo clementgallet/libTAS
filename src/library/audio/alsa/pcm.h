@@ -44,9 +44,9 @@ OVERRIDE int snd_pcm_poll_descriptors(snd_pcm_t *pcm, struct pollfd *pfds, unsig
 OVERRIDE int snd_pcm_poll_descriptors_revents(snd_pcm_t *pcm, struct pollfd *pfds, unsigned int nfds, unsigned short *revents);
 OVERRIDE int snd_pcm_nonblock(snd_pcm_t *pcm, int nonblock);
     // static __inline__ int snd_pcm_abort(snd_pcm_t *pcm) { return snd_pcm_nonblock(pcm, 2); }
-    // int snd_async_add_pcm_handler(snd_async_handler_t **handler, snd_pcm_t *pcm,
-    // 			      snd_async_callback_t callback, void *private_data);
-    // snd_pcm_t *snd_async_handler_get_pcm(snd_async_handler_t *handler);
+OVERRIDE int snd_async_add_pcm_handler(snd_async_handler_t **handler, snd_pcm_t *pcm, snd_async_callback_t callback, void *private_data);
+OVERRIDE snd_pcm_t *snd_async_handler_get_pcm(snd_async_handler_t *handler);
+OVERRIDE int snd_async_del_handler(snd_async_handler_t *handler);
 OVERRIDE int snd_pcm_info(snd_pcm_t *pcm, snd_pcm_info_t *info);
 OVERRIDE int snd_pcm_hw_params_current(snd_pcm_t *pcm, snd_pcm_hw_params_t *params);
 OVERRIDE int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params);
@@ -153,9 +153,9 @@ OVERRIDE int snd_pcm_sw_params_set_stop_threshold(snd_pcm_t *pcm, snd_pcm_sw_par
 // int snd_pcm_sw_params_set_silence_size(snd_pcm_t *pcm, snd_pcm_sw_params_t *params, snd_pcm_uframes_t val);
 // int snd_pcm_sw_params_get_silence_size(const snd_pcm_sw_params_t *params, snd_pcm_uframes_t *val);
 
-// snd_pcm_chmap_query_t **snd_pcm_query_chmaps(snd_pcm_t *pcm);
+OVERRIDE snd_pcm_chmap_query_t **snd_pcm_query_chmaps(snd_pcm_t *pcm);
 // snd_pcm_chmap_query_t **snd_pcm_query_chmaps_from_hw(int card, int dev, int subdev, snd_pcm_stream_t stream);
-// void snd_pcm_free_chmaps(snd_pcm_chmap_query_t **maps);
+OVERRIDE void snd_pcm_free_chmaps(snd_pcm_chmap_query_t **maps);
 OVERRIDE snd_pcm_chmap_t *snd_pcm_get_chmap(snd_pcm_t *pcm);
 // int snd_pcm_set_chmap(snd_pcm_t *pcm, const snd_pcm_chmap_t *map);
 

@@ -320,7 +320,34 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     /* Update the position in the buffer */
                     queue_index = finalIndex;
                     position = finalPos;
-                    state = SOURCE_UNDERRUN;
+                    
+                    /* The callback may push more buffers */
+                    if (callback) {
+                        debuglogstdio(LCF_SOUND, "  Callback");
+                        callback(*curBuf); // buffer argument unused
+                        
+                        int queue_size = buffer_queue.size();
+                        for (int i=queue_index+1; (remainingSamples>0) && (i<queue_size); i++) {
+                            std::shared_ptr<AudioBuffer> loopbuf = buffer_queue[i];
+                            availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0, false);
+                            debuglogstdio(LCF_SOUND, "  Buffer %d in read in range 0 - %d", loopbuf->id, availableSamples);
+
+                            if (!skipMixing) {
+                                audioConverter->queueSamples(begSamples, availableSamples);
+                            }
+
+                            finalIndex = i;
+                            finalPos = availableSamples;
+                            remainingSamples -= availableSamples;
+                        }
+
+                        queue_index = finalIndex;
+                        position = finalPos;
+                    }
+                    
+                    if (remainingSamples > 0) {
+                        state = SOURCE_UNDERRUN;
+                    }
                 }
                 else {
                     queue_index = 0;

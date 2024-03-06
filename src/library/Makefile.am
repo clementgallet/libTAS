@@ -29,6 +29,7 @@ libtas_so_SOURCES = \
     audio/AudioPlayerAlsa.cpp \
     audio/AudioSource.cpp \
     audio/DecoderMSADPCM.cpp \
+    audio/akaudio/akaudio.cpp \
     audio/alsa/control.cpp \
     audio/alsa/pcm.cpp \
     audio/cubeb/cubeb.cpp \

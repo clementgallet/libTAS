@@ -196,6 +196,48 @@ int snd_pcm_nonblock(snd_pcm_t *pcm, int nonblock)
     return 0;
 }
 
+int snd_async_add_pcm_handler(snd_async_handler_t **handler, snd_pcm_t *pcm, snd_async_callback_t callback, void *private_data)
+{
+    RETURN_IF_NATIVE(snd_async_add_pcm_handler, (handler, pcm, callback, private_data), nullptr);
+
+    DEBUGLOGCALL(LCF_SOUND);
+
+    AudioContext& audiocontext = AudioContext::get();
+    int sourceId = reinterpret_cast<intptr_t>(pcm);
+    auto source = audiocontext.getSource(sourceId);
+
+    *handler = reinterpret_cast<snd_async_handler_t *>(pcm);
+    
+    source->callback = [handler, callback](AudioBuffer& ab){
+        callback(*handler);
+    };
+    
+    return 0;
+}
+
+snd_pcm_t *snd_async_handler_get_pcm(snd_async_handler_t *handler)
+{
+    RETURN_IF_NATIVE(snd_async_handler_get_pcm, (handler), nullptr);
+
+    DEBUGLOGCALL(LCF_SOUND);
+
+    return reinterpret_cast<snd_pcm_t *>(handler);
+}
+
+int snd_async_del_handler(snd_async_handler_t *handler)
+{
+    RETURN_IF_NATIVE(snd_async_del_handler, (handler), nullptr);
+
+    DEBUGLOGCALL(LCF_SOUND);
+
+    AudioContext& audiocontext = AudioContext::get();
+    int sourceId = reinterpret_cast<intptr_t>(handler);
+    auto source = audiocontext.getSource(sourceId);
+    source->callback = nullptr;
+    
+    return 0;
+}
+
 int snd_pcm_start(snd_pcm_t *pcm)
 {
     RETURN_IF_NATIVE(snd_pcm_start, (pcm), nullptr);
@@ -1187,6 +1229,39 @@ int snd_pcm_sw_params_set_avail_min(snd_pcm_t *pcm, snd_pcm_sw_params_t *params,
     debuglogstdio(LCF_SOUND, "%s call with val %d", __func__, val);
     avail_min = val;
     return 0;
+}
+
+snd_pcm_chmap_query_t **snd_pcm_query_chmaps(snd_pcm_t *pcm)
+{
+    RETURN_IF_NATIVE(snd_pcm_query_chmaps, (pcm), nullptr);
+
+    DEBUGLOGCALL(LCF_SOUND);
+    
+    snd_pcm_chmap_query_t **queries = static_cast<snd_pcm_chmap_query_t **>(malloc(sizeof(snd_pcm_chmap_query_t *) * 2));
+    snd_pcm_chmap_query_t *query = static_cast<snd_pcm_chmap_query_t *>(malloc(sizeof(snd_pcm_chmap_query_t)));
+    
+    queries[0] = query;
+    queries[1] = nullptr;
+    
+    /* TODO: only fill stereo */
+    query->type = SND_CHMAP_TYPE_FIXED;
+    query->map.channels = 2;
+    query->map.pos[0] = SND_CHMAP_FL;
+    query->map.pos[1] = SND_CHMAP_FR;
+
+    return queries;
+}
+
+void snd_pcm_free_chmaps(snd_pcm_chmap_query_t **maps)
+{
+    RETURN_IF_NATIVE(snd_pcm_free_chmaps, (maps), nullptr);
+
+    DEBUGLOGCALL(LCF_SOUND);
+
+    for (int i = 0; maps[i]; i++) {
+        free(maps[i]);
+    }
+    free(maps);
 }
 
 snd_pcm_chmap_t *snd_pcm_get_chmap(snd_pcm_t *pcm)
