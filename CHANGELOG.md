@@ -24,6 +24,7 @@
 * Add a Markers table in input editor
 * Hook AkAudio to enforce ALSA
 * Add ALSA asynchronous playback
+* Program can download and load some common missing libraries to run games
 
 ### Changed
 

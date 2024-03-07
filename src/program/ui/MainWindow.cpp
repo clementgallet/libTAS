@@ -1078,6 +1078,13 @@ void MainWindow::slotLaunch(bool attach_gdb)
 
     context->config.gameargs = cmdOptions->currentText().toStdString();
 
+    /* Ask if the user allow library downloads */
+    if (context->config.allow_downloads == -1) {
+        QMessageBox::StandardButton btn = QMessageBox::question(this, tr("Libraries download"), 
+        tr("Some games require old libraries unavailable in recent systems, and libTAS can download them for you, if you allow it (this can be changed at any time in the settings)."), QMessageBox::Yes | QMessageBox::No);
+        context->config.allow_downloads = (btn == QMessageBox::Yes);
+    }
+
     /* Save the config */
     context->config.save(context->gamepath);
 

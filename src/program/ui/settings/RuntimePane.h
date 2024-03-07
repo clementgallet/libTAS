@@ -55,6 +55,7 @@ private:
     ToolTipCheckBox* writingBox;
     ToolTipCheckBox* recycleBox;
     ToolTipCheckBox* steamBox;
+    ToolTipCheckBox* downloadsBox;
 
     ToolTipCheckBox* stateIncrementalBox;
     ToolTipCheckBox* stateRamBox;

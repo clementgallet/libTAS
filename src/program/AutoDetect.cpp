@@ -31,7 +31,7 @@
 int AutoDetect::arch(Context *context)
 {
     /* Change settings based on game arch */
-    int gameArch = extractBinaryType(context->gamepath);    
+    int gameArch = extractBinaryType(context->gamepath);
     int libtasArch = extractBinaryType(context->libtaspath);
 
     /* Switch to libtas32.so if required */
@@ -55,18 +55,14 @@ void AutoDetect::game_libraries(Context *context)
     std::string missing_lib = queryCmd(oss_ml.str());
     if (missing_lib.empty()) return;
     
-    missing_lib.pop_back(); // remove trailing newline
-
     std::cout << "Try to find the location of " << missing_lib << " among game files."<< std::endl;
 
     std::string gamedir = dirFromPath(context->gamepath);
     std::ostringstream oss_lp;
     oss_lp << "find '" << gamedir << "' -name " << missing_lib << " -type f -print -quit";
 
-    std::string found_lib = queryCmd(oss_lp.str());    
+    std::string found_lib = queryCmd(oss_lp.str());
     if (!found_lib.empty()) {
-        found_lib.pop_back(); // remove trailing newline
-
         std::cout << "-> library was found at location " << found_lib << std::endl;
         
         std::string found_lib_dir = dirFromPath(found_lib);
@@ -80,6 +76,70 @@ void AutoDetect::game_libraries(Context *context)
     }
     else {
         std::cerr << "-> could not find the library among the game files" << std::endl;
+    }
+    
+    /* Try to download common missing libraries */
+    if (context->config.allow_downloads != 1)
+        return;
+    
+    int gameArch = extractBinaryType(context->gamepath);
+    if (gameArch != BT_ELF32 && gameArch != BT_ELF64)
+        return;
+    
+    missing_lib = queryCmd(oss_ml.str());
+
+    while (! missing_lib.empty()) {
+        std::string libUrl, libDeb, libStr;
+        if (missing_lib == "libcrypto.so.1.0.0") {
+            if (gameArch == BT_ELF32) {
+                libUrl = "http://security.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5.13_i386.deb";
+            }
+            else {
+                libUrl = "http://security.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5.13_amd64.deb";
+            }
+        }
+        else if (missing_lib == "libssl.so.1.0.0") {
+            if (gameArch == BT_ELF32) {
+                libUrl = "http://security.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5.13_i386.deb";
+            }
+            else {
+                libUrl = "http://security.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5.13_amd64.deb";
+            }
+        }
+        else {
+            return;
+        }
+        
+        std::cerr << "Library " << missing_lib << " is missing. Downloading it from " << libUrl << std::endl;
+
+        std::ostringstream oss_lib;
+        oss_lib << "wget -nc -P ${TMPDIR:-/tmp} " << libUrl;
+        oss_lib << " && ar -x --output ${TMPDIR:-/tmp} ${TMPDIR:-/tmp}/" << fileFromPath(libUrl) << " data.tar.xz";
+        
+        std::string libFile = (gameArch == BT_ELF32) ? "./usr/lib/i386-linux-gnu/" : "./usr/lib/x86_64-linux-gnu/";
+        libFile.append(missing_lib);
+        
+        oss_lib << " && tar -xf ${TMPDIR:-/tmp}/data.tar.xz -C ${TMPDIR:-/tmp} " << libFile;
+        oss_lib << " && mv ${TMPDIR:-/tmp}/" << libFile << " ";
+        oss_lib << ((gameArch == BT_ELF32) ? context->config.extralib32dir : context->config.extralib64dir);
+
+        int status;
+        queryCmd(oss_lib.str(), &status);
+
+        if (status != 0) {
+            std::cerr << "Downloading failed..." << std::endl;
+            return;
+        }
+
+        std::string old_missing_lib = missing_lib;
+        missing_lib = queryCmd(oss_ml.str());
+        
+        /* Check if for some reason, adding the library still shows as missing,
+         * to prevent a potential softlock */
+        if (old_missing_lib == missing_lib) {
+            std::cerr << "Loading library " << missing_lib << " did not work, exiting." << std::endl;
+            return;
+        }
     }
 }
 

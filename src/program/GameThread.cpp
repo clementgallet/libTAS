@@ -35,16 +35,21 @@ void GameThread::set_env_variables(Context *context, int gameArch)
     gameArch &= BT_TYPEMASK;
 
 #ifdef __unix__
-    /* Update the LD_LIBRARY_PATH environment variable if the user set one */
-    if (!context->config.libdir.empty()) {
-        char* oldlibpath = getenv("LD_LIBRARY_PATH");
-        std::string libpath = context->config.libdir;
-        if (oldlibpath) {
-            libpath.append(":");
-            libpath.append(oldlibpath);
-        }
-        setenv("LD_LIBRARY_PATH", libpath.c_str(), 1);
-    }
+    /* Update the LD_LIBRARY_PATH environment variable */
+    std::ostringstream oss_lib;
+    if (gameArch == BT_ELF32)
+        oss_lib << context->config.extralib32dir;
+    else if (gameArch == BT_ELF64)
+        oss_lib << context->config.extralib64dir;
+    
+    if (!context->config.libdir.empty())
+        oss_lib << ":" << context->config.libdir;
+
+    char* oldlibpath = getenv("LD_LIBRARY_PATH");
+    if (oldlibpath)
+        oss_lib << ":" << oldlibpath;
+    
+    setenv("LD_LIBRARY_PATH", oss_lib.str().c_str(), 1);
 #endif
 
     /* Change the working directory to the user-defined one or game directory */

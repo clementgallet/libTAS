@@ -355,6 +355,23 @@ int main(int argc, char **argv)
         std::cerr << "Cannot create dir " << context.config.ramsearchdir << std::endl;
         return -1;
     }
+
+    if (context.config.extralib32dir.empty()) {
+        context.config.extralib32dir = data_dir + "/lib_i386";
+    }
+    if (create_dir(context.config.extralib32dir) < 0) {
+        std::cerr << "Cannot create dir " << context.config.extralib32dir << std::endl;
+        return -1;
+    }
+
+    if (context.config.extralib64dir.empty()) {
+        context.config.extralib64dir = data_dir + "/lib_amd64";
+    }
+    if (create_dir(context.config.extralib64dir) < 0) {
+        std::cerr << "Cannot create dir " << context.config.extralib64dir << std::endl;
+        return -1;
+    }
+    
     MemScanner::init(context.config.ramsearchdir);
 
     /* Store current content of LD_PRELOAD/DYLD_INSERT_LIBRARIES */

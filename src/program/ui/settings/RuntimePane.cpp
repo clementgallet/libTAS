@@ -75,12 +75,14 @@ void RuntimePane::initLayout()
 #endif
 #endif
     steamBox = new ToolTipCheckBox(tr("Virtual Steam client"));
+    downloadsBox = new ToolTipCheckBox(tr("Allow downloading missing libraries"));
 
     generalLayout->addLayout(localeLayout);
     generalLayout->addWidget(writingBox);
     generalLayout->addWidget(recycleBox);
     generalLayout->addWidget(steamBox);
-
+    generalLayout->addWidget(downloadsBox);
+    
     savestateBox = new QGroupBox(tr("Savestates"));
     QGridLayout* savestateLayout = new QGridLayout;
     savestateBox->setLayout(savestateLayout);
@@ -190,6 +192,7 @@ void RuntimePane::initSignals()
     connect(writingBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
     connect(recycleBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
     connect(steamBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
+    connect(downloadsBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
 
     connect(stateIncrementalBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
     connect(stateRamBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
@@ -236,6 +239,11 @@ void RuntimePane::initToolTips()
     steamBox->setDescription("Implement a dummy Steam client, to be able to "
     "launch Steam games that require a connection to the Steam server. Almost none "
     "of the actual Steam features are implemented in this dummy client.");
+
+    downloadsBox->setDescription("Some games may need some old libraries that are "
+    "unavailable on newer distributions (e.g. for GameMaker Studio). If checked, libTAS "
+    "will detect the missing libraries, download the registered ones and load "
+    "them when running the game");
 
     stateIncrementalBox->setDescription("Optimize savestate size by only storing "
     "the memory pages that have been modified, at the cost of slightly more processing. "
@@ -365,6 +373,7 @@ void RuntimePane::loadConfig()
     writingBox->setChecked(context->config.sc.prevent_savefiles);
     recycleBox->setChecked(context->config.sc.recycle_threads);
     steamBox->setChecked(context->config.sc.virtual_steam);
+    downloadsBox->setChecked(context->config.allow_downloads);
 
     stateIncrementalBox->setChecked(context->config.sc.savestate_settings & SharedConfig::SS_INCREMENTAL);
     stateRamBox->setChecked(context->config.sc.savestate_settings & SharedConfig::SS_RAM);
@@ -408,6 +417,7 @@ void RuntimePane::saveConfig()
     context->config.sc.prevent_savefiles = writingBox->isChecked();
     context->config.sc.recycle_threads = recycleBox->isChecked();
     context->config.sc.virtual_steam = steamBox->isChecked();
+    context->config.allow_downloads = downloadsBox->isChecked();
 
     context->config.sc.savestate_settings = 0;
     context->config.sc.savestate_settings |= stateIncrementalBox->isChecked() ? SharedConfig::SS_INCREMENTAL : 0;

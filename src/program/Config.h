@@ -90,6 +90,12 @@ public:
     /* Directory holding files storing ram search results */
     std::string ramsearchdir;
 
+    /* Directory holding extra i386 libs required by some games */
+    std::string extralib32dir;
+
+    /* Directory holding extra amd64 libs required by some games */
+    std::string extralib64dir;
+
     /* Flags when end of movie */
     enum MovieEnd {
         MOVIEEND_READ = 0,
@@ -159,6 +165,10 @@ public:
 #elif defined(__APPLE__) && defined(__MACH__)
     int debugger = DEBUGGER_LLDB;
 #endif
+
+    /* Allow the program to download libraries that will help running some games.
+     * (-1 for unset) */
+    int allow_downloads = -1;
 
 private:
     QString iniPath(const std::string& gamepath) const;

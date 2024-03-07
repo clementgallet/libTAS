@@ -62,6 +62,6 @@ int extractBinaryType(std::string path);
 std::string extractMacOSExecutable(std::string path);
 
 /* Get the result of a shell command */
-std::string queryCmd(const std::string& cmd);
+std::string queryCmd(const std::string& cmd, int* status = nullptr);
 
 #endif
