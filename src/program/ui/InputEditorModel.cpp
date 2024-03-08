@@ -147,29 +147,15 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         QColor color = QGuiApplication::palette().text().color();
         const SingleInput si = movie->editor->input_set[index.column()-COLUMN_SPECIAL_SIZE];
 
-        /* If hovering on the cell, show a preview of the input for the 
-         * following: the cell is blank and not analog input */
-        if (index.column() == hoveredIndex.column()) {
-            if (!si.isAnalog()) {
-                const AllInputs& ai = movie->inputs->getInputs(row);
-                int value = ai.getInput(si);
-                if (!value) {
-                    if (index.row() == hoveredIndex.row())
-                        color.setAlpha(128);
-                    else
-                        color.setAlpha(32);
-                    return QBrush(color);                    
-                }
-            }
-        }
-
         /* Show inputs with transparancy when they are pending due to rewind */
+        bool pending_input = false;
         movie->inputs->input_event_queue.lock();
         for (auto it = movie->inputs->input_event_queue.begin(); it != movie->inputs->input_event_queue.end(); it++) {
             if (it->framecount != row)
                 continue;
 
             if (si == it->si) {
+                pending_input = true;
                 /* For analog, use half-transparancy. Otherwise,
                  * use strong/weak transparancy of set/clear input */
                 if (si.isAnalog()) {
@@ -188,6 +174,21 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
             }
         }
         movie->inputs->input_event_queue.unlock();
+
+        /* If hovering on the cell, show a preview of the input for the following:
+         * - the cell is blank
+         * - not analog input
+         * - not pending input due to rewind */
+        if (!pending_input &&
+                index.column() == hoveredIndex.column() &&
+                index.row() == hoveredIndex.row() &&
+                !si.isAnalog()) {
+            const AllInputs& ai = movie->inputs->getInputs(row);
+            int value = ai.getInput(si);
+            if (!value) {
+                color.setAlpha(128);
+            }
+        }
         
         return QBrush(color);
     }
@@ -301,13 +302,16 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         const AllInputs& ai = movie->inputs->getInputs(row);
         const SingleInput si = movie->editor->input_set[index.column()-COLUMN_SPECIAL_SIZE];
 
-        /* If hovering on the cell, show a preview of the input */
-        if (index.column() == hoveredIndex.column() && (!si.isAnalog()))
-            return QString(si.description.c_str());
-
         /* Get the value of the single input in movie inputs */
         int value = ai.getInput(si);
         
+        /* If hovering on the cell, show a preview of the input */
+        if (index.column() == hoveredIndex.column() &&
+            index.row() == hoveredIndex.row() &&
+            !si.isAnalog()) {
+            value = 1;
+        }
+
         /* If the value is currently being modified, load the new value */
         movie->inputs->input_event_queue.lock();
         for (auto it = movie->inputs->input_event_queue.begin(); it != movie->inputs->input_event_queue.end(); it++) {
