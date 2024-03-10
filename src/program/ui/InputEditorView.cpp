@@ -278,22 +278,23 @@ void InputEditorView::updateMenu()
     if (!insertAct)
         return;
     
-    /* Get the lowest selected row */
+    /* Get the lowest selected row and count markers */
     int min_row = 1 << 30;
     const QModelIndexList indexes = selectionModel()->selectedRows();
 
+    int markers_count = 0;
     for (const QModelIndex index : indexes) {
+        if (inputEditorModel->hasMarker(index.row())) {
+            markers_count++;
+            currentMarkerText = inputEditorModel->getMarkerText(index.row());
+        }
         if (index.row() < min_row)
             min_row = index.row();
     }
 
-    bool has_marker = inputEditorModel->hasMarker(min_row);
-
-    /* Set current marker text */
-    currentMarkerText = inputEditorModel->getMarkerText(min_row);
-
-    markAct->setText(has_marker ? tr("Edit marker") : tr("Add marker"));
-    unmarkAct->setEnabled(has_marker);
+    markAct->setText(markers_count ? tr("Edit marker") : tr("Add marker"));
+    unmarkAct->setText((markers_count > 1) ? tr("Remove markers") : tr("Remove marker"));
+    unmarkAct->setEnabled(markers_count);
 
     if (static_cast<uint32_t>(min_row) < context->framecount) {
         duplicateAct->setEnabled(false);
@@ -724,7 +725,9 @@ void InputEditorView::removeMarker()
     if (indexes.count() == 0)
         return;
 
-    emit removeMarkerSignal(indexes[0].row());
+    for (const QModelIndex index : indexes)
+        if (inputEditorModel->hasMarker(index.row()))
+            emit removeMarkerSignal(index.row());
     
     InputEditorView::updateMenu();
 }

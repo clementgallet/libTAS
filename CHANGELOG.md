@@ -25,6 +25,7 @@
 * Hook AkAudio to enforce ALSA
 * Add ALSA asynchronous playback
 * Program can download and load some common missing libraries to run games
+* Remove multiple markers (#596)
 
 ### Changed
 
