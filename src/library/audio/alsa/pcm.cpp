@@ -1278,6 +1278,25 @@ snd_pcm_chmap_t *snd_pcm_get_chmap(snd_pcm_t *pcm)
     return map;
 }
 
+int snd_pcm_set_chmap(snd_pcm_t *pcm, const snd_pcm_chmap_t *map)
+{
+    RETURN_IF_NATIVE(snd_pcm_set_chmap, (pcm, map), nullptr);
+
+    debuglogstdio(LCF_SOUND, "%s call with channels %d", __func__, map->channels);
+
+    /* We only support 1 or 2 channels */
+    if (map->channels > 2)
+        return EINVAL;
+
+    /* Set the number of channels */
+    int sourceId = reinterpret_cast<intptr_t>(pcm);
+    auto source = AudioContext::get().getSource(sourceId);
+    auto buffer = source->buffer_queue[0];
+    buffer->nbChannels = map->channels;
+    
+    return 0;
+}
+
 int snd_pcm_format_mask_malloc(snd_pcm_format_mask_t **ptr)
 {
     RETURN_IF_NATIVE(snd_pcm_format_mask_malloc, (ptr), nullptr);
