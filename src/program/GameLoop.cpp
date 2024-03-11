@@ -85,6 +85,8 @@ void GameLoop::start()
 
         emit uiChanged();
 
+        Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackFrame);
+
         /* We are at a frame boundary */
         /* If we did not yet receive the game window id, just make the game running */
         bool endInnerLoop = false;
@@ -162,8 +164,6 @@ void GameLoop::start()
             context->config.sc_modified = true;
             emit sharedConfigChanged();
         }
-
-        Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackFrame);
 
         endFrameMessages(ai);
 

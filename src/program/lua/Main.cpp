@@ -24,6 +24,7 @@
 #include "Movie.h"
 #include "Memory.h"
 #include "Print.h"
+#include "Runtime.h"
 #include "Callbacks.h"
 
 #include <iostream>
@@ -54,6 +55,7 @@ lua_State* Lua::Main::new_state()
     Lua::Movie::registerFunctions(lua_state, context);
     Lua::Callbacks::registerFunctions(lua_state);
     Lua::Print::init(lua_state);
+    Lua::Runtime::registerFunctions(lua_state, context);
     
     return lua_state;
 }

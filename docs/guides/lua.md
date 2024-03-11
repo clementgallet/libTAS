@@ -267,6 +267,45 @@ Returns the current rerecord count of the movie, or -1 if no movie is loaded
 
 Returns 1 of the current frame is a draw frame, or 0 if not.
 
+### Runtime functions
+
+Runtime functions must be performed in callback `onFrame()` to be effective on
+the current frame.
+
+#### runtime.saveState
+
+    none runtime.saveState(Number slot)
+
+Save a state in slot number `slot` (must be between 1 and 10). Beware, savestate
+operations are registered but not executed instantly, they will be performed after
+this callback.
+
+#### runtime.loadState
+
+    none runtime.loadState(Number slot)
+
+Load a state in slot number `slot` (must be between 1 and 10). The loading behaviour
+depends on the status of the current movie. Beware, savestate operations are
+registered but not executed instantly, they will be performed after this callback.
+
+#### runtime.isFastForward
+
+    Number runtime.isFastForward()
+
+Returns if fast-forward is checked.
+
+#### runtime.setFastForward
+
+    none runtime.setFastForward(Number ff)
+
+Set the fast-forward status.
+
+#### runtime.sleepMS
+
+    none runtime.sleepMS(Number length)
+
+Sleep for `length` milliseconds.
+
 ### Callbacks
 
 #### callback.onStartup
@@ -312,7 +351,8 @@ in recording mode. Not called when movie is in playback mode.
 
 #### onFrame
 
-Called after frame has completed.
+Called just as the current frame has completed. All runtime functions must be
+executed here if you want them to be executed on the current frame.
 
 #### onPaint
 

@@ -67,6 +67,7 @@ libTAS_SOURCES = \
     lua/Memory.cpp \
     lua/Movie.cpp \
     lua/Print.cpp \
+    lua/Runtime.cpp \
     movie/MovieFile.cpp \
     movie/MovieFileAnnotations.cpp \
     movie/MovieFileEditor.cpp \
