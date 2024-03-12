@@ -43,6 +43,14 @@ namespace libtas {
    __THROW.  */
 OVERRIDE int poll (struct pollfd *fds, nfds_t nfds, int timeout);
 
+/* Like poll, but before waiting the threads signal mask is replaced
+   with that specified in the fourth parameter.  For better usability,
+   the timeout value is specified using a TIMESPEC object.
+
+   This function is a cancellation point and therefore not marked with
+   __THROW.  */
+OVERRIDE int ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, const __sigset_t *ss);
+
 /* Check the first NFDS descriptors each in READFDS (if not NULL) for read
    readiness, in WRITEFDS (if not NULL) for write readiness, and in EXCEPTFDS
    (if not NULL) for exceptional conditions.  If TIMEOUT is not NULL, time out

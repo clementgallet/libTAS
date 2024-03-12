@@ -34,6 +34,7 @@
 namespace libtas {
 
 DEFINE_ORIG_POINTER(poll)
+DEFINE_ORIG_POINTER(ppoll)
 DEFINE_ORIG_POINTER(select)
 DEFINE_ORIG_POINTER(pselect)
 #ifdef __linux__
@@ -88,6 +89,26 @@ DEFINE_ORIG_POINTER(epoll_wait)
     return ret;
 }
 
+int ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, const __sigset_t *ss)
+{
+    LINK_NAMESPACE_GLOBAL(ppoll);
+
+    if (GlobalState::isNative()) {
+        return orig::ppoll(fds, nfds, timeout, ss);
+    }
+
+    debuglogstdio(LCF_WAIT, "%s call with %d fds and timeout %d.%09d", __func__, nfds, timeout->tv_sec, timeout->tv_nsec);
+    
+    int ret = orig::ppoll(fds, nfds, timeout, ss);
+
+    /* If timeout on main thread, add the timeout amount to the timer */
+    if (ret == 0) {
+        transfer_sleep(*timeout);        
+    }
+
+    return ret;
+}
+
 /* Override */ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout)
 {
     LINK_NAMESPACE_GLOBAL(select);
@@ -105,7 +126,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
         return orig::select(nfds, readfds, writefds, exceptfds, timeout);
     }
 
-    debuglogstdio(LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, timeout->tv_sec, timeout->tv_usec);
+    debuglogstdio(LCF_SLEEP, "%s call - sleep for %d.%06d sec", __func__, timeout->tv_sec, timeout->tv_usec);
 
     struct timespec ts;
     ts.tv_sec = timeout->tv_sec;
