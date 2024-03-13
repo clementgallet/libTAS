@@ -119,6 +119,9 @@ class AudioSource
          */
         std::function<void(AudioBuffer&)> callback;
 
+        /* Callback data avaible to the callback function */
+        void* callback_data;
+
         /* Helper function to convert ticks into a number of samples
          * in the audio buffer
          */

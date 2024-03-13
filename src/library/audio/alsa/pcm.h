@@ -46,6 +46,7 @@ OVERRIDE int snd_pcm_nonblock(snd_pcm_t *pcm, int nonblock);
     // static __inline__ int snd_pcm_abort(snd_pcm_t *pcm) { return snd_pcm_nonblock(pcm, 2); }
 OVERRIDE int snd_async_add_pcm_handler(snd_async_handler_t **handler, snd_pcm_t *pcm, snd_async_callback_t callback, void *private_data);
 OVERRIDE snd_pcm_t *snd_async_handler_get_pcm(snd_async_handler_t *handler);
+OVERRIDE void *snd_async_handler_get_callback_private(snd_async_handler_t *handler);
 OVERRIDE int snd_async_del_handler(snd_async_handler_t *handler);
 OVERRIDE int snd_pcm_info(snd_pcm_t *pcm, snd_pcm_info_t *info);
 OVERRIDE int snd_pcm_hw_params_current(snd_pcm_t *pcm, snd_pcm_hw_params_t *params);

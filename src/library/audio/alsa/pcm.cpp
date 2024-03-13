@@ -206,16 +206,18 @@ int snd_async_add_pcm_handler(snd_async_handler_t **handler, snd_pcm_t *pcm, snd
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = audiocontext.getSource(sourceId);
 
-    *handler = reinterpret_cast<snd_async_handler_t *>(pcm);
+    snd_async_handler_t *h = reinterpret_cast<snd_async_handler_t *>(pcm);
+    *handler = h;
     
-    source->callback = [handler, callback, &audiocontext](AudioBuffer& ab){
+    source->callback = [h, callback, &audiocontext](AudioBuffer& ab){
         /* The callback may call pcm_writei() or other functions that lock
          * the mutex */
         audiocontext.mutex.unlock();
-        callback(*handler);
+        callback(h);
         audiocontext.mutex.lock();
     };
     
+    source->callback_data = private_data;
     return 0;
 }
 
@@ -226,6 +228,19 @@ snd_pcm_t *snd_async_handler_get_pcm(snd_async_handler_t *handler)
     DEBUGLOGCALL(LCF_SOUND);
 
     return reinterpret_cast<snd_pcm_t *>(handler);
+}
+
+void *snd_async_handler_get_callback_private(snd_async_handler_t *handler)
+{
+    RETURN_IF_NATIVE(snd_async_handler_get_callback_private, (handler), nullptr);
+
+    DEBUGLOGCALL(LCF_SOUND);
+
+    AudioContext& audiocontext = AudioContext::get();
+    int sourceId = reinterpret_cast<intptr_t>(handler);
+    auto source = audiocontext.getSource(sourceId);
+
+    return source->callback_data;
 }
 
 int snd_async_del_handler(snd_async_handler_t *handler)

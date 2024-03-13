@@ -67,6 +67,8 @@ void AudioSource::init(void)
     source = SOURCE_UNDETERMINED;
     state = SOURCE_INITIAL;
     buffer_queue.clear();
+    callback = nullptr;
+    callback_data = nullptr;
     rewind();
 }
 
