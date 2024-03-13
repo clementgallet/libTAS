@@ -97,12 +97,15 @@ int ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, cons
         return orig::ppoll(fds, nfds, timeout, ss);
     }
 
-    debuglogstdio(LCF_WAIT, "%s call with %d fds and timeout %d.%09d", __func__, nfds, timeout->tv_sec, timeout->tv_nsec);
+    if (timeout)
+        debuglogstdio(LCF_WAIT, "%s call with %d fds and timeout %d.%09d", __func__, nfds, timeout->tv_sec, timeout->tv_nsec);
+    else
+        debuglogstdio(LCF_WAIT, "%s call with %d fds and infinite timeout", __func__, nfds);
     
     int ret = orig::ppoll(fds, nfds, timeout, ss);
 
     /* If timeout on main thread, add the timeout amount to the timer */
-    if (ret == 0) {
+    if (ret == 0 && timeout) {
         transfer_sleep(*timeout);        
     }
 
