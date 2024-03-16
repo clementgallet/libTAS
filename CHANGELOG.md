@@ -62,6 +62,7 @@
 * Protect adding logs to ImGui
 * Prevent ImGui log during savestates, because it could allocate memory
 * Guess ImGui input window size so that it is not truncated during encode
+* Tab key now work as hotkey when input editor has focus 
 
 ## [1.4.5] - 2023-10-22
 ### Added

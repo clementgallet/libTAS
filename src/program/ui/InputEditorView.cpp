@@ -532,6 +532,10 @@ void InputEditorView::keyPressEvent(QKeyEvent *event)
     /* We accept hotkeys when this window has focus */
     keysym_t mod = convertQtModifiers(event->modifiers());
     keysym_t ks = context->config.km->nativeToKeysym(event->nativeVirtualKey());
+    
+    /* Special case for <tab> key where event->nativeVirtualKey() returns 0 */
+    if (event->key() == Qt::Key_Tab)
+        ks = 0xff09; /* XK_Tab */
 
     if (context->config.km->hotkey_mapping.find(ks | mod) != context->config.km->hotkey_mapping.end()) {
         HotKey hk = context->config.km->hotkey_mapping[ks | mod];
