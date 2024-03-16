@@ -195,27 +195,34 @@ void PointerScanWindow::slotAdd()
 
 void PointerScanWindow::slotSave()
 {
-    QString defaultPath(context->gamepath.c_str());
-    defaultPath.append(".pm");
+    if (defaultPath.isEmpty()) {
+        defaultPath = context->gamepath.c_str();
+        defaultPath.append(".pm");
+    }
 
     QString filename = QFileDialog::getSaveFileName(this, tr("Save pointermap"), defaultPath, tr("pointermap files (*.pm)"));
 
     if (filename.isNull())
         return;
 
+    defaultPath = filename;
     pointerScanModel->saveChains(filename.toStdString());
 }
 
 void PointerScanWindow::slotLoad()
 {
-    QString defaultPath(context->gamepath.c_str());
-    defaultPath.append(".pm");
+    if (defaultPath.isEmpty()) {
+        defaultPath = context->gamepath.c_str();
+        defaultPath.append(".pm");
+    }
 
     QString filename = QFileDialog::getOpenFileName(this, tr("Open pointermap"), defaultPath, tr("pointermap files (*.pm)"));
 
     if (filename.isNull())
         return;
 
+    defaultPath = filename;
+    
     int ret = pointerScanModel->loadChains(filename.toStdString());
     if (ret < 0) {
         QMessageBox::warning(this, "Error", "Could not open pointermap file");

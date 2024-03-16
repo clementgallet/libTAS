@@ -56,6 +56,8 @@ private:
     QSpinBox *maxLevelInput;
     QSpinBox *maxOffsetInput;
 
+    QString defaultPath;
+    
 private slots:
     void slotSearch();
     void slotAdd();
