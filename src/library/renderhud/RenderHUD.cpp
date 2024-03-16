@@ -37,6 +37,7 @@
 #include "TimeHolder.h"
 #include "../external/imgui/imgui.h"
 #include "../external/imgui/imgui_impl_xlib.h"
+#include "../external/imgui/Roboto-Medium.h"
 
 #include <sstream>
 #include <math.h>
@@ -54,6 +55,10 @@ bool RenderHUD::init()
             if (x11::gameDisplays[i]) {
                 ImGui::CreateContext();
                 GlobalNative gn;
+                
+                ImGuiIO& io = ImGui::GetIO();
+                io.Fonts->AddFontFromMemoryCompressedTTF(Roboto_compressed_data, Roboto_compressed_size, 16.0f);
+                
                 ImGui_ImplXlib_Init(x11::gameDisplays[i], x11::gameXWindows.front());
                 return true;
             }
