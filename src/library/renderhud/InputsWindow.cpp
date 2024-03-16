@@ -37,6 +37,17 @@ void InputsWindow::draw(const AllInputs& ai, const AllInputs& preview_ai, bool* 
         
         const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y + main_viewport->WorkSize.y), ImGuiCond_Always, ImVec2(0.0f, 1.0f));
+
+        /* Guess and set the window size, so that it appears at correct size
+         * on first draw */
+        const ImVec2 preview_size = ImGui::CalcTextSize(preview_inputs_str.c_str());
+        const ImVec2 size = ImGui::CalcTextSize(inputs_str.c_str());
+        float max_width = std::max(preview_size.x, size.x);
+        int line_count = 2;
+        if (preview_inputs_str.empty()) line_count--;
+        if (inputs_str.empty()) line_count--;
+        ImGui::SetNextWindowContentSize(ImVec2(max_width, line_count*ImGui::GetTextLineHeight()));
+
         if (ImGui::Begin("Inputs", nullptr, window_flags))
         {
             if (!preview_inputs_str.empty()) {
