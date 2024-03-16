@@ -689,8 +689,6 @@ int InputEditorModel::pasteInputs(int row)
     /* Update the paste inputs view */
     emit dataChanged(index(row,0), index(row+paste_ais.size()-1,columnCount()));
 
-    emit inputSetChanged();
-
     return paste_ais.size();
 }
 
@@ -731,8 +729,6 @@ void InputEditorModel::pasteInputsInRange(int row, int count)
 
     /* Update the paste inputs view */
     emit dataChanged(index(row,0), index(row+count-1,columnCount()));
-
-    emit inputSetChanged();
 }
 
 int InputEditorModel::pasteInsertInputs(int row)
@@ -772,8 +768,6 @@ int InputEditorModel::pasteInsertInputs(int row)
     /* Update the movie framecount */
     movie->updateLength();
 
-    emit inputSetChanged();
-
     return paste_ais.size();
 }
 
@@ -799,6 +793,7 @@ void InputEditorModel::addUniqueInputs(const AllInputs &ai)
     ai.extractInputs(new_input_set);
 
     /* Check if added inputs are already in the list */
+    bool any_new_input = false;
     for (SingleInput si : new_input_set) {
 
         bool new_input = true;
@@ -811,6 +806,7 @@ void InputEditorModel::addUniqueInputs(const AllInputs &ai)
 
         /* Insert input if new */
         if (new_input) {
+            any_new_input = true;
 
             /* Gather input description */
             for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
@@ -827,7 +823,9 @@ void InputEditorModel::addUniqueInputs(const AllInputs &ai)
             endInsertColumns();
         }
     }
-    emit inputSetChanged();
+    
+    if (any_new_input)
+        emit inputSetChanged();
 }
 
 void InputEditorModel::clearUniqueInput(int column)

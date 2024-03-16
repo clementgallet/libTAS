@@ -183,26 +183,23 @@ void InputEditorView::fillMenu(QMenu* frameMenu)
 
 void InputEditorView::resizeAllColumns()
 {
-
-    resizeColumnsToContents();
     horizontalHeader()->resizeSection(InputEditorModel::COLUMN_SAVESTATE, 20);
     horizontalHeader()->resizeSection(InputEditorModel::COLUMN_FRAME, 80);
 
-    /* Resize analog columns to a fixed value
+    /* Set analog columns to be resizable by users.
      * Increase the other columns by a small amount, because even if it's
      * supposed to take the same place as the header, sometimes it considers
      * that it doesn't have enough space. */
     for (int c = InputEditorModel::COLUMN_SPECIAL_SIZE; c < inputEditorModel->columnCount(); c++) {
-        int size = horizontalHeader()->sectionSize(c);
-        if (inputEditorModel->isInputAnalog(c)) {            
-            if (size < 70)
-                horizontalHeader()->resizeSection(c, 70);
+        if (inputEditorModel->isInputAnalog(c)) {
+            horizontalHeader()->setSectionResizeMode(c, QHeaderView::Interactive);
         }
         else {
+            resizeColumnToContents(c);
+            int size = horizontalHeader()->sectionSize(c);
             horizontalHeader()->resizeSection(c, size + 2);
         }
     }
-
 }
 
 void InputEditorView::update()

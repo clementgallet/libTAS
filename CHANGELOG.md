@@ -29,6 +29,7 @@
 * Add more lua functions (savestates, ff)
 * Implement ppoll
 * Implement snd_async_handler_get_callback_private
+* Allow users to resize analog columns in input editor
 
 ### Changed
 
