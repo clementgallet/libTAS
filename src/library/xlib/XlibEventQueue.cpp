@@ -36,13 +36,11 @@ void XlibEventQueue::setMask(Window w, long event_mask)
         XEvent ev;
         ev.type = EnterNotify;
         ev.xcrossing.window = w;
-        if (game_ai.pointer) {
-            ev.xcrossing.x = game_ai.pointer->x;
-            ev.xcrossing.y = game_ai.pointer->y;
-            ev.xcrossing.x_root = game_ai.pointer->x;
-            ev.xcrossing.y_root = game_ai.pointer->y;
-            ev.xcrossing.state = SingleInput::toXlibPointerMask(ai.pointer->mask);
-        }
+        ev.xcrossing.x = game_ai.pointer.x;
+        ev.xcrossing.y = game_ai.pointer.y;
+        ev.xcrossing.x_root = game_ai.pointer.x;
+        ev.xcrossing.y_root = game_ai.pointer.y;
+        ev.xcrossing.state = SingleInput::toXlibPointerMask(ai.pointer.mask);
         ev.xcrossing.send_event = 0;
         ev.xcrossing.same_screen = 1;
         ev.xcrossing.root = x11::rootWindow;

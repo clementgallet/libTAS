@@ -22,7 +22,7 @@
 #include "logging.h"
 #include "DeterministicTimer.h"
 #include "fileio/FileHandleList.h"
-#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/AllInputsFlat.h"
 #include "global.h"
 #include "GlobalState.h"
 
@@ -34,7 +34,7 @@
 namespace libtas {
 
 /* The tuple contains pipe in fd, pipe out fd, and then refcount. */
-static std::pair<std::pair<int, int>, int> evdevfds[AllInputs::MAXJOYS];
+static std::pair<std::pair<int, int>, int> evdevfds[AllInputsFlat::MAXJOYS];
 
 int is_evdev(const char* source)
 {
@@ -130,7 +130,7 @@ bool sync_evdev(int evnum)
 
 int get_ev_number(int fd)
 {
-    for (int i=0; i<AllInputs::MAXJOYS; i++)
+    for (int i=0; i<AllInputsFlat::MAXJOYS; i++)
         if (evdevfds[i].second != 0 && evdevfds[i].first.first == fd)
             return i;
     return -1;
@@ -138,7 +138,7 @@ int get_ev_number(int fd)
 
 bool unref_evdev(int fd)
 {
-    for (int i=0; i<AllInputs::MAXJOYS; i++)
+    for (int i=0; i<AllInputsFlat::MAXJOYS; i++)
         if (evdevfds[i].second != 0 && evdevfds[i].first.first == fd)
             return --evdevfds[i].second == 0;
     return true;

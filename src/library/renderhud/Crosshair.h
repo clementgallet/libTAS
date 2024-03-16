@@ -20,13 +20,13 @@
 #ifndef LIBTAS_IMGUI_CROSSHAIR_H_INCL
 #define LIBTAS_IMGUI_CROSSHAIR_H_INCL
 
-#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/AllInputsFlat.h"
 
 namespace libtas {
 
 namespace Crosshair
 {
-    void draw(const AllInputs& ai);
+    void draw(const AllInputsFlat& ai);
 }
 
 }

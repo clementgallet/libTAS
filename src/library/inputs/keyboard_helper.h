@@ -21,7 +21,7 @@
 #define LIBTAS_KEYBOARDHELPER_H_INCLUDED
 
 #include "../external/SDL1.h"
-#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/AllInputsFlat.h"
 
 #include <SDL2/SDL.h>
 
@@ -36,18 +36,18 @@ SDL1::SDLKey X11_Translate1Keysym(unsigned int xsym);
 void X11_InitKeymap(void);
 
 /* Fill the keyboard array that SDL functions are expected,
- * based on the KeySym set we get from our AllInputs struct.
+ * based on the KeySym set we get from our AllInputsFlat struct.
  */
-void xkeyboardToSDLkeyboard(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard);
-void xkeyboardToSDL1keyboard(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard);
+void xkeyboardToSDLkeyboard(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard);
+void xkeyboardToSDL1keyboard(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard);
 
 /* Fill the SDL 1 or SDL 2 full key struct based on a Xlib KeySym */
 void xkeysymToSDL(SDL_Keysym *keysym, unsigned int xkeysym);
 void xkeysymToSDL1(SDL1::SDL_keysym *keysym, unsigned int xkeysym);
 
 /* Build the Xlib/SDL2 modifier from the keyboard input */
-unsigned int xkeyboardToXMod(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard);
-SDL_Keymod xkeyboardToSDLMod(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard);
+unsigned int xkeyboardToXMod(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard);
+SDL_Keymod xkeyboardToSDLMod(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard);
 
 }
 

@@ -193,7 +193,7 @@ libtas_so_SOURCES = \
     xlib/xrandr.cpp \
     xlib/xshm.cpp \
     xlib/xwindows.cpp \
-    ../shared/inputs/AllInputs.cpp \
+    ../shared/inputs/AllInputsFlat.cpp \
     ../shared/inputs/ControllerInputs.cpp \
     ../shared/inputs/MiscInputs.cpp \
     ../shared/inputs/MouseInputs.cpp \

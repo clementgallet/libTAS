@@ -22,7 +22,7 @@
 #include "logging.h"
 #include "DeterministicTimer.h"
 #include "fileio/FileHandleList.h"
-#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/AllInputsFlat.h"
 #include "global.h"
 #include "GlobalState.h"
 
@@ -34,7 +34,7 @@
 namespace libtas {
 
 /* The tuple contains pipe in fd, pipe out fd, and then refcount. */
-static std::pair<std::pair<int, int>, int> jsdevfds[AllInputs::MAXJOYS];
+static std::pair<std::pair<int, int>, int> jsdevfds[AllInputsFlat::MAXJOYS];
 
 int is_jsdev(const char* source)
 {
@@ -149,7 +149,7 @@ bool sync_jsdev(int jsnum)
 
 int get_js_number(int fd)
 {
-    for (int i=0; i<AllInputs::MAXJOYS; i++)
+    for (int i=0; i<AllInputsFlat::MAXJOYS; i++)
         if (jsdevfds[i].second != 0 && jsdevfds[i].first.first == fd)
             return i;
     return -1;
@@ -157,7 +157,7 @@ int get_js_number(int fd)
 
 bool unref_jsdev(int fd)
 {
-    for (int i=0; i<AllInputs::MAXJOYS; i++)
+    for (int i=0; i<AllInputsFlat::MAXJOYS; i++)
         if (jsdevfds[i].second != 0 && jsdevfds[i].first.first == fd)
             return --jsdevfds[i].second == 0;
     return true;

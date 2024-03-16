@@ -360,34 +360,3 @@ void AllInputs::send(bool preview)
     
     sendMessage(MSGN_END_INPUTS);
 }
-
-void AllInputs::recv()
-{
-    /* All AllInputs objects in game-side must have all inputs objects,
-     * so we don't need to check all the time, and because we don't need the
-     * saved space */
-    buildAndClear();
-    
-    receiveData(keyboard.data(), keyboard.size() * sizeof(uint32_t));
-    
-    int message = receiveMessage();
-    while (message != MSGN_END_INPUTS) {
-        switch (message) {
-            case MSGN_POINTER_INPUTS:
-                receiveData(pointer.get(), sizeof(MouseInputs));
-                break;
-            
-            case MSGN_CONTROLLER_INPUTS: {
-                int joy;
-                receiveData(&joy, sizeof(int));
-                receiveData(controllers[joy].get(), sizeof(ControllerInputs));
-                break;
-            }
-
-            case MSGN_MISC_INPUTS:
-                receiveData(misc.get(), sizeof(MiscInputs));
-                break;
-        }
-        message = receiveMessage();
-    }
-}

@@ -59,8 +59,8 @@ int __stdcall GetCursorPos(POINT *pt)
     DEBUGLOGCALL(LCF_WINE | LCF_MOUSE);
 
     if (pt) {
-        pt->x = game_ai.pointer->x;
-        pt->y = game_ai.pointer->y;
+        pt->x = game_ai.pointer.x;
+        pt->y = game_ai.pointer.y;
     }
 
     // static bool parity = true;
@@ -82,15 +82,15 @@ short __stdcall GetAsyncKeyState(int key)
     short ret = 0;
 
     /* Check mouse buttons */
-    if ((key == 0x01) && (game_ai.pointer->mask & (1 << SingleInput::POINTER_B1)))
+    if ((key == 0x01) && (game_ai.pointer.mask & (1 << SingleInput::POINTER_B1)))
         ret |= 0x8000;
-    else if ((key == 0x02) && (game_ai.pointer->mask & (1 << SingleInput::POINTER_B2)))
+    else if ((key == 0x02) && (game_ai.pointer.mask & (1 << SingleInput::POINTER_B2)))
         ret |= 0x8000;
-    else if ((key == 0x04) && (game_ai.pointer->mask & (1 << SingleInput::POINTER_B3)))
+    else if ((key == 0x04) && (game_ai.pointer.mask & (1 << SingleInput::POINTER_B3)))
         ret |= 0x8000;
-    else if ((key == 0x05) && (game_ai.pointer->mask & (1 << SingleInput::POINTER_B4)))
+    else if ((key == 0x05) && (game_ai.pointer.mask & (1 << SingleInput::POINTER_B4)))
         ret |= 0x8000;
-    else if ((key == 0x06) && (game_ai.pointer->mask & (1 << SingleInput::POINTER_B5)))
+    else if ((key == 0x06) && (game_ai.pointer.mask & (1 << SingleInput::POINTER_B5)))
         ret |= 0x8000;
 
     /* Check keys */

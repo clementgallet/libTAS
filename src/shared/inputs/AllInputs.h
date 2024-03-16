@@ -96,9 +96,6 @@ class AllInputs {
         /* Send inputs through the socket */
         void send(bool preview);
 
-        /* Receive inputs through the socket excluding the first message MSGN_ALL_INPUTS */
-        void recv();
-
 };
 
 #endif

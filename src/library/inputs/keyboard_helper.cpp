@@ -307,9 +307,9 @@ SDL1::SDLKey X11_Translate1Keysym(unsigned int xsym)
 	return key;
 }
 
-void xkeyboardToSDLkeyboard(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard) {
+void xkeyboardToSDLkeyboard(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard) {
     memset(SDLkeyboard, 0, SDL_NUM_SCANCODES);
-    for (int i=0; i<AllInputs::MAXKEYS; i++) {
+    for (int i=0; i<AllInputsFlat::MAXKEYS; i++) {
         if (Xkeyboard[i]) {
             SDL_Scancode sc = GetScanFromKey(X11_TranslateKeysym(Xkeyboard[i]));
             SDLkeyboard[sc] = 1;
@@ -317,9 +317,9 @@ void xkeyboardToSDLkeyboard(const std::array<unsigned int,AllInputs::MAXKEYS>& X
     }
 }
 
-void xkeyboardToSDL1keyboard(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard) {
+void xkeyboardToSDL1keyboard(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard) {
     memset(SDLkeyboard, 0, SDL1::SDLK_LAST);
-    for (int i=0; i<AllInputs::MAXKEYS; i++) {
+    for (int i=0; i<AllInputsFlat::MAXKEYS; i++) {
         if (Xkeyboard[i]) {
             SDL1::SDLKey key = X11_Translate1Keysym(Xkeyboard[i]);
             SDLkeyboard[key] = 1;
@@ -358,9 +358,9 @@ static std::array<ModTranslate, 10> mod_translate {{
     {XK_Shift_Lock, 1<<4 /* Mod2Mask */, KMOD_NUM},
 }};
 
-unsigned int xkeyboardToXMod(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard) {
+unsigned int xkeyboardToXMod(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard) {
     unsigned int mod = 0;
-    for (int i=0; i<AllInputs::MAXKEYS; i++) {
+    for (int i=0; i<AllInputsFlat::MAXKEYS; i++) {
         if (Xkeyboard[i]) {
             for (int j=0; j<10; j++) {
                 if (Xkeyboard[i] == mod_translate[j].keysym) {
@@ -374,9 +374,9 @@ unsigned int xkeyboardToXMod(const std::array<unsigned int,AllInputs::MAXKEYS>& 
     return mod;
 }
 
-SDL_Keymod xkeyboardToSDLMod(const std::array<unsigned int,AllInputs::MAXKEYS>& Xkeyboard) {
+SDL_Keymod xkeyboardToSDLMod(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard) {
     unsigned int mod = KMOD_NONE; // use int because "bitwise or" promotes to int
-    for (int i=0; i<AllInputs::MAXKEYS; i++) {
+    for (int i=0; i<AllInputsFlat::MAXKEYS; i++) {
         if (Xkeyboard[i]) {
             for (int j=0; j<10; j++) {
                 if (Xkeyboard[i] == mod_translate[j].keysym) {

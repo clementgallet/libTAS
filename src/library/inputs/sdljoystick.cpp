@@ -24,7 +24,6 @@
 #include "sdl/sdlversion.h"
 #include "sdl/SDLEventQueue.h"
 #include "global.h"
-#include "../shared/inputs/AllInputs.h"
 #include "../shared/SharedConfig.h"
 
 #include <stdlib.h>
@@ -373,11 +372,7 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 
     int *joyid = reinterpret_cast<int*>(joystick);
 
-    /* Check if controller built */
-    if (!game_ai.controllers[*joyid])
-        return 0;
-
-    return game_ai.controllers[*joyid]->axes[axis];
+    return game_ai.controllers[*joyid].axes[axis];
 }
 
 /* Override */ Uint8 SDL_JoystickGetHat(SDL_Joystick * joystick, int hat)
@@ -392,18 +387,14 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 
     int *joyid = reinterpret_cast<int*>(joystick);
 
-    /* Check if controller built */
-    if (!game_ai.controllers[*joyid])
-        return 0;
-
     Uint8 hatState = SDL_HAT_CENTERED;
-    if (game_ai.controllers[*joyid]->buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_UP))
+    if (game_ai.controllers[*joyid].buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_UP))
         hatState |= SDL_HAT_UP;
-    if (game_ai.controllers[*joyid]->buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_DOWN))
+    if (game_ai.controllers[*joyid].buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_DOWN))
         hatState |= SDL_HAT_DOWN;
-    if (game_ai.controllers[*joyid]->buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_LEFT))
+    if (game_ai.controllers[*joyid].buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_LEFT))
         hatState |= SDL_HAT_LEFT;
-    if (game_ai.controllers[*joyid]->buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_RIGHT))
+    if (game_ai.controllers[*joyid].buttons & (1 << SDL_CONTROLLER_BUTTON_DPAD_RIGHT))
         hatState |= SDL_HAT_RIGHT;
 
     return hatState;
@@ -427,11 +418,7 @@ int SDL_JoystickIndex(SDL_Joystick *joystick)
 
     int *joyid = reinterpret_cast<int*>(joystick);
 
-    /* Check if controller built */
-    if (!game_ai.controllers[*joyid])
-        return 0;
-
-    return (game_ai.controllers[*joyid]->buttons >> button) & 0x1;
+    return (game_ai.controllers[*joyid].buttons >> button) & 0x1;
 }
 
 /* Override */ int SDL_JoystickRumble(SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms)

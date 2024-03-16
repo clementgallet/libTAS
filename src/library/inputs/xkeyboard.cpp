@@ -24,7 +24,7 @@
 #include "logging.h"
 #include "xlib/xwindows.h" // x11::gameXWindows
 #include "GlobalState.h"
-#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/AllInputsFlat.h"
 
 #include <cstring> // memset
 
@@ -36,7 +36,7 @@ namespace libtas {
 
     memset(keymap, 0, 32);
     GlobalNoLog gnl; // Avoid logging on XkbKeycodeToKeysym
-    for (int i=0; i<AllInputs::MAXKEYS; i++) {
+    for (int i=0; i<AllInputsFlat::MAXKEYS; i++) {
         if (game_ai.keyboard[i] == 0) {
             break;
         }

@@ -27,7 +27,7 @@
 
 namespace libtas {
 
-void InputsWindow::draw(const AllInputs& ai, const AllInputs& preview_ai, bool* p_open = nullptr)
+void InputsWindow::draw(const AllInputsFlat& ai, const AllInputsFlat& preview_ai, bool* p_open = nullptr)
 {
     std::string inputs_str = formatInputs(ai);
     std::string preview_inputs_str = formatInputs(preview_ai);
@@ -61,20 +61,20 @@ void InputsWindow::draw(const AllInputs& ai, const AllInputs& preview_ai, bool* 
     }
 }
 
-std::string InputsWindow::formatInputs(const AllInputs& ai)
+std::string InputsWindow::formatInputs(const AllInputsFlat& ai)
 {
     std::ostringstream oss;
 
     /* Flags */
-    if (ai.misc->flags & (1 << SingleInput::FLAG_RESTART)) {
+    if (ai.misc.flags & (1 << SingleInput::FLAG_RESTART)) {
         oss << "[Restart] ";
     }
     for (int i=0; i<4; i++) {
-        if (ai.misc->flags & (1 << (SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED+i))) {
+        if (ai.misc.flags & (1 << (SingleInput::FLAG_CONTROLLER1_ADDED_REMOVED+i))) {
             oss << "[J" << i << " added/removed] ";
         }
     }
-    if (ai.misc->flags & (1 << SingleInput::FLAG_FOCUS_UNFOCUS)) {
+    if (ai.misc.flags & (1 << SingleInput::FLAG_FOCUS_UNFOCUS)) {
         oss << "[Un/Focus] ";
     }
 
@@ -95,35 +95,32 @@ std::string InputsWindow::formatInputs(const AllInputs& ai)
 
     /* Mouse */
     if (Global::shared_config.mouse_support) {
-        if (ai.pointer->x != 0 || ai.pointer->y != 0 || ai.pointer->wheel != 0) {
-            oss << "[M " << ai.pointer->x << ":" << ai.pointer->y << ":" << ai.pointer->wheel << ":";
-            oss << ((ai.pointer->mode==SingleInput::POINTER_MODE_RELATIVE)?"R":"A");
+        if (ai.pointer.x != 0 || ai.pointer.y != 0 || ai.pointer.wheel != 0) {
+            oss << "[M " << ai.pointer.x << ":" << ai.pointer.y << ":" << ai.pointer.wheel << ":";
+            oss << ((ai.pointer.mode==SingleInput::POINTER_MODE_RELATIVE)?"R":"A");
             oss << "] ";
         }
-        if (ai.pointer->mask & (1 << SingleInput::POINTER_B1))
+        if (ai.pointer.mask & (1 << SingleInput::POINTER_B1))
             oss << "[M b1] ";
-        if (ai.pointer->mask & (1 << SingleInput::POINTER_B2))
+        if (ai.pointer.mask & (1 << SingleInput::POINTER_B2))
             oss << "[M b2] ";
-        if (ai.pointer->mask & (1 << SingleInput::POINTER_B3))
+        if (ai.pointer.mask & (1 << SingleInput::POINTER_B3))
             oss << "[M b3] ";
-        if (ai.pointer->mask & (1 << SingleInput::POINTER_B4))
+        if (ai.pointer.mask & (1 << SingleInput::POINTER_B4))
             oss << "[M b4] ";
-        if (ai.pointer->mask & (1 << SingleInput::POINTER_B5))
+        if (ai.pointer.mask & (1 << SingleInput::POINTER_B5))
             oss << "[M b5] ";
     }
 
     /* Joystick */
     for (int i=0; i<Global::shared_config.nb_controllers; i++) {
-        if (!ai.controllers[i])
-            continue;
-
         for (int j=0; j<ControllerInputs::MAXAXES; j++) {
-            if (ai.controllers[i]->axes[j] != 0)
-                oss << "[J" << i << " a" << j << ":" << ai.controllers[i]->axes[j] << "] ";
+            if (ai.controllers[i].axes[j] != 0)
+                oss << "[J" << i << " a" << j << ":" << ai.controllers[i].axes[j] << "] ";
         }
 
         for (int j=0; j<16; j++) {
-            if (ai.controllers[i]->buttons & (1 << j))
+            if (ai.controllers[i].buttons & (1 << j))
                 oss << "[J" << i << " b" << j << "] ";
         }
     }

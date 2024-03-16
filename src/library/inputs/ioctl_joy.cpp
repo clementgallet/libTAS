@@ -254,7 +254,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
         }
 
         /* Get the buttons state */
-        unsigned short buttons = game_ai.controllers[jsnum] ? game_ai.controllers[jsnum]->buttons : 0;
+        unsigned short buttons = game_ai.controllers[jsnum].buttons;
 
         /* Set the corresponding bit in the key state */
         int len = _IOC_SIZE(request);
@@ -389,12 +389,8 @@ int ioctl(int fd, unsigned long request, ...) __THROW
             }
 
             /* Get the axes and buttons state */
-            std::array<short, ControllerInputs::MAXAXES> axes;
-            if (game_ai.controllers[jsnum])
-                axes = game_ai.controllers[jsnum]->axes;
-            else
-                axes.fill(0);
-            unsigned short buttons = game_ai.controllers[jsnum] ? game_ai.controllers[jsnum]->buttons : 0;
+            std::array<short, ControllerInputs::MAXAXES> axes = game_ai.controllers[jsnum].axes;
+            unsigned short buttons = game_ai.controllers[jsnum].buttons;
 
             /* Write the axis value */
             switch (_IOC_NR(request)) {

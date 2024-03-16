@@ -23,7 +23,7 @@
 
 #include "logging.h"
 #include "GlobalState.h"
-#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/AllInputsFlat.h"
 
 #include <cstring> // memset
 
@@ -57,7 +57,7 @@ namespace libtas {
     GlobalNoLog gnl; // Avoid logging on XkbKeycodeToKeysym
     for (int kc=0; kc<256; kc++) {
         KeySym ks = XkbKeycodeToKeysym(nullptr, (KeyCode)kc, 0, 0);
-        for (int i=0; i<AllInputs::MAXKEYS; i++) {
+        for (int i=0; i<AllInputsFlat::MAXKEYS; i++) {
             if (ks == game_ai.keyboard[i]) {
                 reply->keys[kc>>3] |= (1 << (kc&0x7));
                 break;

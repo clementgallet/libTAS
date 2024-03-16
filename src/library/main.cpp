@@ -39,7 +39,6 @@
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
 #include "../shared/SharedConfig.h"
-#include "../shared/inputs/AllInputs.h"
 
 #include <unistd.h> // getpid()
 #include <vector>

@@ -20,16 +20,16 @@
 #ifndef LIBTAS_IMGUI_INPUTSWINDOW_H_INCL
 #define LIBTAS_IMGUI_INPUTSWINDOW_H_INCL
 
-#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/AllInputsFlat.h"
 #include <string>
 
 namespace libtas {
 
 namespace InputsWindow
 {
-    void draw(const AllInputs& ai, const AllInputs& preview_ai, bool* p_open);
+    void draw(const AllInputsFlat& ai, const AllInputsFlat& preview_ai, bool* p_open);
     
-    std::string formatInputs(const AllInputs& ai);
+    std::string formatInputs(const AllInputsFlat& ai);
 
 }
 

@@ -24,7 +24,7 @@
 #ifndef LIBTAS_RENDERHUD_H_INCL
 #define LIBTAS_RENDERHUD_H_INCL
 
-#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/AllInputsFlat.h"
 
 #include <memory>
 #include <list>
@@ -52,7 +52,7 @@ class RenderHUD
         virtual void newFrame();
 
         /* Add all hud elements for rendering */
-        void drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai);
+        void drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputsFlat& ai, const AllInputsFlat& preview_ai);
         
         /* Called at the end of a frame to render the hud */
         virtual void render() {}

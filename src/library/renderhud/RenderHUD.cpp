@@ -96,7 +96,7 @@ static void aspectRatioCallback(ImGuiSizeCallbackData* data)
     data->DesiredSize.y = roundf((data->DesiredSize.x / aspect_ratio) + ImGui::GetFrameHeight());
 }
 
-void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputs& ai, const AllInputs& preview_ai)
+void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputsFlat& ai, const AllInputsFlat& preview_ai)
 {
     if (!ImGui::GetCurrentContext()) {
         return;

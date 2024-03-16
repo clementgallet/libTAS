@@ -23,7 +23,6 @@
 
 #include "logging.h"
 #include "sdl/sdlwindows.h" // sdl::gameSDLWindow
-#include "../shared/inputs/AllInputs.h"
 #include "../external/SDL1.h"
 
 namespace libtas {

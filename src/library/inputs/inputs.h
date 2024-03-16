@@ -22,28 +22,28 @@
 
 /* TODO: I don't know where to put these, so in a separate file for now */
 
-#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/AllInputsFlat.h"
 
 namespace libtas {
 
 /* Inputs that are sent from libTAS */
-extern AllInputs ai;
+extern AllInputsFlat ai;
 
 /* Last state of the inputs */
-extern AllInputs old_ai;
+extern AllInputsFlat old_ai;
 
 /* Fake state of the inputs that is seen by the game.
  * This struct is used when the game want to set inputs, such as
  * Warping the cursor position.
  */
-extern AllInputs game_ai;
+extern AllInputsFlat game_ai;
 
 /* Last state of the game inputs, used to generate events */
-extern AllInputs old_game_ai;
+extern AllInputsFlat old_game_ai;
 
 /* Same as game_ai but without clipping pointer position */
-extern AllInputs game_unclipped_ai;
-extern AllInputs old_game_unclipped_ai;
+extern AllInputsFlat game_unclipped_ai;
+extern AllInputsFlat old_game_unclipped_ai;
 
 /* Is the pointer clipped inside a window? */
 extern bool pointer_clipping;

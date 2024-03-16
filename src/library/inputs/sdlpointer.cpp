@@ -27,7 +27,6 @@
 #include "sdl/sdlwindows.h" // sdl::gameSDLWindow
 #include "global.h"
 #include "GlobalState.h"
-#include "../shared/inputs/AllInputs.h"
 
 namespace libtas {
 
@@ -44,21 +43,14 @@ SDL_Window *SDL_GetMouseFocus(void)
 Uint32 SDL_GetMouseState(int *x, int *y)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
-    if (!game_ai.pointer) {
-        if (x != NULL)
-            *x = 0;
-        if (y != NULL)
-            *y = 0;
-        return 0;
-    }
 
     if (x != NULL)
-        *x = game_ai.pointer->x;
+        *x = game_ai.pointer.x;
     if (y != NULL)
-        *y = game_ai.pointer->y;
+        *y = game_ai.pointer.y;
 
     /* Translating pointer mask to SDL pointer state */
-    return SingleInput::toSDL2PointerMask(game_ai.pointer->mask);
+    return SingleInput::toSDL2PointerMask(game_ai.pointer.mask);
 }
 
 Uint32 SDL_GetGlobalMouseState(int *x, int *y)
@@ -80,32 +72,24 @@ Uint32 SDL_GetRelativeMouseState(int *x, int *y)
     static int oldx = 0;
     static int oldy = 0;
 
-    if (!game_unclipped_ai.pointer) {
-        if (x != NULL)
-            *x = 0;
-        if (y != NULL)
-            *y = 0;
-        return 0;
-    }
-
     /* For the first call, just output zero deltas */
     if (first) {
-        oldx = game_unclipped_ai.pointer->x;
-        oldy = game_unclipped_ai.pointer->y;
+        oldx = game_unclipped_ai.pointer.x;
+        oldy = game_unclipped_ai.pointer.y;
         first = false;
     }
 
     if (x != NULL)
-        *x = game_unclipped_ai.pointer->x - oldx;
+        *x = game_unclipped_ai.pointer.x - oldx;
     if (y != NULL)
-        *y = game_unclipped_ai.pointer->y - oldy;
+        *y = game_unclipped_ai.pointer.y - oldy;
 
     /* Updating the old pointer coordinates */
-    oldx = game_unclipped_ai.pointer->x;
-    oldy = game_unclipped_ai.pointer->y;
+    oldx = game_unclipped_ai.pointer.x;
+    oldy = game_unclipped_ai.pointer.y;
 
     /* Translating pointer mask to SDL pointer state */
-    return SingleInput::toSDL2PointerMask(game_ai.pointer->mask);
+    return SingleInput::toSDL2PointerMask(game_ai.pointer.mask);
 }
 
 void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
@@ -122,24 +106,24 @@ void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
     event2.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
 
     /* Build up mouse state */
-    event2.motion.state = SingleInput::toSDL2PointerMask(game_ai.pointer->mask);
+    event2.motion.state = SingleInput::toSDL2PointerMask(game_ai.pointer.mask);
     event2.motion.x = x;
     event2.motion.y = y;
-    event2.motion.xrel = game_ai.pointer->x - x;
-    event2.motion.yrel = game_ai.pointer->y - y;
+    event2.motion.xrel = game_ai.pointer.x - x;
+    event2.motion.yrel = game_ai.pointer.y - y;
     sdlEventQueue.insert(&event2);
 
     /* Update the pointer coordinates */
-    game_ai.pointer->x = x;
-    game_ai.pointer->y = y;
+    game_ai.pointer.x = x;
+    game_ai.pointer.y = y;
     
     if (Global::shared_config.mouse_prevent_warp) {
         return;
     }
 
     /* When warping cursor, real and game cursor position are now synced */
-    old_ai.pointer->x = x;
-    old_ai.pointer->y = y;
+    old_ai.pointer.x = x;
+    old_ai.pointer.y = y;
 
     LINK_NAMESPACE_SDL2(SDL_WarpMouseInWindow);
     NATIVECALL(orig::SDL_WarpMouseInWindow(window, x, y));    
@@ -164,16 +148,16 @@ void SDL_WarpMouse(Uint16 x, Uint16 y)
     event1.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
 
     /* Build up mouse state */
-    event1.motion.state = SingleInput::toSDL1PointerMask(game_ai.pointer->mask);
+    event1.motion.state = SingleInput::toSDL1PointerMask(game_ai.pointer.mask);
     event1.motion.x = x;
     event1.motion.y = y;
-    event1.motion.xrel = (Sint16)(game_ai.pointer->x - x);
-    event1.motion.yrel = (Sint16)(game_ai.pointer->y - y);
+    event1.motion.xrel = (Sint16)(game_ai.pointer.x - x);
+    event1.motion.yrel = (Sint16)(game_ai.pointer.y - y);
     sdlEventQueue.insert(&event1);
 
     /* Update the pointer coordinates */
-    game_ai.pointer->x = x;
-    game_ai.pointer->y = y;
+    game_ai.pointer.x = x;
+    game_ai.pointer.y = y;
     
     if (Global::shared_config.mouse_prevent_warp) {
         return;

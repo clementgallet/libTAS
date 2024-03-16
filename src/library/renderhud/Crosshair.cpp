@@ -23,11 +23,11 @@
 
 namespace libtas {
 
-void Crosshair::draw(const AllInputs& ai)
+void Crosshair::draw(const AllInputsFlat& ai)
 {
     int size = 5;
-    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(ai.pointer->x, ai.pointer->y-size), ImVec2(ai.pointer->x, ai.pointer->y+size), IM_COL32(255, 255, 255, 255));
-    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(ai.pointer->x-size, ai.pointer->y), ImVec2(ai.pointer->x+size, ai.pointer->y+size), IM_COL32(255, 255, 255, 255));
+    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(ai.pointer.x, ai.pointer.y-size), ImVec2(ai.pointer.x, ai.pointer.y+size), IM_COL32(255, 255, 255, 255));
+    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(ai.pointer.x-size, ai.pointer.y), ImVec2(ai.pointer.x+size, ai.pointer.y+size), IM_COL32(255, 255, 255, 255));
 }
 
 }

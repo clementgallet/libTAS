@@ -19,7 +19,7 @@
 
 #include "frame.h"
 #include "global.h" // Global::shared_config
-#include "inputs/inputs.h" // AllInputs ai object
+#include "inputs/inputs.h"
 #include "inputs/inputevents.h"
 #include "logging.h"
 #include "GlobalState.h"
@@ -57,7 +57,7 @@
 #include "xlib/xwindows.h" // x11::gameXWindows
 #endif
 #include "../shared/sockethelpers.h"
-#include "../shared/inputs/AllInputs.h"
+#include "../shared/inputs/AllInputsFlat.h"
 #include "../shared/messages.h"
 
 #include <iomanip>
@@ -157,19 +157,6 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 {
     perfTimer.switchTimer(PerfTimer::FrameTimer);
 
-    /* Building and clearing the input objects is done here, because doing it
-     * in main() is too early, before they are even constructed */
-    static bool inputs_built = false;
-    if (!inputs_built) {
-        ai.buildAndClear();
-        old_ai.buildAndClear();
-        game_ai.buildAndClear();
-        old_game_ai.buildAndClear();
-        game_unclipped_ai.buildAndClear();
-        old_game_unclipped_ai.buildAndClear();
-        inputs_built = true;
-    }
-    
     static float fps, lfps = 0;
 
     ThreadManager::setCheckpointThread();
@@ -387,8 +374,8 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
      * won't be able to remove HUD messages during that frame. */
     if (!Global::skipping_draw && Global::shared_config.osd_encode) {
         if (draw) {
-            AllInputs preview_ai;
-            preview_ai.buildAndClear();
+            AllInputsFlat preview_ai;
+            preview_ai.clear();
             hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
             hud.render();            
         }
@@ -429,8 +416,8 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 
     if (!Global::skipping_draw && !Global::shared_config.osd_encode) {
         if (draw) {
-            AllInputs preview_ai;
-            preview_ai.buildAndClear();
+            AllInputsFlat preview_ai;
+            preview_ai.clear();
             
             /* If we draw the game into an ImGui window, we need to clear the
              * background here first */
@@ -589,7 +576,7 @@ static void pushQuitEvent(void)
 #endif
 }
 
-static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllInputs& preview_ai, bool noidle)
+static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllInputsFlat& preview_ai, bool noidle)
 {
     if (!Global::skipping_draw && draw) {
         
@@ -628,8 +615,8 @@ static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllI
 
 static void receive_messages(std::function<void()> draw, RenderHUD& hud)
 {
-    AllInputs preview_ai;
-    preview_ai.buildAndClear();
+    AllInputsFlat preview_ai;
+    preview_ai.clear();
     std::string savestatepath;
     int slot;
 
@@ -718,10 +705,10 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 ai.recv();
 
                 /* Update framerate */
-                DeterministicTimer::get().setFramerate(ai.misc->framerate_num, ai.misc->framerate_den);
+                DeterministicTimer::get().setFramerate(ai.misc.framerate_num, ai.misc.framerate_den);
 
                 /* Set new realtime value */
-                DeterministicTimer::get().setRealTime(ai.misc->realtime_sec, ai.misc->realtime_nsec);
+                DeterministicTimer::get().setRealTime(ai.misc.realtime_sec, ai.misc.realtime_nsec);
                 
                 break;
 
