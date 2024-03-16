@@ -60,6 +60,7 @@
 * Add hidden version argument to FMOD_System_Create (#560)
 * Protect adding logs to ImGui
 * Prevent ImGui log during savestates, because it could allocate memory
+* Guess ImGui input window size so that it is not truncated during encode
 
 ## [1.4.5] - 2023-10-22
 ### Added

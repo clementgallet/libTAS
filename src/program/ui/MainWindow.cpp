@@ -1385,6 +1385,7 @@ void MainWindow::alertDialog(QString alert_msg)
     /* Pause the game */
     context->config.sc.running = false;
     context->config.sc_modified = true;
+    updateSharedConfigChanged();
 
     /* Show alert window */
     QMessageBox::warning(this, "Warning", alert_msg);

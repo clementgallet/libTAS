@@ -937,6 +937,10 @@ void GameLoop::loopExit()
     /* Reset the frame count */
     context->framecount = 0;
 
+    /* Remove fast-forward */
+    context->config.sc.fastforward = false;
+    emit sharedConfigChanged();
+
     /* wait on the game process to terminate */
     wait(nullptr);
 
