@@ -72,12 +72,20 @@ int Lua::Gui::text(lua_State *L)
     int y = static_cast<int>(lua_tointeger(L, 2));
     std::string text = luaL_checklstring(L, 3, nullptr);
     uint32_t color = luaL_optnumber (L, 4, 0xffffffff);
+    float anchor_x = static_cast<float>(luaL_optnumber(L, 5, 0.0f));
+    float anchor_y = static_cast<float>(luaL_optnumber(L, 6, 0.0f));
+    float font_size = static_cast<float>(luaL_optnumber(L, 7, 16.0f));
+    bool monospace = static_cast<bool>(luaL_optinteger(L, 8, 0));
     
     sendMessage(MSGN_LUA_TEXT);
     sendData(&x, sizeof(int));
     sendData(&y, sizeof(int));
     sendString(text);
     sendData(&color, sizeof(uint32_t));
+    sendData(&anchor_x, sizeof(float));
+    sendData(&anchor_y, sizeof(float));
+    sendData(&font_size, sizeof(float));
+    sendData(&monospace, sizeof(bool));
     
     return 0;
 }

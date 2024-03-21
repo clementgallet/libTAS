@@ -300,12 +300,20 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         case MSGN_LUA_TEXT:
         {
             int x, y;
+            uint32_t color;
+            float anchor_x, anchor_y;
+            float font_size;
+            bool monospace;
+            
             receiveData(&x, sizeof(int));
             receiveData(&y, sizeof(int));
             std::string text = receiveString();
-            uint32_t color;
             receiveData(&color, sizeof(uint32_t));
-            LuaDraw::insertText(x, y, text, color);
+            receiveData(&anchor_x, sizeof(float));
+            receiveData(&anchor_y, sizeof(float));
+            receiveData(&font_size, sizeof(float));
+            receiveData(&monospace, sizeof(bool));
+            LuaDraw::insertText(x, y, text, color, anchor_x, anchor_y, font_size, monospace);
             break;
         }
         case MSGN_LUA_PIXEL:

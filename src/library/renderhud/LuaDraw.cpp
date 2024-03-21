@@ -22,19 +22,47 @@
 #include "global.h" // Global::shared_config
 #include "../external/imgui/imgui.h"
 #include "TimeHolder.h"
+#include "logging.h"
 
 #include <list>
 #include <utility>
 #include <string>
 #include <memory>
+#include <cmath>
 
 namespace libtas {
     
 static std::list<std::unique_ptr<LuaDraw::LuaShape>> lua_shapes;
+ImFont* LuaDraw::LuaText::regular_font;
+ImFont* LuaDraw::LuaText::monospace_font;
 
 void LuaDraw::LuaText::render()
 {
-    ImGui::GetBackgroundDrawList()->AddText(ImVec2(x, y), color, text.c_str());
+    ImFont* font = regular_font;
+    
+    if (monospace)
+        font = monospace_font;
+    
+    /* Sanitize and process anchor values */
+    if (anchor_x < 0.0f)
+        anchor_x = 0.0f;
+    if (anchor_x > 1.0f)
+        anchor_x = 1.0f;
+    if (anchor_y < 0.0f)
+        anchor_y = 0.0f;
+    if (anchor_y > 1.0f)
+        anchor_y = 1.0f;
+    
+    /* Try avoiding computing the text length */
+    if (anchor_x == 0.0f && anchor_y == 0.0f) {
+        ImGui::GetBackgroundDrawList()->AddText(font, font_size, ImVec2(x, y), color, text.c_str());
+    }
+    else {
+        const ImVec2 size = font->CalcTextSizeA(font_size, FLT_MAX, -1.0f, text.c_str(), NULL, NULL);
+        int new_x = std::round((float)x - size.x * anchor_x);
+        int new_y = std::round((float)y - size.y * anchor_y);
+        ImGui::GetBackgroundDrawList()->AddText(font, font_size, ImVec2(new_x, new_y), color, text.c_str());
+    }    
 }
 
 void LuaDraw::LuaPixel::render()
@@ -60,7 +88,7 @@ void LuaDraw::LuaEllipse::render()
     ImGui::GetBackgroundDrawList()->AddEllipse(ImVec2(center_x, center_y), radius_x, radius_y, color);
 }
 
-void LuaDraw::insertText(int x, int y, std::string text, uint32_t color)
+void LuaDraw::insertText(int x, int y, std::string text, uint32_t color, float anchor_x, float anchor_y, float font_size, bool monospace)
 {
     auto lt = new LuaText();
     lt->x = x;
@@ -70,6 +98,10 @@ void LuaDraw::insertText(int x, int y, std::string text, uint32_t color)
                  static_cast<uint8_t>((color >> 8) & 0xff),
                  static_cast<uint8_t>(color & 0xff),
                  static_cast<uint8_t>((color >> 24) & 0xff));
+    lt->anchor_x = anchor_x;
+    lt->anchor_y = anchor_y;
+    lt->font_size = font_size;
+    lt->monospace = monospace;
     lua_shapes.emplace_back(lt);
 }
 

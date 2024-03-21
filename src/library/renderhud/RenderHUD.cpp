@@ -38,6 +38,7 @@
 #include "../external/imgui/imgui.h"
 #include "../external/imgui/imgui_impl_xlib.h"
 #include "../external/imgui/Roboto-Medium.h"
+#include "../external/imgui/ProggyClean.h"
 
 #include <sstream>
 #include <math.h>
@@ -57,7 +58,8 @@ bool RenderHUD::init()
                 GlobalNative gn;
                 
                 ImGuiIO& io = ImGui::GetIO();
-                io.Fonts->AddFontFromMemoryCompressedTTF(Roboto_compressed_data, Roboto_compressed_size, 16.0f);
+                LuaDraw::LuaText::regular_font = io.Fonts->AddFontFromMemoryCompressedTTF(Roboto_compressed_data, Roboto_compressed_size, 16.0f);
+                LuaDraw::LuaText::monospace_font = io.Fonts->AddFontFromMemoryCompressedTTF(ProggyClean_compressed_data, ProggyClean_compressed_size, 16.0f);
                 
                 ImGui_ImplXlib_Init(x11::gameDisplays[i], x11::gameXWindows.front());
                 return true;

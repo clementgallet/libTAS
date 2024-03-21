@@ -20,6 +20,8 @@
 #ifndef LIBTAS_IMGUI_LUADRAW_H_INCL
 #define LIBTAS_IMGUI_LUADRAW_H_INCL
 
+#include "../external/imgui/imgui.h"
+
 #include <string>
 #include <cstdint>
 
@@ -39,6 +41,12 @@ struct LuaText : public LuaShape
     uint32_t color;
     int x;
     int y;
+    float anchor_x;
+    float anchor_y;
+    float font_size;
+    bool monospace;
+    static ImFont* regular_font;
+    static ImFont* monospace_font;
     void render() override;
 };
 
@@ -83,7 +91,7 @@ struct LuaEllipse : public LuaShape
 };
 
 /* Insert a lua text to be displayed */
-void insertText(int x, int y, std::string text, uint32_t color);
+void insertText(int x, int y, std::string text, uint32_t color, float anchor_x, float anchor_y, float font_size, bool monospace);
 
 /* Insert a lua pixel to be displayed */
 void insertPixel(int x, int y, uint32_t color);

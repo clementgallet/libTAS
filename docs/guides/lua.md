@@ -21,9 +21,15 @@ Returns the width and height of game window.
 
 #### gui.text
 
-    none gui.text(Number x, Number y, String text, [Number color = 0xffffffff])
+    none gui.text(Number x, Number y, String text, [Number color = 0xffffffff], [Number anchor_x = 0], [Number anchor_y = 0], [Number font_size = 16], [Number monospace = false])
     
-Draws text string `text` starting from `(x, y)`. The text will be colored using color `color`.
+Draws text string `text` at position `(x, y)`. The text will be colored using
+color `color` and size of `font_size`.
+The part of the text string that is positioned at `(x, y)` is determined by `anchor_x`
+and `anchor_y` values that are bound between 0 and 1. For example, setting
+`anchor_x = 0` (default value) will print left-aligned text and `anchor_x = 1` will
+print right-aligned text. If `monospace` is set to a non-zero value, a monospace
+font will be used instead of the regular font.
 
 #### gui.pixel
 
