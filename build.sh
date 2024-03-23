@@ -7,5 +7,7 @@ aclocal
 autoconf
 autoheader
 automake --add-missing
-CXXFLAGS="-O2 -g -Wall -pedantic" ./configure "$@"
+mkdir -p build
+cd build
+CXXFLAGS="-O2 -g -Wall -pedantic" ../configure "$@"
 make -j4

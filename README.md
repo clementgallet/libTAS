@@ -70,6 +70,7 @@ Be careful that you must compile your code in the same arch as the game. If you 
 
 ### Install
 
+    cd build
     sudo make install
 
 ### Dual-arch
@@ -169,7 +170,7 @@ Made by brunovalads.
 
 libTAS is distributed under the terms of the GNU General Public License v3.
 
-    Copyright (C) 2016-2018 clementgallet
+    Copyright (C) 2016-2024 clementgallet
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
