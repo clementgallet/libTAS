@@ -34,7 +34,8 @@ void MovieFileEditor::clear()
 {
     input_set.clear();
     locked_inputs.clear();
-    nondraw_frames.clear();    
+    nondraw_frames.clear();
+    markers.clear();
 }
 
 void MovieFileEditor::load()
@@ -42,6 +43,7 @@ void MovieFileEditor::load()
     /* Clear structures */
     input_set.clear();
     nondraw_frames.clear();
+    markers.clear();
     
     /* Load the editor file */
     QString editorfile = context->config.tempmoviedir.c_str();
