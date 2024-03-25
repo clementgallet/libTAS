@@ -387,8 +387,11 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     /* Always simulate the game window being on top-left corner, so that games
      * using global mouse coords do not desync on different window positions.
      */
-    *x = 0;
-    *y = 0;
+    if (x != nullptr)
+        *x = 0;
+    
+    if (y != nullptr)
+        *y = 0;
 }
 
 /* Override */ void SDL_SetWindowSize(SDL_Window* window, int w, int h)
