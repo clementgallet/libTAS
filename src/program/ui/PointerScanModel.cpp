@@ -58,13 +58,27 @@ void PointerScanModel::locatePointers()
 
     /* Read all memory and store all pointers */
     int cur_size = 0;
+    int game_addr_size = MemAccess::getAddrSize();
     for (const MemSection &section : memory_sections) {
 
         for (uintptr_t addr = section.addr; addr < section.endaddr; addr += 4096) {
 
             /* Read values in chunks of 4096 bytes so we lower the number of calls. */
-            uintptr_t chunk[4096/sizeof(uintptr_t)];
-            int readValues = MemAccess::read(chunk, reinterpret_cast<void*>(addr), 4096);
+            
+            /* The following code is a bit awkward to support both 32-bit and
+             * 64-bit pointers while conforming aliasing rules. A better coder
+             * than me may write more elegant code */
+            uint64_t chunk64[4096/sizeof(uint64_t)];
+            uint32_t chunk32[4096/sizeof(uint32_t)];
+            int readValues;
+
+            if (game_addr_size == 4) {
+                readValues = MemAccess::read(chunk32, reinterpret_cast<void*>(addr), 4096);
+            }
+            else {
+                readValues = MemAccess::read(chunk64, reinterpret_cast<void*>(addr), 4096);
+            }
+            
             if (readValues < 0) {
                 continue;
             }
@@ -72,9 +86,15 @@ void PointerScanModel::locatePointers()
             /* Update progress bar */
             emit signalProgress((int)(100 * ((float)cur_size / total_size)));
 
-            for (unsigned int i = 0; i < readValues/sizeof(uintptr_t); i++, cur_size += sizeof(uintptr_t)) {
+            for (unsigned int i = 0; i < readValues/game_addr_size; i++, cur_size += game_addr_size) {
                 /* Check if the value could be a pointer */
                 bool isPointer = false;
+                
+                uintptr_t value;
+                if (game_addr_size == 4)
+                    value = static_cast<uintptr_t>(chunk32[i]);
+                else
+                    value = static_cast<uintptr_t>(chunk64[i]);
 
                 for (const MemSection &ms : memory_sections) {
                     /* If pointing to a static section, we can skip it */
@@ -83,22 +103,22 @@ void PointerScanModel::locatePointers()
                     }
 
                     /* We take advantage of the fact that sections are ordered */
-                    if (chunk[i] < ms.addr) {
+                    if (value < ms.addr) {
                         break;
                     }
-                    if (chunk[i] < ms.endaddr) {
+                    if (value < ms.endaddr) {
                         isPointer = true;
                         break;
                     }
                 }
 
                 if (isPointer) {
-                    uintptr_t stored_addr = addr + i*sizeof(uintptr_t);
+                    uintptr_t stored_addr = addr + i*game_addr_size;
                     if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemStack)) {
-                        static_pointer_map.insert(std::make_pair(chunk[i], stored_addr));
+                        static_pointer_map.insert(std::make_pair(value, stored_addr));
                     }
                     else {
-                        pointer_map.insert(std::make_pair(chunk[i], stored_addr));
+                        pointer_map.insert(std::make_pair(value, stored_addr));
                     }
                 }
             }

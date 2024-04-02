@@ -26,11 +26,14 @@
 /* Functions to read/write into game memroy */
 namespace MemAccess {
     
-    void init(pid_t pid);
+    void init(pid_t pid, int addr_size);
     
     pid_t getPid();
     
+    int getAddrSize();
+
     size_t read(void* local_addr, void* remote_addr, size_t size);
+    size_t readAddr(void* local_addr, bool* valid);
 
     size_t write(void* local_addr, void* remote_addr, size_t size);    
 }

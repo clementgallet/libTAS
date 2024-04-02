@@ -33,8 +33,9 @@ static task_t task;
 #endif
 
 static pid_t game_pid;
+static int game_addr_size;
 
-void MemAccess::init(pid_t pid)
+void MemAccess::init(pid_t pid, int addr_size)
 {
 #if defined(__APPLE__) && defined(__MACH__)
     kern_return_t error = task_for_pid(mach_task_self(), pid, &task);
@@ -45,11 +46,17 @@ void MemAccess::init(pid_t pid)
 #endif
 
     game_pid = pid;
+    game_addr_size = addr_size;
 }
 
 pid_t MemAccess::getPid()
 {
     return game_pid;
+}
+
+int MemAccess::getAddrSize()
+{
+    return game_addr_size;
 }
 
 size_t MemAccess::read(void* local_addr, void* remote_addr, size_t size)
@@ -73,6 +80,19 @@ size_t MemAccess::read(void* local_addr, void* remote_addr, size_t size)
         return 0;
     return ret_size;
 #endif
+}
+
+uintptr_t MemAccess::readAddr(void* remote_addr, bool* valid)
+{
+    if (game_addr_size == 4) {
+        uint32_t value32;
+        *valid = (read(&value32, remote_addr, sizeof(uint32_t)) == sizeof(uint32_t));
+        return static_cast<uintptr_t>(value32);
+    }
+
+    uint64_t value64;
+    *valid = (read(&value64, remote_addr, sizeof(uint64_t)) == sizeof(uint64_t));
+    return static_cast<uintptr_t>(value64);
 }
 
 size_t MemAccess::write(void* local_addr, void* remote_addr, size_t size)

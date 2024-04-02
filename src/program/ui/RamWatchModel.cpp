@@ -168,6 +168,7 @@ void RamWatchModel::loadSettings(QSettings& watchSettings)
         ramwatch->hex = watchSettings.value("hex").toBool();
         ramwatch->isPointer = watchSettings.value("isPointer").toBool();
         if (ramwatch->isPointer) {
+            ramwatch->base_address = 0;
             ramwatch->base_file = watchSettings.value("base_file").toString().toStdString();
             ramwatch->base_file_offset = watchSettings.value("base_file_offset").toLongLong();
             int size_off = watchSettings.beginReadArray("offsets");
@@ -176,6 +177,7 @@ void RamWatchModel::loadSettings(QSettings& watchSettings)
                 ramwatch->pointer_offsets.push_back(watchSettings.value("offset").toInt());
             }
             watchSettings.endArray();
+            ramwatch->update_addr();
         }
         ramwatches.push_back(std::move(ramwatch));
     }

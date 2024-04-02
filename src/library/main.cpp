@@ -92,14 +92,13 @@ void __attribute__((constructor)) init(void)
     /* Send information to the program */
 
     /* Send game process pid */
-    sendMessage(MSGB_PID);
+    sendMessage(MSGB_PID_ARCH);
     pid_t mypid;
     NATIVECALL(mypid = getpid());
     debuglogstdio(LCF_SOCKET, "Send pid to program: %d", mypid);
-    /* If I replace with the line below, then wine+SuperMeatBoy crashes on
-     * on startup... */
-    // debuglogstdio(LCF_SOCKET, "Send pid to program: ", mypid);
     sendData(&mypid, sizeof(pid_t));
+    int addr_size = sizeof(void*);
+    sendData(&addr_size, sizeof(int));
 
     /* Send interim commit hash if one */
 #ifdef LIBTAS_INTERIM_COMMIT

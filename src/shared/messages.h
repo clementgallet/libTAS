@@ -114,10 +114,10 @@ enum {
     MSGN_USERQUIT,
 
     /*
-     * Send the game pid so that the program can attach to it
-     * Argument: pid_t
+     * Send the game pid so that the program can attach to it, and address size
+     * Arguments: pid_t, int
      */
-    MSGB_PID,
+    MSGB_PID_ARCH,
 
     /*
      * Notice the program of the end of initialization messages

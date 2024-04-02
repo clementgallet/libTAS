@@ -309,10 +309,13 @@ void GameLoop::initProcessMessages()
 
         switch (message) {
             /* Get the game process pid */
-            case MSGB_PID:
+            case MSGB_PID_ARCH: {
+                int addr_size;
                 receiveData(&context->game_pid, sizeof(pid_t));
-                MemAccess::init(context->game_pid);
+                receiveData(&addr_size, sizeof(int));
+                MemAccess::init(context->game_pid, addr_size);
                 break;
+            }
 
             case MSGB_GIT_COMMIT:
                 {
@@ -932,7 +935,7 @@ void GameLoop::loopExit()
     SaveStateList::backupMovies();
 
     /* Unvalidate game pid */
-    MemAccess::init(0);
+    MemAccess::init(0, 0);
 
     /* Reset the frame count */
     context->framecount = 0;
