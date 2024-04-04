@@ -41,6 +41,7 @@ static const luaL_Reg memory_functions[] =
     { "reads64", Lua::Memory::reads64},
     { "readf", Lua::Memory::readf},
     { "readd", Lua::Memory::readd},
+    { "readcstring", Lua::Memory::readcstring},
     { "write8", Lua::Memory::write8},
     { "write16", Lua::Memory::write16},
     { "write32", Lua::Memory::write32},
@@ -100,6 +101,19 @@ int Lua::Memory::read##NAME(lua_State *L) \
 
 READFUNCNUMBER(f, float)
 READFUNCNUMBER(d, double)
+
+int Lua::Memory::readcstring(lua_State *L)
+{
+    uintptr_t addr = static_cast<uintptr_t>(lua_tointeger(L, 1));
+    int max_length = lua_tointeger(L, 2);
+    
+    char* buf = new char[max_length]{};
+    MemAccess::read(buf, reinterpret_cast<void*>(addr), max_length);
+    buf[max_length-1] = '\0';
+    lua_pushstring(L, buf);
+    delete[] buf;
+    return 1;
+}
 
 void Lua::Memory::write(uintptr_t addr, void* value, int size)
 {

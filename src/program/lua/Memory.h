@@ -65,6 +65,9 @@ namespace Memory {
     /* Read a double */
     int readd(lua_State *L);
 
+    /* Read a null-terminating string */
+    int readcstring(lua_State *L);
+
     /* Helper function for reading an integer */
     void write(uintptr_t addr, void* value, int size);
 
