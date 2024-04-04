@@ -289,31 +289,34 @@ enum {
 
     /*
      * Send to the game a text to be displayed from a lua script.
-     * Argument: int x, int y, string text, uint32_t fg, uint32_t bg
+     * Argument: float x, float y, string text, uint32_t color, float anchor_x
+     *           float anchor_y, float font_size, bool monospace
      */
     MSGN_LUA_TEXT,
 
     /*
      * Send to the game a pixel to be displayed from a lua script.
-     * Argument: int x, int y, uint32_t color
+     * Argument: float x, float y, uint32_t color
      */
     MSGN_LUA_PIXEL,
 
     /*
      * Send to the game a rectangle to be displayed from a lua script.
-     * Argument: int x, int y, int w, int h, int thickness, uint32_t outline, uint32_t fill
+     * Argument: float x, float y, float w, float h, float thickness,
+     *           uint32_t color, uint32_t fill
      */
     MSGN_LUA_RECT,
 
     /*
      * Send to the game a line to be displayed from a lua script.
-     * Argument: int x0, int y0, int x1, int y1, uint32_t color
+     * Argument: float x0, float y0, float x1, float y1, uint32_t color
      */
     MSGN_LUA_LINE,
 
     /*
      * Send to the game a line to be displayed from a lua script.
-     * Argument: int center_x, int center_y, int radius_x, int radius_y, uint32_t color
+     * Argument: float center_x, float center_y, float radius_x, float radius_y,
+     *           uint32_t color
      */
     MSGN_LUA_ELLIPSE,
 

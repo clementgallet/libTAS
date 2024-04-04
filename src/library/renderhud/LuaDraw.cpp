@@ -59,8 +59,8 @@ void LuaDraw::LuaText::render()
     }
     else {
         const ImVec2 size = font->CalcTextSizeA(font_size, FLT_MAX, -1.0f, text.c_str(), NULL, NULL);
-        int new_x = std::round((float)x - size.x * anchor_x);
-        int new_y = std::round((float)y - size.y * anchor_y);
+        float new_x = x - size.x * anchor_x;
+        float new_y = y - size.y * anchor_y;
         ImGui::GetBackgroundDrawList()->AddText(font, font_size, ImVec2(new_x, new_y), color, text.c_str());
     }    
 }
@@ -88,7 +88,7 @@ void LuaDraw::LuaEllipse::render()
     ImGui::GetBackgroundDrawList()->AddEllipse(ImVec2(center_x, center_y), radius_x, radius_y, color);
 }
 
-void LuaDraw::insertText(int x, int y, std::string text, uint32_t color, float anchor_x, float anchor_y, float font_size, bool monospace)
+void LuaDraw::insertText(float x, float y, std::string text, uint32_t color, float anchor_x, float anchor_y, float font_size, bool monospace)
 {
     auto lt = new LuaText();
     lt->x = x;
@@ -105,7 +105,7 @@ void LuaDraw::insertText(int x, int y, std::string text, uint32_t color, float a
     lua_shapes.emplace_back(lt);
 }
 
-void LuaDraw::insertPixel(int x, int y, uint32_t color)
+void LuaDraw::insertPixel(float x, float y, uint32_t color)
 {
     auto lp = new LuaPixel;
     lp->x = x;
@@ -117,7 +117,7 @@ void LuaDraw::insertPixel(int x, int y, uint32_t color)
     lua_shapes.emplace_back(lp);
 }
 
-void LuaDraw::insertRect(int x, int y, int w, int h, int thickness, uint32_t color, int filled)
+void LuaDraw::insertRect(float x, float y, float w, float h, float thickness, uint32_t color, int filled)
 {
     auto lr = new LuaRect();
     lr->x = x;
@@ -133,7 +133,7 @@ void LuaDraw::insertRect(int x, int y, int w, int h, int thickness, uint32_t col
     lua_shapes.emplace_back(lr);
 }
 
-void LuaDraw::insertLine(int x0, int y0, int x1, int y1, uint32_t color)
+void LuaDraw::insertLine(float x0, float y0, float x1, float y1, uint32_t color)
 {
     auto ll = new LuaLine();
     ll->x0 = x0;
@@ -147,7 +147,7 @@ void LuaDraw::insertLine(int x0, int y0, int x1, int y1, uint32_t color)
     lua_shapes.emplace_back(ll);
 }
 
-void LuaDraw::insertEllipse(int center_x, int center_y, int radius_x, int radius_y, uint32_t color)
+void LuaDraw::insertEllipse(float center_x, float center_y, float radius_x, float radius_y, uint32_t color)
 {
     auto le = new LuaEllipse();
     le->center_x = center_x;

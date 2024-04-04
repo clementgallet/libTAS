@@ -39,8 +39,8 @@ struct LuaText : public LuaShape
 {
     std::string text;
     uint32_t color;
-    int x;
-    int y;
+    float x;
+    float y;
     float anchor_x;
     float anchor_y;
     float font_size;
@@ -52,19 +52,19 @@ struct LuaText : public LuaShape
 
 struct LuaPixel : public LuaShape
 {
-    int x;
-    int y;
+    float x;
+    float y;
     uint32_t color;
     void render() override;
 };
 
 struct LuaRect : public LuaShape
 {
-    int x;
-    int y;
-    int w;
-    int h;
-    int thickness;
+    float x;
+    float y;
+    float w;
+    float h;
+    float thickness;
     uint32_t color;
     int filled;
     void render() override;
@@ -72,38 +72,38 @@ struct LuaRect : public LuaShape
 
 struct LuaLine : public LuaShape
 {
-    int x0;
-    int y0;
-    int x1;
-    int y1;
+    float x0;
+    float y0;
+    float x1;
+    float y1;
     uint32_t color;
     void render() override;
 };
 
 struct LuaEllipse : public LuaShape
 {
-    int center_x;
-    int center_y;
-    int radius_x;
-    int radius_y;
+    float center_x;
+    float center_y;
+    float radius_x;
+    float radius_y;
     uint32_t color;
     void render() override;
 };
 
 /* Insert a lua text to be displayed */
-void insertText(int x, int y, std::string text, uint32_t color, float anchor_x, float anchor_y, float font_size, bool monospace);
+void insertText(float x, float y, std::string text, uint32_t color, float anchor_x, float anchor_y, float font_size, bool monospace);
 
 /* Insert a lua pixel to be displayed */
-void insertPixel(int x, int y, uint32_t color);
+void insertPixel(float x, float y, uint32_t color);
 
 /* Insert a lua rect to be displayed */
-void insertRect(int x, int y, int w, int h, int thickness, uint32_t color, int filled);
+void insertRect(float x, float y, float w, float h, float thickness, uint32_t color, int filled);
 
 /* Insert a lua line to be displayed */
-void insertLine(int x0, int y0, int x1, int y1, uint32_t color);
+void insertLine(float x0, float y0, float x1, float y1, uint32_t color);
 
 /* Insert a lua line to be displayed */
-void insertEllipse(int center_x, int center_y, int radius_x, int radius_y, uint32_t color);
+void insertEllipse(float center_x, float center_y, float radius_x, float radius_y, uint32_t color);
 
 /* Clear all lua drawings */
 void reset();

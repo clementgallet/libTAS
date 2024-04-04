@@ -299,14 +299,14 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         }
         case MSGN_LUA_TEXT:
         {
-            int x, y;
+            float x, y;
             uint32_t color;
             float anchor_x, anchor_y;
             float font_size;
             bool monospace;
             
-            receiveData(&x, sizeof(int));
-            receiveData(&y, sizeof(int));
+            receiveData(&x, sizeof(float));
+            receiveData(&y, sizeof(float));
             std::string text = receiveString();
             receiveData(&color, sizeof(uint32_t));
             receiveData(&anchor_x, sizeof(float));
@@ -318,9 +318,9 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         }
         case MSGN_LUA_PIXEL:
         {
-            int x, y;
-            receiveData(&x, sizeof(int));
-            receiveData(&y, sizeof(int));
+            float x, y;
+            receiveData(&x, sizeof(float));
+            receiveData(&y, sizeof(float));
             uint32_t color;
             receiveData(&color, sizeof(uint32_t));
             LuaDraw::insertPixel(x, y, color);
@@ -328,12 +328,13 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         }
         case MSGN_LUA_RECT:
         {
-            int x, y, w, h, thickness, filled;
-            receiveData(&x, sizeof(int));
-            receiveData(&y, sizeof(int));
-            receiveData(&w, sizeof(int));
-            receiveData(&h, sizeof(int));
-            receiveData(&thickness, sizeof(int));
+            float x, y, w, h, thickness;
+            int filled;
+            receiveData(&x, sizeof(float));
+            receiveData(&y, sizeof(float));
+            receiveData(&w, sizeof(float));
+            receiveData(&h, sizeof(float));
+            receiveData(&thickness, sizeof(float));
             uint32_t color;
             receiveData(&color, sizeof(uint32_t));
             receiveData(&filled, sizeof(int));
@@ -342,11 +343,11 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         }
         case MSGN_LUA_LINE:
         {
-            int x0, y0, x1, y1;
-            receiveData(&x0, sizeof(int));
-            receiveData(&y0, sizeof(int));
-            receiveData(&x1, sizeof(int));
-            receiveData(&y1, sizeof(int));
+            float x0, y0, x1, y1;
+            receiveData(&x0, sizeof(float));
+            receiveData(&y0, sizeof(float));
+            receiveData(&x1, sizeof(float));
+            receiveData(&y1, sizeof(float));
             uint32_t color;
             receiveData(&color, sizeof(uint32_t));
             LuaDraw::insertLine(x0, y0, x1, y1, color);
@@ -354,11 +355,11 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         }
         case MSGN_LUA_ELLIPSE:
         {
-            int center_x, center_y, radius_x, radius_y;
-            receiveData(&center_x, sizeof(int));
-            receiveData(&center_y, sizeof(int));
-            receiveData(&radius_x, sizeof(int));
-            receiveData(&radius_y, sizeof(int));
+            float center_x, center_y, radius_x, radius_y;
+            receiveData(&center_x, sizeof(float));
+            receiveData(&center_y, sizeof(float));
+            receiveData(&radius_x, sizeof(float));
+            receiveData(&radius_y, sizeof(float));
             uint32_t color;
             receiveData(&color, sizeof(uint32_t));
             LuaDraw::insertEllipse(center_x, center_y, radius_x, radius_y, color);
