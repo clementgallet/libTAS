@@ -356,6 +356,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     gameLayout->addWidget(browseGamePath, 0, 2);
     gameLayout->addWidget(new QLabel(tr("Command-line options")), 1, 0);
     gameLayout->addWidget(cmdOptions, 1, 1);
+    gameLayout->setColumnStretch(1, 1);
     gameBox->setLayout(gameLayout);
 
     /* Movie layout */
@@ -371,6 +372,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     movieFileLayout->addWidget(browseMoviePath, 0, 2);
     movieFileLayout->addWidget(new QLabel(tr("Authors:")), 1, 0);
     movieFileLayout->addWidget(authorField, 1, 1);
+    movieFileLayout->setColumnStretch(1, 1);
 
     QGridLayout *movieCountLayout = new QGridLayout;
     movieCountLayout->addWidget(new QLabel(tr("Movie frame count:")), 0, 0);
@@ -378,6 +380,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     movieCountLayout->addWidget(movieLength, 0, 3);
     movieCountLayout->addWidget(new QLabel(tr("Rerecord count:")), 1, 0);
     movieCountLayout->addWidget(rerecordCount, 1, 1);
+    movieCountLayout->setColumnStretch(1, 1);
     movieCountLayout->setColumnMinimumWidth(2, 50);
 
     QGroupBox *movieStatusBox = new QGroupBox(tr("Movie status"));
@@ -396,23 +399,27 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     QGroupBox *generalBox = new QGroupBox(tr("General options"));
     QVBoxLayout *generalLayout = new QVBoxLayout;
 
-    QHBoxLayout *generalFrameLayout = new QHBoxLayout;
-    generalFrameLayout->addWidget(new QLabel(tr("Frame:")));
-    generalFrameLayout->addStretch(1);
-    generalFrameLayout->addWidget(frameCount);
-    generalFrameLayout->addStretch(1);
-    generalFrameLayout->addWidget(currentLength);
-    generalFrameLayout->addStretch(1);
+    QGridLayout *generalFrameLayout = new QGridLayout;
+    generalFrameLayout->addWidget(new QLabel(tr("Frame:")), 0, 0);
+//    generalFrameLayout->addStretch(1);
+    generalFrameLayout->addWidget(frameCount, 0, 1, 1, 3);
+//    generalFrameLayout->addStretch(1);
+    generalFrameLayout->addWidget(currentLength, 0, 5);
+//    generalFrameLayout->addStretch(1);
 
-    QHBoxLayout *generalFpsLayout = new QHBoxLayout;
-    generalFpsLayout->addWidget(new QLabel(tr("Frames per second:")));
-    generalFpsLayout->addStretch(1);
-    generalFpsLayout->addWidget(fpsNumField);
-    generalFpsLayout->addWidget(new QLabel(tr("/")));
-    generalFpsLayout->addWidget(fpsDenField);
-    generalFpsLayout->addStretch(1);
-    generalFpsLayout->addWidget(fpsValues);
-    generalFpsLayout->addStretch(1);
+    generalFrameLayout->addWidget(new QLabel(tr("Frames per second:")), 1, 0);
+//    generalFpsLayout->addStretch(1);
+    generalFrameLayout->addWidget(fpsNumField, 1, 1);
+    generalFrameLayout->addWidget(new QLabel(tr("/")), 1, 2);
+    generalFrameLayout->addWidget(fpsDenField, 1, 3);
+//    generalFpsLayout->addStretch(1);
+    generalFrameLayout->addWidget(fpsValues, 1, 5);
+//    generalFpsLayout->addStretch(1);
+    generalFrameLayout->setColumnStretch(1, 1);
+    generalFrameLayout->setColumnStretch(3, 1);
+    generalFrameLayout->setColumnStretch(4, 1);
+    generalFrameLayout->setColumnStretch(6, 1);
+
 
     QGridLayout *generalTimeLayout = new QGridLayout;
     generalTimeLayout->addWidget(new QLabel(tr("Elapsed time:")), 0, 0);
@@ -434,7 +441,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     generalControlLayout->addStretch(1);
 
     generalLayout->addLayout(generalFrameLayout);
-    generalLayout->addLayout(generalFpsLayout);
+//    generalLayout->addLayout(generalFpsLayout);
     generalLayout->addLayout(generalTimeLayout);
     generalLayout->addLayout(generalControlLayout);
     generalBox->setLayout(generalLayout);

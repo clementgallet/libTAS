@@ -45,6 +45,7 @@
 * Queue saving memory pages for less write() calls
 * Queue saving compressed memory pages to be saved in temporary memory segment
 * Change ImGui font to Roboto Medium
+* Change streching in some fields of main window (#599)
 
 ### Fixed
 
