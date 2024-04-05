@@ -80,13 +80,31 @@ struct LuaLine : public LuaShape
     void render() override;
 };
 
+struct LuaQuad : public LuaShape
+{
+    float x0;
+    float y0;
+    float x1;
+    float y1;
+    float x2;
+    float y2;
+    float x3;
+    float y3;
+    float thickness;
+    uint32_t color;
+    int filled;
+    void render() override;
+};
+
 struct LuaEllipse : public LuaShape
 {
     float center_x;
     float center_y;
     float radius_x;
     float radius_y;
+    float thickness;
     uint32_t color;
+    int filled;
     void render() override;
 };
 
@@ -103,7 +121,10 @@ void insertRect(float x, float y, float w, float h, float thickness, uint32_t co
 void insertLine(float x0, float y0, float x1, float y1, uint32_t color);
 
 /* Insert a lua line to be displayed */
-void insertEllipse(float center_x, float center_y, float radius_x, float radius_y, uint32_t color);
+void insertQuad(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float thickness, uint32_t color, int filled);
+
+/* Insert a lua line to be displayed */
+void insertEllipse(float center_x, float center_y, float radius_x, float radius_y, float thickness, uint32_t color, int filled);
 
 /* Clear all lua drawings */
 void reset();

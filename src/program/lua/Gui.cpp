@@ -37,6 +37,7 @@ static const luaL_Reg gui_functions[] =
     { "pixel", Lua::Gui::pixel},
     { "rectangle", Lua::Gui::rectangle},
     { "line", Lua::Gui::line},
+    { "quad", Lua::Gui::quad},
     { "ellipse", Lua::Gui::ellipse},
     { NULL, NULL }
 };
@@ -144,20 +145,54 @@ int Lua::Gui::line(lua_State *L)
     return 0;
 }
 
+int Lua::Gui::quad(lua_State *L)
+{
+    float x0 = lua_tonumber(L, 1);
+    float y0 = lua_tonumber(L, 2);
+    float x1 = lua_tonumber(L, 3);
+    float y1 = lua_tonumber(L, 4);
+    float x2 = lua_tonumber(L, 5);
+    float y2 = lua_tonumber(L, 6);
+    float x3 = lua_tonumber(L, 7);
+    float y3 = lua_tonumber(L, 8);
+    float thickness = luaL_optnumber (L, 9, 1);
+    uint32_t color = luaL_optnumber (L, 10, 0xffffffff);
+    int filled = luaL_optnumber (L, 11, 0);
+    
+    sendMessage(MSGN_LUA_QUAD);
+    sendData(&x0, sizeof(float));
+    sendData(&y0, sizeof(float));
+    sendData(&x1, sizeof(float));
+    sendData(&y1, sizeof(float));
+    sendData(&x2, sizeof(float));
+    sendData(&y2, sizeof(float));
+    sendData(&x3, sizeof(float));
+    sendData(&y3, sizeof(float));
+    sendData(&thickness, sizeof(float));
+    sendData(&color, sizeof(uint32_t));
+    sendData(&filled, sizeof(int));
+    
+    return 0;
+}
+
 int Lua::Gui::ellipse(lua_State *L)
 {
     float center_x = lua_tonumber(L, 1);
     float center_y = lua_tonumber(L, 2);
     float radius_x = lua_tonumber(L, 3);
     float radius_y = lua_tonumber(L, 4);
-    uint32_t color = luaL_optnumber (L, 5, 0xffffffff);
+    float thickness = luaL_optnumber (L, 5, 1);
+    uint32_t color = luaL_optnumber (L, 6, 0xffffffff);
+    int filled = luaL_optnumber (L, 7, 0);
     
     sendMessage(MSGN_LUA_ELLIPSE);
     sendData(&center_x, sizeof(float));
     sendData(&center_y, sizeof(float));
     sendData(&radius_x, sizeof(float));
     sendData(&radius_y, sizeof(float));
+    sendData(&thickness, sizeof(float));
     sendData(&color, sizeof(uint32_t));
+    sendData(&filled, sizeof(int));
     
     return 0;
 }

@@ -49,9 +49,15 @@ Draws an antialiased line starting from `(x0,y0)` to `(x1,y1)`, and colored with
 
 Draws rectangle of size `(w,h)` with top-left corner at `(x,y)`. Outline is of thickness `thickness` and is colored with color `color`. If `filled` is true, the rectangle is filled with the same color.
 
+#### gui.quad
+
+    none gui.ellipse(Number x0, Number y0, Number x1, Number y1, Number x2, Number y2, Number x3, Number y3, [Number thickness = 1], [Number color = 0xffffffff], [Number filled = 0])
+
+Draws a quad that goes through the four points `(x0,y0)`, `(x1,y1)`, `(x2,y2)`, `(x3,y3)`. Outline is of thickness `thickness` and is colored with color `color`. If `filled` is true, the quad is filled with the same color.
+
 #### gui.ellipse
 
-    none gui.ellipse(Number center_x, Number center_y, Number radius_x, Number radius_y, [Number color = 0xffffffff])
+    none gui.ellipse(Number center_x, Number center_y, Number radius_x, Number radius_y, [Number thickness = 1], [Number color = 0xffffffff], [Number filled = 0])
 
 Draws an antialiased ellipse whose center is `(center_x,center_y)`, radius along x-axis is `radius_x` and radius along y-axis is `radius_y`, colored with color `color`.
 

@@ -353,16 +353,38 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
             LuaDraw::insertLine(x0, y0, x1, y1, color);
             break;
         }
+        case MSGN_LUA_QUAD:
+        {
+            float x0, y0, x1, y1, x2, y2, x3, y3, thickness;
+            int filled;
+            receiveData(&x0, sizeof(float));
+            receiveData(&y0, sizeof(float));
+            receiveData(&x1, sizeof(float));
+            receiveData(&y1, sizeof(float));
+            receiveData(&x2, sizeof(float));
+            receiveData(&y2, sizeof(float));
+            receiveData(&x3, sizeof(float));
+            receiveData(&y3, sizeof(float));
+            receiveData(&thickness, sizeof(float));
+            uint32_t color;
+            receiveData(&color, sizeof(uint32_t));
+            receiveData(&filled, sizeof(int));
+            LuaDraw::insertQuad(x0, y0, x1, y1, x2, y2, x3, y3, thickness, color, filled);
+            break;
+        }
         case MSGN_LUA_ELLIPSE:
         {
-            float center_x, center_y, radius_x, radius_y;
+            float center_x, center_y, radius_x, radius_y, thickness;
+            int filled;
             receiveData(&center_x, sizeof(float));
             receiveData(&center_y, sizeof(float));
             receiveData(&radius_x, sizeof(float));
             receiveData(&radius_y, sizeof(float));
+            receiveData(&thickness, sizeof(float));
             uint32_t color;
             receiveData(&color, sizeof(uint32_t));
-            LuaDraw::insertEllipse(center_x, center_y, radius_x, radius_y, color);
+            receiveData(&filled, sizeof(int));
+            LuaDraw::insertEllipse(center_x, center_y, radius_x, radius_y, thickness, color, filled);
             break;
         }
         }

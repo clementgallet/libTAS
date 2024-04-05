@@ -83,9 +83,20 @@ void LuaDraw::LuaLine::render()
     ImGui::GetBackgroundDrawList()->AddLine(ImVec2(x0, y0), ImVec2(x1, y1), color);
 }
 
+void LuaDraw::LuaQuad::render()
+{
+    if (filled)
+        ImGui::GetBackgroundDrawList()->AddQuadFilled(ImVec2(x0, y0), ImVec2(x1, y1), ImVec2(x2, y2), ImVec2(x3, y3), color);
+    else
+        ImGui::GetBackgroundDrawList()->AddQuad(ImVec2(x0, y0), ImVec2(x1, y1), ImVec2(x2, y2), ImVec2(x3, y3), color, thickness);
+}
+
 void LuaDraw::LuaEllipse::render()
 {
-    ImGui::GetBackgroundDrawList()->AddEllipse(ImVec2(center_x, center_y), radius_x, radius_y, color);
+    if (filled)
+        ImGui::GetBackgroundDrawList()->AddEllipseFilled(ImVec2(center_x, center_y), radius_x, radius_y, color);
+    else
+        ImGui::GetBackgroundDrawList()->AddEllipse(ImVec2(center_x, center_y), radius_x, radius_y, color, 0.0f, 0, thickness);
 }
 
 void LuaDraw::insertText(float x, float y, std::string text, uint32_t color, float anchor_x, float anchor_y, float font_size, bool monospace)
@@ -147,17 +158,39 @@ void LuaDraw::insertLine(float x0, float y0, float x1, float y1, uint32_t color)
     lua_shapes.emplace_back(ll);
 }
 
-void LuaDraw::insertEllipse(float center_x, float center_y, float radius_x, float radius_y, uint32_t color)
+void LuaDraw::insertQuad(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float thickness, uint32_t color, int filled)
+{
+    auto lq = new LuaQuad();
+    lq->x0 = x0;
+    lq->y0 = y0;
+    lq->x1 = x1;
+    lq->y1 = y1;
+    lq->x2 = x2;
+    lq->y2 = y2;
+    lq->x3 = x3;
+    lq->y3 = y3;
+    lq->thickness = thickness;
+    lq->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
+                   static_cast<uint8_t>((color >> 8) & 0xff),
+                   static_cast<uint8_t>(color & 0xff),
+                   static_cast<uint8_t>((color >> 24) & 0xff));
+    lq->filled = filled;
+    lua_shapes.emplace_back(lq);    
+}
+
+void LuaDraw::insertEllipse(float center_x, float center_y, float radius_x, float radius_y, float thickness, uint32_t color, int filled)
 {
     auto le = new LuaEllipse();
     le->center_x = center_x;
     le->center_y = center_y;
     le->radius_x = radius_x;
     le->radius_y = radius_y;
+    le->thickness = thickness;
     le->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
                  static_cast<uint8_t>((color >> 8) & 0xff),
                  static_cast<uint8_t>(color & 0xff),
                  static_cast<uint8_t>((color >> 24) & 0xff));
+    le->filled = filled;
     lua_shapes.emplace_back(le);
 }
 

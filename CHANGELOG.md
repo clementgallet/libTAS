@@ -32,6 +32,7 @@
 * Allow users to resize analog columns in input editor
 * Add more options to lua gui.text
 * Add lua memory.readcstring()
+* Add lua quad draw
 
 ### Changed
 
