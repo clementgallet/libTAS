@@ -52,8 +52,7 @@ void ves_icall_System_Threading_Thread_Sleep_internal(int ms, void *error)
 
     debuglogstdio(LCF_SLEEP, "%s call - sleep for %d ms", __func__, ms);
 
-    if (! transfer_sleep(ts))
-        orig::ves_icall_System_Threading_Thread_Sleep_internal(ms, error);
+    transfer_sleep(ts, NULL);
 }
 
 void hook_mono()

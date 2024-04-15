@@ -83,7 +83,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
         ts.tv_sec = timeout / 1000;
         ts.tv_nsec = timeout * 1000000;
 
-        transfer_sleep(ts);        
+        transfer_sleep(ts, NULL);        
     }
 
     return ret;
@@ -106,7 +106,7 @@ int ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, cons
 
     /* If timeout on main thread, add the timeout amount to the timer */
     if (ret == 0 && timeout) {
-        transfer_sleep(*timeout);        
+        transfer_sleep(*timeout, NULL);        
     }
 
     return ret;
@@ -135,9 +135,7 @@ int ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, cons
     ts.tv_sec = timeout->tv_sec;
     ts.tv_nsec = timeout->tv_usec * 1000;
     
-    if (!transfer_sleep(ts))
-        return orig::select(nfds, readfds, writefds, exceptfds, timeout);
-
+    transfer_sleep(ts, NULL);
     return 0;
 }
 
@@ -161,9 +159,7 @@ int ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, cons
 
     debuglogstdio(LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, timeout->tv_sec, timeout->tv_nsec);
 
-    if (!transfer_sleep(*timeout))
-        return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
-
+    transfer_sleep(*timeout, NULL);
     return 0;
 }
 
@@ -186,7 +182,7 @@ int ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, cons
         struct timespec ts;
         ts.tv_sec = timeout / 1000;
         ts.tv_nsec = 1000000 * (timeout % 1000);
-        transfer_sleep(ts);
+        transfer_sleep(ts, NULL);
     }
 
     return ret;

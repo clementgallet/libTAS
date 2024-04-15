@@ -49,6 +49,7 @@
 * Change ImGui font to Roboto Medium
 * Change streching in some fields of main window (#599)
 * Accept floats for lua draw commands
+* Don't sleep on main thread when fast-forwarding
 
 ### Fixed
 

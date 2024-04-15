@@ -38,27 +38,31 @@ DEFINE_ORIG_POINTER(nanosleep)
 /* Advance time when sleep call, depending on config and main thread.
  * Returns if the call was transfered.
  */
-bool transfer_sleep(const struct timespec &ts)
-{
+void transfer_sleep(const struct timespec &ts, struct timespec *rem)
+{    
+    /* Skip sleeping when main thread and fast-forwarding */
+    if (!ThreadManager::isMainThread() || !Global::shared_config.fastforward)
+        orig::nanosleep(&ts, rem);
+
     if (ts.tv_sec == 0 && ts.tv_nsec == 0)
-        return false;
+        return;
 
     /* Enforce SLEEP_NEVER on Unity games */
     if (GameHacks::isUnity())
-        return false;
+        return;
 
     switch (Global::shared_config.sleep_handling) {
         case SharedConfig::SLEEP_NEVER:
-            return false;
+            return;
         case SharedConfig::SLEEP_MAIN:
             if (!ThreadManager::isMainThread())
-                return false;
+                return;
+            /* Pass through */
         case SharedConfig::SLEEP_ALWAYS:
             DeterministicTimer::get().addDelay(ts);
             NATIVECALL(sched_yield());
-            return true;        
+            return;
     }
-    return true;
 }
 
 /* Override */ void SDL_Delay(unsigned int sleep)
@@ -76,8 +80,7 @@ bool transfer_sleep(const struct timespec &ts)
 
     debuglogstdio(LCF_SDL | LCF_SLEEP, "%s call - sleep for %d ms", __func__, sleep);
 
-    if (! transfer_sleep(ts))
-        orig::nanosleep(&ts, NULL);
+    transfer_sleep(ts, NULL);
 }
 
 /* Override */ int usleep(useconds_t usec)
@@ -109,9 +112,7 @@ bool transfer_sleep(const struct timespec &ts)
         }
     }
     
-    if (! transfer_sleep(ts))
-        orig::nanosleep(&ts, NULL);
-
+    transfer_sleep(ts, NULL);
     return 0;
 }
 
@@ -125,9 +126,7 @@ bool transfer_sleep(const struct timespec &ts)
 
     debuglogstdio(LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, requested_time->tv_sec, requested_time->tv_nsec);
 
-    if (! transfer_sleep(*requested_time))
-        return orig::nanosleep(requested_time, remaining);
-
+    transfer_sleep(*requested_time, remaining);
     return 0;
 }
 
@@ -150,9 +149,7 @@ bool transfer_sleep(const struct timespec &ts)
     
     debuglogstdio(LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, sleeptime.tv_sec, sleeptime.tv_nsec);
 
-    if (! transfer_sleep(sleeptime))
-        RETURN_NATIVE(clock_nanosleep, (clock_id, flags, req, rem), nullptr);
-
+    transfer_sleep(sleeptime, rem);
     return 0;
 }
 
