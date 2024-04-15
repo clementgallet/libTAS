@@ -62,10 +62,19 @@
 #ifdef __linux__
 #include <sys/syscall.h>
 #endif
+#ifdef __linux__
+/* The ucontext passed to the signal handler is from <asm/ucontext.h> rather than <ucontext.h>
+ * This is due to the ucontext in this instance being allocated kernel side
+ * The kernel does not care for the libc ucontext definition, only its own (generally smaller) baseline definition
+ */
+#include <asm/ucontext.h>
+#define ucontext_t ucontext
+#else
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 600
 #endif
 #include <ucontext.h>
+#endif
 
 #define ONE_MB 1024 * 1024
 
