@@ -268,6 +268,10 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         sendMessage(MSGB_NONDRAW_FRAME);
     }
 
+    else if (Global::skipping_draw) {
+        sendMessage(MSGB_SKIPDRAW_FRAME);
+    }
+
     /* Last message to send */
     sendMessage(MSGB_START_FRAMEBOUNDARY);
 

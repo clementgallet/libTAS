@@ -351,8 +351,11 @@ Registers `f` to be called after frame has completed.
     None callback.onPaint(Function f)
 
 Registers `f` to be called at the end of the frame before the screen rendering 
-is performed. All Gui functions must be executed inside this callback. To 
-include Lua draws in encodes, `Video > OSD > OSD on video encode` can be checked.
+is performed. **Beware**, if the current frame is a non-draw frame, or if the
+current frame rendering is skipped due to fast-forward, the callback is **not**
+called, to improve fast-forward efficiency. All Gui functions must be
+executed inside this callback. To include Lua draws in encodes, 
+`Video > OSD > OSD on video encode` can be checked.
 
 ### Callbacks (obsolete)
 

@@ -288,6 +288,12 @@ enum {
     MSGB_NONDRAW_FRAME,
 
     /*
+     * Indicate that the current frame will not be rendered due to fast-forward.
+     * Argument: None
+     */
+    MSGB_SKIPDRAW_FRAME,
+
+    /*
      * Send to the game a text to be displayed from a lua script.
      * Argument: float x, float y, string text, uint32_t color, float anchor_x
      *           float anchor_y, float font_size, bool monospace

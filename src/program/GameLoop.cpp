@@ -428,6 +428,9 @@ bool GameLoop::startFrameMessages()
 {
     context->draw_frame = true;
     
+    /* Indicate if the current frame rendering will be skipped due to fast-forward */
+    bool skip_draw_frame = false;
+    
     /* Wait for frame boundary */
     int message = receiveMessage();
 
@@ -554,6 +557,10 @@ bool GameLoop::startFrameMessages()
             context->draw_frame = false;
             break;
 
+        case MSGB_SKIPDRAW_FRAME:
+            skip_draw_frame = true;
+            break;
+
         case MSGB_SYMBOL_ADDRESS: {
             std::string sym = receiveString();
             uint64_t addr = getSymbolAddress(sym.c_str());
@@ -584,7 +591,7 @@ bool GameLoop::startFrameMessages()
     movie.editor->setDraw(context->draw_frame);
 
     /* Send ram watches */
-    if (context->config.sc.osd) {
+    if (context->config.sc.osd && context->draw_frame && !skip_draw_frame) {
         std::string ramwatch;
         emit getRamWatch(ramwatch);
         while(!ramwatch.empty()) {
@@ -595,7 +602,8 @@ bool GameLoop::startFrameMessages()
     }
 
     /* Execute the lua callback onPaint here */
-    Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackPaint);
+    if (context->draw_frame && !skip_draw_frame)
+        Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackPaint);
 
     sendMessage(MSGN_START_FRAMEBOUNDARY);
 
