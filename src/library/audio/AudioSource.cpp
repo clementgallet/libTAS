@@ -38,11 +38,11 @@ namespace libtas {
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
 int AudioSource::ticksToSamples(struct timespec ticks, int frequency)
 {
-    uint64_t nsecs = static_cast<uint64_t>(ticks.tv_sec) * 1000000000 + ticks.tv_nsec;
-    uint64_t samples = (nsecs * frequency) / 1000000000;
-    samples_frac += (nsecs * frequency) % 1000000000;
-    if (samples_frac >= 500000000) {
-        samples_frac -= 1000000000;
+    uint64_t nsecs = static_cast<uint64_t>(ticks.tv_sec) * 1000000000ULL + ticks.tv_nsec;
+    uint64_t samples = (nsecs * frequency) / 1000000000ULL;
+    samples_frac += (nsecs * frequency) % 1000000000ULL;
+    if (samples_frac >= 500000000LL) {
+        samples_frac -= 1000000000LL;
         samples++;
     }
     return static_cast<int>(samples);
@@ -166,8 +166,11 @@ bool AudioSource::willEnd(struct timespec ticks)
 
     std::shared_ptr<AudioBuffer> curBuf = buffer_queue[queue_index];
 
-    /* Number of samples to advance in the buffer. */
-    int inNbSamples = ticksToSamples(ticks, static_cast<int>(curBuf->frequency*pitch));
+    /* Number of samples to advance in the buffer. We don't use `ticksToSamples()`
+     * because it keeps track of the fractional part, and thus must be called
+     * exactly once. */
+    uint64_t nsecs = static_cast<uint64_t>(ticks.tv_sec) * 1000000000ULL + ticks.tv_nsec;
+    int inNbSamples = (nsecs * curBuf->frequency * pitch) / 1000000000ULL;
 
     int size = queueSize();
     int pos = getPosition();
