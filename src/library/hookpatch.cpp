@@ -471,8 +471,6 @@ void overwrite_orig_function(void *orig_fun, void* my_function)
 
 void hook_patch(const char* name, const char* library, void** tramp_function, void* my_function)
 {
-    debuglogstdio(LCF_HOOK, "Patching function %s", name);
-
     const char* libpathstr = NULL;
     void* handle;
     
@@ -517,14 +515,12 @@ void hook_patch(const char* name, const char* library, void** tramp_function, vo
         receiveData(&addr, sizeof(uint64_t));
         if (addr)
             memcpy(&orig_fun, &addr, sizeof(void*));
-        else
-            return;
     }
 
-    if (!orig_fun) {
-        debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not load %s", name);
+    if (!orig_fun)
         return;
-    }
+
+    debuglogstdio(LCF_HOOK, "Patching function %s", name);
 
     write_tramp_function(orig_fun, tramp_function);
     overwrite_orig_function(orig_fun, my_function);
