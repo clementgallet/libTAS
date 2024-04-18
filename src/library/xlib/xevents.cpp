@@ -438,6 +438,10 @@ int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *
         isEvent = queue->pop(event_return, predicate, arg);
         if (isEvent)
             break;
+            
+        if (Global::is_exiting)
+            return 0;
+
         struct timespec st = {0, 1000*1000};
         NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
         pushNativeXlibEvents(display);

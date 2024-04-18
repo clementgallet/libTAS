@@ -40,30 +40,28 @@ namespace libtas {
 
 namespace FileHandleList {
 
-/* This sounds really weird, but we are constructing our list of FileHandle
- * inside a function. This forces the list to be constructed when we need it
+/* Constructing this (as well as other elements elsewhere as local-scope static
+ * pointer. This forces the list to be constructed when we need it
  * (a bit like the Singleton pattern). If we simply declare the list as a
  * static variable, then we will be using it before it has time to be
  * constructed (because some other libraries will initialize and open some files),
- * resulting in a crash.
+ * resulting in a crash. Also, we allocate it dynamically and never free it, so
+ * that it has a chance to survive every other game code that may use it.
  */
 static std::forward_list<FileHandle>& getFileList() {
-    static std::forward_list<FileHandle> filehandles;
-    return filehandles;
+    static std::forward_list<FileHandle>* filehandles = new std::forward_list<FileHandle>;
+    return *filehandles;
 }
 
 /* Mutex to protect the file list */
 static std::mutex& getFileListMutex() {
-    static std::mutex mutex;
-    return mutex;
+    static std::mutex* mutex = new std::mutex;
+    return *mutex;
 }
 
 void openFile(const char* file, int fd)
 {
     if (fd < 0)
-        return;
-
-    if (Global::is_exiting)
         return;
 
     std::lock_guard<std::mutex> lock(getFileListMutex());
@@ -83,9 +81,6 @@ void openFile(const char* file, int fd)
 void openFile(const char* file, FILE* f)
 {
     if (!f)
-        return;
-
-    if (Global::is_exiting)
         return;
 
     std::lock_guard<std::mutex> lock(getFileListMutex());
@@ -121,14 +116,6 @@ bool closeFile(int fd)
 {
     if (fd < 0)
         return true;
-
-    if (Global::is_exiting) {
-        /* Closing files may be late in the termination of the program, and
-         * the structs used here may already be gone. We don't care to keep track
-         * when exiting
-         */
-        return true;
-    }
 
     std::lock_guard<std::mutex> lock(getFileListMutex());
     auto& filehandles = getFileList();
