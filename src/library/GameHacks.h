@@ -28,20 +28,6 @@ namespace libtas {
 
 namespace GameHacks
 {
-void setUnity();
-
-bool isUnity();
-        
-void getExecutableMemory();
-
-bool isUnityLoadingThread(uintptr_t addr);
-
-/* Synchronize methods so that Unity jobs are running sequentially. It also
- * supports jobs that never finish by using a timeout */
-void unitySyncNotify();
-void unitySyncWait();
-void unitySyncWaitAll();
-
 /* Regsiter that the game linked `libcoreclr.so` library */
 void setCoreclr();
     

@@ -21,6 +21,7 @@ libtas_so_SOURCES = \
     PerfTimer.cpp \
     Stack.cpp \
     TimeHolder.cpp \
+    UnityHacks.cpp \
     Utils.cpp \
     WindowTitle.cpp \
     audio/AudioBuffer.cpp \

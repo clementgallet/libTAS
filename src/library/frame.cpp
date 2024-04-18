@@ -36,7 +36,7 @@
 #include "BusyLoopDetection.h"
 #include "FPSMonitor.h"
 #include "hook.h"
-#include "GameHacks.h"
+#include "UnityHacks.h"
 #include "PerfTimer.h"
 #include "audio/AudioContext.h"
 #include "sdl/sdlwindows.h"
@@ -186,8 +186,8 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     
     perfTimer.switchTimer(PerfTimer::RenderTimer);
 
-    if (GameHacks::isUnity()) {
-        GameHacks::unitySyncWaitAll();        
+    if (UnityHacks::isUnity()) {
+        UnityHacks::syncWaitAll();        
     }
     perfTimer.switchTimer(PerfTimer::FrameTimer);
 

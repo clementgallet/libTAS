@@ -65,8 +65,8 @@ private:
 
     void sleepSendPreview();
 
-    /* Get the address of a symbol in the game executable */
-    uint64_t getSymbolAddress(const char* symbol);
+    /* Get the address of a symbol from a executable or library file */
+    uint64_t getSymbolAddress(const char* symbol, const char* file);
 
     void processInputs(AllInputs &ai);
 

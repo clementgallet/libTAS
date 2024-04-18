@@ -25,7 +25,7 @@
 #include "backtrace.h"
 #include "GlobalState.h"
 #include "hook.h"
-#include "GameHacks.h"
+#include "UnityHacks.h"
 #include "global.h"
 
 #include <sched.h> // sched_yield()
@@ -48,7 +48,7 @@ void transfer_sleep(const struct timespec &ts, struct timespec *rem)
         return;
 
     /* Enforce SLEEP_NEVER on Unity games */
-    if (GameHacks::isUnity())
+    if (UnityHacks::isUnity())
         return;
 
     switch (Global::shared_config.sleep_handling) {

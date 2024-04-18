@@ -31,6 +31,7 @@
 #endif
 #include "backtrace.h"
 #include "GameHacks.h"
+#include "UnityHacks.h"
 #include "../external/elfhacks.h"
 #include "../dyld_func_lookup_helper/dyld_func_lookup_helper.h"
 
@@ -366,7 +367,7 @@ void *dlsym(void *handle, const char *name) __THROW {
 
     /* Detect a Unity game when it loads specific Unity functions */
     if (std::strstr(name, "mono_unity_") != nullptr)
-        GameHacks::setUnity();
+        UnityHacks::setUnity();
 
     /* FIXME: This design is not good enough.
      * This idea is to link to our defined function when there is one, instead

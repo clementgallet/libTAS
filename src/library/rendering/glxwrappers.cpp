@@ -27,7 +27,7 @@
 #include "screencapture/ScreenCapture.h"
 #include "frame.h"
 #include "xlib/xwindows.h" // x11::gameXWindows
-#include "GameHacks.h"
+#include "UnityHacks.h"
 #include "global.h"
 #include "GlobalState.h"
 
@@ -396,7 +396,7 @@ const char* glXQueryExtensionsString(Display* dpy, int screen)
 
     /* Unity has different behaviors depending on the GLX extensions present,
      * at least for GLX_SGI_swap_control. Returning an empty string works fine. */
-    if (GameHacks::isUnity())
+    if (UnityHacks::isUnity())
         return "GLX_ARB_create_context GLX_ARB_create_context_profile \
 GLX_ARB_create_context_robustness GLX_ARB_fbconfig_float \
 GLX_ARB_framebuffer_sRGB GLX_ARB_get_proc_address GLX_ARB_multisample \

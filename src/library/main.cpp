@@ -25,6 +25,7 @@
 #include "frame.h" // framecount
 #include "Stack.h"
 #include "GlobalState.h"
+#include "UnityHacks.h"
 #include "audio/AudioContext.h"
 #include "encoding/AVEncoder.h"
 #include "steam/isteamuser.h" // SteamSetUserDataFolder
@@ -171,6 +172,12 @@ void __attribute__((constructor)) init(void)
                 uint64_t addr;
                 receiveData(&addr, sizeof(uint64_t));
                 setDynapiAddr(addr);
+                break;
+            }
+            case MSGN_UNITY_WAIT_ADDR: {
+                uint64_t addr;
+                receiveData(&addr, sizeof(uint64_t));
+                UnityHacks::patch(addr);
                 break;
             }
             default:

@@ -83,6 +83,8 @@ struct ThreadInfo {
     std::atomic<int> syncCount;
     int syncOldCount = 0;
 
+    bool unityThread = false; // is unity wait thread
+
     ThreadInfo *next = nullptr; // next thread info in the linked list
     ThreadInfo *prev = nullptr; // previous thread info in the linked list
 };

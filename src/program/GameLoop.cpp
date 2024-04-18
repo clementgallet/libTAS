@@ -39,6 +39,7 @@
 #include "lua/Callbacks.h"
 #include "lua/NamedLuaFunction.h"
 #include "ramsearch/MemAccess.h"
+#include "ramsearch/BaseAddresses.h"
 #include "ui/InputEditorView.h"
 
 #include "../shared/sockethelpers.h"
@@ -210,6 +211,9 @@ void GameLoop::init()
     int err = removeSocket();
     if (err != 0)
         emit alertToShow(QString("Could not remove socket file /tmp/libTAS.socket: %2").arg(strerror(err)));
+
+    /* Clear addresses of loaded files */
+    BaseAddresses::clear();
 
     /* Init savestate list */
     SaveStateList::init(context);
@@ -405,20 +409,43 @@ void GameLoop::initProcessMessages()
     /* Sometime games have trouble finding the address of the orginal function
      * `SDL_DYNAPI_entry()` that we hook, so we send right away the symbol
      * address if there is one */
-    uint64_t sdl_addr = getSymbolAddress("SDL_DYNAPI_entry");
+    uint64_t sdl_addr = getSymbolAddress("SDL_DYNAPI_entry", context->gamepath.c_str());
     if (sdl_addr != 0) {
         sendMessage(MSGN_SDL_DYNAPI_ADDR);
         sendData(&sdl_addr, sizeof(uint64_t));
+    }
+
+    /* Check for `UnityPlayer_s.debug` presence and send symbol addresses */
+    std::string debugfile = dirFromPath(context->gamepath) + "/UnityPlayer_s.debug";
+    if (access(debugfile.c_str(), F_OK) == 0) {
+        
+        uintptr_t base_unity = BaseAddresses::getBaseAddress("UnityPlayer.so");
+        uint64_t futexwait_addr = getSymbolAddress("_ZN12UnityClassic24Baselib_SystemFutex_WaitEPiij", debugfile.c_str());
+        if (futexwait_addr != 0) {
+            futexwait_addr += base_unity;
+            sendMessage(MSGN_UNITY_WAIT_ADDR);
+            sendData(&futexwait_addr, sizeof(uint64_t));
+        }
+        
+        if (sdl_addr == 0) {
+            /* Look again inside UnityPlayer.so */
+            uint64_t sdl_addr = getSymbolAddress("SDL_DYNAPI_entry", debugfile.c_str());
+            if (sdl_addr != 0) {
+                sdl_addr += base_unity;
+                sendMessage(MSGN_SDL_DYNAPI_ADDR);
+                sendData(&sdl_addr, sizeof(uint64_t));
+            }
+        }
     }
 
     /* End message */
     sendMessage(MSGN_END_INIT);
 }
 
-uint64_t GameLoop::getSymbolAddress(const char* symbol)
+uint64_t GameLoop::getSymbolAddress(const char* symbol, const char* file)
 {
     std::ostringstream cmd;
-    cmd << "readelf -Ws '" << context->gamepath << "' | grep " << symbol << " | awk '{print $2}'";
+    cmd << "readelf -Ws '" << file << "' | grep " << symbol << " | awk '{print $2}'";
 
     uint64_t addr = std::strtoull(queryCmd(cmd.str()).c_str(), nullptr, 16);    
     return addr;
@@ -563,7 +590,7 @@ bool GameLoop::startFrameMessages()
 
         case MSGB_SYMBOL_ADDRESS: {
             std::string sym = receiveString();
-            uint64_t addr = getSymbolAddress(sym.c_str());
+            uint64_t addr = getSymbolAddress(sym.c_str(), context->gamepath.c_str());
             sendData(&addr, sizeof(uint64_t));
             break;
         }

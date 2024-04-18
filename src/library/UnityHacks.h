@@ -17,31 +17,39 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_BASEADDRESSES_H_INCLUDED
-#define LIBTAS_BASEADDRESSES_H_INCLUDED
+#ifndef LIBTAS_UNITYHACKS_H_INCLUDED
+#define LIBTAS_UNITYHACKS_H_INCLUDED
 
-#include <stddef.h>
 #include <sys/types.h>
-#include <string>
+#include <cstddef>
 #include <cstdint>
 
-/* Holds the base address for executable and each loaded library */
-namespace BaseAddresses {
+namespace libtas {
 
-    /* Query all loaded libraries and executable, and store base and end addresses */
-    void load();
+namespace UnityHacks
+{
+void setUnity();
 
-    /* Query base and end addresses for a specific file that was not stored */
-    uintptr_t findNewFile(std::string file);
+bool isUnity();
+        
+void getExecutableMemory();
 
-    /* Return the base address of a specific file */
-    uintptr_t getBaseAddress(std::string file);
+bool isLoadingThread(uintptr_t addr);
 
-    /* Get the file and offset from an address */
-    std::string getFileAndOffset(uintptr_t addr, off_t &offset);
+/* Synchronize methods so that Unity jobs are running sequentially. It also
+ * supports jobs that never finish by using a timeout */
+void syncNotify();
+void syncWait();
+void syncWaitAll();
 
-    /* Clear all addresses */
-    void clear();
+/* Determine if a given thread is a Unity loading thread from their thread name */
+void waitFromName(pthread_t target_thread, const char *name);
+
+/* Patch Unity function given the function address */
+void patch(uint64_t addr);
+
+};
+
 }
 
 #endif

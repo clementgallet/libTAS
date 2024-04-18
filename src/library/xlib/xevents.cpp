@@ -27,7 +27,7 @@
 
 #include "logging.h"
 #include "hook.h"
-#include "GameHacks.h"
+#include "UnityHacks.h"
 #include "frame.h"
 #include "global.h"
 #include "GlobalState.h"
@@ -87,7 +87,7 @@ static Bool isEventFiltered (XEvent *event) {
             /* We need to filter this event on Unity. Without this, moving the
              * game window makes inputs stop registering. We still need this
              * on the first frame though.  */
-            if (GameHacks::isUnity()) {
+            if (UnityHacks::isUnity()) {
                 if (framecount == 0)
                     return False;
                 return True;                

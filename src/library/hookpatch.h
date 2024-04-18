@@ -31,6 +31,9 @@ namespace libtas {
  */
 void hook_patch(const char* name, const char* library, void** tramp_function, void* my_function);
 
+/* Hook with the target function address instead of the symbol name */
+void hook_patch_addr(void *orig_fun, void** tramp_function, void* my_function);
+
 #define HOOK_PATCH_ORIG(FUNC,LIB) hook_patch(#FUNC, LIB, reinterpret_cast<void**>(&orig::FUNC), reinterpret_cast<void*>(FUNC))
 
 #define HOOK_PLACEHOLDER_RETURN_ZERO \

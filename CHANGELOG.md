@@ -33,6 +33,7 @@
 * Add more options to lua gui.text
 * Add lua memory.readcstring()
 * Add lua quad draw
+* Sync newer Unity engine games that are bundled with symbols
 
 ### Changed
 

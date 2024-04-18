@@ -522,6 +522,11 @@ void hook_patch(const char* name, const char* library, void** tramp_function, vo
 
     debuglogstdio(LCF_HOOK, "Patching function %s", name);
 
+    hook_patch_addr(orig_fun, tramp_function, my_function);
+}
+
+void hook_patch_addr(void *orig_fun, void** tramp_function, void* my_function)
+{
     write_tramp_function(orig_fun, tramp_function);
     overwrite_orig_function(orig_fun, my_function);
 }

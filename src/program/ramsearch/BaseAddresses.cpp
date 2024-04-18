@@ -149,3 +149,8 @@ std::string BaseAddresses::getFileAndOffset(uintptr_t addr, off_t &offset)
     offset = 0;
     return "";
 }
+
+void BaseAddresses::clear()
+{
+    library_addresses.clear();
+}
