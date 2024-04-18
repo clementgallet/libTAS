@@ -20,6 +20,7 @@
 #include "UnityHacks.h"
 #include "logging.h"
 #include "GlobalState.h"
+#include "global.h"
 #include "hookpatch.h"
 #ifdef __unix__
 #include "checkpoint/ProcSelfMaps.h"
@@ -142,6 +143,9 @@ void UnityHacks::syncWait()
     debuglogstdio(LCF_WAIT, "   Wait before running a Unity job");
     while (unity_running_threads > unity_nonterminating_threads) {
         
+        if (Global::is_exiting)
+            return;
+        
         /* Store the current nonterminating count, so that only one thread that
          * timeouts can increase it */
         unsigned int old_unity_nonterminating_threads = unity_nonterminating_threads;
@@ -229,6 +233,10 @@ void UnityHacks::syncWaitAll()
     while (unity_job_count > old_job_count) {
         old_job_count = unity_job_count;
         unity_mutex.unlock();
+        
+        if (Global::is_exiting)
+            return;
+
         NATIVECALL(usleep(sleep_length));
         /* Frames with a lot of jobs usually require extra care, so we increase
          * the wait time more and more */

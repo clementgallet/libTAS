@@ -512,6 +512,16 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         return ret;
     }
 
+    /* When game is exiting, we want time to advance to prevent softlocks */
+    if (Global::is_exiting) {
+        /* Transfer time to our deterministic timer */
+        TimeHolder now = DeterministicTimer::get().getTicks();
+        TimeHolder delay = abs_timeout - now;
+        DeterministicTimer::get().addDelay(delay);
+
+        return orig::pthread_cond_timedwait(cond, mutex, &real_time);
+    }
+
     if (Global::shared_config.wait_timeout == SharedConfig::WAIT_NATIVE)
         return orig::pthread_cond_timedwait(cond, mutex, &new_abstime);
 

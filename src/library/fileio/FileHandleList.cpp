@@ -63,6 +63,9 @@ void openFile(const char* file, int fd)
     if (fd < 0)
         return;
 
+    if (Global::is_exiting)
+        return;
+
     std::lock_guard<std::mutex> lock(getFileListMutex());
     auto& filehandles = getFileList();
 
@@ -80,6 +83,9 @@ void openFile(const char* file, int fd)
 void openFile(const char* file, FILE* f)
 {
     if (!f)
+        return;
+
+    if (Global::is_exiting)
         return;
 
     std::lock_guard<std::mutex> lock(getFileListMutex());
