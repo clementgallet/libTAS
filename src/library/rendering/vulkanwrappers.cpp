@@ -691,7 +691,7 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_Vulkan renderHUD;
     
-    VkResult ret;
+    VkResult ret = VK_SUCCESS;
     frameBoundary([&] () {
         if (vk::context.swapchainRebuild)
             return;
