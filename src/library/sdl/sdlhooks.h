@@ -339,6 +339,7 @@ SDL_LINK(SDL_RenderGetClipRect)
 SDL_LINK(SDL_RenderGeometryRaw)
 SDL_LINK(SDL_SetTextureScaleMode)
 SDL_LINK(SDL_UpdateTexture)
+SDL_LINK(SDL_RenderClear)
 
 #undef SDL_HOOK
 #undef SDL_LINK

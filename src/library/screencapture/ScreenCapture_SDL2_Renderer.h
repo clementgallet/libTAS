@@ -61,6 +61,10 @@ int copySurfaceToScreen();
  * It is equivalent to `copySurfaceToScreen()` in most cases. */
 void restoreScreenState();
 
+void clearScreen();
+
+uint64_t screenTexture();
+
 private:
     SDL_Texture* screenSDLTex = nullptr;
     SDL_Renderer* sdl_renderer = nullptr;

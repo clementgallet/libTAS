@@ -43,6 +43,8 @@ class RenderHUD_SDL2_renderer : public RenderHUD_Base_MacOS
 
         void render();
 
+        bool supportsGameWindow() {return true;}
+
     private:
         SDL_Renderer* renderer = nullptr;
 

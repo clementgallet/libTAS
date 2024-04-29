@@ -41,6 +41,7 @@ DECLARE_ORIG_POINTER(SDL_RenderCopy)
 DECLARE_ORIG_POINTER(SDL_DestroyTexture)
 DECLARE_ORIG_POINTER(SDL_GetError)
 DECLARE_ORIG_POINTER(SDL_GetWindowSize)
+DECLARE_ORIG_POINTER(SDL_RenderClear)
 
 int ScreenCapture_SDL2_Renderer::init()
 {
@@ -196,6 +197,17 @@ int ScreenCapture_SDL2_Renderer::copySurfaceToScreen()
 void ScreenCapture_SDL2_Renderer::restoreScreenState()
 {
     copySurfaceToScreen();
+}
+
+void ScreenCapture_SDL2_Renderer::clearScreen()
+{
+    LINK_NAMESPACE_SDL2(SDL_RenderClear);
+    orig::SDL_RenderClear(sdl_renderer);
+}
+
+uint64_t ScreenCapture_SDL2_Renderer::screenTexture()
+{
+    return reinterpret_cast<uint64_t>(screenSDLTex);
 }
 
 }

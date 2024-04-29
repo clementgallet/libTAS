@@ -34,6 +34,7 @@
 * Add lua memory.readcstring()
 * Add lua quad draw
 * Sync newer Unity engine games that are bundled with symbols
+* Support game window detach on SDL2 renderer
 
 ### Changed
 
