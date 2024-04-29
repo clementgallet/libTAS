@@ -22,6 +22,7 @@
 
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QMainWindow>
+#include <QtWidgets/QLabel>
 
 /* Forward declaration */
 struct Context;
@@ -44,7 +45,7 @@ public:
 
 public slots:
     void isWindowVisible(bool &visible);
-    
+    void updateStatusBar();
     
 private:
     Context *context;
@@ -52,6 +53,7 @@ private:
     QAction* rewindAct;
     QAction* fastforwardAct;
     QAction* markerPauseAct;
+    QLabel* statusFrame;
 };
 
 #endif

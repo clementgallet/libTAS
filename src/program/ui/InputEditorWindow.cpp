@@ -31,6 +31,7 @@
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QGroupBox>
+#include <QtWidgets/QStatusBar>
 
 InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(parent), context(c)
 {
@@ -47,7 +48,7 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(
     connect(markerView, &MarkerView::scrollSignal, inputEditorView, &InputEditorView::scrollToFrame);
     connect(inputEditorView, &InputEditorView::addMarkerSignal, markerView->markerModel, &MarkerModel::addMarker);
     connect(inputEditorView, &InputEditorView::removeMarkerSignal, markerView->markerModel, &MarkerModel::removeMarker);
-
+    connect(inputEditorView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &InputEditorWindow::updateStatusBar);
 
     QGroupBox* markerBox = new QGroupBox(tr("Markers"));
     QVBoxLayout* markerLayout = new QVBoxLayout;
@@ -82,6 +83,10 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(
         [=](bool checked){context->config.editor_marker_pause = checked;});
 
     markerPauseAct->setCheckable(true);
+
+    /* Status bar */
+    statusFrame = new QLabel(tr("No frame selected"));
+    statusBar()->addWidget(statusFrame);
 
     /* Layout */
     QHBoxLayout *mainLayout = new QHBoxLayout;
@@ -118,4 +123,16 @@ void InputEditorWindow::resetInputs()
 void InputEditorWindow::isWindowVisible(bool &visible)
 {
     visible = isVisible();
+}
+
+void InputEditorWindow::updateStatusBar()
+{
+    const QModelIndexList indexes = inputEditorView->selectionModel()->selectedRows();
+
+    if (indexes.count() == 0)
+        statusFrame->setText(tr("No frame selected"));
+    else if (indexes.count() == 1)
+        statusFrame->setText(tr("1 frame selected"));
+    else
+        statusFrame->setText(QString(tr("%1 frames selected")).arg(indexes.count()));
 }

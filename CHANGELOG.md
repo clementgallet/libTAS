@@ -35,6 +35,7 @@
 * Add lua quad draw
 * Sync newer Unity engine games that are bundled with symbols
 * Support game window detach on SDL2 renderer
+* Show number of selected frames in input editor
 
 ### Changed
 
