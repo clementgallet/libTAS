@@ -53,6 +53,7 @@
 * Accept floats for lua draw commands
 * Don't sleep on main thread when fast-forwarding
 * Don't execute lua onPaint callbacks when non rendering to improve fast-forward
+* We can duplicate multiple selected rows, and improve insertion/deletion
 
 ### Fixed
 

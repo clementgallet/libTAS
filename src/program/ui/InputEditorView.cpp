@@ -741,7 +741,8 @@ void InputEditorView::duplicateInput()
     if (indexes.count() == 0)
         return;
 
-    inputEditorModel->insertRows(indexes[0].row(), 1, true);
+    /* FIXME: Discontinuous selection is not handled */
+    inputEditorModel->insertRows(indexes[0].row(), indexes.count(), true);
 }
 
 void InputEditorView::insertInput()

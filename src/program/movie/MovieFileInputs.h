@@ -101,11 +101,14 @@ public:
     /* Clear a single frame of inputs */
     void clearInputs(uint64_t pos);
 
-    /* Insert inputs before the requested pos */
-    void insertInputsBefore(const AllInputs& inputs, uint64_t pos);
+    /* Insert blank inputs before the requested pos */
+    void insertInputsBefore(uint64_t pos, int count);
+
+    /* Insert inputs from an array before the requested pos */
+    void insertInputsBefore(const AllInputs inputs[], uint64_t pos, int count);
 
     /* Delete inputs at the requested pos */
-    void deleteInputs(uint64_t pos);
+    void deleteInputs(uint64_t pos, int count);
 
     /* Extract all single inputs of all frames and insert them in the set */
     void extractInputs(std::set<SingleInput> &set);

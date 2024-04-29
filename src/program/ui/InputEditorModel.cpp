@@ -571,14 +571,13 @@ bool InputEditorModel::insertRows(int row, int count, bool duplicate, const QMod
 
     beginInsertRows(parent, row, row+count-1);
 
-    AllInputs ai;
-    if (duplicate)
-        movie->inputs->getInputs(ai, row);
-    else
-        ai.clear();
+    movie->inputs->insertInputsBefore(row, count);
 
-    for (int i=0; i<count; i++) {
-        movie->inputs->insertInputsBefore(ai, row);
+    if (duplicate) {
+        for (int i=0; i<count; i++) {
+            const AllInputs& ai = movie->inputs->getInputs(row + count + i);
+            movie->inputs->setInputs(ai, row + i, true);
+        }
     }
 
     endInsertRows();
@@ -597,9 +596,7 @@ bool InputEditorModel::removeRows(int row, int count, const QModelIndex &parent)
 
     beginRemoveRows(parent, row, row+count-1);
 
-    for (int i=0; i<count; i++) {
-        movie->inputs->deleteInputs(row);
-    }
+    movie->inputs->deleteInputs(row, count);
 
     endRemoveRows();
 
@@ -745,10 +742,12 @@ int InputEditorModel::pasteInsertInputs(int row)
 
     beginInsertRows(QModelIndex(), row, row + paste_ais.size() - 1);
 
+    
+    movie->inputs->insertInputsBefore(paste_ais.data(), row, paste_ais.size());
+    
     AllInputs newais;
     newais.clear();
     for (size_t r = 0; r < paste_ais.size(); r++) {
-        movie->inputs->insertInputsBefore(paste_ais[r], row + r);
         newais |= paste_ais[r];
     }
     addUniqueInputs(newais);

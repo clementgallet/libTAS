@@ -494,25 +494,39 @@ void MovieFileInputs::clearInputs(uint64_t pos)
     }
 }
 
-void MovieFileInputs::insertInputsBefore(const AllInputs& inputs, uint64_t pos)
+void MovieFileInputs::insertInputsBefore(uint64_t pos, int count)
 {
     std::unique_lock<std::mutex> lock(input_list_mutex);
 
     if (pos > input_list.size())
         return;
 
-    input_list.insert(input_list.begin() + pos, inputs);
+    AllInputs ai;
+    ai.clear();
+
+    input_list.insert(input_list.begin() + pos, count, ai);
     wasModified();
 }
 
-void MovieFileInputs::deleteInputs(uint64_t pos)
+void MovieFileInputs::insertInputsBefore(const AllInputs inputs[], uint64_t pos, int count)
 {
     std::unique_lock<std::mutex> lock(input_list_mutex);
 
-    if (pos >= input_list.size())
+    if (pos > input_list.size())
         return;
 
-    input_list.erase(input_list.begin() + pos);
+    input_list.insert(input_list.begin() + pos, inputs, inputs + count);
+    wasModified();
+}
+
+void MovieFileInputs::deleteInputs(uint64_t pos, int count)
+{
+    std::unique_lock<std::mutex> lock(input_list_mutex);
+
+    if ((pos + count) > input_list.size())
+        return;
+
+    input_list.erase(input_list.begin() + pos, input_list.begin() + pos + count);
     wasModified();
 }
 
