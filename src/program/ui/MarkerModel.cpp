@@ -176,9 +176,24 @@ void MarkerModel::resetMarkers()
 
 void MarkerModel::addMarker(int frame, QString text)
 {
-    int row = std::distance(movie->editor->markers.begin(),movie->editor->markers.find(frame));
+    int row = 0;
+    bool is_new = false;
+    for (auto it = movie->editor->markers.begin(); it != movie->editor->markers.end(); row++, it++) {
+        if (it->first >= frame) {
+            is_new = (it->first != frame);
+            break;
+        }
+    }
+    
+    if (is_new)
+        beginInsertRows(QModelIndex(), row, row);
+        
     movie->editor->markers[frame] = text.toStdString();
-    emit dataChanged(index(row, 0), index(row, 1));    
+    
+    if (is_new)
+        endInsertRows();
+    else
+        emit dataChanged(index(row, 0), index(row, 1));
 }
 
 void MarkerModel::removeMarker(int frame)

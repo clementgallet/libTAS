@@ -94,8 +94,6 @@ public:
 
     bool hasMarker(int frame);
     std::string getMarkerText(int frame);
-    void addMarker(int frame, std::string text);
-    void removeMarker(int frame);
 
     /* Get lock status of a single input */
     bool isLockedUniqueInput(int column);
