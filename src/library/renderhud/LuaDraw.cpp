@@ -23,6 +23,7 @@
 #include "../external/imgui/imgui.h"
 #include "TimeHolder.h"
 #include "logging.h"
+#include "screencapture/ScreenCapture.h"
 
 #include <list>
 #include <utility>
@@ -118,6 +119,9 @@ void LuaDraw::insertText(float x, float y, std::string text, uint32_t color, flo
 
 void LuaDraw::insertPixel(float x, float y, uint32_t color)
 {
+    if (!LuaDraw::isInbound(x, y, x, y))
+        return;
+
     auto lp = new LuaPixel;
     lp->x = x;
     lp->y = y;
@@ -130,6 +134,9 @@ void LuaDraw::insertPixel(float x, float y, uint32_t color)
 
 void LuaDraw::insertRect(float x, float y, float w, float h, float thickness, uint32_t color, int filled)
 {
+    if (!LuaDraw::isInbound(x, y, x+w, y+h))
+        return;
+
     auto lr = new LuaRect();
     lr->x = x;
     lr->y = y;
@@ -146,6 +153,9 @@ void LuaDraw::insertRect(float x, float y, float w, float h, float thickness, ui
 
 void LuaDraw::insertLine(float x0, float y0, float x1, float y1, uint32_t color)
 {
+    if (!LuaDraw::isInbound(std::min(x0, x1), std::min(y0, y1), std::max(x0, x1), std::max(y0, y1)))
+        return;
+
     auto ll = new LuaLine();
     ll->x0 = x0;
     ll->y0 = y0;
@@ -160,6 +170,12 @@ void LuaDraw::insertLine(float x0, float y0, float x1, float y1, uint32_t color)
 
 void LuaDraw::insertQuad(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float thickness, uint32_t color, int filled)
 {
+    if (LuaDraw::isInbound(std::min(std::min(x0, x1), std::min(x2, x3)),
+                           std::min(std::min(y0, y1), std::min(y2, y3)),
+                           std::max(std::max(x0, x1), std::max(x2, x3)),
+                           std::max(std::max(y0, y1), std::max(y2, y3))))
+        return;
+
     auto lq = new LuaQuad();
     lq->x0 = x0;
     lq->y0 = y0;
@@ -180,6 +196,9 @@ void LuaDraw::insertQuad(float x0, float y0, float x1, float y1, float x2, float
 
 void LuaDraw::insertEllipse(float center_x, float center_y, float radius_x, float radius_y, float thickness, uint32_t color, int filled)
 {
+    if (LuaDraw::isInbound(center_x - radius_x, center_y - radius_y, center_x + radius_x, center_y + radius_y))
+        return;
+
     auto le = new LuaEllipse();
     le->center_x = center_x;
     le->center_y = center_y;
@@ -204,6 +223,20 @@ void LuaDraw::draw()
 void LuaDraw::reset()
 {
     lua_shapes.clear();
+}
+
+bool LuaDraw::isInbound(float min_x, float min_y, float max_x, float max_y)
+{
+    if (max_x < 0) return false;
+    if (max_y < 0) return false;
+
+    int w = 0, h = 0;
+    ScreenCapture::getDimensions(w, h);
+
+    if (min_x > w) return false;
+    if (min_y > h) return false;
+
+    return true;
 }
 
 }
