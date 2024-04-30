@@ -37,6 +37,7 @@
 * Support game window detach on SDL2 renderer
 * Show number of selected frames in input editor
 * Clip lua shapes inside game window
+* Show a progress bar when seeking
 
 ### Changed
 

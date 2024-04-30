@@ -49,6 +49,7 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(
     connect(inputEditorView, &InputEditorView::addMarkerSignal, markerView->markerModel, &MarkerModel::addMarker);
     connect(inputEditorView, &InputEditorView::removeMarkerSignal, markerView->markerModel, &MarkerModel::removeMarker);
     connect(inputEditorView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &InputEditorWindow::updateStatusBar);
+    connect(inputEditorView->inputEditorModel, &InputEditorModel::stateLoaded, this, &InputEditorWindow::updateProgressBar);
 
     QGroupBox* markerBox = new QGroupBox(tr("Markers"));
     QVBoxLayout* markerLayout = new QVBoxLayout;
@@ -87,6 +88,10 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(
     /* Status bar */
     statusFrame = new QLabel(tr("No frame selected"));
     statusBar()->addWidget(statusFrame);
+    statusSeek = new QProgressBar();
+    statusSeek->setMinimum(0);
+    statusSeek->setMaximum(0);
+    statusSeek->setMaximumHeight(statusBar()->height()*0.6);
 
     /* Layout */
     QHBoxLayout *mainLayout = new QHBoxLayout;
@@ -98,6 +103,12 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(
     setCentralWidget(centralWidget);
     
     update_config();
+}
+
+void InputEditorWindow::update()
+{
+    inputEditorView->update();
+    updateProgressBar();
 }
 
 void InputEditorWindow::update_config()
@@ -127,6 +138,10 @@ void InputEditorWindow::isWindowVisible(bool &visible)
 
 void InputEditorWindow::updateStatusBar()
 {
+    /* Seeking take priority over selected frames */
+    if (context->seek_frame)
+        return;
+
     const QModelIndexList indexes = inputEditorView->selectionModel()->selectedRows();
 
     if (indexes.count() == 0)
@@ -135,4 +150,46 @@ void InputEditorWindow::updateStatusBar()
         statusFrame->setText(tr("1 frame selected"));
     else
         statusFrame->setText(QString(tr("%1 frames selected")).arg(indexes.count()));
+}
+
+void InputEditorWindow::updateProgressBar()
+{
+    /* Show progress bar when seeking */
+    static bool is_seeking = false;
+    
+    if (!context->seek_frame) {
+        if (is_seeking) {
+            is_seeking = false;
+            statusBar()->removeWidget(statusSeek);
+            statusBar()->addWidget(statusFrame);
+            statusFrame->show();
+            statusSeek->setMinimum(0);
+            statusSeek->setMaximum(0);
+            statusSeek->setFormat(tr("Loading savestate"));
+        }
+        return;
+    }
+
+    if (!is_seeking) {
+        is_seeking = true;
+        statusBar()->removeWidget(statusFrame);
+        statusBar()->addWidget(statusSeek);
+        statusSeek->show();
+    }
+
+    /* Set minimum and maximum on the first time after state loading.
+     * Before that, it will show a busy indicator */
+    if ((statusSeek->minimum() == 0) && (context->framecount <= context->seek_frame)) {
+        statusSeek->setMinimum(context->framecount);
+        statusSeek->setMaximum(context->seek_frame);
+        statusSeek->setFormat(QString(tr("Seeking to frame %1")).arg(context->seek_frame));
+    }
+    
+    /* Seeking frame may change during seeking */
+    if ((statusSeek->minimum() != 0) && (statusSeek->maximum() != context->seek_frame)) {
+        statusSeek->setMaximum(context->seek_frame);
+        statusSeek->setFormat(QString(tr("Seeking to frame %1")).arg(context->seek_frame));
+    }
+
+    statusSeek->setValue(context->framecount);
 }

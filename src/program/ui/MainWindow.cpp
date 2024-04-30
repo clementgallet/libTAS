@@ -911,7 +911,7 @@ void MainWindow::updateUIFrequent()
     ramWatchWindow->update();
 
     /* Update input editor */
-    inputEditorWindow->inputEditorView->update();
+    inputEditorWindow->update();
 }
 
 void MainWindow::updateMovieParams()

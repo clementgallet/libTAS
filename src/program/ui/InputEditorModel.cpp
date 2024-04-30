@@ -1076,6 +1076,11 @@ bool InputEditorModel::rewind(uint64_t framecount, bool toggle)
             context->hotkey_pressed_queue.push(HOTKEY_PLAYPAUSE);
     }
     
+    /* To display a progress bar showing that a state is loading, we must
+     * signal the window, because otherwise the next time it will update is
+     * after the state has been loaded */
+    emit stateLoaded();
+
     return true;
 }
 

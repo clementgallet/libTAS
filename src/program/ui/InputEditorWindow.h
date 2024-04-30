@@ -23,6 +23,7 @@
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QProgressBar>
 
 /* Forward declaration */
 struct Context;
@@ -38,6 +39,7 @@ public:
     QSize sizeHint() const override;
 
     /* Update UI elements when config has changed */
+    void update();
     void update_config();
     
     InputEditorView *inputEditorView;
@@ -46,6 +48,7 @@ public:
 public slots:
     void isWindowVisible(bool &visible);
     void updateStatusBar();
+    void updateProgressBar();
     
 private:
     Context *context;
@@ -54,6 +57,7 @@ private:
     QAction* fastforwardAct;
     QAction* markerPauseAct;
     QLabel* statusFrame;
+    QProgressBar* statusSeek;
 };
 
 #endif

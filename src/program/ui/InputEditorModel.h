@@ -181,6 +181,7 @@ private:
     
 signals:
     void inputSetChanged();
+    void stateLoaded();
 
 };
 
