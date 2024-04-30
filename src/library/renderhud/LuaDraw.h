@@ -50,6 +50,15 @@ struct LuaText : public LuaShape
     void render() override;
 };
 
+struct LuaWindow : public LuaShape
+{
+    std::string id;
+    std::string text;
+    float x;
+    float y;
+    void render() override;
+};
+
 struct LuaPixel : public LuaShape
 {
     float x;
@@ -110,6 +119,9 @@ struct LuaEllipse : public LuaShape
 
 /* Insert a lua text to be displayed */
 void insertText(float x, float y, std::string text, uint32_t color, float anchor_x, float anchor_y, float font_size, bool monospace);
+
+/* Insert a lua window to be displayed */
+void insertWindow(float x, float y, std::string id, std::string text);
 
 /* Insert a lua pixel to be displayed */
 void insertPixel(float x, float y, uint32_t color);

@@ -34,6 +34,7 @@ static const luaL_Reg gui_functions[] =
 {
     { "resolution", Lua::Gui::resolution},
     { "text", Lua::Gui::text},
+    { "window", Lua::Gui::window},
     { "pixel", Lua::Gui::pixel},
     { "rectangle", Lua::Gui::rectangle},
     { "line", Lua::Gui::line},
@@ -87,6 +88,22 @@ int Lua::Gui::text(lua_State *L)
     sendData(&anchor_y, sizeof(float));
     sendData(&font_size, sizeof(float));
     sendData(&monospace, sizeof(bool));
+    
+    return 0;
+}
+
+int Lua::Gui::window(lua_State *L)
+{
+    float x = lua_tonumber(L, 1);
+    float y = lua_tonumber(L, 2);
+    std::string id = luaL_checklstring(L, 3, nullptr);
+    std::string text = luaL_checklstring(L, 4, nullptr);
+    
+    sendMessage(MSGN_LUA_WINDOW);
+    sendData(&x, sizeof(float));
+    sendData(&y, sizeof(float));
+    sendString(id);
+    sendString(text);
     
     return 0;
 }

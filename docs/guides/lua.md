@@ -31,6 +31,19 @@ and `anchor_y` values that are bound between 0 and 1. For example, setting
 print right-aligned text. If `monospace` is set to a non-zero value, a monospace
 font will be used instead of the regular font.
 
+#### gui.window
+
+    none gui.window(Number x, Number y, String id, String text)
+    
+Draws an ImGui window containing the text string `text` at position `(x, y)`. The
+text can contain newline characters.
+
+If `id` is empty, the window will appear without any decoration and will be fixed.
+If `id` is non-empty, the window will appear with a title, and can be moved freely
+by the user. In that case, the `(x, y)` position is interpreted as startup position.
+
+When displaying multiple windows, you must use unique ids (when not empty).
+
 #### gui.pixel
 
     none gui.pixel(Number x, Number y, [Number color = 0xffffffff]) 

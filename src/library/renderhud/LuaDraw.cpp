@@ -36,6 +36,7 @@ namespace libtas {
 static std::list<std::unique_ptr<LuaDraw::LuaShape>> lua_shapes;
 ImFont* LuaDraw::LuaText::regular_font;
 ImFont* LuaDraw::LuaText::monospace_font;
+static int new_id = 0;
 
 void LuaDraw::LuaText::render()
 {
@@ -64,6 +65,28 @@ void LuaDraw::LuaText::render()
         float new_y = y - size.y * anchor_y;
         ImGui::GetBackgroundDrawList()->AddText(font, font_size, ImVec2(new_x, new_y), color, text.c_str());
     }    
+}
+
+void LuaDraw::LuaWindow::render()
+{
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoSavedSettings;
+    if (id.empty())
+        window_flags |= ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoNav;
+    
+    ImGui::SetNextWindowPos(ImVec2(x, y), id.empty() ? ImGuiCond_Always : ImGuiCond_Once, ImVec2(0.0f, 0.0f));
+
+    /* Generate a unique id */
+    std::string unique_id;
+    if (id.empty()) {
+        unique_id = "temp_";
+        unique_id += std::to_string(new_id);
+        new_id++;
+    }
+
+    if (ImGui::Begin(id.empty() ? unique_id.c_str() : id.c_str(), nullptr, window_flags)) {
+        ImGui::TextUnformatted(text.c_str());
+    }
+    ImGui::End();
 }
 
 void LuaDraw::LuaPixel::render()
@@ -115,6 +138,16 @@ void LuaDraw::insertText(float x, float y, std::string text, uint32_t color, flo
     lt->font_size = font_size;
     lt->monospace = monospace;
     lua_shapes.emplace_back(lt);
+}
+
+void LuaDraw::insertWindow(float x, float y, std::string id, std::string text)
+{
+    auto lw = new LuaWindow();
+    lw->x = x;
+    lw->y = y;
+    lw->id = id;
+    lw->text = text;
+    lua_shapes.emplace_back(lw);
 }
 
 void LuaDraw::insertPixel(float x, float y, uint32_t color)
@@ -215,6 +248,9 @@ void LuaDraw::insertEllipse(float center_x, float center_y, float radius_x, floa
 
 void LuaDraw::draw()
 {
+    /* Reset the generation of unique ids */
+    new_id = 0;
+    
     for (auto &shape : lua_shapes) {
         shape->render();
     }

@@ -38,6 +38,9 @@ namespace Gui {
     /* Draw text */
     int text(lua_State *L);
 
+    /* Draw window */
+    int window(lua_State *L);
+
     /* Draw pixel */
     int pixel(lua_State *L);
 

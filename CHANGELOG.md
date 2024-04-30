@@ -38,6 +38,7 @@
 * Show number of selected frames in input editor
 * Clip lua shapes inside game window
 * Show a progress bar when seeking
+* Add lua window
 
 ### Changed
 

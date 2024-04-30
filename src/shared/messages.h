@@ -301,6 +301,12 @@ enum {
     MSGN_LUA_TEXT,
 
     /*
+     * Send to the game a text to be displayed inside a window.
+     * Argument: float x, float y, string id, string text
+     */
+    MSGN_LUA_WINDOW,
+
+    /*
      * Send to the game a pixel to be displayed from a lua script.
      * Argument: float x, float y, uint32_t color
      */
