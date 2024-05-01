@@ -720,6 +720,15 @@ void GameLoop::processInputs(AllInputs &ai)
                 if (ai.controllers[j]) {
                     emit fillControllerInputs(*ai.controllers[j], j);            
                 }
+                else {
+                    /* If we didn't created an object yet, but if the user
+                     * did set something on the controller panel, then create
+                     * the object. */
+                    ControllerInputs ci;
+                    emit fillControllerInputs(ci, j);
+                    if (!ci.isDefaultController())
+                        ai.controllers[j].reset(new ControllerInputs(ci));
+                }
             }
 
             /* Add framerate if necessary */
