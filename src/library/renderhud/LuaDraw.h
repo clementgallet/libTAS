@@ -33,6 +33,7 @@ namespace LuaDraw
 struct LuaShape
 {
     virtual void render() = 0;
+    virtual bool isInbound() = 0;
 };
 
 struct LuaText : public LuaShape
@@ -48,6 +49,7 @@ struct LuaText : public LuaShape
     static ImFont* regular_font;
     static ImFont* monospace_font;
     void render() override;
+    bool isInbound() override {return true;}
 };
 
 struct LuaWindow : public LuaShape
@@ -57,6 +59,7 @@ struct LuaWindow : public LuaShape
     float x;
     float y;
     void render() override;
+    bool isInbound() override {return true;}
 };
 
 struct LuaPixel : public LuaShape
@@ -65,6 +68,7 @@ struct LuaPixel : public LuaShape
     float y;
     uint32_t color;
     void render() override;
+    bool isInbound() override;
 };
 
 struct LuaRect : public LuaShape
@@ -77,6 +81,7 @@ struct LuaRect : public LuaShape
     uint32_t color;
     int filled;
     void render() override;
+    bool isInbound() override;
 };
 
 struct LuaLine : public LuaShape
@@ -87,6 +92,7 @@ struct LuaLine : public LuaShape
     float y1;
     uint32_t color;
     void render() override;
+    bool isInbound() override;
 };
 
 struct LuaQuad : public LuaShape
@@ -103,6 +109,7 @@ struct LuaQuad : public LuaShape
     uint32_t color;
     int filled;
     void render() override;
+    bool isInbound() override;
 };
 
 struct LuaEllipse : public LuaShape
@@ -115,28 +122,11 @@ struct LuaEllipse : public LuaShape
     uint32_t color;
     int filled;
     void render() override;
+    bool isInbound() override;
 };
 
-/* Insert a lua text to be displayed */
-void insertText(float x, float y, std::string text, uint32_t color, float anchor_x, float anchor_y, float font_size, bool monospace);
-
-/* Insert a lua window to be displayed */
-void insertWindow(float x, float y, std::string id, std::string text);
-
-/* Insert a lua pixel to be displayed */
-void insertPixel(float x, float y, uint32_t color);
-
-/* Insert a lua rect to be displayed */
-void insertRect(float x, float y, float w, float h, float thickness, uint32_t color, int filled);
-
-/* Insert a lua line to be displayed */
-void insertLine(float x0, float y0, float x1, float y1, uint32_t color);
-
-/* Insert a lua line to be displayed */
-void insertQuad(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float thickness, uint32_t color, int filled);
-
-/* Insert a lua line to be displayed */
-void insertEllipse(float center_x, float center_y, float radius_x, float radius_y, float thickness, uint32_t color, int filled);
+/* Process incoming data from libTAS program */
+void processSocket(int message);
 
 /* Clear all lua drawings */
 void reset();

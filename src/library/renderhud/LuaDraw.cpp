@@ -24,6 +24,8 @@
 #include "TimeHolder.h"
 #include "logging.h"
 #include "screencapture/ScreenCapture.h"
+#include "../shared/sockethelpers.h"
+#include "../shared/messages.h"
 
 #include <list>
 #include <utility>
@@ -94,6 +96,11 @@ void LuaDraw::LuaPixel::render()
     ImGui::GetBackgroundDrawList()->AddLine(ImVec2(x, y), ImVec2(x, y), color);
 }
 
+bool LuaDraw::LuaPixel::isInbound()
+{
+    return LuaDraw::isInbound(x, y, x, y);
+}
+
 void LuaDraw::LuaRect::render()
 {
     if (filled)
@@ -102,9 +109,19 @@ void LuaDraw::LuaRect::render()
         ImGui::GetBackgroundDrawList()->AddRect(ImVec2(x, y), ImVec2(x+w, y+h), color, 0.0f, 0, thickness);
 }
 
+bool LuaDraw::LuaRect::isInbound()
+{
+    return LuaDraw::isInbound(x, y, x+w, y+h);
+}
+
 void LuaDraw::LuaLine::render()
 {
     ImGui::GetBackgroundDrawList()->AddLine(ImVec2(x0, y0), ImVec2(x1, y1), color);
+}
+
+bool LuaDraw::LuaLine::isInbound()
+{
+    return LuaDraw::isInbound(std::min(x0, x1), std::min(y0, y1), std::max(x0, x1), std::max(y0, y1));
 }
 
 void LuaDraw::LuaQuad::render()
@@ -115,6 +132,14 @@ void LuaDraw::LuaQuad::render()
         ImGui::GetBackgroundDrawList()->AddQuad(ImVec2(x0, y0), ImVec2(x1, y1), ImVec2(x2, y2), ImVec2(x3, y3), color, thickness);
 }
 
+bool LuaDraw::LuaQuad::isInbound()
+{
+    return LuaDraw::isInbound(std::min(std::min(x0, x1), std::min(x2, x3)),
+                              std::min(std::min(y0, y1), std::min(y2, y3)),
+                              std::max(std::max(x0, x1), std::max(x2, x3)),
+                              std::max(std::max(y0, y1), std::max(y2, y3)));
+}
+
 void LuaDraw::LuaEllipse::render()
 {
     if (filled)
@@ -123,127 +148,162 @@ void LuaDraw::LuaEllipse::render()
         ImGui::GetBackgroundDrawList()->AddEllipse(ImVec2(center_x, center_y), radius_x, radius_y, color, 0.0f, 0, thickness);
 }
 
-void LuaDraw::insertText(float x, float y, std::string text, uint32_t color, float anchor_x, float anchor_y, float font_size, bool monospace)
+bool LuaDraw::LuaEllipse::isInbound()
 {
-    auto lt = new LuaText();
-    lt->x = x;
-    lt->y = y;
-    lt->text = text;
-    lt->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
-                 static_cast<uint8_t>((color >> 8) & 0xff),
-                 static_cast<uint8_t>(color & 0xff),
-                 static_cast<uint8_t>((color >> 24) & 0xff));
-    lt->anchor_x = anchor_x;
-    lt->anchor_y = anchor_y;
-    lt->font_size = font_size;
-    lt->monospace = monospace;
-    lua_shapes.emplace_back(lt);
+    return LuaDraw::isInbound(center_x - radius_x, center_y - radius_y, center_x + radius_x, center_y + radius_y);
 }
 
-void LuaDraw::insertWindow(float x, float y, std::string id, std::string text)
+void LuaDraw::processSocket(int message)
 {
-    auto lw = new LuaWindow();
-    lw->x = x;
-    lw->y = y;
-    lw->id = id;
-    lw->text = text;
-    lua_shapes.emplace_back(lw);
-}
+    switch (message) {
+        case MSGN_LUA_RESOLUTION:
+        {
+            int w, h;
+            ScreenCapture::getDimensions(w, h);
+            sendMessage(MSGB_LUA_RESOLUTION);
+            sendData(&w, sizeof(int));
+            sendData(&h, sizeof(int));
+            break;
+        }
+        case MSGN_LUA_TEXT:
+        {
+            auto lt = new LuaText();
+            receiveData(&lt->x, sizeof(float));
+            receiveData(&lt->y, sizeof(float));
+            lt->text = receiveString();
+            
+            uint32_t color;
+            receiveData(&color, sizeof(uint32_t));
+            lt->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
+                         static_cast<uint8_t>((color >> 8) & 0xff),
+                         static_cast<uint8_t>(color & 0xff),
+                         static_cast<uint8_t>((color >> 24) & 0xff));
+            
+            receiveData(&lt->anchor_x, sizeof(float));
+            receiveData(&lt->anchor_y, sizeof(float));
+            receiveData(&lt->font_size, sizeof(float));
+            receiveData(&lt->monospace, sizeof(bool));
+            lua_shapes.emplace_back(lt);
+            break;
+        }
+        case MSGN_LUA_WINDOW:
+        {
+            auto lw = new LuaWindow();
+            receiveData(&lw->x, sizeof(float));
+            receiveData(&lw->y, sizeof(float));
+            lw->id = receiveString();
+            lw->text = receiveString();
+            lua_shapes.emplace_back(lw);
+            break;
+        }
+        case MSGN_LUA_PIXEL:
+        {
+            auto lp = std::unique_ptr<LuaPixel>(new LuaPixel);
+            receiveData(&lp->x, sizeof(float));
+            receiveData(&lp->y, sizeof(float));
+            uint32_t color;
+            receiveData(&color, sizeof(uint32_t));
+            lp->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
+                         static_cast<uint8_t>((color >> 8) & 0xff),
+                         static_cast<uint8_t>(color & 0xff),
+                         static_cast<uint8_t>((color >> 24) & 0xff));
 
-void LuaDraw::insertPixel(float x, float y, uint32_t color)
-{
-    if (!LuaDraw::isInbound(x, y, x, y))
-        return;
+            if (lp->isInbound())
+                lua_shapes.push_back(std::move(lp));
+            break;
+        }
+        case MSGN_LUA_RECT:
+        {
+            auto lr = std::unique_ptr<LuaRect>(new LuaRect());
+            receiveData(&lr->x, sizeof(float));
+            receiveData(&lr->y, sizeof(float));
+            receiveData(&lr->w, sizeof(float));
+            receiveData(&lr->h, sizeof(float));
+            receiveData(&lr->thickness, sizeof(float));
 
-    auto lp = new LuaPixel;
-    lp->x = x;
-    lp->y = y;
-    lp->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
-                 static_cast<uint8_t>((color >> 8) & 0xff),
-                 static_cast<uint8_t>(color & 0xff),
-                 static_cast<uint8_t>((color >> 24) & 0xff));
-    lua_shapes.emplace_back(lp);
-}
+            uint32_t color;
+            receiveData(&color, sizeof(uint32_t));
+            lr->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
+                           static_cast<uint8_t>((color >> 8) & 0xff),
+                           static_cast<uint8_t>(color & 0xff),
+                           static_cast<uint8_t>((color >> 24) & 0xff));
+            
+            receiveData(&lr->filled, sizeof(int));
 
-void LuaDraw::insertRect(float x, float y, float w, float h, float thickness, uint32_t color, int filled)
-{
-    if (!LuaDraw::isInbound(x, y, x+w, y+h))
-        return;
+            if (lr->isInbound())
+                lua_shapes.push_back(std::move(lr));
+            break;
+        }
+        case MSGN_LUA_LINE:
+        {
+            auto ll = std::unique_ptr<LuaLine>(new LuaLine());
+            receiveData(&ll->x0, sizeof(float));
+            receiveData(&ll->y0, sizeof(float));
+            receiveData(&ll->x1, sizeof(float));
+            receiveData(&ll->y1, sizeof(float));
 
-    auto lr = new LuaRect();
-    lr->x = x;
-    lr->y = y;
-    lr->w = w;
-    lr->h = h;
-    lr->thickness = thickness;
-    lr->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
-                   static_cast<uint8_t>((color >> 8) & 0xff),
-                   static_cast<uint8_t>(color & 0xff),
-                   static_cast<uint8_t>((color >> 24) & 0xff));
-    lr->filled = filled;
-    lua_shapes.emplace_back(lr);
-}
+            uint32_t color;
+            receiveData(&color, sizeof(uint32_t));
+            ll->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
+                         static_cast<uint8_t>((color >> 8) & 0xff),
+                         static_cast<uint8_t>(color & 0xff),
+                         static_cast<uint8_t>((color >> 24) & 0xff));
 
-void LuaDraw::insertLine(float x0, float y0, float x1, float y1, uint32_t color)
-{
-    if (!LuaDraw::isInbound(std::min(x0, x1), std::min(y0, y1), std::max(x0, x1), std::max(y0, y1)))
-        return;
+            if (ll->isInbound())
+                lua_shapes.push_back(std::move(ll));
 
-    auto ll = new LuaLine();
-    ll->x0 = x0;
-    ll->y0 = y0;
-    ll->x1 = x1;
-    ll->y1 = y1;
-    ll->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
-                 static_cast<uint8_t>((color >> 8) & 0xff),
-                 static_cast<uint8_t>(color & 0xff),
-                 static_cast<uint8_t>((color >> 24) & 0xff));
-    lua_shapes.emplace_back(ll);
-}
+            break;
+        }
+        case MSGN_LUA_QUAD:
+        {
+            auto lq = std::unique_ptr<LuaQuad>(new LuaQuad());
+            receiveData(&lq->x0, sizeof(float));
+            receiveData(&lq->y0, sizeof(float));
+            receiveData(&lq->x1, sizeof(float));
+            receiveData(&lq->y1, sizeof(float));
+            receiveData(&lq->x2, sizeof(float));
+            receiveData(&lq->y2, sizeof(float));
+            receiveData(&lq->x3, sizeof(float));
+            receiveData(&lq->y3, sizeof(float));
+            receiveData(&lq->thickness, sizeof(float));
+            uint32_t color;
+            receiveData(&color, sizeof(uint32_t));
+            lq->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
+                           static_cast<uint8_t>((color >> 8) & 0xff),
+                           static_cast<uint8_t>(color & 0xff),
+                           static_cast<uint8_t>((color >> 24) & 0xff));
 
-void LuaDraw::insertQuad(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float thickness, uint32_t color, int filled)
-{
-    if (!LuaDraw::isInbound(std::min(std::min(x0, x1), std::min(x2, x3)),
-                            std::min(std::min(y0, y1), std::min(y2, y3)),
-                            std::max(std::max(x0, x1), std::max(x2, x3)),
-                            std::max(std::max(y0, y1), std::max(y2, y3))))
-        return;
+            receiveData(&lq->filled, sizeof(int));
+            
+            if (lq->isInbound())
+                lua_shapes.push_back(std::move(lq));    
 
-    auto lq = new LuaQuad();
-    lq->x0 = x0;
-    lq->y0 = y0;
-    lq->x1 = x1;
-    lq->y1 = y1;
-    lq->x2 = x2;
-    lq->y2 = y2;
-    lq->x3 = x3;
-    lq->y3 = y3;
-    lq->thickness = thickness;
-    lq->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
-                   static_cast<uint8_t>((color >> 8) & 0xff),
-                   static_cast<uint8_t>(color & 0xff),
-                   static_cast<uint8_t>((color >> 24) & 0xff));
-    lq->filled = filled;
-    lua_shapes.emplace_back(lq);    
-}
+            break;
+        }
+        case MSGN_LUA_ELLIPSE:
+        {
+            auto le = std::unique_ptr<LuaEllipse>(new LuaEllipse());
+            receiveData(&le->center_x, sizeof(float));
+            receiveData(&le->center_y, sizeof(float));
+            receiveData(&le->radius_x, sizeof(float));
+            receiveData(&le->radius_y, sizeof(float));
+            receiveData(&le->thickness, sizeof(float));
+            uint32_t color;
+            receiveData(&color, sizeof(uint32_t));
+            le->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
+                         static_cast<uint8_t>((color >> 8) & 0xff),
+                         static_cast<uint8_t>(color & 0xff),
+                         static_cast<uint8_t>((color >> 24) & 0xff));
+            receiveData(&le->filled, sizeof(int));
 
-void LuaDraw::insertEllipse(float center_x, float center_y, float radius_x, float radius_y, float thickness, uint32_t color, int filled)
-{
-    if (!LuaDraw::isInbound(center_x - radius_x, center_y - radius_y, center_x + radius_x, center_y + radius_y))
-        return;
+            if (le->isInbound())
+                lua_shapes.push_back(std::move(le));
 
-    auto le = new LuaEllipse();
-    le->center_x = center_x;
-    le->center_y = center_y;
-    le->radius_x = radius_x;
-    le->radius_y = radius_y;
-    le->thickness = thickness;
-    le->color = IM_COL32(static_cast<uint8_t>((color >> 16) & 0xff),
-                 static_cast<uint8_t>((color >> 8) & 0xff),
-                 static_cast<uint8_t>(color & 0xff),
-                 static_cast<uint8_t>((color >> 24) & 0xff));
-    le->filled = filled;
-    lua_shapes.emplace_back(le);
+            break;
+        }
+        default:
+            break;
+    }
 }
 
 void LuaDraw::draw()
