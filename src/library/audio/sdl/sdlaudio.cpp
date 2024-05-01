@@ -136,13 +136,22 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
     int bufferId = audiocontext.createBuffer();
     auto buffer = audiocontext.getBuffer(bufferId);
 
-    /* Sanity check done by SDL */
+    /* Sanity checks done by SDL */
     if (desired->freq == 0) obtained->freq = 22050;
     buffer->frequency = obtained->freq;
     debuglogstdio(LCF_SDL | LCF_SOUND, "Frequency %d Hz", buffer->frequency);
 
-    /* Sanity check done by SDL */
     if (desired->format == 0) obtained->format = AUDIO_S16LSB;
+
+    if (desired->samples == 0) {
+		/* Pick a default of ~46 ms at desired frequency */
+		int samples = (desired->freq / 1000) * 46;
+		int power2 = 1;
+		while (power2 < samples) {
+			power2 *= 2;
+		}
+		obtained->samples = power2;
+	}
 
     switch(obtained->format) {
         case AUDIO_U8:
@@ -248,6 +257,7 @@ static int open_audio_device(const SDL_AudioSpec * desired, SDL_AudioSpec * obta
         if (id > 0) {
             desired->size = _obtained.size;
             desired->silence = _obtained.silence;
+            desired->samples = _obtained.samples;
         }
     }
     
