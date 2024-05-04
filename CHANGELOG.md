@@ -81,6 +81,7 @@
 * Fix audio mixing with non-integer samples per frame (#600)
 * Inserting a marker does update correctly the marker table
 * Add sanity check when no buffer size is provided in SDL_OpenAudio()
+* Ruffle OpenGL ES GUI fixed by ImGui update (#604)
 
 ## [1.4.5] - 2023-10-22
 ### Added

@@ -57,13 +57,15 @@ void RenderHUD_Vulkan::init() {
     init_info.Queue = vk::context.graphicsQueue;
     init_info.PipelineCache = VK_NULL_HANDLE;
     init_info.DescriptorPool = vk::context.descriptorPool;
+    init_info.RenderPass = vk::context.renderPass;
     init_info.Subpass = 0;
     init_info.MinImageCount = vk::context.imageCount;
     init_info.ImageCount = vk::context.imageCount;
     init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    init_info.UseDynamicRendering = false;
     init_info.Allocator = vk::context.allocator;
     init_info.CheckVkResultFn = vk::checkVkResult;
-    ImGui_ImplVulkan_Init(&init_info, vk::context.renderPass);
+    ImGui_ImplVulkan_Init(&init_info);
 }
 
 void RenderHUD_Vulkan::fini() {
