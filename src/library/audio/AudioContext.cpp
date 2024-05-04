@@ -81,8 +81,8 @@ AudioContext::AudioContext(void)
 }
 
 AudioContext& AudioContext::get() {
-    static AudioContext instance;
-    return instance;
+    static AudioContext* instance = new AudioContext;
+    return *instance;
 }
 
 void AudioContext::init(void)
