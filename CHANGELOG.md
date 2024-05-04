@@ -39,6 +39,7 @@
 * Clip lua shapes inside game window
 * Show a progress bar when seeking
 * Add lua window
+* Implement SDL grab functions
 
 ### Changed
 

@@ -340,6 +340,11 @@ SDL_LINK(SDL_RenderGeometryRaw)
 SDL_LINK(SDL_SetTextureScaleMode)
 SDL_LINK(SDL_UpdateTexture)
 SDL_LINK(SDL_RenderClear)
+SDL_HOOK(SDL_SetWindowGrab)
+SDL_HOOK(SDL_SetWindowMouseGrab)
+SDL_HOOK(SDL_GetWindowGrab)
+SDL_HOOK(SDL_GetWindowMouseGrab)
+SDL_HOOK(SDL_GetGrabbedWindow)
 
 #undef SDL_HOOK
 #undef SDL_LINK

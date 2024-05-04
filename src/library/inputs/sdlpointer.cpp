@@ -245,4 +245,107 @@ int SDL_ShowCursor(int toggle)
     return showCursor;
 }
 
+static SDL_Window* pointer_grab_sdl_window = nullptr;
+DECLARE_ORIG_POINTER(SDL_GetWindowSize)
+
+void SDL_SetWindowGrab(SDL_Window * window, SDL_bool grabbed)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+
+    if (grabbed) {
+        pointer_grab_sdl_window = window;
+        
+        int w, h;
+        LINK_NAMESPACE_SDL2(SDL_GetWindowSize);
+        orig::SDL_GetWindowSize(window, &w, &h);
+
+        pointer_clipping = true;
+        clipping_x = 0;
+        clipping_y = 0;
+        clipping_w = w;
+        clipping_h = h;
+            
+        if (game_ai.pointer.x < clipping_x) {
+            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x);
+            game_ai.pointer.x = clipping_x;
+        }
+        else if (game_ai.pointer.x >= (clipping_x + clipping_w)) {
+            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x + clipping_w - 1);
+            game_ai.pointer.x = clipping_x + clipping_w - 1;
+        }
+        
+        if (game_ai.pointer.y < clipping_y) {
+            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y);
+            game_ai.pointer.y = clipping_y;
+        }
+        else if (game_ai.pointer.y >= (clipping_y + clipping_h)) {
+            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y + clipping_h - 1);
+            game_ai.pointer.y = clipping_y + clipping_h - 1;
+        }
+    }
+    else {
+        pointer_grab_sdl_window = nullptr;
+        pointer_clipping = false;
+    }
+}
+
+void SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+
+    if (grabbed) {
+        pointer_grab_sdl_window = window;
+        
+        int w, h;
+        LINK_NAMESPACE_SDL2(SDL_GetWindowSize);
+        orig::SDL_GetWindowSize(window, &w, &h);
+
+        pointer_clipping = true;
+        clipping_x = 0;
+        clipping_y = 0;
+        clipping_w = w;
+        clipping_h = h;
+            
+        if (game_ai.pointer.x < clipping_x) {
+            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x);
+            game_ai.pointer.x = clipping_x;
+        }
+        else if (game_ai.pointer.x >= (clipping_x + clipping_w)) {
+            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x + clipping_w - 1);
+            game_ai.pointer.x = clipping_x + clipping_w - 1;
+        }
+        
+        if (game_ai.pointer.y < clipping_y) {
+            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y);
+            game_ai.pointer.y = clipping_y;
+        }
+        else if (game_ai.pointer.y >= (clipping_y + clipping_h)) {
+            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y + clipping_h - 1);
+            game_ai.pointer.y = clipping_y + clipping_h - 1;
+        }
+    }
+    else {
+        pointer_grab_sdl_window = nullptr;
+        pointer_clipping = false;
+    }
+}
+
+SDL_bool SDL_GetWindowGrab(SDL_Window * window)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    return (window == pointer_grab_sdl_window) ? SDL_TRUE : SDL_FALSE;
+}
+
+SDL_bool SDL_GetWindowMouseGrab(SDL_Window * window)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    return (window == pointer_grab_sdl_window) ? SDL_TRUE : SDL_FALSE;
+}
+
+SDL_Window* SDL_GetGrabbedWindow(void)
+{
+    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    return pointer_grab_sdl_window;
+}
+
 }

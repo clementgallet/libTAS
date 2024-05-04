@@ -234,12 +234,78 @@ OVERRIDE void SDL_FreeCursor(SDL_Cursor * cursor);
  */
 OVERRIDE int SDL_ShowCursor(int toggle);
 
-/**
- *  Used as a mask when testing buttons in buttonstate.
- *   - Button 1:  Left mouse button
- *   - Button 2:  Middle mouse button
- *   - Button 3:  Right mouse button
+/** 
+ * Set a window's input grab mode.
+ *  
+ * When input is grabbed, the mouse is confined to the window. This function
+ * will also grab the keyboard if `SDL_HINT_GRAB_KEYBOARD` is set. To grab the
+ * keyboard without also grabbing the mouse, use SDL_SetWindowKeyboardGrab().
+ *
+ * If the caller enables a grab while another window is currently grabbed, the
+ * other window loses its grab in favor of the caller's window.
+ *
+ * \param window the window for which the input grab mode should be set
+ * \param grabbed SDL_TRUE to grab input or SDL_FALSE to release input
+ *
+ * \since This function is available since SDL 2.0.0.
+ *
+ * \sa SDL_GetGrabbedWindow
+ * \sa SDL_GetWindowGrab
  */
+OVERRIDE void SDL_SetWindowGrab(SDL_Window * window, SDL_bool grabbed);
+
+/**
+ * Set a window's mouse grab mode.
+ *
+ * Mouse grab confines the mouse cursor to the window.
+ *
+ * \param window The window for which the mouse grab mode should be set.
+ * \param grabbed This is SDL_TRUE to grab mouse, and SDL_FALSE to release.
+ *
+ * \since This function is available since SDL 2.0.16.
+ *
+ * \sa SDL_GetWindowMouseGrab
+ * \sa SDL_SetWindowKeyboardGrab
+ * \sa SDL_SetWindowGrab
+ */
+OVERRIDE void SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed);
+
+/**
+ * Get a window's input grab mode.
+ *
+ * \param window the window to query
+ * \returns SDL_TRUE if input is grabbed, SDL_FALSE otherwise.
+ *
+ * \since This function is available since SDL 2.0.0.
+ *
+ * \sa SDL_SetWindowGrab
+ */
+OVERRIDE SDL_bool SDL_GetWindowGrab(SDL_Window * window);
+
+/**
+ * Get a window's mouse grab mode.
+ *
+ * \param window the window to query
+ * \returns SDL_TRUE if mouse is grabbed, and SDL_FALSE otherwise.
+ *
+ * \since This function is available since SDL 2.0.16.
+ *
+ * \sa SDL_SetWindowKeyboardGrab
+ * \sa SDL_GetWindowGrab
+ */
+OVERRIDE SDL_bool SDL_GetWindowMouseGrab(SDL_Window * window);
+
+/**
+ * Get the window that currently has an input grab enabled.
+ *
+ * \returns the window if input is grabbed or NULL otherwise.
+ *
+ * \since This function is available since SDL 2.0.4.
+ *
+ * \sa SDL_GetWindowGrab
+ * \sa SDL_SetWindowGrab
+ */
+OVERRIDE SDL_Window* SDL_GetGrabbedWindow(void);
 
 }
 
