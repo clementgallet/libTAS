@@ -503,7 +503,7 @@ bool ImGui_ImplXlib_Init(Display* display, Window window)
     // Select keyboard/focus events
     XWindowAttributes xwa;
     XGetWindowAttributes(display, window, &xwa);
-    XSelectInput(display, window, xwa.your_event_mask | KeyPressMask | KeyReleaseMask | FocusChangeMask);
+    XSelectInput(display, window, xwa.your_event_mask | KeyPressMask | KeyReleaseMask | FocusChangeMask | StructureNotifyMask);
 
     // Setup XInput for mouse inputs
     int xi2_opcode, xi2_event, xi2_error;
@@ -523,11 +523,10 @@ bool ImGui_ImplXlib_Init(Display* display, Window window)
         for (int mask_i = 0; mask_i < orig_num_eventmask; mask_i++) {
             if (orig_eventmask[mask_i].deviceid != XIAllMasterDevices)
                 continue;
-                
-            for (int ei = 0, em = 0; em < orig_num_eventmask; ei++) {
+    
+            for (int ei = 0; (ei>>3) < orig_eventmask[mask_i].mask_len; ei++) {
                 if (XIMaskIsSet(orig_eventmask[mask_i].mask, ei)) {
                     XISetMask(xi2_mask, ei);
-                    em++;
                 }
             }
         }
