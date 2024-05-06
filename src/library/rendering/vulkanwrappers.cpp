@@ -434,12 +434,12 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
     /* Save the color format */
     vk::context.colorFormat = pCreateInfo->imageFormat;
 
+    VkResult res = orig::vkCreateSwapchainKHR(device, &newCreateInfo, pAllocator, pSwapchain);    
+    
     /* Destroy old swapchain elements */
     if (vk::context.swapchain) {
         destroySwapchain();
     }
-
-    VkResult res = orig::vkCreateSwapchainKHR(device, &newCreateInfo, pAllocator, pSwapchain);    
     
     vk::context.swapchain = *pSwapchain;
     vk::context.swapchainRebuild = false;
