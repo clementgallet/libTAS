@@ -26,6 +26,7 @@
 #include "MessageWindow.h"
 #include "WatchesWindow.h"
 #include "AudioDebug.h"
+#include "UnityDebug.h"
 
 #include "GlobalState.h"
 #include "global.h" // Global::shared_config
@@ -35,7 +36,9 @@
 #include "screencapture/ScreenCapture.h"
 #include "general/timewrappers.h" // clock_gettime
 #include "TimeHolder.h"
+#include "UnityHacks.h"
 #include "../external/imgui/imgui.h"
+#include "../external/imgui/implot.h"
 #include "../external/imgui/imgui_impl_xlib.h"
 #include "../external/imgui/Roboto-Medium.h"
 #include "../external/imgui/ProggyClean.h"
@@ -59,6 +62,7 @@ bool RenderHUD::init()
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
             if (x11::gameDisplays[i]) {
                 ImGui::CreateContext();
+                ImPlot::CreateContext();
                 GlobalNative gn;
                 
                 ImGuiIO& io = ImGui::GetIO();
@@ -147,6 +151,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
     static bool show_crosshair = false;
     static bool show_log = false;
     static bool show_audio = false;
+    static bool show_unity = false;
     static bool show_demo = false;
     
     if (Global::shared_config.osd) {
@@ -165,6 +170,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
             if (ImGui::BeginMenu("Debug")) {
                 ImGui::MenuItem("Log", nullptr, &show_log);
                 ImGui::MenuItem("Audio", nullptr, &show_audio);
+                ImGui::MenuItem("Unity", nullptr, &show_unity, UnityHacks::isUnity());
                 ImGui::MenuItem("Demo", nullptr, &show_demo);
                 ImGui::EndMenu();
             }
@@ -215,6 +221,9 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
 
     if (show_audio)
         AudioDebug::draw(framecount, &show_audio);
+
+    if (show_unity)
+        UnityDebug::draw(framecount, &show_unity);
 
     if (show_demo)
         ImGui::ShowDemoWindow(&show_demo);

@@ -32,6 +32,7 @@
 #include <pthread.h> // pthread_t
 #include <csignal> // stack_t
 #include <mutex>
+#include <string>
 #include <condition_variable>
 #include <setjmp.h>
 
@@ -71,6 +72,8 @@ struct ThreadInfo {
     bool initial_owncode = false; // initial value of the global owncode state
     bool initial_nolog = false; // initial value of the global nolog state
 
+    std::string name; // name of the thread
+
     stack_t altstack = {nullptr, 0, 0}; // altstack to be used when suspending threads
 
     std::mutex mutex; // mutex to notify a thread for a new routing
@@ -84,6 +87,7 @@ struct ThreadInfo {
     int syncOldCount = 0;
 
     bool unityThread = false; // is unity wait thread
+    int unityJobCount = 0; // job count executed by this thread during the current frame
 
     ThreadInfo *next = nullptr; // next thread info in the linked list
     ThreadInfo *prev = nullptr; // previous thread info in the linked list

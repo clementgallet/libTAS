@@ -19,6 +19,7 @@
 
 #include "UnityHacks.h"
 #include "logging.h"
+#include "frame.h"
 #include "GlobalState.h"
 #include "global.h"
 #include "hookpatch.h"
@@ -34,6 +35,8 @@
 #include <unistd.h>
 #include <memory>
 #include <mutex>
+#include <vector>
+#include <map>
 #include <condition_variable>
 #include <sys/mman.h> // PROT_READ, PROT_WRITE, etc.
 
@@ -43,6 +46,58 @@ static bool unity = false;
 static uintptr_t executableBase = 0;
 static uintptr_t executableEnd = 0;
 static uintptr_t loadingThreadAddr = 0;
+
+UnityHacks::ScrollingBuffer::ScrollingBuffer(int max_size = 400) {
+    MaxSize = max_size;
+    Offset  = 0;
+    DataX.reserve(MaxSize);
+    DataY.reserve(MaxSize);
+}
+
+void UnityHacks::ScrollingBuffer::AddPoint(int x, int y) {
+    if (DataX.size() < MaxSize) {
+        DataX.push_back(x);
+        DataY.push_back(y);
+    }
+    else {
+        DataX[Offset] = x;
+        DataY[Offset] = y;
+        Offset =  (Offset + 1) % MaxSize;
+    }
+}
+void UnityHacks::ScrollingBuffer::Erase() {
+    if (DataX.size() > 0) {
+        DataX.clear();
+        DataY.clear();
+        Offset  = 0;
+    }
+}
+
+UnityHacks::ScrollingBuffers::ScrollingBuffers() {
+    /* Push back the total count */
+    Buffers[0] = ScrollingBuffer();
+    Buffers[0].name = "Total";
+}
+
+void UnityHacks::ScrollingBuffers::AddPoint(float x, float y, int tid) {
+    bool new_buffer = (Buffers.find(tid) == Buffers.end());
+    Buffers[tid].AddPoint(x, y);
+    if (new_buffer) {
+        for (ThreadInfo* th = ThreadManager::getThreadList(); th != nullptr; th = th->next) {
+            if (th->tid == tid) {
+                Buffers[tid].name = th->name;
+                break;
+            }
+        }
+    }
+}
+
+static UnityHacks::ScrollingBuffers jobData;
+
+const UnityHacks::ScrollingBuffers& UnityHacks::getJobData()
+{
+    return jobData;
+}
 
 void UnityHacks::setUnity()
 {
@@ -140,6 +195,8 @@ void UnityHacks::syncWait()
     std::unique_lock<decltype(unity_mutex)> lock(unity_mutex);
     ++unity_waiting_threads;
     ++unity_job_count;
+    ThreadInfo* th = ThreadManager::getCurrentThread();
+    th->unityJobCount++;
     debuglogstdio(LCF_WAIT, "   Wait before running a Unity job");
     while (unity_running_threads > unity_nonterminating_threads) {
         
@@ -248,7 +305,18 @@ void UnityHacks::syncWaitAll()
             unity_mutex.lock();
         }
     }
+
+    /* Register and reset counts */
+    jobData.AddPoint(framecount, unity_job_count, 0);
     unity_job_count = 0;
+    
+    for (ThreadInfo* th = ThreadManager::getThreadList(); th != nullptr; th = th->next) {
+        if (th->unityJobCount) {
+            jobData.AddPoint(framecount, th->unityJobCount, th->tid);
+            th->unityJobCount = 0;
+        }
+    }
+
     unity_mutex.unlock();
 }
 

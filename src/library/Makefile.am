@@ -112,6 +112,7 @@ libtas_so_SOURCES = \
     renderhud/RenderHUD_Vulkan.cpp \
     renderhud/RenderHUD.cpp \
     renderhud/RenderHUD_Base_Linux.cpp \
+    renderhud/UnityDebug.cpp \
     rendering/eglwrappers.cpp \
     rendering/glxwrappers.cpp \
     rendering/openglloader.cpp \
@@ -210,7 +211,9 @@ libtas_so_SOURCES = \
     ../external/imgui/imgui_impl_opengl3.cpp \
     ../external/imgui/imgui_impl_sdlrenderer2.cpp \
     ../external/imgui/imgui_impl_vulkan.cpp \
-    ../external/imgui/imgui_impl_xlib.cpp
+    ../external/imgui/imgui_impl_xlib.cpp \
+    ../external/imgui/implot_items.cpp \
+    ../external/imgui/implot.cpp
 
 libtas_so_CXXFLAGS = $(LIBSWRESAMPLE_CFLAGS) -fPIC -shared -fvisibility=hidden -fno-stack-protector
 libtas_so_CXXFLAGS += -DLIBTAS_LIBRARY

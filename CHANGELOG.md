@@ -40,6 +40,7 @@
 * Show a progress bar when seeking
 * Add lua window
 * Implement SDL grab functions
+* Add ImPlot and Unity job count debug window
 
 ### Changed
 

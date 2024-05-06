@@ -706,6 +706,7 @@ int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) __TH
 }
 
 #ifdef __unix__
+
 int pthread_setname_np (pthread_t target_thread, const char *name) __THROW
 {
     LINK_NAMESPACE(pthread_setname_np, "pthread");
@@ -713,7 +714,15 @@ int pthread_setname_np (pthread_t target_thread, const char *name) __THROW
         return orig::pthread_setname_np(target_thread, name);
     
     debuglogstdio(LCF_THREAD, "%s called with target_thread %p and name %s", __func__, target_thread, name);
+
+    /* Save name for debugging */
+    ThreadInfo* thread = ThreadManager::getThread(target_thread);
+    if (thread) {
+        thread->name = name;
+    }
+
 #elif defined(__APPLE__) && defined(__MACH__)
+
 int pthread_setname_np (const char *name)
 {
     LINK_NAMESPACE(pthread_setname_np, "pthread");
@@ -721,6 +730,13 @@ int pthread_setname_np (const char *name)
         return orig::pthread_setname_np(name);
 
     debuglogstdio(LCF_THREAD, "%s called with name %s", __func__, name);
+
+    /* Save name for debugging */
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+    if (thread) {
+        thread->name = name;
+    }
+
 #endif
 
     /* Check if the thread is one of the llvm ones, and make it native and disable log */
