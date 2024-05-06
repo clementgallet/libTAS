@@ -43,7 +43,12 @@ class RenderHUD_SDL2_renderer : public RenderHUD_Base_MacOS
 
         void render();
 
+        /* Does the backend supports rendering the game inside an ImGui window? */
         bool supportsGameWindow() {return true;}
+
+        /* Does the backend supports extending the window size to use it as
+         * a working area when game window is detached? */
+        bool supportsLargerViewport() {return false;}
 
     private:
         SDL_Renderer* renderer = nullptr;

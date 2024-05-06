@@ -32,6 +32,7 @@
 #include "global.h"
 #include "GlobalState.h"
 #include "renderhud/RenderHUD.h"
+#include "screencapture/ScreenCapture.h"
 #include "../external/X11/XInput2.h"
 #include "../external/imgui/imgui_impl_xlib.h"
 
@@ -154,6 +155,24 @@ void pushNativeXlibEvents(Display *display)
             /* Redirect events to ImGui, and notify if it was interested in the event */
             if (ImGui_ImplXlib_ProcessEvent(&event))
                 RenderHUD::userInputs();
+                
+            /* Detect window resizing by the user */
+            if (event.type == ConfigureNotify) {
+                XConfigureEvent xce = event.xconfigure;
+
+                int w = 0, h = 0;
+                ScreenCapture::getDimensions(w, h);
+
+                if (w != xce.width || h != xce.height) {
+                    /* Detach the game window */
+                    RenderHUD::detachGameWindow();
+                }
+                
+                /* TODO: We need to do something to prevent games to know that
+                 * we resized the game window */
+                // xce.width = w;
+                // xce.height = h;
+            }
         }
 
         if (!isEventFiltered(&event)) {

@@ -45,12 +45,16 @@
 
 namespace libtas {
 
+bool RenderHUD::show_game_window = false;
+
 bool RenderHUD::init()
 {
     if (!ImGui::GetCurrentContext()) {
         if (x11::gameXWindows.empty())
             return false;
         
+        setWindowResizable(supportsLargerViewport());
+
         /* TODO: select one display? */
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
             if (x11::gameDisplays[i]) {
@@ -64,7 +68,7 @@ bool RenderHUD::init()
                 ImGui_ImplXlib_Init(x11::gameDisplays[i], x11::gameXWindows.front());
                 return true;
             }
-        }
+        }        
     }
     return false;
 }
@@ -134,6 +138,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         ImGui::PopStyleVar(1);
     }
 
+    static bool old_show_game_window = false;
     static bool show_framecount = true;
     static bool show_inputs = true;
     static bool show_messages = true;
@@ -170,6 +175,20 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
             ImGui::EndMainMenuBar();
         }        
     }
+    
+    if (supportsGameWindow() && !show_game_window && old_show_game_window) {
+        /* Resize game window to their native dimensions */
+        /* TODO: select one display? */
+        for (int i=0; i<GAMEDISPLAYNUM; i++) {
+            if (x11::gameDisplays[i]) {
+                int w = 0, h = 0;
+                ScreenCapture::getDimensions(w, h);
+                NATIVECALL(XResizeWindow (x11::gameDisplays[i], x11::gameXWindows.front(), w, h));
+                break;
+            }
+        }
+    }
+    old_show_game_window = show_game_window;
     
     if (show_framecount)
         FrameWindow::draw(framecount, nondraw_framecount, &show_framecount);
@@ -234,6 +253,35 @@ bool RenderHUD::doRender()
     return false;
 }
 
+void RenderHUD::setWindowResizable(bool resizable)
+{
+    /* TODO: select one display? */
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (x11::gameDisplays[i]) {
+            GlobalNative gn;
+            
+            XSizeHints *xsh;
+            xsh = XAllocSizeHints();
+            xsh->flags = resizable ? PMinSize : PMinSize | PMaxSize;
+
+            int w = 0, h = 0;
+            ScreenCapture::getDimensions(w, h);
+            
+            xsh->min_width = w;
+            xsh->min_height = h;
+
+            if (!resizable) {
+                xsh->max_width = w;
+                xsh->max_height = h;
+            }
+            
+            XSetWMNormalHints(x11::gameDisplays[i], x11::gameXWindows.front(), xsh);
+            XFree(xsh);
+            return;
+        }
+    }
+}
+
 /* Returns if the game is rendered inside an ImGui window */
 bool RenderHUD::renderGameWindow()
 {
@@ -241,6 +289,11 @@ bool RenderHUD::renderGameWindow()
         return false;
         
     return show_game_window;    
+}
+
+void RenderHUD::detachGameWindow()
+{
+    show_game_window = true;
 }
 
 }

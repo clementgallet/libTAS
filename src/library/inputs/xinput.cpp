@@ -68,6 +68,15 @@ int XISelectEvents(Display* dpy, Window win, XIEventMask *masks, int num_masks)
     RETURN_NATIVE(XISelectEvents, (dpy, win, masks, num_masks), "libXi.so.6");
 }
 
+XIEventMask *XIGetSelectedEvents( Display *display, Window win, int *num_masks_return)
+{
+    RETURN_IF_NATIVE(XIGetSelectedEvents, (display, win, num_masks_return), "libXi.so.6");
+
+    DEBUGLOGCALL(LCF_WINDOW);
+
+    RETURN_NATIVE(XIGetSelectedEvents, (display, win, num_masks_return), "libXi.so.6");
+}
+
 XIDeviceInfo* XIQueryDevice(Display* dpy, int deviceid, int* ndevices_return)
 {
     DEBUGLOGCALL(LCF_WINDOW);

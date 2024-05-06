@@ -51,6 +51,10 @@ class RenderHUD_GL : public RenderHUD_Base_MacOS
         /* Does the backend supports rendering the game inside an ImGui window? */
         bool supportsGameWindow() {return true;}
 
+        /* Does the backend supports extending the window size to use it as
+         * a working area when game window is detached? */
+        bool supportsLargerViewport() {return true;}
+
         bool invertedOrigin() {return true;}
 
     private:        

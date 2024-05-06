@@ -70,12 +70,20 @@ class RenderHUD
         /* Does the backend supports rendering the game inside an ImGui window? */
         virtual bool supportsGameWindow() {return false;}
 
+        /* Does the backend supports extending the window size to use it as
+         * a working area when game window is detached? */
+        virtual bool supportsLargerViewport() {return false;}
+
+        void setWindowResizable(bool resizable);
+
         /* Returns if the game is rendered inside an ImGui window */
         bool renderGameWindow();
         
         /* Where is the origin point? */
         virtual bool invertedOrigin() {return false;}
         
+        /* Detach the game window */
+        static void detachGameWindow();
 
     protected:
         bool init();
@@ -85,7 +93,7 @@ class RenderHUD
         static int framesBeforeIdle;
         
         /* True if we render the game inside an ImGui window */
-        bool show_game_window = false;
+        static bool show_game_window;
 };
 }
 
