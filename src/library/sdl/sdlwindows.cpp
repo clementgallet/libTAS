@@ -375,10 +375,25 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     return ret;
 }
 
-/* Override */ void SDL_SetWindowPosition(SDL_Window*, int, int)
+/* Override */ void SDL_SetWindowPosition(SDL_Window*, int x, int y)
 {
     DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
-    /* Preventing the game to change the window position */
+    /* Preventing the game to change the window position, but still push the event */
+    struct timespec time = DeterministicTimer::get().getTicks();
+    int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+
+    SDL_Event event;
+    event.type = SDL_WINDOWEVENT;
+    event.window.windowID = 1;
+    event.window.timestamp = timestamp;
+    event.window.event = SDL_WINDOWEVENT_MOVED;
+    event.window.data1 = x;
+    event.window.data2 = y;
+    sdlEventQueue.insert(&event);
+
+    event.type = SDL_WINDOWEVENT;
+    event.window.event = SDL_WINDOWEVENT_EXPOSED;
+    sdlEventQueue.insert(&event);
 }
 
 /* Override */ void SDL_GetWindowPosition(SDL_Window *, int *x, int *y)
