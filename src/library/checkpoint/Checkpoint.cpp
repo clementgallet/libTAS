@@ -65,6 +65,10 @@
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 600
 #endif
+/* Note that the ucontext passed to the signal handler is not exactly the same as the ucontext in <ucontext.h>
+ * This is due to the ucontext in this instance being allocated kernel side
+ * The libc may contain extensions to the ucontext, which the kernel won't add
+ */
 #include <ucontext.h>
 
 #define ONE_MB 1024 * 1024
@@ -88,6 +92,13 @@ static int base_ss_index = -1;
 
 /* Savestate ucontext (must be stored outside the alt stack) */
 static ucontext_t ss_ucontext;
+#if defined(__linux__) && (defined(__x86_64__) || defined(__i386__))
+/* x86 ucontext keeps fp state outside of the actual ucontext, with it accessed by a pointer */
+static _xstate ss_fpregset;
+#ifndef UC_FP_XSTATE
+#define UC_FP_XSTATE 1
+#endif
+#endif
 
 static void readAllAreas();
 static int reallocateArea(Area *saved_area, Area *current_area);
@@ -355,7 +366,19 @@ void Checkpoint::handler(int signum, siginfo_t *info, void *ucontext)
 #endif
 
         /* We must restore the ucontext from the savestate */
+#if defined(__linux__) && (defined(__x86_64__) || defined(__i386__))
+        /* Make sure we properly restore the fp state */
+        ss_ucontext.uc_mcontext.fpregs = static_cast<ucontext_t*>(ucontext)->uc_mcontext.fpregs;
+        if (ss_ucontext.uc_flags & UC_FP_XSTATE) {
+            memcpy(reinterpret_cast<_xstate*>(ss_ucontext.uc_mcontext.fpregs), &ss_fpregset, sizeof(_xstate));
+        }
+        else {
+            memcpy(reinterpret_cast<_fpstate*>(ss_ucontext.uc_mcontext.fpregs), &ss_fpregset.fpstate, sizeof(_fpstate));
+        }
+        memcpy(ucontext, &ss_ucontext, offsetof(ucontext_t, __fpregs_mem));
+#else
         memcpy(ucontext, &ss_ucontext, sizeof(ucontext_t));
+#endif
     }
     else {
         /* Check that base savestate exists, otherwise save it */
@@ -375,7 +398,18 @@ void Checkpoint::handler(int signum, siginfo_t *info, void *ucontext)
             }
         }
         /* We must store the passed ucontext in the savestate */
+#if defined(__linux__) && (defined(__x86_64__) || defined(__i386__))
+        memcpy(&ss_ucontext, ucontext, offsetof(ucontext_t, __fpregs_mem));
+        /* Make sure we properly save the fp state */
+        if (ss_ucontext.uc_flags & UC_FP_XSTATE) {
+            memcpy(&ss_fpregset, reinterpret_cast<_xstate*>(ss_ucontext.uc_mcontext.fpregs), sizeof(_xstate));
+        }
+        else {
+            memcpy(&ss_fpregset.fpstate, reinterpret_cast<_fpstate*>(ss_ucontext.uc_mcontext.fpregs), sizeof(_fpstate));
+        }
+#else
         memcpy(&ss_ucontext, ucontext, sizeof(ucontext_t));
+#endif
 
         writeAllAreas(false);
     }
