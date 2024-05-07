@@ -25,6 +25,7 @@
 #define LIBTAS_RENDERHUD_H_INCL
 
 #include "../shared/inputs/AllInputsFlat.h"
+#include "../shared/inputs/MouseInputs.h"
 
 #include <memory>
 #include <list>
@@ -85,6 +86,10 @@ class RenderHUD
         /* Detach the game window */
         static void detachGameWindow();
 
+        /* Offset and scale the pointer coordinates in case the game window is
+         * detached */
+        void scaleMouseInputs(MouseInputs* mi);
+
     protected:
         bool init();
         
@@ -94,6 +99,12 @@ class RenderHUD
         
         /* True if we render the game inside an ImGui window */
         static bool show_game_window;
+        
+        /* Coordinates of the game window when detached, to be able to scale
+         * the pointer coordinates accordingly */
+        float game_window_x;
+        float game_window_y;
+        float game_window_scale;
 };
 }
 

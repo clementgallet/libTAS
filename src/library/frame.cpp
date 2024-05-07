@@ -652,6 +652,11 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
             case MSGN_ALL_INPUTS:
                 ai.recv();
 
+                /* We don't need to scale pointer coordinates here, because they
+                 * already go through scaling using MSGN_SCALE_POINTER_INPUTS
+                 * message if they came from the real pointer, or they came from
+                 * reading a movie. */
+
                 /* Update framerate */
                 DeterministicTimer::get().setFramerate(ai.misc.framerate_num, ai.misc.framerate_den);
 
@@ -664,8 +669,20 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 screen_redraw(draw, hud, preview_ai, false);
                 break;
 
+            case MSGN_SCALE_POINTER_INPUTS: {
+                /* Scale mouse coords to account for game window detached, and
+                 * resend, so that it can be written correctly into the movie */
+                MouseInputs mi;
+                receiveData(&mi, sizeof(MouseInputs));
+                hud.scaleMouseInputs(&mi);
+                sendData(&mi, sizeof(MouseInputs));
+                break;
+            }
+            
             case MSGN_PREVIEW_INPUTS:
                 preview_ai.recv();
+                /* Preview inputs are not scaled first */
+                hud.scaleMouseInputs(&preview_ai.pointer);
                 break;
 
             case MSGN_SAVESTATE_PATH:

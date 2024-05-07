@@ -53,6 +53,12 @@ enum {
     MSGN_POINTER_INPUTS,
     
     /*
+     * Send pointer inputs to be scaled by the game, when game window is detached
+     * Argument: MouseInputs
+     */
+    MSGN_SCALE_POINTER_INPUTS,
+    
+    /*
      * Send misc inputs
      * Argument: MiscInputs
      */

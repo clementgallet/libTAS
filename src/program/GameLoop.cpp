@@ -715,6 +715,13 @@ void GameLoop::processInputs(AllInputs &ai)
                 context->mouse_wheel = 0;
             }
             
+            /* Scale mouse inputs in case the game window is detached */
+            if (context->config.sc.mouse_support && ai.pointer) {
+                sendMessage(MSGN_SCALE_POINTER_INPUTS);
+                sendData(ai.pointer.get(), sizeof(MouseInputs));
+                receiveData(ai.pointer.get(), sizeof(MouseInputs));
+            }
+            
             /* Fill controller inputs from the controller input window. */
             for (int j = 0; j < AllInputs::MAXJOYS; j++) {
                 if (ai.controllers[j]) {

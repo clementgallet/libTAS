@@ -141,24 +141,33 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, FLT_MAX), aspectRatioCallback, (void*)&aspect_ratio);
         if (ImGui::Begin("Game window", &show_game_window, ImGuiWindowFlags_NoScrollbar)) {
             ImVec2 pos = ImGui::GetCursorScreenPos();
-            
             ImVec2 avail_size = ImGui::GetContentRegionAvail();
+            
+            game_window_x = pos.x;
+            game_window_y = pos.y;
+            game_window_scale = avail_size.x / w;
+            
             ImGui::GetWindowDrawList()->AddImage(
                 reinterpret_cast<void*>(ScreenCapture::screenTexture()), 
-                ImVec2(pos.x, pos.y), 
-                ImVec2(pos.x + avail_size.x, pos.y + avail_size.y), 
+                ImVec2(game_window_x, game_window_y), 
+                ImVec2(game_window_x + avail_size.x, game_window_y + avail_size.y), 
                 ImVec2(0, invertedOrigin()?1:0), 
                 ImVec2(1, invertedOrigin()?0:1)
             );                
 
             /* Show lua on top of the game window */
             if (show_lua)
-                LuaDraw::draw(ImGui::GetWindowDrawList(), ImVec2(pos.x, pos.y), avail_size.x / w);
+                LuaDraw::draw(ImGui::GetWindowDrawList(), ImVec2(game_window_x, game_window_y), game_window_scale);
         }
         ImGui::End();
         ImGui::PopStyleVar(1);
     }
     else {
+        /* Reset values just in case */
+        game_window_x = 0.0f;
+        game_window_y = 0.0f;
+        game_window_scale = 1.0f;
+        
         /* Show lua in background */
         if (show_lua)
             LuaDraw::draw(ImGui::GetBackgroundDrawList(), ImVec2(0, 0), 1.0f);
@@ -308,6 +317,24 @@ bool RenderHUD::renderGameWindow()
 void RenderHUD::detachGameWindow()
 {
     show_game_window = true;
+}
+
+void RenderHUD::scaleMouseInputs(MouseInputs* mi)
+{
+    if (!Global::shared_config.mouse_support)
+        return;
+        
+    if (!show_game_window)
+        return;
+    
+    if (mi->mode == SingleInput::POINTER_MODE_ABSOLUTE) {
+        mi->x = static_cast<int>((static_cast<float>(mi->x) - game_window_x) / game_window_scale);
+        mi->y = static_cast<int>((static_cast<float>(mi->y) - game_window_y) / game_window_scale);
+    }
+    else {
+        mi->x = static_cast<int>(static_cast<float>(mi->x) / game_window_scale);
+        mi->y = static_cast<int>(static_cast<float>(mi->y) / game_window_scale);
+    }
 }
 
 }
