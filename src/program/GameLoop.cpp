@@ -727,11 +727,15 @@ void GameLoop::processInputs(AllInputs &ai)
                 if (ai.controllers[j]) {
                     emit fillControllerInputs(*ai.controllers[j], j);            
                 }
-                else {
+                else if (j < context->config.sc.nb_controllers) {
                     /* If we didn't created an object yet, but if the user
                      * did set something on the controller panel, then create
                      * the object. */
                     ControllerInputs ci;
+                    /* Clear the controller inputs incase the joystick input editor
+                     * is not open to prevent it from reading garbade data
+                     * and adding the joystick axes to the input editor. */
+                    ci.clear();
                     emit fillControllerInputs(ci, j);
                     if (!ci.isDefaultController())
                         ai.controllers[j].reset(new ControllerInputs(ci));
