@@ -112,12 +112,25 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         return;
     }
 
+    static bool old_show_game_window = false;
+    static bool show_framecount = true;
+    static bool show_inputs = true;
+    static bool show_messages = true;
+    static bool show_watches = true;
+    static bool show_lua = true;
+    static bool show_crosshair = false;
+    static bool show_log = false;
+    static bool show_audio = false;
+    static bool show_unity = false;
+    static bool show_demo = false;
+    
+    int w = 0, h = 0;
+    ScreenCapture::getDimensions(w, h);
+
     /* Show game window if backend supports it */
     /* Must be placed **before** offering the option to enable/disable it */
     if (renderGameWindow() && ScreenCapture::isInited()) {
         /* Create the window that will hold the game texture */
-        int w = 0, h = 0;
-        ScreenCapture::getDimensions(w, h);
 
         /* Remove padding so that the texture is aligned with the window */
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
@@ -137,23 +150,20 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
                 ImVec2(0, invertedOrigin()?1:0), 
                 ImVec2(1, invertedOrigin()?0:1)
             );                
+
+            /* Show lua on top of the game window */
+            if (show_lua)
+                LuaDraw::draw(ImGui::GetWindowDrawList(), ImVec2(pos.x, pos.y), avail_size.x / w);
         }
         ImGui::End();
         ImGui::PopStyleVar(1);
     }
+    else {
+        /* Show lua in background */
+        if (show_lua)
+            LuaDraw::draw(ImGui::GetBackgroundDrawList(), ImVec2(0, 0), 1.0f);
+    }
 
-    static bool old_show_game_window = false;
-    static bool show_framecount = true;
-    static bool show_inputs = true;
-    static bool show_messages = true;
-    static bool show_watches = true;
-    static bool show_lua = true;
-    static bool show_crosshair = false;
-    static bool show_log = false;
-    static bool show_audio = false;
-    static bool show_unity = false;
-    static bool show_demo = false;
-    
     if (Global::shared_config.osd) {
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("Display")) {
@@ -187,8 +197,6 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         /* TODO: select one display? */
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
             if (x11::gameDisplays[i]) {
-                int w = 0, h = 0;
-                ScreenCapture::getDimensions(w, h);
                 NATIVECALL(XResizeWindow (x11::gameDisplays[i], x11::gameXWindows.front(), w, h));
                 break;
             }
@@ -209,9 +217,6 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
 
     if (show_watches)
         WatchesWindow::draw(&show_watches);
-
-    if (show_lua)
-        LuaDraw::draw();
 
     if (show_crosshair)
         Crosshair::draw(ai);

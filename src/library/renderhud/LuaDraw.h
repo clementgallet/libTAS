@@ -32,7 +32,7 @@ namespace LuaDraw
 
 struct LuaShape
 {
-    virtual void render() = 0;
+    virtual void render(ImDrawList* draw_list, ImVec2 offset, float scale) = 0;
     virtual bool isInbound() = 0;
 };
 
@@ -48,7 +48,7 @@ struct LuaText : public LuaShape
     bool monospace;
     static ImFont* regular_font;
     static ImFont* monospace_font;
-    void render() override;
+    void render(ImDrawList* draw_list, ImVec2 offset, float scale) override;
     bool isInbound() override {return true;}
 };
 
@@ -58,7 +58,7 @@ struct LuaWindow : public LuaShape
     std::string text;
     float x;
     float y;
-    void render() override;
+    void render(ImDrawList* draw_list, ImVec2 offset, float scale) override;
     bool isInbound() override {return true;}
 };
 
@@ -67,7 +67,7 @@ struct LuaPixel : public LuaShape
     float x;
     float y;
     uint32_t color;
-    void render() override;
+    void render(ImDrawList* draw_list, ImVec2 offset, float scale) override;
     bool isInbound() override;
 };
 
@@ -80,7 +80,7 @@ struct LuaRect : public LuaShape
     float thickness;
     uint32_t color;
     int filled;
-    void render() override;
+    void render(ImDrawList* draw_list, ImVec2 offset, float scale) override;
     bool isInbound() override;
 };
 
@@ -91,7 +91,7 @@ struct LuaLine : public LuaShape
     float x1;
     float y1;
     uint32_t color;
-    void render() override;
+    void render(ImDrawList* draw_list, ImVec2 offset, float scale) override;
     bool isInbound() override;
 };
 
@@ -108,7 +108,7 @@ struct LuaQuad : public LuaShape
     float thickness;
     uint32_t color;
     int filled;
-    void render() override;
+    void render(ImDrawList* draw_list, ImVec2 offset, float scale) override;
     bool isInbound() override;
 };
 
@@ -121,7 +121,7 @@ struct LuaEllipse : public LuaShape
     float thickness;
     uint32_t color;
     int filled;
-    void render() override;
+    void render(ImDrawList* draw_list, ImVec2 offset, float scale) override;
     bool isInbound() override;
 };
 
@@ -131,7 +131,7 @@ void processSocket(int message);
 /* Clear all lua drawings */
 void reset();
 
-void draw();
+void draw(ImDrawList* draw_list, ImVec2 offset, float scale);
 
 /* Check if lua shape is inbound */
 bool isInbound(float min_x, float min_y, float max_x, float max_y);

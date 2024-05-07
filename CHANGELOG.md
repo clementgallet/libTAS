@@ -85,6 +85,7 @@
 * Add sanity check when no buffer size is provided in SDL_OpenAudio()
 * Ruffle OpenGL ES GUI fixed by ImGui update (#604)
 * Fix ImGui X11 to append selected events instead of replacing them
+* Scale lua draws when game window is detached
 
 ## [1.4.5] - 2023-10-22
 ### Added

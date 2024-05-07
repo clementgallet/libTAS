@@ -40,7 +40,7 @@ ImFont* LuaDraw::LuaText::regular_font;
 ImFont* LuaDraw::LuaText::monospace_font;
 static int new_id = 0;
 
-void LuaDraw::LuaText::render()
+void LuaDraw::LuaText::render(ImDrawList* draw_list, ImVec2 offset, float scale)
 {
     ImFont* font = regular_font;
     
@@ -59,17 +59,17 @@ void LuaDraw::LuaText::render()
     
     /* Try avoiding computing the text length */
     if (anchor_x == 0.0f && anchor_y == 0.0f) {
-        ImGui::GetBackgroundDrawList()->AddText(font, font_size, ImVec2(x, y), color, text.c_str());
+        draw_list->AddText(font, font_size*scale, ImVec2(x, y)*scale + offset, color, text.c_str());
     }
     else {
         const ImVec2 size = font->CalcTextSizeA(font_size, FLT_MAX, -1.0f, text.c_str(), NULL, NULL);
         float new_x = x - size.x * anchor_x;
         float new_y = y - size.y * anchor_y;
-        ImGui::GetBackgroundDrawList()->AddText(font, font_size, ImVec2(new_x, new_y), color, text.c_str());
+        draw_list->AddText(font, font_size*scale, ImVec2(new_x, new_y)*scale + offset, color, text.c_str());
     }    
 }
 
-void LuaDraw::LuaWindow::render()
+void LuaDraw::LuaWindow::render(ImDrawList* draw_list, ImVec2 offset, float scale)
 {
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoSavedSettings;
     if (id.empty())
@@ -91,9 +91,9 @@ void LuaDraw::LuaWindow::render()
     ImGui::End();
 }
 
-void LuaDraw::LuaPixel::render()
+void LuaDraw::LuaPixel::render(ImDrawList* draw_list, ImVec2 offset, float scale)
 {
-    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(x, y), ImVec2(x, y), color);
+    draw_list->AddLine(ImVec2(x, y)*scale + offset, ImVec2(x, y)*scale + offset, color);
 }
 
 bool LuaDraw::LuaPixel::isInbound()
@@ -101,12 +101,12 @@ bool LuaDraw::LuaPixel::isInbound()
     return LuaDraw::isInbound(x, y, x, y);
 }
 
-void LuaDraw::LuaRect::render()
+void LuaDraw::LuaRect::render(ImDrawList* draw_list, ImVec2 offset, float scale)
 {
     if (filled)
-        ImGui::GetBackgroundDrawList()->AddRectFilled(ImVec2(x, y), ImVec2(x+w, y+h), color);
+        draw_list->AddRectFilled(ImVec2(x, y)*scale + offset, ImVec2(x+w, y+h)*scale + offset, color);
     else
-        ImGui::GetBackgroundDrawList()->AddRect(ImVec2(x, y), ImVec2(x+w, y+h), color, 0.0f, 0, thickness);
+        draw_list->AddRect(ImVec2(x, y)*scale + offset, ImVec2(x+w, y+h)*scale + offset, color, 0.0f, 0, thickness);
 }
 
 bool LuaDraw::LuaRect::isInbound()
@@ -114,9 +114,9 @@ bool LuaDraw::LuaRect::isInbound()
     return LuaDraw::isInbound(x, y, x+w, y+h);
 }
 
-void LuaDraw::LuaLine::render()
+void LuaDraw::LuaLine::render(ImDrawList* draw_list, ImVec2 offset, float scale)
 {
-    ImGui::GetBackgroundDrawList()->AddLine(ImVec2(x0, y0), ImVec2(x1, y1), color);
+    draw_list->AddLine(ImVec2(x0, y0)*scale + offset, ImVec2(x1, y1)*scale + offset, color);
 }
 
 bool LuaDraw::LuaLine::isInbound()
@@ -124,12 +124,12 @@ bool LuaDraw::LuaLine::isInbound()
     return LuaDraw::isInbound(std::min(x0, x1), std::min(y0, y1), std::max(x0, x1), std::max(y0, y1));
 }
 
-void LuaDraw::LuaQuad::render()
+void LuaDraw::LuaQuad::render(ImDrawList* draw_list, ImVec2 offset, float scale)
 {
     if (filled)
-        ImGui::GetBackgroundDrawList()->AddQuadFilled(ImVec2(x0, y0), ImVec2(x1, y1), ImVec2(x2, y2), ImVec2(x3, y3), color);
+        draw_list->AddQuadFilled(ImVec2(x0, y0)*scale + offset, ImVec2(x1, y1)*scale + offset, ImVec2(x2, y2)*scale + offset, ImVec2(x3, y3)*scale + offset, color);
     else
-        ImGui::GetBackgroundDrawList()->AddQuad(ImVec2(x0, y0), ImVec2(x1, y1), ImVec2(x2, y2), ImVec2(x3, y3), color, thickness);
+        draw_list->AddQuad(ImVec2(x0, y0)*scale + offset, ImVec2(x1, y1)*scale + offset, ImVec2(x2, y2)*scale + offset, ImVec2(x3, y3)*scale + offset, color, thickness);
 }
 
 bool LuaDraw::LuaQuad::isInbound()
@@ -140,12 +140,12 @@ bool LuaDraw::LuaQuad::isInbound()
                               std::max(std::max(y0, y1), std::max(y2, y3)));
 }
 
-void LuaDraw::LuaEllipse::render()
+void LuaDraw::LuaEllipse::render(ImDrawList* draw_list, ImVec2 offset, float scale)
 {
     if (filled)
-        ImGui::GetBackgroundDrawList()->AddEllipseFilled(ImVec2(center_x, center_y), radius_x, radius_y, color);
+        draw_list->AddEllipseFilled(ImVec2(center_x, center_y)*scale + offset, radius_x*scale, radius_y*scale, color);
     else
-        ImGui::GetBackgroundDrawList()->AddEllipse(ImVec2(center_x, center_y), radius_x, radius_y, color, 0.0f, 0, thickness);
+        draw_list->AddEllipse(ImVec2(center_x, center_y)*scale + offset, radius_x*scale, radius_y*scale, color, 0.0f, 0, thickness);
 }
 
 bool LuaDraw::LuaEllipse::isInbound()
@@ -306,13 +306,13 @@ void LuaDraw::processSocket(int message)
     }
 }
 
-void LuaDraw::draw()
+void LuaDraw::draw(ImDrawList* draw_list, ImVec2 offset, float scale)
 {
     /* Reset the generation of unique ids */
     new_id = 0;
     
     for (auto &shape : lua_shapes) {
-        shape->render();
+        shape->render(draw_list, offset, scale);
     }
 }
 
