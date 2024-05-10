@@ -75,6 +75,7 @@ OVERRIDE CSteamAPIContext* SteamInternal_ContextInit( CSteamAPIContextInitData *
 OVERRIDE void * SteamInternal_CreateInterface( const char *ver );
 OVERRIDE void * SteamInternal_FindOrCreateUserInterface(HSteamUser steam_user, const char *version);
 OVERRIDE void * SteamInternal_FindOrCreateGameServerInterface( HSteamUser hSteamUser, const char *pszVersion );
+OVERRIDE int SteamInternal_SteamAPI_Init( const char *pszVersion, char** error );
 /* Override method CSteamAPIContext::Init() */
 OVERRIDE bool _ZN16CSteamAPIContext4InitEv(CSteamAPIContext* context);
 

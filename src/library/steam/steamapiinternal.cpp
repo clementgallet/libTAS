@@ -39,6 +39,7 @@ DEFINE_ORIG_POINTER(SteamInternal_ContextInit)
 DEFINE_ORIG_POINTER(SteamInternal_CreateInterface)
 DEFINE_ORIG_POINTER(SteamInternal_FindOrCreateUserInterface)
 DEFINE_ORIG_POINTER(SteamInternal_FindOrCreateGameServerInterface)
+DEFINE_ORIG_POINTER(SteamInternal_SteamAPI_Init)
 DEFINE_ORIG_POINTER(_ZN16CSteamAPIContext4InitEv)
 
 HSteamUser SteamAPI_GetHSteamUser()
@@ -265,6 +266,16 @@ bool _ZN16CSteamAPIContext4InitEv(CSteamAPIContext* context)
     context->m_pSteamParentalSettings = nullptr;
 
     return true;
+}
+
+int SteamInternal_SteamAPI_Init( const char *pszVersion, char** error )
+{
+    DEBUGLOGCALL(LCF_STEAM);
+    if (Global::shared_config.virtual_steam) {
+        return 0; // k_ESteamAPIInitResult_OK
+    }
+    LINK_NAMESPACE(SteamInternal_SteamAPI_Init, "steam_api");
+    return orig::SteamInternal_SteamAPI_Init(pszVersion, error);
 }
 
 }
