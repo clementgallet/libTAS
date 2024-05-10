@@ -292,6 +292,12 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     flags |= SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS;
     if (windowFullscreen)
         flags |= SDL_WINDOW_FULLSCREEN;
+        
+    /* Remove flags when minimized or hidden, that may trigger unwanted effects */
+    flags &= ~SDL_WINDOW_HIDDEN;
+    flags |= SDL_WINDOW_SHOWN;
+    flags &= ~SDL_WINDOW_MINIMIZED;
+    
     debuglogstdio(LCF_SDL | LCF_WINDOW, "  flags: %d", flags);
     return flags;
 }

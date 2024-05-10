@@ -41,6 +41,7 @@
 * Add lua window
 * Implement SDL grab functions
 * Add ImPlot and Unity job count debug window
+* Prevent games from knowing that game window is hidden or minimized
 
 ### Changed
 
