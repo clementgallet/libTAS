@@ -28,6 +28,15 @@
 /* Store a section of the game memory */
 class MemScannerThread {
     public:
+        
+        enum {
+            ENOERROR = 0,
+            ESTOPPED = -1,
+            EOUTPUT = -2,
+            EINPUT = -3,
+            EPROCESS = -4
+        };
+        
         MemScannerThread(MemScanner& ms, int br, int er, uintptr_t ba, uintptr_t ea, off_t mo, uint64_t mem);
         ~MemScannerThread();
 
@@ -61,6 +70,7 @@ class MemScannerThread {
         std::string values_path; // Output file of values
         
         volatile bool finished; // indicate if scan is finished, used for progress bar
+        int error;
 };
 
 #endif

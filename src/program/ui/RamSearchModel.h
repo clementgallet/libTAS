@@ -55,7 +55,8 @@ public:
     double compare_value;
     double different_value;
 
-    void newWatches(int mem_flags, int type, CompareType ct, CompareOperator co, double cv, double dv);
+    /* Perform a new search and returns the error code */
+    int newWatches(int mem_flags, int type, CompareType ct, CompareOperator co, double cv, double dv);
 
     /* Precompute the size of the next scan (for progress bar) */
     int predictScanCount(int mem_flags);
@@ -65,8 +66,9 @@ public:
 
     /* Total size of scan results (in bytes) */
     uint64_t scanSize();
-    
-    void searchWatches(CompareType ct, CompareOperator co, double cv, double dv);
+
+    /* Perform a following search and returns the error code */
+    int searchWatches(CompareType ct, CompareOperator co, double cv, double dv);
 
     /* Return the address of the given row, used to fill ramwatch */
     uintptr_t address(int row);

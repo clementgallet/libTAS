@@ -36,11 +36,11 @@ class MemScanner : public QObject {
         /* Initialize the memory scanner with the memory scan path */
         static void init(std::string path);
 
-        /* First memory scan */
-        void first_scan(pid_t pid, int mem_flags, int type, CompareType ct, CompareOperator co, double cv, double dv);
+        /* First memory scan. Returns 0 if no error, or error code */
+        int first_scan(pid_t pid, int mem_flags, int type, CompareType ct, CompareOperator co, double cv, double dv);
 
-        /* Generic memory scan method */
-        void scan(bool first, CompareType ct, CompareOperator co, double cv, double dv);
+        /* Generic memory scan method. Returns 0 if no error, or error code */
+        int scan(bool first, CompareType ct, CompareOperator co, double cv, double dv);
 
         /* Returns the total size of results */
         uint64_t scan_size() const;

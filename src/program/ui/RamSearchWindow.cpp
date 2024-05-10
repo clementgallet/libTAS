@@ -26,6 +26,7 @@
 
 #include "Context.h"
 #include "ramsearch/CompareOperations.h"
+#include "ramsearch/MemScannerThread.h" // error codes
 
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QDialogButtonBox>
@@ -287,16 +288,35 @@ void RamSearchWindow::threadedNew(int memflags)
     ramSearchModel->hex = (displayBox->currentIndex() == 1);
 
     /* Call the RamSearch new function using the right type */
-    ramSearchModel->newWatches(memflags, typeBox->currentIndex(), compare_type, compare_operator, compare_value, different_value);
+    int err = ramSearchModel->newWatches(memflags, typeBox->currentIndex(), compare_type, compare_operator, compare_value, different_value);
 
-    /* Don't display values if too many results */
-    if ((ramSearchModel->memscanner.display_scan_count() == 0) && (ramSearchModel->scanCount() != 0))
-        watchCount->setText(QString("%1 addresses (results are not shown above %2)").arg(ramSearchModel->scanCount()).arg(ramSearchModel->memscanner.DISPLAY_THRESHOLD));
-    else
-        watchCount->setText(QString("%1 addresses").arg(ramSearchModel->scanCount()));
-        
+    if (err < 0)
+        searchProgress->reset();
+
+    switch (err) {
+        case MemScannerThread::ESTOPPED:
+            watchCount->setText(tr("The search was interupted by the user"));
+            break;
+        case MemScannerThread::EOUTPUT:
+            watchCount->setText(tr("The search results could not be written to disk"));
+            break;
+        case MemScannerThread::EINPUT:
+            watchCount->setText(tr("The previous search results could not be read correctly"));
+            break;
+        case MemScannerThread::EPROCESS:
+            watchCount->setText(tr("There was an error in the search process"));
+            break;
+        default:
+            /* Don't display values if too many results */
+            if ((ramSearchModel->memscanner.display_scan_count() == 0) && (ramSearchModel->scanCount() != 0))
+                watchCount->setText(QString("%1 addresses (results are not shown above %2)").arg(ramSearchModel->scanCount()).arg(ramSearchModel->memscanner.DISPLAY_THRESHOLD));
+            else
+                watchCount->setText(QString("%1 addresses").arg(ramSearchModel->scanCount()));
+            break;
+    }
+
     /* Change the button to "Stop" and disable some boxes */
-    if (ramSearchModel->scanCount() != 0) {
+    if (ramSearchModel->scanCount() != 0 || err < 0) {
         newButton->setText(tr("Stop"));
         memGroupBox->setDisabled(true);
         formatGroupBox->setDisabled(true);
@@ -342,16 +362,35 @@ void RamSearchWindow::threadedSearch()
     double different_value;
     getCompareParameters(compare_type, compare_operator, compare_value, different_value);
 
-    ramSearchModel->searchWatches(compare_type, compare_operator, compare_value, different_value);
+    int err = ramSearchModel->searchWatches(compare_type, compare_operator, compare_value, different_value);
 
-    /* Don't display values if too many results */
-    if ((ramSearchModel->memscanner.display_scan_count() == 0) && (ramSearchModel->scanCount() != 0))
-        watchCount->setText(QString("%1 addresses (results are not shown above %2)").arg(ramSearchModel->scanCount()).arg(ramSearchModel->memscanner.DISPLAY_THRESHOLD));
-    else
-        watchCount->setText(QString("%1 addresses").arg(ramSearchModel->scanCount()));
+    if (err < 0)
+        searchProgress->reset();
+
+    switch (err) {
+        case MemScannerThread::ESTOPPED:
+            watchCount->setText(tr("The search was interupted by the user"));
+            break;
+        case MemScannerThread::EOUTPUT:
+            watchCount->setText(tr("The search results could not be written to disk"));
+            break;
+        case MemScannerThread::EINPUT:
+            watchCount->setText(tr("The previous search results could not be read correctly"));
+            break;
+        case MemScannerThread::EPROCESS:
+            watchCount->setText(tr("There was an error in the search process"));
+            break;
+        default:
+            /* Don't display values if too many results */
+            if ((ramSearchModel->memscanner.display_scan_count() == 0) && (ramSearchModel->scanCount() != 0))
+                watchCount->setText(QString("%1 addresses (results are not shown above %2)").arg(ramSearchModel->scanCount()).arg(ramSearchModel->memscanner.DISPLAY_THRESHOLD));
+            else
+                watchCount->setText(QString("%1 addresses").arg(ramSearchModel->scanCount()));
+            break;
+    }
 
     /* Change the button to "New" if no results */
-    if (ramSearchModel->scanCount() == 0) {
+    if (ramSearchModel->scanCount() == 0 || err < 0) {
         newButton->setText(tr("New"));
         memGroupBox->setDisabled(false);
         formatGroupBox->setDisabled(false);

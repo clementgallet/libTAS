@@ -45,7 +45,7 @@ void MemScanner::init(std::string path)
     addresses_path = ossoa.str();
 }
 
-void MemScanner::first_scan(pid_t pid, int mem_flags, int type, CompareType ct, CompareOperator co, double cv, double dv)
+int MemScanner::first_scan(pid_t pid, int mem_flags, int type, CompareType ct, CompareOperator co, double cv, double dv)
 {
     value_type = type;
     switch (value_type) {
@@ -81,12 +81,12 @@ void MemScanner::first_scan(pid_t pid, int mem_flags, int type, CompareType ct, 
         total_size += section.size;
     }
         
-    if (total_size == 0) return;
+    if (total_size == 0) return MemScannerThread::ENOERROR;
 
-    scan(true, ct, co, cv, dv);
+    return scan(true, ct, co, cv, dv);
 }
 
-void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv, double dv)
+int MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv, double dv)
 {
     is_stopped = false;
 
@@ -102,8 +102,8 @@ void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv,
     std::vector<std::thread> memscan_threads;
     uint64_t block_size = (total_size / THREAD_COUNT) & 0xfffffffffffff000;
 
-    int beg_region = 0;
-    int end_region = 0;
+    size_t beg_region = 0;
+    size_t end_region = 0;
     uintptr_t beg_address = 0;
     uintptr_t end_address = 0;
     size_t cur_region_offset = 0;
@@ -183,24 +183,31 @@ void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv,
 
     last_scan_was_region = (first && (compare_type == CompareType::Previous));
 
-    /* Wait for the thread to finish. */
+    /* Wait for the thread to finish, and read error codes. */
     total_size = 0;
     total_processed_size = 0;
+    int error = 0;
     for (int t = 0; t < thread_count; t++) {
         memscan_threads[t].join();
+
+        /* If the scanner thread encounter an error, don't read the file */
+        if (memscanners[t].error < 0) {
+            error = memscanners[t].error;
+            continue;
+        }
 
         /* Compute total size and processed size (for display) */
         total_size += memscanners[t].new_memory_size;
         total_processed_size += memscanners[t].processed_memory_size;
     }
 
-    /* If user requested a stop, skip the file merging and report as if
-     * we didn't find any result */
-    if (is_stopped) {
+    /* If user requested a stop or an error occured, skip the file merging
+     * and report as if we didn't find any result */
+    if (is_stopped && (error < 0)) {
         addresses.clear();
         old_values.clear();
         total_size = 0;
-        return;
+        return error;
     }
 
     /* Wait for each thread to finish and merge all individual files created
@@ -230,19 +237,31 @@ void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv,
             std::ifstream iafs(mst.addresses_path, std::ios_base::binary);
             oafs << iafs.rdbuf();
             uint64_t recorded_size = memscanners[t].new_memory_size * sizeof(uintptr_t) / value_type_size;
-            if (iafs.tellg() != recorded_size)
+            if (iafs.tellg() != recorded_size) {
                 std::cerr << "Mismatch size between recorded (" << recorded_size << ") and file (" <<  iafs.tellg() << ") sizes" << std::endl;
+                error = MemScannerThread::EOUTPUT;
+                break;
+            }
+            if (!oafs) {
+                error = MemScannerThread::EOUTPUT;
+                break;
+            }
         }
         std::ifstream ivfs(mst.values_path, std::ios_base::binary);
         ovfs << ivfs.rdbuf();
-        if (ivfs.tellg() != memscanners[t].new_memory_size)
+        if (ivfs.tellg() != memscanners[t].new_memory_size) {
             std::cerr << "Mismatch size between recorded (" << memscanners[t].new_memory_size << ") and file (" <<  ivfs.tellg() << ") sizes" << std::endl;
+            error = MemScannerThread::EOUTPUT;
+            break;
+        }
+        if (!ovfs) {
+            error = MemScannerThread::EOUTPUT;
+            break;
+        }
         
         if (is_stopped) {
-            addresses.clear();
-            old_values.clear();
-            total_size = 0;
-            return;
+            error = MemScannerThread::ESTOPPED;
+            break;
         }
 
         /* Some math to reuse progress bar that has the old size for total */
@@ -250,8 +269,15 @@ void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv,
         emit signalProgress(cur_size*total_processed_size/total_size);
     }
     
+    if (error < 0) {
+        addresses.clear();
+        old_values.clear();
+        total_size = 0;
+        return error;
+    }
+
     /* If the total size is below threshold, load all data (except if region data) */
-    if (last_scan_was_region) return;
+    if (last_scan_was_region) return MemScannerThread::ENOERROR;
 
     addresses.clear();
     old_values.clear();
@@ -267,6 +293,8 @@ void MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv,
         std::ifstream ivfs(values_path, std::ios::in | std::ios::binary);
         old_values = std::vector<char>(std::istreambuf_iterator<char>(ivfs), std::istreambuf_iterator<char>());
     }
+    
+    return MemScannerThread::ENOERROR;
 }
 
 uint64_t MemScanner::scan_size() const

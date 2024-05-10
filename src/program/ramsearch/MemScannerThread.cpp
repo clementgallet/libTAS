@@ -32,7 +32,7 @@
 
 #define MEMORY_CHUNK_SIZE 1024*1024
 
-MemScannerThread::MemScannerThread(MemScanner& ms, int br, int er, uintptr_t ba, uintptr_t ea, off_t mo, uint64_t mem) : memscanner(ms), beg_region(br), end_region(er), beg_address(ba), end_address(ea), memory_offset(mo), memory_size(mem)
+MemScannerThread::MemScannerThread(MemScanner& ms, int br, int er, uintptr_t ba, uintptr_t ea, off_t mo, uint64_t mem) : memscanner(ms), beg_region(br), end_region(er), beg_address(ba), end_address(ea), memory_offset(mo), memory_size(mem), error(ENOERROR)
 {
     finished = false;
 }
@@ -77,6 +77,8 @@ void MemScannerThread::first_region_scan()
     
         if (r == end_region) {
             if ((end_address <= ms.addr) || (end_address > ms.endaddr)) {
+                error = EPROCESS;
+                finished = true;
                 std::cerr << "Wrong end address" << std::endl;
                 return;
             }
@@ -95,11 +97,17 @@ void MemScannerThread::first_region_scan()
                 std::cerr << "Cound not read game process at address " << ca << std::endl;
             }
             vfs.write((char*)chunk, 4096);
+            if (!vfs) {
+                finished = true;
+                error = EOUTPUT;
+                return;
+            }
             new_memory_size += 4096;
             processed_memory_size += 4096;
             
             if (memscanner.is_stopped) {
                 finished = true;
+                error = ESTOPPED;
                 return;                
             }
         }
@@ -133,6 +141,8 @@ void MemScannerThread::first_address_scan()
     
         if (r == end_region) {
             if ((end_address <= ms.addr) || (end_address > ms.endaddr)) {
+                error = EPROCESS;
+                finished = true;
                 std::cerr << "Wrong end address" << std::endl;
                 return;
             }
@@ -159,12 +169,18 @@ void MemScannerThread::first_address_scan()
                     if (batch_index == 4096) {
                         afs.write((char*)batch_addresses, 4096*sizeof(uintptr_t));
                         vfs.write((char*)batch_values, 4096*memscanner.value_type_size);
+                        if (!afs || !vfs) {
+                            error = EOUTPUT;
+                            finished = true;
+                            return;
+                        }
                         new_memory_size += 4096*memscanner.value_type_size;
                         batch_index = 0;
                     }
                 }
 
                 if (memscanner.is_stopped) {
+                    error = ESTOPPED;
                     finished = true;
                     return;                
                 }
@@ -175,6 +191,11 @@ void MemScannerThread::first_address_scan()
     /* Flush the remaining values on the batch */
     afs.write((char*)batch_addresses, batch_index*sizeof(uintptr_t));
     vfs.write((char*)batch_values, batch_index*memscanner.value_type_size);
+    if (!afs || !vfs) {
+        error = EOUTPUT;
+        finished = true;
+        return;
+    }
     new_memory_size += batch_index*memscanner.value_type_size;
     finished = true;
 }
@@ -217,6 +238,8 @@ void MemScannerThread::next_scan_from_region()
     
         if (r == end_region) {
             if ((end_address <= ms.addr) || (end_address > ms.endaddr)) {
+                error = EPROCESS;
+                finished = true;
                 std::cerr << "Wrong end address" << std::endl;
                 return;
             }
@@ -257,12 +280,18 @@ void MemScannerThread::next_scan_from_region()
                     if (batch_index == 4096) {
                         afs.write((char*)batch_addresses, 4096*sizeof(uintptr_t));
                         vfs.write((char*)batch_values, 4096*memscanner.value_type_size);
+                        if (!afs || !vfs) {
+                            error = EOUTPUT;
+                            finished = true;
+                            return;
+                        }
                         new_memory_size += 4096*memscanner.value_type_size;
                         batch_index = 0;
                     }
                 }
                 
                 if (memscanner.is_stopped) {
+                    error = ESTOPPED;
                     finished = true;
                     return;                
                 }
@@ -275,6 +304,11 @@ void MemScannerThread::next_scan_from_region()
     /* Flush the remaining values on the batch */
     afs.write((char*)batch_addresses, batch_index*sizeof(uintptr_t));
     vfs.write((char*)batch_values, batch_index*memscanner.value_type_size);
+    if (!afs || !vfs) {
+        error = EOUTPUT;
+        finished = true;
+        return;
+    }
     new_memory_size += batch_index*memscanner.value_type_size;
     finished = true;
 }
@@ -333,12 +367,20 @@ void MemScannerThread::next_scan_from_address()
         
         if (memscanner.compare_type == CompareType::Previous) {
             ivfs.read(old_memory.data(), chunk_size);
-            if (!ivfs)
+            if (!ivfs) {
                 std::cerr << "error: only " << ivfs.gcount() << " could be read from " << chunk_size << std::endl;
+                error = EINPUT;
+                finished = true;
+                return;
+            }
         }
         iafs.read((char*)old_addresses.data(), chunk_size*size_ratio);
-        if (!iafs)
-        std::cerr << "error: only " << iafs.gcount() << " could be read from " << chunk_size << std::endl;
+        if (!iafs) {
+            std::cerr << "error: only " << iafs.gcount() << " could be read from " << chunk_size << std::endl;
+            error = EINPUT;
+            finished = true;
+            return;
+        }
         
         int addr_beg_index = 0;
         int addr_end_index = chunk_size / memscanner.value_type_size;
@@ -393,12 +435,18 @@ void MemScannerThread::next_scan_from_address()
                     if (batch_index == 4096) {
                         afs.write((char*)batch_addresses, 4096*sizeof(uintptr_t));
                         vfs.write((char*)batch_values, 4096*memscanner.value_type_size);
+                        if (!afs || !vfs) {
+                            error = EOUTPUT;
+                            finished = true;
+                            return;
+                        }
                         new_memory_size += 4096*memscanner.value_type_size;
                         batch_index = 0;
                     }
                 }
                 
                 if (memscanner.is_stopped) {
+                    error = ESTOPPED;
                     finished = true;
                     return;                
                 }
@@ -413,6 +461,11 @@ void MemScannerThread::next_scan_from_address()
     /* Flush the remaining values on the batch */
     afs.write((char*)batch_addresses, batch_index*sizeof(uintptr_t));
     vfs.write((char*)batch_values, batch_index*memscanner.value_type_size);
+    if (!afs || !vfs) {
+        error = EOUTPUT;
+        finished = true;
+        return;
+    }
     new_memory_size += batch_index*memscanner.value_type_size;
     finished = true;
 }
