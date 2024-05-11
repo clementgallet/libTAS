@@ -99,7 +99,7 @@ bool Area::isSkipped() const
 
     /* Don't save area that cannot be promoted to read/write */
     if ((max_prot & (PROT_WRITE|PROT_READ)) != (PROT_WRITE|PROT_READ)) {
-        return false;
+        return true;
     }
     
     /* Save area if write permission */
