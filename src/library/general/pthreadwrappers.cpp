@@ -226,7 +226,7 @@ static void *pthread_native_start(void *arg)
 
     int ret = 0;
     if (isRecycled) {
-        debuglogstdio(LCF_THREAD, "Recycling thread %d", thread->tid);
+        debuglogstdio(LCF_THREAD, "Recycling thread %d", thread->real_tid);
         *tid_p = thread->pthread_id;
 #ifdef __linux__
         /* Notify the thread that it has a function to execute */

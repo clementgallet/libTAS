@@ -75,6 +75,9 @@ ThreadInfo* getThread(pthread_t pthread_id);
  */
 bool initThreadFromParent(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from);
 
+/* Get offset of tid inside pthread_t struct */
+int getTidOffset();
+
 /* Finish the initialization of the ThreadInfo struct by the child thread */
 void initThreadFromChild(ThreadInfo* thread);
 

@@ -53,18 +53,23 @@ struct ThreadInfo {
         ST_IDLE, // thread that has finished its job and waiting to be reused
         ST_RECYCLED, // thread that is about to be recycled
         ST_CKPNTHREAD, // thread that does the checkpoint
+        ST_TERMINATING, // thread flagged as needed to be terminated
+        ST_TERMINATED, // thread that will terminate
     };
 
     ThreadState state = ST_UNINITIALIZED; // thread state
     ThreadState orig_state = ST_UNINITIALIZED; // thread state before savestate
     pthread_t pthread_id = 0; // tid of the thread
-    pid_t tid = 0; // tid of the thread
+    pid_t real_tid = 0; // real tid of the thread
+    pid_t translated_tid = 0; // translated tid of the thread, as seen by the game
+    pid_t* ptid = nullptr; // pointer in pthread_t struct to the tid
     void *(*start)(void *) = nullptr; // original start function of the thread
     void *arg = nullptr; // original argument of the start function
     bool detached = false; // flag to keep track if the thread was detached
     std::ptrdiff_t routine_id; // mostly unique identifier of a start function,
                                // constant across instances of the game
     ucontext_t savctx; // context of the thread (registers)
+    void* saved_sp; // stack pointer of suspended thread
     ThreadTLSInfo tlsInfo; // thread local storage information not stored in
                            // memory (registers)
     void* retval; // return value of the original start function

@@ -68,6 +68,8 @@ int checkpoint(int slot);
 /* Restore a savestate */
 int restore(int slot);
 
+void terminateThreads();
+
 /* Send a signal to suspend all threads before checkpointing */
 void suspendThreads();
 
@@ -76,6 +78,15 @@ void resumeThreads();
 
 /* Function executed by all secondary threads using signal SIGUSR1 */
 void stopThisThread(int signum);
+
+/* Save the list of all threads inside reserved memory */
+void saveThreadList();
+
+/* Create new threads that were destroyed since the savestate */
+void createNewThreads();
+
+/* Function passed to clone() for new threads */
+int startNewThread(void *arg);
 
 void waitForAllRestored(ThreadInfo *thread);
 

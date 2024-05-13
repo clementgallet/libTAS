@@ -263,34 +263,6 @@ int Checkpoint::checkRestore()
         NATIVECALL(close(pmfd));
     }
 
-    /* Check that the thread list is identical */
-    int n=0;
-    for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
-        if ((thread->state != ThreadInfo::ST_RUNNING) &&
-            (thread->state != ThreadInfo::ST_ZOMBIE_RECYCLE) &&
-            (thread->state != ThreadInfo::ST_IDLE))
-            continue;
-
-        int t;
-        for (t=0; t<sh.thread_count; t++) {
-            if ((sh.pthread_ids[t] == thread->pthread_id) &&
-                (sh.tids[t] == thread->tid) &&
-                (sh.states[t] == thread->state)) {
-                n++;
-                break;
-            }
-        }
-
-        if (t == sh.thread_count) {
-            /* We didn't find a match */
-            return SaveStateManager::ESTATE_NOTSAMETHREADS;
-        }
-    }
-
-    if (n != sh.thread_count) {
-        return SaveStateManager::ESTATE_NOTSAMETHREADS;
-    }
-
     return SaveStateManager::ESTATE_OK;
 }
 
@@ -415,6 +387,14 @@ void Checkpoint::handler(int signum, siginfo_t *info, void *ucontext)
     }
 }
 
+void Checkpoint::getStateHeader(StateHeader* sh)
+{
+    /* Thanks to checkRestore() being called before this, savestate is garanteed 
+     * to be present */
+    SaveStateLoading saved_state(pagemappath, pagespath, getPagemapFd(ss_index), getPagesFd(ss_index));
+    saved_state.readHeader(sh);
+}
+
 static void readAllAreas()
 {
     SaveStateLoading saved_state(pagemappath, pagespath, getPagemapFd(ss_index), getPagesFd(ss_index));
@@ -433,7 +413,7 @@ static void readAllAreas()
 
     /* Read the savestate header */
     StateHeader sh;
-    saved_state.readHeader(sh);
+    saved_state.readHeader(&sh);
 
     Area current_area;
     Area saved_area = saved_state.getArea();
@@ -934,7 +914,7 @@ static void writeAllAreas(bool base)
                 break;
             }
             sh.pthread_ids[n] = thread->pthread_id;
-            sh.tids[n] = thread->tid;
+            sh.tids[n] = thread->translated_tid;
             sh.states[n++] = thread->orig_state;
         }
     }

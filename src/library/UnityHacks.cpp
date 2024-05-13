@@ -84,7 +84,7 @@ void UnityHacks::ScrollingBuffers::AddPoint(float x, float y, int tid) {
     Buffers[tid].AddPoint(x, y);
     if (new_buffer) {
         for (ThreadInfo* th = ThreadManager::getThreadList(); th != nullptr; th = th->next) {
-            if (th->tid == tid) {
+            if (th->translated_tid == tid) {
                 Buffers[tid].name = th->name;
                 break;
             }
@@ -312,7 +312,7 @@ void UnityHacks::syncWaitAll()
     
     for (ThreadInfo* th = ThreadManager::getThreadList(); th != nullptr; th = th->next) {
         if (th->unityJobCount) {
-            jobData.AddPoint(framecount, th->unityJobCount, th->tid);
+            jobData.AddPoint(framecount, th->unityJobCount, th->translated_tid);
             th->unityJobCount = 0;
         }
     }

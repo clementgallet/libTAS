@@ -565,10 +565,10 @@ bool GameLoop::startFrameMessages()
                 context->hotkey_pressed_queue.push(HOTKEY_SAVESTATE_BACKTRACK);
 
             /* Invalidate all savestates */
-            SaveStateList::invalidate();
+            //SaveStateList::invalidate();
             
             /* Notify the input editor so it can show it to users */
-            emit invalidateSavestates();
+            //emit invalidateSavestates();
             break;
         case MSGB_GETTIME_BACKTRACE:
         {

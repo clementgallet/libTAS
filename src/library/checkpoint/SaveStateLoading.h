@@ -36,7 +36,7 @@ class SaveStateLoading
         ~SaveStateLoading();
 
     // Also resets back to first area
-    void readHeader(StateHeader& sh);
+    void readHeader(StateHeader* sh);
 
     Area getArea();
     Area nextArea();

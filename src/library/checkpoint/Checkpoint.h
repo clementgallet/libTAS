@@ -26,6 +26,9 @@
 #include <signal.h> // siginfo_t
 
 namespace libtas {
+    
+struct StateHeader;
+
 namespace Checkpoint
 {
     void setSavestatePath(std::string path);
@@ -36,6 +39,7 @@ namespace Checkpoint
 
     void setCurrentToParent();
 
+    void getStateHeader(StateHeader* sh);
     int checkCheckpoint();
     int checkRestore();
     void handler(int signum, siginfo_t *info, void *ucontext);

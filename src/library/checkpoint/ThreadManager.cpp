@@ -47,15 +47,6 @@ static bool is_child_fork = false;
 /* Past savestates are invalid when thread list has changed */
 static bool threadListChanged = false;
 
-/* Offset of `tid` member in the hidden `pthread` structure */
-#ifdef __i386__
-static int offset_tid = 26;
-#elif __x86_64__
-static int offset_tid = 180;
-#else
-static int offset_tid = 0;
-#endif
-
 void ThreadManager::init()
 {
     /* Create a ThreadInfo struct for this thread */
@@ -65,19 +56,6 @@ void ThreadManager::init()
     initThreadFromChild(thread);
 
     setMainThread();
-
-    /* Identify tid offset in pthread structure */
-    int* thread_data = reinterpret_cast<int*>(thread->pthread_id);
-    if (thread_data[offset_tid] != thread->tid) {
-        for (offset_tid = 0; offset_tid < 500; offset_tid++) {
-            if (thread_data[offset_tid] == thread->tid) {
-                break;
-            }
-        }
-        if (offset_tid == 500) {
-            debuglogstdio(LCF_THREAD | LCF_ERROR, "Could not find tid member in pthread!");
-        }
-    }
 }
 
 DEFINE_ORIG_POINTER(pthread_self)
@@ -103,7 +81,7 @@ pid_t ThreadManager::getThreadTid()
 #endif
 
     if (current_thread)
-        return current_thread->tid;
+        return current_thread->real_tid;
     return 0;
 }
 
@@ -202,15 +180,15 @@ pid_t ThreadManager::getThreadTid(pthread_t pthread_id)
 {
     ThreadInfo* ti = getThread(pthread_id);
     if (ti)
-        return ti->tid;
+        return ti->real_tid;
     return 0;
 }
 
 void ThreadManager::restoreThreadTids()
 {
     for (ThreadInfo* thread = thread_list; thread != nullptr; thread = thread->next) {
-        int* thread_data = reinterpret_cast<int*>(thread->pthread_id);
-        thread_data[offset_tid] = thread->tid;
+        pid_t* thread_data = reinterpret_cast<pid_t*>(thread->pthread_id);
+        thread_data[getTidOffset()] = thread->real_tid;
     }
 }
 
@@ -233,7 +211,8 @@ bool ThreadManager::initThreadFromParent(ThreadInfo* thread, void * (* start_rou
     
     if (!isRecycled) {
         thread->pthread_id = 0;
-        thread->tid = 0;
+        thread->real_tid = 0;
+        thread->translated_tid = 0;
 
         thread->next = nullptr;
         thread->prev = nullptr;
@@ -242,18 +221,61 @@ bool ThreadManager::initThreadFromParent(ThreadInfo* thread, void * (* start_rou
     return isRecycled;
 }
 
+int ThreadManager::getTidOffset() {
+
+    static int offset_tid = -1;
+    
+    if (offset_tid != -1)
+        return offset_tid;
+
+    /* Offset of `tid` member in the hidden `pthread` structure */
+#ifdef __x86_64__
+    offset_tid = 180;
+#else
+    offset_tid = 26;
+#endif
+
+    /* Identify tid offset in pthread structure */
+    pthread_t pthread_id = getThreadId();
+    pid_t tid;
+    
+#ifdef __unix__
+    tid = syscall(SYS_gettid);
+#elif defined(__APPLE__) && defined(__MACH__)
+    uint64_t tid64;
+    pthread_threadid_np(nullptr, &tid64);
+    tid = tid64;
+#endif
+
+    pid_t* thread_data = reinterpret_cast<pid_t*>(pthread_id);
+    if (thread_data[offset_tid] != tid) {
+        for (offset_tid = 0; offset_tid < 500; offset_tid++) {
+            if (thread_data[offset_tid] == tid) {
+                break;
+            }
+        }
+        if (offset_tid == 500) {
+            debuglogstdio(LCF_THREAD | LCF_ERROR, "Could not find tid member in pthread!");
+        }
+    }
+
+    return offset_tid;
+}
+
 void ThreadManager::initThreadFromChild(ThreadInfo* thread)
 {
     thread->pthread_id = getThreadId();
     
 #ifdef __unix__
-    thread->tid = syscall(SYS_gettid);
+    thread->real_tid = syscall(SYS_gettid);
 #elif defined(__APPLE__) && defined(__MACH__)
     uint64_t tid;
     pthread_threadid_np(nullptr, &tid);
-    thread->tid = tid;
+    thread->real_tid = tid;
 #endif
+    thread->translated_tid = thread->real_tid;
 
+    thread->ptid = ((pid_t*)thread->pthread_id) + getTidOffset();
 
     current_thread = thread;
     addToList(thread);
@@ -315,7 +337,7 @@ void ThreadManager::setChildFork()
 
 void ThreadManager::threadIsDead(ThreadInfo *thread)
 {
-    debuglogstdio(LCF_THREAD, "Remove thread %d from list", thread->tid);
+    debuglogstdio(LCF_THREAD, "Remove thread %d from list", thread->real_tid);
 
     if (thread->prev != nullptr) {
         thread->prev->next = thread->next;
@@ -343,11 +365,11 @@ void ThreadManager::threadDetach(pthread_t pthread_id)
         lockList();
         thread->detached = true;
         if (thread->state == ThreadInfo::ST_ZOMBIE) {
-            debuglogstdio(LCF_THREAD, "Zombie thread %d is detached", thread->tid);
+            debuglogstdio(LCF_THREAD, "Zombie thread %d is detached", thread->real_tid);
             threadIsDead(thread);
         }
         if (thread->state == ThreadInfo::ST_ZOMBIE_RECYCLE) {
-            debuglogstdio(LCF_THREAD, "Zombie thread %d is detached", thread->tid);
+            debuglogstdio(LCF_THREAD, "Zombie thread %d is detached", thread->real_tid);
             MYASSERT(updateState(thread, ThreadInfo::ST_IDLE, ThreadInfo::ST_ZOMBIE_RECYCLE))            
         }
         unlockList();
@@ -365,7 +387,7 @@ void ThreadManager::threadExit(void* retval)
         MYASSERT(updateState(current_thread, ThreadInfo::ST_ZOMBIE_RECYCLE, ThreadInfo::ST_RUNNING) ||
                  updateState(current_thread, ThreadInfo::ST_ZOMBIE_RECYCLE, ThreadInfo::ST_CKPNTHREAD))
         if (current_thread->detached) {
-            debuglogstdio(LCF_THREAD, "Detached thread %d exited", current_thread->tid);
+            debuglogstdio(LCF_THREAD, "Detached thread %d exited", current_thread->real_tid);
             MYASSERT(updateState(current_thread, ThreadInfo::ST_IDLE, ThreadInfo::ST_ZOMBIE_RECYCLE))
         }
     }
@@ -373,7 +395,7 @@ void ThreadManager::threadExit(void* retval)
         MYASSERT(updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_RUNNING) ||
                 updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_CKPNTHREAD))
         if (current_thread->detached) {
-            debuglogstdio(LCF_THREAD, "Detached thread %d exited", current_thread->tid);
+            debuglogstdio(LCF_THREAD, "Detached thread %d exited", current_thread->real_tid);
             threadIsDead(current_thread);
         }
     }

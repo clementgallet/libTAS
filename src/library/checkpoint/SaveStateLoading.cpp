@@ -73,10 +73,10 @@ SaveStateLoading::~SaveStateLoading()
     }
 }
 
-void SaveStateLoading::readHeader(StateHeader& sh)
+void SaveStateLoading::readHeader(StateHeader* sh)
 {
     lseek(pmfd, 0, SEEK_SET);
-    Utils::readAll(pmfd, &sh, sizeof(sh));
+    Utils::readAll(pmfd, sh, sizeof(StateHeader));
 
     restart();
 }

@@ -137,7 +137,7 @@ void ThreadSync::detWait()
                  * must access the real clock time. */
                 NATIVECALL(ret = detCond.wait_for(lock, std::chrono::milliseconds(1000), [thread]{ return (thread->syncGo); }));
                 if (!ret) {
-                    debuglogstdio(LCF_WARNING, "Timeout waiting for loading thread %d", thread->tid);
+                    debuglogstdio(LCF_WARNING, "Timeout waiting for loading thread %d", thread->real_tid);
                     thread->syncEnabled = false;
                 }
                 thread->syncGo = false;

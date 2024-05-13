@@ -39,6 +39,10 @@ void ReservedMemory::init()
      */
     if (restoreAddr == 0) {
         restoreLength = RESTORE_TOTAL_SIZE;
+
+        /* Take the next multiplier of page size */
+        restoreLength = ((restoreLength + 4095) / 4096) * 4096;
+        
         void* addr = mmap(nullptr, restoreLength + (2 * 4096), PROT_NONE,
             MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
         MYASSERT(addr != MAP_FAILED)

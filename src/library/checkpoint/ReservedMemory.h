@@ -22,36 +22,36 @@
 #ifndef LIBTAS_RESERVEDMEMORY_H
 #define LIBTAS_RESERVEDMEMORY_H
 
+#include "StateHeader.h"
+
 #include <cstdint> // intptr_t
 #include <cstddef> // size_t
 
 #define ONE_MB 1024 * 1024
-#define RESTORE_TOTAL_SIZE 10 * ONE_MB
 
 namespace libtas {
 namespace ReservedMemory {
-    enum Addresses {
-        PAGEMAPS_ADDR = 0,
-        PAGES_ADDR = 11*sizeof(int),
-        SS_SLOTS_ADDR = 22*sizeof(int),
-        PSM_ADDR = 22*sizeof(int)+11*sizeof(bool),
-        COMPRESSED_ADDR = ONE_MB,
-        STACK_ADDR = 6 * ONE_MB,
-    };
     enum Sizes {
-        PAGEMAPS_SIZE = PAGES_ADDR - PAGEMAPS_ADDR,
-        PAGES_SIZE = SS_SLOTS_ADDR - PAGES_ADDR,
-        SS_SLOTS_SIZE = PSM_ADDR - SS_SLOTS_ADDR,
-        PSM_SIZE = COMPRESSED_ADDR - PSM_ADDR,
-        COMPRESSED_SIZE = STACK_ADDR - COMPRESSED_ADDR,
-        STACK_SIZE = RESTORE_TOTAL_SIZE - STACK_ADDR,
+        COMPRESSED_SIZE = 4 * ONE_MB,
+        STACK_SIZE = 5 * ONE_MB,
+        PAGEMAPS_SIZE = 11*sizeof(int),
+        PAGES_SIZE = 11*sizeof(int),
+        SS_SLOTS_SIZE = 11*sizeof(bool),
+        SH_SIZE = sizeof(StateHeader),
+    };
+    enum Addresses {
+        COMPRESSED_ADDR = 0,
+        STACK_ADDR = COMPRESSED_ADDR + COMPRESSED_SIZE,
+        PAGEMAPS_ADDR = STACK_ADDR + STACK_SIZE,
+        PAGES_ADDR = PAGEMAPS_ADDR + PAGEMAPS_SIZE,
+        SS_SLOTS_ADDR = PAGES_ADDR + PAGES_SIZE,
+        SH_ADDR = SS_SLOTS_ADDR + SS_SLOTS_SIZE,
+        RESTORE_TOTAL_SIZE = SH_ADDR + SH_SIZE,
     };
 
     void init();
     void* getAddr(intptr_t offset);
     size_t getSize();
-
-
 }
 }
 
