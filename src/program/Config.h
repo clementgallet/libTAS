@@ -140,6 +140,9 @@ public:
     /* Use fastforward to rewind or seek to a specific frame in the input editor */
     bool editor_rewind_fastforward = true;
 
+    /* Show marker panel */
+    bool editor_panel_marker = false;
+
     /* Pause and stop fastforward when reaching an input editor marker */
     bool editor_marker_pause = false;
 

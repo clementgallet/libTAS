@@ -51,7 +51,7 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(
     connect(inputEditorView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &InputEditorWindow::updateStatusBar);
     connect(inputEditorView->inputEditorModel, &InputEditorModel::stateLoaded, this, &InputEditorWindow::updateProgressBar);
 
-    QGroupBox* markerBox = new QGroupBox(tr("Markers"));
+    markerBox = new QGroupBox(tr("Markers"));
     QVBoxLayout* markerLayout = new QVBoxLayout;
     markerLayout->addWidget(markerView);
     markerBox->setLayout(markerLayout);
@@ -63,6 +63,13 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(
     /* Main menu */
     QMenu* menu = menuBar()->addMenu(tr("Frames"));
     inputEditorView->fillMenu(menu);
+
+    QMenu* panelMenu = menuBar()->addMenu(tr("Panels"));
+
+    markerPanelAct = panelMenu->addAction(tr("Markers"), this,
+        [=](bool checked){context->config.editor_panel_marker = checked; markerBox->setVisible(checked);});
+
+    markerPanelAct->setCheckable(true);
 
     QMenu* optionMenu = menuBar()->addMenu(tr("Options"));
     
@@ -113,6 +120,8 @@ void InputEditorWindow::update()
 
 void InputEditorWindow::update_config()
 {
+    markerPanelAct->setChecked(context->config.editor_panel_marker);
+    markerBox->setVisible(context->config.editor_panel_marker);
     scrollingAct->setChecked(!context->config.editor_autoscroll);
     rewindAct->setChecked(context->config.editor_rewind_seek);
     fastforwardAct->setChecked(!context->config.editor_rewind_fastforward);

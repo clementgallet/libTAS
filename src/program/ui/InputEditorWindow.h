@@ -24,6 +24,7 @@
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QProgressBar>
+#include <QtWidgets/QGroupBox>
 
 /* Forward declaration */
 struct Context;
@@ -52,6 +53,8 @@ public slots:
     
 private:
     Context *context;
+    QGroupBox* markerBox;
+    QAction* markerPanelAct;
     QAction* scrollingAct;
     QAction* rewindAct;
     QAction* fastforwardAct;

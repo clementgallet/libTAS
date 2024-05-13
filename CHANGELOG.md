@@ -44,6 +44,7 @@
 * Prevent games from knowing that game window is hidden or minimized
 * More checks and display errors on Ram Search
 * Add SteamInternal_SteamAPI_Init implementation
+* Option to hide markers view (#603)
 
 ### Changed
 
