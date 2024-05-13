@@ -205,7 +205,7 @@ std::list<std::string> GameThread::build_arg_list(Context *context, int gameArch
                  * print and pause when one signal is sent *
                  * Signals SIGPWR SIGXCPU SIG35 and SIG36 are used a lot in some games */
                 arg_list.push_back("-ex");
-                arg_list.push_back("handle SIGSYS SIGXFSZ SIGUSR1 SIGUSR2 SIGPWR SIGXCPU SIG35 SIG36 nostop noprint");
+                arg_list.push_back("handle SIGSYS SIGXFSZ SIGUSR1 SIGUSR2 SIGPWR SIGXCPU SIG34 SIG35 SIG36 nostop noprint");
                 arg_list.push_back("-ex");
                 arg_list.push_back("run");
                 arg_list.push_back("--args");
