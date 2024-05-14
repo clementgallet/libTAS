@@ -192,4 +192,14 @@ void ThreadSync::detSignalGlobal(int i)
     NATIVECALL(detCond.notify_all());
 }
 
+WrapperLock::WrapperLock()
+{
+    ThreadSync::wrapperExecutionLockLock();
+}
+
+WrapperLock::~WrapperLock()
+{
+    ThreadSync::wrapperExecutionLockUnlock();
+}
+
 }

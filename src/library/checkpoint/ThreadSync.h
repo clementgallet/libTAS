@@ -36,8 +36,18 @@ namespace ThreadSync {
     void detWaitGlobal(int i);
     void detSignal(bool stop);
     void detSignalGlobal(int i);
-
 }
+
+class WrapperLock
+{
+public:
+    WrapperLock(const WrapperLock&) = delete; // no copies
+    WrapperLock& operator=(const WrapperLock&) = delete; // no self-assignments
+
+    WrapperLock();
+    ~WrapperLock();
+};
+
 }
 
 #endif

@@ -176,6 +176,7 @@ static void *pthread_start(void *arg)
         }
     } while (!thread->quit && Global::shared_config.recycle_threads); /* Check if game is quitting */
 
+    WrapperLock wrapperLock;
     return thread->retval;
 }
 
@@ -206,7 +207,7 @@ static void *pthread_native_start(void *arg)
 
     debuglogstdio(LCF_THREAD, "Thread is created with routine %p", (void*)start_routine);
 
-    ThreadSync::wrapperExecutionLockLock();
+    WrapperLock wrapperLock;
     ThreadSync::incrementUninitializedThreadCount();
 
     /* Creating a new or recycled thread, and filling some parameters.
@@ -247,7 +248,6 @@ static void *pthread_native_start(void *arg)
     /* Immediatly detach the thread. We don't want to deal with zombie threads,
      * so we implement ourself the joinable state, and all threads are detached. */
     orig::pthread_detach (*tid_p);
-    ThreadSync::wrapperExecutionLockUnlock();
     return ret;
 }
 
@@ -298,9 +298,8 @@ static void *pthread_native_start(void *arg)
         *thread_return = thread->retval;
     }
 
-    ThreadSync::wrapperExecutionLockLock();
+    WrapperLock wrapperLock;
     ThreadManager::threadDetach(pthread_id);
-    ThreadSync::wrapperExecutionLockUnlock();
     return ret;
 }
 
@@ -311,24 +310,21 @@ static void *pthread_native_start(void *arg)
         return orig::pthread_detach(pthread_id);
     }
 
-    ThreadSync::wrapperExecutionLockLock();
+    WrapperLock wrapperLock;
     ThreadSync::waitForThreadsToFinishInitialization();
 
     debuglogstdio(LCF_THREAD, "Detaching thread id %p tid %d", pthread_id, ThreadManager::getThreadTid(pthread_id));
     ThreadInfo* thread = ThreadManager::getThread(pthread_id);
 
     if (!thread) {
-        ThreadSync::wrapperExecutionLockUnlock();
         return ESRCH;
     }
 
     if (thread->detached) {
-        ThreadSync::wrapperExecutionLockUnlock();
         return EINVAL;
     }
 
     ThreadManager::threadDetach(pthread_id);
-    ThreadSync::wrapperExecutionLockUnlock();
     return 0;
 }
 
@@ -336,19 +332,17 @@ static void *pthread_native_start(void *arg)
 {
     RETURN_IF_NATIVE(pthread_tryjoin_np, (pthread_id, retval), "libpthread.so");
 
-    ThreadSync::wrapperExecutionLockLock();
+    WrapperLock wrapperLock;
     ThreadSync::waitForThreadsToFinishInitialization();
 
     debuglogstdio(LCF_THREAD, "Try to join thread %d", ThreadManager::getThreadTid(pthread_id));
     ThreadInfo* thread = ThreadManager::getThread(pthread_id);
 
     if (!thread) {
-        ThreadSync::wrapperExecutionLockUnlock();
         return ESRCH;
     }
 
     if (thread->detached) {
-        ThreadSync::wrapperExecutionLockUnlock();
         return EINVAL;
     }
 
@@ -367,7 +361,6 @@ static void *pthread_native_start(void *arg)
         debuglogstdio(LCF_THREAD, "Joining thread successfully.");
     else
         debuglogstdio(LCF_THREAD, "Thread has not yet terminated.");
-    ThreadSync::wrapperExecutionLockUnlock();
     return EBUSY;
 }
 
@@ -375,25 +368,22 @@ static void *pthread_native_start(void *arg)
 {
     RETURN_IF_NATIVE(pthread_timedjoin_np, (pthread_id, retval, abstime), "libpthread.so");
 
-    ThreadSync::wrapperExecutionLockLock();
+    WrapperLock wrapperLock;
     ThreadSync::waitForThreadsToFinishInitialization();
 
     debuglogstdio(LCF_THREAD | LCF_TODO, "Try to join thread in %d.%010d sec", abstime->tv_sec, abstime->tv_nsec);
 
     if (abstime->tv_sec < 0 || abstime->tv_nsec >= 1000000000) {
-        ThreadSync::wrapperExecutionLockUnlock();
         return EINVAL;
     }
 
     ThreadInfo* thread = ThreadManager::getThread(pthread_id);
 
     if (!thread) {
-        ThreadSync::wrapperExecutionLockUnlock();
         return ESRCH;
     }
 
     if (thread->detached) {
-        ThreadSync::wrapperExecutionLockUnlock();
         return EINVAL;
     }
 
@@ -417,7 +407,6 @@ static void *pthread_native_start(void *arg)
     else
         debuglogstdio(LCF_THREAD, "Call timed out before thread terminated.");
 
-    ThreadSync::wrapperExecutionLockUnlock();
     return ETIMEDOUT;
 }
 
