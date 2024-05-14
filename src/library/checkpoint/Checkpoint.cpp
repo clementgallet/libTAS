@@ -789,7 +789,7 @@ static void writeAllAreas(bool base)
         if (pid != 0)
             return;
 
-        ThreadManager::restoreThreadTids();
+        ThreadManager::restoreTid();
     }
 
     TimeHolder old_time, new_time, delta_time;

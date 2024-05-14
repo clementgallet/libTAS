@@ -46,8 +46,8 @@ pthread_t getThreadId();
 /* Get the thread tid */
 pid_t getThreadTid();
 
-/* Restore tid in all threads into their internal pthread structure */
-void restoreThreadTids();
+/* Restore the true tid of the current thread, and set it into the internal pthread structure */
+void restoreTid();
 
 /* Set the main thread to this thread */
 void setMainThread();

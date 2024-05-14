@@ -184,12 +184,18 @@ pid_t ThreadManager::getThreadTid(pthread_t pthread_id)
     return 0;
 }
 
-void ThreadManager::restoreThreadTids()
+void ThreadManager::restoreTid()
 {
-    for (ThreadInfo* thread = thread_list; thread != nullptr; thread = thread->next) {
-        pid_t* thread_data = reinterpret_cast<pid_t*>(thread->pthread_id);
-        thread_data[getTidOffset()] = thread->real_tid;
-    }
+#ifdef __unix__
+    current_thread->real_tid = syscall(SYS_gettid);
+#elif defined(__APPLE__) && defined(__MACH__)
+    uint64_t tid;
+    pthread_threadid_np(nullptr, &tid);
+    current_thread->real_tid = tid;
+#endif
+
+    pid_t* thread_data = reinterpret_cast<pid_t*>(current_thread->pthread_id);
+    thread_data[getTidOffset()] = current_thread->real_tid;
 }
 
 bool ThreadManager::initThreadFromParent(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from)
@@ -236,18 +242,8 @@ int ThreadManager::getTidOffset() {
 #endif
 
     /* Identify tid offset in pthread structure */
-    pthread_t pthread_id = getThreadId();
-    pid_t tid;
-    
-#ifdef __unix__
-    tid = syscall(SYS_gettid);
-#elif defined(__APPLE__) && defined(__MACH__)
-    uint64_t tid64;
-    pthread_threadid_np(nullptr, &tid64);
-    tid = tid64;
-#endif
-
-    pid_t* thread_data = reinterpret_cast<pid_t*>(pthread_id);
+    pid_t tid = current_thread->real_tid;    
+    pid_t* thread_data = reinterpret_cast<pid_t*>(current_thread->pthread_id);
     if (thread_data[offset_tid] != tid) {
         for (offset_tid = 0; offset_tid < 500; offset_tid++) {
             if (thread_data[offset_tid] == tid) {
@@ -264,6 +260,8 @@ int ThreadManager::getTidOffset() {
 
 void ThreadManager::initThreadFromChild(ThreadInfo* thread)
 {
+    current_thread = thread;
+
     thread->pthread_id = getThreadId();
     
 #ifdef __unix__
@@ -277,7 +275,6 @@ void ThreadManager::initThreadFromChild(ThreadInfo* thread)
 
     thread->ptid = ((pid_t*)thread->pthread_id) + getTidOffset();
 
-    current_thread = thread;
     addToList(thread);
 
     SaveStateManager::initThreadFromChild(thread);
