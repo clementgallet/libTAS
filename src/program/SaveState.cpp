@@ -122,7 +122,7 @@ int SaveState::save(Context* context, const MovieFile& m)
     return message;
 }
 
-int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inputEditor)
+int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inputEditor, int common_relative_id, uint64_t common_relative_framecount)
 {
     /* Check that the savestate exists (check for both savestate files and 
      * framecount, because there can be leftover savestate files from
@@ -171,7 +171,25 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
              inputEditor))) {
 
         /* Checking if the savestate movie is a prefix of our movie */
-        if (!movie || !m.isPrefix(*movie)) {
+        bool isPrefix;
+        if (!movie)
+            isPrefix = false;
+        else {
+            /* We can skip checking for inputs if we are a parent of the current state */
+            if (common_relative_id == id) {
+                isPrefix = true;
+            }
+            else if (common_relative_id != -1) {
+                /* We can skip most of the checked inputs if we have a common relative
+                 * with the current state */
+                isPrefix = movie->isEqual(m, common_relative_framecount, framecount);
+            }
+            else {
+                /* No relative, check the entire input for prefix */
+                isPrefix = m.isPrefix(*movie);
+            }
+        }
+        if (!isPrefix) {
             /* Not a prefix, we don't allow loading */
             sendMessage(MSGN_OSD_MSG);
             sendString(std::string("Savestate inputs mismatch"));

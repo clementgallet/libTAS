@@ -56,6 +56,38 @@ SaveState& SaveStateList::get(int id)
     return states[id];
 }
 
+int SaveStateList::commonRelative(int id)
+{
+    if (last_state_id == -1)
+        return -1;
+    
+    /* Trivial case */
+    if (last_state_id == id)
+        return id;
+    
+    /* Clear all visited flags */
+    for (int i = 0; i < NB_STATES; i++) {
+        states[i].visited = false;
+    }
+
+    /* Set all visited flags for current parents */
+    int current_id = last_state_id;
+    while (current_id != -1) {
+        states[current_id].visited = true;
+        current_id = states[current_id].parent;
+    }
+    
+    /* Look at all parents of given state */
+    int other_id = id;
+    while (other_id != -1) {
+        if (states[other_id].visited)
+            return other_id;
+        other_id = states[other_id].parent;
+    }
+
+    return -1;
+}
+
 int SaveStateList::save(int id, Context* context, const MovieFile& movie)
 {
     SaveState& ss = get(id);
@@ -86,7 +118,13 @@ int SaveStateList::save(int id, Context* context, const MovieFile& movie)
 int SaveStateList::load(int id, Context* context, const MovieFile& movie, bool branch, bool inputEditor)
 {
     SaveState& ss = get(id);
-    return ss.load(context, movie, branch, inputEditor);
+    
+    /* Get common relative information to skip most of input prefix check */
+    int common_relative_id = commonRelative(id);
+    uint64_t common_relative_framecount = 0;
+    if (common_relative_id != -1)
+        common_relative_framecount = states[common_relative_id].framecount;
+    return ss.load(context, movie, branch, inputEditor, common_relative_id, common_relative_framecount);
 }
 
 int SaveStateList::postLoad(int id, Context* context, MovieFile& movie, bool branch, bool inputEditor)

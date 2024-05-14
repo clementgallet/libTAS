@@ -559,8 +559,11 @@ void MovieFileInputs::close()
 
 bool MovieFileInputs::isEqual(const MovieFileInputs* movie, unsigned int start_frame, unsigned int end_frame) const
 {
-    /* Not a prefix if the size is greater */
+    /* Not equal if a size is greater */
     if (end_frame > input_list.size())
+        return false;
+
+    if (end_frame > movie->input_list.size())
         return false;
 
     return std::equal(movie->input_list.begin() + start_frame, movie->input_list.begin() + end_frame, input_list.begin() + start_frame);

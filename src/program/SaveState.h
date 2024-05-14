@@ -52,6 +52,9 @@ public:
     /* Frame count of the savestate */
     uint64_t framecount;
 
+    /* Has the state being visited? Used by algorithm for common relative */
+    bool visited;
+
     /* Movie file */
     std::unique_ptr<MovieFile> movie;
 
@@ -64,7 +67,7 @@ public:
     int save(Context* context, const MovieFile& movie);
 
     /* Load state. Return 0 or error (<0) */
-    int load(Context* context, const MovieFile& movie, bool branch, bool inputEditor);
+    int load(Context* context, const MovieFile& movie, bool branch, bool inputEditor, int common_relative_id, uint64_t common_relative_framecount);
 
     /* Process after state loading. Return message or error */
     int postLoad(Context* context, MovieFile& movie, bool branch, bool inputEditor);

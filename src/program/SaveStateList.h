@@ -35,7 +35,11 @@ namespace SaveStateList {
 
     /* Return the savestate from its id */
     SaveState& get(int id);
-    
+
+    /* Find the common relative between the current state (saved or loaded) and
+     * the given state. Returns -1 if none */  
+    int commonRelative(int id);
+
     /* Save state from its id and handle parent */
     int save(int id, Context* context, const MovieFile& movie);
 

@@ -45,6 +45,7 @@
 * More checks and display errors on Ram Search
 * Add SteamInternal_SteamAPI_Init implementation
 * Option to hide markers view (#603)
+* Optimize the movie prefix check by using information from the state list
 
 ### Changed
 
