@@ -134,7 +134,6 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
         case HOTKEY_SAVESTATE7:
         case HOTKEY_SAVESTATE8:
         case HOTKEY_SAVESTATE9:
-        case HOTKEY_SAVESTATE_BACKTRACK:
         {
             /* Perform a savestate:
              * - save the moviefile if we are recording
@@ -155,7 +154,6 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
 
             /* Checking that saving succeeded */
             if (message == MSGB_SAVING_SUCCEEDED) {
-                didASavestate = true;
                 emit savestatePerformed(statei, context->framecount);
             }
 
@@ -171,7 +169,6 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
         case HOTKEY_LOADSTATE7:
         case HOTKEY_LOADSTATE8:
         case HOTKEY_LOADSTATE9:
-        case HOTKEY_LOADSTATE_BACKTRACK:
         case HOTKEY_LOADBRANCH1:
         case HOTKEY_LOADBRANCH2:
         case HOTKEY_LOADBRANCH3:
@@ -181,7 +178,6 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
         case HOTKEY_LOADBRANCH7:
         case HOTKEY_LOADBRANCH8:
         case HOTKEY_LOADBRANCH9:
-        case HOTKEY_LOADBRANCH_BACKTRACK:
 
             /* Load a savestate:
              * - check for an existing savestate in the slot
@@ -203,7 +199,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
             }
 
             /* Loading branch? */
-            bool load_branch = (hk.type >= HOTKEY_LOADBRANCH1) && (hk.type <= HOTKEY_LOADBRANCH_BACKTRACK);
+            bool load_branch = (hk.type >= HOTKEY_LOADBRANCH1) && (hk.type <= HOTKEY_LOADSTATE9);
 
             /* Check if input editor is visible */
             bool inputEditor = false;
@@ -214,13 +210,6 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
 
             /* Perform state loading */
             int error = SaveStateList::load(statei, context, *movie, load_branch, inputEditor);
-
-            /* Handle errors */
-            if (error == SaveState::EINVALID) {
-                if (!(context->config.sc.osd))
-                    emit alertToShow(QString("State invalid because new threads were created"));
-                return false;
-            }
 
             if (error == SaveState::ENOSTATEMOVIEPREFIX) {
                 /* Ask the user if they want to load the movie, and get the answer.

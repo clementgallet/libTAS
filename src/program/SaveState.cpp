@@ -30,20 +30,12 @@
 void SaveState::init(Context* context, int i)
 {
     id = i;
-    is_backtrack = (i == 10);
     framecount = 0; // Special value for `no state`
     parent = -1;
-    invalid = false;
     movie = std::unique_ptr<MovieFile>(new MovieFile(context));
 
     buildPaths(context);
     buildMessages();
-}
-
-void SaveState::invalidate()
-{
-    parent = -1;
-    invalid = true;    
 }
 
 void SaveState::buildPaths(Context* context)
@@ -77,22 +69,12 @@ void SaveState::buildMessages(bool branch)
 
     std::string term = branch ? "branch" : "state";
 
-    if (is_backtrack) {
-        loading_msg = "Loading backtrack " + term;
-    }
-    else {
-        loading_msg = "Loading " + term + " ";
-        loading_msg += std::to_string(id);
-    }
+    loading_msg = "Loading " + term + " ";
+    loading_msg += std::to_string(id);
 
-    if (is_backtrack) {
-        loaded_msg = "Backtrack " + term + " loaded";
-    }
-    else {
-        loaded_msg = branch ? "Branch " : "State ";
-        loaded_msg += std::to_string(id);
-        loaded_msg += " loaded";
-    }
+    loaded_msg = branch ? "Branch " : "State ";
+    loaded_msg += std::to_string(id);
+    loaded_msg += " loaded";
 }
 
 const std::string& SaveState::getMoviePath() const
@@ -130,7 +112,6 @@ int SaveState::save(Context* context, const MovieFile& m)
     /* Set framecount */
     if (message == MSGB_SAVING_SUCCEEDED) {
         framecount = context->framecount;
-        invalid = false;
     }
     
     return message;
@@ -165,14 +146,6 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
             sendString(no_state_msg);
         }
         return ENOSTATE;
-    }
-
-    if (invalid) {
-        if (context->config.sc.osd) {
-            sendMessage(MSGN_OSD_MSG);
-            sendString(std::string("State invalid because new threads were created"));
-        }
-        return EINVALID;
     }
 
     /* Rebuild messages to account for a possible branch load */

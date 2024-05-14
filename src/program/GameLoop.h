@@ -101,9 +101,6 @@ signals:
     void getMarkerText(std::string &text);
 
     void getTimeTrace(int type, unsigned long long hash, std::string stacktrace);
-    
-    /* Savestates have been invalidated by thread change */
-    void invalidateSavestates();
 };
 
 #endif

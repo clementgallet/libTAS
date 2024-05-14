@@ -121,10 +121,6 @@ QVariant MarkerModel::data(const QModelIndex &index, int role) const
             }
         }
         
-        /* Invalid portion */
-        // if (framecount < invalid_frame)
-        //     color = color.darker(120);
-
         return QBrush(color);
     }
 

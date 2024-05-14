@@ -125,12 +125,6 @@ void setCurrentThread(ThreadInfo *thread);
 void lockList();
 void unlockList();
 
-/* Has the thread list changed during the current frame? */
-bool hasThreadListChanged();
-
-/* Reset the state of thread list changed */
-void resetThreadListChanged();
-
 }
 }
 

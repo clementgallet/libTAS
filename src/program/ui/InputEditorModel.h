@@ -154,9 +154,6 @@ public slots:
     /* Register a savestate for display */
     void registerSavestate(int slot, unsigned long long frame);
 
-    /* Invalidate all savestates */
-    void invalidateSavestates();
-
     /* Save the new hovered cell */
     void setHoveredCell(const QModelIndex &index);
 
@@ -169,9 +166,6 @@ private:
 
     /* Last saved/loaded state */
     unsigned long long last_savestate = 0;
-
-    /* Framecount of the last invalidation */
-    uint64_t invalid_frame = 0;
 
     /* Freeze the vertical scroll, used for rewind */
     bool freeze_scroll = false;

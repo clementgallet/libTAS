@@ -54,9 +54,6 @@ public:
      */
     virtual bool haveFocus() = 0;
 
-    /* Indicate if at least one savestate was performed, for backtrack savestate */
-    bool didASavestate = false;
-
 protected:
     Context* context;
     MovieFile* movie;

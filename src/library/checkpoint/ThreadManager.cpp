@@ -44,9 +44,6 @@ static pthread_mutex_t threadStateLock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t threadListLock = PTHREAD_MUTEX_INITIALIZER;
 static bool is_child_fork = false;
 
-/* Past savestates are invalid when thread list has changed */
-static bool threadListChanged = false;
-
 void ThreadManager::init()
 {
     /* Create a ThreadInfo struct for this thread */
@@ -160,7 +157,6 @@ ThreadInfo* ThreadManager::getNewThread()
     if (!thread) {
         thread = new ThreadInfo();
         debuglogstdio(LCF_THREAD, "Allocate a new ThreadInfo struct");
-        threadListChanged = true;
     }
 
     unlockList();
@@ -350,8 +346,6 @@ void ThreadManager::threadIsDead(ThreadInfo *thread)
         free(thread->altstack.ss_sp);
     }
     delete(thread);
-
-    threadListChanged = true;
 }
 
 void ThreadManager::threadDetach(pthread_t pthread_id)
@@ -453,16 +447,6 @@ void ThreadManager::lockList()
 void ThreadManager::unlockList()
 {
     MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
-}
-
-bool ThreadManager::hasThreadListChanged()
-{
-    return threadListChanged;
-}
-
-void ThreadManager::resetThreadListChanged()
-{
-    threadListChanged = false;
 }
 
 }

@@ -274,10 +274,6 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         if (savestate_frame != -1)
             color = color.darker(105);
 
-        /* Invalid portion */
-        if (row < invalid_frame)
-            color = color.darker(120);
-
         return QBrush(color);
     }
 
@@ -962,20 +958,9 @@ void InputEditorModel::update()
 void InputEditorModel::resetInputs()
 {
     beginResetModel();
-    invalid_frame = 0;
     last_savestate = 0;
     endResetModel();
     emit inputSetChanged();
-}
-
-void InputEditorModel::invalidateSavestates()
-{
-    /* Update invalid frame */
-    uint64_t previous_invalid_frame = invalid_frame;
-    invalid_frame = context->framecount;
-    
-    /* Update portion of the table */
-    emit dataChanged(index(previous_invalid_frame,0), index(context->framecount,columnCount()-1));
 }
 
 /* Register a savestate. If saved, frame contains the framecount of the

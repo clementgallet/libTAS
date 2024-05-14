@@ -25,7 +25,7 @@
 
 #include <iostream>
 
-#define NB_STATES 11
+#define NB_STATES 10
 
 /* Array of savestates */
 static SaveState states[NB_STATES];
@@ -103,20 +103,10 @@ int SaveStateList::postLoad(int id, Context* context, MovieFile& movie, bool bra
     return message;
 }
 
-void SaveStateList::invalidate()
-{
-    for (int i = 0; i < NB_STATES; i++) {
-        states[i].invalidate();
-    }
-    
-    last_state_id = -1;
-    old_root_framecount = 0;
-}
-
 int SaveStateList::stateAtFrame(uint64_t frame)
 {
     for (int i = 0; i < NB_STATES; i++) {
-        if ((states[i].framecount == frame) && !states[i].invalid)
+        if ((states[i].framecount == frame))
             return states[i].id;
     }
 

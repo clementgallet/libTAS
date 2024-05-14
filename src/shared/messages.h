@@ -258,12 +258,6 @@ enum {
     MSGN_ENCODING_SEGMENT,
 
     /*
-     * Notify that previous savestates have been invalidated because of thread change.
-     * Argument: none
-     */
-    MSGB_INVALIDATE_SAVESTATES,
-
-    /*
      * Send to the game the location of the Steam user data folder.
      * Argument: size_t (string length) then char[len]
      */

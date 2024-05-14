@@ -185,7 +185,6 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::getRamWatch, ramWatchWindow->ramWatchView, &RamWatchView::slotGet, Qt::DirectConnection);
     connect(gameLoop, &GameLoop::getMarkerText, inputEditorWindow->inputEditorView, &InputEditorView::getCurrentMarkerText, Qt::DirectConnection);
     connect(gameLoop->gameEvents, &GameEvents::savestatePerformed, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::registerSavestate);
-    connect(gameLoop, &GameLoop::invalidateSavestates, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::invalidateSavestates);
     connect(gameLoop, &GameLoop::getTimeTrace, timeTraceWindow->timeTraceModel, &TimeTraceModel::addCall);
     connect(gameLoop, &GameLoop::statusChanged, settingsWindow, &SettingsWindow::update);
 

@@ -59,7 +59,6 @@ private:
 
     ToolTipCheckBox* stateIncrementalBox;
     ToolTipCheckBox* stateRamBox;
-    ToolTipCheckBox* stateBacktrackBox;
     ToolTipCheckBox* stateCompressedBox;
     ToolTipCheckBox* stateUnmappedBox;
     ToolTipCheckBox* stateForkBox;

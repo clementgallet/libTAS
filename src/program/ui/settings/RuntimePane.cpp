@@ -93,15 +93,13 @@ void RuntimePane::initLayout()
         context->config.sc.savestate_settings &= ~SharedConfig::SS_INCREMENTAL;
     }
     stateRamBox = new ToolTipCheckBox(tr("Store savestates in RAM"));
-    stateBacktrackBox = new ToolTipCheckBox(tr("Backtrack savestate"));
     stateCompressedBox = new ToolTipCheckBox(tr("Compressed savestates"));
     stateUnmappedBox = new ToolTipCheckBox(tr("Skip unmapped pages"));
     stateForkBox = new ToolTipCheckBox(tr("Fork to save states"));
 
     savestateLayout->addWidget(stateIncrementalBox, 0, 0);
     savestateLayout->addWidget(stateRamBox, 0, 1);
-    savestateLayout->addWidget(stateBacktrackBox, 1, 0);
-    savestateLayout->addWidget(stateCompressedBox, 1, 1);
+    savestateLayout->addWidget(stateCompressedBox, 1, 0);
     savestateLayout->addWidget(stateUnmappedBox, 2, 0);
     savestateLayout->addWidget(stateForkBox, 2, 1);
 
@@ -196,7 +194,6 @@ void RuntimePane::initSignals()
 
     connect(stateIncrementalBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
     connect(stateRamBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
-    connect(stateBacktrackBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
     connect(stateCompressedBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
     connect(stateUnmappedBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
     connect(stateForkBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
@@ -255,12 +252,6 @@ void RuntimePane::initToolTips()
     stateRamBox->setDescription("Storing savestates in RAM can provide a speedup, "
     "but libTAS does not check for available memory. If you have a SSD, this option "
     "is likely to not provide any speedup."
-    "<br><br><em>If unsure, leave this unchecked</em>");
-
-    stateBacktrackBox->setDescription("Save a state whenether a thread is created/destroyed. "
-    "This is useful because libTAS cannot load a savestate when the thread list "
-    "has changed. With this option checked, you will be able to load the frame "
-    "where the thread list has changed (F10 key by default)."
     "<br><br><em>If unsure, leave this unchecked</em>");
 
     stateCompressedBox->setDescription("Compress savestates on-the-fly using a "
@@ -377,7 +368,6 @@ void RuntimePane::loadConfig()
 
     stateIncrementalBox->setChecked(context->config.sc.savestate_settings & SharedConfig::SS_INCREMENTAL);
     stateRamBox->setChecked(context->config.sc.savestate_settings & SharedConfig::SS_RAM);
-    stateBacktrackBox->setChecked(context->config.sc.savestate_settings & SharedConfig::SS_BACKTRACK);
     stateCompressedBox->setChecked(context->config.sc.savestate_settings & SharedConfig::SS_COMPRESSED);
     stateUnmappedBox->setChecked(context->config.sc.savestate_settings & SharedConfig::SS_PRESENT);
     stateForkBox->setChecked(context->config.sc.savestate_settings & SharedConfig::SS_FORK);
@@ -422,7 +412,6 @@ void RuntimePane::saveConfig()
     context->config.sc.savestate_settings = 0;
     context->config.sc.savestate_settings |= stateIncrementalBox->isChecked() ? SharedConfig::SS_INCREMENTAL : 0;
     context->config.sc.savestate_settings |= stateRamBox->isChecked() ? SharedConfig::SS_RAM : 0;
-    context->config.sc.savestate_settings |= stateBacktrackBox->isChecked() ? SharedConfig::SS_BACKTRACK : 0;
     context->config.sc.savestate_settings |= stateCompressedBox->isChecked() ? SharedConfig::SS_COMPRESSED : 0;
     context->config.sc.savestate_settings |= stateUnmappedBox->isChecked() ? SharedConfig::SS_PRESENT : 0;
     context->config.sc.savestate_settings |= stateForkBox->isChecked() ? SharedConfig::SS_FORK : 0;

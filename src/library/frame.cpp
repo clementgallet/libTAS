@@ -256,13 +256,6 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     sendData(&fps, sizeof(float));
     sendData(&lfps, sizeof(float));
 
-    /* Notify the program that threads have changed, so that it can show it
-     * and trigger a backtrack savestate */
-    if (ThreadManager::hasThreadListChanged()) {
-        sendMessage(MSGB_INVALIDATE_SAVESTATES);
-        ThreadManager::resetThreadListChanged();
-    }
-
     /* Send message if non-draw frame */
     if (!draw) {
         sendMessage(MSGB_NONDRAW_FRAME);
@@ -712,9 +705,6 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 if (status == 0) {
                     /* Current savestate is now the parent savestate */
                     Checkpoint::setCurrentToParent();
-
-                    /* We did at least one savestate, used for backtrack savestate */
-                    didASavestate = true;
                 }
 
                 SaveStateManager::printError(status);
