@@ -37,10 +37,10 @@ namespace SaveStateList {
     SaveState& get(int id);
     
     /* Save state from its id and handle parent */
-    int save(int id, Context* context, MovieFile& movie);
+    int save(int id, Context* context, const MovieFile& movie);
 
     /* Load state from its id */
-    int load(int id, Context* context, MovieFile& movie, bool branch, bool inputEditor);
+    int load(int id, Context* context, const MovieFile& movie, bool branch, bool inputEditor);
 
     /* Process after loading state from its id and handle parent */
     int postLoad(int id, Context* context, MovieFile& movie, bool branch, bool inputEditor);
@@ -55,7 +55,7 @@ namespace SaveStateList {
     uint64_t oldRootStateFramecount();
 
     /* Returns the nearest state id in current branch before framecount */
-    int nearestState(uint64_t framecount);
+    int nearestState(uint64_t framecount, const MovieFile* movie);
 
     /* Save movies on disk when exiting */
     void backupMovies();

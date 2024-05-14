@@ -141,7 +141,7 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
             int ret = savedmovie.loadSavestateMovie(movie_path);
 
             /* Checking if our movie is a prefix of the savestate movie */
-            if ((ret == 0) && savedmovie.inputs->isPrefix(m.inputs, context->framecount)) {
+            if ((ret == 0) && savedmovie.inputs->isEqual(m.inputs, 0, context->framecount)) {
                 return ENOSTATEMOVIEPREFIX;
             }
         }

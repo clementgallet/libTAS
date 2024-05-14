@@ -122,9 +122,9 @@ public:
     /* Close the moviefile */
     void close();
 
-    /* Check if another movie starts with the same inputs as this movie, up to
-     * a specified frame count. */
-    bool isPrefix(const MovieFileInputs* movie, unsigned int frame) const;
+    /* Check if another movie has the same inputs as this movie, inside a
+     * specified range of frames */
+    bool isEqual(const MovieFileInputs* movie, unsigned int start_frame, unsigned int end_frame) const;
 
     /* Helper function called when the movie has been modified */
     void wasModified();

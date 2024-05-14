@@ -86,6 +86,8 @@ public:
 
     bool isPrefix(const MovieFile& movie) const;
 
+    bool isEqual(const MovieFile& movie, unsigned int first_frame, unsigned int last_frame) const;
+
     /* Close the moviefile */
     void close();
 

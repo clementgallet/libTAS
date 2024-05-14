@@ -1016,7 +1016,7 @@ bool InputEditorModel::rewind(uint64_t framecount, bool toggle)
 
     int state = 0;
     if (framecount < context->framecount) {
-        state = SaveStateList::nearestState(framecount);
+        state = SaveStateList::nearestState(framecount, movie);
         if (state == -1)
             /* No available savestate before the given framecount */
             return false;

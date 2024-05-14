@@ -199,7 +199,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
             }
 
             /* Loading branch? */
-            bool load_branch = (hk.type >= HOTKEY_LOADBRANCH1) && (hk.type <= HOTKEY_LOADSTATE9);
+            bool load_branch = (hk.type >= HOTKEY_LOADBRANCH1) && (hk.type <= HOTKEY_LOADBRANCH9);
 
             /* Check if input editor is visible */
             bool inputEditor = false;

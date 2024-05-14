@@ -56,7 +56,7 @@ SaveState& SaveStateList::get(int id)
     return states[id];
 }
 
-int SaveStateList::save(int id, Context* context, MovieFile& movie)
+int SaveStateList::save(int id, Context* context, const MovieFile& movie)
 {
     SaveState& ss = get(id);
     int message = ss.save(context, movie);
@@ -83,7 +83,7 @@ int SaveStateList::save(int id, Context* context, MovieFile& movie)
     return message;
 }
 
-int SaveStateList::load(int id, Context* context, MovieFile& movie, bool branch, bool inputEditor)
+int SaveStateList::load(int id, Context* context, const MovieFile& movie, bool branch, bool inputEditor)
 {
     SaveState& ss = get(id);
     return ss.load(context, movie, branch, inputEditor);
@@ -134,7 +134,7 @@ uint64_t SaveStateList::oldRootStateFramecount()
     return old_root_framecount;
 }
 
-int SaveStateList::nearestState(uint64_t framecount)
+int SaveStateList::nearestState(uint64_t framecount, const MovieFile* movie)
 {
     if (last_state_id == -1)
         return -1;
@@ -143,11 +143,51 @@ int SaveStateList::nearestState(uint64_t framecount)
     
     while (parent_id != -1) {
         if (states[parent_id].framecount <= framecount)
-            return parent_id;
+            break;
         parent_id = states[parent_id].parent;
     }
     
-    return -1;
+    if (parent_id == -1)
+        return -1;
+        
+    /* We know that `parent_id` is a good savestate to rewind, but we may find
+     * a better one by looking at other childs of this state, so that we have
+     * very few inputs to check */
+    uint64_t parent_framecount = states[parent_id].framecount;
+    int best_id = parent_id;
+    uint64_t best_framecount = states[best_id].framecount;
+    
+    for (int i = 0; i < NB_STATES; i++) {
+        /* Skip state after the desired framecount */
+        if ((states[i].framecount > framecount))
+            continue;
+            
+        /* Skip worst state to rewind */
+        if ((states[i].framecount <= best_framecount))
+            continue;
+        
+        /* Check if this state is a child */
+        int cur_parent_id = states[i].parent;
+        while (cur_parent_id != -1) {
+            if (cur_parent_id == parent_id)
+                break;
+            cur_parent_id = states[cur_parent_id].parent;
+        }
+        
+        /* Not a child, skipping */
+        if (cur_parent_id != parent_id)
+            continue;
+            
+        /* Now check for prefix, we only have to check between the parent and
+         * this candidate */
+        if (states[i].movie->isEqual(*movie, parent_framecount, states[i].framecount)) {
+            /* We found a better state to rewind to! */
+            best_id = i;
+            best_framecount = states[i].framecount;
+        }
+    }
+
+    return best_id;
 }
 
 void SaveStateList::backupMovies()

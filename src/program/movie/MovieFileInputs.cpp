@@ -557,13 +557,13 @@ void MovieFileInputs::close()
     input_list.clear();
 }
 
-bool MovieFileInputs::isPrefix(const MovieFileInputs* movie, unsigned int frame) const
+bool MovieFileInputs::isEqual(const MovieFileInputs* movie, unsigned int start_frame, unsigned int end_frame) const
 {
     /* Not a prefix if the size is greater */
-    if (frame > input_list.size())
+    if (end_frame > input_list.size())
         return false;
 
-    return std::equal(movie->input_list.begin(), movie->input_list.begin() + frame, input_list.begin());
+    return std::equal(movie->input_list.begin() + start_frame, movie->input_list.begin() + end_frame, input_list.begin() + start_frame);
 }
 
 void MovieFileInputs::wasModified()

@@ -221,7 +221,12 @@ void MovieFile::setLockedInputs(AllInputs& inp)
 
 bool MovieFile::isPrefix(const MovieFile& movie) const
 {
-    return inputs->isPrefix(movie.inputs, movie.header->savestate_framecount);
+    return inputs->isEqual(movie.inputs, 0, movie.header->savestate_framecount);
+}
+
+bool MovieFile::isEqual(const MovieFile& movie, unsigned int first_frame, unsigned int last_frame) const
+{
+    return inputs->isEqual(movie.inputs, first_frame, last_frame);
 }
 
 void MovieFile::close()
