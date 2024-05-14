@@ -60,21 +60,26 @@ void SaveState::buildPaths(Context* context)
     }
 }
 
-void SaveState::buildMessages(bool branch)
+void SaveState::buildMessages()
 {
     if (no_state_msg.empty()) {
         no_state_msg = "No savestate in slot ";
         no_state_msg += std::to_string(id);
     }
 
-    std::string term = branch ? "branch" : "state";
+    loading_branch_msg = "Loading branch ";
+    loading_branch_msg += std::to_string(id);
 
-    loading_msg = "Loading " + term + " ";
-    loading_msg += std::to_string(id);
+    loaded_branch_msg = "Branch ";
+    loaded_branch_msg += std::to_string(id);
+    loaded_branch_msg += " loaded";
 
-    loaded_msg = branch ? "Branch " : "State ";
-    loaded_msg += std::to_string(id);
-    loaded_msg += " loaded";
+    loading_state_msg = "Loading state ";
+    loading_state_msg += std::to_string(id);
+
+    loaded_state_msg = "State ";
+    loaded_state_msg += std::to_string(id);
+    loaded_state_msg += " loaded";
 }
 
 const std::string& SaveState::getMoviePath() const
@@ -148,9 +153,6 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
         return ENOSTATE;
     }
 
-    /* Rebuild messages to account for a possible branch load */
-    buildMessages(branch);
-    
     /* Send the savestate index */
     sendMessage(MSGN_SAVESTATE_INDEX);
     sendData(&id, sizeof(int));
@@ -184,7 +186,10 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
     if (context->config.sc.osd) {
         std::string msg;
         sendMessage(MSGN_OSD_MSG);
-        sendString(loading_msg);
+        if (branch)
+            sendString(loading_branch_msg);
+        else
+            sendString(loading_state_msg);
     }
 
     sendMessage(MSGN_LOADSTATE);
@@ -247,7 +252,10 @@ int SaveState::postLoad(Context* context, MovieFile& m, bool branch, bool inputE
 
     if (didLoad && (context->config.sc.osd)) {
         sendMessage(MSGN_OSD_MSG);
-        sendString(loaded_msg);
+        if (branch)
+            sendString(loaded_branch_msg);
+        else
+            sendString(loaded_state_msg);
     }
 
     sendMessage(MSGN_EXPOSE);

@@ -88,20 +88,15 @@ private:
     /* Build all savestate paths */
     void buildPaths(Context* context);
 
-    /* Savestate saved message */
-    std::string saved_msg;
-
-    /* No savestate message */
+    /* Savestate messages */
     std::string no_state_msg;
-
-    /* Savestate loading message */
-    std::string loading_msg;
-
-    /* Savestate loaded message */
-    std::string loaded_msg;
+    std::string loading_branch_msg;
+    std::string loaded_branch_msg;
+    std::string loading_state_msg;
+    std::string loaded_state_msg;
 
     /* Build all savestate messages */
-    void buildMessages(bool branch = false);
+    void buildMessages();
 
 };
 
