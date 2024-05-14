@@ -311,7 +311,6 @@ int SaveStateManager::checkpoint(int slot)
     /* Create threads that were destroyed since the savestate */
     if (isLoading()) {
         createNewThreads();
-        ThreadManager::restoreThreadTids();
     }
 
     resumeThreads();
@@ -599,15 +598,41 @@ void SaveStateManager::suspendThreads()
                 break;
 
             case ThreadInfo::ST_TERMINATING:
-                /* Send the suspend signal to the thread */
                 if (ThreadManager::updateState(thread, ThreadInfo::ST_TERMINATED, ThreadInfo::ST_TERMINATING)) {
-                    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Signaling thread %d to terminate", thread->real_tid);
-                    NATIVECALL(ret = pthread_kill(thread->pthread_id, sig_suspend_threads));
-                    
-                    /* A terminating thread sets the tid in pthread struct to 0 */
+
+                    /* Try to cancel the thread */
+                    int ret;
+                    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Cancel thread %d", thread->real_tid);
+                    NATIVECALL(ret = pthread_cancel(thread->pthread_id));
+
+                    if (ret < 0) {
+                        debuglogstdio(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Signalled thread %d died", thread->real_tid);
+                        ThreadManager::threadIsDead(thread);
+                        break;
+                    }
+
+                    /* We must wait until the thread terminates entirely, because
+                     * it may release resources during state loading.
+                     * A terminating thread sets the tid in pthread struct to 0 */
+                    int i = 0;
                     while (*thread->ptid != 0) {
                         debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Wait for tid %d to become 0", *thread->ptid);                        
-                        usleep(10000);
+                        NATIVECALL(usleep(1000));
+                        i++;
+                        if (i > 1000)
+                            break;
+                    }
+                    
+                    if (*thread->ptid != 0) {
+                        /* If we couldn't cancel the thread, try to signal it so that
+                        * it can call pthread_exit(). This is unsafe! */
+                        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Cancel failed, signaling thread %d to terminate", thread->real_tid);
+                        NATIVECALL(ret = pthread_kill(thread->pthread_id, sig_suspend_threads));
+                        
+                        while (*thread->ptid != 0) {
+                            debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Wait for tid %d to become 0", *thread->ptid);                        
+                            NATIVECALL(usleep(1000));
+                        }
                     }
                 }
                 break;
@@ -706,6 +731,8 @@ void SaveStateManager::stopThisThread(int signum)
         }
         else {
             ThreadLocalStorage::restoreTLSState(&current_thread->tlsInfo); // restore thread local storage
+            /* Recover the real tid */
+            ThreadManager::restoreTid();
         }
 
         MYASSERT(ThreadManager::updateState(current_thread, current_thread->orig_state, ThreadInfo::ST_SUSPENDED))

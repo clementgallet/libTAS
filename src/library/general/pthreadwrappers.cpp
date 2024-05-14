@@ -584,24 +584,28 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 
 /* Override */ int pthread_setcancelstate (int state, int *oldstate)
 {
+    RETURN_IF_NATIVE(pthread_setcancelstate, (state, oldstate), "libpthread.so");
     DEBUGLOGCALL(LCF_THREAD | LCF_TODO);
     RETURN_NATIVE(pthread_setcancelstate, (state, oldstate), "libpthread.so");
 }
 
 /* Override */ int pthread_setcanceltype (int type, int *oldtype)
 {
+    RETURN_IF_NATIVE(pthread_setcanceltype, (type, oldtype), "libpthread.so");
     DEBUGLOGCALL(LCF_THREAD | LCF_TODO);
     RETURN_NATIVE(pthread_setcanceltype, (type, oldtype), "libpthread.so");
 }
 
 /* Override */ int pthread_cancel (pthread_t pthread_id)
 {
+    RETURN_IF_NATIVE(pthread_cancel, (pthread_id), "libpthread.so");
     debuglogstdio(LCF_THREAD | LCF_TODO, "Cancel thread %d", ThreadManager::getThreadTid(pthread_id));
     RETURN_NATIVE(pthread_cancel, (pthread_id), "libpthread.so");
 }
 
 /* Override */ void pthread_testcancel (void)
 {
+    RETURN_IF_NATIVE(pthread_testcancel, (), "libpthread.so");
     DEBUGLOGCALL(LCF_THREAD | LCF_TODO);
     RETURN_NATIVE(pthread_testcancel, (), "libpthread.so");
 }
