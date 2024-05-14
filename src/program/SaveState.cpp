@@ -146,10 +146,8 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
             }
         }
 
-        if (context->config.sc.osd) {
-            sendMessage(MSGN_OSD_MSG);
-            sendString(no_state_msg);
-        }
+        sendMessage(MSGN_OSD_MSG);
+        sendString(no_state_msg);
         return ENOSTATE;
     }
 
@@ -175,22 +173,18 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
         /* Checking if the savestate movie is a prefix of our movie */
         if (!movie || !m.isPrefix(*movie)) {
             /* Not a prefix, we don't allow loading */
-            if (context->config.sc.osd) {
-                sendMessage(MSGN_OSD_MSG);
-                sendString(std::string("Savestate inputs mismatch"));
-            }
+            sendMessage(MSGN_OSD_MSG);
+            sendString(std::string("Savestate inputs mismatch"));
             return EINPUTMISMATCH;
         }
     }
 
-    if (context->config.sc.osd) {
-        std::string msg;
-        sendMessage(MSGN_OSD_MSG);
-        if (branch)
-            sendString(loading_branch_msg);
-        else
-            sendString(loading_state_msg);
-    }
+    std::string msg;
+    sendMessage(MSGN_OSD_MSG);
+    if (branch)
+        sendString(loading_branch_msg);
+    else
+        sendString(loading_state_msg);
 
     sendMessage(MSGN_LOADSTATE);
      
@@ -250,7 +244,7 @@ int SaveState::postLoad(Context* context, MovieFile& m, bool branch, bool inputE
         m.header->length_nsec = context->current_time_nsec;
     }
 
-    if (didLoad && (context->config.sc.osd)) {
+    if (didLoad) {
         sendMessage(MSGN_OSD_MSG);
         if (branch)
             sendString(loaded_branch_msg);

@@ -597,7 +597,7 @@ bool GameLoop::startFrameMessages()
     movie.editor->setDraw(context->draw_frame);
 
     /* Send ram watches */
-    if (context->config.sc.osd && context->draw_frame && !skip_draw_frame) {
+    if (context->draw_frame && !skip_draw_frame) {
         std::string ramwatch;
         emit getRamWatch(ramwatch);
         while(!ramwatch.empty()) {
@@ -624,14 +624,12 @@ void GameLoop::sleepSendPreview()
 
     /* Send marker text if it has changed */
     static std::string old_marker_text;
-    if (context->config.sc.osd) {
-        std::string text;
-        emit getMarkerText(text);
-        if (old_marker_text != text) {
-            old_marker_text = text;
-            sendMessage(MSGN_MARKER);
-            sendString(text);
-        }
+    std::string text;
+    emit getMarkerText(text);
+    if (old_marker_text != text) {
+        old_marker_text = text;
+        sendMessage(MSGN_MARKER);
+        sendString(text);
     }
 
     /* Send a preview of inputs so that the game can display them
@@ -639,12 +637,6 @@ void GameLoop::sleepSendPreview()
 
     /* Don't preview when reading inputs */
     if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
-        sendMessage(MSGN_EXPOSE);
-        return;
-    }
-
-    /* Only preview if we actually print inputs */
-    if (!(context->config.sc.osd)) {
         sendMessage(MSGN_EXPOSE);
         return;
     }
