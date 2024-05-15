@@ -79,8 +79,6 @@ struct ThreadInfo {
 
     std::string name; // name of the thread
 
-    stack_t altstack = {nullptr, 0, 0}; // altstack to be used when suspending threads
-
     std::mutex mutex; // mutex to notify a thread for a new routing
     std::condition_variable cv; // associated conditional variable
 

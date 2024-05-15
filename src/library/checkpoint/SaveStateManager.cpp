@@ -130,22 +130,6 @@ void SaveStateManager::initThreadFromChild(ThreadInfo* thread)
     sigaddset(&mask, sig_suspend_threads);
     NATIVECALL(pthread_sigmask(SIG_UNBLOCK, &mask, nullptr));
 
-    /* The signal handler for the thread suspend must be registered on *each*
-     * thread, because it runs on a custom stack.
-     */
-    if (!thread->altstack.ss_sp) {
-        thread->altstack.ss_size = 64*1024;
-        thread->altstack.ss_sp = malloc(thread->altstack.ss_size);
-        thread->altstack.ss_flags = 0;
-    }
-
-    int ret;
-    NATIVECALL(ret = sigaltstack(&thread->altstack, nullptr));
-    if (ret < 0) {
-        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "sigaltstack failed with error %d", errno);
-        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "stack starts at %p", thread->altstack.ss_sp);
-    }
-
     struct sigaction sigsuspend;
     sigfillset(&sigsuspend.sa_mask);
     sigsuspend.sa_flags = SA_RESTART | SA_ONSTACK;
@@ -295,6 +279,14 @@ int SaveStateManager::checkpoint(int slot)
 
     NATIVECALL(raise(sig_checkpoint));
 
+    /* Important note: while we are in the function to save a state, the remaining
+     * part of this function is for **both** state saving and state loading!
+     * This is because state loading recovers the exact context that was saved,
+     * so it is logical that we resume execution here. To differentiate between
+     * state saving and state loading, the signal handled above set the variable
+     * `restoreInProgress` if loading a state. So we can use this variable to 
+     * execute specific code. */
+
     /* Restoring the game alternate stack (if any) */
     AltStack::restoreStack();
 
@@ -309,7 +301,7 @@ int SaveStateManager::checkpoint(int slot)
 #endif
 
     /* Create threads that were destroyed since the savestate */
-    if (isLoading()) {
+    if (restoreInProgress) {
         createNewThreads();
     }
 
@@ -331,7 +323,7 @@ int SaveStateManager::checkpoint(int slot)
     ThreadSync::releaseLocks();
 
     /* Mark the savestate as dirty in case of fork savestate */
-    if (!isLoading())
+    if (!restoreInProgress)
         stateStatus(slot, true);
 
     return ESTATE_OK;
@@ -365,6 +357,8 @@ int SaveStateManager::restore(int slot)
     /* We save the alternate stack if the game did set one */
     AltStack::saveStack();
 
+    /* `restoreInProgress` is set to false first, so that we can suspend threads
+     * like in SaveStateManager::checkpoint() */
     restoreInProgress = false;
 
 #ifdef __unix__
@@ -513,39 +507,6 @@ void SaveStateManager::suspendThreads()
                 */
                 thread->orig_state = thread->state;
                 if (ThreadManager::updateState(thread, ThreadInfo::ST_SIGNALED, thread->state)) {
-
-                    /* Setup an alternate signal stack.
-                     *
-                     * This is a workaround for a bug when loading a savestate
-                     * which involves the stack pointer.
-                     * During a state loading, the main thread restores the
-                     * memory of the thread stacks, then resume the threads, and
-                     * each thread restore its registers.
-                     * If the stack pointer had changed, the thread is resumed
-                     * with a corrupted stack (old stack pointer, new stack memory)
-                     * and cannot reach the function to restore its stack pointer.
-                     *
-                     * The workaround is to run our signal handler function on
-                     * an alternate stack (different for each thread).
-                     * This way, this stack pointer will be the same.
-                     */
-
-                    // NATIVECALL(ret = sigaltstack(&thread->altstack, nullptr));
-                    // if (ret < 0) {
-                    //     debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "sigaltstack failed with error ", ret);
-                    // }
-                    // else {
-                    //     debuglog(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "sigaltstack with add ", thread->altstack.ss_sp);
-                    // }
-                    // struct sigaction sigusr1;
-                    // sigfillset(&sigusr1.sa_mask);
-                    // sigusr1.sa_flags = SA_RESTART | SA_ONSTACK;
-                    // sigusr1.sa_handler = stopThisThread;
-                    // {
-                    //     GlobalNative gn;
-                    //     MYASSERT(sigaction(SIGUSR1, &sigusr1, nullptr) == 0)
-                    // }
-
                     /* Send the suspend signal to the thread */
                     debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Signaling thread %d", thread->real_tid);
                     NATIVECALL(ret = pthread_kill(thread->pthread_id, sig_suspend_threads));
@@ -679,15 +640,6 @@ void SaveStateManager::stopThisThread(int signum)
         return;
     }
 
-    /* Checking that we run in our custom stack, using the address of a local variable */
-    /* This check fails often but loading the state works, so I'm commenting this */
-    // stack_t altstack = current_thread->altstack;
-    // if ((&altstack < altstack.ss_sp) ||
-    //     (&altstack >= (void*)((char*)altstack.ss_sp + altstack.ss_size))) {
-    //     debuglogstdio(LCF_CHECKPOINT | LCF_WARNING, "Thread suspend is not running on alternate stack");
-    //     debuglogstdio(LCF_CHECKPOINT | LCF_WARNING, "Local variable in %p and stack at %p", &altstack, altstack.ss_sp);
-    // }
-
     /* Make sure we don't get called twice for same thread */
     if (ThreadManager::updateState(current_thread, ThreadInfo::ST_SUSPINPROG, ThreadInfo::ST_SIGNALED)) {
 
@@ -695,13 +647,16 @@ void SaveStateManager::stopThisThread(int signum)
 
         ThreadLocalStorage::saveTLSState(&current_thread->tlsInfo); // save thread local storage
         MYASSERT(getcontext(&current_thread->savctx) == 0)
+        
+        /* We save the current stack pointer, so that we can use the remaining
+         * space in the stack as a stack segment for the clone() call if the current
+         * thread has to be created */
         save_sp(&current_thread->saved_sp);
 
         if (!restoreInProgress) {
 
-            /* We are a user thread and all context is saved.
-             * Wait for ckpt thread to write ckpt, and resume.
-             */
+            /* Both state saving and state loading operations go here first, to
+             * suspend the thread. */
 
             /* Tell the checkpoint thread that we're all saved away */
             MYASSERT(ThreadManager::updateState(current_thread, ThreadInfo::ST_SUSPENDED, ThreadInfo::ST_SUSPINPROG))
@@ -716,13 +671,19 @@ void SaveStateManager::stopThisThread(int signum)
             // NATIVECALL(pthread_sigmask(SIG_UNBLOCK, &mask, nullptr));
             // raise(SIGTRAP);
 
+            /* We use `pthread_mutex_lock()` to suspend a thread because it is
+             * the most pure sync mechanism underneath, which should translate 
+             * mostly has a futex syscall. Thanks to that, the thread stack can
+             * be modified by the state loading code without it being bothered */
             MYASSERT(pthread_mutex_lock(&threadResumeLock) == 0)
             MYASSERT(pthread_mutex_unlock(&threadResumeLock) == 0)
 
             // raise(SIGTRAP);
 
-            /* If when thread was suspended, we performed a restore,
-             * then we must resume execution using setcontext
+            /* After the thread is resumed from loading a state, we immediately
+             * use `setcontext()` to resume execution. `restoreInProgress` was
+             * modified by the checkpoint thread during state loading, when this
+             * thread was suspended
              */
             if (restoreInProgress) {
                 setcontext(&current_thread->savctx);
@@ -730,7 +691,9 @@ void SaveStateManager::stopThisThread(int signum)
             }
         }
         else {
-            ThreadLocalStorage::restoreTLSState(&current_thread->tlsInfo); // restore thread local storage
+            /* After loading a state and recovering the thread context, we can
+             * restore the thread local storage */
+            ThreadLocalStorage::restoreTLSState(&current_thread->tlsInfo);
             /* Recover the real tid */
             ThreadManager::restoreTid();
         }

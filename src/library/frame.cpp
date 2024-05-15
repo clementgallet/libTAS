@@ -73,9 +73,6 @@ uint64_t framecount = 0;
 /* Store the number of nondraw frames */
 static uint64_t nondraw_framecount = 0;
 
-/* Did we do at least one savestate? */
-static bool didASavestate = false;
-
 static void receive_messages(std::function<void()> draw, RenderHUD& hud);
 
 /* Deciding if we actually draw the frame */

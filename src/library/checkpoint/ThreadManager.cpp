@@ -342,9 +342,6 @@ void ThreadManager::threadIsDead(ThreadInfo *thread)
         thread_list = thread_list->next;
     }
 
-    if (thread->altstack.ss_sp) {
-        free(thread->altstack.ss_sp);
-    }
     delete(thread);
 }
 
