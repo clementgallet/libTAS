@@ -53,7 +53,6 @@ private:
     ToolTipComboBox* localeChoice;
 
     ToolTipCheckBox* writingBox;
-    ToolTipCheckBox* recycleBox;
     ToolTipCheckBox* steamBox;
     ToolTipCheckBox* downloadsBox;
 

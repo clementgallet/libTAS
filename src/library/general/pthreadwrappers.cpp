@@ -61,129 +61,31 @@ int __pthread_workqueue_setkill(int enable);
 DEFINE_ORIG_POINTER(__pthread_workqueue_setkill)
 #endif
 
-/* We create a specific exception for thread exit calls */
-class ThreadExitException {
-    const char* what () const throw ()
-    {
-    	return "Thread exit";
-    }
-};
-
-extern "C" {
-  // Declare an extern reference to the internal, undocumented
-  // function that glibc uses to set (or reset) thread-local storage
-  // to its initial state.
-
-  // This function (effectively) takes a pthread_t argument on
-  // 32-bit and 64-bit x86 Linux, but for some other architectures
-  // it does not.  If you search the glibc source code for TLS_TCB_AT_TP,
-  // architectures that define it as 1 should work with this;
-  // architectures that define it as 0 would require a different
-  // code path.
-
-  // Even though this function is internal and undocumented, I don't think
-  // it's likely to change; it's part of the ABI between libpthread.so
-  // and ld-linux.so.
-  extern void _dl_allocate_tls_init(pthread_t pt) __attribute__((weak));
-
-  // Another internal, undocumented libc function, that calls C++
-  // destructors on thread-local storage.
-  extern void __call_tls_dtors() __attribute__((weak));
-
-  // Another internal, undocumented libc function, that cleans up
-  // any libc internal state in thread-local storage.
-  extern void __libc_thread_freeres() __attribute__((weak));
-}
-
 static void *pthread_start(void *arg)
 {
     ThreadInfo *thread = static_cast<ThreadInfo*>(arg);
 
-    /* Crash on MacOS:
-     * libc++abi.dylib: terminating with uncaught exception of type std::__1::system_error: mutex lock failed: Invalid argument
-     */
-#ifdef __linux__
-    std::unique_lock<std::mutex> lock(thread->mutex);
-#endif
-
     ThreadManager::initThreadFromChild(thread);
+    ThreadManager::setGlobalState(thread);
+    ThreadSync::decrementUninitializedThreadCount();
 
-    do {
-        /* Check if there is a function to execute */
-        if (thread->state == ThreadInfo::ST_RUNNING) {
-            ThreadManager::update(thread);
-            ThreadSync::decrementUninitializedThreadCount();
+    debuglogstdio(LCF_THREAD, "Beginning of thread code %td", thread->routine_id);
 
-            debuglogstdio(LCF_THREAD, "Beginning of thread code %td", thread->routine_id);
+    /* Execute the function */
+    void *ret = thread->start(thread->arg);
 
-            /* We need to handle the case where the thread calls pthread_exit to
-             * terminate. Because we recycle thread routines, we must continue
-             * the execution past the routine, so we are using the exception
-             * feature for that.
-             */
-            void *ret = nullptr;
-            try {
-                /* Execute the function */
-                ret = thread->start(thread->arg);
-            }
-            catch (const ThreadExitException& e) {}
-
-            debuglogstdio(LCF_THREAD, "End of thread code");
-
-            if (Global::shared_config.recycle_threads) {
-#ifdef __linux__
-                /* Because we recycle this thread, we must unset all TLS values
-                 * and call destructors ourselves.  First, we unset the values
-                 * from the older, pthread_key_create()-based implementation
-                 * of TLS.
-                 */
-                clear_pthread_keys();
-                /* Next we deal with the newer linker-based TLS
-                 * implementation accessed via thread_local in C11/C++11
-                 * and later.  For that, first we need to run any C++
-                 * destructors for values in thread-local storage, using
-                 * an internal libc function.
-                 */
-                if (__call_tls_dtors) __call_tls_dtors();
-                /* Next, we clean up any libc state in thread-local storage,
-                 * using an internal libc function.
-                 */
-                if (__libc_thread_freeres) __libc_thread_freeres();
-                /* Finally, we reset all thread-local storage back to its
-                 * initial value, using a third internal libc function.
-                 * This is architecture-specific; it works on 32-bit and
-                 * 64-bit x86, but not on all Linux architectures.  See
-                 * above, where this function is declared.
-                 */
-                if (_dl_allocate_tls_init) _dl_allocate_tls_init(thread->pthread_id);
-                /* This has just reset any libTAS thread-local storage
-                 * for this thread.  Most libTAS TLS is either transient
-                 * anyway, or irrelevant while the thread is waiting
-                 * to be recycled.  But one value is important:
-                 * we need to fix ThreadManager::current_thread .
-                 */
-                ThreadManager::setCurrentThread(thread);
-#endif
-            }
-            ThreadManager::threadExit(ret);
-        }
-        else {
-#ifdef __linux__
-            thread->cv.wait(lock);
-#else
-            NATIVECALL(usleep(1));
-#endif
-        }
-    } while (!thread->quit && Global::shared_config.recycle_threads); /* Check if game is quitting */
+    debuglogstdio(LCF_THREAD, "End of thread code");
 
     WrapperLock wrapperLock;
+    ThreadManager::threadExit(ret);
+
     return thread->retval;
 }
 
 static void *pthread_native_start(void *arg)
 {
     ThreadInfo* thread = static_cast<ThreadInfo*>(arg);
-    ThreadManager::update(thread);
+    ThreadManager::setGlobalState(thread);
 
     auto thread_start = thread->start;
     auto thread_arg = thread->arg;
@@ -191,7 +93,6 @@ static void *pthread_native_start(void *arg)
 
     return thread_start(thread_arg);
 }
-
 
 /* Override */ int pthread_create (pthread_t * tid_p, const pthread_attr_t * attr, void * (* start_routine) (void *), void * arg) __THROW
 {
@@ -210,11 +111,11 @@ static void *pthread_native_start(void *arg)
     WrapperLock wrapperLock;
     ThreadSync::incrementUninitializedThreadCount();
 
-    /* Creating a new or recycled thread, and filling some parameters.
+    /* Creating a new thread, and filling some parameters.
      * The rest (like thread->tid) will be filled by the child thread.
      */
-    ThreadInfo* thread = ThreadManager::getNewThread();
-    bool isRecycled = ThreadManager::initThreadFromParent(thread, start_routine, arg, __builtin_return_address(0));
+    ThreadInfo* thread = new ThreadInfo;
+    ThreadManager::initThreadFromParent(thread, start_routine, arg, __builtin_return_address(0));
 
     /* Threads can be created in detached state */
     int detachstate = PTHREAD_CREATE_JOINABLE; // default
@@ -225,24 +126,13 @@ static void *pthread_native_start(void *arg)
     }
     thread->detached = (detachstate == PTHREAD_CREATE_DETACHED);
 
-    int ret = 0;
-    if (isRecycled) {
-        debuglogstdio(LCF_THREAD, "Recycling thread %d", thread->real_tid);
-        *tid_p = thread->pthread_id;
-#ifdef __linux__
-        /* Notify the thread that it has a function to execute */
-        thread->cv.notify_all();
-#endif
-    }
-    else {
-        /* Call our wrapper function */
-        ret = orig::pthread_create(tid_p, attr, pthread_start, thread);
+    /* Call our wrapper function */
+    int ret = orig::pthread_create(tid_p, attr, pthread_start, thread);
 
-        if (ret != 0) {
-            /* Thread creation failed */
-            ThreadSync::decrementUninitializedThreadCount();
-            ThreadManager::threadIsDead(thread);
-        }
+    if (ret != 0) {
+        /* Thread creation failed */
+        ThreadSync::decrementUninitializedThreadCount();
+        ThreadManager::threadIsDead(thread);
     }
 
     /* Immediatly detach the thread. We don't want to deal with zombie threads,
@@ -257,17 +147,8 @@ static void *pthread_native_start(void *arg)
 
     debuglogstdio(LCF_THREAD, "Thread has exited.");
 
-    if (Global::shared_config.recycle_threads) {
-        /* We need to jump to code after the end of the original thread routine */
-        throw ThreadExitException();
-
-        // ThreadInfo* thread = ThreadManager::getThread(ThreadManager::getThreadId());
-        // longjmp(thread->env, 1);
-    }
-    else {
-        ThreadManager::threadExit(retval);
-        RETURN_NATIVE(pthread_exit, (retval), nullptr);
-    }
+    ThreadManager::threadExit(retval);
+    RETURN_NATIVE(pthread_exit, (retval), nullptr);
 }
 
 /* Override */ int pthread_join (pthread_t pthread_id, void **thread_return)
@@ -290,7 +171,7 @@ static void *pthread_native_start(void *arg)
 
     int ret = 0;
     /* Wait for the thread to become zombie */
-    while (thread->state != ThreadInfo::ST_ZOMBIE && thread->state != ThreadInfo::ST_ZOMBIE_RECYCLE) {
+    while (thread->state != ThreadInfo::ST_ZOMBIE) {
         struct timespec mssleep = {0, 1000*1000};
         NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
     }
@@ -347,7 +228,7 @@ static void *pthread_native_start(void *arg)
     }
 
     int ret = 0;
-    if (thread->state == ThreadInfo::ST_ZOMBIE || thread->state == ThreadInfo::ST_ZOMBIE_RECYCLE) {
+    if (thread->state == ThreadInfo::ST_ZOMBIE) {
         if (retval) {
             *retval = thread->retval;
         }
@@ -392,7 +273,7 @@ static void *pthread_native_start(void *arg)
     /* For now I'm lazy, so we just wait the amount of time and check joining */
     NATIVECALL(nanosleep(abstime, NULL));
 
-    if (thread->state == ThreadInfo::ST_ZOMBIE || thread->state == ThreadInfo::ST_ZOMBIE_RECYCLE) {
+    if (thread->state == ThreadInfo::ST_ZOMBIE) {
         if (retval) {
             *retval = thread->retval;
         }
@@ -788,11 +669,8 @@ static void register_self_thread()
     ThreadSync::incrementUninitializedThreadCount();
     
     /* Creating a new thread and filling parameters. */
-    ThreadInfo* thread = ThreadManager::getNewThread();
-    bool isRecycled = ThreadManager::initThreadFromParent(thread, nullptr, nullptr, __builtin_return_address(0));
-    
-    /* Workqueue thread must not come from recycled thread */
-    MYASSERT(!isRecycled)
+    ThreadInfo* thread = new ThreadInfo;
+    ThreadManager::initThreadFromParent(thread, nullptr, nullptr, __builtin_return_address(0));
     
     thread->detached = false;
     ThreadManager::initThreadFromChild(thread);

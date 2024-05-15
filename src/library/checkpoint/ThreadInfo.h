@@ -30,12 +30,7 @@
 #endif
 #include <ucontext.h>
 #include <pthread.h> // pthread_t
-#include <csignal> // stack_t
-#include <mutex>
 #include <string>
-#include <condition_variable>
-#include <setjmp.h>
-
 
 namespace libtas {
 
@@ -47,11 +42,6 @@ struct ThreadInfo {
         ST_SUSPINPROG, // thread is in the middle of being suspended
         ST_SUSPENDED, // thread is suspended
         ST_ZOMBIE, // thread has returned but is not yet joined or detached
-        ST_ZOMBIE_RECYCLE, // like ST_ZOMBIE except that after detached by the
-                       // game, the thread will go to ST_IDLE, ready to be
-                       // reused.
-        ST_IDLE, // thread that has finished its job and waiting to be reused
-        ST_RECYCLED, // thread that is about to be recycled
         ST_CKPNTHREAD, // thread that does the checkpoint
         ST_TERMINATING, // thread flagged as needed to be terminated
         ST_TERMINATED, // thread that will terminate
@@ -78,11 +68,6 @@ struct ThreadInfo {
     bool initial_nolog = false; // initial value of the global nolog state
 
     std::string name; // name of the thread
-
-    std::mutex mutex; // mutex to notify a thread for a new routing
-    std::condition_variable cv; // associated conditional variable
-
-    bool quit = false; // is game quitting
 
     bool syncEnabled = false; // main thread needs to wait for this thread
     bool syncGo = false; // main thread can advance for now

@@ -47,7 +47,7 @@ static bool is_child_fork = false;
 void ThreadManager::init()
 {
     /* Create a ThreadInfo struct for this thread */
-    ThreadInfo* thread = ThreadManager::getNewThread();
+    ThreadInfo* thread = new ThreadInfo;
     thread->state = ThreadInfo::ST_RUNNING;
     thread->detached = false;
     initThreadFromChild(thread);
@@ -136,33 +136,6 @@ bool ThreadManager::isMainThread()
     return true;
 }
 
-ThreadInfo* ThreadManager::getNewThread()
-{
-    ThreadInfo* thread = nullptr;
-
-    lockList();
-    /* Try to recycle a free thread */
-    for (ThreadInfo* th = thread_list; th != nullptr; th = th->next) {
-        if (th->state == ThreadInfo::ST_IDLE) {
-            thread = th;
-            /* We must change the state here so that this thread is not chosen
-             * twice by two different threads.
-             */
-            thread->state = ThreadInfo::ST_RECYCLED;
-            break;
-        }
-    }
-
-    /* No free thread, create a new one */
-    if (!thread) {
-        thread = new ThreadInfo();
-        debuglogstdio(LCF_THREAD, "Allocate a new ThreadInfo struct");
-    }
-
-    unlockList();
-    return thread;
-}
-
 ThreadInfo* ThreadManager::getThread(pthread_t pthread_id)
 {
     for (ThreadInfo* thread = thread_list; thread != nullptr; thread = thread->next)
@@ -194,10 +167,9 @@ void ThreadManager::restoreTid()
     thread_data[getTidOffset()] = current_thread->real_tid;
 }
 
-bool ThreadManager::initThreadFromParent(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from)
+void ThreadManager::initThreadFromParent(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from)
 {
     debuglogstdio(LCF_THREAD, "Init thread with routine %p", (void*)start_routine);
-    bool isRecycled = thread->state == ThreadInfo::ST_RECYCLED;
 
     thread->start = start_routine;
     thread->arg = arg;
@@ -211,16 +183,12 @@ bool ThreadManager::initThreadFromParent(ThreadInfo* thread, void * (* start_rou
     thread->syncCount = 0;
     thread->syncOldCount = 0;
     
-    if (!isRecycled) {
-        thread->pthread_id = 0;
-        thread->real_tid = 0;
-        thread->translated_tid = 0;
+    thread->pthread_id = 0;
+    thread->real_tid = 0;
+    thread->translated_tid = 0;
 
-        thread->next = nullptr;
-        thread->prev = nullptr;
-    }
-
-    return isRecycled;
+    thread->next = nullptr;
+    thread->prev = nullptr;
 }
 
 int ThreadManager::getTidOffset() {
@@ -276,7 +244,7 @@ void ThreadManager::initThreadFromChild(ThreadInfo* thread)
     SaveStateManager::initThreadFromChild(thread);
 }
 
-void ThreadManager::update(ThreadInfo* thread)
+void ThreadManager::setGlobalState(ThreadInfo* thread)
 {
     /* If a thread that is in native state is creating another thread, we
      * consider that the entire new thread is in native mode (e.g. audio thread)
@@ -356,10 +324,6 @@ void ThreadManager::threadDetach(pthread_t pthread_id)
             debuglogstdio(LCF_THREAD, "Zombie thread %d is detached", thread->real_tid);
             threadIsDead(thread);
         }
-        if (thread->state == ThreadInfo::ST_ZOMBIE_RECYCLE) {
-            debuglogstdio(LCF_THREAD, "Zombie thread %d is detached", thread->real_tid);
-            MYASSERT(updateState(thread, ThreadInfo::ST_IDLE, ThreadInfo::ST_ZOMBIE_RECYCLE))            
-        }
         unlockList();
     }
 }
@@ -371,21 +335,11 @@ void ThreadManager::threadExit(void* retval)
     lockList();
     current_thread->retval = retval;
 
-    if (Global::shared_config.recycle_threads) {
-        MYASSERT(updateState(current_thread, ThreadInfo::ST_ZOMBIE_RECYCLE, ThreadInfo::ST_RUNNING) ||
-                 updateState(current_thread, ThreadInfo::ST_ZOMBIE_RECYCLE, ThreadInfo::ST_CKPNTHREAD))
-        if (current_thread->detached) {
-            debuglogstdio(LCF_THREAD, "Detached thread %d exited", current_thread->real_tid);
-            MYASSERT(updateState(current_thread, ThreadInfo::ST_IDLE, ThreadInfo::ST_ZOMBIE_RECYCLE))
-        }
-    }
-    else {
-        MYASSERT(updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_RUNNING) ||
-                updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_CKPNTHREAD))
-        if (current_thread->detached) {
-            debuglogstdio(LCF_THREAD, "Detached thread %d exited", current_thread->real_tid);
-            threadIsDead(current_thread);
-        }
+    MYASSERT(updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_RUNNING) ||
+            updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_CKPNTHREAD))
+    if (current_thread->detached) {
+        debuglogstdio(LCF_THREAD, "Detached thread %d exited", current_thread->real_tid);
+        threadIsDead(current_thread);
     }
     unlockList();
 }
@@ -404,10 +358,6 @@ void ThreadManager::deallocateThreads()
         /* Skip the main thread */
         if (thread->state == ThreadInfo::ST_CKPNTHREAD)
             continue;
-
-        /* Notify each thread to quit */
-        thread->quit = true;
-        thread->cv.notify_all();
 
         /* Delete the thread struct */
         threadIsDead(thread);

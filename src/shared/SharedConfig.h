@@ -295,9 +295,6 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Prefer using OpenAL Soft over our own OpenAL implementation */
     bool openal_soft = false;
 
-    /* Recycle threads when they terminate */
-    bool recycle_threads = false;
-
     /* Simulates a virtual Steam client */
     bool virtual_steam = false;
 

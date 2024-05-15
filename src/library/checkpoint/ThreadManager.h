@@ -61,19 +61,14 @@ bool isMainThread();
 /* Set the checkpoint thread to this thread */
 void setCheckpointThread();
 
-/* Create a new ThreadInfo struct from the parent thread*/
-ThreadInfo* getNewThread();
-
 /* Get the thread tid of another thread */
 pid_t getThreadTid(pthread_t pthread_id);
 
 /* Get the ThreadInfo struct from the thread id, or null if not there */
 ThreadInfo* getThread(pthread_t pthread_id);
 
-/* Init the ThreadInfo by the parent thread with values passed in
- * pthread_create, and return if the thread was recycled or not.
- */
-bool initThreadFromParent(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from);
+/* Init the ThreadInfo by the parent thread with values passed in pthread_create */
+void initThreadFromParent(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from);
 
 /* Get offset of tid inside pthread_t struct */
 int getTidOffset();
@@ -81,8 +76,8 @@ int getTidOffset();
 /* Finish the initialization of the ThreadInfo struct by the child thread */
 void initThreadFromChild(ThreadInfo* thread);
 
-/* Update the ThreadInfo struct by the child thread */
-void update(ThreadInfo* thread);
+/* Set the global state based on thread state */
+void setGlobalState(ThreadInfo* thread);
 
 /* Add a thread to the thread list */
 void addToList(ThreadInfo* thread);

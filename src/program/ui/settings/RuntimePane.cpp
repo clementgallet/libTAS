@@ -65,21 +65,11 @@ void RuntimePane::initLayout()
     localeLayout->addRow(new QLabel(tr("Force locale:")), localeChoice);
 
     writingBox = new ToolTipCheckBox(tr("Prevent writing to disk"));
-#if defined(__GLIBC__) && defined(__GLIBC_PREREQ)
-#if __GLIBC_PREREQ(2, 35)
-    /* Symbol `__libc_thread_freeres` is no longer available, so recycle threads
-     * may be broken. */
-    recycleBox = new ToolTipCheckBox(tr("Recycle threads (unstable)"));
-#else
-    recycleBox = new ToolTipCheckBox(tr("Recycle threads"));
-#endif
-#endif
     steamBox = new ToolTipCheckBox(tr("Virtual Steam client"));
     downloadsBox = new ToolTipCheckBox(tr("Allow downloading missing libraries"));
 
     generalLayout->addLayout(localeLayout);
     generalLayout->addWidget(writingBox);
-    generalLayout->addWidget(recycleBox);
     generalLayout->addWidget(steamBox);
     generalLayout->addWidget(downloadsBox);
     
@@ -188,7 +178,6 @@ void RuntimePane::initSignals()
     connect(localeChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &RuntimePane::saveConfig);
 
     connect(writingBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
-    connect(recycleBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
     connect(steamBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
     connect(downloadsBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
 
@@ -228,10 +217,6 @@ void RuntimePane::initToolTips()
 
     writingBox->setDescription("Prevent the game from writing files on disk, "
     "but write in memory instead. May cause issues in some games.");
-
-    recycleBox->setDescription("Recycle threads when they finish, to make "
-    "savestates more useable. Can crash on some games."
-    "<br><br><em>If unsure, leave this unchecked</em>");
 
     steamBox->setDescription("Implement a dummy Steam client, to be able to "
     "launch Steam games that require a connection to the Steam server. Almost none "
@@ -362,7 +347,6 @@ void RuntimePane::loadConfig()
         localeChoice->setCurrentIndex(index);
 
     writingBox->setChecked(context->config.sc.prevent_savefiles);
-    recycleBox->setChecked(context->config.sc.recycle_threads);
     steamBox->setChecked(context->config.sc.virtual_steam);
     downloadsBox->setChecked(context->config.allow_downloads);
 
@@ -405,7 +389,6 @@ void RuntimePane::saveConfig()
     context->config.sc.locale = localeChoice->currentData().toInt();
 
     context->config.sc.prevent_savefiles = writingBox->isChecked();
-    context->config.sc.recycle_threads = recycleBox->isChecked();
     context->config.sc.virtual_steam = steamBox->isChecked();
     context->config.allow_downloads = downloadsBox->isChecked();
 

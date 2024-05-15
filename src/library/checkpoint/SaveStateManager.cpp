@@ -448,9 +448,7 @@ void SaveStateManager::terminateThreads()
     
     /* Compare the two lists of threads and flag the ones to be terminated */
     for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
-        if ((thread->state != ThreadInfo::ST_RUNNING) &&
-            (thread->state != ThreadInfo::ST_ZOMBIE_RECYCLE) &&
-            (thread->state != ThreadInfo::ST_IDLE))
+        if (thread->state != ThreadInfo::ST_RUNNING)
             continue;
         
         int t;
@@ -500,13 +498,11 @@ void SaveStateManager::suspendThreads()
                 break;
 
             case ThreadInfo::ST_RUNNING:
-            case ThreadInfo::ST_ZOMBIE_RECYCLE:
-            case ThreadInfo::ST_IDLE:
                 /* Thread is running. Send it a signal so it will call stopthisthread.
                 * We will need to rescan (hopefully it will be suspended by then)
                 */
                 thread->orig_state = thread->state;
-                if (ThreadManager::updateState(thread, ThreadInfo::ST_SIGNALED, thread->state)) {
+                if (ThreadManager::updateState(thread, ThreadInfo::ST_SIGNALED, ThreadInfo::ST_RUNNING)) {
                     /* Send the suspend signal to the thread */
                     debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Signaling thread %d", thread->real_tid);
                     NATIVECALL(ret = pthread_kill(thread->pthread_id, sig_suspend_threads));
@@ -550,11 +546,6 @@ void SaveStateManager::suspendThreads()
             case ThreadInfo::ST_UNINITIALIZED:
                 /* Thread in the middle of being created (that should not
                  * happen because of locks?), try again */
-                needrescan = true;
-                break;
-
-            case ThreadInfo::ST_RECYCLED:
-                /* Thread in the middle of being recycled, try again */
                 needrescan = true;
                 break;
 
