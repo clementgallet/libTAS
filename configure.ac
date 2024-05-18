@@ -74,9 +74,7 @@ AS_IF([test "x$enable_i386_lib" != "xyes"], [
     AC_SEARCH_LIBS([pthread_create], [pthread], [], [AC_MSG_ERROR(The pthread library is required!)])
 
     PKG_CHECK_MODULES([LIBLUA], [lua54],, [
-        PKG_CHECK_MODULES([LIBLUA], [lua53],, [
-            PKG_CHECK_MODULES([LIBLUA], [lua])
-        ])
+        PKG_CHECK_MODULES([LIBLUA], [lua])
     ])
 
     AC_SUBST([LIBLUA_CFLAGS])
