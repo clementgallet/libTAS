@@ -5,3 +5,4 @@ Comment=Tool-assisted speedrunning tool for native games
 Exec=libTAS
 Icon=libTAS
 Categories=Utility;
+Terminal=true
