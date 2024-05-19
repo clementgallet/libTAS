@@ -95,8 +95,6 @@ void GameLoop::start()
         if (isVisible && !context->seek_frame)
             movie.applyAutoHoldFire();
 
-        Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackFrame);
-
         /* We are at a frame boundary */
         /* If we did not yet receive the game window id, just make the game running */
         bool endInnerLoop = false;
@@ -600,6 +598,8 @@ bool GameLoop::startFrameMessages()
         }
         message = receiveMessage();
     }
+
+    Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackFrame);
 
     /* Store in movie and indicate the input editor if the current frame
      * is a draw frame or not */
