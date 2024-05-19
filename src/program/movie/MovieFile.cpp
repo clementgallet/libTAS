@@ -254,3 +254,34 @@ void MovieFile::updateLength()
         context->config.sc_modified = true;
     }
 }
+
+void MovieFile::applyAutoHoldFire()
+{
+    AllInputs ai;
+    inputs->getInputs(ai);
+
+    bool modified = false;
+    for (size_t i = 0; i < editor->autohold.size(); i++) {
+        if (editor->autohold[i] > 0) {
+            SingleInput si = editor->input_set[i];
+            int value = 1;
+            
+            /* When autohold an analog value, we take the previous value */
+            if (si.isAnalog() == (context->framecount > 0)) {
+                const AllInputs& ai = inputs->getInputs(context->framecount - 1);
+                value = ai.getInput(si);
+            }
+
+            if (editor->autohold[i] >= 2) // Auto-fire
+                value = (context->framecount % 2) == (editor->autohold[i] % 2);
+
+            ai.setInput(si, value);
+
+            inputs->wasModified();
+            modified = true;
+        }
+    }
+
+    if (modified)
+        inputs->setInputs(ai, true);
+}

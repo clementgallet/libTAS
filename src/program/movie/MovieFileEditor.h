@@ -35,6 +35,10 @@ public:
     /* Ordered list of single inputs to be shown on the input editor */
     std::vector<SingleInput> input_set;
 
+    /* List of single inputs to autohold or autofire.
+     * 0: no, 1: autohold, 2: autofire on even frames, 3: autofire on odd frames */
+    std::vector<int> autohold;
+
     /* Ordered list of markers to be shown on the input editor */
     std::map<int, std::string> markers;
 
@@ -65,6 +69,18 @@ public:
 
     /* Returns if draw frame */
     bool isDraw(uint64_t frame);
+
+    /* Set autohold of single input */
+    void setAutohold(int index, bool checked);
+
+    /* Returns if autohold of single input */
+    bool isAutohold(int index);
+
+    /* Set autofire of single input */
+    void setAutofire(int index, bool checked);
+
+    /* Returns if autofire of single input */
+    bool isAutofire(int index);
 
     /* Close the moviefile */
     void close();

@@ -85,6 +85,15 @@ void GameLoop::start()
         }
 
         emit uiChanged();
+        
+        /* Autohold and autofire need to be applied at the beginning of each
+         * frame, only if the input editor is visible. It should not apply when
+         * rewinding to a previous frame. */
+        bool isVisible = false;
+        emit isInputEditorVisible(isVisible);
+
+        if (isVisible && !context->seek_frame)
+            movie.applyAutoHoldFire();
 
         Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackFrame);
 
@@ -846,7 +855,7 @@ void GameLoop::processInputs(AllInputs &ai)
             /* Update controller inputs if controller window is shown */
             for (int j = 0; j < AllInputs::MAXJOYS; j++) {
                 if (ai.controllers[j]) {
-                    emit showControllerInputs(*ai.controllers[j], j);            
+                    emit showControllerInputs(*ai.controllers[j], j);
                 }
             }
 

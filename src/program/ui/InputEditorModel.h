@@ -132,6 +132,18 @@ public:
     /* Set scroll freeze state */
     void setScrollFreeze(bool state);
 
+    /* Set autohold of input */
+    void setAutoholdInput(int index, bool checked);
+
+    /* Check autohold of input */
+    bool isAutoholdInput(int index) const;
+
+    /* Set autofire of input */
+    void setAutofireInput(int index, bool checked);
+
+    /* Check autofire of input */
+    bool isAutofireInput(int index) const;
+
 public slots:
     /* Toggle a single input and return the new value */
     bool toggleInput(const QModelIndex &index);

@@ -46,6 +46,7 @@
 * Add SteamInternal_SteamAPI_Init implementation
 * Option to hide markers view (#603)
 * Optimize the movie prefix check by using information from the state list
+* Implement autohold and autofire on input editor
 
 ### Changed
 

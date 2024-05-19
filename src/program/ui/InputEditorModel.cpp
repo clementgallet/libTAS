@@ -99,19 +99,39 @@ QVariant InputEditorModel::headerData(int section, Qt::Orientation orientation, 
     
     if (role == Qt::BackgroundRole) {
         if (orientation == Qt::Horizontal) {
-
-            /* Highlight current column */
-            if (section >= COLUMN_SPECIAL_SIZE && hoveredIndex.isValid()
-                && (section == hoveredIndex.column())) {
-                    
+            if (section >= COLUMN_SPECIAL_SIZE) {
                 /* Main color */
                 QColor color = QGuiApplication::palette().window().color();
                 bool lightTheme = isLightTheme();
-                    
-                if (lightTheme)
-                    color = color.darker(110);
-                else
-                    color = color.lighter(110);
+                
+                /* Highlight current column */
+                if (hoveredIndex.isValid() && (section == hoveredIndex.column())) {
+                    if (lightTheme)
+                        color = color.darker(110);
+                    else
+                        color = color.lighter(110);
+
+                }
+
+                /* Highlight autohold columns */
+                if (isAutoholdInput(section)) {
+                    int r, g, b;
+                    color.getRgb(&r, &g, &b, nullptr);
+
+                    if (lightTheme)
+                        color.setRgb(r - 0x10, g - 0x10, b);
+                    else
+                        color.setRgb(r, g, b + 0x10);
+                }
+                else if (isAutofireInput(section)) {
+                    int r, g, b;
+                    color.getRgb(&r, &g, &b, nullptr);
+
+                    if (lightTheme)
+                        color.setRgb(r, g - 0x10, b);
+                    else
+                        color.setRgb(r + 0x10, g, b + 0x10);
+                }
 
                 return QBrush(color);
             }
@@ -272,6 +292,26 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
                     color = color.darker(150);
                 }
             }
+            
+            /* Highlight autohold columns */
+            if (isAutoholdInput(index.column())) {
+                int r, g, b;
+                color.getRgb(&r, &g, &b, nullptr);
+
+                if (lightTheme)
+                    color.setRgb(r - 0x10, g - 0x10, b);
+                else
+                    color.setRgb(r, g, b + 0x10);
+            }
+            else if (isAutofireInput(index.column())) {
+                int r, g, b;
+                color.getRgb(&r, &g, &b, nullptr);
+
+                if (lightTheme)
+                    color.setRgb(r, g - 0x10, b);
+                else
+                    color.setRgb(r + 0x10, g, b + 0x10);
+            }
         }
         
         /* Frame containing a savestate */
@@ -422,11 +462,7 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
         }
 
         /* Modifying the movie is only performed by the main thread */
-        InputEvent ie;
-        ie.framecount = row;
-        ie.si = si;
-        ie.value = value.toInt();
-        movie->inputs->input_event_queue.push(ie);
+        movie->inputs->queueInput(row, si, value.toInt());
         emit dataChanged(index, index, {role});
         return true;
     }
@@ -509,13 +545,10 @@ bool InputEditorModel::toggleInput(const QModelIndex &index)
 
     /* Modifying the movie is only performed by the main thread */
     const AllInputs& ai = movie->inputs->getInputs(row);
-    InputEvent ie;
-    ie.framecount = row;
-    ie.si = si;
-    ie.value = !ai.getInput(si);
-    movie->inputs->input_event_queue.push(ie);
+    int value = !ai.getInput(si);
+    movie->inputs->queueInput(row, si, value);
     emit dataChanged(index, index);
-    return ie.value;
+    return value;
 }
 
 std::string InputEditorModel::inputLabel(int column)
@@ -827,11 +860,7 @@ void InputEditorModel::clearUniqueInput(int column)
         return;
 
     for (unsigned int f = context->framecount; f < movie->inputs->nbFrames(); f++) {
-        InputEvent ie;
-        ie.framecount = f;
-        ie.si = si;
-        ie.value = 0;
-        movie->inputs->input_event_queue.push(ie);
+        movie->inputs->queueInput(f, si, 0);
     }
 }
 
@@ -848,11 +877,7 @@ bool InputEditorModel::removeUniqueInput(int column)
 
     /* Clear remaining frames */
     for (unsigned int f = context->framecount; f < movie->inputs->nbFrames(); f++) {
-        InputEvent ie;
-        ie.framecount = f;
-        ie.si = si;
-        ie.value = 0;
-        movie->inputs->input_event_queue.push(ie);
+        movie->inputs->queueInput(f, si, 0);
     }
 
     /* Remove clear locked state */
@@ -1100,4 +1125,30 @@ void InputEditorModel::setHoveredCell(const QModelIndex &i)
 void InputEditorModel::seekToFrame(unsigned long long frame)
 {
     rewind(frame, false);
+}
+
+void InputEditorModel::setAutoholdInput(int i, bool checked)
+{
+    movie->editor->setAutohold(i-COLUMN_SPECIAL_SIZE, checked);
+
+    emit dataChanged(index(0,i), index(rowCount(),i), QVector<int>(1, Qt::BackgroundRole));
+    emit headerDataChanged(Qt::Horizontal, i, i);
+}
+
+bool InputEditorModel::isAutoholdInput(int i) const
+{
+    return movie->editor->isAutohold(i-COLUMN_SPECIAL_SIZE);
+}
+
+void InputEditorModel::setAutofireInput(int i, bool checked)
+{
+    movie->editor->setAutofire(i-COLUMN_SPECIAL_SIZE, checked);
+
+    emit dataChanged(index(0,i), index(rowCount(),i), QVector<int>(1, Qt::BackgroundRole));
+    emit headerDataChanged(Qt::Horizontal, i, i);
+}
+
+bool InputEditorModel::isAutofireInput(int i) const
+{
+    return movie->editor->isAutofire(i-COLUMN_SPECIAL_SIZE);
 }

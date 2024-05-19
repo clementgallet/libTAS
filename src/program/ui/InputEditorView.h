@@ -49,6 +49,8 @@ public slots:
     void clearInputColumn();
     void removeInputColumn();
     void lockInputColumn(bool checked);
+    void autoholdInput(bool checked);
+    void autofireInput(bool checked);
 
     void mainMenu(QPoint pos);
     void duplicateInput();
@@ -73,6 +75,7 @@ public slots:
 
     void moveAgainSection(int logicalIndex, int oldVisualIndex, int newVisualIndex);
     void scrollToFrame(unsigned long long frame);
+    void holdSection(int logicalIndex);
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
@@ -121,6 +124,8 @@ private:
     QAction *unmarkAct;
 
     QAction *lockAction;
+    QAction *autoholdAction;
+    QAction *autofireAction;
 
     bool autoScroll = true;
     int markerTimerId = 0;

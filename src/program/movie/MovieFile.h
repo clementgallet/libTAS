@@ -88,6 +88,9 @@ public:
 
     bool isEqual(const MovieFile& movie, unsigned int first_frame, unsigned int last_frame) const;
 
+    /* Apply the autohold and autofire setting to the current frame */
+    void applyAutoHoldFire();
+
     /* Close the moviefile */
     void close();
 

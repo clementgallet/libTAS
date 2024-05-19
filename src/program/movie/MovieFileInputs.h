@@ -116,9 +116,6 @@ public:
     /* Copy inputs to another one */
     void copyTo(MovieFileInputs* movie_inputs) const;
 
-    /* Truncate inputs to a frame number */
-    // void truncateInputs(uint64_t size);
-
     /* Close the moviefile */
     void close();
 
@@ -128,6 +125,10 @@ public:
 
     /* Helper function called when the movie has been modified */
     void wasModified();
+
+    /* Queue an input change in the movie, usually performed by the UI thread, 
+     * so that it can applied by main thread */
+    void queueInput(uint64_t pos, SingleInput si, int value);
     
     /* Process an input event pushed by the UI thread, and returns the modified
      * framecount, so that the UI can be updated accordingly.

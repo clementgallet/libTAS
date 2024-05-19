@@ -572,6 +572,15 @@ void MovieFileInputs::wasModified()
     modifiedSinceLastStateLoad = true;
 }
 
+void MovieFileInputs::queueInput(uint64_t pos, SingleInput si, int value)
+{
+    InputEvent ie;
+    ie.framecount = pos;
+    ie.si = si;
+    ie.value = value;
+    input_event_queue.push(ie);
+}
+
 uint64_t MovieFileInputs::processEvent()
 {
     /* Process input events */

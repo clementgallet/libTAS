@@ -74,10 +74,12 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
     horizontalHeader()->setDropIndicatorShown(true);
     horizontalHeader()->setDragEnabled(true);
     horizontalHeader()->setDragDropMode(QTableView::InternalMove);
+    horizontalHeader()->setSectionsClickable(true);
 
     horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(horizontalHeader(), &QWidget::customContextMenuRequested, this, &InputEditorView::horizontalMenu);
     connect(horizontalHeader(), &QHeaderView::sectionMoved, this, &InputEditorView::moveAgainSection);
+    connect(horizontalHeader(), &QHeaderView::sectionClicked, this, &InputEditorView::holdSection);
 
     /* Horizontal menu */
     horMenu = new QMenu(this);
@@ -87,6 +89,10 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
     horMenu->addAction(tr("Remove input column"), this, &InputEditorView::removeInputColumn);
     lockAction = horMenu->addAction(tr("Lock input column"), this, &InputEditorView::lockInputColumn);
     lockAction->setCheckable(true);
+    autoholdAction = horMenu->addAction(tr("Auto-hold"), this, &InputEditorView::autoholdInput);
+    autoholdAction->setCheckable(true);
+    autofireAction = horMenu->addAction(tr("Auto-fire"), this, &InputEditorView::autofireInput);
+    autofireAction->setCheckable(true);
 
     /* Vertical header */
     verticalHeader()->setVisible(false);
@@ -465,7 +471,7 @@ void InputEditorView::mouseMoveEvent(QMouseEvent *event)
         /* Check if we need to alternate the input state */
         if (event->modifiers() & Qt::ControlModifier) {
             if ((i - mouseRow) % 2)
-            newMouseValue = !newMouseValue;
+                newMouseValue = !newMouseValue;
         }
         
         /* Toggle the cell with the same row as the cell under the mouse */
@@ -582,6 +588,10 @@ void InputEditorView::horizontalMenu(QPoint pos)
     /* Update the status of the lock action */
     lockAction->setChecked(inputEditorModel->isLockedUniqueInput(contextSection));
 
+    /* Update the status of autohold and autofire */
+    autoholdAction->setChecked(inputEditorModel->isAutoholdInput(contextSection));
+    autofireAction->setChecked(inputEditorModel->isAutofireInput(contextSection));
+
     /* Display the context menu */
     horMenu->popup(horizontalHeader()->viewport()->mapToGlobal(pos));
 }
@@ -660,6 +670,22 @@ void InputEditorView::lockInputColumn(bool checked)
         return;
 
     inputEditorModel->lockUniqueInput(contextSection, checked);
+}
+
+void InputEditorView::autoholdInput(bool checked)
+{
+    if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
+        return;
+
+    inputEditorModel->setAutoholdInput(contextSection, checked);
+}
+
+void InputEditorView::autofireInput(bool checked)
+{
+    if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
+        return;
+
+    inputEditorModel->setAutofireInput(contextSection, checked);
 }
 
 void InputEditorView::mainMenu(QPoint pos)
@@ -984,4 +1010,19 @@ void InputEditorView::moveAgainSection(int logicalIndex, int oldVisualIndex, int
 
     /* We probably need to resize columns */
     resizeAllColumns();
+}
+
+void InputEditorView::holdSection(int logicalIndex)
+{
+    /* Skip toggling the first two columns */
+    if (logicalIndex < InputEditorModel::COLUMN_SPECIAL_SIZE)
+        return;
+
+    /* Cycle between nothing, autohold, autofire */
+    if (inputEditorModel->isAutoholdInput(logicalIndex))
+        inputEditorModel->setAutofireInput(logicalIndex, true);        
+    else if (inputEditorModel->isAutofireInput(logicalIndex))
+        inputEditorModel->setAutoholdInput(logicalIndex, false);
+    else
+        inputEditorModel->setAutoholdInput(logicalIndex, true);
 }

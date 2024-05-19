@@ -33,6 +33,7 @@ MovieFileEditor::MovieFileEditor(Context* c) : context(c) {
 void MovieFileEditor::clear()
 {
     input_set.clear();
+    autohold.clear();
     locked_inputs.clear();
     nondraw_frames.clear();
     markers.clear();
@@ -41,9 +42,7 @@ void MovieFileEditor::clear()
 void MovieFileEditor::load()
 {
     /* Clear structures */
-    input_set.clear();
-    nondraw_frames.clear();
-    markers.clear();
+    clear();
     
     /* Load the editor file */
     QString editorfile = context->config.tempmoviedir.c_str();
@@ -165,7 +164,40 @@ bool MovieFileEditor::isDraw(uint64_t frame)
     return !nondraw_frames.count(frame);
 }
 
+void MovieFileEditor::setAutohold(int index, bool checked)
+{
+    if (index >= autohold.size())
+        autohold.resize(index+1);
+    
+    autohold[index] = checked ? 1 : 0;
+}
+
+bool MovieFileEditor::isAutohold(int index)
+{
+    if (index >= autohold.size())
+        return false;
+        
+    return autohold[index] == 1;
+}
+
+void MovieFileEditor::setAutofire(int index, bool checked)
+{
+    if (index >= autohold.size())
+        autohold.resize(index+1);
+
+    autohold[index] = checked ? (2 + (context->framecount % 2)) : 0;
+}
+
+bool MovieFileEditor::isAutofire(int index)
+{
+    if (index >= autohold.size())
+        return false;
+        
+    return autohold[index] >= 2;
+}
+
 void MovieFileEditor::close()
 {
     locked_inputs.clear();
+    autohold.clear();
 }
