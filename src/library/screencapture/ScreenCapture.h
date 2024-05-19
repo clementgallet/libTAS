@@ -80,6 +80,9 @@ public:
     /* Clear the screen */
     static void clearScreen();
 
+    /* width and height before screen capture has been implemented */
+    static int width, height;
+
 protected:
     
     static ScreenCapture_Impl* impl;

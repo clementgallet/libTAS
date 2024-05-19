@@ -18,6 +18,7 @@
  */
 
 #include "ScreenCapture_Impl.h"
+#include "ScreenCapture.h"
 
 #include "hook.h"
 #include "logging.h"
@@ -50,28 +51,37 @@ int ScreenCapture_Impl::init()
 #endif
 
     unsigned int depth = 8;
-#ifdef __unix__
-    /* Get the window dimensions */
-    LINK_NAMESPACE_GLOBAL(XGetGeometry);
-    int x, y;
-    unsigned int w = 0, h = 0, border_width;
-    Window root;
-    for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (x11::gameDisplays[i]) {
-            orig::XGetGeometry(x11::gameDisplays[i], x11::gameXWindows.front(), &root, &x, &y, &w, &h, &border_width, &depth);
-            break;
-        }
+
+    /* XGetGeometry() may not be synced to the last dimensions, to we look
+     * first if a resize was performed before init */
+    if (ScreenCapture::width != 0) {
+        width = ScreenCapture::width;
+        height = ScreenCapture::height;
     }
-    width = w;
-    height = h;
+    else {
+#ifdef __unix__
+        /* Get the window dimensions */
+        LINK_NAMESPACE_GLOBAL(XGetGeometry);
+        int x, y;
+        unsigned int w = 0, h = 0, border_width;
+        Window root;
+        for (int i=0; i<GAMEDISPLAYNUM; i++) {
+            if (x11::gameDisplays[i]) {
+                orig::XGetGeometry(x11::gameDisplays[i], x11::gameXWindows.front(), &root, &x, &y, &w, &h, &border_width, &depth);
+                break;
+            }
+        }
+        width = w;
+        height = h;
 #else
 #error "ScreenCapture not implemented for MacOS"
-    /* Use SDL2 window for now */
-    // if (Global::game_info.video & GameInfo::SDL2) {
-    //     LINK_NAMESPACE_SDL2(SDL_GetWindowSize);
-    //     orig::SDL_GetWindowSize(sdl::gameSDLWindow, &width, &height);
-    // }
+        /* Use SDL2 window for now */
+        // if (Global::game_info.video & GameInfo::SDL2) {
+            //     LINK_NAMESPACE_SDL2(SDL_GetWindowSize);
+            //     orig::SDL_GetWindowSize(sdl::gameSDLWindow, &width, &height);
+            // }
 #endif
+    }
 
     return 0;
 }

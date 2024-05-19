@@ -32,6 +32,8 @@ namespace libtas {
 
 ScreenCapture_Impl* ScreenCapture::impl = nullptr;
 bool ScreenCapture::inited = false;
+int ScreenCapture::width = 0;
+int ScreenCapture::height = 0;
 
 int ScreenCapture::init()
 {
@@ -74,6 +76,9 @@ int ScreenCapture::init()
 
 void ScreenCapture::fini()
 {
+    width = 0;
+    height = 0;
+    
     if (!inited) return;
 
     inited = false;
@@ -88,6 +93,8 @@ void ScreenCapture::fini()
 void ScreenCapture::resize(int w, int h)
 {
     if (!inited) {
+        width = w;
+        height = h;
         return;
     }
 
@@ -104,6 +111,10 @@ bool ScreenCapture::isInited()
 void ScreenCapture::getDimensions(int& w, int& h) {
     if (impl) {
         impl->getDimensions(w, h);
+    }
+    else {
+        w = width;
+        h = height;
     }
 }
 
