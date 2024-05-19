@@ -877,7 +877,7 @@ void InputEditorView::truncateInputs()
     if (indexes.count() == 0)
         return;
 
-    int nbRows = inputEditorModel->rowCount();
+    int nbRows = inputEditorModel->frameCount();
 
     inputEditorModel->removeRows(indexes[0].row()+1, nbRows-indexes[0].row()-1);
 }

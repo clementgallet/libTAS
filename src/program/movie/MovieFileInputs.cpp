@@ -526,7 +526,10 @@ void MovieFileInputs::deleteInputs(uint64_t pos, int count)
     if ((pos + count) > input_list.size())
         return;
 
-    input_list.erase(input_list.begin() + pos, input_list.begin() + pos + count);
+    if ((pos + count) == input_list.size())
+        input_list.resize(pos);
+    else
+        input_list.erase(input_list.begin() + pos, input_list.begin() + pos + count);
     wasModified();
 }
 
@@ -539,18 +542,11 @@ void MovieFileInputs::extractInputs(std::set<SingleInput> &set)
     }
 }
 
-
 void MovieFileInputs::copyTo(MovieFileInputs* movie_inputs) const
 {
     movie_inputs->input_list.resize(input_list.size());
     std::copy(input_list.begin(), input_list.end(), movie_inputs->input_list.begin());
 }
-
-// void MovieFileInputs::truncateInputs(uint64_t size)
-// {
-//     input_list.resize(size);
-//     wasModified();
-// }
 
 void MovieFileInputs::close()
 {

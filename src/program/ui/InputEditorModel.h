@@ -56,6 +56,9 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
+    /* Not to mess with row count, which may be larger due to blank rows at the end */
+    int frameCount() const;
+
     /* Update the content of the table */
     void update();
 

@@ -38,9 +38,14 @@
 
 InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : QAbstractTableModel(parent), context(c), movie(m) {}
 
+int InputEditorModel::frameCount() const
+{
+    return movie->inputs->nbFrames();
+}
+
 int InputEditorModel::rowCount(const QModelIndex & /*parent*/) const
 {
-    return movie->inputs->nbFrames() + 1;
+    return frameCount() + 1;
 }
 
 int InputEditorModel::columnCount(const QModelIndex & /*parent*/) const
