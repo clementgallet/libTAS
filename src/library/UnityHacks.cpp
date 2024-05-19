@@ -295,9 +295,6 @@ void UnityHacks::syncWaitAll()
             return;
 
         NATIVECALL(usleep(sleep_length));
-        /* Frames with a lot of jobs usually require extra care, so we increase
-         * the wait time more and more */
-        sleep_length *= 2;
         unity_mutex.lock();
         while (unity_waiting_threads || (unity_running_threads > unity_nonterminating_threads)) {
             unity_mutex.unlock();
