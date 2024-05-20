@@ -95,6 +95,9 @@
 * Fix ImGui X11 to append selected events instead of replacing them
 * Scale lua draws when game window is detached
 * Scale pointer coordinates when game window is detached
+* Fix some savestate crashes by allocating memory on each thread stack before
+  suspending, so that the mutex lock call always happens at the same place in
+  stack
 
 ## [1.4.5] - 2023-10-22
 ### Added

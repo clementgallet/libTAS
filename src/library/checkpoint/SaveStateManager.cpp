@@ -654,11 +654,21 @@ void SaveStateManager::stopThisThread(int signum)
             /* Then wait for the ckpt thread to write the ckpt file then wake us up */
             debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Thread suspended");
 
-            // sigset_t mask;
-            // sigemptyset(&mask);
-            // sigaddset(&mask, SIGTRAP);
-            // NATIVECALL(pthread_sigmask(SIG_UNBLOCK, &mask, nullptr));
-            // raise(SIGTRAP);
+            /* Before suspending, we must position the stack pointer so that it
+             * always takes the same value. Because the stack pointer may not be
+             * the same between saving and loading the thread, and so returning
+             * after the `pthread_mutex_lock()` will cause a crash.
+             * To do that, we allocate on the stack a big array so that we reach
+             * near the end of the stack. */
+            ptrdiff_t free_space = reinterpret_cast<ptrdiff_t>(current_thread->saved_sp)
+                                 - reinterpret_cast<ptrdiff_t>(current_thread->stack_addr);
+            free_space -= 4096*16; // Arbitrary size left to run the remaining code
+            uintptr_t *pad = static_cast<uintptr_t*>(alloca(free_space));
+            pad[0] = reinterpret_cast<uintptr_t>(pad);
+
+            /* We save again the thread struct on the stack at this now safe
+             * position, so that we will be able to use it after resuming */
+            ThreadInfo *current_thread_safe = ThreadManager::getCurrentThread();
 
             /* We use `pthread_mutex_lock()` to suspend a thread because it is
              * the most pure sync mechanism underneath, which should translate 
@@ -667,15 +677,14 @@ void SaveStateManager::stopThisThread(int signum)
             MYASSERT(pthread_mutex_lock(&threadResumeLock) == 0)
             MYASSERT(pthread_mutex_unlock(&threadResumeLock) == 0)
 
-            // raise(SIGTRAP);
-
             /* After the thread is resumed from loading a state, we immediately
              * use `setcontext()` to resume execution. `restoreInProgress` was
              * modified by the checkpoint thread during state loading, when this
              * thread was suspended
              */
             if (restoreInProgress) {
-                setcontext(&current_thread->savctx);
+                
+                setcontext(&current_thread_safe->savctx);
                 /* NOT REACHED */
             }
         }

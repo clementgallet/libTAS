@@ -35,6 +35,8 @@ class TimeHolder : public timespec
     public:
 
         TimeHolder() {this->tv_sec = 0; this->tv_nsec = 0;};
+        TimeHolder(time_t s, long ns) {this->tv_sec = s; this->tv_nsec = ns;};
+        
         TimeHolder(const timespec& th)
         {
             this->tv_sec = th.tv_sec;
@@ -49,13 +51,6 @@ class TimeHolder : public timespec
         bool operator!=(const timespec& th) const
         {
             return ((this->tv_sec != th.tv_sec) || (this->tv_nsec != th.tv_nsec));
-        }
-
-        TimeHolder &operator=(const timespec& th)
-        {
-            this->tv_sec = th.tv_sec;
-            this->tv_nsec = th.tv_nsec;
-            return *this;
         }
 
         TimeHolder operator+(const timespec& th) 
@@ -106,6 +101,11 @@ class TimeHolder : public timespec
         bool operator>(const timespec& th ) const
         {
             return ((this->tv_sec > th.tv_sec) || ((this->tv_sec == th.tv_sec) && (this->tv_nsec > th.tv_nsec)));
+        }
+
+        bool operator<(const timespec& th ) const
+        {
+            return ((this->tv_sec < th.tv_sec) || ((this->tv_sec == th.tv_sec) && (this->tv_nsec < th.tv_nsec)));
         }
 
         /* Use a shift and add algorithm for multiplying a TimeHolder

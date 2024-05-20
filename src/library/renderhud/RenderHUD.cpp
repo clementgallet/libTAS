@@ -257,7 +257,7 @@ bool RenderHUD::doRender()
         return true;
         
     /* Idling with 100ms steps between renders */
-    static const TimeHolder stepTime({0, 100000000});
+    static const TimeHolder stepTime{0, 100000000};
     static TimeHolder lastTime{}; // -> member, update on render
     
     if (lastTime.tv_sec == 0) {

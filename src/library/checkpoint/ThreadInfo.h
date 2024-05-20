@@ -68,6 +68,9 @@ struct ThreadInfo {
     bool initial_nolog = false; // initial value of the global nolog state
 
     std::string name; // name of the thread
+    
+    void* stack_addr = nullptr; // stack address of thread
+    size_t stack_size = 0; // stack size of thread
 
     bool syncEnabled = false; // main thread needs to wait for this thread
     bool syncGo = false; // main thread can advance for now

@@ -239,6 +239,11 @@ void ThreadManager::initThreadFromChild(ThreadInfo* thread)
 
     thread->ptid = ((pid_t*)thread->pthread_id) + getTidOffset();
 
+    /* Get stack address */
+    pthread_attr_t attrs;
+    pthread_getattr_np(thread->pthread_id, &attrs);
+    pthread_attr_getstack(&attrs, &thread->stack_addr, &thread->stack_size);
+
     addToList(thread);
 
     SaveStateManager::initThreadFromChild(thread);
@@ -378,7 +383,8 @@ bool ThreadManager::updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, 
     return res;
 }
 
-ThreadInfo *ThreadManager::getCurrentThread() {
+ThreadInfo *ThreadManager::getCurrentThread()
+{
     return current_thread;
 }
 
