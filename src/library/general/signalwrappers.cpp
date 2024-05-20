@@ -40,6 +40,7 @@ DEFINE_ORIG_POINTER(sigaction)
 DEFINE_ORIG_POINTER(sigpending)
 DEFINE_ORIG_POINTER(pthread_sigmask)
 DEFINE_ORIG_POINTER(pthread_kill)
+DEFINE_ORIG_POINTER(sigaltstack)
 
 static int origUsrMaskProcess = 0;
 static thread_local int origUsrMaskThread = 0;
@@ -52,7 +53,7 @@ static thread_local int origUsrMaskThread = 0;
     /* Our checkpoint code uses signals, so we must prevent the game from
      * signaling threads at the same time.
      */
-    ThreadSync::wrapperExecutionLockLock();
+    WrapperLock wrapperLock;
 
     debuglogstdio(LCF_SIGNAL, "    Setting handler %p for signal %s", reinterpret_cast<void*>(handler), strsignal(sig));
 
@@ -61,8 +62,6 @@ static thread_local int origUsrMaskThread = 0;
     }
 
     sighandler_t ret = orig::signal(sig, handler);
-
-    ThreadSync::wrapperExecutionLockUnlock();
 
     return ret;
 }
@@ -191,7 +190,7 @@ static thread_local int origUsrMaskThread = 0;
     /* Our checkpoint code uses signals, so we must prevent the game from
      * signaling threads at the same time.
      */
-    ThreadSync::wrapperExecutionLockLock();
+    WrapperLock wrapperLock;
 
     /* Save the original handlers for signals that we will skip */
     struct sigaction act_suspend, act_checkpoint;
@@ -206,8 +205,7 @@ static thread_local int origUsrMaskThread = 0;
 
         if (act != nullptr)
             act_suspend = *act;
-            
-        ThreadSync::wrapperExecutionLockUnlock();
+
         return 0;
     }
 
@@ -219,16 +217,10 @@ static thread_local int origUsrMaskThread = 0;
 
         if (act != nullptr)
             act_checkpoint = *act;
-            
-        ThreadSync::wrapperExecutionLockUnlock();
+
         return 0;
     }
     
-    if (oact != nullptr) {
-        debuglogstdio(LCF_SIGNAL, "    Getting handler %p for signal %d (%s)", (oact->sa_flags & SA_SIGINFO)?
-            reinterpret_cast<void*>(oact->sa_sigaction):
-            reinterpret_cast<void*>(oact->sa_handler), sig, strsignal(sig));
-    }
     if (act != nullptr) {
         debuglogstdio(LCF_SIGNAL, "    Setting handler %p for signal %d (%s)", (act->sa_flags & SA_SIGINFO)?
                 reinterpret_cast<void*>(act->sa_sigaction):
@@ -237,7 +229,11 @@ static thread_local int origUsrMaskThread = 0;
 
     int ret = orig::sigaction(sig, act, oact);
 
-    ThreadSync::wrapperExecutionLockUnlock();
+    if (oact != nullptr) {
+        debuglogstdio(LCF_SIGNAL, "    Getting handler %p for signal %d (%s)", (oact->sa_flags & SA_SIGINFO)?
+            reinterpret_cast<void*>(oact->sa_sigaction):
+            reinterpret_cast<void*>(oact->sa_handler), sig, strsignal(sig));
+    }
 
     return ret;
 }
@@ -269,18 +265,23 @@ static thread_local int origUsrMaskThread = 0;
 
 /* Override */ int sigaltstack (const stack_t *ss, stack_t *oss) __THROW
 {
-    RETURN_IF_NATIVE(sigaltstack, (ss, oss), nullptr);
+    LINK_NAMESPACE_GLOBAL(sigaltstack);
+    if (GlobalState::isNative())
+        return orig::sigaltstack(ss, oss);
 
     DEBUGLOGCALL(LCF_SIGNAL);
 
     if (ss) {
         debuglogstdio(LCF_SIGNAL, "    Setting altstack with base address %p and size %d", ss->ss_sp, ss->ss_size);
     }
-    else if (oss) {
+    
+    int ret = orig::sigaltstack(ss, oss);
+
+    if (oss) {
         debuglogstdio(LCF_SIGNAL, "    Getting altstack with base address %p and size %d", oss->ss_sp, oss->ss_size);
     }
 
-    RETURN_NATIVE(sigaltstack, (ss, oss), nullptr);
+    return ret;
 }
 
 /* Override */ int pthread_sigmask (int how, const sigset_t *newmask,
@@ -391,11 +392,9 @@ static thread_local int origUsrMaskThread = 0;
     /* Our checkpoint code uses signals, so we must prevent the game from
      * signaling threads at the same time.
      */
-    ThreadSync::wrapperExecutionLockLock();
+    WrapperLock wrapperLock;
 
     int ret = orig::pthread_kill(threadid, signo);
-
-    ThreadSync::wrapperExecutionLockUnlock();
 
     return ret;
 }
