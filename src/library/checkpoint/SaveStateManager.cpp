@@ -132,7 +132,7 @@ void SaveStateManager::initThreadFromChild(ThreadInfo* thread)
 
     struct sigaction sigsuspend;
     sigfillset(&sigsuspend.sa_mask);
-    sigsuspend.sa_flags = SA_RESTART | SA_ONSTACK;
+    sigsuspend.sa_flags = SA_RESTART;
     sigsuspend.sa_handler = stopThisThread;
     {
         GlobalNative gn;
@@ -217,7 +217,7 @@ int SaveStateManager::checkpoint(int slot)
     /* Lock the display so we can empty events */
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i])
-            XLockDisplay(x11::gameDisplays[i]);
+            NATIVECALL(XLockDisplay(x11::gameDisplays[i]));
     }
 #endif
 
@@ -311,7 +311,7 @@ int SaveStateManager::checkpoint(int slot)
     /* Unlock the display */
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i])
-            XUnlockDisplay(x11::gameDisplays[i]);
+            NATIVECALL(XUnlockDisplay(x11::gameDisplays[i]));
     }
 #endif
 
@@ -469,8 +469,6 @@ void SaveStateManager::terminateThreads()
 
 void SaveStateManager::suspendThreads()
 {
-    MYASSERT(pthread_mutex_destroy(&threadResumeLock) == 0)
-    MYASSERT(pthread_mutex_init(&threadResumeLock, NULL) == 0)
     MYASSERT(pthread_mutex_lock(&threadResumeLock) == 0)
 
     /* Terminate threads flagged as such.
