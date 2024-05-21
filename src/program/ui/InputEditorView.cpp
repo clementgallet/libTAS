@@ -535,6 +535,10 @@ void InputEditorView::keyPressEvent(QKeyEvent *event)
         event->accept();
     }
 
+    /* Ignore auto-repeat events for hotkeys */
+    if (event->isAutoRepeat())
+        return QTableView::keyPressEvent(event);
+
     /* We accept hotkeys when this window has focus */
     keysym_t mod = convertQtModifiers(event->modifiers());
     keysym_t ks = context->config.km->nativeToKeysym(event->nativeVirtualKey());
@@ -559,6 +563,10 @@ void InputEditorView::keyPressEvent(QKeyEvent *event)
 
 void InputEditorView::keyReleaseEvent(QKeyEvent *event)
 {
+    /* Ignore auto-repeat events for hotkeys */
+    if (event->isAutoRepeat())
+        return QTableView::keyReleaseEvent(event);
+
     /* We accept hotkeys when this window has focus */
     keysym_t mod = convertQtModifiers(event->modifiers());
     keysym_t ks = context->config.km->nativeToKeysym(event->nativeVirtualKey());
