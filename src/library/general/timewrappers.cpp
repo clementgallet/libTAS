@@ -112,17 +112,7 @@ namespace libtas {
         }
     }
 
-    switch (clock_id) {
-        case CLOCK_REALTIME:
-        case CLOCK_REALTIME_ALARM:
-        case CLOCK_REALTIME_COARSE:
-        case CLOCK_TAI:
-            *tp = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME_REALTIME);
-            break;
-        default:
-            *tp = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC);
-            break;
-    }
+    *tp = DeterministicTimer::get().getTicks(DeterministicTimer::get().clockToType(clock_id));
     debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %d.%09d", tp->tv_sec, tp->tv_nsec);
 
     if (Global::shared_config.game_specific_timing & SharedConfig::GC_TIMING_CELESTE) {

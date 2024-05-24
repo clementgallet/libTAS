@@ -344,6 +344,8 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     struct timespec new_abstime = *abstime;
     TimeHolder abs_timeout = *abstime;
     TimeHolder real_time;
+    SharedConfig::TimeCallType time_type = SharedConfig::TIMETYPE_UNTRACKED_REALTIME;
+    
 #ifdef __unix__
     /* Get clock_id of cond */
     clockid_t clock_id = CLOCK_REALTIME;
@@ -354,6 +356,8 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         clock_id = it->second;
 
     NATIVECALL(clock_gettime(clock_id, &real_time));
+    time_type = DeterministicTimer::get().clockToType(clock_id);
+
 #elif defined(__APPLE__) && defined(__MACH__)
     /* On MacOS, the reference time is based on gettimeofday(). */
     timeval tv;
@@ -367,7 +371,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
      * a negative time, or more than 10 seconds. */
     if ((rel_timeout.tv_sec < -1) || (rel_timeout.tv_sec > 10)) {
         /* Change the reference time to real system time */
-        TimeHolder fake_time = DeterministicTimer::get().getTicks();
+        TimeHolder fake_time = DeterministicTimer::get().getTicks(time_type);
         TimeHolder new_rel_timeout = abs_timeout - fake_time;
         TimeHolder new_abs_timeout = real_time + new_rel_timeout;
         new_abstime = new_abs_timeout;
@@ -385,7 +389,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     /* When game is exiting, we want time to advance to prevent softlocks */
     if (Global::is_exiting) {
         /* Transfer time to our deterministic timer */
-        TimeHolder now = DeterministicTimer::get().getTicks();
+        TimeHolder now = DeterministicTimer::get().getTicks(time_type);
         TimeHolder delay = abs_timeout - now;
         DeterministicTimer::get().addDelay(delay);
 
@@ -411,7 +415,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         (Global::shared_config.wait_timeout == SharedConfig::WAIT_FULL))
         {
         /* Transfer time to our deterministic timer */
-        TimeHolder now = DeterministicTimer::get().getTicks();
+        TimeHolder now = DeterministicTimer::get().getTicks(time_type);
         TimeHolder delay = abs_timeout - now;
         DeterministicTimer::get().addDelay(delay);
     }
@@ -419,7 +423,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (Global::shared_config.wait_timeout == SharedConfig::WAIT_FINITE) {
         /* Wait again for 0.1 sec, arbitrary */
 #ifdef __unix__
-        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &real_time));
+        NATIVECALL(clock_gettime(clock_id, &real_time));
 #elif defined(__APPLE__) && defined(__MACH__)
         timeval tv;
         NATIVECALL(gettimeofday(&tv, nullptr));

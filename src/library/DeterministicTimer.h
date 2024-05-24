@@ -22,6 +22,7 @@
 
 #include "TimeHolder.h"
 #include "../shared/SharedConfig.h"
+#include <time.h>
 
 #include <mutex>
 
@@ -92,6 +93,9 @@ public:
 
     /* Returns if the time call returns a monotonic or realtime */
     bool isTimeCallMonotonic(SharedConfig::TimeCallType type);
+
+    /* Returns the type of untrack time from a clock identifier */
+    SharedConfig::TimeCallType clockToType(clockid_t clock);
 
 private:
 
