@@ -34,6 +34,7 @@
 #ifdef __linux__
 #include <sys/syscall.h>
 #endif
+#include <sys/sendfile.h>
 
 namespace libtas {
 
@@ -317,17 +318,26 @@ int SaveFile::open(int flags)
 
             if (rv == 0) {
                 /* The file exists, copying the content to the stream */
-                FILE* f = fopen(filename.c_str(), "rb");
-
-                if (f != nullptr) {
-                    char tmp_buf[4096];
-                    size_t s;
-                    do {
-                        s = fread(tmp_buf, 1, 4096, f);
-                        write(fd, tmp_buf, s);
-                    } while(s != 0);
-
-                    fclose(f);
+                int fd_file = ::open(filename.c_str(), O_RDONLY);
+                
+                if (fd_file >= 0) {
+                    /* Preallocate the file size to save time */
+                    int ret = ftruncate(fd, filestat.st_size);
+                    if (ret < 0) {
+                        debuglogstdio(LCF_FILEIO | LCF_ERROR, "Could not preallocate savefile %s with size %jd", filename.c_str(), filestat.st_size);
+                    }
+                
+                    /* sendfile() can copy at most 2^31 bytes, so we need a loop
+                     * to copy the entire file */
+                    off_t offset = 0;
+                    while (offset < filestat.st_size) {
+                        ssize_t ret = sendfile(fd, fd_file, &offset, filestat.st_size - offset);
+                
+                        if (ret < 0) {
+                            debuglogstdio(LCF_FILEIO | LCF_ERROR, "Could not transfer file %s of size %jd to savefile", filename.c_str(), filestat.st_size);
+                        }
+                    }
+                    close(fd_file);
                 }
             }
         }
