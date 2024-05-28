@@ -161,23 +161,32 @@ void trackAllFiles()
                 /* By now all the threads are suspended, so we don't have to worry about
                  * racing to empty the pipe and possibly blocking.
                  */
-                MYASSERT(ioctl(fh.fds[0], FIONREAD, &fh.pipeSize) == 0);
-                debuglogstdio(LCF_FILEIO, "Save pipe size: %d", fh.pipeSize);
-                if (fh.pipeSize > 0) {
+                int pipeSize;
+                MYASSERT(ioctl(fh.fds[0], FIONREAD, &pipeSize) == 0);
+                debuglogstdio(LCF_FILEIO, "Save pipe size: %d", pipeSize);
+                fh.size = pipeSize;
+                if (fh.size > 0) {
                     std::free(fh.fileNameOrPipeContents);
-                    fh.fileNameOrPipeContents = static_cast<char *>(std::malloc(fh.pipeSize));
-                    Utils::readAll(fh.fds[0], fh.fileNameOrPipeContents, fh.pipeSize);
+                    fh.fileNameOrPipeContents = static_cast<char *>(std::malloc(fh.size));
+                    Utils::readAll(fh.fds[0], fh.fileNameOrPipeContents, fh.size);
                 }
             }
             else {
                 if (fh.stream) {
                     fflush(fh.stream);
-                    fh.fileOffset = ftell(fh.stream);
+                    fdatasync(fh.fds[0]);
+                    fh.fileOffset = ftello(fh.stream);
+                    fseeko(fh.stream, 0, SEEK_END);
+                    fh.size = ftello(fh.stream);
+                    fseeko(fh.stream, fh.fileOffset, SEEK_SET);
                 }
                 else {
+                    fdatasync(fh.fds[0]);
                     fh.fileOffset = lseek(fh.fds[0], 0, SEEK_CUR);
+                    fh.size = lseek(fh.fds[0], 0, SEEK_END);
+                    lseek(fh.fds[0], fh.fileOffset, SEEK_SET);
                 }
-                debuglogstdio(LCF_FILEIO, "Save file offset: %d", fh.offset());
+                debuglogstdio(LCF_FILEIO, "Save file offset %jd and size %jd", fh.fileOffset, fh.size);
             }
         }
     }
@@ -199,11 +208,11 @@ void recoverAllFiles()
             continue;
         }
 
-        int offset = fh.offset();
+        int offset = fh.fileOffset;
         ssize_t ret;
         if (fh.isPipe()) {
             /* Only recover if we have valid contents */
-            if (!fh.fileNameOrPipeContents || fh.pipeSize < 0) {
+            if (!fh.fileNameOrPipeContents || fh.size < 0) {
                 continue;
             }
 
@@ -216,10 +225,10 @@ void recoverAllFiles()
                 std::free(tmp);
             }
 
-            ret = Utils::writeAll(fh.fds[1], fh.fileNameOrPipeContents, fh.pipeSize);
+            ret = Utils::writeAll(fh.fds[1], fh.fileNameOrPipeContents, fh.size);
             std::free(fh.fileNameOrPipeContents);
             fh.fileNameOrPipeContents = nullptr;
-            fh.pipeSize = -1;
+            fh.size = -1;
         }
         else {
             /* Only seek if we have a valid offset */
@@ -227,20 +236,27 @@ void recoverAllFiles()
                 continue;
             }
 
+            off_t current_size = -1;
             if (fh.stream) {
-                ret = fseek(fh.stream, fh.fileOffset, SEEK_SET);
+                fseeko(fh.stream, 0, SEEK_END);
+                current_size = ftello(fh.stream);
+                ret = fseeko(fh.stream, 0, SEEK_SET);
             }
             else {
+                current_size = lseek(fh.fds[0], 0, SEEK_END);
                 ret = lseek(fh.fds[0], fh.fileOffset, SEEK_SET);
+            }
+            if (current_size != fh.size) {
+                debuglogstdio(LCF_FILEIO | LCF_WARNING, "Restore file %s (fd=%d) changed size from %jd to %jd", fh.fileName(), fh.fds[0], fh.size, current_size);
             }
             fh.fileOffset = -1;
         }
 
         if (ret == -1) {
-            debuglogstdio(LCF_FILEIO | LCF_ERROR, "Error recovering %d bytes into file %s (fd=%d,%d)", offset, fh.fileName(), fh.fds[0], fh.fds[1]);
+            debuglogstdio(LCF_FILEIO | LCF_ERROR, "Error recovering %jd bytes into file %s (fd=%d,%d)", offset, fh.fileName(), fh.fds[0], fh.fds[1]);
         }
         else {
-            debuglogstdio(LCF_FILEIO, "Restore file %s (fd=%d,%d) offset to %d", fh.fileName(), fh.fds[0], fh.fds[1], offset);
+            debuglogstdio(LCF_FILEIO, "Restore file %s (fd=%d,%d) offset to %jd", fh.fileName(), fh.fds[0], fh.fds[1], offset);
         }
     }
 }
