@@ -192,6 +192,8 @@ private:
     /* Create the main window menus */
     void createMenus();
 
+    pid_t debugger_pid;
+
 private slots:
 
     /* Update UI elements (mainly enable/disable) depending on

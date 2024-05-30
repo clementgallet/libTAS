@@ -39,6 +39,7 @@
 #include "movie/MovieFile.h"
 #include "utils.h"
 #include "GameEvents.h"
+#include "GameThread.h"
 #include "../shared/version.h"
 
 #include <QtWidgets/QFileDialog>
@@ -61,6 +62,7 @@
 #include <unistd.h> // access, isatty
 #include <limits>
 #include <features.h> // __GLIBC_PREREQ
+#include <sys/wait.h> // waitpid
 
 /* Check all checkboxes from a list of actions whose associated flag data
  * is present in the value
@@ -482,6 +484,8 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
         slotFastForward(true);
         slotLaunch(false);
     }
+    
+    debugger_pid = 0;
 }
 
 MainWindow::~MainWindow()
@@ -729,6 +733,8 @@ void MainWindow::updateStatus(int status)
             realTimeNsec->setValue(context->config.sc.initial_time_nsec);
 
             launchGdbButton->setEnabled(true);
+            launchGdbAction->setText(tr("Launch with GDB"));
+            launchLldbAction->setText(tr("Launch with LLDB"));
 
             if (context->config.sc.av_dumping) {
                 context->config.sc.av_dumping = false;
@@ -774,6 +780,9 @@ void MainWindow::updateStatus(int status)
             break;
 
         case Context::ACTIVE:
+            launchGdbButton->setEnabled(true);
+            launchGdbAction->setText(tr("Attach with GDB"));
+            launchLldbAction->setText(tr("Attach with LLDB"));
             stopButton->setEnabled(true);
 
             if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
@@ -783,6 +792,7 @@ void MainWindow::updateStatus(int status)
 
             break;
         case Context::QUITTING:
+            launchGdbButton->setEnabled(false);
             stopButton->setText("Kill");
             break;
 
@@ -911,6 +921,16 @@ void MainWindow::updateUIFrequent()
 
     /* Update input editor */
     inputEditorWindow->update();
+    
+    /* Detect if the debugger was detached from the game and allow user to attach again */
+    if (context->attach_gdb && debugger_pid) {
+        int ret = waitpid(debugger_pid, nullptr, WNOHANG);
+        if (ret == debugger_pid) {
+            context->attach_gdb = false;
+            debugger_pid = 0;
+            launchGdbButton->setEnabled(true);
+        }
+    }
 }
 
 void MainWindow::updateMovieParams()
@@ -1059,13 +1079,25 @@ void MainWindow::slotLaunchLldb() {
 
 void MainWindow::slotLaunch(bool attach_gdb)
 {
+    /* Special case of attaching gdb to an already running process */
+    if (attach_gdb && !context->attach_gdb && (context->status == Context::ACTIVE)) {
+        context->attach_gdb = true;
+        launchGdbButton->setEnabled(false);
 
-    /* Do we attach gdb ? */
-    context->attach_gdb = attach_gdb;
+        debugger_pid = fork();
+        if (debugger_pid == 0) {
+            GameThread::attach(context);
+        }
+        
+        return;
+    }
 
     if (context->status != Context::INACTIVE)
         return;
 
+    /* Do we attach gdb ? */
+    context->attach_gdb = attach_gdb;
+    
     /* Perform all checks */
     if (!ErrorChecking::allChecks(context))
         return;

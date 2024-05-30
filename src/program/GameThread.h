@@ -34,6 +34,9 @@ namespace GameThread {
      */
     void launch(Context *context);
 
+    /* Run the debugger program to attach to the already running game process */
+    void attach(Context *context);
+
     /* Set all environment variables before launching the game process */
     void set_env_variables(Context *context, int gameArch);
     

@@ -342,3 +342,20 @@ void GameThread::launch(Context *context)
     /* Run the actual game with sh, taking care of splitting arguments */
     execlp("sh", "sh", "-c", sharg.str().c_str(), nullptr);
 }
+
+void GameThread::attach(Context *context)
+{
+    switch (context->config.debugger) {
+        case Config::DEBUGGER_GDB: {
+            execlp("gdb", "gdb", "-q", "-ex",
+                   "handle SIGSYS SIGXFSZ SIGUSR1 SIGUSR2 SIGPWR SIGXCPU SIG34 SIG35 SIG36 nostop noprint",
+                   context->gamepath.c_str(), "-p", std::to_string(context->game_pid).c_str(), (char *) NULL);
+            break;
+        }
+        case Config::DEBUGGER_LLDB: {
+            execlp("lldb", "lldb",
+                   "-p", std::to_string(context->game_pid).c_str(), (char *) NULL);
+            break;
+        }
+    }
+}
