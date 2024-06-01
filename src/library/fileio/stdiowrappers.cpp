@@ -45,9 +45,9 @@ FILE *fopen (const char *filename, const char *modes)
         return orig::fopen(filename, modes);
 
     if (filename)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename, modes);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename, modes);
     else
-        debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with null filename", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::fopen(filename, modes);
@@ -76,7 +76,7 @@ FILE *fopen (const char *filename, const char *modes)
 
             std::string s = datestr.str();
 
-            debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", filename, s.c_str());
+            LOG(LL_DEBUG, LCF_FILEIO, "Creating fake %s with %s", filename, s.c_str());
             fwrite(s.c_str(), sizeof(char), s.size(), f);
             fwrite(" ", sizeof(char), 1, f);
             fwrite(s.c_str(), sizeof(char), s.size(), f);
@@ -88,7 +88,7 @@ FILE *fopen (const char *filename, const char *modes)
     }
 
     else if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(filename, modes)) {
-        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        LOG(LL_DEBUG, LCF_FILEIO, "  savefile detected");
         f = SaveFileList::openSaveFile(filename, modes);
     }
 
@@ -112,9 +112,9 @@ FILE *fopen64 (const char *filename, const char *modes)
         return orig::fopen64(filename, modes);
 
     if (filename)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename, modes);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename, modes);
     else
-        debuglogstdio(LCF_FILEIO, "%s call with null filename", __func__);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with null filename", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::fopen64(filename, modes);
@@ -143,7 +143,7 @@ FILE *fopen64 (const char *filename, const char *modes)
 
             std::string s = datestr.str();
 
-            debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", filename, s.c_str());
+            LOG(LL_DEBUG, LCF_FILEIO, "Creating fake %s with %s", filename, s.c_str());
             fwrite(s.c_str(), sizeof(char), s.size(), f);
             fwrite(" ", sizeof(char), 1, f);
             fwrite(s.c_str(), sizeof(char), s.size(), f);
@@ -155,7 +155,7 @@ FILE *fopen64 (const char *filename, const char *modes)
     }
 
     else if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(filename, modes)) {
-        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        LOG(LL_DEBUG, LCF_FILEIO, "  savefile detected");
         f = SaveFileList::openSaveFile(filename, modes);
     }
 
@@ -178,7 +178,7 @@ int fclose (FILE *stream)
     if (GlobalState::isNative())
         return orig::fclose(stream);
 
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::fclose(stream);
@@ -211,7 +211,7 @@ int fclose (FILE *stream)
 //     if (GlobalState::isNative())
 //         return orig::fileno(stream);
 //
-//     DEBUGLOGCALL(LCF_FILEIO);
+//     LOGTRACE(LCF_FILEIO);
 //
 //     return orig::fileno(stream);
 // }

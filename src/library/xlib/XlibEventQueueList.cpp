@@ -79,7 +79,7 @@ bool XlibEventQueueList::waitForEmpty()
             allEmpty &= queue->emptied;
             if (!queue->emptied) {
                 if (++attempts > 10 * 100) {
-                    debuglogstdio(LCF_EVENTS | LCF_ERROR | LCF_ALERT, "xevents sync took too long, were asynchronous events incorrectly enabled?");
+                    LOG(LL_ERROR, LCF_EVENTS, "xevents sync took too long, were asynchronous events incorrectly enabled?");
                     return false;
                 }
             }

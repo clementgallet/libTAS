@@ -79,7 +79,7 @@ static bool windowFullscreen = false;
     if (GlobalState::isNative())
         return orig::SDL_GL_SwapBuffers();
 
-    DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    LOGTRACE(LCF_SDL | LCF_OGL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_GL renderHUD_GL;
@@ -93,7 +93,7 @@ static bool windowFullscreen = false;
     if (GlobalState::isNative())
         return orig::SDL_GL_SwapWindow(window);
 
-    DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    LOGTRACE(LCF_SDL | LCF_OGL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_GL renderHUD_GL;
@@ -102,7 +102,7 @@ static bool windowFullscreen = false;
 
 void* SDL_GL_CreateContext(SDL_Window *window)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    LOGTRACE(LCF_SDL | LCF_OGL | LCF_WINDOW);
     LINK_NAMESPACE_SDL2(SDL_GL_CreateContext);
 
     void* context;
@@ -114,7 +114,7 @@ void* SDL_GL_CreateContext(SDL_Window *window)
     if (context && !(Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)) {
         LINK_NAMESPACE_SDL2(SDL_GL_SetSwapInterval);
         orig::SDL_GL_SetSwapInterval(0);
-        debuglogstdio(LCF_WINDOW, "Disable vsync !!");
+        LOG(LL_DEBUG, LCF_WINDOW, "Disable vsync !!");
     }
 
     /* If the context creation failed, we stop here */
@@ -132,7 +132,7 @@ void* SDL_GL_CreateContext(SDL_Window *window)
 
 void SDL_GL_DeleteContext(SDL_GLContext context)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    LOGTRACE(LCF_SDL | LCF_OGL | LCF_WINDOW);
     LINK_NAMESPACE_SDL2(SDL_GL_DeleteContext);
 
     /* Delete texture and fbo in the OSD */
@@ -147,7 +147,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 
 /* Override */ int SDL_GL_SetSwapInterval(int interval)
 {
-    debuglogstdio(LCF_SDL | LCF_OGL | LCF_WINDOW, "%s call - setting to %d", __func__, interval);
+    LOG(LL_TRACE, LCF_SDL | LCF_OGL | LCF_WINDOW, "%s call - setting to %d", __func__, interval);
     LINK_NAMESPACE_SDL2(SDL_GL_SetSwapInterval);
 
     /* We save the interval if the game wants it later */
@@ -155,9 +155,9 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 
     /* When using non deterministic timer, we let the game set vsync */
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME) {
-        debuglogstdio(LCF_WINDOW, "Set swap interval !!");
+        LOG(LL_DEBUG, LCF_WINDOW, "Set swap interval !!");
         int ret = orig::SDL_GL_SetSwapInterval(interval);
-        debuglogstdio(LCF_WINDOW, "   return %d", ret);
+        LOG(LL_DEBUG, LCF_WINDOW, "   return %d", ret);
         return ret;
         // return orig::SDL_GL_SetSwapInterval(interval);
     }
@@ -167,12 +167,12 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 
 /* Override */ int SDL_GL_GetSwapInterval(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    LOGTRACE(LCF_SDL | LCF_OGL | LCF_WINDOW);
     return swapInterval;
 }
 
 /* Override */ SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: %x", __func__,  title?title:"", x, y, w, h, flags);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: %x", __func__,  title?title:"", x, y, w, h, flags);
     LINK_NAMESPACE_SDL2(SDL_CreateWindow);
 
     ThreadManager::setMainThread();
@@ -244,7 +244,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     sendMessage(MSGB_WINDOW_ID);
     sendData(&win, sizeof(win));
     unlockSocket();
-    debuglogstdio(LCF_WINDOW, "Sent X11 window id %d", win);
+    LOG(LL_DEBUG, LCF_WINDOW, "Sent X11 window id %d", win);
 #endif
 
     return sdl::gameSDLWindow;
@@ -252,7 +252,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 
 /* Override */ void SDL_DestroyWindow(SDL_Window* window)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
     LINK_NAMESPACE_SDL2(SDL_DestroyWindow);
 
     orig::SDL_DestroyWindow(window);
@@ -269,7 +269,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 
 /* Override */ Uint32 SDL_GetWindowID(SDL_Window* window)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
     if (sdl::gameSDLWindow == window)
         return 1;
     LINK_NAMESPACE_SDL2(SDL_GetWindowID);
@@ -278,7 +278,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 
 /* Override */ SDL_Window* SDL_GetWindowFromID(Uint32 id)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
     if (id == 1)
         return sdl::gameSDLWindow;
     LINK_NAMESPACE_SDL2(SDL_GetWindowFromID);
@@ -286,7 +286,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 }
 
 /* Override */ Uint32 SDL_GetWindowFlags(SDL_Window* window){
-    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
     LINK_NAMESPACE_SDL2(SDL_GetWindowFlags);
     Uint32 flags = orig::SDL_GetWindowFlags(window);
     flags |= SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS;
@@ -298,13 +298,13 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     flags |= SDL_WINDOW_SHOWN;
     flags &= ~SDL_WINDOW_MINIMIZED;
     
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "  flags: %d", flags);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "  flags: %d", flags);
     return flags;
 }
 
 /* Override */ void SDL_SetWindowTitle(SDL_Window * window, const char *title)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with title %s", __func__, title?title:"[null]");
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with title %s", __func__, title?title:"[null]");
     LINK_NAMESPACE_SDL2(SDL_SetWindowTitle);
 
     WindowTitle::setOriginalTitle(title);
@@ -313,7 +313,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 
 /* Override */ void SDL_WM_SetCaption(const char *title, const char *icon)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with title %s", __func__, title?title:"[null]");
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with title %s", __func__, title?title:"[null]");
     LINK_NAMESPACE_SDL1(SDL_WM_SetCaption);
     WindowTitle::setOriginalTitle(title);
     WindowTitle::setUpdateFunc([icon] (const char* t) {orig::SDL_WM_SetCaption(t, icon);});
@@ -321,7 +321,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 
 /* Override */ int SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with flags %d", __func__, flags);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with flags %d", __func__, flags);
 
     windowFullscreen = (flags & SDL_WINDOW_FULLSCREEN);
 
@@ -349,7 +349,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 
 /* Override */ void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with border %d", __func__, bordered);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with border %d", __func__, bordered);
     /* Don't do anything */
 }
 
@@ -357,8 +357,8 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 /* Override */ int SDL_CreateWindowAndRenderer(int width, int height,
         Uint32 window_flags, SDL_Window **window, SDL_Renderer **renderer)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "  size %d x %d", width, height);
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "  size %d x %d", width, height);
     LINK_NAMESPACE_SDL2(SDL_CreateWindowAndRenderer);
 
     ThreadManager::setMainThread();
@@ -383,7 +383,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 
 /* Override */ void SDL_SetWindowPosition(SDL_Window*, int x, int y)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
     /* Preventing the game to change the window position, but still push the event */
     struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
@@ -404,7 +404,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 
 /* Override */ void SDL_GetWindowPosition(SDL_Window *, int *x, int *y)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
     /* Always simulate the game window being on top-left corner, so that games
      * using global mouse coords do not desync on different window positions.
      */
@@ -424,7 +424,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
         return;
     }
 
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with new size: %d x %d", __func__, w, h);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with new size: %d x %d", __func__, w, h);
 
     /* Ignored if game window is fullscreen */
     if (windowFullscreen)
@@ -440,7 +440,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 {
     LINK_NAMESPACE_SDL1(SDL_SetVideoMode);
 
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with size (%d,%d), bpp %d and flags %x", __func__, width, height, bpp, flags);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with size (%d,%d), bpp %d and flags %x", __func__, width, height, bpp, flags);
 
     ThreadManager::setMainThread();
 
@@ -476,7 +476,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 
 /* Override */ int SDL_SetColorKey(SDL_Surface *surface, int flag, Uint32 key)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with flag %d and key %d", __func__, flag, key);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with flag %d and key %d", __func__, flag, key);
     LINK_NAMESPACE_SDLX(SDL_SetColorKey);
     return orig::SDL_SetColorKey(surface, flag, key);
 }
@@ -488,7 +488,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     if (GlobalState::isNative())
         return orig::SDL_Flip(screen);
 
-    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD renderHUD;
@@ -505,7 +505,7 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     }
 
     LINK_NAMESPACE_SDL1(SDL_UpdateRect);
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with %d rects", __func__, numrects);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with %d rects", __func__, numrects);
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD renderHUD;
@@ -519,7 +519,7 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     if (GlobalState::isNative())
         return orig::SDL_UpdateRect(screen, x, y, w, h);
 
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with pos (%d,%d) and size (%u,%u)", __func__, x, y, w, h);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with pos (%d,%d) and size (%u,%u)", __func__, x, y, w, h);
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD renderHUD;
@@ -528,7 +528,7 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
 
 /* Override */ SDL1::SDL_GrabMode SDL_WM_GrabInput(SDL1::SDL_GrabMode mode)
 {
-    debuglogstdio(LCF_SDL | LCF_KEYBOARD | LCF_MOUSE | LCF_WINDOW, "%s call with mode %d", __func__, mode);
+    LOG(LL_TRACE, LCF_SDL | LCF_KEYBOARD | LCF_MOUSE | LCF_WINDOW, "%s call with mode %d", __func__, mode);
     static SDL1::SDL_GrabMode fakeGrab = SDL1::SDL_GRAB_OFF;
     if (mode != SDL1::SDL_GRAB_QUERY)
         fakeGrab = mode;
@@ -538,7 +538,7 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
 
 /* Override */ int SDL_GL_SetAttribute(SDL_GLattr attr, int value)
 {
-    debuglogstdio(LCF_SDL | LCF_OGL | LCF_WINDOW, "%s call with attr %d and value %d", __func__, attr, value);
+    LOG(LL_TRACE, LCF_SDL | LCF_OGL | LCF_WINDOW, "%s call with attr %d and value %d", __func__, attr, value);
     LINK_NAMESPACE_SDL2(SDL_GL_SetAttribute);
 
     switch (attr) {
@@ -580,7 +580,7 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     if (GlobalState::isNative())
         return orig::SDL_UpdateWindowSurface(window);
 
-    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
     Global::game_info.video |= GameInfo::SDL2_SURFACE;
 
     /* Start the frame boundary and pass the function to draw */
@@ -598,7 +598,7 @@ OVERRIDE void SDL_UpdateRects(SDL1::SDL_Surface *screen, int numrects, SDL1::SDL
     }
 
     LINK_NAMESPACE_SDL2(SDL_UpdateWindowSurface);
-    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
     Global::game_info.video |= GameInfo::SDL2_SURFACE;
 
     /* Start the frame boundary and pass the function to draw */

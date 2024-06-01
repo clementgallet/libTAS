@@ -32,7 +32,7 @@ DECLARE_ORIG_POINTER(SDL_WasInit)
 DECLARE_ORIG_POINTER(SDL_Quit)
 
 /* Override */ int SDL_Init(Uint32 flags){
-    DEBUGLOGCALL(LCF_SDL);
+    LOGTRACE(LCF_SDL);
 
     LINK_NAMESPACE_SDLX(SDL_Init);
 
@@ -60,7 +60,7 @@ DECLARE_ORIG_POINTER(SDL_Quit)
 static Uint32 init_flags = 0;
 
 /* Override */ int SDL_InitSubSystem(Uint32 flags){
-    DEBUGLOGCALL(LCF_SDL);
+    LOGTRACE(LCF_SDL);
 
     /* Get which sdl version we are using. */
     int SDLver = get_sdlversion();
@@ -70,36 +70,36 @@ static Uint32 init_flags = 0;
     LINK_NAMESPACE_SDLX(SDL_InitSubSystem);
 
     if (flags & SDL_INIT_TIMER)
-        debuglogstdio(LCF_SDL, "    SDL_TIMER enabled.");
+        LOG(LL_DEBUG, LCF_SDL, "    SDL_TIMER enabled.");
 
     if (flags & SDL_INIT_AUDIO) {
-        debuglogstdio(LCF_SDL, "    SDL_AUDIO fake enabled.");
+        LOG(LL_DEBUG, LCF_SDL, "    SDL_AUDIO fake enabled.");
         SDL_AudioInit(nullptr);
         Global::game_info.audio = sdl_flag;
     }
 
     if (flags & SDL_INIT_VIDEO) {
-        debuglogstdio(LCF_SDL, "    SDL_VIDEO enabled.");
+        LOG(LL_DEBUG, LCF_SDL, "    SDL_VIDEO enabled.");
         Global::game_info.video |= sdl_flag;
         Global::game_info.keyboard = sdl_flag;
         Global::game_info.mouse = sdl_flag;
     }
 
     if (flags & SDL_INIT_JOYSTICK) {
-        debuglogstdio(LCF_SDL, "    SDL_JOYSTICK fake enabled.");
+        LOG(LL_DEBUG, LCF_SDL, "    SDL_JOYSTICK fake enabled.");
         Global::game_info.joystick = sdl_flag;
     }
 
     if (flags & SDL_INIT_HAPTIC)
-        debuglogstdio(LCF_SDL, "    SDL_HAPTIC fake enabled.");
+        LOG(LL_DEBUG, LCF_SDL, "    SDL_HAPTIC fake enabled.");
 
     if (flags & SDL_INIT_GAMECONTROLLER) {
-        debuglogstdio(LCF_SDL, "    SDL_GAMECONTROLLER fake enabled.");
+        LOG(LL_DEBUG, LCF_SDL, "    SDL_GAMECONTROLLER fake enabled.");
         Global::game_info.joystick = sdl_flag;
     }
 
     if (flags & SDL_INIT_EVENTS)
-        debuglogstdio(LCF_SDL, "    SDL_EVENTS enabled.");
+        LOG(LL_DEBUG, LCF_SDL, "    SDL_EVENTS enabled.");
 
     Global::game_info.tosend = true;
 
@@ -124,7 +124,7 @@ static Uint32 init_flags = 0;
 
 Uint32 SDL_WasInit(Uint32 flags)
 {
-    debuglogstdio(LCF_SDL, "%s with flags %d", __func__, flags);
+    LOG(LL_TRACE, LCF_SDL, "%s with flags %d", __func__, flags);
 
     if (flags == 0)
         flags = SDL_INIT_EVERYTHING;
@@ -134,7 +134,7 @@ Uint32 SDL_WasInit(Uint32 flags)
 
 /* Override */ void SDL_Quit()
 {
-    DEBUGLOGCALL(LCF_SDL);
+    LOGTRACE(LCF_SDL);
     LINK_NAMESPACE_SDLX(SDL_Quit);
     orig::SDL_Quit();
 }

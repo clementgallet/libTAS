@@ -40,7 +40,7 @@ DEFINE_ORIG_POINTER(XQueryPointer)
         int* win_x_return, int* win_y_return,
         unsigned int* mask_return)
 {
-    DEBUGLOGCALL(LCF_MOUSE);
+    LOGTRACE(LCF_MOUSE);
     if (x11::gameXWindows.empty()) {
         LINK_NAMESPACE_GLOBAL(XQueryPointer);
         return orig::XQueryPointer(display, w, root_return, child_return,
@@ -60,7 +60,7 @@ DEFINE_ORIG_POINTER(XQueryPointer)
 /* Override */ int XGrabPointer(Display* display, Window w, Bool owner_events, unsigned int event_mask, int, int,
     Window confine_to, Cursor, Time)
 {
-    DEBUGLOGCALL(LCF_MOUSE);
+    LOGTRACE(LCF_MOUSE);
 
     pointer_grab_window = w;
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
@@ -76,20 +76,20 @@ DEFINE_ORIG_POINTER(XQueryPointer)
         clipping_h = clip_attr.height;
 
         if (game_ai.pointer.x < clipping_x) {
-            debuglogstdio(LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x);
+            LOG(LL_DEBUG, LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x);
             game_ai.pointer.x = clipping_x;
         }
         else if (game_ai.pointer.x >= (clipping_x + clipping_w)) {
-            debuglogstdio(LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x + clipping_w - 1);
+            LOG(LL_DEBUG, LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x + clipping_w - 1);
             game_ai.pointer.x = clipping_x + clipping_w - 1;
         }
 
         if (game_ai.pointer.y < clipping_y) {
-            debuglogstdio(LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y);
+            LOG(LL_DEBUG, LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y);
             game_ai.pointer.y = clipping_y;
         }
         else if (game_ai.pointer.y >= (clipping_y + clipping_h)) {
-            debuglogstdio(LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y + clipping_h - 1);
+            LOG(LL_DEBUG, LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y + clipping_h - 1);
             game_ai.pointer.y = clipping_y + clipping_h - 1;
         }
     }
@@ -98,7 +98,7 @@ DEFINE_ORIG_POINTER(XQueryPointer)
 
 /* Override */ int XUngrabPointer(Display* display, Time)
 {
-    DEBUGLOGCALL(LCF_MOUSE);
+    LOGTRACE(LCF_MOUSE);
     pointer_grab_window = None;
     
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
@@ -110,34 +110,34 @@ DEFINE_ORIG_POINTER(XQueryPointer)
 
 /* Override */ int XChangeActivePointerGrab(Display*, unsigned int, Cursor, Time)
 {
-    DEBUGLOGCALL(LCF_MOUSE);
+    LOGTRACE(LCF_MOUSE);
     return 0; // Not sure what to return
 }
 
 /* Override */ int XGrabButton(Display*, unsigned int, unsigned int, Window,
     Bool, unsigned int, int, int, Window, Cursor)
 {
-    DEBUGLOGCALL(LCF_MOUSE);
+    LOGTRACE(LCF_MOUSE);
     return GrabSuccess;
 }
 
 /* Override */ int XUngrabButton(Display*, unsigned int, unsigned int, Window)
 {
-    DEBUGLOGCALL(LCF_MOUSE);
+    LOGTRACE(LCF_MOUSE);
     return 0; // Not sure what to return
 }
 
 /* Override */ int XDefineCursor(Display* d, Window w, Cursor c)
 {
     RETURN_IF_NATIVE(XDefineCursor, (d, w, c), nullptr);
-    DEBUGLOGCALL(LCF_MOUSE);
+    LOGTRACE(LCF_MOUSE);
     return 0; // Not sure what to return
 }
 
 /* Override */ int XUndefineCursor(Display* d, Window w)
 {
     RETURN_IF_NATIVE(XUndefineCursor, (d, w), nullptr);
-    DEBUGLOGCALL(LCF_MOUSE);
+    LOGTRACE(LCF_MOUSE);
     return 0; // Not sure what to return
 }
 
@@ -147,7 +147,7 @@ DEFINE_ORIG_POINTER(XQueryPointer)
 {
     RETURN_IF_NATIVE(XWarpPointer, (d, src_w, dest_w, src_x, src_y, src_width, src_height, dest_x, dest_y), nullptr);
 
-    debuglogstdio(LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dest_w, dest_x, dest_y);
+    LOG(LL_TRACE, LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dest_w, dest_x, dest_y);
 
     /* We have to generate an MotionNotify event. */
     if (!x11::gameXWindows.empty()) {
@@ -172,7 +172,7 @@ DEFINE_ORIG_POINTER(XQueryPointer)
         event.xmotion.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
         xlibEventQueueList.insert(&event);
-        debuglogstdio(LCF_EVENTS | LCF_MOUSE, "Generate Xlib event MotionNotify with new position (%d,%d)", game_ai.pointer.x, game_ai.pointer.y);
+        LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate Xlib event MotionNotify with new position (%d,%d)", game_ai.pointer.x, game_ai.pointer.y);
     }
 
     /* Update the pointer coordinates */

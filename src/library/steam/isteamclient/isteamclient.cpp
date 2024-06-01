@@ -57,7 +57,7 @@ struct ISteamClient *SteamClient_generic(const char *version)
 	};
 	int i;
 
-    debuglogstdio(LCF_STEAM, "%s called with version %s", __func__, version);
+    LOG(LL_DEBUG, LCF_STEAM, "%s called with version %s", __func__, version);
 
 	i = 0;
 	while (ifaces[i].name)
@@ -72,14 +72,14 @@ struct ISteamClient *SteamClient_generic(const char *version)
 		i++;
 	}
 
-    debuglogstdio(LCF_STEAM | LCF_WARNING, "Unable to find ISteamClient version %s", version);
+    LOG(LL_WARN, LCF_STEAM, "Unable to find ISteamClient version %s", version);
 
 	return nullptr;
 }
 
 void SteamClient_set_version(const char *version)
 {
-    debuglogstdio(LCF_STEAM, "%s called with version %s", __func__, version);
+    LOG(LL_DEBUG, LCF_STEAM, "%s called with version %s", __func__, version);
 
 	// if (!steamclient_version)
 		steamclient_version = version;
@@ -87,7 +87,7 @@ void SteamClient_set_version(const char *version)
 
 struct ISteamClient *SteamClient(void)
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamClient, "steam_api");
@@ -99,7 +99,7 @@ struct ISteamClient *SteamClient(void)
 	if (!steamclient_version)
 	{
 		steamclient_version = STEAMCLIENT_INTERFACE_VERSION_017;
-        debuglogstdio(LCF_STEAM | LCF_WARNING, "ISteamClient: No version specified, defaulting to %s", steamclient_version);
+        LOG(LL_WARN, LCF_STEAM, "ISteamClient: No version specified, defaulting to %s", steamclient_version);
 	}
 
 	if (!cached_iface)
@@ -110,246 +110,246 @@ struct ISteamClient *SteamClient(void)
 
 HSteamPipe ISteamClient_CreateSteamPipe(void *iface)
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return 0;
 }
 
 bool ISteamClient_BReleaseSteamPipe( void *iface, HSteamPipe hSteamPipe )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return true;
 }
 
 HSteamUser ISteamClient_ConnectToGlobalUser( void *iface, HSteamPipe hSteamPipe )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return 0;
 }
 
 HSteamUser ISteamClient_CreateLocalUser( void *iface, HSteamPipe *phSteamPipe, EAccountType eAccountType )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return 0;
 }
 
 void ISteamClient_ReleaseUser( void *iface, HSteamPipe hSteamPipe, HSteamUser hUser )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 }
 
 ISteamUser *ISteamClient_GetISteamUser( void *iface, HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return SteamUser();
 }
 
 ISteamGameServer *ISteamClient_GetISteamGameServer( void *iface, HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return SteamGameServer();
 }
 
 void ISteamClient_SetLocalIPBinding( void *iface, uint32_t unIP, uint16_t usPort )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 }
 
 ISteamFriends *ISteamClient_GetISteamFriends( void *iface, HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return SteamFriends();
 }
 
 ISteamUtils *ISteamClient_GetISteamUtils( void *iface, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return SteamUtils();
 }
 
 ISteamMatchmaking *ISteamClient_GetISteamMatchmaking( void *iface, HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return SteamMatchmaking();
 }
 
 ISteamMatchmakingServers *ISteamClient_GetISteamMatchmakingServers( void *iface, HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return SteamMatchmakingServers();
 }
 
 void *ISteamClient_GetISteamGenericInterface( void *iface, HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     if (strcmp(pchVersion, "SteamGameCoordinator001") == 0) {
         static ISteamGameCoordinator steamgamecoordinator;
         return &steamgamecoordinator;
     }
-    debuglogstdio(LCF_STEAM | LCF_ERROR, "Invalid interface %s", pchVersion);
+    LOG(LL_ERROR, LCF_STEAM, "Invalid interface %s", pchVersion);
     return nullptr;
 }
 
 ISteamUserStats *ISteamClient_GetISteamUserStats( void *iface, HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return SteamUserStats();
 }
 
 ISteamGameServerStats *ISteamClient_GetISteamGameServerStats( void *iface, HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
 }
 
 ISteamApps *ISteamClient_GetISteamApps( void *iface, HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return SteamApps();
 }
 
 ISteamNetworking *ISteamClient_GetISteamNetworking( void *iface, HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return SteamNetworking();
 }
 
 ISteamRemoteStorage *ISteamClient_GetISteamRemoteStorage( void *iface, HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     SteamRemoteStorage_set_version(pchVersion);
     return SteamRemoteStorage();
 }
 
 ISteamScreenshots *ISteamClient_GetISteamScreenshots( void *iface, HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return SteamScreenshots();
 }
 
 ISteamGameSearch *ISteamClient_GetISteamGameSearch(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version)
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
 }
 
 void ISteamClient_RunFrame(void *iface)
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 }
 
 unsigned int ISteamClient_GetIPCCallCount(void *iface)
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return 0;
 }
 
 void ISteamClient_SetWarningMessageHook( void *iface, void *pFunction )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 }
 
 bool ISteamClient_BShutdownIfAllPipesClosed(void *iface)
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return true;
 }
 
 ISteamHTTP *ISteamClient_GetISteamHTTP( void *iface, HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return SteamHTTP();
 }
 
 void *ISteamClient_GetISteamUnifiedMessages( void *iface, HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
 }
 
 ISteamController *ISteamClient_GetISteamController( void *iface, HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return SteamController();
 }
 
 ISteamUGC *ISteamClient_GetISteamUGC( void *iface, HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return SteamUGC();
 }
 
 ISteamAppList *ISteamClient_GetISteamAppList( void *iface, HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
 }
 
 ISteamMusic *ISteamClient_GetISteamMusic( void *iface, HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
 }
 
 ISteamMusicRemote *ISteamClient_GetISteamMusicRemote(void *iface, HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion)
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
 }
 
 ISteamHTMLSurface *ISteamClient_GetISteamHTMLSurface(void *iface, HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion)
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
 }
 
 void ISteamClient_DEPRECATED_Set_SteamAPI_CPostAPIResultInProcess( void *iface, void (*)() )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 }
 
 void ISteamClient_DEPRECATED_Remove_SteamAPI_CPostAPIResultInProcess( void *iface, void (*)() )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 }
 
 void ISteamClient_Set_SteamAPI_CCheckCallbackRegisteredInProcess( void *iface, SteamAPI_CheckCallbackRegistered_t func )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 }
 
 ISteamInventory *ISteamClient_GetISteamInventory( void *iface, HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
 }
 
 ISteamVideo *ISteamClient_GetISteamVideo( void *iface, HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
 }
 
 ISteamParentalSettings *ISteamClient_GetISteamParentalSettings( void *iface, HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
 }
 
 ISteamInput *ISteamClient_GetISteamInput(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version)
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return SteamInput();
 }
 
 ISteamParties *ISteamClient_GetISteamParties(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version)
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
 }
 
 ISteamRemotePlay *ISteamClient_GetISteamRemotePlay(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version)
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return reinterpret_cast<void*>(1); // Return a value that evaluates to `true`
 }
 

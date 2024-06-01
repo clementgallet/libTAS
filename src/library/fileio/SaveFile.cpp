@@ -56,7 +56,7 @@ SaveFile::SaveFile(const char *file) {
 SaveFile::~SaveFile() {
     /* Save back data into the file */
     if (Global::shared_config.write_savefiles_on_exit && (fd != 0)) {
-        debuglogstdio(LCF_FILEIO, "Save back into file %s", filename.c_str());
+        LOG(LL_DEBUG, LCF_FILEIO, "Save back into file %s", filename.c_str());
         GlobalNative gn;
         lseek(fd, 0, SEEK_SET);
         int file_fd = creat(filename.c_str(), 00777);
@@ -324,7 +324,7 @@ int SaveFile::open(int flags)
                     /* Preallocate the file size to save time */
                     int ret = ftruncate(fd, filestat.st_size);
                     if (ret < 0) {
-                        debuglogstdio(LCF_FILEIO | LCF_ERROR, "Could not preallocate savefile %s with size %jd", filename.c_str(), filestat.st_size);
+                        LOG(LL_ERROR, LCF_FILEIO, "Could not preallocate savefile %s with size %jd", filename.c_str(), filestat.st_size);
                     }
                 
                     /* sendfile() can copy at most 2^31 bytes, so we need a loop
@@ -334,7 +334,7 @@ int SaveFile::open(int flags)
                         ssize_t ret = sendfile(fd, fd_file, &offset, filestat.st_size - offset);
                 
                         if (ret < 0) {
-                            debuglogstdio(LCF_FILEIO | LCF_ERROR, "Could not transfer file %s of size %jd to savefile", filename.c_str(), filestat.st_size);
+                            LOG(LL_ERROR, LCF_FILEIO, "Could not transfer file %s of size %jd to savefile", filename.c_str(), filestat.st_size);
                         }
                     }
                     close(fd_file);

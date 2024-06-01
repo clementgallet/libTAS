@@ -101,7 +101,7 @@ const UnityHacks::ScrollingBuffers& UnityHacks::getJobData()
 
 void UnityHacks::setUnity()
 {
-    debuglogstdio(LCF_HOOK, "   detected Unity engine");
+    LOG(LL_DEBUG, LCF_HOOK, "   detected Unity engine");
     unity = true;
 }
 
@@ -139,8 +139,8 @@ void UnityHacks::getExecutableMemory()
                 break;
         }
         
-        debuglogstdio(LCF_WARNING, "Game executable has non-default mapping! We found this:");
-        debuglogstdio(LCF_WARNING, "Region %p-%p (%s) with size %zu", area.addr, area.endAddr, area.name, area.size);
+        LOG(LL_WARN, LCF_WAIT, "Game executable has non-default mapping! We found this:");
+        LOG(LL_WARN, LCF_WAIT, "Region %p-%p (%s) with size %zu", area.addr, area.endAddr, area.name, area.size);
     }
 
     executableBase = reinterpret_cast<uintptr_t>(area.addr);
@@ -180,7 +180,7 @@ void UnityHacks::syncNotify()
     if (!first) {
         GlobalNative gn;
         std::lock_guard<decltype(unity_mutex)> lock(unity_mutex);
-        debuglogstdio(LCF_WAIT, "   Notifty the end of Unity job");
+        LOG(LL_DEBUG, LCF_WAIT, "   Notifty the end of Unity job");
         --unity_running_threads;
         /* TODO: a nonterminating thread that eventually finishes is not supported. */
         unity_condition.notify_all();
@@ -197,7 +197,7 @@ void UnityHacks::syncWait()
     ++unity_job_count;
     ThreadInfo* th = ThreadManager::getCurrentThread();
     th->unityJobCount++;
-    debuglogstdio(LCF_WAIT, "   Wait before running a Unity job");
+    LOG(LL_DEBUG, LCF_WAIT, "   Wait before running a Unity job");
     while (unity_running_threads > unity_nonterminating_threads) {
         
         if (Global::is_exiting)
@@ -219,12 +219,12 @@ void UnityHacks::syncWait()
 
             if ((unity_running_threads > unity_nonterminating_threads) &&
                 (unity_nonterminating_threads == old_unity_nonterminating_threads)) {                
-                debuglogstdio(LCF_WAIT, "   Increase Unity nonterminating thread count");
+                LOG(LL_DEBUG, LCF_WAIT, "   Increase Unity nonterminating thread count");
                 unity_nonterminating_threads++;
             }
         }
     }
-    debuglogstdio(LCF_WAIT, "   Start running a Unity job");
+    LOG(LL_DEBUG, LCF_WAIT, "   Start running a Unity job");
     --unity_waiting_threads;
     ++unity_running_threads;
 }
@@ -283,7 +283,7 @@ void UnityHacks::syncWaitAll()
      * ...
      */
     
-    debuglogstdio(LCF_WAIT, "   Wait that all Unity jobs finish");
+    LOG(LL_DEBUG, LCF_WAIT, "   Wait that all Unity jobs finish");
     unsigned int old_job_count = 0;
     unity_mutex.lock();
     int sleep_length = 200;
@@ -336,7 +336,7 @@ unsigned int (*futexWait)(int* x, int y, unsigned int z);
 static int futexWait(int* x, int y, unsigned int z)
 {
     ThreadInfo* thread = ThreadManager::getCurrentThread();
-    DEBUGLOGCALL(LCF_WAIT);
+    LOGTRACE(LCF_WAIT);
     if (thread->unityThread) {
         UnityHacks::syncNotify();
 

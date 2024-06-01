@@ -134,7 +134,7 @@ void pushNativeXlibEvents(Display *display)
         if (event.type == ClientMessage) {
             /* Catch the close event */
             if (static_cast<Atom>(event.xclient.data.l[0]) == x11_atom(WM_DELETE_WINDOW)) {
-                debuglogstdio(LCF_EVENTS | LCF_WINDOW, "    caught a window close event");
+                LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "    caught a window close event");
                 Global::is_exiting = true;
             }
 
@@ -142,7 +142,7 @@ void pushNativeXlibEvents(Display *display)
             if ((event.xclient.message_type == x11_atom(WM_PROTOCOLS)) &&
                 (static_cast<Atom>(event.xclient.data.l[0]) == x11_atom(_NET_WM_PING))) {
 
-                debuglogstdio(LCF_EVENTS | LCF_WINDOW, "Answering a ping message");
+                LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "Answering a ping message");
                 XEvent reply = event;
                 reply.xclient.window = DefaultRootWindow(display);
                 NATIVECALL(XSendEvent(display, DefaultRootWindow(display), False,
@@ -191,7 +191,7 @@ int XNextEvent(Display *display, XEvent *event_return)
         return orig::XNextEvent(display, event_return);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XNextEvent);
@@ -209,7 +209,7 @@ int XNextEvent(Display *display, XEvent *event_return)
         pushNativeXlibEvents(display);
     }
     if (!isEvent) {
-        debuglogstdio(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
+        LOG(LL_WARN, LCF_EVENTS, "    waited too long for an event");
     }
     return 0;
 }
@@ -221,7 +221,7 @@ int XPeekEvent(Display *display, XEvent *event_return)
         return orig::XPeekEvent(display, event_return);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XPeekEvent);
@@ -239,7 +239,7 @@ int XPeekEvent(Display *display, XEvent *event_return)
         pushNativeXlibEvents(display);
     }
     if (!isEvent) {
-        debuglogstdio(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
+        LOG(LL_WARN, LCF_EVENTS, "    waited too long for an event");
     }
     return 0;
 }
@@ -251,7 +251,7 @@ int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_retu
         return orig::XWindowEvent(display, w, event_mask, event_return);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XWindowEvent);
@@ -269,7 +269,7 @@ int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_retu
         pushNativeXlibEvents(display);
     }
     if (!isEvent) {
-        debuglogstdio(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
+        LOG(LL_WARN, LCF_EVENTS, "    waited too long for an event");
     }
     return 0;
 }
@@ -281,7 +281,7 @@ Bool XCheckWindowEvent(Display *display, Window w, long event_mask, XEvent *even
         return orig::XCheckWindowEvent(display, w, event_mask, event_return);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XCheckWindowEvent);
@@ -300,7 +300,7 @@ int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
         return orig::XMaskEvent(display, event_mask, event_return);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XMaskEvent);
@@ -318,7 +318,7 @@ int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
         pushNativeXlibEvents(display);
     }
     if (!isEvent) {
-        debuglogstdio(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
+        LOG(LL_WARN, LCF_EVENTS, "    waited too long for an event");
     }
     return 0;
 }
@@ -330,7 +330,7 @@ Bool XCheckMaskEvent(Display *display, long event_mask, XEvent *event_return)
         return orig::XCheckMaskEvent(display, event_mask, event_return);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XCheckMaskEvent);
@@ -353,7 +353,7 @@ Bool XCheckTypedEvent(Display *display, int event_type, XEvent *event_return)
         return orig::XCheckTypedEvent(display, event_type, event_return);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XCheckTypedEvent);
@@ -376,7 +376,7 @@ Bool XCheckTypedWindowEvent(Display *display, Window w, int event_type, XEvent *
         return orig::XCheckTypedWindowEvent(display, w, event_type, event_return);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XCheckTypedWindowEvent);
@@ -399,7 +399,7 @@ int XEventsQueued(Display* display, int mode)
         return orig::XEventsQueued(display, mode);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XEventsQueued);
@@ -408,7 +408,7 @@ int XEventsQueued(Display* display, int mode)
 
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
     int ret = queue->size();
-    debuglogstdio(LCF_EVENTS, "    returns %d", ret);
+    LOG(LL_DEBUG, LCF_EVENTS, "    returns %d", ret);
     if ((ret == 0) && (mode != QueuedAlready))
         pushNativeXlibEvents(display);
 
@@ -422,7 +422,7 @@ int XPending(Display *display)
         return orig::XPending(display);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XPending);
@@ -431,7 +431,7 @@ int XPending(Display *display)
 
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
     int ret = queue->size();
-    debuglogstdio(LCF_EVENTS, "    returns %d", ret);
+    LOG(LL_DEBUG, LCF_EVENTS, "    returns %d", ret);
     if (ret == 0)
         pushNativeXlibEvents(display);
     return ret;
@@ -444,7 +444,7 @@ int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *
         return orig::XIfEvent(display, event_return, predicate, arg);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XIfEvent);
@@ -466,7 +466,7 @@ int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *
             return 0;
     }
     if (!isEvent) {
-        debuglogstdio(LCF_EVENTS | LCF_ERROR, "    waited too long for an event");
+        LOG(LL_WARN, LCF_EVENTS, "    waited too long for an event");
     }
     return 0;
 }
@@ -478,7 +478,7 @@ Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Dis
         return orig::XCheckIfEvent(display, event_return, predicate, arg);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XCheckIfEvent);
@@ -499,7 +499,7 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
     if (GlobalState::isNative())
         return orig::XSendEvent(display, w, propagate, event_mask, event_send);
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     /* Detect and disable several window state changes */
     if (event_send->type == ClientMessage) {
@@ -508,9 +508,9 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
 
             /* Detect and disable fullscreen switching */
             if (static_cast<Atom>(event_send->xclient.data.l[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
-                debuglogstdio(LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
+                LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
                 if (!x11::gameXWindows.empty() && (event_send->xclient.window != x11::gameXWindows.front())) {
-                    debuglogstdio(LCF_EVENTS | LCF_WINDOW | LCF_WARNING, "   fullscreen window is not game window!");
+                    LOG(LL_WARN, LCF_EVENTS | LCF_WINDOW, "   fullscreen window is not game window!");
                 }
 
                 /* Resize the window to the screen or fake resolution */
@@ -528,7 +528,7 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
 
             /* Detect and disable window always on top */
             if (static_cast<Atom>(event_send->xclient.data.l[1]) == x11_atom(_NET_WM_STATE_ABOVE)) {
-                debuglogstdio(LCF_EVENTS | LCF_WINDOW, "   prevented window always on top");
+                LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "   prevented window always on top");
                 return 0;
             }
         }
@@ -544,7 +544,7 @@ Bool XFilterEvent(XEvent *event, Window w)
         return orig::XFilterEvent(event, w);
     }
     
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
     /* This is used when using composition, but we don't support it.
      * In the meanwhile, we disable it completely. Users that want to input
      * special characters can map in libTAS a key to that character.
@@ -559,7 +559,7 @@ int XFlush(Display *display)
         return orig::XFlush(display);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XFlush);
@@ -578,7 +578,7 @@ int XSync(Display *display, Bool discard)
         return orig::XSync(display, discard);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return orig::XSync(display, discard);
@@ -596,7 +596,7 @@ Bool XGetEventData(Display* dpy, XGenericEventCookie* cookie)
         return orig::XGetEventData(dpy, cookie);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XGetEventData);
@@ -620,7 +620,7 @@ void XFreeEventData(Display* dpy, XGenericEventCookie* cookie)
         return orig::XFreeEventData(dpy, cookie);
     }
 
-    DEBUGLOGCALL(LCF_EVENTS);
+    LOGTRACE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XFreeEventData);
@@ -664,100 +664,100 @@ void XFreeEventData(Display* dpy, XGenericEventCookie* cookie)
 /* Show informations about an xevent */
 static void debugEvent(XEvent *event)
 {
-    debuglogstdio(LCF_EVENTS, "Debug event %p:", event);
+    LOG(LL_DEBUG, LCF_EVENTS, "Debug event %p:", event);
     if (!event) return;
 
-    debuglogstdio(LCF_EVENTS, "| Generic information");
+    LOG(LL_DEBUG, LCF_EVENTS, "| Generic information");
     
-    debuglogstdio(LCF_EVENTS, "| | type: %d", event->type);
-    debuglogstdio(LCF_EVENTS, "| | serial: %d", event->xany.serial);
-    debuglogstdio(LCF_EVENTS, "| | send_event: %d", event->xany.send_event);
-    debuglogstdio(LCF_EVENTS, "| | display: %p", event->xany.display);
-    debuglogstdio(LCF_EVENTS, "| |_window: %d", event->xany.window);
+    LOG(LL_DEBUG, LCF_EVENTS, "| | type: %d", event->type);
+    LOG(LL_DEBUG, LCF_EVENTS, "| | serial: %d", event->xany.serial);
+    LOG(LL_DEBUG, LCF_EVENTS, "| | send_event: %d", event->xany.send_event);
+    LOG(LL_DEBUG, LCF_EVENTS, "| | display: %p", event->xany.display);
+    LOG(LL_DEBUG, LCF_EVENTS, "| |_window: %d", event->xany.window);
 
-    debuglogstdio(LCF_EVENTS, "| Specific information");
+    LOG(LL_DEBUG, LCF_EVENTS, "| Specific information");
     switch(event->type) {
         case KeyPress:
         case KeyRelease:
             if (event->type == KeyPress)
-                debuglogstdio(LCF_EVENTS, "| | type: KeyPress");
+                LOG(LL_DEBUG, LCF_EVENTS, "| | type: KeyPress");
             else
-                debuglogstdio(LCF_EVENTS, "| | type: KeyRelease");
-            debuglogstdio(LCF_EVENTS, "| | root: %d", event->xkey.root);
-            debuglogstdio(LCF_EVENTS, "| | subwindow: %d", event->xkey.subwindow);
-            debuglogstdio(LCF_EVENTS, "| | time: %d", event->xkey.time);
-            debuglogstdio(LCF_EVENTS, "| | x: %d", event->xkey.x);
-            debuglogstdio(LCF_EVENTS, "| | y: %d", event->xkey.y);
-            debuglogstdio(LCF_EVENTS, "| | x_root: %d", event->xkey.x_root);
-            debuglogstdio(LCF_EVENTS, "| | y_root: %d", event->xkey.y_root);
-            debuglogstdio(LCF_EVENTS, "| | state: %u", event->xkey.state);
-            debuglogstdio(LCF_EVENTS, "| | keycode: %u", event->xkey.keycode);
-            debuglogstdio(LCF_EVENTS, "| |_same_screen: %d", event->xkey.same_screen);
+                LOG(LL_DEBUG, LCF_EVENTS, "| | type: KeyRelease");
+            LOG(LL_DEBUG, LCF_EVENTS, "| | root: %d", event->xkey.root);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | subwindow: %d", event->xkey.subwindow);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | time: %d", event->xkey.time);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | x: %d", event->xkey.x);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | y: %d", event->xkey.y);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | x_root: %d", event->xkey.x_root);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | y_root: %d", event->xkey.y_root);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | state: %u", event->xkey.state);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | keycode: %u", event->xkey.keycode);
+            LOG(LL_DEBUG, LCF_EVENTS, "| |_same_screen: %d", event->xkey.same_screen);
             break;
         case ButtonPress:
         case ButtonRelease:
             if (event->type == ButtonPress)
-                debuglogstdio(LCF_EVENTS, "| | type: ButtonPress");
+                LOG(LL_DEBUG, LCF_EVENTS, "| | type: ButtonPress");
             else
-                debuglogstdio(LCF_EVENTS, "| | type: ButtonRelease");
-            debuglogstdio(LCF_EVENTS, "| | root: %d", event->xbutton.root);
-            debuglogstdio(LCF_EVENTS, "| | subwindow: %d", event->xbutton.subwindow);
-            debuglogstdio(LCF_EVENTS, "| | time: %d", event->xbutton.time);
-            debuglogstdio(LCF_EVENTS, "| | x: %d", event->xbutton.x);
-            debuglogstdio(LCF_EVENTS, "| | y: %d", event->xbutton.y);
-            debuglogstdio(LCF_EVENTS, "| | x_root: %d", event->xbutton.x_root);
-            debuglogstdio(LCF_EVENTS, "| | y_root: %d", event->xbutton.y_root);
-            debuglogstdio(LCF_EVENTS, "| | state: %u", event->xbutton.state);
-            debuglogstdio(LCF_EVENTS, "| | button: %u", event->xbutton.button);
-            debuglogstdio(LCF_EVENTS, "| |_same_screen: %d", event->xbutton.same_screen);
+                LOG(LL_DEBUG, LCF_EVENTS, "| | type: ButtonRelease");
+            LOG(LL_DEBUG, LCF_EVENTS, "| | root: %d", event->xbutton.root);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | subwindow: %d", event->xbutton.subwindow);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | time: %d", event->xbutton.time);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | x: %d", event->xbutton.x);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | y: %d", event->xbutton.y);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | x_root: %d", event->xbutton.x_root);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | y_root: %d", event->xbutton.y_root);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | state: %u", event->xbutton.state);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | button: %u", event->xbutton.button);
+            LOG(LL_DEBUG, LCF_EVENTS, "| |_same_screen: %d", event->xbutton.same_screen);
             break;
         case MotionNotify:
-            debuglogstdio(LCF_EVENTS, "| | type: MotionNotify");
-            debuglogstdio(LCF_EVENTS, "| | root: %d", event->xmotion.root);
-            debuglogstdio(LCF_EVENTS, "| | subwindow: %d", event->xmotion.subwindow);
-            debuglogstdio(LCF_EVENTS, "| | time: %d", event->xmotion.time);
-            debuglogstdio(LCF_EVENTS, "| | x: %d", event->xmotion.x);
-            debuglogstdio(LCF_EVENTS, "| | y: %d", event->xmotion.y);
-            debuglogstdio(LCF_EVENTS, "| | x_root: %d", event->xmotion.x_root);
-            debuglogstdio(LCF_EVENTS, "| | y_root: %d", event->xmotion.y_root);
-            debuglogstdio(LCF_EVENTS, "| | state: %u", event->xmotion.state);
-            debuglogstdio(LCF_EVENTS, "| | is_hint: %d", event->xmotion.is_hint);
-            debuglogstdio(LCF_EVENTS, "| |_same_screen: %d", event->xmotion.same_screen);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | type: MotionNotify");
+            LOG(LL_DEBUG, LCF_EVENTS, "| | root: %d", event->xmotion.root);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | subwindow: %d", event->xmotion.subwindow);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | time: %d", event->xmotion.time);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | x: %d", event->xmotion.x);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | y: %d", event->xmotion.y);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | x_root: %d", event->xmotion.x_root);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | y_root: %d", event->xmotion.y_root);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | state: %u", event->xmotion.state);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | is_hint: %d", event->xmotion.is_hint);
+            LOG(LL_DEBUG, LCF_EVENTS, "| |_same_screen: %d", event->xmotion.same_screen);
             break;
         case GenericEvent:
-            debuglogstdio(LCF_EVENTS, "| | type: GenericEvent");
-            debuglogstdio(LCF_EVENTS, "| | extension: %d", event->xgeneric.extension);
-            debuglogstdio(LCF_EVENTS, "| |_evtype: %d", event->xgeneric.evtype);
+            LOG(LL_DEBUG, LCF_EVENTS, "| | type: GenericEvent");
+            LOG(LL_DEBUG, LCF_EVENTS, "| | extension: %d", event->xgeneric.extension);
+            LOG(LL_DEBUG, LCF_EVENTS, "| |_evtype: %d", event->xgeneric.evtype);
             break;
         case FocusIn:
-            debuglogstdio(LCF_EVENTS, "| | type: FocusIn");
+            LOG(LL_DEBUG, LCF_EVENTS, "| | type: FocusIn");
             break;
         case FocusOut:
-            debuglogstdio(LCF_EVENTS, "| | type: FocusOut");
+            LOG(LL_DEBUG, LCF_EVENTS, "| | type: FocusOut");
             break;
         case Expose:
-            debuglogstdio(LCF_EVENTS, "| | type: Expose");
+            LOG(LL_DEBUG, LCF_EVENTS, "| | type: Expose");
             break;
         case EnterNotify:
-            debuglogstdio(LCF_EVENTS, "| | type: EnterNotify");
+            LOG(LL_DEBUG, LCF_EVENTS, "| | type: EnterNotify");
             break;
         case LeaveNotify:
-            debuglogstdio(LCF_EVENTS, "| | type: LeaveNotify");
+            LOG(LL_DEBUG, LCF_EVENTS, "| | type: LeaveNotify");
             break;
         case PropertyNotify:
-            debuglogstdio(LCF_EVENTS, "| | type: PropertyNotify");
+            LOG(LL_DEBUG, LCF_EVENTS, "| | type: PropertyNotify");
             break;
         case ReparentNotify:
-            debuglogstdio(LCF_EVENTS, "| | type: ReparentNotify");
+            LOG(LL_DEBUG, LCF_EVENTS, "| | type: ReparentNotify");
             break;
         case ConfigureNotify:
-            debuglogstdio(LCF_EVENTS, "| | type: ConfigureNotify");
+            LOG(LL_DEBUG, LCF_EVENTS, "| | type: ConfigureNotify");
             break;
         case ClientMessage:
-            debuglogstdio(LCF_EVENTS, "| | type: ClientMessage");
+            LOG(LL_DEBUG, LCF_EVENTS, "| | type: ClientMessage");
             break;
     }    
-    debuglogstdio(LCF_EVENTS, "|___");
+    LOG(LL_DEBUG, LCF_EVENTS, "|___");
 }
 
 }

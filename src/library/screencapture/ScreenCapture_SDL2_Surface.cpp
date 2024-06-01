@@ -89,37 +89,37 @@ const char* ScreenCapture_SDL2_Surface::getPixelFormat()
     Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
     switch (sdlpixfmt) {
         case SDL_PIXELFORMAT_RGBA8888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  RGBA");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGBA");
             return "BGRA";
         case SDL_PIXELFORMAT_BGRA8888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  BGRA");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGRA");
             return "RGBA";
         case SDL_PIXELFORMAT_ARGB8888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  ARGB");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  ARGB");
             return "ABGR";
         case SDL_PIXELFORMAT_ABGR8888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  ABGR");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  ABGR");
             return "ARGB";
         case SDL_PIXELFORMAT_RGB888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  RGB888");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGB888");
             return "BGR\0";
         case SDL_PIXELFORMAT_RGBX8888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  RGBX8888");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGBX8888");
             return "\0BGR";
         case SDL_PIXELFORMAT_BGR888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  BGR888");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGR888");
             return "RGB\0";
         case SDL_PIXELFORMAT_BGRX8888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  BGRX8888");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGRX8888");
             return "\0RGB";
         case SDL_PIXELFORMAT_RGB24:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  RGB24");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGB24");
             return "24BG";
         case SDL_PIXELFORMAT_BGR24:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  BGR24");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGR24");
             return "RAW ";
         default:
-            debuglogstdio(LCF_DUMP | LCF_SDL | LCF_ERROR, "  Unsupported pixel format %d", sdlpixfmt);
+            LOG(LL_ERROR, LCF_DUMP | LCF_SDL, "  Unsupported pixel format %d", sdlpixfmt);
     }
 
     return "RGBA";
@@ -129,7 +129,7 @@ int ScreenCapture_SDL2_Surface::copyScreenToSurface()
 {
     GlobalNative gn;
 
-    debuglogstdio(LCF_DUMP, "Access SDL_Surface pixels for video dump");
+    LOG(LL_DEBUG, LCF_DUMP, "Access SDL_Surface pixels for video dump");
 
     LINK_NAMESPACE_SDL2(SDL_GetWindowSurface);
     LINK_NAMESPACE_SDL2(SDL_UpperBlit);
@@ -141,7 +141,7 @@ int ScreenCapture_SDL2_Surface::copyScreenToSurface()
     int cw = surf2->w;
     int ch = surf2->h;
     if ((cw != width) || (ch != height)) {
-        debuglogstdio(LCF_DUMP | LCF_ERROR, "Window coords have changed (%d,%d) -> (%d,%d)", width, height, cw, ch);
+        LOG(LL_ERROR, LCF_DUMP, "Window coords have changed (%d,%d) -> (%d,%d)", width, height, cw, ch);
         return -1;
     }
 
@@ -186,7 +186,7 @@ int ScreenCapture_SDL2_Surface::copySurfaceToScreen()
     LINK_NAMESPACE_SDL2(SDL_GetClipRect);
     LINK_NAMESPACE_SDL2(SDL_SetClipRect);
 
-    debuglogstdio(LCF_DUMP, "Set SDL1_Surface pixels");
+    LOG(LL_DEBUG, LCF_DUMP, "Set SDL1_Surface pixels");
 
     /* Get surface from window */
     SDL_Surface* surf2 = orig::SDL_GetWindowSurface(sdl::gameSDLWindow);

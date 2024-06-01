@@ -53,7 +53,7 @@ DIR *__DARWIN_ALIAS_I_STR(opendir) (const char *name)
     if (GlobalState::isNative())
         return d;
 
-    debuglogstdio(LCF_FILEIO, "%s call with dir %s", __func__, name);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with dir %s", __func__, name);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return d;
@@ -72,7 +72,7 @@ DIR *__DARWIN_ALIAS_I_STR(opendir) (const char *name)
         }
     }
     if (i == DIROFF_SIZE) {
-        debuglogstdio(LCF_FILEIO | LCF_ERROR, "   could not register dir, not enough space");
+        LOG(LL_ERROR, LCF_FILEIO, "   could not register dir, not enough space");
     }
     
     return d;
@@ -87,7 +87,7 @@ DIR *__DARWIN_ALIAS_I_STR(fdopendir) (int fd)
     if (GlobalState::isNative())
         return d;
 
-    debuglogstdio(LCF_FILEIO, "%s call with fd %d", __func__, fd);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return d;
@@ -111,14 +111,14 @@ DIR *__DARWIN_ALIAS_I_STR(fdopendir) (int fd)
                 dirpath[i] = buf;            
             }
             else {
-                debuglogstdio(LCF_FILEIO | LCF_ERROR, "   could not get path from fd");
+                LOG(LL_ERROR, LCF_FILEIO, "   could not get path from fd");
                 dird[i] = 0;
             }
             break;
         }
     }
     if (i == DIROFF_SIZE) {
-        debuglogstdio(LCF_FILEIO | LCF_ERROR, "   could not register dir, not enough space");
+        LOG(LL_ERROR, LCF_FILEIO, "   could not register dir, not enough space");
     }
     
     return d;    
@@ -133,7 +133,7 @@ int __DARWIN_ALIAS_STR(closedir) (DIR *dirp)
     if (GlobalState::isNative())
         return ret;
 
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return ret;
@@ -151,7 +151,7 @@ int __DARWIN_ALIAS_STR(closedir) (DIR *dirp)
         }
     }
     if (i == DIROFF_SIZE && ret == 0) {
-        debuglogstdio(LCF_FILEIO | LCF_ERROR, "   could not unregister dir");
+        LOG(LL_ERROR, LCF_FILEIO, "   could not unregister dir");
     }
     
     return ret;
@@ -166,7 +166,7 @@ struct dirent *__DARWIN_INODE64_STR(readdir) (DIR *dirp)
     if (GlobalState::isNative())
         return orig::__DARWIN_INODE64_STR(readdir)(dirp);
 
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::__DARWIN_INODE64_STR(readdir)(dirp);
@@ -222,7 +222,7 @@ struct dirent64 *readdir64 (DIR *dirp)
     if (GlobalState::isNative())
         return orig::readdir64(dirp);
 
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::readdir64(dirp);
@@ -276,7 +276,7 @@ int __DARWIN_INODE64_STR(readdir_r) (DIR *dirp, struct dirent *entry, struct dir
     if (GlobalState::isNative())
         return orig::__DARWIN_INODE64_STR(readdir_r)(dirp, entry, result);
 
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::__DARWIN_INODE64_STR(readdir_r)(dirp, entry, result);
@@ -309,7 +309,7 @@ int __DARWIN_INODE64_STR(readdir_r) (DIR *dirp, struct dirent *entry, struct dir
                 strncpy(entry->d_name, filename.c_str(), 255);
                 *result = entry;
                 diri[i]++;
-                debuglogstdio(LCF_FILEIO, "   return savefile %s", entry->d_name);
+                LOG(LL_DEBUG, LCF_FILEIO, "   return savefile %s", entry->d_name);
                 return 0;
             }
             else {
@@ -332,7 +332,7 @@ int readdir64_r (DIR *dirp, struct dirent64 *entry, struct dirent64 **result)
     if (GlobalState::isNative())
         return orig::readdir64_r(dirp, entry, result);
 
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::readdir64_r(dirp, entry, result); 

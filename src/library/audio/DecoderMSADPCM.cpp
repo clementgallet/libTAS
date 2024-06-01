@@ -137,7 +137,7 @@ void DecoderMSADPCM::toPCM(BinaryIStream &source, int nbChannels, int sampleAlig
             }
         }
     } else {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "MSADPCM data is not mono or stereo");
+        LOG(LL_ERROR, LCF_SOUND, "MSADPCM data is not mono or stereo");
     }
 }
 

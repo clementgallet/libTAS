@@ -29,6 +29,7 @@ class QRadioButton;
 class QSpinBox;
 class ToolTipCheckBox;
 class QGroupBox;
+class QSlider;
 
 class DebugPane : public QWidget {
     Q_OBJECT
@@ -57,11 +58,8 @@ private:
 
     QComboBox* logToChoice;
 
+    QSlider* logLevelSlider;
     QCheckBox* logPrintMainBox;
-    QCheckBox* logPrintFrequentBox;
-    QCheckBox* logPrintErrorBox;
-    QCheckBox* logPrintWarningBox;
-    QCheckBox* logPrintInfoBox;
     QCheckBox* logPrintTODOBox;
     QCheckBox* logPrintAVBox;
     QCheckBox* logPrintCheckpointBox;
@@ -89,12 +87,6 @@ private:
     QCheckBox* logPrintWindowsBox;
     QCheckBox* logPrintWineBox;
     
-    QCheckBox* logExcludeMainBox;
-    QCheckBox* logExcludeFrequentBox;
-    QCheckBox* logExcludeErrorBox;
-    QCheckBox* logExcludeWarningBox;
-    QCheckBox* logExcludeInfoBox;
-    QCheckBox* logExcludeTODOBox;
     QCheckBox* logExcludeAVBox;
     QCheckBox* logExcludeCheckpointBox;
     QCheckBox* logExcludeEventsBox;

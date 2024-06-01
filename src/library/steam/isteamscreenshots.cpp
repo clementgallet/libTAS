@@ -25,53 +25,53 @@ namespace libtas {
 
 ScreenshotHandle ISteamScreenshots::WriteScreenshot( void *pubRGB, uint32_t cubRGB, int nWidth, int nHeight )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return 1;
 }
 
 ScreenshotHandle ISteamScreenshots::AddScreenshotToLibrary( const char *pchFilename, const char *pchThumbnailFilename, int nWidth, int nHeight )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return 1;
 }
 
 void ISteamScreenshots::TriggerScreenshot()
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 }
 
 void ISteamScreenshots::HookScreenshots( bool bHook )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 }
 
 bool ISteamScreenshots::SetLocation( ScreenshotHandle hScreenshot, const char *pchLocation )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return true;
 }
 
 bool ISteamScreenshots::TagUser( ScreenshotHandle hScreenshot, CSteamID steamID )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return true;
 }
 
 bool ISteamScreenshots::TagPublishedFile( ScreenshotHandle hScreenshot, PublishedFileId_t unPublishedFileID )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return true;
 }
 
 bool ISteamScreenshots::IsScreenshotsHooked()
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return true;
 }
 
 ScreenshotHandle ISteamScreenshots::AddVRScreenshotToLibrary( EVRScreenshotType eType, const char *pchFilename, const char *pchVRFilename )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return 1;
 }
 

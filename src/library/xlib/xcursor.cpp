@@ -26,7 +26,7 @@ namespace libtas {
 
 OVERRIDE Cursor XcursorLibraryLoadCursor (Display *dpy, const char *file)
 {
-    DEBUGLOGCALL(LCF_WINDOW | LCF_MOUSE);
+    LOGTRACE(LCF_WINDOW | LCF_MOUSE);
     /* Ruffle calls this, but it crashes when called multiple times (due to
      * savestates). Because we already noop XDefineCursor, we can return 0 here */
     return 0;    

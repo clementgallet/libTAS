@@ -217,7 +217,7 @@ static void* allocate_nearby_segment()
     void* obtainedAddr = mmap(nullptr, 0x1000, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_32BIT, 0, 0);
     
     if (obtainedAddr == MAP_FAILED) {
-        debuglogstdio(LCF_HOOK, "  Could not obtain a memory segment for hookpatch functions, error %d", errno);
+        LOG(LL_DEBUG, LCF_HOOK, "  Could not obtain a memory segment for hookpatch functions, error %d", errno);
         return nullptr;
     }
     
@@ -242,11 +242,11 @@ static int compute_overwrite_offset(const unsigned char* pOrig)
         for (int off = old_offset; off < offset; off++) {
             oss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(pOrig + off)) << " ";
         }
-        debuglogstdio(LCF_HOOK, "  Found instruction %s", oss.str().c_str());
+        LOG(LL_DEBUG, LCF_HOOK, "  Found instruction %s", oss.str().c_str());
         
         old_offset = offset;
     }
-    debuglogstdio(LCF_HOOK, "  Saving instructions of length %d", offset);
+    LOG(LL_DEBUG, LCF_HOOK, "  Saving instructions of length %d", offset);
     return offset;
 }
 
@@ -277,7 +277,7 @@ static void write_tramp_function(const void *orig_fun, void **pTramp)
     int offset = compute_overwrite_offset(pOrig);
     
     /* Overwrite the trampoline function */
-    debuglogstdio(LCF_HOOK, "  Building our trampoline function in %p", currentTrampAddr);
+    LOG(LL_DEBUG, LCF_HOOK, "  Building our trampoline function in %p", currentTrampAddr);
     
     /* Write each instruction of the original function that we will overwrite,
      * and update instructions with relative addresses. Our trampoline function
@@ -327,7 +327,7 @@ static void write_tramp_function(const void *orig_fun, void **pTramp)
                         break;
                 }
                 
-                debuglogstdio(LCF_HOOK, "  Found instruction with rel addr %p", (*reinterpret_cast<const int*>(pOrig+cur_offset+off_to_rel)));
+                LOG(LL_DEBUG, LCF_HOOK, "  Found instruction with rel addr %p", (*reinterpret_cast<const int*>(pOrig+cur_offset+off_to_rel)));
 
                 /* Write the instruction and just change the offset to
                  * the new offset between our function and the call target. */
@@ -335,16 +335,16 @@ static void write_tramp_function(const void *orig_fun, void **pTramp)
                 currentTrampAddr += off_to_rel;
 
                 const unsigned char* target_addr = pOrig + cur_offset + instr_len + (*reinterpret_cast<const int*>(pOrig+cur_offset+off_to_rel));
-                debuglogstdio(LCF_HOOK, "  Absolute addr becomes %p", target_addr);
+                LOG(LL_DEBUG, LCF_HOOK, "  Absolute addr becomes %p", target_addr);
                 
                 ptrdiff_t new_offset = reinterpret_cast<ptrdiff_t>(target_addr) - reinterpret_cast<ptrdiff_t>(currentTrampAddr) - 4;
                 /* Check if it fits into signed 32-bit */
                 if (new_offset < INT32_MIN || new_offset > INT32_MAX) {
-                    debuglogstdio(LCF_HOOK | LCF_ERROR, "  Could not modify CALL instruction, offset too large: %lld", new_offset);
+                    LOG(LL_ERROR, LCF_HOOK, "  Could not modify CALL instruction, offset too large: %lld", new_offset);
                 }
                 int32_t new_offset_32 = static_cast<int32_t>(new_offset);
 
-                debuglogstdio(LCF_HOOK, "  New relative addr becomes %x", new_offset_32);
+                LOG(LL_DEBUG, LCF_HOOK, "  New relative addr becomes %x", new_offset_32);
 
                 memcpy(currentTrampAddr, &new_offset_32, 4);
                 currentTrampAddr += 4;
@@ -355,7 +355,7 @@ static void write_tramp_function(const void *orig_fun, void **pTramp)
                 for (int i = 0; i < 4; i++) {
                     oss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(currentTrampAddr-4+i)) << " ";
                 }
-                debuglogstdio(LCF_HOOK, "  Write modified instruction %s", oss.str().c_str());
+                LOG(LL_DEBUG, LCF_HOOK, "  Write modified instruction %s", oss.str().c_str());
 
                 break;
             }
@@ -378,14 +378,14 @@ static void write_tramp_function(const void *orig_fun, void **pTramp)
             case 0x7f:
             case 0xe3:
             {
-                debuglogstdio(LCF_HOOK, "  Found conditional jump instruction %p to rel addr %p", *(pOrig+cur_offset), (*(pOrig+cur_offset+1)));
+                LOG(LL_DEBUG, LCF_HOOK, "  Found conditional jump instruction %p to rel addr %p", *(pOrig+cur_offset), (*(pOrig+cur_offset+1)));
 
                 jmp_info info;
                 info.target_addr = pOrig + cur_offset + instr_len + (*reinterpret_cast<const int8_t*>(pOrig+cur_offset+1));
                 info.offset_addr = currentTrampAddr + 1;
                 jmp_list.push_back(info);
 
-                debuglogstdio(LCF_HOOK, "  Absolute addr becomes %p", info.target_addr);
+                LOG(LL_DEBUG, LCF_HOOK, "  Absolute addr becomes %p", info.target_addr);
 
                 /* Write the same conditional jump, but later change the offset
                  * so that it jumps to another jump
@@ -402,7 +402,7 @@ static void write_tramp_function(const void *orig_fun, void **pTramp)
                 for (int i = 0; i < instr_len; i++) {
                     oss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(pOrig+cur_offset+i)) << " ";
                 }
-                debuglogstdio(LCF_HOOK, "  Write unmodified instruction %s", oss.str().c_str());
+                LOG(LL_DEBUG, LCF_HOOK, "  Write unmodified instruction %s", oss.str().c_str());
 
                 break;
         }
@@ -446,7 +446,7 @@ static void write_tramp_function(const void *orig_fun, void **pTramp)
 void overwrite_orig_function(void *orig_fun, void* my_function)
 {
     /* Overwrite the original function */
-    debuglogstdio(LCF_HOOK, "  Overwriting the native function in %p", orig_fun);
+    LOG(LL_DEBUG, LCF_HOOK, "  Overwriting the native function in %p", orig_fun);
 
     char *pTarget = reinterpret_cast<char *>(orig_fun);
     uintptr_t addrTarget = reinterpret_cast<uintptr_t>(pTarget);
@@ -479,7 +479,7 @@ void hook_patch(const char* name, const char* library, void** tramp_function, vo
         std::string libpath = find_lib(library);
         
         if (libpath.empty()) {
-            debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not find %s path", library);
+            LOG(LL_ERROR, LCF_HOOK, "Could not find %s path", library);
             return;
         }
 
@@ -490,7 +490,7 @@ void hook_patch(const char* name, const char* library, void** tramp_function, vo
     NATIVECALL(handle = dlopen(libpathstr, RTLD_LAZY));
 
     if (!handle) {
-        debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not load %s", library);
+        LOG(LL_ERROR, LCF_HOOK, "Could not load %s", library);
         return;
     }
 
@@ -520,7 +520,7 @@ void hook_patch(const char* name, const char* library, void** tramp_function, vo
     if (!orig_fun)
         return;
 
-    debuglogstdio(LCF_HOOK, "Patching function %s", name);
+    LOG(LL_DEBUG, LCF_HOOK, "Patching function %s", name);
 
     hook_patch_addr(orig_fun, tramp_function, my_function);
 }

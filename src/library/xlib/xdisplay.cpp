@@ -34,14 +34,14 @@ Display* x11::gameDisplays[GAMEDISPLAYNUM] = {};
 
 Display *XOpenDisplay(const char *display_name)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
     LINK_NAMESPACE_GLOBAL(XOpenDisplay);
 
     Display* display;
     OWNCALL(display = orig::XOpenDisplay(display_name));
 
     if (!display) {
-        debuglogstdio(LCF_WINDOW | LCF_ERROR, "Could not open X connection to %s", display_name ? display_name : "$DISPLAY");
+        LOG(LL_ERROR, LCF_WINDOW, "Could not open X connection to %s", display_name ? display_name : "$DISPLAY");
         return nullptr;
     }
 
@@ -53,7 +53,7 @@ Display *XOpenDisplay(const char *display_name)
         }
     }
     if (i == GAMEDISPLAYNUM) {
-        debuglogstdio(LCF_WINDOW | LCF_ERROR, "   Reached the limit of registered X connections");
+        LOG(LL_ERROR, LCF_WINDOW, "   Reached the limit of registered X connections");
     }
 
     /* Initialize atoms */
@@ -67,7 +67,7 @@ Display *XOpenDisplay(const char *display_name)
 
 int XCloseDisplay(Display *display)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
 
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i] == display) {
@@ -84,7 +84,7 @@ int XCloseDisplay(Display *display)
 
 int XDisplayHeight(Display* display, int screen_number)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
 
     if (Global::shared_config.screen_height) {
         return Global::shared_config.screen_height;
@@ -95,7 +95,7 @@ int XDisplayHeight(Display* display, int screen_number)
 
 int XDisplayWidth(Display* display, int screen_number)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
 
     if (Global::shared_config.screen_width) {
         return Global::shared_config.screen_width;

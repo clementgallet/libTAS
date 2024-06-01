@@ -34,24 +34,24 @@ static std::vector<std::string> actionSets, digitalActions, analogActions;
 
 bool ISteamController::Init()
 {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK);
     return true;
 }
 
 bool ISteamController::Shutdown()
 {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK);
     return true;
 }
 
 void ISteamController::RunFrame()
 {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK);
 }
 
 int ISteamController::GetConnectedControllers( ControllerHandle_t *handlesOut )
 {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK);
     if (handlesOut) {
         for (int i = 0; i < Global::shared_config.nb_controllers; i++)
             handlesOut[i] = i + 1;
@@ -61,14 +61,14 @@ int ISteamController::GetConnectedControllers( ControllerHandle_t *handlesOut )
 
 bool ISteamController::ShowBindingPanel( ControllerHandle_t controllerHandle )
 {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK);
     /* Return false to indicate that we are not in Big Picture Mode. */
     return false;
 }
 
 ControllerActionSetHandle_t ISteamController::GetActionSetHandle( const char *pszActionSetName )
 {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK);
     for (unsigned i = 0; i < actionSets.size(); i++)
         if (actionSets[i] == pszActionSetName)
             return i + 1;
@@ -78,7 +78,7 @@ ControllerActionSetHandle_t ISteamController::GetActionSetHandle( const char *ps
 
 void ISteamController::ActivateActionSet( ControllerHandle_t controllerHandle, ControllerActionSetHandle_t actionSetHandle )
 {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK);
     if (controllerHandle - 1 < ControllerHandle_t(Global::shared_config.nb_controllers))
         controllerActionSets[controllerHandle - 1] = actionSetHandle;
     else if (controllerHandle == STEAM_CONTROLLER_HANDLE_ALL_CONTROLLERS)
@@ -88,14 +88,14 @@ void ISteamController::ActivateActionSet( ControllerHandle_t controllerHandle, C
 
 ControllerActionSetHandle_t ISteamController::GetCurrentActionSet( ControllerHandle_t controllerHandle )
 {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK);
     if (controllerHandle - 1 >= ControllerHandle_t(Global::shared_config.nb_controllers))
         return 0;
     return controllerActionSets[controllerHandle - 1];
 }
 
 ControllerDigitalActionHandle_t ISteamController::GetDigitalActionHandle( const char *pszActionName ) {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK);
     for (unsigned i = 0; i < digitalActions.size(); i++)
         if (digitalActions[i] == pszActionName)
             return i + 1;
@@ -104,7 +104,7 @@ ControllerDigitalActionHandle_t ISteamController::GetDigitalActionHandle( const 
 }
 
 ControllerDigitalActionData_t ISteamController::GetDigitalActionData( ControllerHandle_t controllerHandle, ControllerDigitalActionHandle_t digitalActionHandle ) {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK);
     ControllerDigitalActionData_t data;
     data.bState = false;
     data.bActive = false;
@@ -150,7 +150,7 @@ ControllerDigitalActionData_t ISteamController::GetDigitalActionData( Controller
 }
 
 int ISteamController::GetDigitalActionOrigins( ControllerHandle_t controllerHandle, ControllerActionSetHandle_t actionSetHandle, ControllerDigitalActionHandle_t digitalActionHandle, EControllerActionOrigin *originsOut ) {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK);
     if (controllerHandle - 1 >= ControllerHandle_t(Global::shared_config.nb_controllers) ||
         actionSetHandle - 1 >= actionSets.size() ||
         digitalActionHandle - 1 >= digitalActions.size())
@@ -193,7 +193,7 @@ int ISteamController::GetDigitalActionOrigins( ControllerHandle_t controllerHand
 }
 
 ControllerAnalogActionHandle_t ISteamController::GetAnalogActionHandle( const char *pszActionName ) {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK);
     for (unsigned i = 0; i < analogActions.size(); i++)
         if (analogActions[i] == pszActionName)
             return i + 1;
@@ -202,7 +202,7 @@ ControllerAnalogActionHandle_t ISteamController::GetAnalogActionHandle( const ch
 }
 
 ControllerAnalogActionData_t ISteamController::GetAnalogActionData( ControllerHandle_t controllerHandle, ControllerAnalogActionHandle_t analogActionHandle ) {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK);
     ControllerAnalogActionData_t data;
     data.eMode = k_EControllerSourceMode_None;
     data.x = data.y = 0.0f;
@@ -230,7 +230,7 @@ ControllerAnalogActionData_t ISteamController::GetAnalogActionData( ControllerHa
 }
 
 int ISteamController::GetAnalogActionOrigins( ControllerHandle_t controllerHandle, ControllerActionSetHandle_t actionSetHandle, ControllerAnalogActionHandle_t analogActionHandle, EControllerActionOrigin *originsOut ) {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK);
     if (controllerHandle - 1 >= ControllerHandle_t(Global::shared_config.nb_controllers) ||
         actionSetHandle  - 1 > actionSets.size() ||
         analogActionHandle - 1 >= analogActions.size())
@@ -249,11 +249,11 @@ int ISteamController::GetAnalogActionOrigins( ControllerHandle_t controllerHandl
 }
 
 void ISteamController::StopAnalogActionMomentum( ControllerHandle_t controllerHandle, ControllerAnalogActionHandle_t eAction ) {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK | LCF_TODO);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK | LCF_TODO);
 }
 
 void ISteamController::TriggerHapticPulse( ControllerHandle_t controllerHandle, ESteamControllerPad eTargetPad, unsigned short usDurationMicroSec ) {
-    DEBUGLOGCALL(LCF_STEAM | LCF_JOYSTICK);
+    LOGTRACE(LCF_STEAM | LCF_JOYSTICK);
 }
 
 }

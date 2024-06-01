@@ -33,7 +33,7 @@ namespace libtas {
 int Screenshot::save(const std::string& screenshotfile, bool draw) {
     
     if (!ScreenCapture::isInited()) {
-        debuglogstdio(LCF_DUMP | LCF_ERROR, "Screen was not inited");
+        LOG(LL_ERROR, LCF_DUMP, "Screen was not inited");
         return ESCREENSHOT_NOSCREEN;
     }
 
@@ -46,7 +46,7 @@ int Screenshot::save(const std::string& screenshotfile, bool draw) {
     NATIVECALL(ffmpeg_pipe = popen(commandline.str().c_str(), "w"));
 
     if (! ffmpeg_pipe) {
-        debuglogstdio(LCF_DUMP | LCF_ERROR, "Could not create a pipe to ffmpeg");
+        LOG(LL_ERROR, LCF_DUMP, "Could not create a pipe to ffmpeg");
         return ESCREENSHOT_NOPIPE;
     }
     
@@ -62,14 +62,14 @@ int Screenshot::save(const std::string& screenshotfile, bool draw) {
     uint8_t* pixels = nullptr;
     int size = ScreenCapture::getPixelsFromSurface(&pixels, draw);
 
-    debuglogstdio(LCF_DUMP, "Perform the screenshot");
+    LOG(LL_DEBUG, LCF_DUMP, "Perform the screenshot");
     nutMuxer->writeVideoFrame(pixels, size);
     
     if (ffmpeg_pipe) {
         int ret;
         NATIVECALL(ret = pclose(ffmpeg_pipe));
         if (ret < 0) {
-            debuglogstdio(LCF_DUMP | LCF_ERROR, "Could not close the pipe to ffmpeg");
+            LOG(LL_ERROR, LCF_DUMP, "Could not close the pipe to ffmpeg");
             return ESCREENSHOT_NOPIPE;
         }
     }

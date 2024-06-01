@@ -50,7 +50,7 @@ void ves_icall_System_Threading_Thread_Sleep_internal(int ms, void *error)
     if (ms == 0)
         return;
 
-    debuglogstdio(LCF_SLEEP, "%s call - sleep for %d ms", __func__, ms);
+    LOG(LL_TRACE, LCF_SLEEP, "%s call - sleep for %d ms", __func__, ms);
 
     transfer_sleep(ts, NULL);
 }

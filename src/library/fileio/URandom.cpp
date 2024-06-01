@@ -52,7 +52,7 @@ uint64_t urandom_rand()
 
 static void urandom_handler(int signum)
 {
-    debuglogstdio(LCF_FILEIO | LCF_RANDOM, "Filling urandom fd");
+    LOG(LL_DEBUG, LCF_FILEIO | LCF_RANDOM, "Filling urandom fd");
     
     int err = 0;
     do {
@@ -63,7 +63,7 @@ static void urandom_handler(int signum)
 
 int urandom_create_fd()
 {
-    debuglogstdio(LCF_FILEIO | LCF_RANDOM, "Open /dev/urandom");
+    LOG(LL_DEBUG, LCF_FILEIO | LCF_RANDOM, "Open /dev/urandom");
 
     if (readfd == -1) {
         std::pair<int, int> fds = FileHandleList::createPipe(O_NONBLOCK);
@@ -100,7 +100,7 @@ int urandom_create_fd()
         MYASSERT(sigaction(SIGIO, &sigio, nullptr) == 0)
     }
 
-    debuglogstdio(LCF_FILEIO | LCF_RANDOM, "Return fd %d", readfd);
+    LOG(LL_DEBUG, LCF_FILEIO | LCF_RANDOM, "Return fd %d", readfd);
     return readfd;
 }
 

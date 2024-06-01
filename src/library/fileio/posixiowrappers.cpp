@@ -78,9 +78,9 @@ int open (const char *file, int oflag, ...)
     }
 
     if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
     else {
-        debuglogstdio(LCF_FILEIO, "%s call with filename <NULL> and flag %o", __func__, oflag);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename <NULL> and flag %o", __func__, oflag);
         return orig::open(file, oflag, mode);
     }
 
@@ -110,7 +110,7 @@ int open (const char *file, int oflag, ...)
 
             std::string s = datestr.str();
 
-            debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", file, s.c_str());
+            LOG(LL_DEBUG, LCF_FILEIO, "Creating fake %s with %s", file, s.c_str());
             write(fd, s.c_str(), s.size());
             write(fd, " ", 1);
             write(fd, s.c_str(), s.size());
@@ -137,7 +137,7 @@ int open (const char *file, int oflag, ...)
 #endif
 
     else if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
-        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        LOG(LL_DEBUG, LCF_FILEIO, "  savefile detected");
         fd = SaveFileList::openSaveFile(file, oflag);
     }
 
@@ -173,9 +173,9 @@ int open64 (const char *file, int oflag, ...)
         return orig::open64(file, oflag, mode);
 
     if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
     else {
-        debuglogstdio(LCF_FILEIO, "%s call with filename <NULL> and flag %o", __func__, oflag);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename <NULL> and flag %o", __func__, oflag);
         return orig::open64(file, oflag, mode);
     }
 
@@ -205,7 +205,7 @@ int open64 (const char *file, int oflag, ...)
 
             std::string s = datestr.str();
 
-            debuglogstdio(LCF_FILEIO, "Creating fake %s with %s", file, s.c_str());
+            LOG(LL_DEBUG, LCF_FILEIO, "Creating fake %s with %s", file, s.c_str());
             write(fd, s.c_str(), s.size());
             write(fd, " ", 1);
             write(fd, s.c_str(), s.size());
@@ -232,7 +232,7 @@ int open64 (const char *file, int oflag, ...)
 #endif
 
     else if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
-        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        LOG(LL_DEBUG, LCF_FILEIO, "  savefile detected");
         fd = SaveFileList::openSaveFile(file, oflag);
     }
 
@@ -268,9 +268,9 @@ int openat (int dirfd, const char *file, int oflag, ...)
         return orig::openat(dirfd, file, oflag, mode);
 
     if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
     else {
-        debuglogstdio(LCF_FILEIO, "%s call with filename <NULL> and flag %o", __func__, oflag);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename <NULL> and flag %o", __func__, oflag);
         return orig::openat(dirfd, file, oflag, mode);
     }
 
@@ -280,7 +280,7 @@ int openat (int dirfd, const char *file, int oflag, ...)
     int fd = 0;
 
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
-        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        LOG(LL_DEBUG, LCF_FILEIO, "  savefile detected");
         fd = SaveFileList::openSaveFile(file, oflag);
     }
 
@@ -316,9 +316,9 @@ int openat64 (int dirfd, const char *file, int oflag, ...)
         return orig::openat64(dirfd, file, oflag, mode);
 
     if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename %s and flag %o", __func__, file, oflag);
     else {
-        debuglogstdio(LCF_FILEIO, "%s call with filename <NULL> and flag %o", __func__, oflag);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename <NULL> and flag %o", __func__, oflag);
         return orig::openat64(dirfd, file, oflag, mode);
     }
 
@@ -328,7 +328,7 @@ int openat64 (int dirfd, const char *file, int oflag, ...)
     int fd = 0;
 
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
-        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        LOG(LL_DEBUG, LCF_FILEIO, "  savefile detected");
         fd = SaveFileList::openSaveFile(file, oflag);
     }
 
@@ -350,9 +350,9 @@ int creat (const char *file, mode_t mode)
         return orig::creat(file, mode);
 
     if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, file);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with file %s", __func__, file);
     else {
-        debuglogstdio(LCF_FILEIO, "%s call with file <NULL>", __func__);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with file <NULL>", __func__);
         return orig::creat(file, mode);
     }
 
@@ -367,7 +367,7 @@ int creat (const char *file, mode_t mode)
     int fd = 0;
 
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
-        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        LOG(LL_DEBUG, LCF_FILEIO, "  savefile detected");
         fd = SaveFileList::openSaveFile(file, oflag);
     }
 
@@ -389,9 +389,9 @@ int creat64 (const char *file, mode_t mode)
         return orig::creat64(file, mode);
 
     if (file)
-        debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, file);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with file %s", __func__, file);
     else {
-        debuglogstdio(LCF_FILEIO, "%s call with file <NULL>", __func__);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with file <NULL>", __func__);
         return orig::creat64(file, mode);
     }
 
@@ -403,7 +403,7 @@ int creat64 (const char *file, mode_t mode)
     int fd = 0;
 
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
-        debuglogstdio(LCF_FILEIO, "  savefile detected");
+        LOG(LL_DEBUG, LCF_FILEIO, "  savefile detected");
         fd = SaveFileList::openSaveFile(file, oflag);
     }
     else {
@@ -420,7 +420,7 @@ int close (int fd)
 {
     RETURN_IF_NATIVE(close, (fd), nullptr);
 
-    debuglogstdio(LCF_FILEIO, "%s call", __func__);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         RETURN_NATIVE(close, (fd), nullptr);
@@ -455,9 +455,9 @@ int access(const char *name, int type) __THROW
         return orig::access(name, type);
 
     if (name)
-        debuglogstdio(LCF_FILEIO, "%s call with name %s", __func__, name);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with name %s", __func__, name);
     else {
-        debuglogstdio(LCF_FILEIO, "%s call with name <NULL>", __func__);
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with name <NULL>", __func__);
         return orig::access(name, type);
     }
 
@@ -497,7 +497,7 @@ int __xstat(int ver, const char *path, struct stat *buf) __THROW
 {
     RETURN_IF_NATIVE(__xstat, (ver, path, buf), nullptr);
 
-    debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         RETURN_NATIVE(__xstat, (ver, path, buf), nullptr);
@@ -537,7 +537,7 @@ int __xstat64(int ver, const char *path, struct stat64 *buf) __THROW
 {
     RETURN_IF_NATIVE(__xstat64, (ver, path, buf), nullptr);
 
-    debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         RETURN_NATIVE(__xstat64, (ver, path, buf), nullptr);
@@ -577,7 +577,7 @@ int __lxstat(int ver, const char *path, struct stat *buf) __THROW
 {
     RETURN_IF_NATIVE(__lxstat, (ver, path, buf), nullptr);
     
-    debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         RETURN_NATIVE(__lxstat, (ver, path, buf), nullptr);
@@ -617,7 +617,7 @@ int __lxstat64(int ver, const char *path, struct stat64 *buf) __THROW
 {
     RETURN_IF_NATIVE(__lxstat64, (ver, path, buf), nullptr);
 
-    debuglogstdio(LCF_FILEIO, "%s call with path %s", __func__, path);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         RETURN_NATIVE(__lxstat64, (ver, path, buf), nullptr);
@@ -657,7 +657,7 @@ int __fxstat(int ver, int fd, struct stat *buf) __THROW
 {
     RETURN_IF_NATIVE(__fxstat, (ver, fd, buf), nullptr);
 
-    debuglogstdio(LCF_FILEIO, "%s call with fd %d", __func__, fd);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
     RETURN_NATIVE(__fxstat, (ver, fd, buf), nullptr);
 }
 
@@ -665,23 +665,23 @@ int __fxstat64(int ver, int fd, struct stat64 *buf) __THROW
 {
     RETURN_IF_NATIVE(__fxstat64, (ver, fd, buf), nullptr);
 
-    debuglogstdio(LCF_FILEIO, "%s call with fd %d", __func__, fd);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
     RETURN_NATIVE(__fxstat64, (ver, fd, buf), nullptr);
 }
 
 int dup (int fd) __THROW
 {
-    debuglogstdio(LCF_FILEIO, "%s call on %d", __func__, fd);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call on %d", __func__, fd);
     LINK_NAMESPACE_GLOBAL(dup);
 
     int newfd = orig::dup(fd);
-    debuglogstdio(LCF_FILEIO, "   new fd: %d", newfd);
+    LOG(LL_DEBUG, LCF_FILEIO, "   new fd: %d", newfd);
     return newfd;
 }
 
 int dup2 (int fd, int fd2) __THROW
 {
-    debuglogstdio(LCF_FILEIO, "%s call: %d -> %d", __func__, fd2, fd);
+    LOG(LL_TRACE, LCF_FILEIO, "%s call: %d -> %d", __func__, fd2, fd);
     LINK_NAMESPACE_GLOBAL(dup2);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)

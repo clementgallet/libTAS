@@ -26,7 +26,7 @@ namespace libtas {
 
 Atom XInternAtom(Display* display, const char* atom_name, Bool only_if_exists)
 {
-    debuglogstdio(LCF_WINDOW, "%s call with atom %s", __func__, atom_name);
+    LOG(LL_TRACE, LCF_WINDOW, "%s call with atom %s", __func__, atom_name);
     RETURN_NATIVE(XInternAtom, (display, atom_name, only_if_exists), nullptr);
 }
 

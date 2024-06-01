@@ -41,7 +41,7 @@ do { \
     glProcs.FUNC ARGS; \
     GLenum error; \
     if ((error = glProcs.GetError()) != GL_NO_ERROR) \
-        debuglogstdio(LCF_WINDOW | LCF_OGL | LCF_ERROR, #FUNC " failed with error %d", error); \
+        LOG(LL_ERROR, LCF_WINDOW | LCF_OGL, #FUNC " failed with error %d", error); \
 } while (0) \
 
 namespace libtas {

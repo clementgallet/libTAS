@@ -20,24 +20,34 @@
 #ifndef LIBTAS_LCF_H_INCL
 #define LIBTAS_LCF_H_INCL
 
-/* Taken from the Hourglass code.
- * Categories for printing debug messages.
- * Some categories will obviously not be used. */
-typedef int LogCategoryFlag; enum
+/* Log level, should be combined with a log category */
+typedef unsigned int LogLevel; enum
+{
+    LL_FATAL    = 0, // things that shouldn't happen and that we won't recover.
+    LL_ERROR    = 1, // things that shouldn't happen.
+    LL_WARN     = 2, // things that users should be warned about.
+    LL_INFO     = 3, // things that users may want to know about.
+    LL_DEBUG    = 4, // things that devs may want to know about.
+    LL_TRACE    = 5, // reserved for logging each hooked function call.
+};
+
+const char* const LL_NAMES[] = { "FATAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE" };
+
+typedef unsigned int LogCategoryFlag; enum
 {
     LCF_NONE     = 0,
 
-    /* Log status, should be combined with a log category */
+    /* Special categories */
     LCF_MAINTHREAD = 1 << 0, // things that are executed by the main thread.
-    LCF_FREQUENT = 1 << 1, // things that tend to get called very often (more than once per frame).
-    LCF_ERROR    = 1 << 2, // things that shouldn't happen.
-    LCF_WARNING  = 1 << 3, // things that users should be warned about.
-    LCF_INFO     = 1 << 4, // things that users may want to know about.
+    /* UNUSED    = 1 << 1, */
+    /* UNUSED    = 1 << 2, */
+    /* UNUSED    = 1 << 3, */
+    /* UNUSED    = 1 << 4, */
     LCF_TODO     = 1 << 5, // things known to require further implementation in the future.
 
     /* Log category */
     LCF_HOOK     = 1 << 6, // hooking notifications
-    LCF_ALERT    = 1 << 7, // messages that must be shown to the user
+    /* UNUSED   = 1 << 7, */
     LCF_TIMESET  = 1 << 8, // notifications of setting the internal time
     LCF_TIMEGET  = 1 << 9, // notifications of getting the internal time
     LCF_CHECKPOINT  = 1 << 10, // savestates
@@ -63,7 +73,7 @@ typedef int LogCategoryFlag; enum
     LCF_STEAM    = 1 << 29, // Steam API
     LCF_THREAD   = 1 << 30,
     LCF_TIMERS   = 1 << 31, // as in async timer objects
-    LCF_ALL      = -1,
+    LCF_ALL      = 0xffffffff & ~(LCF_MAINTHREAD | LCF_TODO),
 };
 
 #endif

@@ -25,37 +25,37 @@ namespace libtas {
 
 EResult ISteamNetworkingMessages::SendMessageToUser( const SteamNetworkingIdentity &identityRemote, const void *pubData, uint32_t cubData, int nSendFlags, int nRemoteChannel )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return 0;
 }
 
 int ISteamNetworkingMessages::ReceiveMessagesOnChannel( int nLocalChannel, SteamNetworkingMessage_t **ppOutMessages, int nMaxMessages )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return 0;
 }
 
 bool ISteamNetworkingMessages::AcceptSessionWithUser( const SteamNetworkingIdentity &identityRemote )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return false;
 }
 
 bool ISteamNetworkingMessages::CloseSessionWithUser( const SteamNetworkingIdentity &identityRemote )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return false;
 }
 
 bool ISteamNetworkingMessages::CloseChannelWithUser( const SteamNetworkingIdentity &identityRemote, int nLocalChannel )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return false;
 }
 
 ESteamNetworkingConnectionState ISteamNetworkingMessages::GetSessionConnectionInfo( const SteamNetworkingIdentity &identityRemote, SteamNetConnectionInfo_t *pConnectionInfo, SteamNetConnectionRealTimeStatus_t *pQuickStatus )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return 0;
 }
 

@@ -57,15 +57,20 @@
 
 namespace libtas {
 
-void debuglogfull(LogCategoryFlag lcf, const char* file, int line, ...)
+void debuglogfull(LogLevel ll, LogCategoryFlag lcf, const char* file, int line, ...)
 {
-    if ((Global::shared_config.includeFlags & LCF_MAINTHREAD) &&
-        !ThreadManager::isMainThread())
+    /* Check log level and categories */
+    if (Global::shared_config.logging_level < ll)
         return;
 
-    if ((!(lcf & Global::shared_config.includeFlags)  ||
-          (lcf & Global::shared_config.excludeFlags)) &&
-         !(lcf & LCF_ALERT))
+    if (lcf & Global::shared_config.logging_exclude_flags)
+        return;
+
+    if ((lcf != LCF_NONE) && !(lcf & Global::shared_config.logging_include_flags))
+        return;
+
+    if ((Global::shared_config.logging_include_flags & LCF_MAINTHREAD) &&
+        !ThreadManager::isMainThread())
         return;
 
     /* Not printing anything if global state is set to NOLOG */
@@ -75,7 +80,11 @@ void debuglogfull(LogCategoryFlag lcf, const char* file, int line, ...)
     /* We avoid recursive loops by protecting eventual recursive calls to debuglog
      * in the following code
      */
-     GlobalNoLog tnl;
+    GlobalNoLog tnl;
+
+    /* Sanitize values */
+    if (ll > LL_TRACE)
+        ll = LL_TRACE;
 
     /* Build main log string */
 
@@ -89,10 +98,10 @@ void debuglogfull(LogCategoryFlag lcf, const char* file, int line, ...)
     /* We only print colors if displayed on a terminal */
     bool isTerm = isatty(/*cerr*/ 2);
     if (isTerm) {
-        if (lcf & LCF_ERROR)
+        if (ll <= LL_ERROR)
             /* Write the header text in red */
             strncat(s, ANSI_COLOR_RED, maxsize-size-1);
-        else if (lcf & LCF_WARNING)
+        else if (ll == LL_WARN)
             /* Write the header text in light red */
             strncat(s, ANSI_COLOR_LIGHT_RED, maxsize-size-1);
         else
@@ -125,21 +134,19 @@ void debuglogfull(LogCategoryFlag lcf, const char* file, int line, ...)
 
     int beg_size = size;
 
-    if (lcf & LCF_ERROR) {
-        snprintf(s + size, maxsize-size-1, "ERROR (%s:%d): ", file, line);
-        size = strlen(s);
+    if (ll <= LL_ERROR) {
+        snprintf(s + size, maxsize-size-1, "%s (%s:%d): ", LL_NAMES[ll], file, line);
     }
+    else {
+        snprintf(s + size, maxsize-size-1, "%s: ", LL_NAMES[ll]);
+    }
+    size = strlen(s);
+
     va_list args;
     va_start(args, line);
     char* fmt = va_arg(args, char *);
     vsnprintf(s + size, maxsize-size-1, fmt, args);
     va_end(args);
-
-    /* If we must send the string to the program for displaying to the user,
-     * we only send the actual message */
-    // if (lcf & LCF_ALERT) {
-    //     setAlertMsg(s+size, strlen(s)-size);
-    // }
 
     size = strlen(s);
 

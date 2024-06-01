@@ -59,7 +59,7 @@ void ScreenCapture_VDPAU::initScreenSurface()
     /* Set up a backup surface/framebuffer */
     VdpStatus status = orig::VdpOutputSurfaceCreate(vdp::vdpDevice, VDP_RGBA_FORMAT_B8G8R8A8, width, height, &screenVDPAUSurf);
     if (status != VDP_STATUS_OK) {
-        debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceCreate failed with status %d", status);
+        LOG(LL_ERROR, LCF_WINDOW, "VdpOutputSurfaceCreate failed with status %d", status);
         return;
     }
 }
@@ -83,7 +83,7 @@ const char* ScreenCapture_VDPAU::getPixelFormat()
         case VDP_RGBA_FORMAT_R8G8B8A8:
             return "RGBA";
         default:
-            debuglogstdio(LCF_DUMP | LCF_ERROR, "  Unsupported pixel format %d", rgba_format);
+            LOG(LL_ERROR, LCF_DUMP, "  Unsupported pixel format %d", rgba_format);
     }
     return "RGBA";
 }
@@ -95,7 +95,7 @@ int ScreenCapture_VDPAU::copyScreenToSurface()
     /* Copy to our screen surface */
     VdpStatus status = orig::VdpOutputSurfaceRenderOutputSurface(screenVDPAUSurf, nullptr, vdp::vdpSurface, nullptr, nullptr, nullptr, 0);
     if (status != VDP_STATUS_OK) {
-        debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceRenderOutputSurface failed with status %d", status);
+        LOG(LL_ERROR, LCF_WINDOW, "VdpOutputSurfaceRenderOutputSurface failed with status %d", status);
     }
     
     return size;
@@ -118,7 +118,7 @@ int ScreenCapture_VDPAU::getPixelsFromSurface(uint8_t **pixels, bool draw)
     unsigned int pp = pitch;
     VdpStatus status = orig::VdpOutputSurfaceGetBitsNative(screenVDPAUSurf, nullptr, &pix, &pp);
     if (status != VDP_STATUS_OK) {
-        debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceGetBitsNative failed with status %d", status);
+        LOG(LL_ERROR, LCF_WINDOW, "VdpOutputSurfaceGetBitsNative failed with status %d", status);
     }
 
     return size;
@@ -130,7 +130,7 @@ int ScreenCapture_VDPAU::copySurfaceToScreen()
 
     VdpStatus status = orig::VdpOutputSurfaceRenderOutputSurface(vdp::vdpSurface, nullptr, screenVDPAUSurf, nullptr, nullptr, nullptr, 0);
     if (status != VDP_STATUS_OK) {
-        debuglogstdio(LCF_WINDOW | LCF_ERROR, "VdpOutputSurfaceRenderOutputSurface failed with status %d", status);
+        LOG(LL_ERROR, LCF_WINDOW, "VdpOutputSurfaceRenderOutputSurface failed with status %d", status);
     }
 
     return 0;

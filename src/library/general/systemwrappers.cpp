@@ -41,7 +41,7 @@ DEFINE_ORIG_POINTER(sched_getaffinity)
 {
     RETURN_IF_NATIVE(getpid, (), nullptr);
 
-    DEBUGLOGCALL(LCF_SYSTEM);
+    LOGTRACE(LCF_SYSTEM);
 
     /* A bit hackish: Dead Cells seeds the rng using the process pid.
      * However, specifying a wrong pid for other calls will most likely crash
@@ -69,7 +69,7 @@ DEFINE_ORIG_POINTER(sched_getaffinity)
         return pid;
     }
 
-    DEBUGLOGCALL(LCF_SYSTEM);
+    LOGTRACE(LCF_SYSTEM);
 
     if (pid == 0) {
         Global::is_fork = true;
@@ -96,7 +96,7 @@ DEFINE_ORIG_POINTER(sched_getaffinity)
      * call compared to TLS access, aiming at caching the value.
      * See <https://github.com/dotnet/runtime/blob/bfa39b303ab33306b66ec24c72ccc8fc4fe17bb2/src/libraries/System.Private.CoreLib/src/System/Threading/ProcessorIdCache.cs#L58-L143> */
     
-    DEBUGLOGCALL(LCF_SYSTEM);
+    LOGTRACE(LCF_SYSTEM);
 
     /* GameHacks::hasCoreclr() alone may not recognize dotnet games */
     if (GameHacks::hasCoreclr() || GameHacks::getFinalizerThread() != 0)

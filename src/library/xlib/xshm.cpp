@@ -56,7 +56,7 @@ OVERRIDE Bool XShmPutImage(
     if (GlobalState::isNative())
         return orig::XShmPutImage(dpy, d, gc, image, src_x, src_y, dst_x, dst_y, src_width, src_height, send_event);
 
-    debuglogstdio(LCF_WINDOW, "%s called with drawable %d", __func__, d);
+    LOG(LL_TRACE, LCF_WINDOW, "%s called with drawable %d", __func__, d);
 
     /* Only handle the screen draw if no other rendering API is used */
     if ((Global::game_info.video & GameInfo::VDPAU) || (Global::game_info.video & GameInfo::OPENGL))
@@ -83,7 +83,7 @@ OVERRIDE Bool XShmPutImage(
         sendMessage(MSGB_WINDOW_ID);
         sendData(&i, sizeof(i));
         unlockSocket();
-        debuglogstdio(LCF_WINDOW, "Sent X11 window id %d", i);
+        LOG(LL_DEBUG, LCF_WINDOW, "Sent X11 window id %d", i);
     }
 
     /* The surface can change size independently of the window size, so we

@@ -101,7 +101,7 @@ int ScreenCapture_SDL1::copyScreenToSurface()
     GlobalNative gn;
 
     /* Not tested !! */
-    debuglogstdio(LCF_DUMP, "Access SDL_Surface pixels for video dump");
+    LOG(LL_DEBUG, LCF_DUMP, "Access SDL_Surface pixels for video dump");
 
     LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
     link_function((void**)&orig::SDL1_LockSurface, "SDL_LockSurface", "libSDL-1.2.so.0");
@@ -116,7 +116,7 @@ int ScreenCapture_SDL1::copyScreenToSurface()
     int cw = surf1->w;
     int ch = surf1->h;
     if ((cw != width) || (ch != height)) {
-        debuglogstdio(LCF_DUMP | LCF_ERROR, "Window coords have changed (%d,%d) -> (%d,%d)", width, height, cw, ch);
+        LOG(LL_ERROR, LCF_DUMP, "Window coords have changed (%d,%d) -> (%d,%d)", width, height, cw, ch);
         return -1;
     }
 
@@ -146,7 +146,7 @@ int ScreenCapture_SDL1::getPixelsFromSurface(uint8_t **pixels, bool draw)
     /* We must lock the surface before accessing the raw pixels */
     int ret = orig::SDL1_LockSurface(screenSDL1Surf);
     if (ret != 0) {
-        debuglogstdio(LCF_DUMP | LCF_ERROR, "Could not lock SDL surface");
+        LOG(LL_ERROR, LCF_DUMP, "Could not lock SDL surface");
         return -1;
     }
 
@@ -169,7 +169,7 @@ int ScreenCapture_SDL1::copySurfaceToScreen()
     link_function((void**)&orig::SDL1_UpperBlit, "SDL_UpperBlit", "libSDL-1.2.so.0");
 
     /* Not tested !! */
-    debuglogstdio(LCF_DUMP, "Set SDL1_Surface pixels");
+    LOG(LL_DEBUG, LCF_DUMP, "Set SDL1_Surface pixels");
 
     /* Get surface from window */
     ::SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();

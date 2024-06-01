@@ -128,19 +128,19 @@ bool initSocketGame(void)
     const int tmp_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (bind(tmp_fd, reinterpret_cast<const struct sockaddr*>(&addr), sizeof(struct sockaddr_un)))
     {
-        debuglogstdio(LCF_SOCKET | LCF_ERROR, "Couldn't bind client socket %s", strerror(errno));
+        LOG(LL_ERROR, LCF_SOCKET, "Couldn't bind client socket %s", strerror(errno));
         exit(-1);
     }
 
     if (listen(tmp_fd, 1))
     {
-        debuglogstdio(LCF_SOCKET | LCF_ERROR, "Couldn't listen on client socket %s", strerror(errno));
+        LOG(LL_ERROR, LCF_SOCKET, "Couldn't listen on client socket %s", strerror(errno));
         exit(-1);
     }
 
     if ((socket_fd = accept(tmp_fd, NULL, NULL)) < 0)
     {
-        debuglogstdio(LCF_SOCKET | LCF_ERROR, "Couldn't accept client connection %s", strerror(errno));
+        LOG(LL_ERROR, LCF_SOCKET, "Couldn't accept client connection %s", strerror(errno));
         exit(-1);
     }
 
@@ -149,7 +149,7 @@ bool initSocketGame(void)
     int option_value = 1;
     if (setsockopt(socket_fd, SOL_SOCKET, SO_NOSIGPIPE, &option_value, sizeof(option_value)))
     {
-        debuglogstdio(LCF_SOCKET | LCF_ERROR, "Couldn't set SO_NOSIGPIPE option %s", strerror(errno));
+        LOG(LL_ERROR, LCF_SOCKET, "Couldn't set SO_NOSIGPIPE option %s", strerror(errno));
         exit(-1);
     }
 #endif
@@ -181,7 +181,7 @@ void unlockSocket(void)
 int sendData(const void* elem, unsigned int size)
 {
 #ifdef LIBTAS_LIBRARY
-    debuglogstdio(LCF_SOCKET, "Send socket data of size %u", size);
+    LOG(LL_DEBUG, LCF_SOCKET, "Send socket data of size %u", size);
 #endif
 
     ssize_t ret = 0;
@@ -191,14 +191,14 @@ int sendData(const void* elem, unsigned int size)
 
     if (ret == -1) {
 #ifdef LIBTAS_LIBRARY
-        debuglogstdio(LCF_SOCKET | LCF_ERROR, "send() returns -1 with error %s", strerror(errno));
+        LOG(LL_ERROR, LCF_SOCKET, "send() returns -1 with error %s", strerror(errno));
 #else
         std::cerr << "send() returns -1 with error " << strerror(errno) << std::endl;
 #endif
     }
     else if (ret != static_cast<ssize_t>(size)) {
 #ifdef LIBTAS_LIBRARY
-        debuglogstdio(LCF_SOCKET | LCF_ERROR, "send() %u bytes instead of %u", ret, size);
+        LOG(LL_ERROR, LCF_SOCKET, "send() %u bytes instead of %u", ret, size);
 #else
         std::cerr << "send() " << ret << " bytes instead of " << size << std::endl;
 #endif
@@ -210,7 +210,7 @@ int sendData(const void* elem, unsigned int size)
 int sendMessage(int message)
 {
 #ifdef LIBTAS_LIBRARY
-    debuglogstdio(LCF_SOCKET, "Send socket message %d", message);
+    LOG(LL_DEBUG, LCF_SOCKET, "Send socket message %d", message);
 #endif
     return sendData(&message, sizeof(int));
 }
@@ -218,7 +218,7 @@ int sendMessage(int message)
 void sendString(const std::string& str)
 {
 #ifdef LIBTAS_LIBRARY
-    debuglogstdio(LCF_SOCKET, "Send socket string %s", str.c_str());
+    LOG(LL_DEBUG, LCF_SOCKET, "Send socket string %s", str.c_str());
 #endif
     unsigned int str_size = str.size();
     sendData(&str_size, sizeof(unsigned int));
@@ -229,7 +229,7 @@ void sendString(const std::string& str)
 int receiveData(void* elem, unsigned int size)
 {
 #ifdef LIBTAS_LIBRARY
-    debuglogstdio(LCF_SOCKET, "Receive socket data of size %u", size);
+    LOG(LL_DEBUG, LCF_SOCKET, "Receive socket data of size %u", size);
 #endif
 
     ssize_t ret = 0;
@@ -239,21 +239,21 @@ int receiveData(void* elem, unsigned int size)
 
     if (ret == -1) {
 #ifdef LIBTAS_LIBRARY
-        debuglogstdio(LCF_SOCKET | LCF_ERROR, "recv() returns -1 with error %s", strerror(errno));
+        LOG(LL_ERROR, LCF_SOCKET, "recv() returns -1 with error %s", strerror(errno));
 #else
         std::cerr << "recv() returns -1 with error " << strerror(errno) << std::endl;
 #endif
     }
     else if (ret == 0 && size > 0) { // socket has been closed
 #ifdef LIBTAS_LIBRARY
-        debuglogstdio(LCF_SOCKET | LCF_WARNING, "recv() returns 0 -> socket closed");
+        LOG(LL_WARN, LCF_SOCKET, "recv() returns 0 -> socket closed");
 #else
         std::cerr << "recv() returns 0 -> socket closed" << std::endl;
 #endif
     }
     else if (ret != static_cast<ssize_t>(size)) {
 #ifdef LIBTAS_LIBRARY
-        debuglogstdio(LCF_SOCKET | LCF_ERROR, "recv() %u bytes instead of %u", ret, size);
+        LOG(LL_ERROR, LCF_SOCKET, "recv() %u bytes instead of %u", ret, size);
 #else
         std::cerr << "recv() " << ret << " bytes instead of " << size << std::endl;
 #endif
@@ -266,7 +266,7 @@ int receiveMessage()
     int msg;
     int ret = receiveData(&msg, sizeof(int));
 #ifdef LIBTAS_LIBRARY
-    debuglogstdio(LCF_SOCKET, "Receive socket message %d", msg);
+    LOG(LL_DEBUG, LCF_SOCKET, "Receive socket message %d", msg);
 #endif
     /* Handle special case for closed socket */
     if (ret == 0)
@@ -284,7 +284,7 @@ int receiveMessageNonBlocking()
     if (ret < 0)
         return ret;
 #ifdef LIBTAS_LIBRARY
-    debuglogstdio(LCF_SOCKET, "Receive non-blocking socket message %d", msg);
+    LOG(LL_DEBUG, LCF_SOCKET, "Receive non-blocking socket message %d", msg);
 #endif
 
     /* Handle special case for closed socket */
@@ -308,7 +308,7 @@ std::string receiveString()
 
     std::string str(buf.data(), str_size);
 #ifdef LIBTAS_LIBRARY
-    debuglogstdio(LCF_SOCKET, "Receive socket string %s", str.c_str());
+    LOG(LL_DEBUG, LCF_SOCKET, "Receive socket string %s", str.c_str());
 #endif
     return str;
 }
@@ -320,6 +320,6 @@ void receiveCString(char* str)
     receiveData(str, str_size);
     str[str_size] = '\0';
 #ifdef LIBTAS_LIBRARY
-    debuglogstdio(LCF_SOCKET, "Receive socket C string %s", str);
+    LOG(LL_DEBUG, LCF_SOCKET, "Receive socket C string %s", str);
 #endif
 }

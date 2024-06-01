@@ -92,7 +92,7 @@ void BusyLoopDetection::increment(int type)
     if (DeterministicTimer::get().isInsideFrameBoundary())
         return;
 
-    debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "Time function called");
+    LOG(LL_DEBUG, LCF_TIMEGET, "Time function called");
 
     GlobalState::setNative(true);
 
@@ -217,11 +217,11 @@ void BusyLoopDetection::increment(int type)
         timecall_count++;
 
         if (timecall_count == 10) {
-            debuglogstdio(LCF_TIMESET, "Busy loop detected, fake advance ticks to next frame");
+            LOG(LL_DEBUG, LCF_TIMESET, "Busy loop detected, fake advance ticks to next frame");
             DeterministicTimer::get().fakeAdvanceTimerFrame();
         }
         if (timecall_count > 20) {
-            debuglogstdio(LCF_TIMESET, "Still softlocking, advance one frame");
+            LOG(LL_DEBUG, LCF_TIMESET, "Still softlocking, advance one frame");
             std::function<void()> dummy_draw;
             static RenderHUD dummy;
             frameBoundary(dummy_draw, dummy);

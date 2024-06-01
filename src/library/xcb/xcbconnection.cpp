@@ -33,14 +33,14 @@ xcb_connection_t* x11::gameConnections[GAMECONNECTIONNUM] = {};
 
 xcb_connection_t *xcb_connect(const char *displayname, int *screenp)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
     LINK_NAMESPACE_GLOBAL(xcb_connect);
 
     xcb_connection_t* c;
     OWNCALL(c = orig::xcb_connect(displayname, screenp));
 
     if (!c) {
-        debuglogstdio(LCF_WINDOW | LCF_ERROR, "Could not open xcb connection to %s (%d)", displayname ? displayname : "$DISPLAY", screenp ? *screenp : 0);
+        LOG(LL_ERROR, LCF_WINDOW, "Could not open xcb connection to %s (%d)", displayname ? displayname : "$DISPLAY", screenp ? *screenp : 0);
         return nullptr;
     }
 
@@ -52,7 +52,7 @@ xcb_connection_t *xcb_connect(const char *displayname, int *screenp)
         }
     }
     if (i == GAMECONNECTIONNUM) {
-        debuglogstdio(LCF_WINDOW | LCF_ERROR, "   Reached the limit of registered xcb connections");
+        LOG(LL_ERROR, LCF_WINDOW, "   Reached the limit of registered xcb connections");
     }
 
     /* Initialize atoms */
@@ -66,7 +66,7 @@ xcb_connection_t *xcb_connect(const char *displayname, int *screenp)
 
 void xcb_disconnect(xcb_connection_t *c)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
     LINK_NAMESPACE_GLOBAL(xcb_disconnect);
 
     for (int i=0; i<GAMECONNECTIONNUM; i++) {

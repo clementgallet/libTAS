@@ -61,7 +61,7 @@ AudioConverterSwr::AudioConverterSwr(void)
     }
     /* Still test if it succeeded. */
     if (!orig::swr_alloc) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "Could not link to swr_alloc, disable audio mixing");
+        LOG(LL_ERROR, LCF_SOUND, "Could not link to swr_alloc, disable audio mixing");
         swr = nullptr;
     }
     else {
@@ -124,7 +124,7 @@ void AudioConverterSwr::init(AudioBuffer::SampleFormat inFormat, int inChannels,
             inAVFormat = AV_SAMPLE_FMT_DBL;
             break;
         default:
-            debuglogstdio(LCF_SOUND | LCF_ERROR, "Unknown sample format");
+            LOG(LL_ERROR, LCF_SOUND, "Unknown sample format");
             break;
     }
 
@@ -147,7 +147,7 @@ void AudioConverterSwr::init(AudioBuffer::SampleFormat inFormat, int inChannels,
             outAVFormat = AV_SAMPLE_FMT_DBL;
             break;
         default:
-            debuglogstdio(LCF_SOUND | LCF_ERROR, "Unknown sample format");
+            LOG(LL_ERROR, LCF_SOUND, "Unknown sample format");
             break;
     }
 
@@ -194,7 +194,7 @@ void AudioConverterSwr::init(AudioBuffer::SampleFormat inFormat, int inChannels,
 
     /* Open the context */
     if (orig::swr_init(swr) < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "Error initializing swr context");
+        LOG(LL_ERROR, LCF_SOUND, "Error initializing swr context");
         return;
     }
 }

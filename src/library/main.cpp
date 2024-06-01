@@ -59,7 +59,7 @@ void __attribute__((constructor)) init(void)
     if (delay_str && (delay_str[0] > '0')) {
         delay_str[0] -= 1;
         setenv("LIBTAS_DELAY_INIT", delay_str, 1);
-        debuglogstdio(LCF_INFO, "Skipping libtas init");
+        LOG(LL_INFO, LCF_NONE, "Skipping libtas init");
 
         /* Setting native state so that we interact as little as possible
          * with the process */
@@ -100,7 +100,7 @@ void __attribute__((constructor)) init(void)
     sendMessage(MSGB_PID_ARCH);
     pid_t mypid;
     NATIVECALL(mypid = getpid());
-    debuglogstdio(LCF_SOCKET, "Send pid to program: %d", mypid);
+    LOG(LL_DEBUG, LCF_SOCKET, "Send pid to program: %d", mypid);
     sendData(&mypid, sizeof(pid_t));
     int addr_size = sizeof(void*);
     sendData(&addr_size, sizeof(int));
@@ -124,22 +124,22 @@ void __attribute__((constructor)) init(void)
     while (message != MSGN_END_INIT) {
         switch (message) {
             case MSGN_CONFIG_SIZE: {
-                debuglogstdio(LCF_SOCKET, "Receiving config size");
+                LOG(LL_DEBUG, LCF_SOCKET, "Receiving config size");
                 int config_size;
                 receiveData(&config_size, sizeof(int));
                 if (config_size != sizeof(SharedConfig)) {
-                    debuglogstdio(LCF_SOCKET | LCF_ERROR, "Shared config size mismatch between program and library!");                    
+                    LOG(LL_ERROR, LCF_SOCKET, "Shared config size mismatch between program and library!");                    
                 }
                 break;
             }
             case MSGN_CONFIG:
-                debuglogstdio(LCF_SOCKET, "Receiving config");
+                LOG(LL_DEBUG, LCF_SOCKET, "Receiving config");
                 receiveData(&Global::shared_config, sizeof(SharedConfig));
                 break;
             case MSGN_DUMP_FILE:
-                debuglogstdio(LCF_SOCKET, "Receiving dump filename");
+                LOG(LL_DEBUG, LCF_SOCKET, "Receiving dump filename");
                 receiveCString(AVEncoder::dumpfile);
-                debuglogstdio(LCF_SOCKET, "File %s", AVEncoder::dumpfile);
+                LOG(LL_DEBUG, LCF_SOCKET, "File %s", AVEncoder::dumpfile);
                 receiveCString(AVEncoder::ffmpeg_options);
                 break;
             case MSGN_BASE_SAVESTATE_PATH: {
@@ -185,7 +185,7 @@ void __attribute__((constructor)) init(void)
                 break;
             }
             default:
-                debuglogstdio(LCF_ERROR | LCF_SOCKET, "Unknown socket message %d", message);
+                LOG(LL_ERROR, LCF_SOCKET, "Unknown socket message %d", message);
                 exit(1);
         }
         message = receiveMessage();
@@ -217,7 +217,7 @@ void __attribute__((destructor)) term(void)
             sendMessage(MSGB_QUIT);
             closeSocket();
         }
-        debuglogstdio(LCF_SOCKET, "Exiting.");
+        LOG(LL_DEBUG, LCF_SOCKET, "Exiting.");
         ThreadManager::deallocateThreads();
     }
 }

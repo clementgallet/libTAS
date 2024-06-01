@@ -27,7 +27,7 @@ static pid_t finalizer_pid = 0;
 
 void GameHacks::setCoreclr()
 {
-    debuglogstdio(LCF_HOOK, "   detected coreclr");
+    LOG(LL_DEBUG, LCF_HOOK, "   detected coreclr");
     coreclr = true;
 }
 
@@ -38,7 +38,7 @@ bool GameHacks::hasCoreclr()
 
 void GameHacks::setFinalizerThread(pid_t pid)
 {
-    debuglogstdio(LCF_HOOK, "   set finalizer to %d", pid);
+    LOG(LL_DEBUG, LCF_HOOK, "   set finalizer to %d", pid);
     finalizer_pid = pid;
 }
 

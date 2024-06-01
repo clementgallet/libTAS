@@ -48,13 +48,13 @@ PerfTimer::TimerType PerfTimer::currentTimer()
 
 void PerfTimer::print()
 {
-    debuglogstdio(LCF_INFO, "Game timer took %d.%03d sec", elapsed[GameTimer].tv_sec, elapsed[GameTimer].tv_nsec / 1000000);
-    debuglogstdio(LCF_INFO, "Frame timer took %d.%03d sec", elapsed[FrameTimer].tv_sec, elapsed[FrameTimer].tv_nsec / 1000000);
-    debuglogstdio(LCF_INFO, "Render timer took %d.%03d sec", elapsed[RenderTimer].tv_sec, elapsed[RenderTimer].tv_nsec / 1000000);
-    debuglogstdio(LCF_INFO, "Idle timer took %d.%03d sec", elapsed[IdleTimer].tv_sec, elapsed[IdleTimer].tv_nsec / 1000000);
-    debuglogstdio(LCF_INFO, "Wait timer took %d.%03d sec", elapsed[WaitTimer].tv_sec, elapsed[WaitTimer].tv_nsec / 1000000);
-    debuglogstdio(LCF_INFO, "Time timer took %d.%03d sec", elapsed[TimeTimer].tv_sec, elapsed[TimeTimer].tv_nsec / 1000000);
-    debuglogstdio(LCF_INFO, "Special timer took %d.%03d sec", elapsed[SpecialTimer].tv_sec, elapsed[SpecialTimer].tv_nsec / 1000000);
+    LOG(LL_INFO, LCF_NONE, "Game timer took %d.%03d sec", elapsed[GameTimer].tv_sec, elapsed[GameTimer].tv_nsec / 1000000);
+    LOG(LL_INFO, LCF_NONE, "Frame timer took %d.%03d sec", elapsed[FrameTimer].tv_sec, elapsed[FrameTimer].tv_nsec / 1000000);
+    LOG(LL_INFO, LCF_NONE, "Render timer took %d.%03d sec", elapsed[RenderTimer].tv_sec, elapsed[RenderTimer].tv_nsec / 1000000);
+    LOG(LL_INFO, LCF_NONE, "Idle timer took %d.%03d sec", elapsed[IdleTimer].tv_sec, elapsed[IdleTimer].tv_nsec / 1000000);
+    LOG(LL_INFO, LCF_NONE, "Wait timer took %d.%03d sec", elapsed[WaitTimer].tv_sec, elapsed[WaitTimer].tv_nsec / 1000000);
+    LOG(LL_INFO, LCF_NONE, "Time timer took %d.%03d sec", elapsed[TimeTimer].tv_sec, elapsed[TimeTimer].tv_nsec / 1000000);
+    LOG(LL_INFO, LCF_NONE, "Special timer took %d.%03d sec", elapsed[SpecialTimer].tv_sec, elapsed[SpecialTimer].tv_nsec / 1000000);
 
     for (int i=0; i < TotalTimer; i++) {
         elapsed[i].tv_sec = 0;

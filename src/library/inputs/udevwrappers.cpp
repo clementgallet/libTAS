@@ -1244,7 +1244,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
 
 
 /* Override */ struct udev *udev_ref(struct udev *udev) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_ref, "udev");
         return orig::udev_ref(udev);
@@ -1253,7 +1253,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return ref(udev);
 }
 /* Override */ struct udev *udev_unref(struct udev *udev) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_unref, "udev");
         return orig::udev_unref(udev);
@@ -1262,7 +1262,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return unref(udev);
 }
 /* Override */ struct udev *udev_new(void) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_new, "udev");
         return orig::udev_new();
@@ -1271,7 +1271,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return new struct udev;
 }
 /* Override */ void *udev_get_userdata(struct udev *udev) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_get_userdata, "udev");
         return orig::udev_get_userdata(udev);
@@ -1282,7 +1282,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev->userdata;
 }
 /* Override */ void udev_set_userdata(struct udev *udev, void *userdata) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_set_userdata, "udev");
         return orig::udev_set_userdata(udev, userdata);
@@ -1294,7 +1294,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
 }
 
 /* Override */ struct udev_list_entry *udev_list_entry_get_next(struct udev_list_entry *list_entry) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_list_entry_get_next, "udev");
         return orig::udev_list_entry_get_next(list_entry);
@@ -1305,7 +1305,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return *++list_entry ? list_entry : nullptr;
 }
 /* Override */ struct udev_list_entry *udev_list_entry_get_by_name(struct udev_list_entry *list_entry, const char *name) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_list_entry_get_by_name, "udev");
         return orig::udev_list_entry_get_by_name(list_entry, name);
@@ -1321,7 +1321,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return errno = ENOENT, nullptr;
 }
 /* Override */ const char *udev_list_entry_get_name(struct udev_list_entry *list_entry) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_list_entry_get_name, "udev");
         return orig::udev_list_entry_get_name(list_entry);
@@ -1332,7 +1332,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return list_entry->name.c_str();
 }
 /* Override */ const char *udev_list_entry_get_value(struct udev_list_entry *list_entry) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_list_entry_get_value, "udev");
         return orig::udev_list_entry_get_value(list_entry);
@@ -1344,7 +1344,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
 }
 
 /* Override */ struct udev_device *udev_device_ref(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_ref, "udev");
         return orig::udev_device_ref(udev_device);
@@ -1353,7 +1353,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return ref(udev_device);
 }
 /* Override */ struct udev_device *udev_device_unref(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_unref, "udev");
         return orig::udev_device_unref(udev_device);
@@ -1362,7 +1362,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return unref(udev_device);
 }
 /* Override */ struct udev *udev_device_get_udev(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_udev, "udev");
         return orig::udev_device_get_udev(udev_device);
@@ -1371,7 +1371,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return get_udev(udev_device);
 }
 /* Override */ struct udev_device *udev_device_new_from_syspath(struct udev *udev, const char *syspath) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_new_from_syspath, "udev");
         return orig::udev_device_new_from_syspath(udev, syspath);
@@ -1384,7 +1384,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return errno = ENOENT, nullptr;
 }
 /* Override */ struct udev_device *udev_device_new_from_devnum(struct udev *udev, char type, dev_t devnum) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_new_from_devnum, "udev");
         return orig::udev_device_new_from_devnum(udev, type, devnum);
@@ -1397,7 +1397,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return errno = ENOENT, nullptr;
 }
 /* Override */ struct udev_device *udev_device_new_from_subsystem_sysname(struct udev *udev, const char *subsystem, const char *sysname) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_new_from_subsystem_sysname, "udev");
         return orig::udev_device_new_from_subsystem_sysname(udev, subsystem, sysname);
@@ -1410,7 +1410,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return errno = ENOENT, nullptr;
 }
 /* Override */ struct udev_device *udev_device_new_from_device_id(struct udev *udev, const char *id) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_new_from_device_id, "udev");
         return orig::udev_device_new_from_device_id(udev, id);
@@ -1423,7 +1423,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return errno = ENOENT, nullptr;
 }
 /* Override */ struct udev_device *udev_device_new_from_environment(struct udev *udev) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_new_from_environment, "udev");
         return orig::udev_device_new_from_environment(udev);
@@ -1434,7 +1434,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return errno = ENOENT, nullptr;
 }
 /* Override */ struct udev_device *udev_device_get_parent(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_parent, "udev");
         return orig::udev_device_get_parent(udev_device);
@@ -1446,7 +1446,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
 }
 /* Override */ struct udev_device *udev_device_get_parent_with_subsystem_devtype(struct udev_device *udev_device,
                                                                                  const char *subsystem, const char *devtype) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_parent_with_subsystem_devtype, "udev");
         return orig::udev_device_get_parent_with_subsystem_devtype(udev_device, subsystem, devtype);
@@ -1462,7 +1462,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return errno = ENOENT, nullptr;
 }
 /* Override */ const char *udev_device_get_devpath(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_devpath, "udev");
         return orig::udev_device_get_devpath(udev_device);
@@ -1473,7 +1473,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.devpath().c_str();
 }
 /* Override */ const char *udev_device_get_subsystem(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_subsystem, "udev");
         return orig::udev_device_get_subsystem(udev_device);
@@ -1484,7 +1484,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.subsystem().c_str();
 }
 /* Override */ const char *udev_device_get_devtype(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_devtype, "udev");
         return orig::udev_device_get_devtype(udev_device);
@@ -1495,7 +1495,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.devtype().c_str();
 }
 /* Override */ const char *udev_device_get_syspath(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_syspath, "udev");
         return orig::udev_device_get_syspath(udev_device);
@@ -1506,7 +1506,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.syspath().c_str();
 }
 /* Override */ const char *udev_device_get_sysname(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_sysname, "udev");
         return orig::udev_device_get_sysname(udev_device);
@@ -1517,7 +1517,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.sysname().c_str();
 }
 /* Override */ const char *udev_device_get_sysnum(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_sysnum, "udev");
         return orig::udev_device_get_sysnum(udev_device);
@@ -1528,7 +1528,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.sysnum().c_str();
 }
 /* Override */ const char *udev_device_get_devnode(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_devnode, "udev");
         return orig::udev_device_get_devnode(udev_device);
@@ -1539,7 +1539,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.devnode().c_str();
 }
 /* Override */ int udev_device_get_is_initialized(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_is_initialized, "udev");
         return orig::udev_device_get_is_initialized(udev_device);
@@ -1550,7 +1550,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.isInitialized();
 }
 /* Override */ struct udev_list_entry *udev_device_get_devlinks_list_entry(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_devlinks_list_entry, "udev");
         return orig::udev_device_get_devlinks_list_entry(udev_device);
@@ -1563,7 +1563,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return errno = ENODATA, nullptr;
 }
 /* Override */ struct udev_list_entry *udev_device_get_properties_list_entry(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_properties_list_entry, "udev");
         return orig::udev_device_get_properties_list_entry(udev_device);
@@ -1576,7 +1576,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return errno = ENODATA, nullptr;
 }
 /* Override */ struct udev_list_entry *udev_device_get_tags_list_entry(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_tags_list_entry, "udev");
         return orig::udev_device_get_tags_list_entry(udev_device);
@@ -1589,7 +1589,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return errno = ENODATA, nullptr;
 }
 /* Override */ struct udev_list_entry *udev_device_get_sysattr_list_entry(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_sysattr_list_entry, "udev");
         return orig::udev_device_get_sysattr_list_entry(udev_device);
@@ -1602,7 +1602,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return errno = ENODATA, nullptr;
 }
 /* Override */ const char *udev_device_get_property_value(struct udev_device *udev_device, const char *key) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_property_value, "udev");
         return orig::udev_device_get_property_value(udev_device, key);
@@ -1613,7 +1613,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.propertyValue(key).c_str();
 }
 /* Override */ const char *udev_device_get_driver(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_driver, "udev");
         return orig::udev_device_get_driver(udev_device);
@@ -1624,7 +1624,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.driver().c_str();
 }
 /* Override */ dev_t udev_device_get_devnum(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_devnum, "udev");
         return orig::udev_device_get_devnum(udev_device);
@@ -1635,7 +1635,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.devnum();
 }
 /* Override */ const char *udev_device_get_action(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_action, "udev");
         return orig::udev_device_get_action(udev_device);
@@ -1646,7 +1646,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.action().c_str();
 }
 /* Override */ unsigned long long int udev_device_get_seqnum(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_seqnum, "udev");
         return orig::udev_device_get_seqnum(udev_device);
@@ -1657,7 +1657,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.seqnum();
 }
 /* Override */ unsigned long long int udev_device_get_usec_since_initialized(struct udev_device *udev_device) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_usec_since_initialized, "udev");
         return orig::udev_device_get_usec_since_initialized(udev_device);
@@ -1668,7 +1668,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.usecSinceInitialized();
 }
 /* Override */ const char *udev_device_get_sysattr_value(struct udev_device *udev_device, const char *sysattr) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_get_sysattr_value, "udev");
         return orig::udev_device_get_sysattr_value(udev_device, sysattr);
@@ -1679,7 +1679,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.sysattrPathValue(sysattr).c_str();
 }
 /* Override */ int udev_device_set_sysattr_value(struct udev_device *udev_device, const char *sysattr, const char *value) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_set_sysattr_value, "udev");
         return orig::udev_device_set_sysattr_value(udev_device, sysattr, value);
@@ -1690,7 +1690,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_device->device.hasSysattr(sysattr) ? -EPERM : -ENOENT;
 }
 /* Override */ int udev_device_has_tag(struct udev_device *udev_device, const char *tag) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_device_has_tag, "udev");
         return orig::udev_device_has_tag(udev_device, tag);
@@ -1702,7 +1702,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
 }
 
 /* Override */ struct udev_monitor *udev_monitor_ref(struct udev_monitor *udev_monitor) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_monitor_ref, "udev");
         return orig::udev_monitor_ref(udev_monitor);
@@ -1711,7 +1711,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return ref(udev_monitor);
 }
 /* Override */ struct udev_monitor *udev_monitor_unref(struct udev_monitor *udev_monitor) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_monitor_unref, "udev");
         return orig::udev_monitor_unref(udev_monitor);
@@ -1720,7 +1720,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return unref(udev_monitor);
 }
 /* Override */ struct udev *udev_monitor_get_udev(struct udev_monitor *udev_monitor) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_monitor_get_udev, "udev");
         return orig::udev_monitor_get_udev(udev_monitor);
@@ -1729,7 +1729,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return get_udev(udev_monitor);
 }
 /* Override */ struct udev_monitor *udev_monitor_new_from_netlink(struct udev *udev, const char *name) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_monitor_new_from_netlink, "udev");
         return orig::udev_monitor_new_from_netlink(udev, name);
@@ -1738,7 +1738,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return new_from_udev<struct udev_monitor>(udev);
 }
 /* Override */ int udev_monitor_enable_receiving(struct udev_monitor *udev_monitor) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_monitor_enable_receiving, "udev");
         return orig::udev_monitor_enable_receiving(udev_monitor);
@@ -1749,7 +1749,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_monitor_set_receive_buffer_size(struct udev_monitor *udev_monitor, int size) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_monitor_set_receive_buffer_size, "udev");
         return orig::udev_monitor_set_receive_buffer_size(udev_monitor, size);
@@ -1760,7 +1760,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_monitor_get_fd(struct udev_monitor *udev_monitor) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_monitor_get_fd, "udev");
         return orig::udev_monitor_get_fd(udev_monitor);
@@ -1771,7 +1771,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_monitor->fd;
 }
 /* Override */ struct udev_device *udev_monitor_receive_device(struct udev_monitor *udev_monitor) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_monitor_receive_device, "udev");
         return orig::udev_monitor_receive_device(udev_monitor);
@@ -1783,7 +1783,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
 }
 /* Override */ int udev_monitor_filter_add_match_subsystem_devtype(struct udev_monitor *udev_monitor,
                                                                    const char *subsystem, const char *devtype) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_monitor_filter_add_match_subsystem_devtype, "udev");
         return orig::udev_monitor_filter_add_match_subsystem_devtype(udev_monitor, subsystem, devtype);
@@ -1794,7 +1794,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_monitor_filter_add_match_tag(struct udev_monitor *udev_monitor, const char *tag) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_monitor_filter_add_match_tag, "udev");
         return orig::udev_monitor_filter_add_match_tag(udev_monitor, tag);
@@ -1805,7 +1805,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_monitor_filter_update(struct udev_monitor *udev_monitor) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_monitor_filter_update, "udev");
         return orig::udev_monitor_filter_update(udev_monitor);
@@ -1816,7 +1816,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_monitor_filter_remove(struct udev_monitor *udev_monitor) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_monitor_filter_remove, "udev");
         return orig::udev_monitor_filter_remove(udev_monitor);
@@ -1828,7 +1828,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
 }
 
 /* Override */ struct udev_enumerate *udev_enumerate_ref(struct udev_enumerate *udev_enumerate) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_ref, "udev");
         return orig::udev_enumerate_ref(udev_enumerate);
@@ -1837,7 +1837,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return ref(udev_enumerate);
 }
 /* Override */ struct udev_enumerate *udev_enumerate_unref(struct udev_enumerate *udev_enumerate) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_unref, "udev");
         return orig::udev_enumerate_unref(udev_enumerate);
@@ -1846,7 +1846,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return unref(udev_enumerate);
 }
 /* Override */ struct udev *udev_enumerate_get_udev(struct udev_enumerate *udev_enumerate) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_get_udev, "udev");
         return orig::udev_enumerate_get_udev(udev_enumerate);
@@ -1855,7 +1855,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return get_udev(udev_enumerate);
 }
 /* Override */ struct udev_enumerate *udev_enumerate_new(struct udev *udev) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_new, "udev");
         return orig::udev_enumerate_new(udev);
@@ -1864,7 +1864,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return new_from_udev<struct udev_enumerate>(udev);
 }
 /* Override */ int udev_enumerate_add_match_subsystem(struct udev_enumerate *udev_enumerate, const char *subsystem) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_add_match_subsystem, "udev");
         return orig::udev_enumerate_add_match_subsystem(udev_enumerate, subsystem);
@@ -1876,7 +1876,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_enumerate_add_nomatch_subsystem(struct udev_enumerate *udev_enumerate, const char *subsystem) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_add_nomatch_subsystem, "udev");
         return orig::udev_enumerate_add_nomatch_subsystem(udev_enumerate, subsystem);
@@ -1888,7 +1888,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_enumerate_add_match_sysattr(struct udev_enumerate *udev_enumerate, const char *sysattr, const char *value) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_add_match_sysattr, "udev");
         return orig::udev_enumerate_add_match_sysattr(udev_enumerate, sysattr, value);
@@ -1900,7 +1900,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_enumerate_add_nomatch_sysattr(struct udev_enumerate *udev_enumerate, const char *sysattr, const char *value) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_add_nomatch_sysattr, "udev");
         return orig::udev_enumerate_add_nomatch_sysattr(udev_enumerate, sysattr, value);
@@ -1912,7 +1912,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_enumerate_add_match_property(struct udev_enumerate *udev_enumerate, const char *property, const char *value) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_add_match_property, "udev");
         return orig::udev_enumerate_add_match_property(udev_enumerate, property, value);
@@ -1924,7 +1924,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_enumerate_add_match_sysname(struct udev_enumerate *udev_enumerate, const char *sysname) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_add_match_sysname, "udev");
         return orig::udev_enumerate_add_match_sysname(udev_enumerate, sysname);
@@ -1936,7 +1936,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_enumerate_add_match_tag(struct udev_enumerate *udev_enumerate, const char *tag) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_add_match_tag, "udev");
         return orig::udev_enumerate_add_match_tag(udev_enumerate, tag);
@@ -1948,7 +1948,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_enumerate_add_match_parent(struct udev_enumerate *udev_enumerate, struct udev_device *parent) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_add_match_parent, "udev");
         return orig::udev_enumerate_add_match_parent(udev_enumerate, parent);
@@ -1960,7 +1960,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_enumerate_add_match_is_initialized(struct udev_enumerate *udev_enumerate) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_add_match_is_initialized, "udev");
         return orig::udev_enumerate_add_match_is_initialized(udev_enumerate);
@@ -1972,7 +1972,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_enumerate_add_syspath(struct udev_enumerate *udev_enumerate, const char *syspath) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_add_syspath, "udev");
         return orig::udev_enumerate_add_syspath(udev_enumerate, syspath);
@@ -1984,7 +1984,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_enumerate_scan_devices(struct udev_enumerate *udev_enumerate) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_scan_devices, "udev");
         return orig::udev_enumerate_scan_devices(udev_enumerate);
@@ -1996,7 +1996,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ int udev_enumerate_scan_subsystems(struct udev_enumerate *udev_enumerate) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_scan_subsystems, "udev");
         return orig::udev_enumerate_scan_subsystems(udev_enumerate);
@@ -2008,7 +2008,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return 0;
 }
 /* Override */ struct udev_list_entry *udev_enumerate_get_list_entry(struct udev_enumerate *udev_enumerate) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_enumerate_get_list_entry, "udev");
         return orig::udev_enumerate_get_list_entry(udev_enumerate);
@@ -2022,7 +2022,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
 }
 
 /* Override */ struct udev_queue *udev_queue_ref(struct udev_queue *udev_queue) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_queue_ref, "udev");
         return orig::udev_queue_ref(udev_queue);
@@ -2031,7 +2031,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return ref(udev_queue);
 }
 /* Override */ struct udev_queue *udev_queue_unref(struct udev_queue *udev_queue) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_queue_unref, "udev");
         return orig::udev_queue_unref(udev_queue);
@@ -2040,7 +2040,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return unref(udev_queue);
 }
 /* Override */ struct udev *udev_queue_get_udev(struct udev_queue *udev_queue) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_queue_get_udev, "udev");
         return orig::udev_queue_get_udev(udev_queue);
@@ -2049,7 +2049,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return get_udev(udev_queue);
 }
 /* Override */ struct udev_queue *udev_queue_new(struct udev *udev) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_queue_new, "udev");
         return orig::udev_queue_new(udev);
@@ -2058,7 +2058,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return new_from_udev<struct udev_queue>(udev);
 }
 /* Override */ int udev_queue_get_udev_is_active(struct udev_queue *udev_queue) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_queue_get_udev_is_active, "udev");
         return orig::udev_queue_get_udev_is_active(udev_queue);
@@ -2069,7 +2069,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return true;
 }
 /* Override */ int udev_queue_get_queue_is_empty(struct udev_queue *udev_queue) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_queue_get_queue_is_empty, "udev");
         return orig::udev_queue_get_queue_is_empty(udev_queue);
@@ -2080,7 +2080,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return false;
 }
 /* Override */ int udev_queue_get_fd(struct udev_queue *udev_queue) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_queue_get_fd, "udev");
         return orig::udev_queue_get_fd(udev_queue);
@@ -2091,7 +2091,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return udev_queue->fd;
 }
 /* Override */ int udev_queue_flush(struct udev_queue *udev_queue) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_queue_flush, "udev");
         return orig::udev_queue_flush(udev_queue);
@@ -2103,7 +2103,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
 }
 
 /* Override */ struct udev_hwdb *udev_hwdb_new(struct udev *udev) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_hwdb_new, "udev");
         return orig::udev_hwdb_new(udev);
@@ -2112,7 +2112,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return new struct udev_hwdb;
 }
 /* Override */ struct udev_hwdb *udev_hwdb_ref(struct udev_hwdb *hwdb) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_hwdb_ref, "udev");
         return orig::udev_hwdb_ref(hwdb);
@@ -2121,7 +2121,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return ref(hwdb);
 }
 /* Override */ struct udev_hwdb *udev_hwdb_unref(struct udev_hwdb *hwdb) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_hwdb_unref, "udev");
         return orig::udev_hwdb_unref(hwdb);
@@ -2130,7 +2130,7 @@ DEFINE_ORIG_POINTER(udev_hwdb_get_properties_list_entry)
     return unref(hwdb);
 }
 /* Override */ struct udev_list_entry *udev_hwdb_get_properties_list_entry(struct udev_hwdb *hwdb, const char *modalias, unsigned int flags) {
-    DEBUGLOGCALL(LCF_FILEIO);
+    LOGTRACE(LCF_FILEIO);
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
         LINK_NAMESPACE(udev_hwdb_get_properties_list_entry, "udev");
         return orig::udev_hwdb_get_properties_list_entry(hwdb, modalias, flags);

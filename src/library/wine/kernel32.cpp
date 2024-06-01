@@ -77,41 +77,41 @@ int __stdcall WaitForMultipleObjectsEx( int count, const void **handles,
                                        bool wait_all, int timeout,
                                        bool alertable )
 {
-    DEBUGLOGCALL(LCF_WINE);
+    LOGTRACE(LCF_WINE);
     return orig::WaitForMultipleObjectsEx(count, handles, wait_all, timeout, alertable);
 }
 
 unsigned int __stdcall GetTickCount()
 {
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    LOGTRACE(LCF_TIMEGET);
     struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_GETTICKCOUNT);
     unsigned int msec = ts.tv_sec*1000 + ts.tv_nsec/1000000;
-    debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %d", msec);
+    LOG(LL_DEBUG, LCF_TIMEGET, "  returning %d", msec);
     return msec;
 }
 
 uint64_t __stdcall GetTickCount64()
 {
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    LOGTRACE(LCF_TIMEGET);
     struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_GETTICKCOUNT64);
     uint64_t msec = ts.tv_sec*1000 + ts.tv_nsec/1000000;
-    debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %" PRIu64, msec);
+    LOG(LL_DEBUG, LCF_TIMEGET, "  returning %" PRIu64, msec);
     return msec;
 }
 
 int __stdcall QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency)
 {
-    DEBUGLOGCALL(LCF_TIMEGET);
+    LOGTRACE(LCF_TIMEGET);
     lpFrequency->QuadPart = 1000000000;
     return 1;
 }
 
 int __stdcall QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount)
 {
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    LOGTRACE(LCF_TIMEGET);
     struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_QUERYPERFORMANCECOUNTER);
     lpPerformanceCount->QuadPart = ts.tv_nsec + ts.tv_sec * 1000000000LL;
-    debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %" PRId64, lpPerformanceCount->QuadPart);
+    LOG(LL_DEBUG, LCF_TIMEGET, "  returning %" PRId64, lpPerformanceCount->QuadPart);
     return 1;
 }
 

@@ -48,7 +48,7 @@ void NonDeterministicTimer::initialize(uint64_t initial_sec, uint64_t initial_ns
 
 struct timespec NonDeterministicTimer::getTicks(void)
 {
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    LOGTRACE(LCF_TIMEGET);
 
     /* If we didn't initialized yet, return a non-zero value. A value of
      * zero breaks some code. */
@@ -90,7 +90,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
     }
 
     ticks += delta;
-    debuglogstdio(LCF_TIMESET|LCF_FREQUENT, "%s added %d.%010d", __func__, delta.tv_sec, delta.tv_nsec);
+    LOG(LL_DEBUG, LCF_TIMESET, "%s added %d.%010d", __func__, delta.tv_sec, delta.tv_nsec);
 
     lasttime = realtime;
 
@@ -99,7 +99,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
 
 TimeHolder NonDeterministicTimer::enterFrameBoundary()
 {
-    DEBUGLOGCALL(LCF_TIMEGET);
+    LOGTRACE(LCF_TIMEGET);
     frame_mutex.lock();
 
     getTicks();
@@ -115,7 +115,7 @@ TimeHolder NonDeterministicTimer::enterFrameBoundary()
 
 void NonDeterministicTimer::exitFrameBoundary()
 {
-    DEBUGLOGCALL(LCF_TIMEGET);
+    LOGTRACE(LCF_TIMEGET);
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastExitTime));
     inFB = false;
     frame_mutex.unlock();
@@ -123,7 +123,7 @@ void NonDeterministicTimer::exitFrameBoundary()
 
 void NonDeterministicTimer::addDelay(struct timespec delayTicks)
 {
-    DEBUGLOGCALL(LCF_SLEEP | LCF_FREQUENT);
+    LOGTRACE(LCF_SLEEP);
 
     if (Global::shared_config.fastforward) {
         delayTicks.tv_sec = 0;

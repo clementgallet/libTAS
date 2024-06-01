@@ -78,7 +78,7 @@ void transfer_sleep(const struct timespec &ts, struct timespec *rem)
         return;
     }
 
-    debuglogstdio(LCF_SDL | LCF_SLEEP, "%s call - sleep for %d ms", __func__, sleep);
+    LOG(LL_TRACE, LCF_SDL | LCF_SLEEP, "%s call - sleep for %d ms", __func__, sleep);
 
     transfer_sleep(ts, NULL);
 }
@@ -95,7 +95,7 @@ void transfer_sleep(const struct timespec &ts, struct timespec *rem)
         return orig::nanosleep(&ts, NULL);
 
     bool mainT = ThreadManager::isMainThread();
-    debuglogstdio(LCF_SLEEP | (mainT?LCF_NONE:LCF_FREQUENT), "%s call - sleep for %d us", __func__, usec);
+    LOG(LL_TRACE, LCF_SLEEP, "%s call - sleep for %d us", __func__, usec);
 
      /* A bit hackish: Disable sleeps from nvidia driver */
     if (usec && ThreadManager::isMainThread()) {
@@ -124,7 +124,7 @@ void transfer_sleep(const struct timespec &ts, struct timespec *rem)
         return orig::nanosleep(requested_time, remaining);
     }
 
-    debuglogstdio(LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, requested_time->tv_sec, requested_time->tv_nsec);
+    LOG(LL_TRACE, LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, requested_time->tv_sec, requested_time->tv_nsec);
 
     transfer_sleep(*requested_time, remaining);
     return 0;
@@ -147,7 +147,7 @@ void transfer_sleep(const struct timespec &ts, struct timespec *rem)
         sleeptime -= curtime;
     }
     
-    debuglogstdio(LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, sleeptime.tv_sec, sleeptime.tv_nsec);
+    LOG(LL_TRACE, LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, sleeptime.tv_sec, sleeptime.tv_nsec);
 
     transfer_sleep(sleeptime, rem);
     return 0;
@@ -157,7 +157,7 @@ void transfer_sleep(const struct timespec &ts, struct timespec *rem)
 {
     RETURN_IF_NATIVE(sched_yield, (), nullptr);
 
-    DEBUGLOGCALL(LCF_SLEEP);
+    LOGTRACE(LCF_SLEEP);
 
     if (Global::shared_config.game_specific_timing & SharedConfig::GC_TIMING_CELESTE) {
         if (ThreadManager::isMainThread())

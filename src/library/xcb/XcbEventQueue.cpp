@@ -85,7 +85,7 @@ int XcbEventQueue::insert(xcb_generic_event_t *event)
 
     /* Check the size of the queue */
     if (eventQueue.size() > 1024) {
-        debuglogstdio(LCF_EVENTS, "We reached the limit of the event queue size!");
+        LOG(LL_DEBUG, LCF_EVENTS, "We reached the limit of the event queue size!");
         return -1;
     }
 

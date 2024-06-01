@@ -64,7 +64,7 @@ int open_evdev(const char* source, int flags)
         return -1;
     }
 
-    debuglogstdio(LCF_JOYSTICK, "   evdev device %d detected", evnum);
+    LOG(LL_DEBUG, LCF_JOYSTICK, "   evdev device %d detected", evnum);
 
     if (evdevfds[evnum].second++ == 0) {
         /* Register that we use EVDEV for joystick inputs */
@@ -77,7 +77,7 @@ int open_evdev(const char* source, int flags)
         /* If pipe creation failed (e.g. when opening the dev file in write mode),
          * invalidate the pipe and return -1. */
         if (evdevfds[evnum].first.first == -1) {
-            debuglogstdio(LCF_JOYSTICK, "   could not create evdev pipe with flags %d", flags);
+            LOG(LL_DEBUG, LCF_JOYSTICK, "   could not create evdev pipe with flags %d", flags);
             evdevfds[evnum].second = 0;
             return -1;
         }
@@ -98,7 +98,7 @@ void write_evdev(struct input_event ev, int evnum)
     if (pipeSize < static_cast<int>(64*sizeof(ev)))
         write(evdevfds[evnum].first.second, &ev, sizeof(ev));
     else {
-        debuglogstdio(LCF_JOYSTICK | LCF_WARNING, "did not write evdev event, too many already.");
+        LOG(LL_WARN, LCF_JOYSTICK, "did not write evdev event, too many already.");
     }
 }
 
@@ -117,7 +117,7 @@ bool sync_evdev(int evnum)
         NATIVECALL(ioctl(evdevfds[evnum].first.first, FIONREAD, &count));
         if (count > 0) {
             if (++attempts > 100 * 100) {
-                debuglogstdio(LCF_JOYSTICK | LCF_ERROR | LCF_ALERT, "evdev sync took too long, were asynchronous events incorrectly enabled?");
+                LOG(LL_ERROR, LCF_JOYSTICK, "evdev sync took too long, were asynchronous events incorrectly enabled?");
                 return false;
             }
             struct timespec sleepTime = { 0, 10 * 1000 };

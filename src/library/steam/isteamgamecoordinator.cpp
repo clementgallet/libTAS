@@ -25,19 +25,19 @@ namespace libtas {
 
 EGCResults ISteamGameCoordinator::SendMessage( uint32_t unMsgType, const void *pubData, uint32_t cubData )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return 0; // k_EGCResultOK
 }
 
 bool ISteamGameCoordinator::IsMessageAvailable( uint32_t *pcubMsgSize )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return false;
 }
 
 EGCResults ISteamGameCoordinator::RetrieveMessage( uint32_t *punMsgType, void *pubDest, uint32_t cubDest, uint32_t *pcubMsgSize )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return 1; // k_EGCResultNoMessage
 }
 

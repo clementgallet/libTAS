@@ -33,14 +33,14 @@ DEFINE_ORIG_POINTER(g_cond_wait_until)
 
 /* Override */ void g_cond_wait (GCond *cond, GMutex *mutex)
 {
-    DEBUGLOGCALL(LCF_THREAD | LCF_WAIT);
+    LOGTRACE(LCF_THREAD | LCF_WAIT);
     LINK_NAMESPACE(g_cond_wait, "glib-2.0");
     return orig::g_cond_wait(cond, mutex);
 }
 
 /* Override */ gboolean g_cond_wait_until(GCond *cond, GMutex *mutex, gint64 end_time)
 {
-    debuglogstdio(LCF_THREAD | LCF_WAIT, "%s called with end_time %lld", __func__, end_time);
+    LOG(LL_TRACE, LCF_THREAD | LCF_WAIT, "%s called with end_time %lld", __func__, end_time);
     LINK_NAMESPACE(g_cond_wait_until, "glib-2.0");
 
     /* If not main thread, do not change the behavior */

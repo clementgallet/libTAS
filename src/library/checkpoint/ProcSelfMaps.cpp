@@ -162,7 +162,7 @@ bool ProcSelfMaps::getNextArea(Area *area)
 
     /* Check if we reached the end of the line */
     while (line_idx == Area::FILENAMESIZE) {
-        debuglogstdio(LCF_CHECKPOINT | LCF_WARNING, "File path of memory section is too long");
+        LOG(LL_WARN, LCF_CHECKPOINT, "File path of memory section is too long");
         off += Area::FILENAMESIZE;
         ssize_t ret = pread(tmp_fd, line, Area::FILENAMESIZE, off);
         if (ret < 1) {

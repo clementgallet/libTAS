@@ -39,7 +39,7 @@ ssize_t Utils::writeAll(int fd, const void *buf, size_t count)
             if (errno == EINTR) {
                 continue;
             } else {
-                debuglogstdio(LCF_ERROR, "Write at address %p failed with errno %d", ptr + num_written, errno);
+                LOG(LL_ERROR, LCF_FILEIO, "Write at address %p failed with errno %d", ptr + num_written, errno);
                 return rc;
             }
         } else if (rc == 0) {
@@ -68,7 +68,7 @@ ssize_t Utils::readAll(int fd, void *buf, size_t count)
             if (errno == EINTR) {
                 continue;
             } else {
-                debuglogstdio(LCF_ERROR, "Read at address %p failed with errno %d", ptr + num_read, errno);
+                LOG(LL_ERROR, LCF_FILEIO, "Read at address %p failed with errno %d", ptr + num_read, errno);
                 return -1;
             }
         } else if (rc == 0) {

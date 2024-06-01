@@ -68,7 +68,7 @@ static void audioCallback(void *inUserData, AudioQueueRef queue, AudioQueueBuffe
 
 bool AudioPlayerCoreAudio::init(AudioContext& ac)
 {
-    debuglogstdio(LCF_SOUND, "Init audio player");
+    LOG(LL_DEBUG, LCF_SOUND, "Init audio player");
 
     GlobalNative gn;
     OSStatus res;
@@ -90,7 +90,7 @@ bool AudioPlayerCoreAudio::init(AudioContext& ac)
             strdesc.mFormatFlags |= kLinearPCMFormatFlagIsSignedInteger;
             break;
         default:
-            debuglogstdio(LCF_SOUND | LCF_ERROR, "Unsupported audio format %d", ac.outBitDepth);
+            LOG(LL_ERROR, LCF_SOUND, "Unsupported audio format %d", ac.outBitDepth);
             return false;
     }
     
@@ -109,7 +109,7 @@ bool AudioPlayerCoreAudio::init(AudioContext& ac)
 
     /* Init new queue */
     if ((res = AudioQueueNewOutput(&strdesc, audioCallback, &cyclicBuffer, nullptr, nullptr, 0, &audioQueue)) < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "  Cannot create audio queue: err %d", res);
+        LOG(LL_ERROR, LCF_SOUND, "  Cannot create audio queue: err %d", res);
         return false;
     }
 
@@ -123,12 +123,12 @@ bool AudioPlayerCoreAudio::init(AudioContext& ac)
             layout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;
             break;
         default:
-            debuglogstdio(LCF_SOUND | LCF_ERROR, "  Unknown channel layout");
+            LOG(LL_ERROR, LCF_SOUND, "  Unknown channel layout");
             return false;
     }
     
     if ((res = AudioQueueSetProperty(audioQueue, kAudioQueueProperty_ChannelLayout, &layout, sizeof(layout))) < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "  AudioQueueSetProperty(kAudioQueueProperty_ChannelLayout) failed: err %d", res);
+        LOG(LL_ERROR, LCF_SOUND, "  AudioQueueSetProperty(kAudioQueueProperty_ChannelLayout) failed: err %d", res);
         return false;
     }
 
@@ -138,7 +138,7 @@ bool AudioPlayerCoreAudio::init(AudioContext& ac)
     /* Create audio buffers */
     for (int i = 0; i < numAudioBuffers; i++) {
         if ((res = AudioQueueAllocateBuffer(audioQueue, buffer_size, &audioQueueBuffers[i])) < 0) {
-            debuglogstdio(LCF_SOUND | LCF_ERROR, "  AudioQueueAllocateBuffer failed: err %d", res);
+            LOG(LL_ERROR, LCF_SOUND, "  AudioQueueAllocateBuffer failed: err %d", res);
             return false;
         }
         
@@ -149,13 +149,13 @@ bool AudioPlayerCoreAudio::init(AudioContext& ac)
 
         audioQueueBuffers[i]->mAudioDataByteSize = audioQueueBuffers[i]->mAudioDataBytesCapacity;
         if ((res = AudioQueueEnqueueBuffer(audioQueue, audioQueueBuffers[i], 0, NULL)) < 0) {
-            debuglogstdio(LCF_SOUND | LCF_ERROR, "  AudioQueueEnqueueBuffer failed: err %d", res);
+            LOG(LL_ERROR, LCF_SOUND, "  AudioQueueEnqueueBuffer failed: err %d", res);
             return false;
         }
     }
     
     if ((res = AudioQueueStart(audioQueue, NULL))) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "  AudioQueueEnqueueBuffer failed: err %d", res);
+        LOG(LL_ERROR, LCF_SOUND, "  AudioQueueEnqueueBuffer failed: err %d", res);
         return false;
     }
 
@@ -178,12 +178,12 @@ bool AudioPlayerCoreAudio::play(AudioContext& ac)
     if (Global::shared_config.fastforward)
         return true;
 
-    debuglogstdio(LCF_SOUND, "Play an audio frame");
+    LOG(LL_DEBUG, LCF_SOUND, "Play an audio frame");
     
     /* Write into circular buffer */
     int bytestoWrite = std::min(ac.outBytes, cyclicBuffer.cap - cyclicBuffer.size);
     if ((cyclicBuffer.cap - cyclicBuffer.size) < ac.outBytes)
-        debuglogstdio(LCF_SOUND | LCF_WARNING, "Not enough space in circular buffer to write");
+        LOG(LL_WARN, LCF_SOUND, "Not enough space in circular buffer to write");
 
     /* Write until buffer end */
     size_t sizeEnd = std::min(bytestoWrite, cyclicBuffer.cap - cyclicBuffer.end);

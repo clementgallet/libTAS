@@ -71,7 +71,7 @@ bool check_al_soft_available()
         CHECKVAL(orig::alcMakeContextCurrent(context) == ALC_TRUE);
 
         const char* al_renderer = orig::alGetString(AL_RENDERER);
-        debuglogstdio(LCF_SOUND, "orig::alcGetString(AL_RENDERER) returned %s", al_renderer ? al_renderer : "<NULL>");
+        LOG(LL_DEBUG, LCF_SOUND, "orig::alcGetString(AL_RENDERER) returned %s", al_renderer ? al_renderer : "<NULL>");
         al_soft_available = al_renderer && strcmp(al_renderer, "OpenAL Soft") == 0;
 
         orig::alcMakeContextCurrent(nullptr);

@@ -335,7 +335,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 
         /* First, create the AVEncoder is needed */
         if (!avencoder) {
-            debuglogstdio(LCF_DUMP, "Start AV dumping on file %s", AVEncoder::dumpfile);
+            LOG(LL_DEBUG, LCF_DUMP, "Start AV dumping on file %s", AVEncoder::dumpfile);
             avencoder.reset(new AVEncoder());
         }
 
@@ -347,7 +347,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
          * encoding, so we must delete the encoder object.
          */
         if (avencoder) {
-            debuglogstdio(LCF_DUMP, "Stop AV dumping");
+            LOG(LL_DEBUG, LCF_DUMP, "Stop AV dumping");
             avencoder.reset(nullptr);
         }
     }
@@ -626,14 +626,14 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 break;
 
             case MSGN_DUMP_FILE:
-                debuglogstdio(LCF_SOCKET, "Receiving dump filename");
+                LOG(LL_DEBUG, LCF_SOCKET, "Receiving dump filename");
                 receiveCString(AVEncoder::dumpfile);
-                debuglogstdio(LCF_SOCKET, "File %s", AVEncoder::dumpfile);
+                LOG(LL_DEBUG, LCF_SOCKET, "File %s", AVEncoder::dumpfile);
                 receiveCString(AVEncoder::ffmpeg_options);
                 break;
 
             case MSGN_SCREENSHOT:{
-                debuglogstdio(LCF_SOCKET, "Receiving screenshot filename");
+                LOG(LL_DEBUG, LCF_SOCKET, "Receiving screenshot filename");
                 std::string screenshotfile = receiveString();
                 Screenshot::save(screenshotfile, !!draw);                    
                 break;
@@ -769,7 +769,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
 
             case MSGN_STOP_ENCODE:
                 if (avencoder) {
-                    debuglogstdio(LCF_DUMP, "Stop AV dumping");
+                    LOG(LL_DEBUG, LCF_DUMP, "Stop AV dumping");
                     avencoder.reset(nullptr);
                     Global::shared_config.av_dumping = false;
 
@@ -794,7 +794,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 return;
 
             default:
-                debuglogstdio(LCF_ERROR | LCF_SOCKET, "Unknown message received");
+                LOG(LL_ERROR, LL_ERROR, "Unknown message received");
                 return;
         }
     }

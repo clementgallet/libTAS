@@ -239,11 +239,11 @@ static bool HandleCallbackOutput(struct call_output *out)
         int size = callback->GetCallbackSizeBytes();
         if (size != out->data_size)
         {
-            debuglogstdio(LCF_STEAM | LCF_ERROR, "Callback %d data size mismatch: expected %u != got %u", out->type, out->data_size, size);
+            LOG(LL_ERROR, LCF_STEAM, "Callback %d data size mismatch: expected %u != got %u", out->type, out->data_size, size);
             continue;
         }
 
-        debuglogstdio(LCF_STEAM, "   Run callback of type %u", out->type);
+        LOG(LL_DEBUG, LCF_STEAM, "   Run callback of type %u", out->type);
         callback->Run(out->data);
         out->is_handled = true;
     }
@@ -279,11 +279,11 @@ static bool HandleApiCallResultOutput(struct call_output *out)
 
         int size = callback->GetCallbackSizeBytes();
         if (size != out->data_size) {
-            debuglogstdio(LCF_STEAM | LCF_ERROR, "   Call result #%" PRIu64 " %u data size mismatch: expected %u != got %u", out->api_call, out->type, out->data_size, size);
+            LOG(LL_ERROR, LCF_STEAM, "   Call result #%" PRIu64 " %u data size mismatch: expected %u != got %u", out->api_call, out->type, out->data_size, size);
             continue;
         }
 
-        debuglogstdio(LCF_STEAM, "   Run call result #%" PRIu64 " of type %u", out->api_call, out->type);
+        LOG(LL_DEBUG, LCF_STEAM, "   Run call result #%" PRIu64 " of type %u", out->api_call, out->type);
         callback->Run(out->data, out->io_failure, out->api_call);
 
         api_call_results.erase_after(prev_it);

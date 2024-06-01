@@ -70,12 +70,12 @@ enum {
 
 void setDynapiAddr(uint64_t addr)
 {
-    debuglogstdio(LCF_SDL, "Received SDL_DYNAPI_entry address %llx", addr);
+    LOG(LL_DEBUG, LCF_SDL, "Received SDL_DYNAPI_entry address %llx", addr);
     orig::SDL_DYNAPI_entry = reinterpret_cast<decltype(orig::SDL_DYNAPI_entry)>(addr);
 }
 
 /* Override */ Sint32 SDL_DYNAPI_entry(Uint32 apiver, void *table, Uint32 tablesize) {
-    DEBUGLOGCALL(LCF_SDL);
+    LOGTRACE(LCF_SDL);
 
     /* Try finding the original SDL_DYNAPI_entry function. The more generic way
      * is to determine in which file the calling function is located with  
@@ -90,7 +90,7 @@ void setDynapiAddr(uint64_t addr)
         if (dladdr(__builtin_return_address(0), &info)) {
             /* Get the dynamic library name of our caller */
 
-            debuglogstdio(LCF_SDL, "   Try extracting original SDL_DYNAPI_entry function from file %s", info.dli_fname);
+            LOG(LL_DEBUG, LCF_SDL, "   Try extracting original SDL_DYNAPI_entry function from file %s", info.dli_fname);
             eh_obj_t obj;
             int ret = eh_find_obj(&obj, info.dli_fname);
             if (ret == 0) {
@@ -103,11 +103,11 @@ void setDynapiAddr(uint64_t addr)
     if (!orig::SDL_DYNAPI_entry) {        
         /* We couldn't find the SDL library that is supposed to be used by the
         * game, so we load the system SDL library instead */
-        debuglogstdio(LCF_SDL | LCF_WARNING, "   Could not find the original SDL_DYNAPI_entry function, using the system one");
+        LOG(LL_WARN, LCF_SDL, "   Could not find the original SDL_DYNAPI_entry function, using the system one");
         LINK_NAMESPACE_SDL2(SDL_DYNAPI_entry);
         
         if (!orig::SDL_DYNAPI_entry) {
-            debuglogstdio(LCF_SDL | LCF_ERROR, "   Could not find any SDL_DYNAPI_entry function!");
+            LOG(LL_ERROR, LCF_SDL, "   Could not find any SDL_DYNAPI_entry function!");
             return 1;
         }
     }
@@ -115,7 +115,7 @@ void setDynapiAddr(uint64_t addr)
     /* Get the original pointers. */
     Sint32 res = orig::SDL_DYNAPI_entry(apiver, table, tablesize);
     if (res != 0) {
-        debuglogstdio(LCF_SDL | LCF_ERROR, "   The original SDL_DYNAPI_entry failed!");
+        LOG(LL_ERROR, LCF_SDL, "   The original SDL_DYNAPI_entry failed!");
         return res;
     }
 
@@ -129,7 +129,7 @@ void setDynapiAddr(uint64_t addr)
     // orig::SDL_GetVersion(&ver);
     // 
     // if ((ver.minor == 0) && (ver.patch < 18)) {
-    //     debuglogstdio(LCF_SDL | LCF_WARNING, "System SDL library is too old (%d.%d.%d)!", ver.major, ver.minor, ver.patch);
+    //     LOG(LL_WARN, LCF_SDL, "System SDL library is too old (%d.%d.%d)!", ver.major, ver.minor, ver.patch);
     // }
 
     /* TODO: Load the `SDL_DYNAPI_entry()` function from system SDL library */
@@ -144,12 +144,12 @@ void setDynapiAddr(uint64_t addr)
     void *libtaslib;
     NATIVECALL(libtaslib = dlopen(libtaspath, RTLD_LAZY | RTLD_NOLOAD));
     if (libtaslib == nullptr) {
-        debuglogstdio(LCF_SDL | LCF_ERROR, "   Could not find already loaded libtas.so!");
+        LOG(LL_ERROR, LCF_SDL, "   Could not find already loaded libtas.so!");
         return 1;
     }
 
 #define IF_IN_BOUNDS(FUNC) if (index::FUNC * sizeof(void *) < tablesize)
-#define SDL_LINK(FUNC) IF_IN_BOUNDS(FUNC) orig::FUNC = reinterpret_cast<decltype(&FUNC)>(entries[index::FUNC]); else debuglogstdio(LCF_SDL | LCF_HOOK, "sdl dynapi symbol %s will not be imported", #FUNC);
+#define SDL_LINK(FUNC) IF_IN_BOUNDS(FUNC) orig::FUNC = reinterpret_cast<decltype(&FUNC)>(entries[index::FUNC]); else LOG(LL_DEBUG, LCF_SDL | LCF_HOOK, "sdl dynapi symbol %s will not be imported", #FUNC);
 #define SDL_HOOK(FUNC) IF_IN_BOUNDS(FUNC) entries[index::FUNC] = reinterpret_cast<void *>(dlsym(libtaslib, #FUNC));
 #include "sdlhooks.h"
 

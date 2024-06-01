@@ -49,7 +49,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
         return orig::poll(fds, nfds, timeout);
     }
 
-    debuglogstdio(LCF_WAIT, "%s call with %d fds and timeout %d", __func__, nfds, timeout);
+    LOG(LL_TRACE, LCF_WAIT, "%s call with %d fds and timeout %d", __func__, nfds, timeout);
 
 #ifdef __linux__
     /* Check for the fd used by ALSA */
@@ -112,9 +112,9 @@ int ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, cons
     }
 
     if (timeout)
-        debuglogstdio(LCF_WAIT, "%s call with %d fds and timeout %d.%09d", __func__, nfds, timeout->tv_sec, timeout->tv_nsec);
+        LOG(LL_TRACE, LCF_WAIT, "%s call with %d fds and timeout %d.%09d", __func__, nfds, timeout->tv_sec, timeout->tv_nsec);
     else
-        debuglogstdio(LCF_WAIT, "%s call with %d fds and infinite timeout", __func__, nfds);
+        LOG(LL_TRACE, LCF_WAIT, "%s call with %d fds and infinite timeout", __func__, nfds);
     
     int ret = orig::ppoll(fds, nfds, timeout, ss);
 
@@ -143,7 +143,7 @@ int ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, cons
         return orig::select(nfds, readfds, writefds, exceptfds, timeout);
     }
 
-    debuglogstdio(LCF_SLEEP, "%s call - sleep for %d.%06d sec", __func__, timeout->tv_sec, timeout->tv_usec);
+    LOG(LL_TRACE, LCF_SLEEP, "%s call - sleep for %d.%06d sec", __func__, timeout->tv_sec, timeout->tv_usec);
 
     struct timespec ts;
     ts.tv_sec = timeout->tv_sec;
@@ -171,7 +171,7 @@ int ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, cons
         return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
     }
 
-    debuglogstdio(LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, timeout->tv_sec, timeout->tv_nsec);
+    LOG(LL_TRACE, LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, timeout->tv_sec, timeout->tv_nsec);
 
     transfer_sleep(*timeout, NULL);
     return 0;
@@ -186,7 +186,7 @@ int ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, cons
         return orig::epoll_wait(epfd, events, maxevents, timeout);
     }
 
-    debuglogstdio(LCF_SLEEP, "%s call with timeout %d", __func__, timeout);
+    LOG(LL_TRACE, LCF_SLEEP, "%s call with timeout %d", __func__, timeout);
 
     int ret = orig::epoll_wait(epfd, events, maxevents, timeout);
 

@@ -31,21 +31,21 @@ namespace libtas {
 
 /* Override */ xcb_query_keymap_cookie_t xcb_query_keymap(xcb_connection_t *)
 {
-    DEBUGLOGCALL(LCF_KEYBOARD);
+    LOGTRACE(LCF_KEYBOARD);
     xcb_query_keymap_cookie_t keymap_cookie = {0};
     return keymap_cookie;
 }
 
 /* Override */ xcb_query_keymap_cookie_t xcb_query_keymap_unchecked(xcb_connection_t *)
 {
-    DEBUGLOGCALL(LCF_KEYBOARD);
+    LOGTRACE(LCF_KEYBOARD);
     xcb_query_keymap_cookie_t keymap_cookie = {0};
     return keymap_cookie;
 }
 
 /* Override */ xcb_query_keymap_reply_t* xcb_query_keymap_reply(xcb_connection_t *, xcb_query_keymap_cookie_t , xcb_generic_error_t** )
 {
-    DEBUGLOGCALL(LCF_KEYBOARD);
+    LOGTRACE(LCF_KEYBOARD);
 
     /* The reply is allocated and the caller is in charge of freeing it */
     xcb_query_keymap_reply_t *reply = new xcb_query_keymap_reply_t;
@@ -76,7 +76,7 @@ xcb_grab_keyboard (xcb_connection_t *,
                    uint8_t           ,
                    uint8_t           )
 {
-    DEBUGLOGCALL(LCF_KEYBOARD);
+    LOGTRACE(LCF_KEYBOARD);
     xcb_grab_keyboard_cookie_t keyboard_grab_cookie = {0};
     return keyboard_grab_cookie;
 }
@@ -89,7 +89,7 @@ xcb_grab_keyboard_unchecked (xcb_connection_t *,
                              uint8_t           ,
                              uint8_t           )
 {
-    DEBUGLOGCALL(LCF_KEYBOARD);
+    LOGTRACE(LCF_KEYBOARD);
     xcb_grab_keyboard_cookie_t keyboard_grab_cookie = {0};
     return keyboard_grab_cookie;
 }
@@ -99,7 +99,7 @@ xcb_grab_keyboard_reply (xcb_connection_t            *,
                          xcb_grab_keyboard_cookie_t     /**< */,
                          xcb_generic_error_t        **)
 {
-    DEBUGLOGCALL(LCF_KEYBOARD);
+    LOGTRACE(LCF_KEYBOARD);
     xcb_grab_keyboard_reply_t *reply = new xcb_grab_keyboard_reply_t;
     reply->response_type = XCB_GRAB_KEYBOARD;
     reply->sequence = 0;
@@ -112,7 +112,7 @@ xcb_grab_keyboard_reply (xcb_connection_t            *,
 xcb_ungrab_keyboard_checked (xcb_connection_t *,
                              xcb_timestamp_t   )
 {
-    DEBUGLOGCALL(LCF_KEYBOARD);
+    LOGTRACE(LCF_KEYBOARD);
     xcb_void_cookie_t keyboard_ungrab_cookie = {0};
     return keyboard_ungrab_cookie;
 }
@@ -121,7 +121,7 @@ xcb_ungrab_keyboard_checked (xcb_connection_t *,
 xcb_ungrab_keyboard (xcb_connection_t *,
                      xcb_timestamp_t   )
 {
-    DEBUGLOGCALL(LCF_KEYBOARD);
+    LOGTRACE(LCF_KEYBOARD);
     xcb_void_cookie_t keyboard_ungrab_cookie = {0};
     return keyboard_ungrab_cookie;
 }
@@ -135,7 +135,7 @@ xcb_grab_key_checked (xcb_connection_t *,
                       uint8_t           ,
                       uint8_t           )
 {
-    DEBUGLOGCALL(LCF_KEYBOARD);
+    LOGTRACE(LCF_KEYBOARD);
     xcb_void_cookie_t key_grab_cookie = {0};
     return key_grab_cookie;
 }
@@ -149,7 +149,7 @@ xcb_grab_key (xcb_connection_t *,
               uint8_t           ,
               uint8_t           )
 {
-    DEBUGLOGCALL(LCF_KEYBOARD);
+    LOGTRACE(LCF_KEYBOARD);
     xcb_void_cookie_t key_grab_cookie = {0};
     return key_grab_cookie;
 }
@@ -160,7 +160,7 @@ xcb_ungrab_key_checked (xcb_connection_t *,
                         xcb_window_t      ,
                         uint16_t          )
 {
-    DEBUGLOGCALL(LCF_KEYBOARD);
+    LOGTRACE(LCF_KEYBOARD);
     xcb_void_cookie_t key_ungrab_cookie = {0};
     return key_ungrab_cookie;
 }
@@ -171,7 +171,7 @@ xcb_ungrab_key (xcb_connection_t *,
                 xcb_window_t      ,
                 uint16_t          )
 {
-    DEBUGLOGCALL(LCF_KEYBOARD);
+    LOGTRACE(LCF_KEYBOARD);
     xcb_void_cookie_t key_ungrab_cookie = {0};
     return key_ungrab_cookie;
 }

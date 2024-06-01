@@ -158,7 +158,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_PumpEvents(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
     
     /* Update the internal keyboard array */
     int SDLver = get_sdlversion();
@@ -178,7 +178,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_PeepEvents);
@@ -203,7 +203,7 @@ void pushNativeSDLEvents(void)
     int nevents = 0;
     switch (action) {
         case SDL_ADDEVENT:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "The game wants to add %d events", numevents);
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "The game wants to add %d events", numevents);
             for (int i=0; i<numevents; i++) {
                 if (SDLver == 1) {
                     if (! isBannedEvent(&events1[i])) {
@@ -228,14 +228,14 @@ void pushNativeSDLEvents(void)
             }
             return nevents;
         case SDL_PEEKEVENT:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "The game wants to peek at %d events", numevents);
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "The game wants to peek at %d events", numevents);
             if (SDLver == 1)
                 return sdlEventQueue.pop(events1, numevents, mask, false);
             if (SDLver == 2)
                 return sdlEventQueue.pop(events, numevents, minType, maxType, false);
             break;
         case SDL_GETEVENT:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "The game wants to get %d events", numevents);
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "The game wants to get %d events", numevents);
             if (SDLver == 1)
                 return sdlEventQueue.pop(events1, numevents, mask, true);
             if (SDLver == 2)
@@ -248,7 +248,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ int SDL_PollEvent(SDL_Event *event)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_PollEvent);
@@ -288,7 +288,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ SDL_bool SDL_HasEvent(Uint32 type)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_HasEvent);
@@ -300,7 +300,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ SDL_bool SDL_HasEvents(Uint32 minType, Uint32 maxType)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_HasEvents);
@@ -314,7 +314,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_FlushEvent(Uint32 type)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_FlushEvent);
@@ -326,7 +326,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_FlushEvents(Uint32 minType, Uint32 maxType)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_FlushEvents);
@@ -338,7 +338,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ int SDL_WaitEvent(SDL_Event * event)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_WaitEvent);
@@ -368,7 +368,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ int SDL_WaitEventTimeout(SDL_Event * event, int timeout)
 {
-    debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_TODO, "%s call with timeout %d", __func__, timeout);
+    LOG(LL_TRACE, LCF_SDL | LCF_EVENTS | LCF_TODO, "%s call with timeout %d", __func__, timeout);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_WaitEventTimeout);
@@ -407,7 +407,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ int SDL_PushEvent(SDL_Event * event)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_PushEvent);
@@ -444,7 +444,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_SetEventFilter(SDL_EventFilter filter, void *userdata)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_SetEventFilter);
@@ -460,7 +460,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ SDL_bool SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_GetEventFilter);
@@ -469,7 +469,7 @@ void pushNativeSDLEvents(void)
 
     int SDLver = get_sdlversion();
     if (SDLver == 1) {
-        debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_ERROR, "Not supported yet for SDL1");
+        LOG(LL_ERROR, LCF_SDL | LCF_EVENTS, "Not supported yet for SDL1");
         return SDL_FALSE;
         // return reinterpret_cast<SDL_bool>(sdlEventQueue.getFilter());
     }
@@ -484,7 +484,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_AddEventWatch(SDL_EventFilter filter, void *userdata)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_AddEventWatch);
@@ -496,7 +496,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_DelEventWatch(SDL_EventFilter filter, void *userdata)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_DelEventWatch);
@@ -508,7 +508,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_FilterEvents(SDL_EventFilter filter, void *userdata)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_FilterEvents);
@@ -520,7 +520,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ Uint8 SDL_EventState(Uint32 type, int state)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS);
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_EventState);
@@ -543,7 +543,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ Uint32 SDL_RegisterEvents(int numevents)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_EVENTS | LCF_TODO);
+    LOGTRACE(LCF_SDL | LCF_EVENTS | LCF_TODO);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_RegisterEvents);
@@ -558,155 +558,155 @@ void logEvent(SDL_Event *event)
     switch(event->type) {
         case SDL_KEYDOWN:
         case SDL_KEYUP:
-            debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Receiving KEYUP/KEYDOWN event with scancode %d and sym %d", (int)event->key.keysym.scancode, event->key.keysym.sym);
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Receiving KEYUP/KEYDOWN event with scancode %d and sym %d", (int)event->key.keysym.scancode, event->key.keysym.sym);
             break;
 
         case SDL_QUIT:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving QUIT event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving QUIT event.");
             break;
 
         case SDL_WINDOWEVENT:
             switch (event->window.event) {
                 case SDL_WINDOWEVENT_FOCUS_GAINED:
-                    debuglogstdio(LCF_SDL | LCF_EVENTS, "Window %d gained keyboard focus.", event->window.windowID);
+                    LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Window %d gained keyboard focus.", event->window.windowID);
                     break;
                 case SDL_WINDOWEVENT_FOCUS_LOST:
-                    debuglogstdio(LCF_SDL | LCF_EVENTS, "Window %d lost keyboard focus.", event->window.windowID);
+                    LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Window %d lost keyboard focus.", event->window.windowID);
                     break;
                 case SDL_WINDOWEVENT_CLOSE:
-                    debuglogstdio(LCF_SDL | LCF_EVENTS, "Window %d closed.", event->window.windowID);
+                    LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Window %d closed.", event->window.windowID);
                     break;
                 default:
-                    debuglogstdio(LCF_SDL | LCF_EVENTS, "Window event %d", (int)event->window.event);
+                    LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Window event %d", (int)event->window.event);
                     break;
             }
             break;
 
         case SDL_TEXTEDITING:
-            debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Receiving a keyboard text editing event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Receiving a keyboard text editing event.");
             break;
 
         case SDL_TEXTINPUT:
-            debuglogstdio(LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Receiving a keyboard text input event %s", event->text.text);
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Receiving a keyboard text input event %s", event->text.text);
             break;
             /*
                case SDL_KEYMAPCHANGED:
-               debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a keymap change event.");
+               LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a keymap change event.");
                break;
                */
         case SDL_MOUSEMOTION:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a mouse move event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a mouse move event.");
             break;
 
         case SDL_MOUSEBUTTONDOWN:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a mouse button press event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a mouse button press event.");
             break;
 
         case SDL_MOUSEBUTTONUP:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a mouse button release event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a mouse button release event.");
             break;
 
         case SDL_MOUSEWHEEL:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a mouse wheel event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a mouse wheel event.");
             break;
 
         case SDL_JOYAXISMOTION:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a joystick axis motion event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a joystick axis motion event.");
             break;
 
         case SDL_JOYBALLMOTION:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a joystick trackball event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a joystick trackball event.");
             break;
 
         case SDL_JOYHATMOTION:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a joystick hat position event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a joystick hat position event.");
             break;
 
         case SDL_JOYBUTTONDOWN:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a joystick button press event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a joystick button press event.");
             break;
 
         case SDL_JOYBUTTONUP:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a joystick button release event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a joystick button release event.");
             break;
 
         case SDL_JOYDEVICEADDED:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a joystick connected event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a joystick connected event.");
             break;
 
         case SDL_JOYDEVICEREMOVED:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a joystick disconnected event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a joystick disconnected event.");
             break;
 
         case SDL_CONTROLLERAXISMOTION:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a controller axis motion event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a controller axis motion event.");
             break;
 
         case SDL_CONTROLLERBUTTONDOWN:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a controller button press event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a controller button press event.");
             break;
 
         case SDL_CONTROLLERBUTTONUP:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a controller button release event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a controller button release event.");
             break;
 
         case SDL_CONTROLLERDEVICEADDED:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a controller connected event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a controller connected event.");
             break;
 
         case SDL_CONTROLLERDEVICEREMOVED:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a controller disconnected event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a controller disconnected event.");
             break;
 
         case SDL_CONTROLLERDEVICEREMAPPED:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a controller mapping update event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a controller mapping update event.");
             break;
 
         case SDL_FINGERDOWN:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving an input device touch event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving an input device touch event.");
             break;
 
         case SDL_FINGERUP:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving an input device release event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving an input device release event.");
             break;
 
         case SDL_FINGERMOTION:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving an input device drag event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving an input device drag event.");
             break;
 
         case SDL_DOLLARGESTURE:
         case SDL_DOLLARRECORD:
         case SDL_MULTIGESTURE:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a gesture event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a gesture event.");
             break;
 
         case SDL_CLIPBOARDUPDATE:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a clipboard update event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a clipboard update event.");
             break;
 
         case SDL_DROPFILE:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a drag and drop event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a drag and drop event.");
             break;
             /*
                case SDL_AUDIODEVICEADDED:
-               debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a new audio device event.");
+               LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a new audio device event.");
                break;
 
                case SDL_AUDIODEVICEREMOVED:
-               debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a audio device removal event.");
+               LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a audio device removal event.");
                break;
                */
         case SDL_RENDER_TARGETS_RESET:
             //            case SDL_RENDER_DEVICE_RESET:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a render event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a render event.");
             break;
 
         case SDL_USEREVENT:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving a user-specified event.");
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a user-specified event.");
             break;
 
         default:
-            debuglogstdio(LCF_SDL | LCF_EVENTS, "Receiving an unknown event: %d", event->type);
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving an unknown event: %d", event->type);
             break;
     }
 }

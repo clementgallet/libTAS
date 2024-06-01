@@ -25,151 +25,151 @@ namespace libtas {
 
 HTTPRequestHandle ISteamHTTP::CreateHTTPRequest( EHTTPMethod eHTTPRequestMethod, const char *pchAbsoluteURL )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return 0;
 }
 
 bool ISteamHTTP::SetHTTPRequestContextValue( HTTPRequestHandle hRequest, uint64_t ulContextValue )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestNetworkActivityTimeout( HTTPRequestHandle hRequest, uint32_t unTimeoutSeconds )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestHeaderValue( HTTPRequestHandle hRequest, const char *pchHeaderName, const char *pchHeaderValue )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestGetOrPostParameter( HTTPRequestHandle hRequest, const char *pchParamName, const char *pchParamValue )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::SendHTTPRequest( HTTPRequestHandle hRequest, SteamAPICall_t *pCallHandle )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::SendHTTPRequestAndStreamResponse( HTTPRequestHandle hRequest, SteamAPICall_t *pCallHandle )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::DeferHTTPRequest( HTTPRequestHandle hRequest )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::PrioritizeHTTPRequest( HTTPRequestHandle hRequest )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::GetHTTPResponseHeaderSize( HTTPRequestHandle hRequest, const char *pchHeaderName, uint32_t *unResponseHeaderSize )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::GetHTTPResponseHeaderValue( HTTPRequestHandle hRequest, const char *pchHeaderName, uint8_t *pHeaderValueBuffer, uint32_t unBufferSize )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::GetHTTPResponseBodySize( HTTPRequestHandle hRequest, uint32_t *unBodySize )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::GetHTTPResponseBodyData( HTTPRequestHandle hRequest, uint8_t *pBodyDataBuffer, uint32_t unBufferSize )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::GetHTTPStreamingResponseBodyData( HTTPRequestHandle hRequest, uint32_t cOffset, uint8_t *pBodyDataBuffer, uint32_t unBufferSize )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::ReleaseHTTPRequest( HTTPRequestHandle hRequest )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::GetHTTPDownloadProgressPct( HTTPRequestHandle hRequest, float *pflPercentOut )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestRawPostBody( HTTPRequestHandle hRequest, const char *pchContentType, uint8_t *pubBody, uint32_t unBodyLen )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return false;
 }
 
 HTTPCookieContainerHandle ISteamHTTP::CreateCookieContainer( bool bAllowResponsesToModify )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return 0;
 }
 
 bool ISteamHTTP::ReleaseCookieContainer( HTTPCookieContainerHandle hCookieContainer )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::SetCookie( HTTPCookieContainerHandle hCookieContainer, const char *pchHost, const char *pchUrl, const char *pchCookie )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestCookieContainer( HTTPRequestHandle hRequest, HTTPCookieContainerHandle hCookieContainer )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestUserAgentInfo( HTTPRequestHandle hRequest, const char *pchUserAgentInfo )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestRequiresVerifiedCertificate( HTTPRequestHandle hRequest, bool bRequireVerifiedCertificate )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestAbsoluteTimeoutMS( HTTPRequestHandle hRequest, uint32_t unMilliseconds )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::GetHTTPRequestWasTimedOut( HTTPRequestHandle hRequest, bool *pbWasTimedOut )
 {
-    DEBUGLOGCALL(LCF_STEAM);
+    LOGTRACE(LCF_STEAM);
 	return false;
 }
 

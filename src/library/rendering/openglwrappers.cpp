@@ -33,7 +33,7 @@ void gl##NAME DECL\
 {\
     LINK_GL_POINTER(NAME);\
     if (GlobalState::isNative()) return glProcs.NAME ARGS;\
-    DEBUGLOGCALL(LCF_OGL);\
+    LOGTRACE(LCF_OGL);\
     if (!Global::skipping_draw)\
         return glProcs.NAME ARGS;\
 }\
@@ -41,7 +41,7 @@ void gl##NAME DECL\
 void my##gl##NAME DECL\
 {\
     if (GlobalState::isNative()) return glProcs.NAME ARGS;\
-    DEBUGLOGCALL(LCF_OGL);\
+    LOGTRACE(LCF_OGL);\
     if (!Global::skipping_draw)\
         return glProcs.NAME ARGS ;\
 }
@@ -122,7 +122,7 @@ GLFUNCSKIPDRAW(DrawArraysEXT, (GLenum mode, GLint first, GLsizei count), (mode, 
 
 void myglBlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)
 {
-    DEBUGLOGCALL(LCF_OGL);
+    LOGTRACE(LCF_OGL);
     if (!Global::skipping_draw)
         return glProcs.BlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 }
@@ -135,7 +135,7 @@ void glTexParameterf(GLenum target, GLenum pname, GLfloat param)
 
 void myglTexParameterf(GLenum target, GLenum pname, GLfloat param)
 {
-    DEBUGLOGCALL(LCF_OGL);
+    LOGTRACE(LCF_OGL);
     if (Global::shared_config.opengl_performance) {
         switch (pname) {
             case GL_TEXTURE_MIN_FILTER:
@@ -167,7 +167,7 @@ void glTexParameteri(GLenum target, GLenum pname, GLfloat param)
 
 void myglTexParameteri(GLenum target, GLenum pname, GLint param)
 {
-    DEBUGLOGCALL(LCF_OGL);
+    LOGTRACE(LCF_OGL);
     if (Global::shared_config.opengl_performance) {
         switch (pname) {
             case GL_TEXTURE_MIN_FILTER:
@@ -200,7 +200,7 @@ void glEnable(GLenum cap)
 void myglEnable(GLenum cap)
 {
     if (GlobalState::isNative()) return glProcs.Enable(cap);
-    DEBUGLOGCALL(LCF_OGL);
+    LOGTRACE(LCF_OGL);
     if (Global::shared_config.opengl_performance) {
         switch (cap) {
             case GL_MULTISAMPLE:
@@ -222,7 +222,7 @@ void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 void myglViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     if (GlobalState::isNative()) return glProcs.Viewport(x, y, width, height);
-    debuglogstdio(LCF_OGL, "glViewport called with %d : %d", width, height);
+    LOG(LL_TRACE, LCF_OGL, "glViewport called with %d : %d", width, height);
     return glProcs.Viewport(x, y, width, height);
 }
 

@@ -63,11 +63,13 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
 
     int logging_status = LOGGING_TO_CONSOLE;
 
+    LogLevel logging_level = LL_WARN;
+
     /* Which flags trigger a debug message */
-    LogCategoryFlag includeFlags = LCF_ERROR | LCF_WARNING | LCF_INFO;
+    LogCategoryFlag logging_include_flags = LCF_ALL;
 
     /* Which flags prevent triggering a debug message */
-    LogCategoryFlag excludeFlags = LCF_NONE;
+    LogCategoryFlag logging_exclude_flags = LCF_NONE;
 
     /* Initial framerate at which the game is running, as a fraction */
     unsigned int initial_framerate_num = 60;

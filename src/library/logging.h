@@ -33,21 +33,20 @@
 namespace libtas {
 
 /* Actual implementation with file and line */
-void debuglogfull(LogCategoryFlag lcf, const char* file, int line, ...);
+void debuglogfull(LogLevel ll, LogCategoryFlag lcf, const char* file, int line, ...);
 
-/* Print the debug message using stdio functions */
-#define debuglogstdio(lcf, ...) do {\
+/* Main logging function */
+#define LOG(ll, lcf, ...) do {\
 /*    PerfTimerCall ptc(lcf); */ \
-    debuglogfull(lcf, __FILE__, __LINE__, __VA_ARGS__);\
+    debuglogfull(ll, lcf, __FILE__, __LINE__, __VA_ARGS__);\
     } while (0)
 
-/* If we only want to print the function name... */
-#define DEBUGLOGCALL(lcf) debuglogstdio(lcf, "%s call.", __func__)
+/* Trace logging for hooked functions where we only want to print the function name */
+#define LOGTRACE(lcf) LOG(LL_TRACE, lcf, "%s call.", __func__)
 
 /* Macro of an assert */
 #define MYASSERT(term) if ((term)) {} \
-    else {debuglogstdio(LCF_ERROR, "%s failed in %s with error %s", #term, __func__, (errno == 0)?"None":strerror(errno)); \
-    exit(1);}
+    else {LOG(LL_ERROR, LCF_NONE, "%s failed in %s with error %s", #term, __func__, (errno == 0)?"None":strerror(errno));}
 
 /* Send error messages to the program so that they can be
  * shown on a dialog box. */

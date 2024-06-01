@@ -142,7 +142,7 @@ char SaveStateLoading::getPageFlag(char* addr)
         nextArea();
     }
 
-    // debuglogstdio(LCF_CHECKPOINT, "Savestate addr query %p, current area %p and size %d, with current addr %p", addr, area.addr, area.size, current_addr);
+    // LOG(LL_DEBUG, LCF_CHECKPOINT, "Savestate addr query %p, current area %p and size %d, with current addr %p", addr, area.addr, area.size, current_addr);
 
     if (area.addr == nullptr)
         return Area::NONE;

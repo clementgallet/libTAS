@@ -122,7 +122,7 @@ void ScreenCapture_Vulkan::initScreenSurface()
     
     /* Create the image */
     if ((res = orig::vkCreateImage(vk::context.device, &imageInfo, vk::context.allocator, &vkScreenImage)) != VK_SUCCESS) {
-        debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkCreateImage failed with error %d", res);
+        LOG(LL_ERROR, LCF_VULKAN, "vkCreateImage failed with error %d", res);
     }
     
     /* Create memory to back up the image */
@@ -136,7 +136,7 @@ void ScreenCapture_Vulkan::initScreenSurface()
     allocInfo.memoryTypeIndex = vk::getMemoryTypeIndex(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     if ((res = orig::vkAllocateMemory(vk::context.device, &allocInfo, vk::context.allocator, &vkScreenImageMemory)) != VK_SUCCESS) {
-        debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkAllocateMemory failed with error %d", res);
+        LOG(LL_ERROR, LCF_VULKAN, "vkAllocateMemory failed with error %d", res);
     }
 
     orig::vkBindImageMemory(vk::context.device, vkScreenImage, vkScreenImageMemory, 0);
@@ -156,7 +156,7 @@ void ScreenCapture_Vulkan::initScreenSurface()
         info.subresourceRange.layerCount = 1;
         res = orig::vkCreateImageView(vk::context.device, &info, vk::context.allocator, &vkScreenImageView);
         if (res != VK_SUCCESS) {
-            debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkCreateImageView failed with error %d", res);
+            LOG(LL_ERROR, LCF_VULKAN, "vkCreateImageView failed with error %d", res);
         }
     }
 
@@ -175,7 +175,7 @@ void ScreenCapture_Vulkan::initScreenSurface()
         sampler_info.maxAnisotropy = 1.0f;
         res = orig::vkCreateSampler(vk::context.device, &sampler_info, vk::context.allocator, &vkScreenSampler);
         if (res != VK_SUCCESS) {
-            debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkCreateSampler failed with error %d", res);
+            LOG(LL_ERROR, LCF_VULKAN, "vkCreateSampler failed with error %d", res);
         }
     }
     
@@ -247,7 +247,7 @@ const char* ScreenCapture_Vulkan::getPixelFormat()
         case VK_FORMAT_R16G16B16A16_SFLOAT:
             return "RBA\x40";
         default:
-            debuglogstdio(LCF_DUMP | LCF_VULKAN | LCF_ERROR, "  Unsupported pixel format %d", vk::context.colorFormat);
+            LOG(LL_ERROR, LCF_DUMP | LCF_VULKAN, "  Unsupported pixel format %d", vk::context.colorFormat);
             return "RGBA";
     }
 }
@@ -267,7 +267,7 @@ int ScreenCapture_Vulkan::copyScreenToSurface()
     cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     if ((res = orig::vkBeginCommandBuffer(cmdBuffer, &cmdBufInfo)) != VK_SUCCESS) {
-        debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkBeginCommandBuffer failed with error %d", res);
+        LOG(LL_ERROR, LCF_VULKAN, "vkBeginCommandBuffer failed with error %d", res);
     }
     
     /* Transition destination image to transfer destination layout */
@@ -366,7 +366,7 @@ int ScreenCapture_Vulkan::copyScreenToSurface()
 
     /* Flush the command buffer */
     if ((res = orig::vkEndCommandBuffer(cmdBuffer)) != VK_SUCCESS) {
-        debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkEndCommandBuffer failed with error %d", res);
+        LOG(LL_ERROR, LCF_VULKAN, "vkEndCommandBuffer failed with error %d", res);
     }
 
     VkPipelineStageFlags stageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
@@ -375,7 +375,7 @@ int ScreenCapture_Vulkan::copyScreenToSurface()
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &cmdBuffer;
     if (!vk::context.currentSemaphore) {
-        debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_ERROR, "    No semaphore to wait on");
+        LOG(LL_ERROR, LCF_WINDOW | LCF_VULKAN, "    No semaphore to wait on");
         submitInfo.waitSemaphoreCount = 0;
         submitInfo.pWaitSemaphores = VK_NULL_HANDLE;
     }
@@ -387,10 +387,10 @@ int ScreenCapture_Vulkan::copyScreenToSurface()
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = &vk::context.frameSemaphores[vk::context.semaphoreIndex].screenCompleteSemaphore;
 
-    // debuglogstdio(LCF_VULKAN, "    vkQueueSubmit wait on %llx and signal %llx and semindex %d", submitInfo.pWaitSemaphores[0], submitInfo.pSignalSemaphores[0], vk::context.semaphoreIndex);
+    // LOG(LL_DEBUG, LCF_VULKAN, "    vkQueueSubmit wait on %llx and signal %llx and semindex %d", submitInfo.pWaitSemaphores[0], submitInfo.pSignalSemaphores[0], vk::context.semaphoreIndex);
 
     if ((res = orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE)) != VK_SUCCESS) {
-        debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkEndCommandBuffer failed with error %d", res);
+        LOG(LL_ERROR, LCF_VULKAN, "vkEndCommandBuffer failed with error %d", res);
     }
 
     vk::context.currentSemaphore = submitInfo.pSignalSemaphores[0];
@@ -419,7 +419,7 @@ int ScreenCapture_Vulkan::getPixelsFromSurface(uint8_t **pixels, bool draw)
 	/* Map image memory so we can start copying from it */
 	const char* data;
     if ((res = orig::vkMapMemory(vk::context.device, vkScreenImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&data)) != VK_SUCCESS) {
-        debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkEndCommandBuffer failed with error %d", res);
+        LOG(LL_ERROR, LCF_VULKAN, "vkEndCommandBuffer failed with error %d", res);
     }
     
     /* Copy image pixels respecting the image layout. */
@@ -434,7 +434,7 @@ int ScreenCapture_Vulkan::getPixelsFromSurface(uint8_t **pixels, bool draw)
     }
 
     if (h != height)
-        debuglogstdio(LCF_VULKAN | LCF_ERROR, "Mismatch between Vulkan internal image height (%d) and registered height (%d)", h, height);
+        LOG(LL_ERROR, LCF_VULKAN, "Mismatch between Vulkan internal image height (%d) and registered height (%d)", h, height);
     
     orig::vkUnmapMemory(vk::context.device, vkScreenImageMemory);
     
@@ -446,12 +446,12 @@ static void acquireImage()
     /* Acquire an image from the swapchain */
     VkResult res = orig::vkAcquireNextImageKHR(vk::context.device, vk::context.swapchain, UINT64_MAX, vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore, VK_NULL_HANDLE, &vk::context.frameIndex);
     if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR) {
-        debuglogstdio(LCF_VULKAN | LCF_WARNING, "vkAcquireNextImageKHR failed with error %d", res);
+        LOG(LL_WARN, LCF_VULKAN, "vkAcquireNextImageKHR failed with error %d", res);
         vk::context.swapchainRebuild = true;
         return;
     }
     
-    // debuglogstdio(LCF_VULKAN, "vkAcquireNextImageKHR signals %llx and returns image index %d", vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore, vk::context.frameIndex);
+    // LOG(LL_DEBUG, LCF_VULKAN, "vkAcquireNextImageKHR signals %llx and returns image index %d", vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore, vk::context.frameIndex);
 
     vk::context.currentSemaphore = vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore;
 }
@@ -464,7 +464,7 @@ static void beginCommand(VkCommandBuffer cmdBuffer)
     cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     if ((res = orig::vkBeginCommandBuffer(cmdBuffer, &cmdBufInfo)) != VK_SUCCESS) {
-        debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkBeginCommandBuffer failed with error %d", res);
+        LOG(LL_ERROR, LCF_VULKAN, "vkBeginCommandBuffer failed with error %d", res);
     }
 }
 
@@ -474,7 +474,7 @@ static void EndCommandAndSubmitQueue(VkCommandBuffer cmdBuffer, VkSemaphore* sem
 
     /* Flush the command buffer */
     if ((res = orig::vkEndCommandBuffer(cmdBuffer)) != VK_SUCCESS) {
-        debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkEndCommandBuffer failed with error %d", res);
+        LOG(LL_ERROR, LCF_VULKAN, "vkEndCommandBuffer failed with error %d", res);
     }
     
     VkPipelineStageFlags stageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
@@ -488,10 +488,10 @@ static void EndCommandAndSubmitQueue(VkCommandBuffer cmdBuffer, VkSemaphore* sem
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = sem;
     
-    // debuglogstdio(LCF_VULKAN, "    vkQueueSubmit wait on %llx and signal %llx and semindex %d", submitInfo.pWaitSemaphores[0], submitInfo.pSignalSemaphores[0], vk::context.semaphoreIndex);
+    // LOG(LL_DEBUG, LCF_VULKAN, "    vkQueueSubmit wait on %llx and signal %llx and semindex %d", submitInfo.pWaitSemaphores[0], submitInfo.pSignalSemaphores[0], vk::context.semaphoreIndex);
     
     if ((res = orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE)) != VK_SUCCESS) {
-        debuglogstdio(LCF_VULKAN | LCF_ERROR, "vkEndCommandBuffer failed with error %d", res);
+        LOG(LL_ERROR, LCF_VULKAN, "vkEndCommandBuffer failed with error %d", res);
     }
     
     vk::context.currentSemaphore = *sem;

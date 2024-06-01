@@ -46,7 +46,7 @@ bool AudioConverterCoreAudio::isInited()
 
 void AudioConverterCoreAudio::init(AudioBuffer::SampleFormat inFormat, int inChannels, int inFreq, AudioBuffer::SampleFormat outFormat, int outChannels, int outFreq)
 {
-    debuglogstdio(LCF_SOUND, "Init audio converter");
+    LOG(LL_DEBUG, LCF_SOUND, "Init audio converter");
 
     in.mFormatID = kAudioFormatLinearPCM;
     in.mFormatFlags = kLinearPCMFormatFlagIsPacked;
@@ -74,7 +74,7 @@ void AudioConverterCoreAudio::init(AudioBuffer::SampleFormat inFormat, int inCha
             in.mFormatFlags |= kLinearPCMFormatFlagIsFloat;
             break;
         default:
-            debuglogstdio(LCF_SOUND | LCF_ERROR, "Unsupported audio format %d", inFormat);
+            LOG(LL_ERROR, LCF_SOUND, "Unsupported audio format %d", inFormat);
             return;
     }
     in.mBytesPerFrame = in.mChannelsPerFrame * in.mBitsPerChannel / 8;
@@ -106,7 +106,7 @@ void AudioConverterCoreAudio::init(AudioBuffer::SampleFormat inFormat, int inCha
             out.mFormatFlags |= kLinearPCMFormatFlagIsFloat;
             break;
         default:
-            debuglogstdio(LCF_SOUND | LCF_ERROR, "Unsupported audio format %d", outFormat);
+            LOG(LL_ERROR, LCF_SOUND, "Unsupported audio format %d", outFormat);
             return;
     }
     out.mBytesPerFrame = out.mChannelsPerFrame * out.mBitsPerChannel / 8;
@@ -116,7 +116,7 @@ void AudioConverterCoreAudio::init(AudioBuffer::SampleFormat inFormat, int inCha
     
     /* Open the context */
     if (err < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "Error initializing AudioConverter: %d", err);
+        LOG(LL_ERROR, LCF_SOUND, "Error initializing AudioConverter: %d", err);
         return;
     }
 
@@ -172,7 +172,7 @@ void AudioConverterCoreAudio::queueSamples(const uint8_t* inSamples, int inNbSam
     static_cast<void*>(this), &ioOutputDataPacketSize, &outBufferList, nullptr);
     
     if (err < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "Error in AudioConverterFillComplexBuffer: %d", err);
+        LOG(LL_ERROR, LCF_SOUND, "Error in AudioConverterFillComplexBuffer: %d", err);
         return;
     }
     

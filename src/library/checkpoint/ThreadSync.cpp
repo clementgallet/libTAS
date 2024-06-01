@@ -44,18 +44,18 @@ static bool syncGo[10];
 
 void ThreadSync::acquireLocks()
 {
-    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Waiting for other threads to exit wrappers");
+    LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Waiting for other threads to exit wrappers");
     MYASSERT(pthread_mutex_lock(&wrapperExecutionLock) == 0)
 
-    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Waiting for newly created threads to finish initialization");
+    LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Waiting for newly created threads to finish initialization");
     waitForThreadsToFinishInitialization();
 
-    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Done acquiring all locks");
+    LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Done acquiring all locks");
 }
 
 void ThreadSync::releaseLocks()
 {
-    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Releasing ThreadSync locks");
+    LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Releasing ThreadSync locks");
     MYASSERT(pthread_mutex_unlock(&wrapperExecutionLock) == 0)
 }
 
@@ -63,7 +63,7 @@ void ThreadSync::waitForThreadsToFinishInitialization()
 {
     while (uninitializedThreadCount != 0) {
         struct timespec sleepTime = { 0, 10 * 1000 * 1000 };
-        debuglogstdio(LCF_THREAD, "Sleeping %d ns for thread initialization", sleepTime.tv_nsec);
+        LOG(LL_DEBUG, LCF_THREAD, "Sleeping %d ns for thread initialization", sleepTime.tv_nsec);
         NATIVECALL(nanosleep(&sleepTime, NULL));
     }
 }
@@ -76,7 +76,7 @@ void ThreadSync::incrementUninitializedThreadCount()
 void ThreadSync::decrementUninitializedThreadCount()
 {
     if (uninitializedThreadCount <= 0) {
-        debuglogstdio(LCF_ERROR | LCF_THREAD, "uninitializedThreadCount is negative!");
+        LOG(LL_ERROR, LCF_THREAD, "uninitializedThreadCount is negative!");
     }
     uninitializedThreadCount--;
 }
@@ -91,7 +91,7 @@ void ThreadSync::wrapperExecutionLockLock()
             continue;
         }
         if (retVal != 0 && retVal != EDEADLK) {
-            debuglogstdio(LCF_ERROR | LCF_THREAD, "Failed to acquire lock!");
+            LOG(LL_ERROR, LCF_THREAD, "Failed to acquire lock!");
             return;
         }
         break;
@@ -101,7 +101,7 @@ void ThreadSync::wrapperExecutionLockLock()
 void ThreadSync::wrapperExecutionLockUnlock()
 {
     if (pthread_mutex_unlock(&wrapperExecutionLock) != 0) {
-        debuglogstdio(LCF_ERROR | LCF_THREAD, "Failed to release lock!");
+        LOG(LL_ERROR, LCF_THREAD, "Failed to release lock!");
     }
 }
 
@@ -122,7 +122,7 @@ void ThreadSync::detWait()
         for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
             /* Should wait if sync count has increased since last time */
             if (thread->syncCount > thread->syncOldCount) {
-                // debuglogstdio(LCF_ERROR, "Thread %d has increased sync count %d -> %d", thread->tid, thread->syncOldCount, thread->syncCount.load());
+                // debuglogstdio(LL_ERROR, "Thread %d has increased sync count %d -> %d", thread->tid, thread->syncOldCount, thread->syncCount.load());
                 thread->syncOldCount = thread->syncCount;
                 shouldWait = true;
             }
@@ -137,7 +137,7 @@ void ThreadSync::detWait()
                  * must access the real clock time. */
                 NATIVECALL(ret = detCond.wait_for(lock, std::chrono::milliseconds(1000), [thread]{ return (thread->syncGo); }));
                 if (!ret) {
-                    debuglogstdio(LCF_WARNING, "Timeout waiting for loading thread %d", thread->real_tid);
+                    LOG(LL_WARN, LCF_THREAD, "Timeout waiting for loading thread %d", thread->real_tid);
                     thread->syncEnabled = false;
                 }
                 thread->syncGo = false;
@@ -158,11 +158,11 @@ void ThreadSync::detWait()
 
 void ThreadSync::detWaitGlobal(int i)
 {
-    debuglogstdio(LCF_THREAD, "Wait on global lock %d", i);
+    LOG(LL_DEBUG, LCF_THREAD, "Wait on global lock %d", i);
     std::unique_lock<std::mutex> lock(detMutex);
     NATIVECALL(detCond.wait(lock, [i]{ return (syncGo[i]); }));
     syncGo[i] = false;
-    debuglogstdio(LCF_THREAD, "End Wait on global lock %d", i);
+    LOG(LL_DEBUG, LCF_THREAD, "End Wait on global lock %d", i);
 }
 
 void ThreadSync::detSignal(bool stop)
@@ -184,7 +184,7 @@ void ThreadSync::detSignal(bool stop)
 
 void ThreadSync::detSignalGlobal(int i)
 {
-    debuglogstdio(LCF_THREAD, "Signal global lock %d", i);
+    LOG(LL_DEBUG, LCF_THREAD, "Signal global lock %d", i);
     {
         std::lock_guard<std::mutex> lock(detMutex);
         syncGo[i] = true;

@@ -275,7 +275,7 @@ void Checkpoint::handler(int signum, siginfo_t *info, void *ucontext)
     Display *display = x11::gameDisplays[0];
     if ((&display < ReservedMemory::getAddr(0)) ||
         (&display >= ReservedMemory::getAddr(ReservedMemory::getSize()))) {
-        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Checkpoint code is not running on alternate stack");
+        LOG(LL_FATAL, LCF_CHECKPOINT, "Checkpoint code is not running on alternate stack");
         return;
     }
 #endif
@@ -313,7 +313,7 @@ void Checkpoint::handler(int signum, siginfo_t *info, void *ucontext)
         readAllAreas();
         NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &new_time));
         delta_time = new_time - old_time;
-        debuglogstdio(LCF_CHECKPOINT | LCF_INFO, "Loaded state %d in %f seconds", ss_index, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
+        LOG(LL_INFO, LCF_CHECKPOINT, "Loaded state %d in %f seconds", ss_index, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
 
         /* Loading state was overwritten, putting the right value again */
         SaveStateManager::setLoading();
@@ -418,7 +418,7 @@ static void readAllAreas()
     Area current_area;
     Area saved_area = saved_state.getArea();
 
-    debuglogstdio(LCF_CHECKPOINT, "Performing restore.");
+    LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing restore.");
 
     /* Read the memory mapping */
 #ifdef __unix__
@@ -488,7 +488,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
         if ((strcmp(saved_area->name, current_area->name) != 0) ||
             (saved_area->flags != current_area->flags)) {
 
-            debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
             MYASSERT(munmap(current_area->addr, current_area->size) == 0)
             return 1;
         }
@@ -500,27 +500,27 @@ static int reallocateArea(Area *saved_area, Area *current_area)
             /* Special case for stacks, always try to resize the Area */
             if (saved_area->flags & Area::AREA_STACK) {
 #ifdef __linux__
-                debuglogstdio(LCF_CHECKPOINT, "Changing stack size from %d to %d", current_area->size, saved_area->size);
+                LOG(LL_DEBUG, LCF_CHECKPOINT, "Changing stack size from %d to %d", current_area->size, saved_area->size);
                 void *newAddr = mremap(current_area->addr, current_area->size, saved_area->size, 0);
 
                 if (newAddr == MAP_FAILED) {
-                    debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Resizing failed");
+                    LOG(LL_FATAL, LCF_CHECKPOINT, "Resizing failed");
                     return 0;
                 }
 
                 if (newAddr != saved_area->addr) {
-                    debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "mremap relocated the area");
+                    LOG(LL_FATAL, LCF_CHECKPOINT, "mremap relocated the area");
                     return 0;
                 }
 #else
-                debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "stack size changed but mremap is not available");
+                LOG(LL_FATAL, LCF_CHECKPOINT, "stack size changed but mremap is not available");
 #endif
                 copy_size = saved_area->size;
             }
 
             /* Special case for heap, use brk instead */
             if (saved_area->flags & Area::AREA_HEAP) {
-                debuglogstdio(LCF_CHECKPOINT, "Changing heap size from %d to %d", current_area->size, saved_area->size);
+                LOG(LL_DEBUG, LCF_CHECKPOINT, "Changing heap size from %d to %d", current_area->size, saved_area->size);
 
 #ifdef __linux__
                 int ret = brk(saved_area->endAddr);
@@ -529,7 +529,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 #endif
 
                 if (ret < 0) {
-                    debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "brk failed");
+                    LOG(LL_FATAL, LCF_CHECKPOINT, "brk failed");
                     return 0;
                 }
 
@@ -568,7 +568,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
     if ((saved_area->addr == nullptr) || (saved_area->addr > current_area->addr)) {
         /* Our current area starts before the saved area */
-        debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
+        LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
         MYASSERT(munmap(current_area->addr, current_area->size) == 0)
 
         return 1;
@@ -578,13 +578,13 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
         if ((current_area->addr != nullptr) && (saved_area->endAddr > current_area->addr)) {
             /* Areas are overlapping, we unmap the current area until there is no more overlapping */
-            debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
             MYASSERT(munmap(current_area->addr, current_area->size) == 0)
             return 1;
         }
 
         /* This saved area must be allocated */
-        debuglogstdio(LCF_CHECKPOINT, "Region %p (%s) with size %d must be allocated", saved_area->addr, saved_area->name, saved_area->size);
+        LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %d must be allocated", saved_area->addr, saved_area->name, saved_area->size);
 
         int imagefd = -1;
         if (saved_area->flags & Area::AREA_FILE) {
@@ -614,9 +614,9 @@ static int reallocateArea(Area *saved_area, Area *current_area)
         }
 
         if (saved_area->flags & Area::AREA_ANON) {
-            debuglogstdio(LCF_CHECKPOINT, "Restoring anonymous area, %d bytes at %p", saved_area->size, saved_area->addr);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "Restoring anonymous area, %d bytes at %p", saved_area->size, saved_area->addr);
         } else {
-            debuglogstdio(LCF_CHECKPOINT, "Restoring non-anonymous area, %d bytes at %p from %s + %d", saved_area->size, saved_area->addr, saved_area->name, saved_area->offset);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "Restoring non-anonymous area, %d bytes at %p from %s + %d", saved_area->size, saved_area->addr, saved_area->name, saved_area->offset);
         }
 
         /* Create the memory area */
@@ -624,11 +624,11 @@ static int reallocateArea(Area *saved_area, Area *current_area)
                                saved_area->toMmapFlag(), imagefd, saved_area->offset);
 
         if (mmappedat == MAP_FAILED) {
-            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Mapping %d bytes at %p failed: errno %d", saved_area->size, saved_area->addr, errno);
+            LOG(LL_FATAL, LCF_CHECKPOINT, "Mapping %d bytes at %p failed: errno %d", saved_area->size, saved_area->addr, errno);
         }
 
         if (mmappedat != saved_area->addr) {
-            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "Area at %p got mmapped to %p", saved_area->addr, mmappedat);
+            LOG(LL_FATAL, LCF_CHECKPOINT, "Area at %p got mmapped to %p", saved_area->addr, mmappedat);
         }
 
         /* Close image file (fd only gets in the way) */
@@ -812,7 +812,7 @@ static void writeAllAreas(bool base)
 #ifdef __linux__
     if (Global::shared_config.savestate_settings & SharedConfig::SS_RAM) {
         if (!(Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL)) {
-            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in slot %d", ss_index);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in slot %d", ss_index);
 
             pmfd = getPagemapFd(ss_index);
             if (pmfd) {
@@ -837,7 +837,7 @@ static void writeAllAreas(bool base)
             }
         }
         else if (base) {
-            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in slot %d", base_ss_index);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in slot %d", base_ss_index);
 
             /* Create new memfds */
             pmfd = syscall(SYS_memfd_create, "pagemapstate", 0);
@@ -847,7 +847,7 @@ static void writeAllAreas(bool base)
             setPagesFd(base_ss_index, pfd);
         }
         else {
-            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in slot %d", ss_index);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in slot %d", ss_index);
             /* Creating new memfds for temp state */
             pmfd = syscall(SYS_memfd_create, "pagemapstate", 0);
             pfd = syscall(SYS_memfd_create, "pagesstate", 0);
@@ -857,7 +857,7 @@ static void writeAllAreas(bool base)
 #endif
     {
         if (!(Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL)) {
-            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s and %s", pagemappath, pagespath);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in %s and %s", pagemappath, pagespath);
 
             NATIVECALL(unlink(pagemappath));
             NATIVECALL(pmfd = creat(pagemappath, 0644));
@@ -866,7 +866,7 @@ static void writeAllAreas(bool base)
             NATIVECALL(pfd = creat(pagespath, 0644));
         }
         else if (base) {
-            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s", basepagespath);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in %s", basepagespath);
 
             NATIVECALL(pmfd = creat(basepagemappath, 0644));
             NATIVECALL(pfd = creat(basepagespath, 0644));
@@ -878,7 +878,7 @@ static void writeAllAreas(bool base)
             strncat(temppagemappath, ".temp", 1023 - strlen(temppagemappath));
             strncat(temppagespath, ".temp", 1023 - strlen(temppagespath));
 
-            debuglogstdio(LCF_CHECKPOINT, "Performing checkpoint in %s and %s", temppagemappath, temppagespath);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in %s and %s", temppagemappath, temppagespath);
 
             NATIVECALL(unlink(temppagemappath));
             NATIVECALL(pmfd = creat(temppagemappath, 0644));
@@ -910,7 +910,7 @@ static void writeAllAreas(bool base)
     for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
         if (thread->state == ThreadInfo::ST_SUSPENDED) {
             if (n >= STATEMAXTHREADS) {
-                debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "   hit the limit of the number of threads");
+                LOG(LL_ERROR, LCF_CHECKPOINT, "   hit the limit of the number of threads");
                 break;
             }
             sh.pthread_ids[n] = thread->pthread_id;
@@ -987,7 +987,7 @@ static void writeAllAreas(bool base)
 
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &new_time));
     delta_time = new_time - old_time;
-    debuglogstdio(LCF_INFO, "Saved state %d of size %zu in %f seconds", base?0:ss_index, savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
+    LOG(LL_INFO, LCF_CHECKPOINT, "Saved state %d of size %zu in %f seconds", base?0:ss_index, savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
 
     if (Global::shared_config.savestate_settings & SharedConfig::SS_FORK) {
         /* Store that we are the child, so that destructors may act differently */

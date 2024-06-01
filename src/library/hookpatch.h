@@ -41,7 +41,7 @@ void hook_patch_addr(void *orig_fun, void** tramp_function, void* my_function);
     x__++;\
     x__++;\
     if (x__==2) {\
-        debuglogstdio(LCF_HOOK | LCF_ERROR, "Function got called before it was set up!");\
+        LOG(LL_ERROR, LCF_HOOK, "Function got called before it was set up!");\
     }\
     x__++;\
     x__++;\

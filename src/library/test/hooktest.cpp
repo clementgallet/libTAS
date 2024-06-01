@@ -30,48 +30,48 @@ DEFINE_ORIG_POINTER(libtasTestFunc3)
 
 /* Override */ int libtasTestFunc1()
 {
-    DEBUGLOGCALL(LCF_HOOK);
+    LOGTRACE(LCF_HOOK);
     LINK_NAMESPACE_GLOBAL(libtasTestFunc1);
     if (!orig::libtasTestFunc1) {
-        debuglogstdio(LCF_HOOK | LCF_ERROR, "   Couldn't get original function");
+        LOG(LL_ERROR, LCF_HOOK, "   Couldn't get original function");
     }
     else if (orig::libtasTestFunc1() != 1) {
-        debuglogstdio(LCF_HOOK | LCF_ERROR, "   Original function gives wrong result");
+        LOG(LL_ERROR, LCF_HOOK, "   Original function gives wrong result");
     }
     else {
-        debuglogstdio(LCF_HOOK, "   Correctly linked to original function");
+        LOG(LL_DEBUG, LCF_HOOK, "   Correctly linked to original function");
     }
     return 2;
 }
 
 /* Override */ int libtasTestFunc2()
 {
-    DEBUGLOGCALL(LCF_HOOK);
+    LOGTRACE(LCF_HOOK);
     LINK_NAMESPACE(libtasTestFunc2, "hooklib2");
     if (!orig::libtasTestFunc2) {
-        debuglogstdio(LCF_HOOK | LCF_ERROR, "   Couldn't get original function");
+        LOG(LL_ERROR, LCF_HOOK, "   Couldn't get original function");
     }
     else if (orig::libtasTestFunc2() != 1) {
-        debuglogstdio(LCF_HOOK | LCF_ERROR, "   Original function gives wrong result");
+        LOG(LL_ERROR, LCF_HOOK, "   Original function gives wrong result");
     }
     else {
-        debuglogstdio(LCF_HOOK, "   Correctly linked to original function");
+        LOG(LL_DEBUG, LCF_HOOK, "   Correctly linked to original function");
     }
     return 2;
 }
 
 /* Override */ int libtasTestFunc3()
 {
-    DEBUGLOGCALL(LCF_HOOK);
+    LOGTRACE(LCF_HOOK);
     LINK_NAMESPACE(libtasTestFunc3, "hooklib3");
     if (!orig::libtasTestFunc3) {
-        debuglogstdio(LCF_HOOK | LCF_ERROR, "   Couldn't get original function");
+        LOG(LL_ERROR, LCF_HOOK, "   Couldn't get original function");
     }
     else if (orig::libtasTestFunc3() != 1) {
-        debuglogstdio(LCF_HOOK | LCF_ERROR, "   Original function gives wrong result");
+        LOG(LL_ERROR, LCF_HOOK, "   Original function gives wrong result");
     }
     else {
-        debuglogstdio(LCF_HOOK, "   Correctly linked to original function");
+        LOG(LL_DEBUG, LCF_HOOK, "   Correctly linked to original function");
     }
     return 2;
 }

@@ -67,14 +67,14 @@ void ScreenCapture_SDL2_Renderer::initScreenSurface()
     /* Create the screen texture */
     sdl_renderer = orig::SDL_GetRenderer(sdl::gameSDLWindow);
     if (!sdl_renderer) {
-        debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_GetRenderer failed: %s", orig::SDL_GetError());
+        LOG(LL_ERROR, LCF_WINDOW | LCF_SDL, "SDL_GetRenderer failed: %s", orig::SDL_GetError());
     }
     Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
     if (!screenSDLTex) {
         screenSDLTex = orig::SDL_CreateTexture(sdl_renderer, sdlpixfmt,
             SDL_TEXTUREACCESS_STREAMING, width, height);
         if (!screenSDLTex) {
-            debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_CreateTexture failed: %s", orig::SDL_GetError());
+            LOG(LL_ERROR, LCF_WINDOW | LCF_SDL, "SDL_CreateTexture failed: %s", orig::SDL_GetError());
         }
     }
 }
@@ -94,37 +94,37 @@ const char* ScreenCapture_SDL2_Renderer::getPixelFormat()
     Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
     switch (sdlpixfmt) {
         case SDL_PIXELFORMAT_RGBA8888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  RGBA");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGBA");
             return "BGRA";
         case SDL_PIXELFORMAT_BGRA8888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  BGRA");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGRA");
             return "RGBA";
         case SDL_PIXELFORMAT_ARGB8888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  ARGB");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  ARGB");
             return "ABGR";
         case SDL_PIXELFORMAT_ABGR8888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  ABGR");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  ABGR");
             return "ARGB";
         case SDL_PIXELFORMAT_RGB888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  RGB888");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGB888");
             return "BGR\0";
         case SDL_PIXELFORMAT_RGBX8888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  RGBX8888");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGBX8888");
             return "\0BGR";
         case SDL_PIXELFORMAT_BGR888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  BGR888");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGR888");
             return "RGB\0";
         case SDL_PIXELFORMAT_BGRX8888:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  BGRX8888");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGRX8888");
             return "\0RGB";
         case SDL_PIXELFORMAT_RGB24:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  RGB24");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGB24");
             return "24BG";
         case SDL_PIXELFORMAT_BGR24:
-            debuglogstdio(LCF_DUMP | LCF_SDL, "  BGR24");
+            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGR24");
             return "RAW ";
         default:
-            debuglogstdio(LCF_DUMP | LCF_SDL | LCF_ERROR, "  Unsupported pixel format %d", sdlpixfmt);
+            LOG(LL_ERROR, LCF_DUMP | LCF_SDL, "  Unsupported pixel format %d", sdlpixfmt);
     }
 
     return "RGBA";
@@ -145,11 +145,11 @@ int ScreenCapture_SDL2_Renderer::copyScreenToSurface()
     int tex_pitch;
     int ret = orig::SDL_LockTexture(screenSDLTex, nullptr, &tex_pixels, &tex_pitch);
     if (ret < 0) {
-        debuglogstdio(LCF_DUMP | LCF_SDL | LCF_ERROR, "SDL_LockTexture failed: %s", orig::SDL_GetError());
+        LOG(LL_ERROR, LCF_DUMP | LCF_SDL, "SDL_LockTexture failed: %s", orig::SDL_GetError());
     }
     ret = orig::SDL_RenderReadPixels(sdl_renderer, NULL, 0, tex_pixels, tex_pitch);
     if (ret < 0) {
-        debuglogstdio(LCF_DUMP | LCF_SDL | LCF_ERROR, "SDL_RenderReadPixels failed: %s", orig::SDL_GetError());
+        LOG(LL_ERROR, LCF_DUMP | LCF_SDL, "SDL_RenderReadPixels failed: %s", orig::SDL_GetError());
     }
     orig::SDL_UnlockTexture(screenSDLTex);
 
@@ -188,7 +188,7 @@ int ScreenCapture_SDL2_Renderer::copySurfaceToScreen()
 
     int ret = orig::SDL_RenderCopy(sdl_renderer, screenSDLTex, NULL, NULL);
     if (ret < 0) {
-        debuglogstdio(LCF_WINDOW | LCF_SDL | LCF_ERROR, "SDL_RenderCopy to screen failed: %s", orig::SDL_GetError());
+        LOG(LL_ERROR, LCF_WINDOW | LCF_SDL, "SDL_RenderCopy to screen failed: %s", orig::SDL_GetError());
     }
 
     return 0;

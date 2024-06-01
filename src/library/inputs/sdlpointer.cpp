@@ -36,13 +36,13 @@ DEFINE_ORIG_POINTER(SDL_WarpMouse)
 
 SDL_Window *SDL_GetMouseFocus(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
     return sdl::gameSDLWindow;
 }
 
 Uint32 SDL_GetMouseState(int *x, int *y)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
 
     if (x != NULL)
         *x = game_ai.pointer.x;
@@ -55,7 +55,7 @@ Uint32 SDL_GetMouseState(int *x, int *y)
 
 Uint32 SDL_GetGlobalMouseState(int *x, int *y)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
     /* We don't support global mouse state. We consider that the window
      * is located at the bottom left of the screen and just output the
      * same result as SDL_GetMouseState().
@@ -66,7 +66,7 @@ Uint32 SDL_GetGlobalMouseState(int *x, int *y)
 
 Uint32 SDL_GetRelativeMouseState(int *x, int *y)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
 
     static bool first = true;
     static int oldx = 0;
@@ -94,7 +94,7 @@ Uint32 SDL_GetRelativeMouseState(int *x, int *y)
 
 void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
 {
-    debuglogstdio(LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
+    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
 
     /* We have to generate an MOUSEMOTION event. */
     SDL_Event event2;
@@ -131,7 +131,7 @@ void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
 
 int SDL_WarpMouseGlobal(int x, int y)
 {
-    debuglogstdio(LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
+    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
 
     /* Should we support this? */
     SDL_WarpMouseInWindow(nullptr, x, y);
@@ -140,7 +140,7 @@ int SDL_WarpMouseGlobal(int x, int y)
 
 void SDL_WarpMouse(Uint16 x, Uint16 y)
 {
-    debuglogstdio(LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
+    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
 
     /* We have to generate an MOUSEMOTION event. */
     SDL1::SDL_Event event1;
@@ -171,72 +171,72 @@ SDL_bool relativeMode = SDL_FALSE;
 
 int SDL_SetRelativeMouseMode(SDL_bool enabled)
 {
-    debuglogstdio(LCF_SDL | LCF_MOUSE, "%s call with %d", __func__, enabled);
+    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call with %d", __func__, enabled);
     relativeMode = enabled;
     return 0;
 }
 
 int SDL_CaptureMouse(SDL_bool enabled)
 {
-    debuglogstdio(LCF_SDL | LCF_MOUSE, "%s call with %d", __func__, enabled);
+    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call with %d", __func__, enabled);
     /* We should disable capture anyway */
     return 0;
 }
 
 SDL_bool SDL_GetRelativeMouseMode(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
     return relativeMode;
 }
 
 SDL_Cursor *SDL_CreateCursor(const Uint8 * data, const Uint8 * mask, int w, int h, int hot_x, int hot_y)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
     /* Return some non-null value */
     return reinterpret_cast<SDL_Cursor*>(1);
 }
 
 SDL_Cursor *SDL_CreateColorCursor(SDL_Surface *surface, int hot_x, int hot_y)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
     /* Return some non-null value */
     return reinterpret_cast<SDL_Cursor*>(1);
 }
 
 SDL_Cursor *SDL_CreateSystemCursor(SDL_SystemCursor id)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
     /* Return some non-null value */
     return reinterpret_cast<SDL_Cursor*>(1);
 }
 
 void SDL_SetCursor(SDL_Cursor * cursor)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
 }
 
 SDL_Cursor *SDL_GetCursor(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
     /* Return some non-null value */
     return reinterpret_cast<SDL_Cursor*>(1);
 }
 
 SDL_Cursor *SDL_GetDefaultCursor(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
     /* Return some non-null value */
     return reinterpret_cast<SDL_Cursor*>(1);
 }
 
 void SDL_FreeCursor(SDL_Cursor * cursor)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
 }
 
 int SDL_ShowCursor(int toggle)
 {
-    debuglogstdio(LCF_SDL | LCF_MOUSE, "%s call with %d", __func__, toggle);
+    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call with %d", __func__, toggle);
 
     /* We keep the state of the cursor, but we keep it shown. */
     static int showCursor = 1;
@@ -250,7 +250,7 @@ DECLARE_ORIG_POINTER(SDL_GetWindowSize)
 
 void SDL_SetWindowGrab(SDL_Window * window, SDL_bool grabbed)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
 
     if (grabbed) {
         pointer_grab_sdl_window = window;
@@ -266,20 +266,20 @@ void SDL_SetWindowGrab(SDL_Window * window, SDL_bool grabbed)
         clipping_h = h;
             
         if (game_ai.pointer.x < clipping_x) {
-            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x);
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x);
             game_ai.pointer.x = clipping_x;
         }
         else if (game_ai.pointer.x >= (clipping_x + clipping_w)) {
-            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x + clipping_w - 1);
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x + clipping_w - 1);
             game_ai.pointer.x = clipping_x + clipping_w - 1;
         }
         
         if (game_ai.pointer.y < clipping_y) {
-            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y);
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y);
             game_ai.pointer.y = clipping_y;
         }
         else if (game_ai.pointer.y >= (clipping_y + clipping_h)) {
-            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y + clipping_h - 1);
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y + clipping_h - 1);
             game_ai.pointer.y = clipping_y + clipping_h - 1;
         }
     }
@@ -291,7 +291,7 @@ void SDL_SetWindowGrab(SDL_Window * window, SDL_bool grabbed)
 
 void SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
 
     if (grabbed) {
         pointer_grab_sdl_window = window;
@@ -307,20 +307,20 @@ void SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed)
         clipping_h = h;
             
         if (game_ai.pointer.x < clipping_x) {
-            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x);
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x);
             game_ai.pointer.x = clipping_x;
         }
         else if (game_ai.pointer.x >= (clipping_x + clipping_w)) {
-            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x + clipping_w - 1);
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x + clipping_w - 1);
             game_ai.pointer.x = clipping_x + clipping_w - 1;
         }
         
         if (game_ai.pointer.y < clipping_y) {
-            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y);
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y);
             game_ai.pointer.y = clipping_y;
         }
         else if (game_ai.pointer.y >= (clipping_y + clipping_h)) {
-            debuglogstdio(LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y + clipping_h - 1);
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y + clipping_h - 1);
             game_ai.pointer.y = clipping_y + clipping_h - 1;
         }
     }
@@ -332,19 +332,19 @@ void SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed)
 
 SDL_bool SDL_GetWindowGrab(SDL_Window * window)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
     return (window == pointer_grab_sdl_window) ? SDL_TRUE : SDL_FALSE;
 }
 
 SDL_bool SDL_GetWindowMouseGrab(SDL_Window * window)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
     return (window == pointer_grab_sdl_window) ? SDL_TRUE : SDL_FALSE;
 }
 
 SDL_Window* SDL_GetGrabbedWindow(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_MOUSE);
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
     return pointer_grab_sdl_window;
 }
 

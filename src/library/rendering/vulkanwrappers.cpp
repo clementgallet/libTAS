@@ -32,21 +32,21 @@
 #define STORE_SYMBOL(str) \
     if (!strcmp(symbol, #str)) { \
         orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
-        debuglogstdio(LCF_HOOK | LCF_VULKAN,"  store real function in %p", real_pointer); \
+        LOG(LL_DEBUG, LCF_HOOK | LCF_VULKAN,"  store real function in %p", real_pointer); \
         return real_pointer; \
     }
 
 #define STORE_RETURN_SYMBOL(str) \
     if (!strcmp(symbol, #str)) { \
         orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
-        debuglogstdio(LCF_HOOK | LCF_VULKAN,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(libtas::str), real_pointer); \
+        LOG(LL_DEBUG, LCF_HOOK | LCF_VULKAN,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(libtas::str), real_pointer); \
         return reinterpret_cast<void*>(libtas::str); \
     }
 
 #define STORE_RETURN_SYMBOL_CUSTOM(str) \
     if (!strcmp(reinterpret_cast<const char*>(symbol), #str)) { \
         orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
-        debuglogstdio(LCF_HOOK | LCF_VULKAN,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(my##str), real_pointer); \
+        LOG(LL_DEBUG, LCF_HOOK | LCF_VULKAN,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(my##str), real_pointer); \
         return reinterpret_cast<void*>(my##str); \
     }
 
@@ -55,13 +55,13 @@ namespace libtas {
 Vulkan_Context vk::context = {};
 
 #define VKCHECKERROR(err) \
-do { if (err < 0) debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_ERROR, "Vulkan error: %d", err); } while (0)
+do { if (err < 0) LOG(LL_ERROR, LCF_WINDOW | LCF_VULKAN, "Vulkan error: %d", err); } while (0)
 
 void vk::checkVkResult(VkResult err)
 {
     if (err == 0)
         return;
-    debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_ERROR, "Vulkan error: %d", err);
+    LOG(LL_ERROR, LCF_WINDOW | LCF_VULKAN, "Vulkan error: %d", err);
 }
 
 uint32_t vk::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties)
@@ -75,7 +75,7 @@ uint32_t vk::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags propert
 		typeBits >>= 1;
 	}
 
-    debuglogstdio(LCF_WINDOW | LCF_VULKAN, "Could not find a suitable memory type");
+    LOG(LL_DEBUG, LCF_WINDOW | LCF_VULKAN, "Could not find a suitable memory type");
     return 0;
 }
 
@@ -140,7 +140,7 @@ DEFINE_ORIG_POINTER(vkCmdClearColorImage)
 DEFINE_ORIG_POINTER(NAME)\
 void NAME DECL\
 {\
-    DEBUGLOGCALL(LCF_VULKAN);\
+    LOGTRACE(LCF_VULKAN);\
     if (!Global::skipping_draw)\
         return orig::NAME ARGS;\
 }
@@ -225,7 +225,7 @@ VkResult myvkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAll
     if (GlobalState::isNative())
         return orig::vkCreateInstance(pCreateInfo, pAllocator, pInstance);
 
-    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
     VkInstanceCreateInfo createInfo = *pCreateInfo;
     // createInfo.enabledLayerCount = 1;
@@ -245,7 +245,7 @@ VkResult myvkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAll
 
 PFN_vkVoidFunction vkGetInstanceProcAddr(VkInstance instance, const char* pName)
 {
-    debuglogstdio(LCF_HOOK | LCF_VULKAN, "%s call with symbol %s", __func__, pName);
+    LOG(LL_TRACE, LCF_HOOK | LCF_VULKAN, "%s call with symbol %s", __func__, pName);
     LINK_NAMESPACE(vkGetInstanceProcAddr, "vulkan");
 
     if (!orig::vkGetInstanceProcAddr) return nullptr;
@@ -255,7 +255,7 @@ PFN_vkVoidFunction vkGetInstanceProcAddr(VkInstance instance, const char* pName)
 
 PFN_vkVoidFunction myvkGetDeviceProcAddr(VkDevice device, const char* pName)
 {
-    debuglogstdio(LCF_HOOK | LCF_VULKAN, "%s call with symbol %s", __func__, pName);
+    LOG(LL_TRACE, LCF_HOOK | LCF_VULKAN, "%s call with symbol %s", __func__, pName);
 
     if (!orig::vkGetDeviceProcAddr) return nullptr;
 
@@ -271,7 +271,7 @@ VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateI
     if (GlobalState::isNative())
         return orig::vkCreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice);
 
-    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
     /* Store physical device */
     vk::context.physicalDevice = physicalDevice;
@@ -358,7 +358,7 @@ void myvkDestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
     if (GlobalState::isNative())
         return orig::vkDestroyDevice(device, pAllocator);
 
-    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
     if (vk::context.descriptorPool) {
         orig::vkDestroyDescriptorPool(device, vk::context.descriptorPool, pAllocator);
@@ -376,7 +376,7 @@ void vkGetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queue
     if (GlobalState::isNative())
         return orig::vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
 
-    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
     /* Store the queue family */
     vk::context.queueFamily = queueFamilyIndex;
@@ -424,7 +424,7 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
     if (GlobalState::isNative())
         return orig::vkCreateSwapchainKHR(device, pCreateInfo, pAllocator, pSwapchain);
 
-    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
     /* We must add support for transfering the swapchain image from/to another image,
      * for encoding and hud. */
@@ -600,7 +600,7 @@ void vkDestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAl
     if (GlobalState::isNative())
         return orig::vkDestroySwapchainKHR(device, swapchain, pAllocator);
 
-    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
     if (vk::context.swapchain == swapchain) {
         destroySwapchain();
@@ -615,7 +615,7 @@ VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64
     if (GlobalState::isNative())
         return orig::vkAcquireNextImageKHR(device, swapchain, timeout, semaphore, fence, pImageIndex);
 
-    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
     if (Global::skipping_draw) {
         /* We don't acquire an image, so that we don't need to call vkQueuePresentKHR()
@@ -652,7 +652,7 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
     if (GlobalState::isNative())
         return orig::vkQueuePresentKHR(queue, pPresentInfo);
 
-    DEBUGLOGCALL(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
     /* Store the graphic queue */
     vk::context.graphicsQueue = queue;
@@ -660,7 +660,7 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
     /* We check that only one swapchain is being presented.
      * Otherwise, I don't know what to do. */
     if (pPresentInfo->swapchainCount != 1) {
-        debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_WARNING, "Multiple swapchains are being presented");
+        LOG(LL_WARN, LCF_WINDOW | LCF_VULKAN, "Multiple swapchains are being presented");
     }
 
     if (pPresentInfo->waitSemaphoreCount == 0) {
@@ -670,7 +670,7 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
         vk::context.currentSemaphore = pPresentInfo->pWaitSemaphores[0];
     }
     else {
-        debuglogstdio(LCF_WINDOW | LCF_VULKAN | LCF_ERROR, "   Waiting on multiple semaphores");            
+        LOG(LL_ERROR, LCF_WINDOW | LCF_VULKAN, "   Waiting on multiple semaphores");            
         vk::context.currentSemaphore = VK_NULL_HANDLE;
     }
 
@@ -705,7 +705,7 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
         /* Present the queue with the stored image index, because we will 
          * acquire other images when presenting again. */
         pi.pImageIndices = &vk::context.frameIndex;
-        // debuglogstdio(LCF_WINDOW | LCF_VULKAN, "    vkQueuePresentKHR wait on semaphore %llx", vk::context.currentSemaphore);
+        // LOG(LL_DEBUG, LCF_WINDOW | LCF_VULKAN, "    vkQueuePresentKHR wait on semaphore %llx", vk::context.currentSemaphore);
         ret = orig::vkQueuePresentKHR(queue, &pi);
         
         if (ret == VK_ERROR_OUT_OF_DATE_KHR || ret == VK_SUBOPTIMAL_KHR) {

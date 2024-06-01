@@ -47,7 +47,7 @@ void XlibEventQueue::setMask(Window w, long event_mask)
         ev.xcrossing.mode = NotifyNormal;
         ev.xcrossing.detail = NotifyNonlinear;
 
-        debuglogstdio(LCF_EVENTS | LCF_MOUSE, "   Inserting a EnterNotify event for window %d", w);
+        LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "   Inserting a EnterNotify event for window %d", w);
         insert(&ev);
     }
 
@@ -58,7 +58,7 @@ void XlibEventQueue::setMask(Window w, long event_mask)
         ev.type = FocusIn;
         ev.xfocus.window = w;
 
-        debuglogstdio(LCF_EVENTS | LCF_MOUSE | LCF_KEYBOARD, "   Inserting a FocusIn event");
+        LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE | LCF_KEYBOARD, "   Inserting a FocusIn event");
         insert(&ev);
     }
 
@@ -84,7 +84,7 @@ int XlibEventQueue::insert(XEvent* event)
             
             /* Check the size of the queue */
             if (eventQueue.size() > 1024) {
-                debuglogstdio(LCF_EVENTS, "We reached the limit of the event queue size!");
+                LOG(LL_DEBUG, LCF_EVENTS, "We reached the limit of the event queue size!");
                 return -1;
             }
 
@@ -126,7 +126,7 @@ int XlibEventQueue::insert(XEvent* event)
 
     /* Check the size of the queue */
     if (eventQueue.size() > 1024) {
-        debuglogstdio(LCF_EVENTS, "We reached the limit of the event queue size!");
+        LOG(LL_DEBUG, LCF_EVENTS, "We reached the limit of the event queue size!");
         return -1;
     }
 

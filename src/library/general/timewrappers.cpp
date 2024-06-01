@@ -36,9 +36,9 @@ namespace libtas {
 
 /* Override */ time_t time(time_t* t) __THROW
 {
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    LOGTRACE(LCF_TIMEGET);
     struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_TIME);
-    debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %d", ts.tv_sec);
+    LOG(LL_DEBUG, LCF_TIMEGET, "  returning %d", ts.tv_sec);
     if (t)
         *t = ts.tv_sec;
     return ts.tv_sec;
@@ -46,9 +46,9 @@ namespace libtas {
 
 /* Override */ int gettimeofday(struct timeval* tv, struct timezone* tz) __THROW
 {
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    LOGTRACE(LCF_TIMEGET);
     struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_GETTIMEOFDAY);
-    debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %d.%06d", ts.tv_sec, ts.tv_nsec/1000);
+    LOG(LL_DEBUG, LCF_TIMEGET, "  returning %d.%06d", ts.tv_sec, ts.tv_nsec/1000);
     tv->tv_sec = ts.tv_sec;
     tv->tv_usec = ts.tv_nsec / 1000;
     return 0;
@@ -56,10 +56,10 @@ namespace libtas {
 
 /* Override */ clock_t clock (void) __THROW
 {
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    LOGTRACE(LCF_TIMEGET);
     struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_CLOCK);
     clock_t clk = static_cast<clock_t>(ts.tv_sec) * CLOCKS_PER_SEC + (static_cast<clock_t>(ts.tv_nsec) * CLOCKS_PER_SEC) / 1000000000;
-    debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %d", clk);
+    LOG(LL_DEBUG, LCF_TIMEGET, "  returning %d", clk);
     return clk;
 }
 
@@ -67,7 +67,7 @@ namespace libtas {
 {
     RETURN_IF_NATIVE(clock_gettime, (clock_id, tp), nullptr);
 
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    LOGTRACE(LCF_TIMEGET);
 
     /* .NET coreclr computes several speed chekcs at startup.
      * Because we don't advance time, it causes a softlock.
@@ -83,10 +83,9 @@ namespace libtas {
         if (GameHacks::getFinalizerThread() == ThreadManager::getThreadTid()) {
             void* return_address =  __builtin_return_address(0);
             char** symbols = backtrace_symbols(&return_address, 1);
-            debuglogstdio(LCF_TIMEGET | LCF_ERROR, "  getting call symbol: %s", symbols[0]);
             if (symbols != nullptr) {
                 if (strstr(symbols[0], "libcoreclr.so")) {
-                    debuglogstdio(LCF_TIMEGET | LCF_FREQUENT | LCF_ERROR, "  special advance coreclr yield");
+                    LOG(LL_DEBUG, LCF_TIMEGET, "  special advance coreclr yield");
                     struct timespec ts = {0, 1000000};
                     DeterministicTimer::get().addDelay(ts);
                 }
@@ -100,10 +99,9 @@ namespace libtas {
         if (ThreadManager::isMainThread()) {
             void* return_address =  __builtin_return_address(0);
             char** symbols = backtrace_symbols(&return_address, 1);
-            debuglogstdio(LCF_TIMEGET | LCF_ERROR, "  getting call symbol: %s", symbols[0]);
             if (symbols != nullptr) {
                 if (strstr(symbols[0], "libSystem.Native.so")) {
-                    debuglogstdio(LCF_TIMEGET | LCF_FREQUENT | LCF_ERROR, "  special advance coreclr TLS");
+                    LOG(LL_DEBUG, LCF_TIMEGET, "  special advance coreclr TLS");
                     struct timespec ts = {0, 1000000};
                     DeterministicTimer::get().addDelay(ts);
                 }
@@ -113,7 +111,7 @@ namespace libtas {
     }
 
     *tp = DeterministicTimer::get().getTicks(DeterministicTimer::get().clockToType(clock_id));
-    debuglogstdio(LCF_TIMEGET | LCF_FREQUENT, "  returning %d.%09d", tp->tv_sec, tp->tv_nsec);
+    LOG(LL_DEBUG, LCF_TIMEGET, "  returning %d.%09d", tp->tv_sec, tp->tv_nsec);
 
     if (Global::shared_config.game_specific_timing & SharedConfig::GC_TIMING_CELESTE) {
         if (ThreadManager::isMainThread())

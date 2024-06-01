@@ -56,7 +56,7 @@ static bool __stdcall __attribute__((noinline)) ScreenToClient(void *hWnd, POINT
 
 int __stdcall GetCursorPos(POINT *pt)
 {
-    DEBUGLOGCALL(LCF_WINE | LCF_MOUSE);
+    LOGTRACE(LCF_WINE | LCF_MOUSE);
 
     if (pt) {
         pt->x = game_ai.pointer.x;
@@ -71,13 +71,13 @@ int __stdcall GetCursorPos(POINT *pt)
 
 int __stdcall ScreenToClient(void *hWnd, POINT *lpPoint)
 {
-    DEBUGLOGCALL(LCF_WINE | LCF_MOUSE);
+    LOGTRACE(LCF_WINE | LCF_MOUSE);
     return 1;
 }
 
 short __stdcall GetAsyncKeyState(int key)
 {
-    DEBUGLOGCALL(LCF_WINE | LCF_KEYBOARD);
+    LOGTRACE(LCF_WINE | LCF_KEYBOARD);
 
     short ret = 0;
 

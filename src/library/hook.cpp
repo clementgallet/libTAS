@@ -46,7 +46,7 @@ bool link_function(void** function, const char* source, const char* library, con
         NATIVECALL(*function = dlsym(RTLD_NEXT, source));
 
     if (*function != nullptr) {
-        debuglogstdio(LCF_HOOK, "Imported symbol %s function : %p", source, *function);
+        LOG(LL_DEBUG, LCF_HOOK, "Imported symbol %s function : %p", source, *function);
         return true;
     }
 
@@ -67,7 +67,7 @@ bool link_function(void** function, const char* source, const char* library, con
                 NATIVECALL(*function = dlsym(handle, source));
 
                 if (*function != nullptr) {
-                    debuglogstdio(LCF_HOOK, "Imported from lib %s symbol %s function : %p", libpath.c_str(), source, *function);
+                    LOG(LL_DEBUG, LCF_HOOK, "Imported from lib %s symbol %s function : %p", libpath.c_str(), source, *function);
                     return true;
                 }
             }
@@ -80,7 +80,7 @@ bool link_function(void** function, const char* source, const char* library, con
             NATIVECALL(*function = dlsym(handle, source));
 
             if (*function != nullptr) {
-                debuglogstdio(LCF_HOOK, "Imported from lib %s symbol %s function : %p", library, source, *function);
+                LOG(LL_DEBUG, LCF_HOOK, "Imported from lib %s symbol %s function : %p", library, source, *function);
 
                 /* Add the library to our set of libraries */
                 add_lib(library);
@@ -99,7 +99,7 @@ bool link_function(void** function, const char* source, const char* library, con
         kern_return_t ret;
         ret = task_info(mach_task_self(), TASK_DYLD_INFO, (task_info_t)&dyld_info, &count);
         if (ret != KERN_SUCCESS) {
-            debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not get task info");
+            LOG(LL_ERROR, LCF_HOOK, "Could not get task info");
             return false;
         }
         
@@ -123,7 +123,7 @@ bool link_function(void** function, const char* source, const char* library, con
                     NATIVECALL(*function = dlsym(handle, source));
                     dlclose(handle);
                     if (*function != nullptr) {
-                        debuglogstdio(LCF_HOOK, "Imported from mach lib %s symbol %s function: %p", image.imageFilePath, source, *function);
+                        LOG(LL_DEBUG, LCF_HOOK, "Imported from mach lib %s symbol %s function: %p", image.imageFilePath, source, *function);
                         return true;
                     }
                 }
@@ -132,7 +132,7 @@ bool link_function(void** function, const char* source, const char* library, con
     }
 #endif
 
-    debuglogstdio(LCF_ERROR | LCF_HOOK, "Could not import symbol %s", source);
+    LOG(LL_ERROR, LCF_HOOK, "Could not import symbol %s", source);
 
     *function = nullptr;
     return false;

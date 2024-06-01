@@ -42,29 +42,29 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
 
 /* Override */ int SDL_GetNumVideoDisplays(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_WINDOW);
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
     LINK_NAMESPACE_SDL2(SDL_GetNumVideoDisplays);
 
     int ret = orig::SDL_GetNumVideoDisplays();
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns %d", ret);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns %d", ret);
 
     return ret;
 }
 
 /* Override */ const char *SDL_GetDisplayName(int displayIndex)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
     LINK_NAMESPACE_SDL2(SDL_GetDisplayName);
 
     const char* ret = orig::SDL_GetDisplayName(displayIndex);
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns %d", ret);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns %d", ret);
 
     return ret;
 }
 
 /* Override */ int SDL_GetDisplayBounds(int displayIndex, SDL_Rect * rect)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
     int ret = 0;
     if (GlobalState::isNative() || !Global::shared_config.screen_width) {
@@ -79,36 +79,36 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
         rect->h = Global::shared_config.screen_height;
     }
 
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns rect (%d,%d,%d,%d)", rect->x, rect->y, rect->w, rect->h);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns rect (%d,%d,%d,%d)", rect->x, rect->y, rect->w, rect->h);
 
     return ret;
 }
 
 /* Override */ int SDL_GetDisplayDPI(int displayIndex, float * ddpi, float * hdpi, float * vdpi)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
     LINK_NAMESPACE_SDL2(SDL_GetDisplayDPI);
 
     int ret = orig::SDL_GetDisplayDPI(displayIndex, ddpi, hdpi, vdpi);
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns ddpi=%f, hdpi=%f, vdpi=", ddpi?*ddpi:0.0f, hdpi?*hdpi:0.0f, vdpi?*vdpi:0.0f);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns ddpi=%f, hdpi=%f, vdpi=", ddpi?*ddpi:0.0f, hdpi?*hdpi:0.0f, vdpi?*vdpi:0.0f);
 
     return ret;
 }
 
 /* Override */ int SDL_GetDisplayUsableBounds(int displayIndex, SDL_Rect * rect)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
     LINK_NAMESPACE_SDL2(SDL_GetDisplayUsableBounds);
 
     int ret = orig::SDL_GetDisplayUsableBounds(displayIndex, rect);
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns rect (%d,%d,%d,%d)", rect->x, rect->y, rect->w, rect->h);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns rect (%d,%d,%d,%d)", rect->x, rect->y, rect->w, rect->h);
 
     return ret;
 }
 
 /* Override */ int SDL_GetNumDisplayModes(int displayIndex)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
     int ret = 1;
 
@@ -116,14 +116,14 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
         LINK_NAMESPACE_SDL2(SDL_GetNumDisplayModes);
         ret = orig::SDL_GetNumDisplayModes(displayIndex);
     }
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns %d", ret);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns %d", ret);
 
     return ret;
 }
 
 /* Override */ int SDL_GetDisplayMode(int displayIndex, int modeIndex, SDL_DisplayMode * mode)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with index %d and mode %d", __func__, displayIndex, modeIndex);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d and mode %d", __func__, displayIndex, modeIndex);
 
     int ret = 0;
     if (GlobalState::isNative() || !Global::shared_config.screen_width) {
@@ -141,13 +141,13 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
     }
     mode->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
 
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
     return ret;
 }
 
 /* Override */ int SDL_GetDesktopDisplayMode(int displayIndex, SDL_DisplayMode * mode)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
     LINK_NAMESPACE_SDL2(SDL_GetDesktopDisplayMode);
 
     int ret = orig::SDL_GetDesktopDisplayMode(displayIndex, mode);
@@ -159,13 +159,13 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
     }
     mode->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
 
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
     return ret;
 }
 
 /* Override */ int SDL_GetCurrentDisplayMode(int displayIndex, SDL_DisplayMode * mode)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
     int ret = 0;
     if (GlobalState::isNative() || !Global::shared_config.screen_width) {
@@ -183,14 +183,13 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
     }
     mode->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
 
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
     return ret;
 }
 
 /* Override */ SDL_DisplayMode *SDL_GetClosestDisplayMode(int displayIndex, const SDL_DisplayMode * mode, SDL_DisplayMode * closest)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "   and mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d and mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", __func__, displayIndex, mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
 
     SDL_DisplayMode *dm = nullptr;
     if (GlobalState::isNative() || !Global::shared_config.screen_width) {
@@ -217,38 +216,37 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
 
 /* Override */ int SDL_GetWindowDisplayIndex(SDL_Window * window)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with window %d", __func__, (void*)window);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with window %d", __func__, (void*)window);
 
     int ret = 0;
     if (GlobalState::isNative() || !Global::shared_config.screen_width) {
         LINK_NAMESPACE_SDL2(SDL_GetWindowDisplayIndex);
         ret = orig::SDL_GetWindowDisplayIndex(window);
     }
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns index %d", ret);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns index %d", ret);
 
     return ret;
 }
 
 /* Override */ int SDL_SetWindowDisplayMode(SDL_Window * window, const SDL_DisplayMode* mode)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with window %d", __func__, (void*)window);
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "   and mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with window %d and mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", __func__, (void*)window, mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
     LINK_NAMESPACE_SDL2(SDL_SetWindowDisplayMode);
 
     int ret = orig::SDL_SetWindowDisplayMode(window, mode);
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns ret %d", ret);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns ret %d", ret);
 
     return ret;
 }
 
 /* Override */ int SDL_GetWindowDisplayMode(SDL_Window * window, SDL_DisplayMode * mode)
 {
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "%s call with window %d", __func__, (void*)window);
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with window %d", __func__, (void*)window);
     LINK_NAMESPACE_SDL2(SDL_GetWindowDisplayMode);
 
     int ret = orig::SDL_GetWindowDisplayMode(window, mode);
 
-    debuglogstdio(LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
 
     return ret;
 }

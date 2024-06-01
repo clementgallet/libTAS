@@ -47,7 +47,7 @@ static thread_local int origUsrMaskThread = 0;
 
 /* Override */ sighandler_t signal (int sig, sighandler_t handler) __THROW
 {
-    DEBUGLOGCALL(LCF_SIGNAL);
+    LOGTRACE(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(signal);
 
     /* Our checkpoint code uses signals, so we must prevent the game from
@@ -55,7 +55,7 @@ static thread_local int origUsrMaskThread = 0;
      */
     WrapperLock wrapperLock;
 
-    debuglogstdio(LCF_SIGNAL, "    Setting handler %p for signal %s", reinterpret_cast<void*>(handler), strsignal(sig));
+    LOG(LL_DEBUG, LCF_SIGNAL, "    Setting handler %p for signal %s", reinterpret_cast<void*>(handler), strsignal(sig));
 
     if ((sig == SaveStateManager::sigSuspend()) || (sig == SaveStateManager::sigCheckpoint())) {
         return SIG_IGN;
@@ -68,7 +68,7 @@ static thread_local int origUsrMaskThread = 0;
     
 /* Override */ int sigblock (int mask) __THROW
 {
-    DEBUGLOGCALL(LCF_SIGNAL);
+    LOGTRACE(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigblock);
 
     static const int bannedMask = sigmask(SaveStateManager::sigSuspend()) | sigmask(SaveStateManager::sigCheckpoint());
@@ -87,7 +87,7 @@ static thread_local int origUsrMaskThread = 0;
 
 /* Override */ int sigsetmask (int mask) __THROW
 {
-    DEBUGLOGCALL(LCF_SIGNAL);
+    LOGTRACE(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigsetmask);
 
     static const int bannedMask = sigmask(SaveStateManager::sigSuspend()) | sigmask(SaveStateManager::sigCheckpoint());
@@ -107,7 +107,7 @@ static thread_local int origUsrMaskThread = 0;
 
 /* Override */ int siggetmask (void) __THROW
 {
-    DEBUGLOGCALL(LCF_SIGNAL);
+    LOGTRACE(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(siggetmask);
 
     int oldmask = orig::siggetmask();
@@ -121,7 +121,7 @@ static thread_local int origUsrMaskThread = 0;
 
 /* Override */ int sigprocmask (int how, const sigset_t *set, sigset_t *oset) __THROW
 {
-    DEBUGLOGCALL(LCF_SIGNAL);
+    LOGTRACE(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigprocmask);
 
     if (GlobalState::isNative())
@@ -162,7 +162,7 @@ static thread_local int origUsrMaskThread = 0;
 
 /* Override */ int sigsuspend (const sigset_t *set)
 {
-    DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
+    LOGTRACE(LCF_SIGNAL | LCF_TODO);
     LINK_NAMESPACE_GLOBAL(sigsuspend);
 
     sigset_t tmp;
@@ -185,7 +185,7 @@ static thread_local int origUsrMaskThread = 0;
         return orig::sigaction(sig, act, oact);
     }
 
-    DEBUGLOGCALL(LCF_SIGNAL);
+    LOGTRACE(LCF_SIGNAL);
 
     /* Our checkpoint code uses signals, so we must prevent the game from
      * signaling threads at the same time.
@@ -198,7 +198,7 @@ static thread_local int origUsrMaskThread = 0;
     act_checkpoint.sa_handler = SIG_DFL;
 
     if (sig == SaveStateManager::sigSuspend()) {
-        debuglogstdio(LCF_SIGNAL, "    Skipping because libTAS uses that signal for suspend");
+        LOG(LL_DEBUG, LCF_SIGNAL, "    Skipping because libTAS uses that signal for suspend");
         
         if (oact != nullptr)
             *oact = act_suspend;
@@ -210,7 +210,7 @@ static thread_local int origUsrMaskThread = 0;
     }
 
     if (sig == SaveStateManager::sigCheckpoint()) {
-        debuglogstdio(LCF_SIGNAL, "    Skipping because libTAS uses that signal for checkpoint");
+        LOG(LL_DEBUG, LCF_SIGNAL, "    Skipping because libTAS uses that signal for checkpoint");
         
         if (oact != nullptr)
             *oact = act_checkpoint;
@@ -222,7 +222,7 @@ static thread_local int origUsrMaskThread = 0;
     }
     
     if (act != nullptr) {
-        debuglogstdio(LCF_SIGNAL, "    Setting handler %p for signal %d (%s)", (act->sa_flags & SA_SIGINFO)?
+        LOG(LL_DEBUG, LCF_SIGNAL, "    Setting handler %p for signal %d (%s)", (act->sa_flags & SA_SIGINFO)?
                 reinterpret_cast<void*>(act->sa_sigaction):
                 reinterpret_cast<void*>(act->sa_handler), sig, strsignal(sig));
     }
@@ -230,7 +230,7 @@ static thread_local int origUsrMaskThread = 0;
     int ret = orig::sigaction(sig, act, oact);
 
     if (oact != nullptr) {
-        debuglogstdio(LCF_SIGNAL, "    Getting handler %p for signal %d (%s)", (oact->sa_flags & SA_SIGINFO)?
+        LOG(LL_DEBUG, LCF_SIGNAL, "    Getting handler %p for signal %d (%s)", (oact->sa_flags & SA_SIGINFO)?
             reinterpret_cast<void*>(oact->sa_sigaction):
             reinterpret_cast<void*>(oact->sa_handler), sig, strsignal(sig));
     }
@@ -240,26 +240,26 @@ static thread_local int origUsrMaskThread = 0;
 
 /* Override */ int sigpending (sigset_t *set) __THROW
 {
-    DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
+    LOGTRACE(LCF_SIGNAL | LCF_TODO);
     RETURN_NATIVE(sigpending, (set), nullptr);
 }
 
 /* Override */ int sigwait (const sigset_t *set, int *sig)
 {
-    DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
+    LOGTRACE(LCF_SIGNAL | LCF_TODO);
     RETURN_NATIVE(sigwait, (set, sig), nullptr);
 }
 
 /* Override */ int sigwaitinfo (const sigset_t *set, siginfo_t *info)
 {
-    DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
+    LOGTRACE(LCF_SIGNAL | LCF_TODO);
     RETURN_NATIVE(sigwaitinfo, (set, info), nullptr);
 }
 
 /* Override */ int sigtimedwait (const sigset_t *set,
     siginfo_t *info, const struct timespec *timeout)
 {
-    DEBUGLOGCALL(LCF_SIGNAL | LCF_TODO);
+    LOGTRACE(LCF_SIGNAL | LCF_TODO);
     RETURN_NATIVE(sigtimedwait, (set, info, timeout), nullptr);
 }
 
@@ -269,16 +269,16 @@ static thread_local int origUsrMaskThread = 0;
     if (GlobalState::isNative())
         return orig::sigaltstack(ss, oss);
 
-    DEBUGLOGCALL(LCF_SIGNAL);
+    LOGTRACE(LCF_SIGNAL);
 
     if (ss) {
-        debuglogstdio(LCF_SIGNAL, "    Setting altstack with base address %p and size %d", ss->ss_sp, ss->ss_size);
+        LOG(LL_DEBUG, LCF_SIGNAL, "    Setting altstack with base address %p and size %d", ss->ss_sp, ss->ss_size);
     }
     
     int ret = orig::sigaltstack(ss, oss);
 
     if (oss) {
-        debuglogstdio(LCF_SIGNAL, "    Getting altstack with base address %p and size %d", oss->ss_sp, oss->ss_size);
+        LOG(LL_DEBUG, LCF_SIGNAL, "    Getting altstack with base address %p and size %d", oss->ss_sp, oss->ss_size);
     }
 
     return ret;
@@ -287,7 +287,7 @@ static thread_local int origUsrMaskThread = 0;
 /* Override */ int pthread_sigmask (int how, const sigset_t *newmask,
     sigset_t *oldmask) __THROW
 {
-    DEBUGLOGCALL(LCF_SIGNAL | LCF_THREAD);
+    LOGTRACE(LCF_SIGNAL | LCF_THREAD);
     LINK_NAMESPACE_GLOBAL(pthread_sigmask);
 
     /* This is a bit of a workaround. We still want native threads
@@ -300,11 +300,11 @@ static thread_local int origUsrMaskThread = 0;
 
     if (newmask) {
         if (how == SIG_BLOCK)
-            debuglogstdio(LCF_SIGNAL | LCF_THREAD, "    Blocking signals:");
+            LOG(LL_DEBUG, LCF_SIGNAL | LCF_THREAD, "    Blocking signals:");
         if (how == SIG_UNBLOCK)
-            debuglogstdio(LCF_SIGNAL | LCF_THREAD, "    Unblocking signals:");
+            LOG(LL_DEBUG, LCF_SIGNAL | LCF_THREAD, "    Unblocking signals:");
         if (how == SIG_SETMASK)
-            debuglogstdio(LCF_SIGNAL | LCF_THREAD, "    Setting signals to block:");
+            LOG(LL_DEBUG, LCF_SIGNAL | LCF_THREAD, "    Setting signals to block:");
         // for (int s=1; s<NSIG; s++) {
         //     if (sigismember(newmask, s) == 1)
                 /* I encountered a deadlock here when using strsignal() to print
@@ -315,11 +315,11 @@ static thread_local int origUsrMaskThread = 0;
                  *
                  * So I don't use any function that is making memory allocation.
                  */
-                // debuglogstdio(LCF_SIGNAL | LCF_THREAD, "        %d", s);
+                // LOG(LL_DEBUG, LCF_SIGNAL | LCF_THREAD, "        %d", s);
         // }
     }
     else if (oldmask) {
-        debuglogstdio(LCF_SIGNAL | LCF_THREAD, "    Getting blocked signals");
+        LOG(LL_DEBUG, LCF_SIGNAL | LCF_THREAD, "    Getting blocked signals");
     }
 
     sigset_t tmpmask;
@@ -387,7 +387,7 @@ static thread_local int origUsrMaskThread = 0;
     if (GlobalState::isNative())
         return orig::pthread_kill(threadid, signo);
 
-    debuglogstdio(LCF_SIGNAL | LCF_THREAD, "%s called with thread %p and signo %d", __func__, threadid, signo);
+    LOG(LL_TRACE, LCF_SIGNAL | LCF_THREAD, "%s called with thread %p and signo %d", __func__, threadid, signo);
 
     /* Our checkpoint code uses signals, so we must prevent the game from
      * signaling threads at the same time.
@@ -402,7 +402,7 @@ static thread_local int origUsrMaskThread = 0;
 /* Override */ int pthread_sigqueue (pthread_t threadid, int signo,
                  const union sigval value) __THROW
 {
-    DEBUGLOGCALL(LCF_SIGNAL | LCF_THREAD);
+    LOGTRACE(LCF_SIGNAL | LCF_THREAD);
     RETURN_NATIVE(pthread_sigqueue, (threadid, signo, value), nullptr);
 }
 

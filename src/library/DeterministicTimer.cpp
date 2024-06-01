@@ -97,7 +97,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
         return returnTicks;
     }
 
-    DEBUGLOGCALL(LCF_TIMEGET | LCF_FREQUENT);
+    LOGTRACE(LCF_TIMEGET);
 
     bool mainT = ThreadManager::isMainThread();
 
@@ -130,7 +130,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
              */
             int tickDelta = 1;
 
-            debuglogstdio(LCF_TIMESET | LCF_FREQUENT, "WARNING! force-advancing time of type %d", type);
+            LOG(LL_DEBUG, LCF_TIMESET, "WARNING! force-advancing time of type %d", type);
 
             ticksExtra += tickDelta;
 
@@ -146,7 +146,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
          * of potential options to tweak. */
         main_gettimes[type]++;
         if (main_gettimes[type] == ALERT_CALL_THRESHOLD) {            
-            debuglogstdio(LCF_TIMESET | LCF_WARNING, "WARNING! many calls to function %s, you may need to enable time-tracking", gettimes_names[type]);
+            LOG(LL_WARN, LCF_TIMESET, "WARNING! many calls to function %s, you may need to enable time-tracking", gettimes_names[type]);
         }
     }
 
@@ -164,7 +164,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
 
 void DeterministicTimer::addDelay(struct timespec delayTicks)
 {
-    debuglogstdio(LCF_TIMESET | LCF_SLEEP, "%s call with delay %u.%010u sec", __func__, delayTicks.tv_sec, delayTicks.tv_nsec);
+    LOG(LL_DEBUG, LCF_TIMESET | LCF_SLEEP, "%s call with delay %u.%010u sec", __func__, delayTicks.tv_sec, delayTicks.tv_nsec);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
         return NonDeterministicTimer::get().addDelay(delayTicks);
@@ -235,7 +235,7 @@ void DeterministicTimer::exitFrameBoundary()
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
         return NonDeterministicTimer::get().exitFrameBoundary();
 
-    DEBUGLOGCALL(LCF_TIMEGET);
+    LOGTRACE(LCF_TIMEGET);
 
     /* Reset the counts of each time get function */
     for (int i = 0; i < SharedConfig::TIMETYPE_NUMTRACKEDTYPES; i++) {
@@ -288,7 +288,7 @@ TimeHolder DeterministicTimer::enterFrameBoundary()
         return NonDeterministicTimer::get().enterFrameBoundary();
 
     frame_mutex.lock();
-    DEBUGLOGCALL(LCF_TIMEGET);
+    LOGTRACE(LCF_TIMEGET);
 
     insideFrameBoundary = true;
 
@@ -314,7 +314,7 @@ TimeHolder DeterministicTimer::enterFrameBoundary()
     if (timeIncrement > addedDelay) {
         TimeHolder deltaTicks = timeIncrement - addedDelay;
         ticks += deltaTicks;
-        debuglogstdio(LCF_TIMESET, "%s added %u.%010u", __func__, deltaTicks.tv_sec, deltaTicks.tv_nsec);
+        LOG(LL_DEBUG, LCF_TIMESET, "%s added %u.%010u", __func__, deltaTicks.tv_sec, deltaTicks.tv_nsec);
         addedDelay = {0, 0};
     }
     else {

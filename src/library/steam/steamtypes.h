@@ -13,7 +13,7 @@ namespace libtas {
 
 #define DUMMY_STEAM_IMPL(NAME, ARGS, RETTYPE, RET) \
 RETTYPE NAME ARGS {\
-    DEBUGLOGCALL(LCF_STEAM);\
+    LOGTRACE(LCF_STEAM);\
     return RET;\
 }
 

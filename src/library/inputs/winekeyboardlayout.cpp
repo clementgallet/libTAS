@@ -63,15 +63,15 @@ static const KeySym wine_default_keymap[256] = {
 
 KeySym VKeyToXKeysym(int vkey)
 {
-    debuglogstdio(LCF_KEYBOARD, "%s called with vkey %d", __func__, vkey);
+    LOG(LL_DEBUG, LCF_KEYBOARD, "%s called with vkey %d", __func__, vkey);
     KeySym sym = wine_default_keymap[vkey];
-    debuglogstdio(LCF_KEYBOARD, "   returning %d", sym);
+    LOG(LL_DEBUG, LCF_KEYBOARD, "   returning %d", sym);
     return sym;
 }
 
 int XKeysymToVKey(KeySym keysym)
 {
-    debuglogstdio(LCF_KEYBOARD, "%s called with keysym %d", __func__, keysym);
+    LOG(LL_DEBUG, LCF_KEYBOARD, "%s called with keysym %d", __func__, keysym);
     int vkey = 0;
     /* Translate from uppercase letter to lowercase */
     if ((keysym >= XK_A) && (keysym <= XK_Z)) {
@@ -85,7 +85,7 @@ int XKeysymToVKey(KeySym keysym)
         }
     }
 
-    debuglogstdio(LCF_KEYBOARD, "   returning %d", vkey);
+    LOG(LL_DEBUG, LCF_KEYBOARD, "   returning %d", vkey);
     return vkey;
 }
 

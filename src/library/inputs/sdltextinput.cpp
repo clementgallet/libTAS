@@ -28,25 +28,25 @@ static bool isTextInputActive = true;
 
 void SDL_StartTextInput(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD);
+    LOGTRACE(LCF_SDL | LCF_KEYBOARD);
     isTextInputActive = true;
 }
 
 SDL_bool SDL_IsTextInputActive(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD);
+    LOGTRACE(LCF_SDL | LCF_KEYBOARD);
     return isTextInputActive?SDL_TRUE:SDL_FALSE;
 }
 
 void SDL_StopTextInput(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD);
+    LOGTRACE(LCF_SDL | LCF_KEYBOARD);
     isTextInputActive = false;
 }
 
 void SDL_SetTextInputRect(SDL_Rect *rect)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD);
+    LOGTRACE(LCF_SDL | LCF_KEYBOARD);
 }
 
 /* SDL 1 */
@@ -54,7 +54,7 @@ static bool isUnicodeEnabled = false;
 
 int SDL_EnableUNICODE(int enable)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_KEYBOARD);
+    LOGTRACE(LCF_SDL | LCF_KEYBOARD);
 
     if (enable == -1) {
         return isUnicodeEnabled?1:0;

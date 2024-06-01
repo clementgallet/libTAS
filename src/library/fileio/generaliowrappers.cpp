@@ -31,7 +31,7 @@ int rename (const char *oldf, const char *newf) __THROW
 {
     RETURN_IF_NATIVE(rename, (oldf, newf), nullptr);
     
-    debuglogstdio(LCF_FILEIO, "%s call with old %s and new %s", __func__, oldf?oldf:"<NULL>", newf?newf:"<NULL>");
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with old %s and new %s", __func__, oldf?oldf:"<NULL>", newf?newf:"<NULL>");
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         RETURN_NATIVE(rename, (oldf, newf), nullptr);
@@ -50,7 +50,7 @@ int remove (const char *filename) __THROW
 {
     RETURN_IF_NATIVE(remove, (filename), nullptr);
 
-    debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, filename?filename:"<NULL>");
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with file %s", __func__, filename?filename:"<NULL>");
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         RETURN_NATIVE(remove, (filename), nullptr);
@@ -69,7 +69,7 @@ int unlink (const char *name) __THROW
 {
     RETURN_IF_NATIVE(unlink, (name), nullptr);
 
-    debuglogstdio(LCF_FILEIO, "%s call with file %s", __func__, name?name:"<NULL>");
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with file %s", __func__, name?name:"<NULL>");
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         RETURN_NATIVE(unlink, (name), nullptr);

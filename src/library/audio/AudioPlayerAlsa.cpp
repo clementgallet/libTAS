@@ -32,7 +32,7 @@ std::vector<uint8_t> AudioPlayerAlsa::silence;
 
 bool AudioPlayerAlsa::init(AudioContext& ac)
 {
-    debuglogstdio(LCF_SOUND, "Init audio player");
+    LOG(LL_DEBUG, LCF_SOUND, "Init audio player");
 
     /* Format parameters */
     snd_pcm_format_t format;
@@ -54,58 +54,58 @@ bool AudioPlayerAlsa::init(AudioContext& ac)
     GlobalNative gn;
 
     if (snd_pcm_open(&phandle, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "  Cannot open default audio device");
+        LOG(LL_ERROR, LCF_SOUND, "  Cannot open default audio device");
         return false;
     }
 
     snd_pcm_hw_params_t *hw_params;
 
     if (snd_pcm_hw_params_malloc(&hw_params) < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_malloc failed");
+        LOG(LL_ERROR, LCF_SOUND, "  snd_pcm_hw_params_malloc failed");
         return false;
     }
 
     if (snd_pcm_hw_params_any(phandle, hw_params) < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_any failed");
+        LOG(LL_ERROR, LCF_SOUND, "  snd_pcm_hw_params_any failed");
         return false;
     }
 
     if (snd_pcm_hw_params_set_access(phandle, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED) < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_access failed");
+        LOG(LL_ERROR, LCF_SOUND, "  snd_pcm_hw_params_set_access failed");
         return false;
     }
 
     if (snd_pcm_hw_params_set_format(phandle, hw_params, format) < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_format failed");
+        LOG(LL_ERROR, LCF_SOUND, "  snd_pcm_hw_params_set_format failed");
         return false;
     }
 
     int dir = 0;
     if (snd_pcm_hw_params_set_rate(phandle, hw_params, ac.outFrequency, dir) < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_rate failed");
+        LOG(LL_ERROR, LCF_SOUND, "  snd_pcm_hw_params_set_rate failed");
         return false;
     }
 
     if (snd_pcm_hw_params_set_channels(phandle, hw_params, ac.outNbChannels) < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_channels failed (%d)", ac.outNbChannels);
+        LOG(LL_ERROR, LCF_SOUND, "  snd_pcm_hw_params_set_channels failed (%d)", ac.outNbChannels);
         return false;
     }
 
     snd_pcm_uframes_t buffer_size = (Global::shared_config.initial_framerate_num>0)?(2*ac.outFrequency*Global::shared_config.initial_framerate_den/Global::shared_config.initial_framerate_num):(2*ac.outFrequency/30);
-    debuglogstdio(LCF_SOUND, "  Buffer size is %d", buffer_size);
+    LOG(LL_DEBUG, LCF_SOUND, "  Buffer size is %d", buffer_size);
     if (snd_pcm_hw_params_set_buffer_size_near(phandle, hw_params, &buffer_size) < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params_set_rate_near failed");
+        LOG(LL_ERROR, LCF_SOUND, "  snd_pcm_hw_params_set_rate_near failed");
         return false;
     }
-    debuglogstdio(LCF_SOUND, "  new buffer size is %d", buffer_size);
+    LOG(LL_DEBUG, LCF_SOUND, "  new buffer size is %d", buffer_size);
 
     if (snd_pcm_hw_params(phandle, hw_params) < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_hw_params failed");
+        LOG(LL_ERROR, LCF_SOUND, "  snd_pcm_hw_params failed");
         return false;
     }
 
     if (snd_pcm_prepare(phandle) < 0) {
-        debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_prepare failed");
+        LOG(LL_ERROR, LCF_SOUND, "  snd_pcm_prepare failed");
         return false;
     }
 
@@ -130,7 +130,7 @@ bool AudioPlayerAlsa::play(AudioContext& ac)
     if (Global::shared_config.fastforward)
         return true;
 
-    debuglogstdio(LCF_SOUND, "Play an audio frame");
+    LOG(LL_DEBUG, LCF_SOUND, "Play an audio frame");
     int err;
     {
         GlobalNative gn;
@@ -138,13 +138,13 @@ bool AudioPlayerAlsa::play(AudioContext& ac)
     }
 	if (err < 0) {
 		if (err == -EPIPE) {
-			debuglogstdio(LCF_SOUND, "  Underrun");
+			LOG(LL_DEBUG, LCF_SOUND, "  Underrun");
             {
                 GlobalNative gn;
 	            err = snd_pcm_prepare(phandle);
             }
 			if (err < 0) {
-				debuglogstdio(LCF_SOUND | LCF_ERROR, "  Can't recovery from underrun, prepare failed: %s", snd_strerror(err));
+				LOG(LL_ERROR, LCF_SOUND, "  Can't recovery from underrun, prepare failed: %s", snd_strerror(err));
 			    return false;
             }
             else {
@@ -157,7 +157,7 @@ bool AudioPlayerAlsa::play(AudioContext& ac)
             }
 		}
 		else {
-			debuglogstdio(LCF_SOUND | LCF_ERROR, "  snd_pcm_writei() failed: %s", snd_strerror (err));
+			LOG(LL_ERROR, LCF_SOUND, "  snd_pcm_writei() failed: %s", snd_strerror (err));
 			return false;
 		}
 	}

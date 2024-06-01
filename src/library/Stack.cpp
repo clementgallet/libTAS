@@ -58,11 +58,11 @@ void Stack::grow()
 
     /* Check if we found the stack */
     if (!stackArea.addr) {
-        debuglogstdio(LCF_ERROR, "Could not find the stack area");
+        LOG(LL_ERROR, LCF_CHECKPOINT, "Could not find the stack area");
         return;
     }
 
-    // debuglogstdio(LCF_INFO, "Current stack size is %d", stackArea.size);
+    // LOG(LL_INFO, LCF_NONE, "Current stack size is %d", stackArea.size);
 
     /* Check if we need to grow it */
     if (stackSize <= stackArea.size)
@@ -73,7 +73,7 @@ void Stack::grow()
     void* tmpbuf = alloca(allocSize);
     MYASSERT(tmpbuf != nullptr);
     memset(tmpbuf, 0, allocSize);
-    debuglogstdio(LCF_NONE, "Some value %d", static_cast<char*>(tmpbuf)[0]);
+    LOG(LL_DEBUG, LCF_NONE, "Some value %d", static_cast<char*>(tmpbuf)[0]);
 
     /* Look at the new stack area */
     /* Apparently, if we don't use another local variable here, the compiler
@@ -87,7 +87,7 @@ void Stack::grow()
 
     /* Check if we found the stack */
     if (stackArea.addr) {
-        // debuglogstdio(LCF_INFO, "New stack size is %d", stackArea.size);
+        // LOG(LL_INFO, LCF_NONE, "New stack size is %d", stackArea.size);
         return;
     }
 #endif

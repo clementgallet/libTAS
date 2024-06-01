@@ -25,31 +25,31 @@ namespace libtas {
 
 int SDL_NumHaptics(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
 	return 0;
 }
 
 SDL_Haptic * SDL_HapticOpen(int device_index)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
 	return NULL;
 }
 
 int SDL_JoystickIsHaptic(SDL_Joystick * joystick)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
 	return 0;
 }
 
 SDL_Haptic *SDL_HapticOpenFromJoystick(SDL_Joystick *joystick)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
 	return NULL;
 }
 
 void SDL_HapticClose(SDL_Haptic * haptic)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
 }
 
 }

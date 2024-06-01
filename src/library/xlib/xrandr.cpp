@@ -46,7 +46,7 @@ static const char *mode_name = "libTAS fake XRR mode";
 
 XRRScreenResources *XRRGetScreenResources (Display *dpy, Window window)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
     if (Global::shared_config.screen_width) {
         static XRRScreenResources sr;
         sr.ncrtc = 1;
@@ -91,13 +91,13 @@ XRRScreenResources *XRRGetScreenResources (Display *dpy, Window window)
 
 XRRScreenResources *XRRGetScreenResourcesCurrent (Display *dpy, Window window)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
     return XRRGetScreenResources(dpy, window);
 }
 
 void XRRFreeScreenResources (XRRScreenResources *resources)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
     if (!Global::shared_config.screen_width) {
         LINK_NAMESPACE_FULLNAME(XRRFreeScreenResources, "libXrandr.so.2");
         return orig::XRRFreeScreenResources(resources);
@@ -106,7 +106,7 @@ void XRRFreeScreenResources (XRRScreenResources *resources)
 
 XRROutputInfo *XRRGetOutputInfo (Display *dpy, XRRScreenResources *resources, RROutput output)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
     if (Global::shared_config.screen_width) {
         static XRROutputInfo output_info;
         output_info.crtc = 1;
@@ -126,7 +126,7 @@ XRROutputInfo *XRRGetOutputInfo (Display *dpy, XRRScreenResources *resources, RR
 
 void XRRFreeOutputInfo (XRROutputInfo *outputInfo)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
     if (!Global::shared_config.screen_width) {
         LINK_NAMESPACE_FULLNAME(XRRFreeOutputInfo, "libXrandr.so.2");
         return orig::XRRFreeOutputInfo(outputInfo);
@@ -135,7 +135,7 @@ void XRRFreeOutputInfo (XRROutputInfo *outputInfo)
 
 XRRCrtcInfo *XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc crtc)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
 
     if (Global::shared_config.screen_width) {
         static XRRCrtcInfo crtcInfo;
@@ -162,7 +162,7 @@ XRRCrtcInfo *XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc
 
 void XRRFreeCrtcInfo (XRRCrtcInfo *crtcInfo)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
     if (!Global::shared_config.screen_width) {
         LINK_NAMESPACE_FULLNAME(XRRFreeCrtcInfo, "libXrandr.so.2");
         return orig::XRRFreeCrtcInfo(crtcInfo);
@@ -171,7 +171,7 @@ void XRRFreeCrtcInfo (XRRCrtcInfo *crtcInfo)
 
 Atom *XRRListOutputProperties (Display *dpy, RROutput output, int *nprop)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
     if (!Global::shared_config.screen_width) {
         LINK_NAMESPACE_FULLNAME(XRRListOutputProperties, "libXrandr.so.2");
         return orig::XRRListOutputProperties(dpy, output, nprop);
@@ -185,25 +185,25 @@ Atom *XRRListOutputProperties (Display *dpy, RROutput output, int *nprop)
 
 Status XRRSetCrtcConfig (Display *dpy, XRRScreenResources *resources, RRCrtc crtc, Time timestamp, int x, int y, RRMode mode, Rotation rotation, RROutput *outputs, int noutputs)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
     return RRSetConfigSuccess;
 }
 
 Status XRRSetScreenConfig (Display *dpy, XRRScreenConfiguration *config, Drawable draw, int size_index, Rotation rotation, Time timestamp)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
     return RRSetConfigSuccess;
 }
 
 Status XRRSetScreenConfigAndRate (Display *dpy, XRRScreenConfiguration *config, Drawable draw, int size_index, Rotation rotation, short rate, Time timestamp)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
     return RRSetConfigSuccess;
 }
 
 void XRRSetScreenSize (Display *dpy, Window window, int width, int height, int mmWidth, int mmHeight)
 {
-    DEBUGLOGCALL(LCF_WINDOW);
+    LOGTRACE(LCF_WINDOW);
     /* We prevent games from changing the screen size */
 }
 

@@ -61,7 +61,7 @@ void mySDL_GameControllerChangeAttached(int index)
 
 /* Override */ SDL_bool SDL_IsGameController(int joystick_index)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
     if (joystick_index >= 0 && joystick_index < Global::shared_config.nb_controllers)
         return SDL_TRUE;
     return SDL_FALSE;
@@ -70,7 +70,7 @@ void mySDL_GameControllerChangeAttached(int index)
 
 /* Override */ SDL_GameController *SDL_GameControllerOpen(int joystick_index)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
     if (joystick_index < 0 || joystick_index >= Global::shared_config.nb_controllers)
         return NULL;
 
@@ -89,19 +89,19 @@ void mySDL_GameControllerChangeAttached(int index)
 
 /* Override */ const char *SDL_GameControllerNameForIndex(int joystick_index)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
     return joy_name;
 }
 
 /* Override */ SDL_GameControllerType SDL_GameControllerTypeForIndex(int joystick_index)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
     return SDL_CONTROLLER_TYPE_XBOX360;
 }
 
 /* Override */ const char *SDL_GameControllerName(SDL_GameController *gamecontroller)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
 
     if (!gamecontroller)
         return NULL;
@@ -111,7 +111,7 @@ void mySDL_GameControllerChangeAttached(int index)
 
 /* Override */ SDL_GameControllerType SDL_GameControllerGetType(SDL_GameController *gamecontroller)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
 
     if (!gamecontroller)
         return SDL_CONTROLLER_TYPE_UNKNOWN;
@@ -121,7 +121,7 @@ void mySDL_GameControllerChangeAttached(int index)
 
 /* Override */ SDL_Joystick* SDL_GameControllerGetJoystick(SDL_GameController* gamecontroller)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
 
     /* We simply return the same id */
     return reinterpret_cast<SDL_Joystick*>(gamecontroller);
@@ -129,7 +129,7 @@ void mySDL_GameControllerChangeAttached(int index)
 
 /* Override */ SDL_GameController* SDL_GameControllerFromInstanceID(SDL_JoystickID joy)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joy);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joy);
     if (joy < 0 || joy >= Global::shared_config.nb_controllers)
         return NULL;
     if (gcids[joy] != -1)
@@ -141,7 +141,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 
 /* Override */ char *SDL_GameControllerMappingForGUID( SDL_JoystickGUID guid )
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
     /* Mhhh, let's bet that the game will only call this on a guid that
      * we returned, so we return here the mapping of a xbox 360 controller.
      *
@@ -155,7 +155,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 
 /* Override */ char *SDL_GameControllerMapping( SDL_GameController * gamecontroller )
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
 
     if (!gamecontroller)
         return NULL;
@@ -180,7 +180,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 
 /* Override */ char *SDL_GameControllerMappingForDeviceIndex(int joystick_index)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joystick_index);
 
     if (joystick_index < 0 || joystick_index >= Global::shared_config.nb_controllers)
         return NULL;
@@ -196,7 +196,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 
 /* Override */ SDL_bool SDL_GameControllerGetAttached(SDL_GameController *gamecontroller)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
 
     if (!gamecontroller)
         return SDL_FALSE;
@@ -213,7 +213,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 
 /* Override */ int SDL_GameControllerEventState(int state)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with state %d", __func__, state);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with state %d", __func__, state);
     const int gcevents[] = {
         SDL_CONTROLLERDEVICEADDED,
         SDL_CONTROLLERDEVICEREMOVED,
@@ -246,7 +246,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 
 /* Override */ void SDL_GameControllerUpdate(void)
 {
-    DEBUGLOGCALL(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
     GlobalNoLog tnl;
     SDL_JoystickUpdate();
 }
@@ -254,7 +254,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 /* Override */ SDL_GameControllerButtonBind SDL_GameControllerGetBindForAxis(SDL_GameController *gamecontroller,
                                  SDL_GameControllerAxis axis)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d and axis %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1, axis);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d and axis %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1, axis);
 
     SDL_GameControllerButtonBind b;
     b.bindType = SDL_CONTROLLER_BINDTYPE_NONE;
@@ -286,7 +286,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 
 /* Override */ SDL_bool SDL_GameControllerHasAxis(SDL_GameController *gamecontroller, SDL_GameControllerAxis axis)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d and axis %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1, axis);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d and axis %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1, axis);
 
     if (!gamecontroller)
         return SDL_FALSE;
@@ -310,7 +310,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 /* Override */ Sint16 SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,
                                           SDL_GameControllerAxis axis)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d and axis %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1, axis);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d and axis %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1, axis);
 
     if (!gamecontroller)
         return 0;
@@ -337,7 +337,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
 SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
                                    SDL_GameControllerButton button)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d and button %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1, button);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d and button %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1, button);
 
     SDL_GameControllerButtonBind b;
     b.bindType = SDL_CONTROLLER_BINDTYPE_NONE;
@@ -377,7 +377,7 @@ SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
 /* Override */ SDL_bool SDL_GameControllerHasButton(SDL_GameController *gamecontroller,
                                                              SDL_GameControllerButton button)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d and button %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1, button);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d and button %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1, button);
 
     if (!gamecontroller)
         return SDL_FALSE;
@@ -402,7 +402,7 @@ SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
 /* Override */ Uint8 SDL_GameControllerGetButton(SDL_GameController *gamecontroller,
                                                  SDL_GameControllerButton button)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d and button %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1, button);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d and button %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1, button);
 
     if (!gamecontroller)
         return 0;
@@ -421,7 +421,7 @@ SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
         return 0;
 
     /* Return button value */
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "  return %d", (game_ai.controllers[*gcid].buttons >> button) & 0x1);
+    LOG(LL_DEBUG, LCF_SDL | LCF_JOYSTICK, "  return %d", (game_ai.controllers[*gcid].buttons >> button) & 0x1);
 
     return (game_ai.controllers[*gcid].buttons >> button) & 0x1;
 
@@ -429,79 +429,79 @@ SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
 
 /* Override */ SDL_bool SDL_GameControllerHasSensor(SDL_GameController *gamecontroller, SDL_SensorType type)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
     return SDL_FALSE;
 }
 
 /* Override */ int SDL_GameControllerSetSensorEnabled(SDL_GameController *gamecontroller, SDL_SensorType type, SDL_bool enabled)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
     return -1;
 }
 
 /* Override */ SDL_bool SDL_GameControllerIsSensorEnabled(SDL_GameController *gamecontroller, SDL_SensorType type)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
     return SDL_FALSE;
 }
 
 /* Override */ float SDL_GameControllerGetSensorDataRate(SDL_GameController *gamecontroller, SDL_SensorType type)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
     return 0.0f;
 }
 
 /* Override */ int SDL_GameControllerGetSensorData(SDL_GameController *gamecontroller, SDL_SensorType type, float *data, int num_values)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
     return -1;
 }
 
 /* Override */ int SDL_GameControllerRumble(SDL_GameController *gamecontroller, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
     return -1;
 }
 
 /* Override */ int SDL_GameControllerRumbleTriggers(SDL_GameController *gamecontroller, Uint16 left_rumble, Uint16 right_rumble, Uint32 duration_ms)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
     return -1;
 }
 
 /* Override */ SDL_bool SDL_GameControllerHasLED(SDL_GameController *gamecontroller)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
     return SDL_FALSE;
 }
 
 /* Override */ SDL_bool SDL_GameControllerHasRumble(SDL_GameController *gamecontroller)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
     return SDL_FALSE;
 }
 
 /* Override */ SDL_bool SDL_GameControllerHasRumbleTriggers(SDL_GameController *gamecontroller)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
     return SDL_FALSE;
 }
 
 /* Override */ int SDL_GameControllerSetLED(SDL_GameController *gamecontroller, Uint8 red, Uint8 green, Uint8 blue)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
     return -1;
 }
 
 /* Override */ int SDL_GameControllerSendEffect(SDL_GameController *gamecontroller, const void *data, int size)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
     return -1;
 }
 
 /* Override */ void SDL_GameControllerClose(SDL_GameController *gamecontroller)
 {
-    debuglogstdio(LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
+    LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, gamecontroller?*reinterpret_cast<int*>(gamecontroller):-1);
 
     if (!gamecontroller)
         return;

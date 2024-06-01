@@ -142,9 +142,9 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
     
 /* Override */ KeySym XKeycodeToKeysym(Display* display, KeyCode keycode, int index)
 {
-    debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, (int)keycode);
+    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, (int)keycode);
     KeySym sym = (index == 1) ? Xlib_default_keymap_shifted[keycode] : Xlib_default_keymap[keycode];
-    debuglogstdio(LCF_KEYBOARD, "   returning %d", sym);
+    LOG(LL_DEBUG, LCF_KEYBOARD, "   returning %d", sym);
     return sym;
 }
 
@@ -153,15 +153,15 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
     /* ImGui uses this function */
     RETURN_IF_NATIVE(XkbKeycodeToKeysym, (dpy, kc, group, level), nullptr);
 
-    debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, (int)kc);
+    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, (int)kc);
     KeySym sym = (level == 1) ? Xlib_default_keymap_shifted[kc] : Xlib_default_keymap[kc];
-    debuglogstdio(LCF_KEYBOARD, "   returning %d", sym);
+    LOG(LL_DEBUG, LCF_KEYBOARD, "   returning %d", sym);
     return sym;
 }
 
 /* Override */ KeyCode XKeysymToKeycode( Display* display, KeySym keysym)
 {
-    debuglogstdio(LCF_KEYBOARD, "%s called with keysym %d", __func__, keysym);
+    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keysym %d", __func__, keysym);
     KeyCode kc = 0;
     for (int i=0; i<256; i++) {
         if (Xlib_default_keymap[i] == keysym) {
@@ -174,7 +174,7 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
         }
     }
 
-    debuglogstdio(LCF_KEYBOARD, "   returning %d", (int)kc);
+    LOG(LL_DEBUG, LCF_KEYBOARD, "   returning %d", (int)kc);
     return kc;
 }
 
@@ -183,7 +183,7 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
     /* ImGui uses this function */
     RETURN_IF_NATIVE(XLookupString, (event_struct, buffer_return, bytes_buffer, keysym_return, status_in_out), nullptr);
 
-    debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, event_struct->keycode);
+    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, event_struct->keycode);
 
     KeyCode keycode = event_struct->keycode;
     if (keysym_return) {
@@ -213,7 +213,7 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
 
 /* Override */ int XmbLookupString(XIC ic, XKeyPressedEvent *event, char *buffer_return, int bytes_buffer, KeySym *keysym_return, Status *status_return)
 {
-    debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
+    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
     KeyCode keycode = event->keycode;
     KeySym keysym = (event->state & ShiftMask) ? Xlib_default_keymap_shifted[keycode] : Xlib_default_keymap[keycode];
 
@@ -250,7 +250,7 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
 
 /* Override */ int XwcLookupString(XIC ic, XKeyPressedEvent *event, wchar_t *buffer_return, int wchars_buffer, KeySym *keysym_return, Status *status_return)
 {
-    debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
+    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
     KeyCode keycode = event->keycode;
     KeySym keysym = (event->state & ShiftMask) ? Xlib_default_keymap_shifted[keycode] : Xlib_default_keymap[keycode];
 
@@ -290,7 +290,7 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
 {
     RETURN_IF_NATIVE(Xutf8LookupString, (ic, event, buffer_return, bytes_buffer, keysym_return, status_return), nullptr);
 
-    debuglogstdio(LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
+    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
     KeyCode keycode = event->keycode;
     KeySym keysym = (event->state & ShiftMask) ? Xlib_default_keymap_shifted[keycode] : Xlib_default_keymap[keycode];
 
@@ -327,7 +327,7 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
 
 /* Override */ KeySym *XGetKeyboardMapping(Display *display, KeyCode first_keycode, int keycode_count, int *keysyms_per_keycode_return)
 {
-    debuglogstdio(LCF_KEYBOARD, "%s called with keycode_count %d", __func__, keycode_count);
+    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode_count %d", __func__, keycode_count);
     *keysyms_per_keycode_return = 2;
     KeySym *keysyms = static_cast<KeySym*>(malloc(keycode_count*(*keysyms_per_keycode_return)*sizeof(KeySym)));
     for (int c=0; c<keycode_count; c++) {

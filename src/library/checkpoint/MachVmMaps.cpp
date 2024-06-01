@@ -49,7 +49,7 @@ MachVmMaps::MachVmMaps()
     kern_return_t ret;
     ret = task_info(mach_task_self(), TASK_DYLD_INFO, (task_info_t)&dyld_info, &count);
     if (ret != KERN_SUCCESS) {
-        debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not get task info");
+        LOG(LL_ERROR, LCF_HOOK, "Could not get task info");
     }
     
     /* Get image array's size and address */
@@ -67,7 +67,7 @@ MachVmMaps::MachVmMaps()
 
     uint32_t image_count = _dyld_image_count();
     for (int i = 0; i < image_count; ++i) {
-//        debuglogstdio(LCF_CHECKPOINT, "   library %s at addr %p and slide %x", _dyld_get_image_name(i), _dyld_get_image_header(i), _dyld_get_image_vmaddr_slide(i));
+//        LOG(LL_DEBUG, LCF_CHECKPOINT, "   library %s at addr %p and slide %x", _dyld_get_image_name(i), _dyld_get_image_header(i), _dyld_get_image_vmaddr_slide(i));
 
         /* Shared cache starts at 0x7fff00000000. Other libraries will be processed normally */
         if (reinterpret_cast<uintptr_t>(_dyld_get_image_header(i)) < 0x7fff00000000)
@@ -77,7 +77,7 @@ MachVmMaps::MachVmMaps()
         const uint8_t* ptr = reinterpret_cast<const uint8_t*>(_dyld_get_image_header(i));
 
         if (header->magic == MH_MAGIC_64) {
-//            debuglogstdio(LCF_CHECKPOINT, "   64-bit header");
+//            LOG(LL_DEBUG, LCF_CHECKPOINT, "   64-bit header");
             const struct mach_header_64* header64 = reinterpret_cast<const struct mach_header_64*>(_dyld_get_image_header(i));
             ptr += sizeof(struct mach_header_64);
             
@@ -116,7 +116,7 @@ MachVmMaps::MachVmMaps()
             }
         }
         else {
-            debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "   Unknown library magic: %x", header->magic);
+            LOG(LL_ERROR, LCF_CHECKPOINT, "   Unknown library magic: %x", header->magic);
         }
     }
     

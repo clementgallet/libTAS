@@ -95,7 +95,7 @@ void ThreadManager::setMainThread()
         if (!(Global::shared_config.debug_state & SharedConfig::DEBUG_MAIN_FIRST_THREAD) &&
             !(Global::shared_config.game_specific_timing & SharedConfig::GC_TIMING_ARMA_CWA)) {
             /* Switching main thread */
-            debuglogstdio(LCF_THREAD | LCF_WARNING, "Switching main thread from %d to %d", main_pthread_id, pthread_id);
+            LOG(LL_WARN, LCF_THREAD, "Switching main thread from %d to %d", main_pthread_id, pthread_id);
             main_pthread_id = pthread_id;
         }
     }
@@ -169,7 +169,7 @@ void ThreadManager::restoreTid()
 
 void ThreadManager::initThreadFromParent(ThreadInfo* thread, void * (* start_routine) (void *), void * arg, void * from)
 {
-    debuglogstdio(LCF_THREAD, "Init thread with routine %p", (void*)start_routine);
+    LOG(LL_DEBUG, LCF_THREAD, "Init thread with routine %p", (void*)start_routine);
 
     thread->start = start_routine;
     thread->arg = arg;
@@ -215,7 +215,7 @@ int ThreadManager::getTidOffset() {
             }
         }
         if (offset_tid == 500) {
-            debuglogstdio(LCF_THREAD | LCF_ERROR, "Could not find tid member in pthread!");
+            LOG(LL_ERROR, LCF_THREAD, "Could not find tid member in pthread!");
         }
     }
 
@@ -303,7 +303,7 @@ void ThreadManager::setChildFork()
 
 void ThreadManager::threadIsDead(ThreadInfo *thread)
 {
-    debuglogstdio(LCF_THREAD, "Remove thread %d from list", thread->real_tid);
+    LOG(LL_DEBUG, LCF_THREAD, "Remove thread %d from list", thread->real_tid);
 
     if (thread->prev != nullptr) {
         thread->prev->next = thread->next;
@@ -326,7 +326,7 @@ void ThreadManager::threadDetach(pthread_t pthread_id)
         lockList();
         thread->detached = true;
         if (thread->state == ThreadInfo::ST_ZOMBIE) {
-            debuglogstdio(LCF_THREAD, "Zombie thread %d is detached", thread->real_tid);
+            LOG(LL_DEBUG, LCF_THREAD, "Zombie thread %d is detached", thread->real_tid);
             threadIsDead(thread);
         }
         unlockList();
@@ -343,7 +343,7 @@ void ThreadManager::threadExit(void* retval)
     MYASSERT(updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_RUNNING) ||
             updateState(current_thread, ThreadInfo::ST_ZOMBIE, ThreadInfo::ST_CKPNTHREAD))
     if (current_thread->detached) {
-        debuglogstdio(LCF_THREAD, "Detached thread %d exited", current_thread->real_tid);
+        LOG(LL_DEBUG, LCF_THREAD, "Detached thread %d exited", current_thread->real_tid);
         threadIsDead(current_thread);
     }
     unlockList();

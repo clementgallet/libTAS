@@ -32,7 +32,7 @@ DEFINE_ORIG_POINTER(_ZN4FMOD6System9setOutputE15FMOD_OUTPUTTYPE)
 
 int FMOD_System_Create(void **system, int version)
 {
-    DEBUGLOGCALL(LCF_SOUND);
+    LOGTRACE(LCF_SOUND);
 
     LINK_NAMESPACE(FMOD_System_Create, "fmod");
     LINK_NAMESPACE(FMOD_System_SetOutput, "fmod");
@@ -47,7 +47,7 @@ int FMOD_System_Create(void **system, int version)
 
 int FMOD_EventSystem_Create(void **eventsystem)
 {
-    DEBUGLOGCALL(LCF_SOUND);
+    LOGTRACE(LCF_SOUND);
 
     LINK_NAMESPACE(FMOD_EventSystem_Create, "fmod");
     LINK_NAMESPACE(FMOD_EventSystem_GetSystemObject, "fmod");
@@ -65,7 +65,7 @@ int FMOD_EventSystem_Create(void **eventsystem)
 
 int FMOD_System_SetOutput(void *system, int)
 {
-    DEBUGLOGCALL(LCF_SOUND);
+    LOGTRACE(LCF_SOUND);
 
     LINK_NAMESPACE(FMOD_System_SetOutput, "fmod");
 
@@ -75,7 +75,7 @@ int FMOD_System_SetOutput(void *system, int)
 
 int _ZN4FMOD6System9setOutputE15FMOD_OUTPUTTYPE(void *system, int output)
 {
-    DEBUGLOGCALL(LCF_SOUND);
+    LOGTRACE(LCF_SOUND);
 
     LINK_NAMESPACE(_ZN4FMOD6System9setOutputE15FMOD_OUTPUTTYPE, "fmod");
 

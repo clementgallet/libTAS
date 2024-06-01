@@ -70,7 +70,7 @@ void openFile(const char* file, int fd)
     /* Check if we already registered the file */
     for (const FileHandle &fh : filehandles) {
         if (fh.fds[0] == fd) {
-            debuglogstdio(LCF_FILEIO | LCF_ERROR, "Opened file descriptor %d was already registered!", fd);
+            LOG(LL_ERROR, LCF_FILEIO, "Opened file descriptor %d was already registered!", fd);
             return;
         }
     }
@@ -89,7 +89,7 @@ void openFile(const char* file, FILE* f)
     /* Check if we already registered the file */
     for (const FileHandle &fh : filehandles) {
         if (fh.stream == f) {
-            debuglogstdio(LCF_FILEIO | LCF_ERROR, "Opened file %p was already registered!", f);
+            LOG(LL_ERROR, LCF_FILEIO, "Opened file %p was already registered!", f);
             return;
         }
     }
@@ -143,7 +143,7 @@ bool closeFile(int fd)
         }
     }
 
-    debuglogstdio(LCF_FILEIO, "Unknown file descriptor %d", fd);
+    LOG(LL_DEBUG, LCF_FILEIO, "Unknown file descriptor %d", fd);
     return true;
 }
 
@@ -153,7 +153,7 @@ void trackAllFiles()
     std::lock_guard<std::mutex> lock(getFileListMutex());
 
     for (FileHandle &fh : getFileList()) {
-        debuglogstdio(LCF_FILEIO, "Track file %s (fd=%d,%d)", fh.fileName(), fh.fds[0], fh.fds[1]);
+        LOG(LL_DEBUG, LCF_FILEIO, "Track file %s (fd=%d,%d)", fh.fileName(), fh.fds[0], fh.fds[1]);
         fh.tracked = true;
         /* Save the file offset */
         if (!fh.closed) {
@@ -163,7 +163,7 @@ void trackAllFiles()
                  */
                 int pipeSize;
                 MYASSERT(ioctl(fh.fds[0], FIONREAD, &pipeSize) == 0);
-                debuglogstdio(LCF_FILEIO, "Save pipe size: %d", pipeSize);
+                LOG(LL_DEBUG, LCF_FILEIO, "Save pipe size: %d", pipeSize);
                 fh.size = pipeSize;
                 if (fh.size > 0) {
                     std::free(fh.fileNameOrPipeContents);
@@ -186,7 +186,7 @@ void trackAllFiles()
                     fh.size = lseek(fh.fds[0], 0, SEEK_END);
                     lseek(fh.fds[0], fh.fileOffset, SEEK_SET);
                 }
-                debuglogstdio(LCF_FILEIO, "Save file offset %jd and size %jd", fh.fileOffset, fh.size);
+                LOG(LL_DEBUG, LCF_FILEIO, "Save file offset %jd and size %jd", fh.fileOffset, fh.size);
             }
         }
     }
@@ -199,7 +199,7 @@ void recoverAllFiles()
     for (FileHandle &fh : getFileList()) {
 
         if (! fh.tracked) {
-            debuglogstdio(LCF_FILEIO | LCF_ERROR, "File %s (fd=%d,%d) not tracked when recovering", fh.fileName(), fh.fds[0], fh.fds[1]);
+            LOG(LL_ERROR, LCF_FILEIO, "File %s (fd=%d,%d) not tracked when recovering", fh.fileName(), fh.fds[0], fh.fds[1]);
             continue;
         }
 
@@ -247,16 +247,16 @@ void recoverAllFiles()
                 ret = lseek(fh.fds[0], fh.fileOffset, SEEK_SET);
             }
             if (current_size != fh.size) {
-                debuglogstdio(LCF_FILEIO | LCF_WARNING, "Restore file %s (fd=%d) changed size from %jd to %jd", fh.fileName(), fh.fds[0], fh.size, current_size);
+                LOG(LL_WARN, LCF_FILEIO, "Restore file %s (fd=%d) changed size from %jd to %jd", fh.fileName(), fh.fds[0], fh.size, current_size);
             }
             fh.fileOffset = -1;
         }
 
         if (ret == -1) {
-            debuglogstdio(LCF_FILEIO | LCF_ERROR, "Error recovering %jd bytes into file %s (fd=%d,%d)", offset, fh.fileName(), fh.fds[0], fh.fds[1]);
+            LOG(LL_ERROR, LCF_FILEIO, "Error recovering %jd bytes into file %s (fd=%d,%d)", offset, fh.fileName(), fh.fds[0], fh.fds[1]);
         }
         else {
-            debuglogstdio(LCF_FILEIO, "Restore file %s (fd=%d,%d) offset to %jd", fh.fileName(), fh.fds[0], fh.fds[1], offset);
+            LOG(LL_DEBUG, LCF_FILEIO, "Restore file %s (fd=%d,%d) offset to %jd", fh.fileName(), fh.fds[0], fh.fds[1], offset);
         }
     }
 }
@@ -280,7 +280,7 @@ void closeUntrackedFiles()
             /* We don't bother updating the file handle list, because it will be
              * replaced with the list from the loaded savestate.
              */
-            debuglogstdio(LCF_FILEIO, "Close untracked file %s (fd=%d,%d)", fh.fileName(), fh.fds[0], fh.fds[1]);
+            LOG(LL_DEBUG, LCF_FILEIO, "Close untracked file %s (fd=%d,%d)", fh.fileName(), fh.fds[0], fh.fds[1]);
         }
     }
 }

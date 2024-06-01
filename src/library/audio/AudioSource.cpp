@@ -186,7 +186,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
     if (buffer_queue.empty())
         return -1;
 
-    debuglogstdio(LCF_SOUND, "Start mixing source %d", id);
+    LOG(LL_DEBUG, LCF_SOUND, "Start mixing source %d", id);
 
     bool skipMixing = (!audioConverter->isAvailable()) || 
                         (!Global::shared_config.av_dumping && 
@@ -210,7 +210,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     outFormat = AudioBuffer::SAMPLE_FMT_S16;
                     break;
                 default:
-                    debuglogstdio(LCF_SOUND | LCF_ERROR, "Unknown audio format");
+                    LOG(LL_ERROR, LCF_SOUND, "Unknown audio format");
                     break;
             }
 
@@ -242,14 +242,14 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         /* We did not reach the end of the buffer, easy case */
 
         position = newPosition;
-        debuglogstdio(LCF_SOUND, "  Buffer %d in read in range %d - %d", curBuf->id, oldPosition, position);
+        LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d in read in range %d - %d", curBuf->id, oldPosition, position);
         if (!skipMixing) {
             audioConverter->queueSamples(begSamples, inNbSamples);
         }
     }
     else {
         /* We reached the end of the buffer */
-        debuglogstdio(LCF_SOUND, "  Buffer %d is read from %d to its end %d", curBuf->id, oldPosition, curBuf->sampleSize);
+        LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d is read from %d to its end %d", curBuf->id, oldPosition, curBuf->sampleSize);
         if (!skipMixing) {
             if (availableSamples > 0)
                 audioConverter->queueSamples(begSamples, availableSamples);
@@ -275,7 +275,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     audioConverter->queueSamples(begSamples, availableSamples);
                 }
 
-                debuglogstdio(LCF_SOUND, "  Buffer %d is read again from 0 to %d", curBuf->id, availableSamples);
+                LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d is read again from 0 to %d", curBuf->id, availableSamples);
                 if (remainingSamples == availableSamples)
                     position = availableSamples;
                 remainingSamples -= availableSamples;
@@ -291,7 +291,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 for (int i=(queue_index+1)%queue_size; remainingSamples>0; i=(i+1)%queue_size) {
                     std::shared_ptr<AudioBuffer> loopbuf = buffer_queue[i];
                     availableSamples = loopbuf->getSamples(begSamples, remainingSamples, loopbuf->loop_point_beg, (source == SOURCE_STATIC) && looping);
-                    debuglogstdio(LCF_SOUND, "  Buffer %d in read in range %d - %d", loopbuf->id, loopbuf->loop_point_beg, availableSamples);
+                    LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d in read in range %d - %d", loopbuf->id, loopbuf->loop_point_beg, availableSamples);
 
                     if (!skipMixing) {
                         audioConverter->queueSamples(begSamples, availableSamples);
@@ -306,7 +306,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                 for (int i=queue_index+1; (remainingSamples>0) && (i<queue_size); i++) {
                     std::shared_ptr<AudioBuffer> loopbuf = buffer_queue[i];
                     availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0, false);
-                    debuglogstdio(LCF_SOUND, "  Buffer %d in read in range 0 - %d", loopbuf->id, availableSamples);
+                    LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d in read in range 0 - %d", loopbuf->id, availableSamples);
 
                     if (!skipMixing) {
                         audioConverter->queueSamples(begSamples, availableSamples);
@@ -320,7 +320,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
 
             if (remainingSamples > 0) {
                 /* We reached the end of the buffer queue */
-                debuglogstdio(LCF_SOUND, "  End of the queue reached");
+                LOG(LL_DEBUG, LCF_SOUND, "  End of the queue reached");
                 if (source == SOURCE_STREAMING_CONTINUOUS) {
                     /* Update the position in the buffer */
                     queue_index = finalIndex;
@@ -328,14 +328,14 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     
                     /* The callback may push more buffers */
                     if (callback) {
-                        debuglogstdio(LCF_SOUND, "  Callback");
+                        LOG(LL_DEBUG, LCF_SOUND, "  Callback");
                         callback(*curBuf); // buffer argument unused
                         
                         int queue_size = buffer_queue.size();
                         for (int i=queue_index+1; (remainingSamples>0) && (i<queue_size); i++) {
                             std::shared_ptr<AudioBuffer> loopbuf = buffer_queue[i];
                             availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0, false);
-                            debuglogstdio(LCF_SOUND, "  Buffer %d in read in range 0 - %d", loopbuf->id, availableSamples);
+                            LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d in read in range 0 - %d", loopbuf->id, availableSamples);
 
                             if (!skipMixing) {
                                 audioConverter->queueSamples(begSamples, availableSamples);
@@ -423,7 +423,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
         }
         
         if (nbSaturate > 0)
-            debuglogstdio(LCF_SOUND | LCF_WARNING, "Saturation during mixing for %d samples", nbSaturate);        
+            LOG(LL_WARN, LCF_SOUND, "Saturation during mixing for %d samples", nbSaturate);        
     }
 
     /* Reset the audio converter if the source has stopped */

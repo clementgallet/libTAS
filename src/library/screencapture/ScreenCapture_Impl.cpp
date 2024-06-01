@@ -95,7 +95,7 @@ int ScreenCapture_Impl::postInit()
 
     initScreenSurface();
 
-    debuglogstdio(LCF_WINDOW, "Inited Screen Capture with dimensions (%d,%d)", width, height);
+    LOG(LL_DEBUG, LCF_WINDOW, "Inited Screen Capture with dimensions (%d,%d)", width, height);
     return 0;    
 }
 
@@ -131,7 +131,7 @@ void ScreenCapture_Impl::resize(int w, int h)
         avencoder.reset(new AVEncoder());
     }
 
-    debuglogstdio(LCF_WINDOW, "Resize Screen Capture with new dimensions (%d,%d) and size %d", width, height, size);
+    LOG(LL_DEBUG, LCF_WINDOW, "Resize Screen Capture with new dimensions (%d,%d) and size %d", width, height, size);
 }
 
 void ScreenCapture_Impl::getDimensions(int& w, int& h) {

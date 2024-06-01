@@ -127,7 +127,7 @@ static void get_dlfct_symbols()
 
     if (!orig::dlopen && !orig::dlsym)
     {
-        debuglogstdio(LCF_HOOK | LCF_ERROR, "Could not get dl function symbols");
+        LOG(LL_ERROR, LCF_HOOK, "Could not get dl function symbols");
         exit(1);
     }
 }
@@ -154,16 +154,16 @@ __attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
      * hooked to library functions to enforce ALSA, so we can safely allow
      * opening libpulse */
     if (file != nullptr && std::strstr(file, "libpulse") != nullptr && !(Global::game_info.audio & GameInfo::AKAUDIO)) {
-        debuglogstdio(LCF_HOOK, "%s blocked access to library %s", __func__, file);
+        LOG(LL_DEBUG, LCF_HOOK, "%s blocked access to library %s", __func__, file);
         return nullptr;
     }
 
     if (file != nullptr && std::strstr(file, "ScreenSelector.so") != nullptr) {
-        debuglogstdio(LCF_HOOK, "%s blocked access to library %s", __func__, file);
+        LOG(LL_DEBUG, LCF_HOOK, "%s blocked access to library %s", __func__, file);
         return nullptr;
     }
 
-    debuglogstdio(LCF_HOOK, "%s call with file %s", __func__, (file!=nullptr)?file:"<NULL>");
+    LOG(LL_TRACE, LCF_HOOK, "%s call with file %s", __func__, (file!=nullptr)?file:"<NULL>");
     void *result = nullptr;
 
 #if defined(__APPLE__) && defined(__MACH__)
@@ -221,7 +221,7 @@ __attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
 
                                 result = orig::dlopen(path.c_str(), mode);
                                 if (result != nullptr) {
-                                    debuglogstdio(LCF_HOOK, "   Found at %s", name);
+                                    LOG(LL_DEBUG, LCF_HOOK, "   Found at %s", name);
                                     add_lib(path.c_str());
                                     break;
                                 }
@@ -329,7 +329,7 @@ void *dlsym(void *handle, const char *name) __THROW {
         return ret;
     }
 
-    debuglogstdio(LCF_HOOK, "%s call with function %s %s", __func__, name, safe?"(safe)":"");
+    LOG(LL_TRACE, LCF_HOOK, "%s call with function %s %s", __func__, name, safe?"(safe)":"");
 
     /* Special cases when dlsym is called with dl* functions (yes, it happens...). */
     if (strcmp(name, "dlopen") == 0) {
@@ -361,7 +361,7 @@ void *dlsym(void *handle, const char *name) __THROW {
             return ret;
         }
         else {
-            debuglogstdio(LCF_HOOK | LCF_WARNING, "   dlsym called with RTLD_NEXT for symbol %s!", name);
+            LOG(LL_WARN, LCF_HOOK, "   dlsym called with RTLD_NEXT for symbol %s!", name);
         }
     }
 

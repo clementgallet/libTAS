@@ -63,7 +63,7 @@ const char* ScreenCapture_XShm::getPixelFormat()
             return "RGB\0";
     }
     else {
-        debuglogstdio(LCF_DUMP | LCF_ERROR, "  Unsupported pixel format");
+        LOG(LL_ERROR, LCF_DUMP, "  Unsupported pixel format");
     }
 
     return "RGBA";
@@ -74,7 +74,7 @@ int ScreenCapture_XShm::copyScreenToSurface()
     GlobalNative gn;
 
     if ((x11::gameXImage->width != width) || (x11::gameXImage->height != height)) {
-        debuglogstdio(LCF_DUMP | LCF_ERROR, "Window coords have changed (%d,%d) -> (%d,%d)", width, height, x11::gameXImage->width, x11::gameXImage->height);
+        LOG(LL_ERROR, LCF_DUMP, "Window coords have changed (%d,%d) -> (%d,%d)", width, height, x11::gameXImage->width, x11::gameXImage->height);
         return -1;
     }
     

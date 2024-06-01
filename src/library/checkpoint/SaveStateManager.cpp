@@ -152,11 +152,11 @@ int SaveStateManager::waitChild()
     }
     status = WEXITSTATUS(status);
     if ((status < 0) && (status > 10)) {
-        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "Got unknown status code %d from pid %d", status, pid);
+        LOG(LL_ERROR, LCF_THREAD | LCF_CHECKPOINT, "Got unknown status code %d from pid %d", status, pid);
         return -1;
     }
     if (!state_dirty[status]) {
-        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "State saving %d completed but was already ready", status);
+        LOG(LL_ERROR, LCF_THREAD | LCF_CHECKPOINT, "State saving %d completed but was already ready", status);
         return -1;
     }
 
@@ -170,7 +170,7 @@ bool SaveStateManager::stateReady(int slot)
         return true;
 
     if ((slot < 0) && (slot > 10)) {
-        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT | LCF_ERROR, "Wrong slot number");
+        LOG(LL_ERROR, LCF_THREAD | LCF_CHECKPOINT, "Wrong slot number");
         return false;
     }
     return !state_dirty[slot];
@@ -316,9 +316,9 @@ int SaveStateManager::checkpoint(int slot)
 #endif
 
     /* Wait for all other threads to finish being restored before resuming */
-    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Waiting for other threads to resume");
+    LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Waiting for other threads to resume");
     waitForAllRestored(current_thread);
-    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Resuming main thread");
+    LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Resuming main thread");
 
     ThreadSync::releaseLocks();
 
@@ -412,7 +412,7 @@ int SaveStateManager::restore(int slot)
      */
 
      /* If restore was not done, we return here */
-     debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Restoring was not done, resuming threads");
+     LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Restoring was not done, resuming threads");
 
      /* Restoring the game alternate stack (if any) */
      AltStack::restoreStack();
@@ -502,7 +502,7 @@ void SaveStateManager::suspendThreads()
                 thread->orig_state = thread->state;
                 if (ThreadManager::updateState(thread, ThreadInfo::ST_SIGNALED, ThreadInfo::ST_RUNNING)) {
                     /* Send the suspend signal to the thread */
-                    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Signaling thread %d", thread->real_tid);
+                    LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Signaling thread %d", thread->real_tid);
                     NATIVECALL(ret = pthread_kill(thread->pthread_id, sig_suspend_threads));
 
                     if (ret == 0) {
@@ -510,7 +510,7 @@ void SaveStateManager::suspendThreads()
                     }
                     else {
                         MYASSERT(ret == ESRCH)
-                        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Thread %d has died since", thread->real_tid);
+                        LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Thread %d has died since", thread->real_tid);
                         ThreadManager::threadIsDead(thread);
                     }
                 }
@@ -524,7 +524,7 @@ void SaveStateManager::suspendThreads()
                 }
                 else {
                     MYASSERT(ret == ESRCH)
-                    debuglogstdio(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Signalled thread %d died", thread->real_tid);
+                    LOG(LL_ERROR, LCF_THREAD | LCF_CHECKPOINT, "Signalled thread %d died", thread->real_tid);
                     ThreadManager::threadIsDead(thread);
                 }
                 break;
@@ -552,11 +552,11 @@ void SaveStateManager::suspendThreads()
 
                     /* Try to cancel the thread */
                     int ret;
-                    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Cancel thread %d", thread->real_tid);
+                    LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Cancel thread %d", thread->real_tid);
                     NATIVECALL(ret = pthread_cancel(thread->pthread_id));
 
                     if (ret < 0) {
-                        debuglogstdio(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Signalled thread %d died", thread->real_tid);
+                        LOG(LL_ERROR, LCF_THREAD | LCF_CHECKPOINT, "Signalled thread %d died", thread->real_tid);
                         ThreadManager::threadIsDead(thread);
                         break;
                     }
@@ -566,7 +566,7 @@ void SaveStateManager::suspendThreads()
                      * A terminating thread sets the tid in pthread struct to 0 */
                     int i = 0;
                     while (*thread->ptid != 0) {
-                        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Wait for tid %d to become 0", *thread->ptid);                        
+                        LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Wait for tid %d to become 0", *thread->ptid);                        
                         NATIVECALL(usleep(1000));
                         i++;
                         if (i > 1000)
@@ -576,11 +576,11 @@ void SaveStateManager::suspendThreads()
                     if (*thread->ptid != 0) {
                         /* If we couldn't cancel the thread, try to signal it so that
                         * it can call pthread_exit(). This is unsafe! */
-                        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Cancel failed, signaling thread %d to terminate", thread->real_tid);
+                        LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Cancel failed, signaling thread %d to terminate", thread->real_tid);
                         NATIVECALL(ret = pthread_kill(thread->pthread_id, sig_suspend_threads));
                         
                         while (*thread->ptid != 0) {
-                            debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Wait for tid %d to become 0", *thread->ptid);                        
+                            LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Wait for tid %d to become 0", *thread->ptid);                        
                             NATIVECALL(usleep(1000));
                         }
                     }
@@ -591,7 +591,7 @@ void SaveStateManager::suspendThreads()
                 break;
 
             default:
-                debuglogstdio(LCF_ERROR | LCF_THREAD | LCF_CHECKPOINT, "Unknown thread state %d", thread->state);
+                LOG(LL_ERROR, LCF_THREAD | LCF_CHECKPOINT, "Unknown thread state %d", thread->state);
             }
         }
         if (needrescan) {
@@ -606,15 +606,15 @@ void SaveStateManager::suspendThreads()
         NATIVECALL(sem_wait(&semNotifyCkptThread));
     }
 
-    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "%d threads were suspended", numThreads);
+    LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "%d threads were suspended", numThreads);
 }
 
 /* Resume all threads. */
 void SaveStateManager::resumeThreads()
 {
-    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Resuming all threads");
+    LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Resuming all threads");
     MYASSERT(pthread_mutex_unlock(&threadResumeLock) == 0)
-    debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "All threads resumed");
+    LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "All threads resumed");
 }
 
 void SaveStateManager::stopThisThread(int signum)
@@ -652,7 +652,7 @@ void SaveStateManager::stopThisThread(int signum)
             NATIVECALL(sem_post(&semNotifyCkptThread));
 
             /* Then wait for the ckpt thread to write the ckpt file then wake us up */
-            debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Thread suspended");
+            LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Thread suspended");
 
             /* Before suspending, we must position the stack pointer so that it
              * always takes the same value. Because the stack pointer may not be
@@ -703,7 +703,7 @@ void SaveStateManager::stopThisThread(int signum)
          */
         waitForAllRestored(current_thread);
 
-        debuglogstdio(LCF_THREAD | LCF_CHECKPOINT, "Thread returning to user code");
+        LOG(LL_DEBUG, LCF_THREAD | LCF_CHECKPOINT, "Thread returning to user code");
     }
 }
 
@@ -717,7 +717,7 @@ void SaveStateManager::saveThreadList()
     for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
         if (thread->state == ThreadInfo::ST_SUSPENDED) {
             if (n >= STATEMAXTHREADS) {
-                debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, "   hit the limit of the number of threads");
+                LOG(LL_ERROR, LCF_CHECKPOINT, "   hit the limit of the number of threads");
                 break;
             }
             sh->pthread_ids[n] = thread->pthread_id;
@@ -748,7 +748,7 @@ void SaveStateManager::createNewThreads()
         
         if (t == sh->thread_count) {
             /* Thread was not found, create one */
-            debuglogstdio(LCF_CHECKPOINT | LCF_THREAD, "Recreate thread %llx (%d) ", thread->pthread_id, thread->translated_tid);
+            LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_THREAD, "Recreate thread %llx (%d) ", thread->pthread_id, thread->translated_tid);
 
             int flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SYSVSEM |
                         CLONE_SIGHAND | CLONE_THREAD |
@@ -808,7 +808,7 @@ void SaveStateManager::printError(int err)
         0 };
 
     if (err < 0) {
-        debuglogstdio(LCF_CHECKPOINT | LCF_ERROR, errors[-err]);
+        LOG(LL_ERROR, LCF_CHECKPOINT, errors[-err]);
         MessageWindow::insert(errors[-err]);
     }
 }
