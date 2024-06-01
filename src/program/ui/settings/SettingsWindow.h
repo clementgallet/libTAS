@@ -62,6 +62,8 @@ public:
     void openDebugTab();
     void openGameSpecificTab();
 
+    void loadConfig();
+
 private:
     QTabWidget* tabWidget;
     RuntimePane* rp;

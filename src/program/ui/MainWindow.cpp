@@ -1217,6 +1217,7 @@ void MainWindow::slotGamePathChanged()
     executableWindow->update_config();
     inputWindow->update();
     inputEditorWindow->update_config();
+    settingsWindow->loadConfig();
 }
 
 void MainWindow::slotBrowseMoviePath()

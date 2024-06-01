@@ -120,6 +120,17 @@ void SettingsWindow::save()
     hide();
 }
 
+void SettingsWindow::loadConfig()
+{
+    rp->loadConfig();
+    mp->loadConfig();
+    ip->loadConfig();
+    ap->loadConfig();
+    vp->loadConfig();
+    gp->loadConfig();
+    gsp->loadConfig();
+}
+
 void SettingsWindow::update(int status)
 {
     rp->update(status);

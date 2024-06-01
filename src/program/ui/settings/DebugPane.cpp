@@ -346,8 +346,12 @@ void DebugPane::loadConfig()
     int index = logToChoice->findData(context->config.sc.logging_status);
     if (index >= 0)
         logToChoice->setCurrentIndex(index);
-    
+
+    /* Disconnect to not trigger valueChanged() signal */
+    disconnect(logLevelSlider, &QAbstractSlider::valueChanged, this, &DebugPane::saveConfig);
     logLevelSlider->setValue(context->config.sc.logging_level);
+    connect(logLevelSlider, &QAbstractSlider::valueChanged, this, &DebugPane::saveConfig);
+
     logPrintMainBox->setChecked(context->config.sc.logging_include_flags & LCF_MAINTHREAD);
     logPrintTODOBox->setChecked(context->config.sc.logging_include_flags & LCF_TODO);
     logPrintAVBox->setChecked(context->config.sc.logging_include_flags & LCF_DUMP);

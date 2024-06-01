@@ -303,9 +303,9 @@ void Config::load(const std::string& gamepath) {
     sc.fastforward_mode = settings.value("fastforward_mode", sc.fastforward_mode).toInt();
     sc.fastforward_render = settings.value("fastforward_render", sc.fastforward_render).toInt();
     sc.logging_status = settings.value("logging_status", sc.logging_status).toInt();
-    sc.logging_level = settings.value("logging_level", sc.logging_level).toInt();
-    sc.logging_include_flags = settings.value("logging_include_flags", sc.logging_include_flags).toInt();
-    sc.logging_exclude_flags = settings.value("logging_exclude_flags", sc.logging_exclude_flags).toInt();
+    sc.logging_level = settings.value("logging_level", sc.logging_level).toUInt();
+    sc.logging_include_flags = settings.value("logging_include_flags", sc.logging_include_flags).toUInt();
+    sc.logging_exclude_flags = settings.value("logging_exclude_flags", sc.logging_exclude_flags).toUInt();
     sc.initial_framerate_num = settings.value("framerate_num", sc.initial_framerate_num).toUInt();
     sc.initial_framerate_den = settings.value("framerate_den", sc.initial_framerate_den).toUInt();
     sc.mouse_support = settings.value("mouse_support", sc.mouse_support).toBool();
