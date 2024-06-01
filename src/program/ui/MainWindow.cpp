@@ -312,11 +312,6 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(launchGdbAction, &QAction::triggered, this, &MainWindow::slotLaunchGdb);
     connect(launchLldbAction, &QAction::triggered, this, &MainWindow::slotLaunchLldb);
 
-    /* launchGdbButton is a special case, it's explicitly disabled along with
-     * all the other widgets on launch
-     */
-    //disabledWidgetsOnStart.append(launchGdbButton);
-
 #ifdef __unix__
     launchGdbButton->setPopupMode(QToolButton::MenuButtonPopup);
 
@@ -780,9 +775,11 @@ void MainWindow::updateStatus(int status)
             break;
 
         case Context::ACTIVE:
-            launchGdbButton->setEnabled(true);
-            launchGdbAction->setText(tr("Attach with GDB"));
-            launchLldbAction->setText(tr("Attach with LLDB"));
+            if (!context->attach_gdb) {
+                launchGdbButton->setEnabled(true);
+                launchGdbAction->setText(tr("Attach with GDB"));
+                launchLldbAction->setText(tr("Attach with LLDB"));
+            }
             stopButton->setEnabled(true);
 
             if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
