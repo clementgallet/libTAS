@@ -48,6 +48,7 @@
 * Optimize the movie prefix check by using information from the state list
 * Implement autohold and autofire on input editor
 * Debugger can be attached during game execution
+* Prevent games from using Wayland
 
 ### Changed
 

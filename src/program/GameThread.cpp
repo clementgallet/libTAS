@@ -86,6 +86,9 @@ void GameThread::set_env_variables(Context *context, int gameArch)
         unsetenv("ALSOFT_DRIVERS");
     }
 
+    /* Disable Wayland support */
+    setenv("WAYLAND_DISPLAY", "", 1);
+
     /* Pass libtas library path to the game */
     setenv("LIBTAS_LIBRARY_PATH", context->libtaspath.c_str(), 1);
 
