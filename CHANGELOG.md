@@ -69,6 +69,7 @@
 * We can duplicate multiple selected rows, and improve insertion/deletion
 * Remove backtrack savestate and invalidation
 * Pick a better state to rewind to
+* Better handling of infinite poll with ALSA
 
 ### Fixed
 

@@ -54,23 +54,37 @@ DEFINE_ORIG_POINTER(epoll_wait)
 #ifdef __linux__
     /* Check for the fd used by ALSA */
     for (nfds_t i = 0; i < nfds; i++) {
-        if (fds[i].fd == 0xa15a) {
-            /* Wait here until our ALSA buffer has enough bytes available */
-            int ret = snd_pcm_wait(reinterpret_cast<snd_pcm_t*>(static_cast<intptr_t>(fds[i].revents)), timeout);
-
-            if (ret == 1) return ret;
-
-            /* Call the poll on the remaining fds if any */
-            if (nfds > 1) {
-                fds[i] = fds[nfds-1];
-                ret = orig::poll(fds, nfds-1, timeout);
-
-                /* If call returned an event, don't handle the ALSA fd */
-                if (ret > 0)
+        if (fds[i].fd == 0xa15a) { // ALSA
+            
+            /* If timeout is infinite, we must check alternatively the alsa fd
+             * and the other ones with finite timeouts, otherwise we may be stuck
+             * on one infinite wait while the other one received an event */
+            do {
+                /* Wait here until our ALSA buffer has enough bytes available */
+                int ret = snd_pcm_wait(reinterpret_cast<snd_pcm_t*>(static_cast<intptr_t>(fds[i].revents)), timeout);
+                
+                if (ret == 1)
                     return ret;
-            }
-
-            return ret;
+                
+                /* Call the poll on the remaining fds if any */
+                if (nfds > 1) {
+                    fds[i] = fds[nfds-1];
+                    ret = orig::poll(fds, nfds-1, (timeout==-1)?100:timeout); // Arbitrary check with 100 ms timeout
+                    
+                    /* If call returned an event, recover the original fds structure and return */
+                    if (ret > 0) {
+                        fds[nfds-1] = fds[i];
+                        fds[i].fd = 0xa15a;
+                        fds[i].events = POLLIN;
+                        return ret;
+                    }
+                    if (ret < 0)
+                        return ret;
+                }
+            } while (timeout == -1);
+            
+            /* Reaching here means that we timeout */
+            return 0;
         }
     }
 #endif
