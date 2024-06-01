@@ -41,7 +41,7 @@ private:
         this->killTimer(m_timer_id);
         m_timer_id = 0;
 
-        BalloonTip::showBalloon(QIcon(), m_title, m_description,
+        BalloonTip::showBalloon(m_title, m_description,
             this->parentWidget()->mapToGlobal(getToolTipPosition()), this);
     }
 

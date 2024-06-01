@@ -4,7 +4,7 @@
 #ifndef LIBTAS_BALLOONTIP_H_INCLUDED
 #define LIBTAS_BALLOONTIP_H_INCLUDED
 
-#include <QIcon>
+#include <QColor>
 #include <QPixmap>
 #include <QWidget>
 
@@ -22,15 +22,15 @@ public:
     Yes,
     No
   };
-  static void showBalloon(const QIcon& icon, const QString& title, const QString& msg,
-                          const QPoint& pos, QWidget* parent,
-                          ShowArrow show_arrow = ShowArrow::Yes);
+  static void showBalloon(const QString& title, const QString& msg,
+                          const QPoint& target_arrow_tip_position, QWidget* parent,
+                          ShowArrow show_arrow = ShowArrow::Yes, int border_width = 1);
   static void hideBalloon();
 
-  BalloonTip(PrivateTag, const QIcon& icon, QString title, QString msg, QWidget* parent);
+  BalloonTip(PrivateTag, const QString& title, QString msg, QWidget* const parent);
 
 private:
-  void updateBoundsAndRedraw(const QPoint&, ShowArrow);
+  void updateBoundsAndRedraw(const QPoint& target_arrow_tip_position, ShowArrow show_arrow, int border_width);
 
 protected:
   void paintEvent(QPaintEvent*) override;
@@ -38,7 +38,6 @@ protected:
 private:
   QColor m_border_color;
   QPixmap m_pixmap;
-  bool m_show_arrow = true;
 };
 
 #endif

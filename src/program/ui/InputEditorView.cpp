@@ -493,7 +493,7 @@ void InputEditorView::timerEvent(QTimerEvent* event)
     int y = rowViewportPosition(markerRow) + rowHeight(markerRow);
     QPoint pos = QPoint(x, y);
 
-    BalloonTip::showBalloon(QIcon(), "",  QString(inputEditorModel->getMarkerText(markerRow).c_str()), this->mapToGlobal(pos), this);
+    BalloonTip::showBalloon("",  QString(inputEditorModel->getMarkerText(markerRow).c_str()), this->mapToGlobal(pos), this);
 }
 
 void InputEditorView::hideEvent(QHideEvent* event)
