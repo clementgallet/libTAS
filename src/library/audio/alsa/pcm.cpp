@@ -352,7 +352,7 @@ int snd_pcm_wait(snd_pcm_t *pcm, int timeout)
     int delta_ms = -1;
     int real_timeout_count = 0;
     DeterministicTimer& detTimer = DeterministicTimer::get();
-    if ((buffer_size - get_latency(pcm)) <= avail_min) {
+    if ((buffer_size - get_latency(pcm)) < avail_min) {
         /* Wait for timeout or available samples */
         TimeHolder initial_time = detTimer.getTicks();
         do {
@@ -372,16 +372,16 @@ int snd_pcm_wait(snd_pcm_t *pcm, int timeout)
              * waiting for audio to drain without advancing frames */
             if (! detTimer.isInsideFrameBoundary()) {
                 real_timeout_count++;
-                if (real_timeout_count > 1000) { // Arbitrary, about 1 sec
+                if (real_timeout_count > 2000) { // Arbitrary, about 2 sec
                     debuglogstdio(LCF_SOUND | LCF_WARNING, "Softlocked inside snd_pcm_wait()");
                     return 0;
                 }
             }
                 
-        } while ((buffer_size - get_latency(pcm)) <= avail_min);
+        } while ((buffer_size - get_latency(pcm)) < avail_min);
     }
 
-    if ((buffer_size - get_latency(pcm)) > avail_min)
+    if ((buffer_size - get_latency(pcm)) >= avail_min)
         return 1;
 
     /* Timeout */

@@ -99,6 +99,7 @@
 * Fix some savestate crashes by allocating memory on each thread stack before
   suspending, so that the mutex lock call always happens at the same place in
   stack
+* Fix snd_pcm_wait() softlock having incorrect comparison operators
 
 ## [1.4.5] - 2023-10-22
 ### Added
