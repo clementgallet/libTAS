@@ -49,6 +49,7 @@
 * Implement autohold and autofire on input editor
 * Debugger can be attached during game execution
 * Prevent games from using Wayland
+* Allow attaching debugger for systems having restricted ptrace
 
 ### Changed
 

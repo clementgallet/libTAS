@@ -44,6 +44,7 @@
 #include <unistd.h> // getpid()
 #include <vector>
 #include <string>
+#include <sys/prctl.h>
 
 extern char**environ;
 
@@ -83,6 +84,9 @@ void __attribute__((constructor)) init(void)
             environ[i][0] = 'Y';
         }
     }
+
+    /* Allow future gdb instances to debug this process */
+    prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY);
 
     ThreadManager::init();
     SaveStateManager::init();
