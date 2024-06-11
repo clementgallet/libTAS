@@ -1197,7 +1197,7 @@ void MainWindow::slotGamePathChanged()
     
     /* Disable `Start and attach gdb` if Windows game */
     int gameArch = extractBinaryType(context->gamepath);
-    if (gameArch == BT_PE32 || gameArch == BT_PE32P)
+    if (gameArch == BT_PE32 || gameArch == BT_PE32P || gameArch == BT_NE)
         launchGdbButton->setEnabled(false);
     else
         launchGdbButton->setEnabled(true);

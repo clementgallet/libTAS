@@ -98,7 +98,7 @@ void GameThread::set_env_variables(Context *context, int gameArch)
     setenv("TZ", "UTC0", 1);
 
     /* Set wine-specific env variables */
-    if ((gameArch == BT_PE32) || (gameArch == BT_PE32P)) {
+    if ((gameArch == BT_PE32) || (gameArch == BT_PE32P) || (gameArch == BT_NE)) {
 
         /* Set specific env variables for Proton */
         if (context->config.use_proton && !context->config.proton_path.empty()) {
@@ -143,7 +143,7 @@ std::list<std::string> GameThread::build_arg_list(Context *context, int gameArch
     /* Build the argument list to be fed to execv */
     std::list<std::string> arg_list;
 
-    if ((gameArch == BT_PE32) || (gameArch == BT_PE32P)) {
+    if ((gameArch == BT_PE32) || (gameArch == BT_PE32P) || (gameArch == BT_NE)) {
         if (context->config.use_proton && !context->config.proton_path.empty()) {
             /* Change the executable to proton */
             std::string winepath = context->config.proton_path;
@@ -304,7 +304,7 @@ void GameThread::launch(Context *context)
     std::ostringstream sharg;
 
     /* Prepend LD_PRELOAD/DYLD_INSERT_LIBRARIES */
-    if (!(context->attach_gdb && (!(((gameArch&BT_TYPEMASK) == BT_PE32) || ((gameArch&BT_TYPEMASK) == BT_PE32P))))) {
+    if (!(context->attach_gdb && (!(((gameArch&BT_TYPEMASK) == BT_PE32) || ((gameArch&BT_TYPEMASK) == BT_PE32P) || ((gameArch&BT_TYPEMASK) == BT_NE))))) {
         /* Set the LD_PRELOAD/DYLD_INSERT_LIBRARIES environment variable to
          * inject our lib to the game */
 #ifdef __unix__

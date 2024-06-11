@@ -168,6 +168,10 @@ int extractBinaryType(std::string path)
         return BT_PE32P | macappflag;
     }
 
+    if (outputstr.find("MS-DOS executable, NE") != std::string::npos) {
+        return BT_NE | macappflag;
+    }
+
     if (outputstr.find("Bourne-Again shell script") != std::string::npos) {
         return BT_SH | macappflag;
     }

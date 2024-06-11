@@ -47,6 +47,7 @@ enum BinaryType {
     BT_ELF64,
     BT_PE32,
     BT_PE32P,
+    BT_NE,
     BT_SH,
     BT_MACOS32,
     BT_MACOS64,
