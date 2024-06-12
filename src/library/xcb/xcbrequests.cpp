@@ -20,10 +20,12 @@
 #include "xcbrequests.h"
 #include "XcbEventQueueList.h"
 #include "XcbEventQueue.h"
+#include "inputs/inputs.h"
 
 #include "hook.h"
 #include "GlobalState.h"
 #include "logging.h"
+#include "DeterministicTimer.h"
 #include "screencapture/ScreenCapture.h"
 #include "xlib/xatom.h"
 #include "xlib/xwindows.h" // x11::gameXWindows
@@ -255,7 +257,6 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
         case XCB_SEND_EVENT:
         {
             const auto* req = static_cast<const xcb_send_event_request_t*>(vector->iov_base);
-
             LOG(LL_TRACE, LCF_EVENTS, "XCB_SEND_EVENT raw request call");
 
             const auto* ev = reinterpret_cast<const xcb_generic_event_t*>(req->event);
@@ -309,6 +310,120 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
             }
 
             send_request(vector);
+            break;
+        }
+
+        case XCB_QUERY_KEYMAP:
+        {
+            LOG(LL_TRACE, LCF_KEYBOARD, "XCB_QUERY_KEYMAP raw request call");
+            break;
+        }
+
+        case XCB_GRAB_KEYBOARD:
+        {
+            LOG(LL_TRACE, LCF_KEYBOARD, "XCB_GRAB_KEYBOARD raw request call");
+            break;
+        }
+
+        case XCB_UNGRAB_KEYBOARD:
+        {
+            LOG(LL_TRACE, LCF_KEYBOARD, "XCB_UNGRAB_KEYBOARD raw request call");
+            break;
+        }
+
+        case XCB_GRAB_KEY:
+        {
+            LOG(LL_TRACE, LCF_KEYBOARD, "XCB_GRAB_KEY raw request call");
+            break;
+        }
+
+        case XCB_UNGRAB_KEY:
+        {
+            LOG(LL_TRACE, LCF_KEYBOARD, "XCB_UNGRAB_KEY raw request call");
+            break;
+        }
+
+        case XCB_QUERY_POINTER:
+        {
+            LOG(LL_TRACE, LCF_MOUSE, "XCB_QUERY_POINTER raw request call");
+            break;
+        }
+
+        case XCB_WARP_POINTER:
+        {
+            const auto* req = static_cast<const xcb_warp_pointer_request_t*>(vector->iov_base);
+            LOG(LL_TRACE, LCF_MOUSE, "XCB_WARP_POINTER raw request called with dest_w %d and dest_x %d and dest_y %d", req->dst_window, req->dst_x, req->dst_y);
+
+            /* Does this generate a XCB_MOTION_NOTIFY event? */
+            if (!x11::gameXWindows.empty()) {
+                xcb_motion_notify_event_t event;
+                event.response_type = XCB_MOTION_NOTIFY;
+                event.state = SingleInput::toXlibPointerMask(game_ai.pointer.mask);
+
+                if (req->dst_window == XCB_NONE) {
+                    /* Relative warp */
+                    event.event_x = game_ai.pointer.x + req->dst_x;
+                    event.event_y = game_ai.pointer.y + req->dst_y;
+                }
+                else {
+                    /* Absolute warp */
+                    event.event_x = req->dst_x;
+                    event.event_y = req->dst_y;
+                }
+                event.root_x = event.event_x;
+                event.root_y = event.event_y;
+                event.event = x11::gameXWindows.front();
+
+                struct timespec time = DeterministicTimer::get().getTicks();
+                event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+
+                xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
+                LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (%d,%d)", game_ai.pointer.x, game_ai.pointer.y);
+            }
+
+            /* Update the pointer coordinates */
+            if (req->dst_window == XCB_NONE) {
+                /* Relative warp */
+                game_ai.pointer.x += req->dst_x;
+                game_ai.pointer.y += req->dst_y;
+            }
+            else {
+                /* Absolute warp */
+                game_ai.pointer.x = req->dst_x;
+                game_ai.pointer.y = req->dst_y;
+            }
+
+            if (Global::shared_config.mouse_prevent_warp) {
+                break;
+            }
+
+            /* When warping cursor, real and game cursor position are now synced */
+            if (Global::shared_config.mouse_support) {
+                if (req->dst_window == XCB_NONE) {
+                    /* Relative warp */
+                    old_ai.pointer.x += req->dst_x;
+                    old_ai.pointer.y += req->dst_y;
+                }
+                else {
+                    /* Absolute warp */
+                    old_ai.pointer.x = req->dst_x;
+                    old_ai.pointer.y = req->dst_y;
+                }
+            }
+
+            send_request(vector);
+            break;
+        }
+
+        case XCB_GRAB_POINTER:
+        {
+            LOG(LL_TRACE, LCF_MOUSE, "XCB_GRAB_POINTER raw request call");
+            break;
+        }
+
+        case XCB_UNGRAB_POINTER:
+        {
+            LOG(LL_TRACE, LCF_MOUSE, "XCB_UNGRAB_POINTER raw request call");
             break;
         }
 

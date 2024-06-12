@@ -37,7 +37,7 @@ class XcbEventQueue
         void setMask(xcb_window_t wid, uint32_t event_mask);
 
         /* Insert an event in the queue */
-        int insert(xcb_generic_event_t *event);
+        int insert(xcb_generic_event_t *event, bool native_event);
 
         /* Return a copy of the first event of the queue, and remove it from
          * the queue. */

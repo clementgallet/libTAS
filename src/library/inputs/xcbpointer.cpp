@@ -101,7 +101,7 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
         struct timespec time = DeterministicTimer::get().getTicks();
         event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
-        xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
+        xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
         LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (%d,%d)", game_ai.pointer.x, game_ai.pointer.y);
     }
 
@@ -177,7 +177,7 @@ xcb_warp_pointer (xcb_connection_t *c,
         struct timespec time = DeterministicTimer::get().getTicks();
         event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
-        xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
+        xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
         LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (%d,%d)", game_ai.pointer.x, game_ai.pointer.y);
     }
 

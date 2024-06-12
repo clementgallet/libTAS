@@ -161,7 +161,7 @@ static void generateKeyUpEvents(void)
                 for (int c=0; c<GAMECONNECTIONNUM; c++) {
                     if (x11::gameConnections[c]) {
                         // event.root = XRootWindow(x11::gameConnections[c], 0);
-                        xcbEventQueueList.insert(x11::gameConnections[c], reinterpret_cast<xcb_generic_event_t*>(&event));
+                        xcbEventQueueList.insert(x11::gameConnections[c], reinterpret_cast<xcb_generic_event_t*>(&event), false);
                     }
                 }
 
@@ -325,7 +325,7 @@ static void generateKeyDownEvents(void)
                 for (int c=0; c<GAMECONNECTIONNUM; c++) {
                     if (x11::gameConnections[c]) {
                         // event.root = XRootWindow(x11::gameConnections[c], 0);
-                        xcbEventQueueList.insert(x11::gameConnections[c], reinterpret_cast<xcb_generic_event_t*>(&event));
+                        xcbEventQueueList.insert(x11::gameConnections[c], reinterpret_cast<xcb_generic_event_t*>(&event), false);
                     }
                 }
 
@@ -856,7 +856,7 @@ static void generateMouseMotionEvents(void)
         event.child = 0;
         event.root = x11::rootWindow;
 
-        xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
+        xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
         LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (%d,%d)", game_ai.pointer.x, game_ai.pointer.y);
     }
 
@@ -995,7 +995,7 @@ void generateMouseButtonEvents(void)
                 event.child = 0;
                 event.root = x11::rootWindow;
 
-                xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
+                xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
             }
 
             if ((Global::game_info.mouse & GameInfo::XIEVENTS) && !x11::gameXWindows.empty()) {
@@ -1143,14 +1143,14 @@ static void generateFocusEvents(void)
             event.response_type = XCB_FOCUS_OUT;
             LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_FOCUS_OUT");
             event.event = x11::gameXWindows.front();
-            xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
+            xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
         }
         else {
             xcb_focus_in_event_t event;
             event.response_type = XCB_FOCUS_IN;
             LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_FOCUS_IN");
             event.event = x11::gameXWindows.front();
-            xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
+            xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
         }
     }
 #endif
