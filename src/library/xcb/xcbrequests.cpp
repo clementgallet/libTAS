@@ -39,6 +39,11 @@
 #include <xcb/randr.h>
 #endif
 
+#include "../external/X11/XInput2.h"
+#include "xlib/xdisplay.h" // x11::gameDisplays
+#include "xlib/XlibEventQueueList.h"
+#include <xcb/xinput.h>
+
 namespace libtas {
 
 DEFINE_ORIG_POINTER(xcb_send_request)
@@ -238,7 +243,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                     index++;
                 }
 
-                new_req->value_mask &= ~(XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
+                new_req->value_mask &= ~(XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y);
                 new_req->length += new_index;
                 new_vector[4].iov_len = new_index * 4;
             }
@@ -316,6 +321,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
         case XCB_QUERY_KEYMAP:
         {
             LOG(LL_TRACE, LCF_KEYBOARD, "XCB_QUERY_KEYMAP raw request call");
+            //send_request(vector);
             break;
         }
 
@@ -346,6 +352,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
         case XCB_QUERY_POINTER:
         {
             LOG(LL_TRACE, LCF_MOUSE, "XCB_QUERY_POINTER raw request call");
+            //send_request(vector);
             break;
         }
 
@@ -429,6 +436,124 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
 
         default:
         {
+            static uint8_t xi_major_opcode = 0;
+            if (xi_major_opcode == 0) {
+                static xcb_extension_t xi_ext = { "XInputExtension", 0 };
+                auto* reply = xcb_get_extension_data(c, &xi_ext);
+                xi_major_opcode = reply ? reply->major_opcode : -1;
+            }
+
+            if (major_opcode == xi_major_opcode)
+            {
+                auto minor_opcode = static_cast<uint8_t*>(vector->iov_base)[1];
+                switch (minor_opcode)
+                {
+                    case XCB_INPUT_XI_SELECT_EVENTS:
+                    {
+                        const auto* req = static_cast<const xcb_input_xi_select_events_request_t*>(vector->iov_base);
+                        LOG(LL_TRACE, LCF_WINDOW, "XCB_INPUT_XI_SELECT_EVENTS raw request call");
+
+                        /* Only check if not using SDL */
+                        if (req->num_mask) {
+                            constexpr size_t padding_len = -sizeof(xcb_input_xi_select_events_request_t) & 3;
+                            const auto* masks = reinterpret_cast<const xcb_input_event_mask_t*>(vector[1].iov_len == padding_len ? vector[2].iov_base : vector[1].iov_base);
+                            const uint32_t event_mask = *reinterpret_cast<const uint32_t*>(&masks[1]);
+
+                            if (!(Global::game_info.keyboard & (GameInfo::SDL1 | GameInfo::SDL2))) {
+                                if (event_mask & XCB_INPUT_XI_EVENT_MASK_KEY_PRESS) {
+                                    LOG(LL_DEBUG, LCF_KEYBOARD, "   selecting XI keyboard events");
+                                    Global::game_info.keyboard |= GameInfo::XIEVENTS;
+                                    Global::game_info.tosend = true;
+                                }
+                                if (event_mask & XCB_INPUT_XI_EVENT_MASK_RAW_KEY_PRESS) {
+                                    LOG(LL_DEBUG, LCF_KEYBOARD, "   selecting XI raw keyboard events");
+                                    Global::game_info.keyboard |= GameInfo::XIRAWEVENTS;
+                                    Global::game_info.tosend = true;
+                                }
+                            }
+
+                            if (!(Global::game_info.mouse & (GameInfo::SDL1 | GameInfo::SDL2))) {
+                                if ((event_mask & XCB_INPUT_XI_EVENT_MASK_MOTION) || (event_mask & XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS)) {
+                                    LOG(LL_DEBUG, LCF_MOUSE, "   selecting XI mouse events");
+                                    Global::game_info.mouse |= GameInfo::XIEVENTS;
+                                    Global::game_info.tosend = true;
+                                }
+                                if ((event_mask & XCB_INPUT_XI_EVENT_MASK_RAW_MOTION) || (event_mask & XCB_INPUT_XI_EVENT_MASK_RAW_BUTTON_PRESS)) {
+                                    LOG(LL_DEBUG, LCF_MOUSE, "   selecting XI raw mouse events");
+                                    Global::game_info.mouse |= GameInfo::XIRAWEVENTS;
+                                    Global::game_info.tosend = true;
+                                }
+                            }
+
+                            if (!(Global::game_info.keyboard & (GameInfo::SDL1 | GameInfo::SDL2)) && !x11::gameXWindows.empty()) {
+                                if (event_mask & XCB_INPUT_XI_EVENT_MASK_FOCUS_IN) {
+                                    xcb_input_focus_in_event_t event{};
+                                    event.response_type = XCB_GE_GENERIC;
+                                    event.extension = xi_major_opcode;
+                                    event.length = (sizeof(xcb_input_focus_in_event_t) - sizeof(xcb_ge_generic_event_t)) / 4;
+                                    event.event_type = XCB_INPUT_FOCUS_IN;
+                                    event.sourceid = event.deviceid = 3; // "Virtual core keyboard"
+                                    struct timespec time = DeterministicTimer::get().getTicks();
+                                    event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+                                    event.root = x11::rootWindow;
+                                    event.event = x11::gameXWindows.front();
+                                    event.child = 0;
+                                    event.root_x = event.event_x = game_ai.pointer.x;
+                                    event.root_y = event.event_y = game_ai.pointer.y;
+                                    event.same_screen = 1;
+                                    event.focus = 1;
+
+                                    LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE | LCF_KEYBOARD, "   Inserting an xcb event XCB_INPUT_FOCUS_IN");
+                                    xcbEventQueueList.insert(c, reinterpret_cast<xcb_generic_event_t*>(&event), true);
+
+                                    if (Global::game_info.keyboard & GameInfo::XEVENTS) {
+                                        // kind of a hack, but ruffle expects Xlib XI_FocusIn, not an XCB input focus in
+                                        XEvent xev;
+                                        auto* dev = static_cast<XIFocusInEvent*>(calloc(1, sizeof(XIFocusInEvent)));
+                                        xev.xcookie.type = GenericEvent;
+                                        xev.xcookie.extension = xi_major_opcode;
+                                        xev.xcookie.evtype = XI_FocusIn;
+                                        xev.xcookie.data = dev;
+                                        dev->evtype = XI_FocusIn;
+                                        dev->time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+                                        dev->deviceid = dev->sourceid = 3;
+                                        dev->event = x11::gameXWindows.front();
+                                        dev->root_x = dev->event_x = game_ai.pointer.x;
+                                        dev->root_y = dev->event_y = game_ai.pointer.y;
+                                        dev->focus = True;
+                                        dev->same_screen = True;
+                                        LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE | LCF_KEYBOARD, "   Inserting an Xlib event XI_FocusIn");
+                                        for (int d=0; d<GAMEDISPLAYNUM; d++) {
+                                            if (x11::gameDisplays[d]) {
+                                                dev->root = XRootWindow(x11::gameDisplays[d], 0);
+                                                xlibEventQueueList.insert(x11::gameDisplays[d], &xev);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        send_request(vector);
+                        return;
+                    }
+
+                    case XCB_INPUT_XI_GET_SELECTED_EVENTS:
+                    {
+                        LOG(LL_TRACE, LCF_WINDOW, "XCB_INPUT_XI_GET_SELECTED_EVENTS raw request call");
+                        send_request(vector);
+                        return;
+                    }
+
+                    case XCB_INPUT_XI_QUERY_DEVICE:
+                    {
+                        LOG(LL_TRACE, LCF_WINDOW, "XCB_INPUT_XI_QUERY_DEVICE raw request call");
+                        //send_request(vector);
+                        return;
+                    }
+                }
+            }
+
             send_request(vector);
             break;
         }

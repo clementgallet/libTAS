@@ -52,19 +52,19 @@ std::shared_ptr<XcbEventQueue> XcbEventQueueList::getQueue(xcb_connection_t *c)
     return nullptr;
 }
 
-int XcbEventQueueList::insert(xcb_connection_t *c, xcb_generic_event_t *event, bool native_event)
+int XcbEventQueueList::insert(xcb_connection_t *c, xcb_generic_event_t *event, bool full_event)
 {
     for (auto queue: eventQueueList)
         if (queue->c == c)
-            return queue->insert(event, native_event);
+            return queue->insert(event, full_event);
 
     return 0;
 }
 
-void XcbEventQueueList::insert(xcb_generic_event_t *event, bool native_event)
+void XcbEventQueueList::insert(xcb_generic_event_t *event, bool full_event)
 {
     for (auto queue: eventQueueList)
-        queue->insert(event, native_event);
+        queue->insert(event, full_event);
 }
 
 }

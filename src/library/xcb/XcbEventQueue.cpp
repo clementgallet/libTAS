@@ -78,7 +78,7 @@ void XcbEventQueue::setMask(xcb_window_t wid, uint32_t event_mask)
 
 #define EVENTQUEUE_MAXLEN 1024
 
-int XcbEventQueue::insert(xcb_generic_event_t *event, bool native_event)
+int XcbEventQueue::insert(xcb_generic_event_t *event, bool full_event)
 {
     /* Check if the window can produce such event */
     // auto mask = eventMasks.find(event->xany.window);
@@ -100,7 +100,7 @@ int XcbEventQueue::insert(xcb_generic_event_t *event, bool native_event)
 
     xcb_generic_event_t* ev;
 
-    if (native_event) {
+    if (full_event) {
         /* Figure out the size of the event (this is variable for xcb_ge_generic_event_t!) */
         size_t event_size = sizeof(xcb_generic_event_t);
         if (event->response_type == XCB_GE_GENERIC) {
@@ -112,7 +112,7 @@ int XcbEventQueue::insert(xcb_generic_event_t *event, bool native_event)
         memcpy(ev, event, event_size);
     }
     else {
-        /* If we're generating our own events, we won't actually have the full xcb_generic_event_t passed
+        /* If we're generating our own events, we generally won't actually have the full xcb_generic_event_t passed
          * The last 4 bytes of xcb_generic_event_t stores the full sequence number, and is not present in other struct definitions
          * We do need to actually set this to something, otherwise Xlib might throw an error (0 suffices here)
          */
