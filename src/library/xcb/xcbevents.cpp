@@ -128,6 +128,8 @@ reinterpret_cast<char*>(&reply));
         if (!isEventFiltered(event)) {
             xcbEventQueueList.insert(c, event);
         }
+
+        free(event);
     }
 }
 

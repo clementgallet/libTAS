@@ -31,6 +31,8 @@ class XcbEventQueue
     public:
         XcbEventQueue(xcb_connection_t *c);
 
+        ~XcbEventQueue();
+
         /* Set an event mask for a window */
         void setMask(xcb_window_t wid, uint32_t event_mask);
 
@@ -48,7 +50,7 @@ class XcbEventQueue
 
     private:
         /* Event queue */
-        std::list<xcb_generic_event_t> eventQueue;
+        std::list<xcb_generic_event_t*> eventQueue;
 
         /* Event mask for each Window */
         std::map<xcb_window_t, uint32_t> eventMasks;
