@@ -68,6 +68,9 @@ bool RenderHUD::init()
                 ImGuiIO& io = ImGui::GetIO();
                 LuaDraw::LuaText::regular_font = io.Fonts->AddFontFromMemoryCompressedTTF(Roboto_compressed_data, Roboto_compressed_size, 16.0f);
                 LuaDraw::LuaText::monospace_font = io.Fonts->AddFontFromMemoryCompressedTTF(ProggyClean_compressed_data, ProggyClean_compressed_size, 16.0f);
+
+                /* Disable config file */
+                io.IniFilename = NULL;
                 
                 ImGui_ImplXlib_Init(x11::gameDisplays[i], x11::gameXWindows.front());
                 return true;
