@@ -35,7 +35,7 @@ int AutoDetect::arch(Context *context)
     int libtasArch = extractBinaryType(context->libtaspath);
 
     /* Switch to libtas32.so if required */
-    if ((((gameArch&BT_TYPEMASK) == BT_ELF32) || ((gameArch&BT_TYPEMASK) == BT_PE32)) && (libtasArch == BT_ELF64)) {
+    if ((((gameArch&BT_TYPEMASK) == BT_ELF32) || ((gameArch&BT_TYPEMASK) == BT_PE32) || ((gameArch&BT_TYPEMASK) == BT_NE)) && (libtasArch == BT_ELF64)) {
         context->libtaspath = context->libtas32path;
         /* libtas32.so presence was already checked in ui/ErrorChecking.cpp */
         libtasArch = extractBinaryType(context->libtaspath);

@@ -150,7 +150,7 @@ bool ErrorChecking::checkArchType(Context* context)
     /* Checking that the game can be executed by the user, or try adding the flag.
      * This is not needed for wine games.
      * MacOS apps are directories, and thus executables */
-    if (gameArch != BT_PE32 && gameArch != BT_PE32P && access(context->gamepath.c_str(), X_OK) != 0) {
+    if (gameArch != BT_PE32 && gameArch != BT_PE32P && gameArch != BT_NE && access(context->gamepath.c_str(), X_OK) != 0) {
         struct stat sb;
         if ((stat(context->gamepath.c_str(), &sb) == -1) ||
            (chmod(context->gamepath.c_str(), sb.st_mode | S_IXUSR) == -1)) {
@@ -173,7 +173,7 @@ bool ErrorChecking::checkArchType(Context* context)
     }
 
     /* Check for wine presence in case of Windows executables */
-    if ((gameArch == BT_PE32) || (gameArch == BT_PE32P)) {
+    if ((gameArch == BT_PE32) || (gameArch == BT_PE32P) || (gameArch == BT_NE)) {
         std::string winename = "wine";
         if (gameArch == BT_PE32P)
             winename += "64";
