@@ -105,6 +105,7 @@
   suspending, so that the mutex lock call always happens at the same place in
   stack
 * Fix snd_pcm_wait() softlock having incorrect comparison operators
+* Prevent games from seeing window resizing to fix game window detach
 
 ## [1.4.5] - 2023-10-22
 ### Added

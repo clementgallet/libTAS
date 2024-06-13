@@ -54,6 +54,7 @@ DECLARE_ORIG_POINTER(SDL_GL_CreateContext)
 DECLARE_ORIG_POINTER(SDL_GL_DeleteContext)
 DECLARE_ORIG_POINTER(SDL_GL_SetSwapInterval)
 DECLARE_ORIG_POINTER(SDL_DestroyWindow)
+DECLARE_ORIG_POINTER(SDL_GetWindowSize)
 DECLARE_ORIG_POINTER(SDL_SetWindowSize)
 DECLARE_ORIG_POINTER(SDL_CreateWindowAndRenderer)
 DEFINE_ORIG_POINTER(SDL_SetVideoMode)
@@ -420,8 +421,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     LINK_NAMESPACE_SDL2(SDL_SetWindowSize);
 
     if (GlobalState::isNative()) {
-        NATIVECALL(orig::SDL_SetWindowSize(window, w, h));
-        return;
+        return orig::SDL_SetWindowSize(window, w, h);
     }
 
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with new size: %d x %d", __func__, w, h);
@@ -433,6 +433,28 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     NATIVECALL(orig::SDL_SetWindowSize(window, w, h));
 
     ScreenCapture::resize(w, h);
+}
+
+/* Override */ void SDL_GetWindowSize(SDL_Window * window, int *w, int *h)
+{
+    LINK_NAMESPACE_SDL2(SDL_GetWindowSize);
+
+    if (GlobalState::isNative()) {
+        return orig::SDL_GetWindowSize(window, w, h);
+    }
+
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
+
+    if (!ScreenCapture::isInited())
+        return orig::SDL_GetWindowSize(window, w, h);
+    
+    /* Return our saved dimension, because user may have resized the window and
+     * game window may be detached */
+    int width = 0, height = 0;
+    ScreenCapture::getDimensions(width, height);
+
+    *w = width;
+    *h = height;
 }
 
 /* SDL 1.2 */

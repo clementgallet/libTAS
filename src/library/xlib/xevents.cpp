@@ -164,8 +164,15 @@ void pushNativeXlibEvents(Display *display)
                 ScreenCapture::getDimensions(w, h);
 
                 if (w != xce.width || h != xce.height) {
+                    /* Check the saved dimension to see if the event was generated
+                     * by window resizing or API call */
+                     
                     /* Detach the game window */
                     RenderHUD::detachGameWindow();
+
+                    /* Skip the event */
+                    NOLOGCALL(n = orig::XPending(display));
+                    continue;
                 }
                 
                 /* TODO: We need to do something to prevent games to know that

@@ -231,6 +231,32 @@ OVERRIDE void SDL_GetWindowPosition(SDL_Window * window, int *x, int *y);
 OVERRIDE void SDL_SetWindowSize(SDL_Window* window, int w, int h);
 
 /**
+ * Get the size of a window's client area.
+ *
+ * NULL can safely be passed as the `w` or `h` parameter if the width or
+ * height value is not desired.
+ *
+ * The window size in screen coordinates may differ from the size in pixels,
+ * if the window was created with `SDL_WINDOW_ALLOW_HIGHDPI` on a platform
+ * with high-dpi support (e.g. iOS or macOS). Use SDL_GL_GetDrawableSize(),
+ * SDL_Vulkan_GetDrawableSize(), or SDL_GetRendererOutputSize() to get the
+ * real client area size in pixels.
+ *
+ * \param window the window to query the width and height from
+ * \param w a pointer filled in with the width of the window, in screen
+ *          coordinates, may be NULL
+ * \param h a pointer filled in with the height of the window, in screen
+ *          coordinates, may be NULL
+ *
+ * \since This function is available since SDL 2.0.0.
+ *
+ * \sa SDL_GL_GetDrawableSize
+ * \sa SDL_Vulkan_GetDrawableSize
+ * \sa SDL_SetWindowSize
+ */
+OVERRIDE void SDL_GetWindowSize(SDL_Window * window, int *w, int *h);
+
+/**
  * Set up a video mode with the specified width, height and bits-per-pixel.
  *
  * If 'bpp' is 0, it is treated as the current display bits per pixel.
