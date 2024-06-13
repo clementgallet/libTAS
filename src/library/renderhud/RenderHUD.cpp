@@ -177,6 +177,9 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
     }
 
     if (Global::shared_config.osd) {
+        ImGui::PushStyleColor(ImGuiCol_MenuBarBg, ImVec4(0.14f, 0.14f, 0.14f, 0.50f));
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.14f, 0.14f, 0.14f, 0.50f));
+        
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("Display")) {
                 ImGui::MenuItem("Detach game window", nullptr, &show_game_window, supportsGameWindow());
@@ -201,7 +204,8 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
             float fps = FPSMonitor::tickRedraw();
             ImGui::Text("FPS: %2.1f", fps);
             ImGui::EndMainMenuBar();
-        }        
+        }
+		ImGui::PopStyleColor(2);
     }
     
     if (supportsGameWindow() && !show_game_window && old_show_game_window) {

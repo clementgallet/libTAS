@@ -74,6 +74,7 @@
 * Pick a better state to rewind to
 * Better handling of infinite poll with ALSA
 * Update BalloonTip class from Dolphin
+* Make menu bar transparent
 
 ### Fixed
 
