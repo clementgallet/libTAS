@@ -321,7 +321,6 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
         case XCB_QUERY_KEYMAP:
         {
             LOG(LL_TRACE, LCF_KEYBOARD, "XCB_QUERY_KEYMAP raw request call");
-            //send_request(vector);
             break;
         }
 
@@ -352,7 +351,6 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
         case XCB_QUERY_POINTER:
         {
             LOG(LL_TRACE, LCF_MOUSE, "XCB_QUERY_POINTER raw request call");
-            //send_request(vector);
             break;
         }
 
@@ -548,7 +546,6 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                     case XCB_INPUT_XI_QUERY_DEVICE:
                     {
                         LOG(LL_TRACE, LCF_WINDOW, "XCB_INPUT_XI_QUERY_DEVICE raw request call");
-                        //send_request(vector);
                         return;
                     }
                 }
