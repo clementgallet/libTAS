@@ -63,6 +63,7 @@ struct GLProcs {
     DEFINE_GL_POINTER(GenFramebuffers)
     DEFINE_GL_POINTER(BindFramebuffer)
     DEFINE_GL_POINTER(DeleteFramebuffers)
+    DEFINE_GL_POINTER(GetFramebufferAttachmentParameteriv)
     DEFINE_GL_POINTER(GenRenderbuffers)
     DEFINE_GL_POINTER(BindRenderbuffer)
     DEFINE_GL_POINTER(DeleteRenderbuffers)

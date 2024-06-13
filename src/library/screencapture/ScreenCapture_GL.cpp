@@ -66,15 +66,22 @@ void ScreenCapture_GL::initScreenSurface()
     GL_CALL(GetIntegerv, (GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer));
     GL_CALL(GetIntegerv, (GL_READ_FRAMEBUFFER_BINDING, &read_buffer));
 
+    GLint default_fb_color_encoding = 0;
+    GL_CALL(BindFramebuffer, (GL_FRAMEBUFFER, 0));
+    GL_CALL(GetFramebufferAttachmentParameteriv, (GL_FRAMEBUFFER, GL_FRONT_LEFT, GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING, &default_fb_color_encoding));
+
     if (screenFBO == 0) {
         GL_CALL(GenFramebuffers, (1, &screenFBO));
     }
 
     GL_CALL(BindFramebuffer, (GL_FRAMEBUFFER, screenFBO));
-    
-    GL_CALL(GenTextures, (1, &screenTex));
+
+    if (screenTex == 0) {
+        GL_CALL(GenTextures, (1, &screenTex));
+    }
+
     GL_CALL(BindTexture, (GL_TEXTURE_2D, screenTex));
-    GL_CALL(TexImage2D, (GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL));
+    GL_CALL(TexImage2D, (GL_TEXTURE_2D, 0, default_fb_color_encoding == GL_SRGB ? GL_SRGB8 : GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL));
     GL_CALL(TexParameteri, (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     GL_CALL(TexParameteri, (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     GL_CALL(FramebufferTexture2D, (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTex, 0));
@@ -87,7 +94,7 @@ void ScreenCapture_GL::initScreenSurface()
     GL_CALL(RenderbufferStorage, (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height));
     GL_CALL(FramebufferRenderbuffer, (GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, screenRBO));
 
-    GL_CALL(BindFramebuffer, (GL_DRAW_FRAMEBUFFER, draw_buffer));        
+    GL_CALL(BindFramebuffer, (GL_DRAW_FRAMEBUFFER, draw_buffer));
     GL_CALL(BindFramebuffer, (GL_READ_FRAMEBUFFER, read_buffer));
 
     gllinepixels.resize(pitch);
@@ -124,28 +131,28 @@ int ScreenCapture_GL::copyScreenToSurface()
 {
     GlobalNative gn;
 
-    /* Disable sRGB if needed */
-    GLboolean isFramebufferSrgb = glProcs.IsEnabled(GL_FRAMEBUFFER_SRGB);
-    if (isFramebufferSrgb)
-        glProcs.Disable(GL_FRAMEBUFFER_SRGB);
-    
+    /* Disable the scissor test if needed */
+    GLboolean scissor_test_active = glProcs.IsEnabled(GL_SCISSOR_TEST);
+    if (scissor_test_active)
+        glProcs.Disable(GL_SCISSOR_TEST);
+
     /* Copy the original draw/read framebuffers */
     GLint draw_buffer, read_buffer;
     glProcs.GetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer);
     glProcs.GetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
-    
+
     glProcs.GetError();
-    
+
     GL_CALL(BindFramebuffer, (GL_READ_FRAMEBUFFER, 0));
     GL_CALL(BindFramebuffer, (GL_DRAW_FRAMEBUFFER, screenFBO));
     GL_CALL(BlitFramebuffer, (0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST));
-    
+
     /* Restore the original draw/read framebuffers */
     GL_CALL(BindFramebuffer, (GL_DRAW_FRAMEBUFFER, draw_buffer));
     GL_CALL(BindFramebuffer, (GL_READ_FRAMEBUFFER, read_buffer));
-    
-    if (isFramebufferSrgb)
-        glProcs.Enable(GL_FRAMEBUFFER_SRGB);
+
+    if (scissor_test_active)
+        glProcs.Enable(GL_SCISSOR_TEST);
 
     return size;
 }
@@ -160,11 +167,6 @@ int ScreenCapture_GL::getPixelsFromSurface(uint8_t **pixels, bool draw)
         return size;
 
     GlobalNative gn;
-
-    /* Disable sRGB if needed */
-    GLboolean isFramebufferSrgb = glProcs.IsEnabled(GL_FRAMEBUFFER_SRGB);
-    if (isFramebufferSrgb)
-        glProcs.Disable(GL_FRAMEBUFFER_SRGB);
 
     /* Copy the original read framebuffer */
     GLint read_buffer;
@@ -211,9 +213,6 @@ int ScreenCapture_GL::getPixelsFromSurface(uint8_t **pixels, bool draw)
         memcpy(&winpixels[pos2], gllinepixels.data(), pitch);
     }
 
-    if (isFramebufferSrgb)
-        glProcs.Enable(GL_FRAMEBUFFER_SRGB);
-
     return size;
 }
 
@@ -221,33 +220,42 @@ int ScreenCapture_GL::copySurfaceToScreen()
 {
     GlobalNative gn;
 
-    GLboolean isFramebufferSrgb = glProcs.IsEnabled(GL_FRAMEBUFFER_SRGB);
-    if (isFramebufferSrgb)
-        glProcs.Disable(GL_FRAMEBUFFER_SRGB);
-    
+    /* Disable the scissor test if needed */
+    GLboolean scissor_test_active = glProcs.IsEnabled(GL_SCISSOR_TEST);
+    if (scissor_test_active)
+        glProcs.Disable(GL_SCISSOR_TEST);
+
     /* Copy the original draw/read framebuffers */
     GLint draw_buffer, read_buffer;
     glProcs.GetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_buffer);
     glProcs.GetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_buffer);
-    
+
     glProcs.GetError();
     GL_CALL(BindFramebuffer, (GL_READ_FRAMEBUFFER, screenFBO));
     GL_CALL(BindFramebuffer, (GL_DRAW_FRAMEBUFFER, 0));
     GL_CALL(BlitFramebuffer, (0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST));
-    
+
     /* Restore the original draw/read framebuffers */
     GL_CALL(BindFramebuffer, (GL_DRAW_FRAMEBUFFER, draw_buffer));
     GL_CALL(BindFramebuffer, (GL_READ_FRAMEBUFFER, read_buffer));
-    
-    if (isFramebufferSrgb)
-        glProcs.Enable(GL_FRAMEBUFFER_SRGB);
+
+    if (scissor_test_active)
+        glProcs.Enable(GL_SCISSOR_TEST);
 
     return 0;
 }
 
 void ScreenCapture_GL::clearScreen()
 {
+    /* Disable the scissor test if needed */
+    GLboolean scissor_test_active = glProcs.IsEnabled(GL_SCISSOR_TEST);
+    if (scissor_test_active)
+        glProcs.Disable(GL_SCISSOR_TEST);
+
     glProcs.Clear(GL_COLOR_BUFFER_BIT);
+
+    if (scissor_test_active)
+        glProcs.Enable(GL_SCISSOR_TEST);
 }
 
 }
