@@ -26,9 +26,18 @@
 #include "xlib/XlibEventQueue.h"
 #include "xlib/xdisplay.h" // x11::gameDisplays
 
+#include <xcb/xproto.h>
+
 namespace libtas {
 
 XcbEventQueue::XcbEventQueue(xcb_connection_t *conn) : c(conn) {}
+
+XcbEventQueue::~XcbEventQueue()
+{
+    for (auto* ev : eventQueue) {
+        free(ev);
+    }
+}
 
 void XcbEventQueue::setMask(xcb_window_t wid, uint32_t event_mask)
 {
@@ -69,7 +78,7 @@ void XcbEventQueue::setMask(xcb_window_t wid, uint32_t event_mask)
 
 #define EVENTQUEUE_MAXLEN 1024
 
-int XcbEventQueue::insert(xcb_generic_event_t *event)
+int XcbEventQueue::insert(xcb_generic_event_t *event, bool full_event)
 {
     /* Check if the window can produce such event */
     // auto mask = eventMasks.find(event->xany.window);
@@ -89,8 +98,31 @@ int XcbEventQueue::insert(xcb_generic_event_t *event)
         return -1;
     }
 
-    /* Push the event at the beginning of the queue */
-    eventQueue.push_front(*event);
+    xcb_generic_event_t* ev;
+
+    if (full_event) {
+        /* Figure out the size of the event (this is variable for xcb_ge_generic_event_t!) */
+        size_t event_size = sizeof(xcb_generic_event_t);
+        if (event->response_type == XCB_GE_GENERIC) {
+            event_size += reinterpret_cast<xcb_ge_generic_event_t*>(event)->length * 4;
+        }
+
+        /* Allocate a copy of the event */
+        ev = static_cast<xcb_generic_event_t*>(malloc(event_size));
+        memcpy(ev, event, event_size);
+    }
+    else {
+        /* If we're generating our own events, we generally won't actually have the full xcb_generic_event_t passed
+         * The last 4 bytes of xcb_generic_event_t stores the full sequence number, and is not present in other struct definitions
+         * We do need to actually set this to something, otherwise Xlib might throw an error (0 suffices here)
+         */
+        ev = static_cast<xcb_generic_event_t*>(malloc(sizeof(xcb_generic_event_t)));
+        memcpy(ev, event, sizeof(xcb_generic_event_t) - 4);
+        ev->full_sequence = 0;
+    }
+
+    /* Push the event copy at the beginning of the queue */
+    eventQueue.push_front(ev);
 
     return 1;
 }
@@ -100,12 +132,9 @@ xcb_generic_event_t* XcbEventQueue::pop()
     if (eventQueue.size() == 0)
         return nullptr;
 
-    xcb_generic_event_t* ev = new xcb_generic_event_t;
-    xcb_generic_event_t event = eventQueue.back();
+    xcb_generic_event_t* event = eventQueue.back();
     eventQueue.pop_back();
-
-    memcpy(ev, &event, sizeof(xcb_generic_event_t));
-    return ev;
+    return event;
 }
 
 int XcbEventQueue::size()

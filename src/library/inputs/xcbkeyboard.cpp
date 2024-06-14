@@ -48,7 +48,7 @@ namespace libtas {
     LOGTRACE(LCF_KEYBOARD);
 
     /* The reply is allocated and the caller is in charge of freeing it */
-    xcb_query_keymap_reply_t *reply = new xcb_query_keymap_reply_t;
+    auto* reply = static_cast<xcb_query_keymap_reply_t*>(malloc(sizeof(xcb_query_keymap_reply_t)));
     reply->response_type = XCB_QUERY_KEYMAP;
     /* Let's hope the caller does not care about the sequence */
     reply->sequence = 0;
@@ -100,7 +100,7 @@ xcb_grab_keyboard_reply (xcb_connection_t            *,
                          xcb_generic_error_t        **)
 {
     LOGTRACE(LCF_KEYBOARD);
-    xcb_grab_keyboard_reply_t *reply = new xcb_grab_keyboard_reply_t;
+    auto* reply = static_cast<xcb_grab_keyboard_reply_t*>(malloc(sizeof(xcb_grab_keyboard_reply_t)));
     reply->response_type = XCB_GRAB_KEYBOARD;
     reply->sequence = 0;
     reply->status = XCB_GRAB_STATUS_SUCCESS;

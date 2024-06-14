@@ -41,10 +41,10 @@ class XcbEventQueueList
         std::shared_ptr<XcbEventQueue> getQueue(xcb_connection_t *c);
 
         /* Insert an event into a specific queue */
-        int insert(xcb_connection_t *c, xcb_generic_event_t *event);
+        int insert(xcb_connection_t *c, xcb_generic_event_t *event, bool full_event);
 
         /* Insert an event into all queues */
-        void insert(xcb_generic_event_t *event);
+        void insert(xcb_generic_event_t *event, bool full_event);
 
     private:
         std::list<std::shared_ptr<XcbEventQueue>> eventQueueList;

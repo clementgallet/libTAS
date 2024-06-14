@@ -419,7 +419,7 @@ xcb_void_cookie_t xcb_configure_window_checked (xcb_connection_t *c, xcb_window_
             new_index++;
             index++;
         }
-        value_mask &= ~(XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT);
+        value_mask &= ~(XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y);
     }
 
     xcb_void_cookie_t ret = orig::xcb_configure_window_checked(c, window, value_mask, new_list);

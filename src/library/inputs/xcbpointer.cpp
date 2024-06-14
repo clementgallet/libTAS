@@ -49,7 +49,7 @@ namespace libtas {
 /* Override */ xcb_query_pointer_reply_t *xcb_query_pointer_reply (xcb_connection_t *c, xcb_query_pointer_cookie_t cookie, xcb_generic_error_t **e)
 {
     LOGTRACE(LCF_MOUSE);
-    xcb_query_pointer_reply_t* reply = new xcb_query_pointer_reply_t;
+    auto* reply = static_cast<xcb_query_pointer_reply_t*>(malloc(sizeof(xcb_query_pointer_reply_t)));
     reply->response_type = XCB_QUERY_POINTER;
     reply->sequence = 0;
     reply->same_screen = true;
@@ -101,7 +101,7 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
         struct timespec time = DeterministicTimer::get().getTicks();
         event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
-        xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
+        xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
         LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (%d,%d)", game_ai.pointer.x, game_ai.pointer.y);
     }
 
@@ -177,7 +177,7 @@ xcb_warp_pointer (xcb_connection_t *c,
         struct timespec time = DeterministicTimer::get().getTicks();
         event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
-        xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event));
+        xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
         LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (%d,%d)", game_ai.pointer.x, game_ai.pointer.y);
     }
 
@@ -253,7 +253,7 @@ xcb_grab_pointer_reply (xcb_connection_t           *c,
                         xcb_generic_error_t       **e)
 {
     LOGTRACE(LCF_MOUSE);
-    xcb_grab_pointer_reply_t *reply = new xcb_grab_pointer_reply_t;
+    auto* reply = static_cast<xcb_grab_pointer_reply_t*>(malloc(sizeof(xcb_grab_pointer_reply_t)));
     reply->response_type = XCB_GRAB_POINTER;
     reply->sequence = 0;
     reply->status = XCB_GRAB_STATUS_SUCCESS;

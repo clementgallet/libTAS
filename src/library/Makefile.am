@@ -183,6 +183,7 @@ libtas_so_SOURCES = \
     xcb/XcbEventQueueList.cpp \
     xcb/xcbconnection.cpp \
     xcb/xcbevents.cpp \
+    xcb/xcbrequests.cpp \
     xcb/xcbwindows.cpp \
     xlib/XlibEventQueue.cpp \
     xlib/XlibEventQueueList.cpp \
