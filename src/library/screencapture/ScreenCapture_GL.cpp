@@ -68,7 +68,7 @@ void ScreenCapture_GL::initScreenSurface()
 
     GLint default_fb_color_encoding = 0;
     GL_CALL(BindFramebuffer, (GL_FRAMEBUFFER, 0));
-    GL_CALL(GetFramebufferAttachmentParameteriv, (GL_FRAMEBUFFER, GL_FRONT_LEFT, GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING, &default_fb_color_encoding));
+    GL_CALL(GetFramebufferAttachmentParameteriv, (GL_FRAMEBUFFER, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING, &default_fb_color_encoding));
 
     if (screenFBO == 0) {
         GL_CALL(GenFramebuffers, (1, &screenFBO));
@@ -81,18 +81,12 @@ void ScreenCapture_GL::initScreenSurface()
     }
 
     GL_CALL(BindTexture, (GL_TEXTURE_2D, screenTex));
-    GL_CALL(TexImage2D, (GL_TEXTURE_2D, 0, default_fb_color_encoding == GL_SRGB ? GL_SRGB8 : GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL));
+    GL_CALL(TexImage2D, (GL_TEXTURE_2D, 0,
+        default_fb_color_encoding == GL_SRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8, 
+        width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
     GL_CALL(TexParameteri, (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     GL_CALL(TexParameteri, (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     GL_CALL(FramebufferTexture2D, (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTex, 0));
-
-    if (screenRBO == 0) {
-        GL_CALL(GenRenderbuffers, (1, &screenRBO));
-    }
-
-    GL_CALL(BindRenderbuffer, (GL_RENDERBUFFER, screenRBO));
-    GL_CALL(RenderbufferStorage, (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height));
-    GL_CALL(FramebufferRenderbuffer, (GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, screenRBO));
 
     GL_CALL(BindFramebuffer, (GL_DRAW_FRAMEBUFFER, draw_buffer));
     GL_CALL(BindFramebuffer, (GL_READ_FRAMEBUFFER, read_buffer));
