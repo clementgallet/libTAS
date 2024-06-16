@@ -40,6 +40,7 @@
 #include "fileio/FileHandleList.h"
 #include "renderhud/MessageWindow.h"
 #ifdef __unix__
+#include "xcb/xcbconnection.h" // x11::gameConnections
 #include "xlib/xdisplay.h" // x11::gameDisplays
 #endif
 
@@ -51,6 +52,7 @@
 #include <sys/syscall.h> // syscall, SYS_gettid
 #include <sys/wait.h> // waitpid
 #ifdef __unix__
+#include <xcb/xproto.h> // xcb_get_input_focus_reply, xcb_get_input_focus
 #include <X11/Xlib.h> // XLockDisplay
 #endif
 
@@ -308,6 +310,14 @@ int SaveStateManager::checkpoint(int slot)
     resumeThreads();
 
 #ifdef __unix__
+    /* After restore, we need to sync xcb connections to avoid potential deadlocks */
+    if (restoreInProgress) {
+        for (int i=0; i<GAMECONNECTIONNUM; i++) {
+            if (x11::gameConnections[i])
+                NATIVECALL(free(xcb_get_input_focus_reply(x11::gameConnections[i], xcb_get_input_focus(x11::gameConnections[i]), nullptr)));
+        }
+    }
+
     /* Unlock the display */
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i])
