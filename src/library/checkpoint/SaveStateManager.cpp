@@ -250,6 +250,10 @@ int SaveStateManager::checkpoint(int slot)
     }
 #endif
 
+    /* Update thread stack address and size for stack padding.
+     * Must be done **before** suspending threads. */
+    ThreadManager::updateStackInfo();
+
     /* Sending a suspend signal to all threads */
     suspendThreads();
 

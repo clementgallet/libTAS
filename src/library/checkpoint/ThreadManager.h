@@ -120,6 +120,10 @@ void setCurrentThread(ThreadInfo *thread);
 void lockList();
 void unlockList();
 
+/* Update the thread stack address and size based on what actual memory is
+ * available */
+void updateStackInfo();
+
 }
 }
 

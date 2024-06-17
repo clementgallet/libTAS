@@ -20,6 +20,12 @@
 #include "ThreadManager.h"
 #include "SaveStateManager.h"
 #include "ThreadSync.h"
+#include "MemArea.h"
+#ifdef __unix__
+#include "ProcSelfMaps.h"
+#elif defined(__APPLE__) && defined(__MACH__)
+#include "MachVmMaps.h"
+#endif
 
 #include "logging.h"
 #include "hook.h"
@@ -400,6 +406,57 @@ void ThreadManager::lockList()
 void ThreadManager::unlockList()
 {
     MYASSERT(pthread_mutex_unlock(&threadListLock) == 0)
+}
+
+void ThreadManager::updateStackInfo()
+{
+#ifdef __unix__
+    ProcSelfMaps memMapLayout;
+#elif defined(__APPLE__) && defined(__MACH__)
+    MachVmMaps memMapLayout;
+#endif
+
+    Area area;
+    bool not_eof = memMapLayout.getNextArea(&area);
+
+    lockList();
+
+    while (not_eof) {
+        
+        /* Look for non-rw areas that intersect a thread stack.
+         * FNA split some thread stacks with a non-rw section at the end, which
+         * makes padding fail, see an exemple of stack layout:
+         *     7fffb2c00000-7fffb2c01000 rw-p 00000000 00:00 0
+         *     7fffb2c01000-7fffb2c09000 ---p 00000000 00:00 0
+         *     7fffb2c09000-7fffb2f00000 rw-p 00000000 00:00 0
+         * Thus we update the stack address and size to always have rw permission
+         */
+        if (!(area.prot & PROT_READ) || !(area.prot & PROT_WRITE)) {
+            for (ThreadInfo* thread = thread_list; thread != nullptr; thread = thread->next) {
+                void* thread_stack_end_addr = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(thread->stack_addr) + thread->stack_size);
+                if ((area.addr >= thread->stack_addr) && (area.addr < thread_stack_end_addr)) {
+                    if (area.endAddr >= thread_stack_end_addr)
+                        LOG(LL_ERROR, LCF_THREAD, "Top of thread %d stack (%p-%p) detected as not rw because of segment (%p-%p)!",
+                            thread->real_tid, thread->stack_addr, thread_stack_end_addr,
+                            area.addr, area.endAddr);
+                    else {
+                        void* new_addr = area.endAddr;
+                        size_t new_size = reinterpret_cast<ptrdiff_t>(thread_stack_end_addr) - reinterpret_cast<ptrdiff_t>(area.endAddr);
+                        LOG(LL_INFO, LCF_THREAD, "Thread %d stack was updated from %p-%p to %p-%p",
+                            thread->real_tid, thread->stack_addr, thread_stack_end_addr,
+                            new_addr, thread_stack_end_addr);
+                        thread->stack_addr = new_addr;
+                        thread->stack_size = new_size;
+                    }
+                    break;
+                }
+            }
+        }
+        
+        not_eof = memMapLayout.getNextArea(&area);
+    }
+
+    unlockList();
 }
 
 }
