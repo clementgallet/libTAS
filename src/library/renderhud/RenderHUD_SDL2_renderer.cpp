@@ -23,6 +23,8 @@
 #include "hook.h"
 #include "GlobalState.h"
 
+#include "sdl/sdlwindows.h"
+
 #include "../external/imgui/imgui.h"
 #include "../external/imgui/imgui_impl_sdlrenderer2.h"
 
@@ -36,6 +38,7 @@ DECLARE_ORIG_POINTER(SDL_RenderCopy)
 DECLARE_ORIG_POINTER(SDL_SetTextureBlendMode)
 DECLARE_ORIG_POINTER(SDL_GetError)
 DECLARE_ORIG_POINTER(SDL_GetVersion)
+DECLARE_ORIG_POINTER(SDL_SetWindowResizable)
 
 RenderHUD_SDL2_renderer::~RenderHUD_SDL2_renderer()
 {
@@ -67,8 +70,10 @@ void RenderHUD_SDL2_renderer::newFrame()
         if ((ver.minor == 0) && (ver.patch < 18))
             return;
         
-        if (RenderHUD::init())
+        if (RenderHUD::init()) {
             ImGui_ImplSDLRenderer2_Init(renderer);
+            orig::SDL_SetWindowResizable(sdl::gameSDLWindow, supportsLargerViewport()?SDL_TRUE:SDL_FALSE);
+        }
         else
             return;
     }
