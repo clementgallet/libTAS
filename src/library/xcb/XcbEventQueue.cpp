@@ -48,10 +48,10 @@ void XcbEventQueue::setMask(xcb_window_t wid, uint32_t event_mask)
     //     xcb_enter_notify_event_t ev;
     //     ev.response_type = XCB_ENTER_NOTIFY;
     //     ev.event = wid;
-    //     ev.event_x = game_ai.pointer.x;
-    //     ev.event_y = game_ai.pointer.y;
-    //     ev.root_x = game_ai.pointer.x;
-    //     ev.root_y = game_ai.pointer.y;
+    //     ev.event_x = Inputs::game_ai.pointer.x;
+    //     ev.event_y = Inputs::game_ai.pointer.y;
+    //     ev.root_x = Inputs::game_ai.pointer.x;
+    //     ev.root_y = Inputs::game_ai.pointer.y;
     //     ev.state = SingleInput::toXlibPointerMask(ai.pointer.mask);
     //
     //     debuglog(LCF_EVENTS | LCF_MOUSE, "   Inserting a XCB_EVENT_MASK_ENTER_WINDOW event");

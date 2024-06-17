@@ -329,7 +329,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
         return 0;
 
     /* Return axis value */
-    return game_ai.controllers[*gcid].axes[axis];
+    return Inputs::game_ai.controllers[*gcid].axes[axis];
 
 }
 
@@ -421,9 +421,9 @@ SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
         return 0;
 
     /* Return button value */
-    LOG(LL_DEBUG, LCF_SDL | LCF_JOYSTICK, "  return %d", (game_ai.controllers[*gcid].buttons >> button) & 0x1);
+    LOG(LL_DEBUG, LCF_SDL | LCF_JOYSTICK, "  return %d", (Inputs::game_ai.controllers[*gcid].buttons >> button) & 0x1);
 
-    return (game_ai.controllers[*gcid].buttons >> button) & 0x1;
+    return (Inputs::game_ai.controllers[*gcid].buttons >> button) & 0x1;
 
 }
 

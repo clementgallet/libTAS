@@ -363,12 +363,12 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
             if (!x11::gameXWindows.empty()) {
                 xcb_motion_notify_event_t event;
                 event.response_type = XCB_MOTION_NOTIFY;
-                event.state = SingleInput::toXlibPointerMask(game_ai.pointer.mask);
+                event.state = SingleInput::toXlibPointerMask(Inputs::game_ai.pointer.mask);
 
                 if (req->dst_window == XCB_NONE) {
                     /* Relative warp */
-                    event.event_x = game_ai.pointer.x + req->dst_x;
-                    event.event_y = game_ai.pointer.y + req->dst_y;
+                    event.event_x = Inputs::game_ai.pointer.x + req->dst_x;
+                    event.event_y = Inputs::game_ai.pointer.y + req->dst_y;
                 }
                 else {
                     /* Absolute warp */
@@ -383,19 +383,19 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                 event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
                 xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
-                LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (%d,%d)", game_ai.pointer.x, game_ai.pointer.y);
+                LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (%d,%d)", Inputs::game_ai.pointer.x, Inputs::game_ai.pointer.y);
             }
 
             /* Update the pointer coordinates */
             if (req->dst_window == XCB_NONE) {
                 /* Relative warp */
-                game_ai.pointer.x += req->dst_x;
-                game_ai.pointer.y += req->dst_y;
+                Inputs::game_ai.pointer.x += req->dst_x;
+                Inputs::game_ai.pointer.y += req->dst_y;
             }
             else {
                 /* Absolute warp */
-                game_ai.pointer.x = req->dst_x;
-                game_ai.pointer.y = req->dst_y;
+                Inputs::game_ai.pointer.x = req->dst_x;
+                Inputs::game_ai.pointer.y = req->dst_y;
             }
 
             if (Global::shared_config.mouse_prevent_warp) {
@@ -406,13 +406,13 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
             if (Global::shared_config.mouse_support) {
                 if (req->dst_window == XCB_NONE) {
                     /* Relative warp */
-                    old_ai.pointer.x += req->dst_x;
-                    old_ai.pointer.y += req->dst_y;
+                    Inputs::old_ai.pointer.x += req->dst_x;
+                    Inputs::old_ai.pointer.y += req->dst_y;
                 }
                 else {
                     /* Absolute warp */
-                    old_ai.pointer.x = req->dst_x;
-                    old_ai.pointer.y = req->dst_y;
+                    Inputs::old_ai.pointer.x = req->dst_x;
+                    Inputs::old_ai.pointer.y = req->dst_y;
                 }
             }
 
@@ -496,8 +496,8 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                                     event.root = x11::rootWindow;
                                     event.event = x11::gameXWindows.front();
                                     event.child = 0;
-                                    event.root_x = event.event_x = game_ai.pointer.x;
-                                    event.root_y = event.event_y = game_ai.pointer.y;
+                                    event.root_x = event.event_x = Inputs::game_ai.pointer.x;
+                                    event.root_y = event.event_y = Inputs::game_ai.pointer.y;
                                     event.same_screen = 1;
                                     event.focus = 1;
 
@@ -516,8 +516,8 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                                         dev->time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
                                         dev->deviceid = dev->sourceid = 3;
                                         dev->event = x11::gameXWindows.front();
-                                        dev->root_x = dev->event_x = game_ai.pointer.x;
-                                        dev->root_y = dev->event_y = game_ai.pointer.y;
+                                        dev->root_x = dev->event_x = Inputs::game_ai.pointer.x;
+                                        dev->root_y = dev->event_y = Inputs::game_ai.pointer.y;
                                         dev->focus = True;
                                         dev->same_screen = True;
                                         LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE | LCF_KEYBOARD, "   Inserting an Xlib event XI_FocusIn");

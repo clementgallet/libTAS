@@ -37,12 +37,12 @@ namespace libtas {
     memset(keymap, 0, 32);
     GlobalNoLog gnl; // Avoid logging on XkbKeycodeToKeysym
     for (int i=0; i<AllInputsFlat::MAXKEYS; i++) {
-        if (game_ai.keyboard[i] == 0) {
+        if (Inputs::game_ai.keyboard[i] == 0) {
             break;
         }
         for (int kc=0; kc<256; kc++) {
             KeySym ks = XkbKeycodeToKeysym(display, (KeyCode)kc, 0, 0);
-            if (ks == game_ai.keyboard[i]) {
+            if (ks == Inputs::game_ai.keyboard[i]) {
                 keymap[kc>>3] |= (1 << (kc&0x7));
                 break;
             }

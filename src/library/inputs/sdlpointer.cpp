@@ -45,12 +45,12 @@ Uint32 SDL_GetMouseState(int *x, int *y)
     LOGTRACE(LCF_SDL | LCF_MOUSE);
 
     if (x != NULL)
-        *x = game_ai.pointer.x;
+        *x = Inputs::game_ai.pointer.x;
     if (y != NULL)
-        *y = game_ai.pointer.y;
+        *y = Inputs::game_ai.pointer.y;
 
     /* Translating pointer mask to SDL pointer state */
-    return SingleInput::toSDL2PointerMask(game_ai.pointer.mask);
+    return SingleInput::toSDL2PointerMask(Inputs::game_ai.pointer.mask);
 }
 
 Uint32 SDL_GetGlobalMouseState(int *x, int *y)
@@ -74,22 +74,22 @@ Uint32 SDL_GetRelativeMouseState(int *x, int *y)
 
     /* For the first call, just output zero deltas */
     if (first) {
-        oldx = game_unclipped_ai.pointer.x;
-        oldy = game_unclipped_ai.pointer.y;
+        oldx = Inputs::game_unclipped_pointer.x;
+        oldy = Inputs::game_unclipped_pointer.y;
         first = false;
     }
 
     if (x != NULL)
-        *x = game_unclipped_ai.pointer.x - oldx;
+        *x = Inputs::game_unclipped_pointer.x - oldx;
     if (y != NULL)
-        *y = game_unclipped_ai.pointer.y - oldy;
+        *y = Inputs::game_unclipped_pointer.y - oldy;
 
     /* Updating the old pointer coordinates */
-    oldx = game_unclipped_ai.pointer.x;
-    oldy = game_unclipped_ai.pointer.y;
+    oldx = Inputs::game_unclipped_pointer.x;
+    oldy = Inputs::game_unclipped_pointer.y;
 
     /* Translating pointer mask to SDL pointer state */
-    return SingleInput::toSDL2PointerMask(game_ai.pointer.mask);
+    return SingleInput::toSDL2PointerMask(Inputs::game_ai.pointer.mask);
 }
 
 void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
@@ -106,24 +106,24 @@ void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
     event2.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
 
     /* Build up mouse state */
-    event2.motion.state = SingleInput::toSDL2PointerMask(game_ai.pointer.mask);
+    event2.motion.state = SingleInput::toSDL2PointerMask(Inputs::game_ai.pointer.mask);
     event2.motion.x = x;
     event2.motion.y = y;
-    event2.motion.xrel = game_ai.pointer.x - x;
-    event2.motion.yrel = game_ai.pointer.y - y;
+    event2.motion.xrel = Inputs::game_ai.pointer.x - x;
+    event2.motion.yrel = Inputs::game_ai.pointer.y - y;
     sdlEventQueue.insert(&event2);
 
     /* Update the pointer coordinates */
-    game_ai.pointer.x = x;
-    game_ai.pointer.y = y;
+    Inputs::game_ai.pointer.x = x;
+    Inputs::game_ai.pointer.y = y;
     
     if (Global::shared_config.mouse_prevent_warp) {
         return;
     }
 
     /* When warping cursor, real and game cursor position are now synced */
-    old_ai.pointer.x = x;
-    old_ai.pointer.y = y;
+    Inputs::old_ai.pointer.x = x;
+    Inputs::old_ai.pointer.y = y;
 
     LINK_NAMESPACE_SDL2(SDL_WarpMouseInWindow);
     NATIVECALL(orig::SDL_WarpMouseInWindow(window, x, y));    
@@ -148,16 +148,16 @@ void SDL_WarpMouse(Uint16 x, Uint16 y)
     event1.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
 
     /* Build up mouse state */
-    event1.motion.state = SingleInput::toSDL1PointerMask(game_ai.pointer.mask);
+    event1.motion.state = SingleInput::toSDL1PointerMask(Inputs::game_ai.pointer.mask);
     event1.motion.x = x;
     event1.motion.y = y;
-    event1.motion.xrel = (Sint16)(game_ai.pointer.x - x);
-    event1.motion.yrel = (Sint16)(game_ai.pointer.y - y);
+    event1.motion.xrel = (Sint16)(Inputs::game_ai.pointer.x - x);
+    event1.motion.yrel = (Sint16)(Inputs::game_ai.pointer.y - y);
     sdlEventQueue.insert(&event1);
 
     /* Update the pointer coordinates */
-    game_ai.pointer.x = x;
-    game_ai.pointer.y = y;
+    Inputs::game_ai.pointer.x = x;
+    Inputs::game_ai.pointer.y = y;
     
     if (Global::shared_config.mouse_prevent_warp) {
         return;
@@ -259,33 +259,33 @@ void SDL_SetWindowGrab(SDL_Window * window, SDL_bool grabbed)
         LINK_NAMESPACE_SDL2(SDL_GetWindowSize);
         orig::SDL_GetWindowSize(window, &w, &h);
 
-        pointer_clipping = true;
-        clipping_x = 0;
-        clipping_y = 0;
-        clipping_w = w;
-        clipping_h = h;
+        Inputs::pointer_clipping = true;
+        Inputs::clipping_x = 0;
+        Inputs::clipping_y = 0;
+        Inputs::clipping_w = w;
+        Inputs::clipping_h = h;
             
-        if (game_ai.pointer.x < clipping_x) {
-            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x);
-            game_ai.pointer.x = clipping_x;
+        if (Inputs::game_ai.pointer.x < Inputs::clipping_x) {
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", Inputs::game_ai.pointer.x, Inputs::clipping_x);
+            Inputs::game_ai.pointer.x = Inputs::clipping_x;
         }
-        else if (game_ai.pointer.x >= (clipping_x + clipping_w)) {
-            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x + clipping_w - 1);
-            game_ai.pointer.x = clipping_x + clipping_w - 1;
+        else if (Inputs::game_ai.pointer.x >= (Inputs::clipping_x + Inputs::clipping_w)) {
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", Inputs::game_ai.pointer.x, Inputs::clipping_x + Inputs::clipping_w - 1);
+            Inputs::game_ai.pointer.x = Inputs::clipping_x + Inputs::clipping_w - 1;
         }
         
-        if (game_ai.pointer.y < clipping_y) {
-            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y);
-            game_ai.pointer.y = clipping_y;
+        if (Inputs::game_ai.pointer.y < Inputs::clipping_y) {
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", Inputs::game_ai.pointer.y, Inputs::clipping_y);
+            Inputs::game_ai.pointer.y = Inputs::clipping_y;
         }
-        else if (game_ai.pointer.y >= (clipping_y + clipping_h)) {
-            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y + clipping_h - 1);
-            game_ai.pointer.y = clipping_y + clipping_h - 1;
+        else if (Inputs::game_ai.pointer.y >= (Inputs::clipping_y + Inputs::clipping_h)) {
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", Inputs::game_ai.pointer.y, Inputs::clipping_y + Inputs::clipping_h - 1);
+            Inputs::game_ai.pointer.y = Inputs::clipping_y + Inputs::clipping_h - 1;
         }
     }
     else {
         pointer_grab_sdl_window = nullptr;
-        pointer_clipping = false;
+        Inputs::pointer_clipping = false;
     }
 }
 
@@ -300,33 +300,33 @@ void SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed)
         LINK_NAMESPACE_SDL2(SDL_GetWindowSize);
         orig::SDL_GetWindowSize(window, &w, &h);
 
-        pointer_clipping = true;
-        clipping_x = 0;
-        clipping_y = 0;
-        clipping_w = w;
-        clipping_h = h;
+        Inputs::pointer_clipping = true;
+        Inputs::clipping_x = 0;
+        Inputs::clipping_y = 0;
+        Inputs::clipping_w = w;
+        Inputs::clipping_h = h;
             
-        if (game_ai.pointer.x < clipping_x) {
-            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x);
-            game_ai.pointer.x = clipping_x;
+        if (Inputs::game_ai.pointer.x < Inputs::clipping_x) {
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", Inputs::game_ai.pointer.x, Inputs::clipping_x);
+            Inputs::game_ai.pointer.x = Inputs::clipping_x;
         }
-        else if (game_ai.pointer.x >= (clipping_x + clipping_w)) {
-            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", game_ai.pointer.x, clipping_x + clipping_w - 1);
-            game_ai.pointer.x = clipping_x + clipping_w - 1;
+        else if (Inputs::game_ai.pointer.x >= (Inputs::clipping_x + Inputs::clipping_w)) {
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer x from %d to %d", Inputs::game_ai.pointer.x, Inputs::clipping_x + Inputs::clipping_w - 1);
+            Inputs::game_ai.pointer.x = Inputs::clipping_x + Inputs::clipping_w - 1;
         }
         
-        if (game_ai.pointer.y < clipping_y) {
-            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y);
-            game_ai.pointer.y = clipping_y;
+        if (Inputs::game_ai.pointer.y < Inputs::clipping_y) {
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", Inputs::game_ai.pointer.y, Inputs::clipping_y);
+            Inputs::game_ai.pointer.y = Inputs::clipping_y;
         }
-        else if (game_ai.pointer.y >= (clipping_y + clipping_h)) {
-            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", game_ai.pointer.y, clipping_y + clipping_h - 1);
-            game_ai.pointer.y = clipping_y + clipping_h - 1;
+        else if (Inputs::game_ai.pointer.y >= (Inputs::clipping_y + Inputs::clipping_h)) {
+            LOG(LL_DEBUG, LCF_SDL | LCF_MOUSE, "   warping pointer y from %d to %d", Inputs::game_ai.pointer.y, Inputs::clipping_y + Inputs::clipping_h - 1);
+            Inputs::game_ai.pointer.y = Inputs::clipping_y + Inputs::clipping_h - 1;
         }
     }
     else {
         pointer_grab_sdl_window = nullptr;
-        pointer_clipping = false;
+        Inputs::pointer_clipping = false;
     }
 }
 

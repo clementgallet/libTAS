@@ -26,6 +26,8 @@
 
 namespace libtas {
 
+namespace Inputs {
+
 /* Inputs that are sent from libTAS */
 extern AllInputsFlat ai;
 
@@ -42,8 +44,8 @@ extern AllInputsFlat game_ai;
 extern AllInputsFlat old_game_ai;
 
 /* Same as game_ai but without clipping pointer position */
-extern AllInputsFlat game_unclipped_ai;
-extern AllInputsFlat old_game_unclipped_ai;
+extern MouseInputs game_unclipped_pointer;
+extern MouseInputs old_game_unclipped_pointer;
 
 /* Is the pointer clipped inside a window? */
 extern bool pointer_clipping;
@@ -51,8 +53,9 @@ extern bool pointer_clipping;
 /* Coordinates of the clipping window */
 extern int clipping_x, clipping_y, clipping_w, clipping_h;
 
-void updateGameInputs();
+void update();
 
+}
 }
 
 #endif

@@ -24,20 +24,21 @@
 
 namespace libtas {
 
-AllInputsFlat ai;
-AllInputsFlat old_ai;
-AllInputsFlat game_ai;
-AllInputsFlat old_game_ai;
-AllInputsFlat game_unclipped_ai;
-AllInputsFlat old_game_unclipped_ai;
+AllInputsFlat Inputs::ai;
+AllInputsFlat Inputs::old_ai;
+AllInputsFlat Inputs::game_ai;
+AllInputsFlat Inputs::old_game_ai;
+MouseInputs Inputs::game_unclipped_pointer;
+MouseInputs Inputs::old_game_unclipped_pointer;
 
-bool pointer_clipping = false;
-int clipping_x, clipping_y, clipping_w, clipping_h;
+bool Inputs::pointer_clipping = false;
+int Inputs::clipping_x, Inputs::clipping_y, Inputs::clipping_w, Inputs::clipping_h;
 
-void updateGameInputs()
+void Inputs::update()
 {
     old_game_ai = game_ai;
-    old_game_unclipped_ai = game_unclipped_ai;
+    
+    old_game_unclipped_pointer = game_unclipped_pointer;
 
     game_ai.keyboard = ai.keyboard;
 
@@ -45,22 +46,22 @@ void updateGameInputs()
     if (game_ai.pointer.mode == SingleInput::POINTER_MODE_RELATIVE) {
         game_ai.pointer.x += ai.pointer.x;
         game_ai.pointer.y += ai.pointer.y;
-        game_unclipped_ai.pointer.x += ai.pointer.x;
-        game_unclipped_ai.pointer.y += ai.pointer.y;
+        game_unclipped_pointer.x += ai.pointer.x;
+        game_unclipped_pointer.y += ai.pointer.y;
     }
     else {
         /* If we just switch to absolute, keep the same coords for that frame */
         if (old_game_ai.pointer.mode == SingleInput::POINTER_MODE_RELATIVE) {
             game_ai.pointer.x = old_game_ai.pointer.x;
             game_ai.pointer.y = old_game_ai.pointer.y;
-            game_unclipped_ai.pointer.x = game_unclipped_ai.pointer.x;
-            game_unclipped_ai.pointer.y = game_unclipped_ai.pointer.y;
+            game_unclipped_pointer.x = game_unclipped_pointer.x;
+            game_unclipped_pointer.y = game_unclipped_pointer.y;
         }
         else {
             game_ai.pointer.x += ai.pointer.x - old_ai.pointer.x;
             game_ai.pointer.y += ai.pointer.y - old_ai.pointer.y;
-            game_unclipped_ai.pointer.x += ai.pointer.x - old_ai.pointer.x;
-            game_unclipped_ai.pointer.y += ai.pointer.y - old_ai.pointer.y;
+            game_unclipped_pointer.x += ai.pointer.x - old_ai.pointer.x;
+            game_unclipped_pointer.y += ai.pointer.y - old_ai.pointer.y;
         }
     }
 

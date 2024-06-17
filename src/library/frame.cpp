@@ -314,7 +314,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         if (draw) {
             AllInputsFlat preview_ai;
             preview_ai.clear();
-            hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
+            hud.drawAll(framecount, nondraw_framecount, Inputs::ai, preview_ai);
             hud.render();            
         }
         else {
@@ -361,7 +361,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
              * background here first */
             if (hud.renderGameWindow())
                 ScreenCapture::clearScreen();
-            hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
+            hud.drawAll(framecount, nondraw_framecount, Inputs::ai, preview_ai);
             hud.render();            
         }
         else {
@@ -416,7 +416,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     /* Update game inputs based on current and previous inputs. This must be
      * done after getting the new inputs (obviously) and before pushing events,
      * because they used the new game inputs. */
-    updateGameInputs();
+    Inputs::update();
 
 #ifdef __unix__
     /* Reset the empty state of each xevent queue, for async event handling */
@@ -530,7 +530,7 @@ static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllI
             /* We don't need to draw everything, just the ImGui to update for
              * new elements */
             hud.newFrame();
-            hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
+            hud.drawAll(framecount, nondraw_framecount, Inputs::ai, preview_ai);
             hud.endFrame();
         }
         if (redraw_count > 0) {
@@ -542,7 +542,7 @@ static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllI
                 ScreenCapture::clearScreen();
             else
                 ScreenCapture::copySurfaceToScreen();
-            hud.drawAll(framecount, nondraw_framecount, ai, preview_ai);
+            hud.drawAll(framecount, nondraw_framecount, Inputs::ai, preview_ai);
             hud.render();
             
             GlobalNoLog gnl;
@@ -640,7 +640,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                 }
 
             case MSGN_ALL_INPUTS:
-                ai.recv();
+                Inputs::ai.recv();
 
                 /* We don't need to scale pointer coordinates here, because they
                  * already go through scaling using MSGN_SCALE_POINTER_INPUTS
@@ -648,10 +648,10 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                  * reading a movie. */
 
                 /* Update framerate */
-                DeterministicTimer::get().setFramerate(ai.misc.framerate_num, ai.misc.framerate_den);
+                DeterministicTimer::get().setFramerate(Inputs::ai.misc.framerate_num, Inputs::ai.misc.framerate_den);
 
                 /* Set new realtime value */
-                DeterministicTimer::get().setRealTime(ai.misc.realtime_sec, ai.misc.realtime_nsec);
+                DeterministicTimer::get().setRealTime(Inputs::ai.misc.realtime_sec, Inputs::ai.misc.realtime_nsec);
                 
                 break;
 

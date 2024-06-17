@@ -20,7 +20,7 @@
 #include "ioctl_joy.h"
 #include "evdev.h" // get_ev_number
 #include "jsdev.h" // get_js_number
-#include "inputs.h" // game_ai
+#include "inputs.h" // Inputs::game_ai
 
 #include "logging.h"
 #include "hook.h"
@@ -254,7 +254,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
         }
 
         /* Get the buttons state */
-        unsigned short buttons = game_ai.controllers[jsnum].buttons;
+        unsigned short buttons = Inputs::game_ai.controllers[jsnum].buttons;
 
         /* Set the corresponding bit in the key state */
         int len = _IOC_SIZE(request);
@@ -389,8 +389,8 @@ int ioctl(int fd, unsigned long request, ...) __THROW
             }
 
             /* Get the axes and buttons state */
-            std::array<short, ControllerInputs::MAXAXES> axes = game_ai.controllers[jsnum].axes;
-            unsigned short buttons = game_ai.controllers[jsnum].buttons;
+            std::array<short, ControllerInputs::MAXAXES> axes = Inputs::game_ai.controllers[jsnum].axes;
+            unsigned short buttons = Inputs::game_ai.controllers[jsnum].buttons;
 
             /* Write the axis value */
             switch (_IOC_NR(request)) {

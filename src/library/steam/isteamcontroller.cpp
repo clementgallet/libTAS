@@ -116,33 +116,33 @@ ControllerDigitalActionData_t ISteamController::GetDigitalActionData( Controller
     if (split != std::string::npos)
         digitalAction.resize(split);
     if (digitalAction == "a")
-        data.bState = ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_A & 1;
+        data.bState = Inputs::game_ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_A & 1;
     else if (digitalAction == "b")
-        data.bState = ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_B & 1;
+        data.bState = Inputs::game_ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_B & 1;
     else if (digitalAction == "x")
-        data.bState = ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_X & 1;
+        data.bState = Inputs::game_ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_X & 1;
     else if (digitalAction == "y")
-        data.bState = ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_Y & 1;
+        data.bState = Inputs::game_ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_Y & 1;
     else if (digitalAction == "back")
-        data.bState = ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_BACK & 1;
+        data.bState = Inputs::game_ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_BACK & 1;
     else if (digitalAction == "start")
-        data.bState = ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_START & 1;
+        data.bState = Inputs::game_ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_START & 1;
     else if (digitalAction == "lshl")
-        data.bState = ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_LEFTSHOULDER & 1;
+        data.bState = Inputs::game_ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_LEFTSHOULDER & 1;
     else if (digitalAction == "rshl")
-        data.bState = ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_RIGHTSHOULDER & 1;
+        data.bState = Inputs::game_ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_RIGHTSHOULDER & 1;
     else if (digitalAction == "dpup")
-        data.bState = ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_DPAD_UP & 1;
+        data.bState = Inputs::game_ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_DPAD_UP & 1;
     else if (digitalAction == "dpdn")
-        data.bState = ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_DPAD_DOWN & 1;
+        data.bState = Inputs::game_ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_DPAD_DOWN & 1;
     else if (digitalAction == "dplt")
-        data.bState = ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_DPAD_LEFT & 1;
+        data.bState = Inputs::game_ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_DPAD_LEFT & 1;
     else if (digitalAction == "dprt")
-        data.bState = ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_DPAD_RIGHT & 1;
+        data.bState = Inputs::game_ai.controllers[controllerHandle - 1].buttons >> SingleInput::BUTTON_DPAD_RIGHT & 1;
     else if (digitalAction == "ltrg")
-        data.bState = ai.controllers[controllerHandle - 1].axes[SingleInput::AXIS_TRIGGERLEFT] > 0;
+        data.bState = Inputs::game_ai.controllers[controllerHandle - 1].axes[SingleInput::AXIS_TRIGGERLEFT] > 0;
     else if (digitalAction == "rtrg")
-        data.bState = ai.controllers[controllerHandle - 1].axes[SingleInput::AXIS_TRIGGERRIGHT] > 0;
+        data.bState = Inputs::game_ai.controllers[controllerHandle - 1].axes[SingleInput::AXIS_TRIGGERRIGHT] > 0;
     else
         return data;
     data.bActive = true;
@@ -215,12 +215,12 @@ ControllerAnalogActionData_t ISteamController::GetAnalogActionData( ControllerHa
     if (split != std::string::npos)
         analogAction.resize(split);
     if (analogAction == "analogl") {
-        data.x = (ai.controllers[controllerHandle - 1].axes[SingleInput::AXIS_LEFTX] + 0.5f) * (2/65535.0f);
-        data.y = (ai.controllers[controllerHandle - 1].axes[SingleInput::AXIS_LEFTY] + 0.5f) * (2/65535.0f);
+        data.x = (Inputs::game_ai.controllers[controllerHandle - 1].axes[SingleInput::AXIS_LEFTX] + 0.5f) * (2/65535.0f);
+        data.y = (Inputs::game_ai.controllers[controllerHandle - 1].axes[SingleInput::AXIS_LEFTY] + 0.5f) * (2/65535.0f);
     }
     else if (analogAction == "analogr") {
-        data.x = (ai.controllers[controllerHandle - 1].axes[SingleInput::AXIS_RIGHTX] + 0.5f) * (2/65535.0f);
-        data.y = (ai.controllers[controllerHandle - 1].axes[SingleInput::AXIS_RIGHTX] + 0.5f) * (2/65535.0f);
+        data.x = (Inputs::game_ai.controllers[controllerHandle - 1].axes[SingleInput::AXIS_RIGHTX] + 0.5f) * (2/65535.0f);
+        data.y = (Inputs::game_ai.controllers[controllerHandle - 1].axes[SingleInput::AXIS_RIGHTX] + 0.5f) * (2/65535.0f);
     }
     else
         return data;

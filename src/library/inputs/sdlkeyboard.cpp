@@ -37,7 +37,7 @@ static Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
     if (numkeys)
         *numkeys = SDL_NUM_SCANCODES;
 
-    xkeyboardToSDLkeyboard(game_ai.keyboard, SDL_keyboard);
+    xkeyboardToSDLkeyboard(Inputs::game_ai.keyboard, SDL_keyboard);
     return SDL_keyboard;
 }
 
@@ -48,7 +48,7 @@ static Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
     if (numkeys)
         *numkeys = SDL1::SDLK_LAST;
 
-    xkeyboardToSDL1keyboard(game_ai.keyboard, SDL1_keyboard);
+    xkeyboardToSDL1keyboard(Inputs::game_ai.keyboard, SDL1_keyboard);
     return SDL1_keyboard;
 }
 
@@ -61,7 +61,7 @@ static Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
 /* Override */ SDL_Keymod SDL_GetModState(void)
 {
     LOGTRACE(LCF_SDL | LCF_KEYBOARD);
-    return xkeyboardToSDLMod(game_ai.keyboard);
+    return xkeyboardToSDLMod(Inputs::game_ai.keyboard);
 }
 
 /* Override */ void SDL_SetModState(SDL_Keymod modstate)
