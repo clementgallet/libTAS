@@ -137,7 +137,6 @@ int open (const char *file, int oflag, ...)
 #endif
 
     else if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
-        LOG(LL_DEBUG, LCF_FILEIO, "  savefile detected");
         fd = SaveFileList::openSaveFile(file, oflag);
     }
 
@@ -232,7 +231,6 @@ int open64 (const char *file, int oflag, ...)
 #endif
 
     else if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
-        LOG(LL_DEBUG, LCF_FILEIO, "  savefile detected");
         fd = SaveFileList::openSaveFile(file, oflag);
     }
 
@@ -280,7 +278,6 @@ int openat (int dirfd, const char *file, int oflag, ...)
     int fd = 0;
 
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
-        LOG(LL_DEBUG, LCF_FILEIO, "  savefile detected");
         fd = SaveFileList::openSaveFile(file, oflag);
     }
 
@@ -328,7 +325,6 @@ int openat64 (int dirfd, const char *file, int oflag, ...)
     int fd = 0;
 
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
-        LOG(LL_DEBUG, LCF_FILEIO, "  savefile detected");
         fd = SaveFileList::openSaveFile(file, oflag);
     }
 
@@ -367,7 +363,6 @@ int creat (const char *file, mode_t mode)
     int fd = 0;
 
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
-        LOG(LL_DEBUG, LCF_FILEIO, "  savefile detected");
         fd = SaveFileList::openSaveFile(file, oflag);
     }
 
@@ -403,7 +398,6 @@ int creat64 (const char *file, mode_t mode)
     int fd = 0;
 
     if (!GlobalState::isOwnCode() && SaveFileList::isSaveFile(file, oflag)) {
-        LOG(LL_DEBUG, LCF_FILEIO, "  savefile detected");
         fd = SaveFileList::openSaveFile(file, oflag);
     }
     else {
@@ -493,15 +487,8 @@ int access(const char *name, int type) __THROW
     return orig::access(name, type);
 }
 
-int __xstat(int ver, const char *path, struct stat *buf) __THROW
+static int stat_special(const char *path, struct stat *buf)
 {
-    RETURN_IF_NATIVE(__xstat, (ver, path, buf), nullptr);
-
-    LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
-
-    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
-        RETURN_NATIVE(__xstat, (ver, path, buf), nullptr);
-
 #ifdef __linux__
     /* Check if joystick device */
     int joy = is_jsdev(path);
@@ -525,10 +512,59 @@ int __xstat(int ver, const char *path, struct stat *buf) __THROW
             return -1;
         }
         else {
-            NATIVECALL(__fxstat(ver, fd, buf));
+            NATIVECALL(fstat(fd, buf));
             return 0;
         }
     }
+    
+    return 1;
+}
+
+static int stat64_special(const char *path, struct stat64 *buf)
+{
+#ifdef __linux__
+    /* Check if joystick device */
+    int joy = is_jsdev(path);
+    if (joy == -1) joy = is_evdev(path);
+
+    if (joy >= 0) {
+        if (joy == 1)
+            return 0;
+        else {
+            errno = ENOENT;
+            return -1;
+        }
+    }
+#endif
+
+    /* Check if savefile. */
+    int fd = SaveFileList::getSaveFileFd(path);
+    if (fd != 0) {
+        if (SaveFileList::isSaveFileRemoved(path)) {
+            errno = ENOENT;
+            return -1;
+        }
+        else {
+            NATIVECALL(fstat64(fd, buf));
+            return 0;
+        }
+    }
+    
+    return 1;
+}
+
+int __xstat(int ver, const char *path, struct stat *buf) __THROW
+{
+    RETURN_IF_NATIVE(__xstat, (ver, path, buf), nullptr);
+
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
+
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        RETURN_NATIVE(__xstat, (ver, path, buf), nullptr);
+
+    int ret = stat_special(path, buf);
+    if (ret <= 0)
+        return ret;
 
     RETURN_NATIVE(__xstat, (ver, path, buf), nullptr);
 }
@@ -542,35 +578,43 @@ int __xstat64(int ver, const char *path, struct stat64 *buf) __THROW
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         RETURN_NATIVE(__xstat64, (ver, path, buf), nullptr);
 
-#ifdef __linux__
-    /* Check if joystick device */
-    int joy = is_jsdev(path);
-    if (joy == -1) joy = is_evdev(path);
-
-    if (joy >= 0) {
-        if (joy == 1)
-            return 0;
-        else {
-            errno = ENOENT;
-            return -1;
-        }
-    }
-#endif
-
-    /* Check if savefile. */
-    int fd = SaveFileList::getSaveFileFd(path);
-    if (fd != 0) {
-        if (SaveFileList::isSaveFileRemoved(path)) {
-            errno = ENOENT;
-            return -1;
-        }
-        else {
-            NATIVECALL(__fxstat64(ver, fd, buf));
-            return 0;
-        }
-    }
+    int ret = stat64_special(path, buf);
+    if (ret <= 0)
+        return ret;
 
     RETURN_NATIVE(__xstat64, (ver, path, buf), nullptr);
+}
+
+int stat(const char *path, struct stat *buf) __THROW
+{
+    RETURN_IF_NATIVE(stat, (path, buf), nullptr);
+
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
+
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        RETURN_NATIVE(stat, (path, buf), nullptr);
+
+    int ret = stat_special(path, buf);
+    if (ret <= 0)
+        return ret;
+
+    RETURN_NATIVE(stat, (path, buf), nullptr);
+}
+
+int stat64(const char *path, struct stat64 *buf) __THROW
+{
+    RETURN_IF_NATIVE(stat64, (path, buf), nullptr);
+
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
+
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        RETURN_NATIVE(stat64, (path, buf), nullptr);
+
+    int ret = stat64_special(path, buf);
+    if (ret <= 0)
+        return ret;
+
+    RETURN_NATIVE(stat64, (path, buf), nullptr);
 }
 
 int __lxstat(int ver, const char *path, struct stat *buf) __THROW
@@ -582,33 +626,9 @@ int __lxstat(int ver, const char *path, struct stat *buf) __THROW
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         RETURN_NATIVE(__lxstat, (ver, path, buf), nullptr);
 
-#ifdef __linux__
-    /* Check if joystick device */
-    int joy = is_jsdev(path);
-    if (joy == -1) joy = is_evdev(path);
-
-    if (joy >= 0) {
-        if (joy == 1)
-            return 0;
-        else {
-            errno = ENOENT;
-            return -1;
-        }
-    }
-#endif
-
-    /* Check if savefile. */
-    int fd = SaveFileList::getSaveFileFd(path);
-    if (fd != 0) {
-        if (SaveFileList::isSaveFileRemoved(path)) {
-            errno = ENOENT;
-            return -1;
-        }
-        else {
-            NATIVECALL(__fxstat(ver, fd, buf));
-            return 0;
-        }
-    }
+    int ret = stat_special(path, buf);
+    if (ret <= 0)
+        return ret;
 
     RETURN_NATIVE(__lxstat, (ver, path, buf), nullptr);
 }
@@ -622,35 +642,44 @@ int __lxstat64(int ver, const char *path, struct stat64 *buf) __THROW
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         RETURN_NATIVE(__lxstat64, (ver, path, buf), nullptr);
 
-#ifdef __linux__
-    /* Check if joystick device */
-    int joy = is_jsdev(path);
-    if (joy == -1) joy = is_evdev(path);
+    int ret = stat64_special(path, buf);
+    if (ret <= 0)
+        return ret;
 
-    if (joy >= 0) {
-        if (joy == 1)
-            return 0;
-        else {
-            errno = ENOENT;
-            return -1;
-        }
-    }
-#endif
-
-    /* Check if savefile. */
-    int fd = SaveFileList::getSaveFileFd(path);
-    if (fd != 0) {
-        if (SaveFileList::isSaveFileRemoved(path)) {
-            errno = ENOENT;
-            return -1;
-        }
-        else {
-            NATIVECALL(__fxstat64(ver, fd, buf));
-            return 0;
-        }
-    }
 
     RETURN_NATIVE(__lxstat64, (ver, path, buf), nullptr);
+}
+
+int lstat(const char *path, struct stat *buf) __THROW
+{
+    RETURN_IF_NATIVE(lstat, (path, buf), nullptr);
+    
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
+
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        RETURN_NATIVE(lstat, (path, buf), nullptr);
+
+    int ret = stat_special(path, buf);
+    if (ret <= 0)
+        return ret;
+
+    RETURN_NATIVE(lstat, (path, buf), nullptr);
+}
+
+int lstat64(const char *path, struct stat64 *buf) __THROW
+{
+    RETURN_IF_NATIVE(lstat64, (path, buf), nullptr);
+
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
+
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
+        RETURN_NATIVE(lstat64, (path, buf), nullptr);
+
+    int ret = stat64_special(path, buf);
+    if (ret <= 0)
+        return ret;
+    
+    RETURN_NATIVE(lstat64, (path, buf), nullptr);
 }
 
 int __fxstat(int ver, int fd, struct stat *buf) __THROW
@@ -667,6 +696,22 @@ int __fxstat64(int ver, int fd, struct stat64 *buf) __THROW
 
     LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
     RETURN_NATIVE(__fxstat64, (ver, fd, buf), nullptr);
+}
+
+int fstat(int fd, struct stat *buf) __THROW
+{
+    RETURN_IF_NATIVE(fstat, (fd, buf), nullptr);
+
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
+    RETURN_NATIVE(fstat, (fd, buf), nullptr);
+}
+
+int fstat64(int fd, struct stat64 *buf) __THROW
+{
+    RETURN_IF_NATIVE(fstat64, (fd, buf), nullptr);
+
+    LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
+    RETURN_NATIVE(fstat64, (fd, buf), nullptr);    
 }
 
 int dup (int fd) __THROW

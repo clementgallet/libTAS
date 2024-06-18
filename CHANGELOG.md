@@ -51,6 +51,7 @@
 * Prevent games from using Wayland
 * Allow attaching debugger for systems having restricted ptrace
 * Add log level
+* Add hooks for the new stat/lstat/fstat aliases (#611)
 
 ### Changed
 

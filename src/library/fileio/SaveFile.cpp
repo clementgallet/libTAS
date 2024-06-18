@@ -56,7 +56,7 @@ SaveFile::SaveFile(const char *file) {
 SaveFile::~SaveFile() {
     /* Save back data into the file */
     if (Global::shared_config.write_savefiles_on_exit && (fd != 0)) {
-        LOG(LL_DEBUG, LCF_FILEIO, "Save back into file %s", filename.c_str());
+        LOG(LL_INFO, LCF_FILEIO, "Save back into file %s", filename.c_str());
         GlobalNative gn;
         lseek(fd, 0, SEEK_SET);
         int file_fd = creat(filename.c_str(), 00777);
@@ -267,6 +267,8 @@ int SaveFile::open(int flags)
 {
     if (filename.empty())
         return -1;
+
+    LOG(LL_INFO, LCF_FILEIO, "Open a savefile from %s", filename.c_str());
 
     /*
      * Create an anonymous file with a copy of the content of the file using

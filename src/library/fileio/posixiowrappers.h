@@ -62,6 +62,13 @@ OVERRIDE int __lxstat64(int ver, const char *path, struct stat64 *buf) __THROW;
 OVERRIDE int __fxstat(int ver, int fd, struct stat *buf) __THROW;
 OVERRIDE int __fxstat64(int ver, int fd, struct stat64 *buf) __THROW;
 
+OVERRIDE int stat(const char *path, struct stat *buf) __THROW;
+OVERRIDE int stat64(const char *path, struct stat64 *buf) __THROW;
+OVERRIDE int lstat(const char *path, struct stat *buf) __THROW;
+OVERRIDE int lstat64(const char *path, struct stat64 *buf) __THROW;
+OVERRIDE int fstat(int fd, struct stat *buf) __THROW;
+OVERRIDE int fstat64(int fd, struct stat64 *buf) __THROW;
+
 // OVERRIDE ssize_t sendfile (int out_fd, int in_fd, off_t *offset, size_t count) __THROW;
 
 /* Duplicate FD to FD2, closing FD2 and making it open on the same file.  */
