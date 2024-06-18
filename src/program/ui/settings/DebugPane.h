@@ -59,6 +59,8 @@ private:
     QComboBox* logToChoice;
 
     QSlider* logLevelSlider;
+    QCheckBox* logPrintAllBox;
+    QCheckBox* logPrintNoneBox;
     QCheckBox* logPrintMainBox;
     QCheckBox* logPrintTODOBox;
     QCheckBox* logPrintAVBox;

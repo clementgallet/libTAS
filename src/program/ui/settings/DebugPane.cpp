@@ -116,6 +116,8 @@ void DebugPane::initLayout()
     QHBoxLayout* logMainPrintLayout = new QHBoxLayout;
     logMainPrintBox->setLayout(logMainPrintLayout);
 
+    logPrintAllBox = new QCheckBox(tr("All"));
+    logPrintNoneBox = new QCheckBox(tr("None"));
     logPrintMainBox = new QCheckBox(tr("Main Thread"));
     logPrintTODOBox = new QCheckBox(tr("TODO"));
     logPrintAVBox = new QCheckBox(tr("AV Dumping"));
@@ -144,6 +146,8 @@ void DebugPane::initLayout()
     logPrintWindowsBox = new QCheckBox(tr("Windows"));
     logPrintWineBox = new QCheckBox(tr("Wine"));
 
+    logMainPrintLayout->addWidget(logPrintAllBox);
+    logMainPrintLayout->addWidget(logPrintNoneBox);
     logMainPrintLayout->addWidget(logPrintMainBox);
     logMainPrintLayout->addWidget(logPrintTODOBox);
 
@@ -254,6 +258,8 @@ void DebugPane::initSignals()
     connect(logToChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &DebugPane::saveConfig);
     connect(logLevelSlider, &QAbstractSlider::valueChanged, this, &DebugPane::saveConfig);
 
+    connect(logPrintAllBox, &QAbstractButton::clicked, this, &DebugPane::saveConfig);
+    connect(logPrintNoneBox, &QAbstractButton::clicked, this, &DebugPane::saveConfig);
     connect(logPrintMainBox, &QAbstractButton::clicked, this, &DebugPane::saveConfig);
     connect(logPrintTODOBox, &QAbstractButton::clicked, this, &DebugPane::saveConfig);
     connect(logPrintAVBox, &QAbstractButton::clicked, this, &DebugPane::saveConfig);
@@ -425,34 +431,95 @@ void DebugPane::saveConfig()
     context->config.sc.logging_status = logToChoice->currentData().toInt();
     
     context->config.sc.logging_level = logLevelSlider->value();
+    
     context->config.sc.logging_include_flags = 0;
     context->config.sc.logging_include_flags |= logPrintMainBox->isChecked() ? LCF_MAINTHREAD : 0;
     context->config.sc.logging_include_flags |= logPrintTODOBox->isChecked() ? LCF_TODO : 0;
-    context->config.sc.logging_include_flags |= logPrintAVBox->isChecked() ? LCF_DUMP : 0;
-    context->config.sc.logging_include_flags |= logPrintCheckpointBox->isChecked() ? LCF_CHECKPOINT : 0;
-    context->config.sc.logging_include_flags |= logPrintEventsBox->isChecked() ? LCF_EVENTS : 0;
-    context->config.sc.logging_include_flags |= logPrintIOBox->isChecked() ? LCF_FILEIO : 0;
-    context->config.sc.logging_include_flags |= logPrintHookBox->isChecked() ? LCF_HOOK : 0;
-    context->config.sc.logging_include_flags |= logPrintJoystickBox->isChecked() ? LCF_JOYSTICK : 0;
-    context->config.sc.logging_include_flags |= logPrintKeyboardBox->isChecked() ? LCF_KEYBOARD : 0;
-    context->config.sc.logging_include_flags |= logPrintLocaleBox->isChecked() ? LCF_LOCALE : 0;
-    context->config.sc.logging_include_flags |= logPrintMouseBox->isChecked() ? LCF_MOUSE : 0;
-    context->config.sc.logging_include_flags |= logPrintGLBox->isChecked() ? LCF_OGL : 0;
-    context->config.sc.logging_include_flags |= logPrintRandomBox->isChecked() ? LCF_RANDOM : 0;
-    context->config.sc.logging_include_flags |= logPrintSDLBox->isChecked() ? LCF_SDL : 0;
-    context->config.sc.logging_include_flags |= logPrintSignalsBox->isChecked() ? LCF_SIGNAL : 0;
-    context->config.sc.logging_include_flags |= logPrintSleepBox->isChecked() ? LCF_SLEEP : 0;
-    context->config.sc.logging_include_flags |= logPrintSocketBox->isChecked() ? LCF_SOCKET : 0;
-    context->config.sc.logging_include_flags |= logPrintSoundBox->isChecked() ? LCF_SOUND : 0;
-    context->config.sc.logging_include_flags |= logPrintSteamBox->isChecked() ? LCF_STEAM : 0;
-    context->config.sc.logging_include_flags |= logPrintSystemBox->isChecked() ? LCF_SYSTEM : 0;
-    context->config.sc.logging_include_flags |= logPrintTimeGetBox->isChecked() ? LCF_TIMEGET : 0;
-    context->config.sc.logging_include_flags |= logPrintTimeSetBox->isChecked() ? LCF_TIMESET : 0;
-    context->config.sc.logging_include_flags |= logPrintTimersBox->isChecked() ? LCF_TIMERS : 0;
-    context->config.sc.logging_include_flags |= logPrintThreadsBox->isChecked() ? LCF_THREAD : 0;
-    context->config.sc.logging_include_flags |= logPrintWaitBox->isChecked() ? LCF_WAIT : 0;
-    context->config.sc.logging_include_flags |= logPrintWindowsBox->isChecked() ? LCF_WINDOW : 0;
-    context->config.sc.logging_include_flags |= logPrintWineBox->isChecked() ? LCF_WINE : 0;
+
+    if (logPrintAllBox->isChecked()) {
+        context->config.sc.logging_include_flags |= LCF_ALL;
+        logPrintAVBox->setChecked(true);
+        logPrintCheckpointBox->setChecked(true);
+        logPrintEventsBox->setChecked(true);
+        logPrintIOBox->setChecked(true);
+        logPrintHookBox->setChecked(true);
+        logPrintJoystickBox->setChecked(true);
+        logPrintKeyboardBox->setChecked(true);
+        logPrintLocaleBox->setChecked(true);
+        logPrintMouseBox->setChecked(true);
+        logPrintGLBox->setChecked(true);
+        logPrintRandomBox->setChecked(true);
+        logPrintSDLBox->setChecked(true);
+        logPrintSignalsBox->setChecked(true);
+        logPrintSleepBox->setChecked(true);
+        logPrintSocketBox->setChecked(true);
+        logPrintSoundBox->setChecked(true);
+        logPrintSteamBox->setChecked(true);
+        logPrintSystemBox->setChecked(true);
+        logPrintTimeGetBox->setChecked(true);
+        logPrintTimeSetBox->setChecked(true);
+        logPrintTimersBox->setChecked(true);
+        logPrintThreadsBox->setChecked(true);
+        logPrintWaitBox->setChecked(true);
+        logPrintWindowsBox->setChecked(true);
+        logPrintWineBox->setChecked(true);
+        logPrintAllBox->setChecked(false);
+    }
+    else if (logPrintNoneBox->isChecked()) {
+        logPrintAVBox->setChecked(false);
+        logPrintCheckpointBox->setChecked(false);
+        logPrintEventsBox->setChecked(false);
+        logPrintIOBox->setChecked(false);
+        logPrintHookBox->setChecked(false);
+        logPrintJoystickBox->setChecked(false);
+        logPrintKeyboardBox->setChecked(false);
+        logPrintLocaleBox->setChecked(false);
+        logPrintMouseBox->setChecked(false);
+        logPrintGLBox->setChecked(false);
+        logPrintRandomBox->setChecked(false);
+        logPrintSDLBox->setChecked(false);
+        logPrintSignalsBox->setChecked(false);
+        logPrintSleepBox->setChecked(false);
+        logPrintSocketBox->setChecked(false);
+        logPrintSoundBox->setChecked(false);
+        logPrintSteamBox->setChecked(false);
+        logPrintSystemBox->setChecked(false);
+        logPrintTimeGetBox->setChecked(false);
+        logPrintTimeSetBox->setChecked(false);
+        logPrintTimersBox->setChecked(false);
+        logPrintThreadsBox->setChecked(false);
+        logPrintWaitBox->setChecked(false);
+        logPrintWindowsBox->setChecked(false);
+        logPrintWineBox->setChecked(false);
+        logPrintNoneBox->setChecked(false);
+    }
+    else {
+        context->config.sc.logging_include_flags |= logPrintAVBox->isChecked() ? LCF_DUMP : 0;
+        context->config.sc.logging_include_flags |= logPrintCheckpointBox->isChecked() ? LCF_CHECKPOINT : 0;
+        context->config.sc.logging_include_flags |= logPrintEventsBox->isChecked() ? LCF_EVENTS : 0;
+        context->config.sc.logging_include_flags |= logPrintIOBox->isChecked() ? LCF_FILEIO : 0;
+        context->config.sc.logging_include_flags |= logPrintHookBox->isChecked() ? LCF_HOOK : 0;
+        context->config.sc.logging_include_flags |= logPrintJoystickBox->isChecked() ? LCF_JOYSTICK : 0;
+        context->config.sc.logging_include_flags |= logPrintKeyboardBox->isChecked() ? LCF_KEYBOARD : 0;
+        context->config.sc.logging_include_flags |= logPrintLocaleBox->isChecked() ? LCF_LOCALE : 0;
+        context->config.sc.logging_include_flags |= logPrintMouseBox->isChecked() ? LCF_MOUSE : 0;
+        context->config.sc.logging_include_flags |= logPrintGLBox->isChecked() ? LCF_OGL : 0;
+        context->config.sc.logging_include_flags |= logPrintRandomBox->isChecked() ? LCF_RANDOM : 0;
+        context->config.sc.logging_include_flags |= logPrintSDLBox->isChecked() ? LCF_SDL : 0;
+        context->config.sc.logging_include_flags |= logPrintSignalsBox->isChecked() ? LCF_SIGNAL : 0;
+        context->config.sc.logging_include_flags |= logPrintSleepBox->isChecked() ? LCF_SLEEP : 0;
+        context->config.sc.logging_include_flags |= logPrintSocketBox->isChecked() ? LCF_SOCKET : 0;
+        context->config.sc.logging_include_flags |= logPrintSoundBox->isChecked() ? LCF_SOUND : 0;
+        context->config.sc.logging_include_flags |= logPrintSteamBox->isChecked() ? LCF_STEAM : 0;
+        context->config.sc.logging_include_flags |= logPrintSystemBox->isChecked() ? LCF_SYSTEM : 0;
+        context->config.sc.logging_include_flags |= logPrintTimeGetBox->isChecked() ? LCF_TIMEGET : 0;
+        context->config.sc.logging_include_flags |= logPrintTimeSetBox->isChecked() ? LCF_TIMESET : 0;
+        context->config.sc.logging_include_flags |= logPrintTimersBox->isChecked() ? LCF_TIMERS : 0;
+        context->config.sc.logging_include_flags |= logPrintThreadsBox->isChecked() ? LCF_THREAD : 0;
+        context->config.sc.logging_include_flags |= logPrintWaitBox->isChecked() ? LCF_WAIT : 0;
+        context->config.sc.logging_include_flags |= logPrintWindowsBox->isChecked() ? LCF_WINDOW : 0;
+        context->config.sc.logging_include_flags |= logPrintWineBox->isChecked() ? LCF_WINE : 0;
+    }
     
     context->config.sc.logging_exclude_flags = 0;
     context->config.sc.logging_exclude_flags |= logExcludeAVBox->isChecked() ? LCF_DUMP : 0;

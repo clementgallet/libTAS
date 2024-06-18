@@ -52,6 +52,7 @@
 * Allow attaching debugger for systems having restricted ptrace
 * Add log level
 * Add hooks for the new stat/lstat/fstat aliases (#611)
+* Add checkboxes to enable/disable all log categories
 
 ### Changed
 
