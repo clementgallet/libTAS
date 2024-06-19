@@ -106,6 +106,22 @@ void AutoDetect::game_libraries(Context *context)
                 libUrl = "http://security.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5.13_amd64.deb";
             }
         }
+        else if (missing_lib == "libldap-2.4.so.2") {
+            if (gameArch == BT_ELF32) {
+                libUrl = "http://security.ubuntu.com/ubuntu/pool/main/o/openldap/libldap-2.4-2_2.4.49+dfsg-2ubuntu1.10_i386.deb";
+            }
+            else {
+                libUrl = "http://security.ubuntu.com/ubuntu/pool/main/o/openldap/libldap-2.4-2_2.4.49+dfsg-2ubuntu1.10_amd64.deb";
+            }
+        }
+        else if (missing_lib == "liblber-2.4.so.2") {
+            if (gameArch == BT_ELF32) {
+                libUrl = "http://security.ubuntu.com/ubuntu/pool/main/o/openldap/libldap-2.4-2_2.4.49+dfsg-2ubuntu1.10_i386.deb";
+            }
+            else {
+                libUrl = "http://security.ubuntu.com/ubuntu/pool/main/o/openldap/libldap-2.4-2_2.4.49+dfsg-2ubuntu1.10_amd64.deb";
+            }
+        }
         else {
             return;
         }
@@ -117,12 +133,9 @@ void AutoDetect::game_libraries(Context *context)
         oss_lib << " && ar -x --output ${TMPDIR:-/tmp} ${TMPDIR:-/tmp}/" << fileFromPath(libUrl) << " data.tar.xz";
         
         std::string libFile = (gameArch == BT_ELF32) ? "./usr/lib/i386-linux-gnu/" : "./usr/lib/x86_64-linux-gnu/";
-        libFile.append(missing_lib);
         
         oss_lib << " && tar -xf ${TMPDIR:-/tmp}/data.tar.xz -C ${TMPDIR:-/tmp} " << libFile;
-        oss_lib << " && mv ${TMPDIR:-/tmp}/" << libFile << " ";
-        oss_lib << ((gameArch == BT_ELF32) ? context->config.extralib32dir : context->config.extralib64dir);
-
+        
         int status;
         queryCmd(oss_lib.str(), &status);
 
@@ -131,11 +144,32 @@ void AutoDetect::game_libraries(Context *context)
             return;
         }
 
+        /* The extracted library may be a symlink to another library file, so
+         * move all the symlink chain to the real file */
+        std::string current_lib = missing_lib;
+        
+        while (!current_lib.empty()) {
+            /* Get the symlink if any, or it returns empty string */
+            std::ostringstream oss_sym;
+            oss_sym << "readlink ${TMPDIR:-/tmp}/" << libFile << current_lib;
+            
+            std::string symlink_lib = queryCmd(oss_sym.str());
+            
+            /* Move the library file */
+            std::ostringstream oss_move;
+            oss_move << "mv ${TMPDIR:-/tmp}/" << libFile << current_lib << " ";
+            oss_move << ((gameArch == BT_ELF32) ? context->config.extralib32dir : context->config.extralib64dir);
+            
+            queryCmd(oss_move.str());
+            
+            current_lib = symlink_lib;
+        }
+
+        /* Check if for some reason, adding the library still shows as missing,
+         * to prevent a potential softlock */
         std::string old_missing_lib = missing_lib;
         missing_lib = queryCmd(oss_ml.str());
         
-        /* Check if for some reason, adding the library still shows as missing,
-         * to prevent a potential softlock */
         if (old_missing_lib == missing_lib) {
             std::cerr << "Loading library " << missing_lib << " did not work, exiting." << std::endl;
             return;
