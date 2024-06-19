@@ -40,7 +40,7 @@ HSteamUser ISteamUser::GetHSteamUser()
 bool ISteamUser::BLoggedOn()
 {
     LOGTRACE(LCF_STEAM);
-	return true;
+    return false; // Required for N++ to pass the splash screen
 }
 
 CSteamID ISteamUser::GetSteamID()
