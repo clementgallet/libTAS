@@ -797,9 +797,9 @@ void GameLoop::processInputs(AllInputs &ai)
 
         case SharedConfig::RECORDING_READ:
             /* Read inputs from file */
-            int ret = movie.inputs->getInputs(ai);
-
-            if (ret == 1) {
+            uint64_t moviecount = movie.inputs->size();
+            
+            if ((context->framecount + 1) == moviecount) {
                 /* We are reading the last frame of the movie */
                 switch(context->config.on_movie_end) {
                     case Config::MOVIEEND_READ:
@@ -814,7 +814,17 @@ void GameLoop::processInputs(AllInputs &ai)
                 }
             }
 
-            if (ret >= 0) { // read succeeded
+            if (context->framecount < moviecount) { // movie has inputs for current frame
+                /* Get a reference to the movie inputs, so that lua can modify it */
+                AllInputs& movie_ai = movie.inputs->getInputs();
+
+                /* Allow lua to modify movie inputs even in playback mode */
+                Lua::Input::registerInputs(&movie_ai);
+                Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackInput);
+
+                /* Copy inputs to the object that we will later send to the game,
+                 * so that we don't risk modifying the movie inputs more. */
+                ai = movie_ai;
 
                 /* Update framerate */
                 uint32_t new_framerate_num = 0;
@@ -847,10 +857,13 @@ void GameLoop::processInputs(AllInputs &ai)
                     context->new_realtime_nsec = ai.misc->realtime_nsec;
                 }
             }
+            else {
+                ai.clear();
 
-            /* Call lua onInput() here so that a script can modify inputs */
-            Lua::Input::registerInputs(&ai);
-            Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackInput);
+                /* Allow lua to modify inputs past the end of the movie */
+                Lua::Input::registerInputs(&ai);
+                Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackInput);
+            }
 
             /* Update controller inputs if controller window is shown */
             for (int j = 0; j < AllInputs::MAXJOYS; j++) {

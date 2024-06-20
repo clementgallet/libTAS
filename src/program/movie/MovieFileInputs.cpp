@@ -460,12 +460,12 @@ int MovieFileInputs::getInputs(AllInputs& inputs, uint64_t pos)
     return 0;
 }
 
-const AllInputs& MovieFileInputs::getInputs()
+AllInputs& MovieFileInputs::getInputs()
 {
     return getInputs(context->framecount);
 }
 
-const AllInputs& MovieFileInputs::getInputs(uint64_t pos)
+AllInputs& MovieFileInputs::getInputs(uint64_t pos)
 {
     std::unique_lock<std::mutex> lock(input_list_mutex);
 
@@ -603,4 +603,9 @@ uint64_t MovieFileInputs::processEvent()
         return ie.framecount;
     }
     return UINT64_MAX;
+}
+
+uint64_t MovieFileInputs::size()
+{
+    return input_list.size();
 }

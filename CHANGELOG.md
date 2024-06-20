@@ -77,6 +77,7 @@
 * Better handling of infinite poll with ALSA
 * Update BalloonTip class from Dolphin
 * Make menu bar transparent
+* Lua can now modify movie inputs even in playback mode
 
 ### Fixed
 

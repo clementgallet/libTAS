@@ -92,11 +92,11 @@ public:
 
     /* Load inputs from a certain frame */
     int getInputs(AllInputs& inputs, uint64_t pos);
-    const AllInputs& getInputs(uint64_t pos);
+    AllInputs& getInputs(uint64_t pos);
 
     /* Load inputs from the current frame */
     int getInputs(AllInputs& inputs);
-    const AllInputs& getInputs();
+    AllInputs& getInputs();
 
     /* Clear a single frame of inputs */
     void clearInputs(uint64_t pos);
@@ -134,6 +134,9 @@ public:
      * framecount, so that the UI can be updated accordingly.
      * If no event left, returns UINT64_MAX */
     uint64_t processEvent();
+    
+    /* Return the movie frame count */
+    uint64_t size();
 
 private:
     Context* context;

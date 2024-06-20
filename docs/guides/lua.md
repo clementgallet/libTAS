@@ -350,8 +350,10 @@ Registers `f` to be called when the game has started, before the end of the firs
 
     None callback.onInput(Function f)
 
-Registers `f` to be called when input for the current frame is decided. Change the movie input if
-in recording mode. Not called when movie is in playback mode.
+Registers `f` to be called when input for the current frame is decided. It will 
+change the inputs inside the current movie in recording mode **and** playback 
+mode. It will also apply when no movie is loaded, or if the movie playback 
+reached the end.
 
 #### callback.onFrame
 
