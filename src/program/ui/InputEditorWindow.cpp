@@ -32,6 +32,7 @@
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QStatusBar>
+#include <QtWidgets/QSplitter>
 
 InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(parent), context(c)
 {
@@ -101,13 +102,13 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(
     statusSeek->setMaximumHeight(statusBar()->height()*0.6);
 
     /* Layout */
-    QHBoxLayout *mainLayout = new QHBoxLayout;
+    QSplitter *mainLayout = new QSplitter;
     mainLayout->addWidget(inputEditorView);
-    mainLayout->addLayout(sideLayout);
+    QWidget *sideWidget = new QWidget;
+    sideWidget->setLayout(sideLayout);
+    mainLayout->addWidget(sideWidget);
 
-    QWidget *centralWidget = new QWidget;
-    centralWidget->setLayout(mainLayout);
-    setCentralWidget(centralWidget);
+    setCentralWidget(mainLayout);
     
     update_config();
 }

@@ -78,6 +78,7 @@
 * Update BalloonTip class from Dolphin
 * Make menu bar transparent
 * Lua can now modify movie inputs even in playback mode
+* Use a splitter between input editor and marker panel
 
 ### Fixed
 
