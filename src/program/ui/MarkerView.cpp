@@ -17,21 +17,13 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include "KeyPressedDialog.h"
 #include "MarkerView.h"
 #include "MarkerModel.h"
 #include "MainWindow.h"
-// #include "qtutils.h"
 
 #include "Context.h"
 
-#include <QtWidgets/QInputDialog>
 #include <QtWidgets/QHeaderView>
-#include <QtWidgets/QScrollBar>
-#include <QtWidgets/QMenuBar>
-#include <QtWidgets/QMessageBox>
-#include <QtGui/QClipboard>
-#include <QtGui/QGuiApplication>
 
 #include <stdint.h>
 #include <climits>
@@ -42,7 +34,7 @@ MarkerView::MarkerView(Context* c, QWidget *parent, QWidget *gp) : QTableView(pa
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     setShowGrid(true);
     setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
-    setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
     MovieFile *movie = nullptr;
     MainWindow *mw = qobject_cast<MainWindow*>(gp);
@@ -53,11 +45,6 @@ MarkerView::MarkerView(Context* c, QWidget *parent, QWidget *gp) : QTableView(pa
     markerModel = new MarkerModel(context, movie);
     setModel(markerModel);
 
-    // connect(markerModel, &InputEditorModel::inputSetChanged, this, &InputEditorView::resizeAllColumns);
-    // connect(this, &InputEditorView::entered, this, &InputEditorView::showMarkerToolTip);
-    // connect(this, &InputEditorView::entered, inputEditorModel, &InputEditorModel::setHoveredCell);
-    // setMouseTracking(true);
-
     /* Horizontal header */
     horizontalHeader()->setMinimumSectionSize(20);
     horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
@@ -65,33 +52,12 @@ MarkerView::MarkerView(Context* c, QWidget *parent, QWidget *gp) : QTableView(pa
 
     /* Frame column is fixed */
     horizontalHeader()->resizeSection(0, 80);
-
-    // horizontalHeader()->setSectionsMovable(true);
-    // horizontalHeader()->setHighlightSections(false);
-    // horizontalHeader()->setDropIndicatorShown(true);
-    // horizontalHeader()->setDragEnabled(true);
-    // horizontalHeader()->setDragDropMode(QTableView::InternalMove);
-
-    // horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
-    // connect(horizontalHeader(), &QWidget::customContextMenuRequested, this, &InputEditorView::horizontalMenu);
-    // connect(horizontalHeader(), &QHeaderView::sectionMoved, this, &InputEditorView::moveAgainSection);
-
-    /* Horizontal menu */
+    horizontalHeader()->setStretchLastSection(true);
 
     /* Vertical header */
     verticalHeader()->setVisible(false);
     verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    // verticalHeader()->setMinimumSectionSize(fontMetrics().height());
     verticalHeader()->setDefaultSectionSize(verticalHeader()->minimumSectionSize());
-
-    /* Track vertical scrolling */
-    // connect(verticalScrollBar(), &QAbstractSlider::valueChanged, this, &InputEditorView::manualScroll);
-
-    /* Track selection changed to enable/disable menu items. */
-    // insertAct = nullptr;
-    // connect(selectionModel(), &QItemSelectionModel::selectionChanged, this, &InputEditorView::updateMenu);
-
-    // scrollBarWidth = verticalScrollBar()->sizeHint().width() + 20;
     
     fillMenu();
 }
@@ -105,8 +71,6 @@ void MarkerView::fillMenu()
 
     seekAct = menu->addAction(tr("Seek To"), this, &MarkerView::seekSlot);
     scrollAct = menu->addAction(tr("Scroll To"), this, &MarkerView::scrollSlot);
-//    editAct = menu->addAction(tr("Edit Text"), this, &MarkerView::editSlot);
-//    editFrameAct = menu->addAction(tr("Edit Frame"), this, &MarkerView::editFrameSlot);
     removeAct = menu->addAction(tr("Remove"), this, &MarkerView::removeSlot);
 }
 

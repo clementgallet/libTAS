@@ -79,6 +79,7 @@
 * Make menu bar transparent
 * Lua can now modify movie inputs even in playback mode
 * Use a splitter between input editor and marker panel
+* Expand last column of Marker panel
 
 ### Fixed
 
