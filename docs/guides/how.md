@@ -11,7 +11,49 @@ This page describes the technical details of the implementation, issues and limi
 
 ## Structure
 
-TODO
+libTAS is a TASing tool that is structured as two components: a program (`libTAS`) 
+that contains the user interface, and a library (`libtas.so`). 
+When a game is launched from within libTAS, the library is preloaded with the 
+game (see `Hooking` section) so that we can intercept specific functions where 
+we want to run custom code.
+
+Launching the game is done using `fork()/exec()` technique, and before that it 
+needs to take care about a few things:
+
+* Setting environment variables (library preloading, enforcing software rendering, etc.)
+* Redirecting standard error
+* Optionally attaching a debugger
+
+After the game is launched, the two processes communicate through the use of
+a Unix socket. The socket is mainly use during frame boundaries, where most of 
+the TAS tools apply (inputs, savestates, encoding, etc.)
+
+In short, during a frame boundary, libTAS program gathers the inputs to be send
+to the game (either from real keyboard inputs, or from a movie file), and send
+them to the socket. The game process receives and processes the inputs to be used
+on the next frame. See `Communication` section for details.
+
+The different TAS tools and features are split between the two processes depending
+on which one is the most convenient. libTAS program is separate from the game 
+process, so by default it holds most of the features because it does not mess 
+with the game execution. The drawback is that is does not have easily access to 
+the game's memory or screen buffer.
+ 
+Here is a short list of what each process is responsible for. libTAS program 
+takes care of:
+
+* Handling movie files
+* Gathering and sending inputs
+* Managing settings
+* Input editor
+* Ram Watch/Ram Search ()
+* Lua scripting
+
+The game executable is responsible for:
+
+* Savestates
+* Audio and video encoding
+* Fast-forward
 
 ## Hooking
 
@@ -21,11 +63,42 @@ then it resolves symbols. When multiple libraries offer the same symbol, it choo
 the one that was loaded first. So by preloading the libtas library, their symbols
 will be chosen. This simple method allows us to intercept all functions that are
 loaded on startup, and we have access to the original functions by using
-`dl_sym()` with the `RTLD_NEXT` special value to get the next occurrence of a
+`dlsym()` with the `RTLD_NEXT` special value to get the next occurrence of a
 symbol in the loading order.
 
 We also hook `dlopen()` and `dlsym()` to intercept functions that are dynamically
-loaded.
+loaded. Hooking these functions can't be done the normal method, because we are
+supposed to use `dlsym()` to find the original function... The current up-to-date 
+method is to manually parsing the libc library to look for the address of these two symbols.
+
+If either methods above are not applicable to the functions we want to hook, we
+have a last method where we only need the address of the target function: patching.
+We replace the first instructions of the function to a jump instruction to our
+custom function. If we want to call the original function, we design a trampoline
+function which executes the first instructions of the original function that we
+erased, followed by a jump instruction to the remaining part of the original function.
+
+    original func | patched func   |   custom func  |   trampoline func
+                  |                |                | 
+    instr_1       | jump instr ----|-> custom code  |   instr_1
+    instr_2       |                |   ...          |   instr_2
+    instr_3       |                |                |   instr_3
+    instr_4       | instr_4  <-----|--------------- |---jump instr
+    ...           | ...            |                |
+    instr_N       | instr_N        |                |
+
+This method needs special care when we move over the first few instructions to
+our trampoline function. Instructions with relative addressing need to modify
+the offsets. No instruction has 64-bit relative addressing, so we need to make sure
+that we are at most 2^31 bytes away from the original function.
+
+The patching method arises when we want to hook functions that are called from within the same library. 
+For example, newer Unity engines don't use `sem_wait()` anymore and switched to
+direct `futex` syscall. We need to hook the function `UnityClassic::Baselib_SystemFutex_Wait` 
+that replaced `sem_wait()`, whose address is accessible because some games have debug symbols.
+
+Also, all of wine support needs patching, because wine completely bypasses the 
+linux linking mechanism by using its own method of linking.
 
 ## Frames
 
@@ -118,23 +191,84 @@ Emulators with both GUI and no-GUI versions:
 
 ## Communication
 
-TODO
+Here is a detailed visualization of the communication between the two processes:
+
+            libTAS program                 |    Game process
+         ----------------------------------|-----------------------------------
+    S    |                                 |     
+    t    |                              <--|--- Send pid, executable arch
+    a    |                                 |
+    r    |  Send config, initial time   ---|-->
+    t    |                                 |
+    u    |                                 |
+    p    |                                 |
+         ----------------------------------|-----------------------------------
+    F    |                                 |
+    r    |                              <--|--- Send game window id when created    
+    a    |                                 |
+    m    |                                 |
+    e    |                                 |
+         -------------------------------------------- Render() call -----------
+         |                                 |
+         |                              <--|--- Send framecount, time, fps 
+    B    |                                 |
+    o    | Send ram watches, lua shapes ---|-->
+    u    |                                 |    
+    n    | Send user commands:          ---|--> Process commands until
+    d    | * encoding/screenshot           |    end of frame
+    a    | * savestate                     |    
+    r    | * quit                          |
+    y    |                                 |
+         | Send inputs for next frame   ---|--> 
+         | Send end of frame            ---|-->
+         -------------------------------------- Return from Render() call -----
+    F    |                                 |     
+    r    |                                 | 
+    a    |                                 |
+    m    |                                 |
+    e    |                                 |
+         -------------------------------------------- Render() call -----------
+         etc.
 
 ## Determinism
 
+Determinism is a crucial part of TASing. When building a movie, replaying the movie
+inputs must produce the same results each time. By nature, programs running on a PC are
+non-deterministic due to various reasons (caching, multi-tasking, external factors, etc.).
+
+libTAS tries to mitigate most of the sources of non-determinism, but can't fix
+them, because it lets the game run in it's native environment, as opposed to 
+emulators which build an isolated environment. 
+
 ### Uninitialized memory
 
-TODO
+One of the first source of non-determinism was the fact that memory allocation
+may not be initialized for performance, but then uninitialized memory may be 
+used by games. libTAS ensures that all allocated memory is initialized to zero.
 
 ### Threading
 
-TODO
+Threading is the most severe cause of non-determinism, and can't really be 
+addressed by libTAS. For Unity games, a specific code identifies which threads
+are doing resource loading, and those threads are made sequential by hooking the
+function where they wait for new jobs to execute (`sem_wait()`, or a specific
+Unity function for newer engines, see Hooking section).
 
 ### External factors
 
-TODO
+External factors are most commonly used as a source of randomness to seed the
+pseudo-random number generator. Such examples and associated solutions are:
 
-cputime, urandom, pid, opengl extensions
+* reading `/proc/cputime`: a fake file is provided with a deterministic content
+* using the current process pid: function `getpid()` is hooked and a constant value
+  is returned. Because this function is very sensitive, we only return this constant
+  value for specific calling functions (using the library name) 
+* reading `/dev/urandom`: the file opening function is hooked, and we return a
+  file descriptor to a pipe, where we push random data from a deterministic PRNG
+
+One other example of external factor is which OpenGL extensions are supported by
+the GPU driver. This has consequences on Unity games if some vsync features are
+available.
 
 ## Time
 
@@ -232,6 +366,49 @@ difference between the two, which changes only when realtime is modified during
 game execution.
 
 ## Inputs and events
+
+Input handling is fundamental in a TAS tool. Games can handle inputs in two main
+ways: by direct calls to query the state of an input device (e.g. `XQueryKeymap()`) 
+or by processing events (e.g. `XNextEvent()`). It is mandatory that the tool 
+hooks and handle **all** the inputs API, so that the game process does not have
+access to any input device.
+
+### Direct
+
+Games can query the state of input devices. We hook all functions from high-level
+SDL1 and SDL2 API on the following categories: `SDL_GameController`, `SDL_Joystick`, 
+`SDL_Keyboard`, `SDL_Haptic` (just to disable it), `SDL_Mouse`, `SDL_TextInput`.
+
+For most games that don't use SDL, we also support low-level xlib and xcb 
+libraries for keyboard and mouse.
+
+### Events
+
+After the inputs are received from the game process (see `Communication` section),
+events are generated and stored inside custom event queues. When the game queries
+an event, we deliver one from our event queue instead of the native one.
+
+Because events cover a wider range than inputs, we still need to deliver some 
+native events as well (e.g. window creation) as some games will expect those 
+events and will softlock otherwise. So we regularly transfer native events into
+our custom event queue for specific event types only. Input events are obviously
+not transferred, but some other events like `FocusIn`/`FocusOut` and 
+`EnterNotify`/`LeaveNotify` need to be filtered as well.
+
+### Others
+
+Inputs can also be queried using direct read to device files. We support two 
+types of devices to implement joystick support: `/dev/input/event` (evdev) and 
+`/dev/input/js` (jsdev). When a game tries to open one of those files, we give
+them a file descriptor of a pipe where we push joystick events. We also need to 
+hook `ioctl()` because this function is used by game to gather information about 
+the joystick devices.
+
+Some games use another method to discover input devices by directly call the `udev`
+API that populates the `/dev/` device files. So we hook all the `udev` functions
+to return the input devices information.
+
+### Keyboard layout
 
 TODO
 
