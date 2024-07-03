@@ -94,8 +94,11 @@ public:
     /* Returns if the time call returns a monotonic or realtime */
     bool isTimeCallMonotonic(SharedConfig::TimeCallType type);
 
-    /* Returns the type of untrack time from a clock identifier */
+    /* Returns the type of clock_gettime time from a clock identifier */
     SharedConfig::TimeCallType clockToType(clockid_t clock);
+
+    /* Returns the type of untrack time from a clock identifier */
+    SharedConfig::TimeCallType clockToTypeUntracked(clockid_t clock);
 
 private:
 

@@ -356,7 +356,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         clock_id = it->second;
 
     NATIVECALL(clock_gettime(clock_id, &real_time));
-    time_type = DeterministicTimer::get().clockToType(clock_id);
+    time_type = DeterministicTimer::get().clockToTypeUntracked(clock_id);
 
 #elif defined(__APPLE__) && defined(__MACH__)
     /* On MacOS, the reference time is based on gettimeofday(). */

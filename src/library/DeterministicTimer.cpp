@@ -434,6 +434,19 @@ SharedConfig::TimeCallType DeterministicTimer::clockToType(clockid_t clock)
         case CLOCK_REALTIME_ALARM:
         case CLOCK_REALTIME_COARSE:
         case CLOCK_TAI:
+            return SharedConfig::TIMETYPE_CLOCKGETTIME_REALTIME;
+        default:
+            return SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC;
+    }
+}
+
+SharedConfig::TimeCallType DeterministicTimer::clockToTypeUntracked(clockid_t clock)
+{
+    switch (clock) {
+        case CLOCK_REALTIME:
+        case CLOCK_REALTIME_ALARM:
+        case CLOCK_REALTIME_COARSE:
+        case CLOCK_TAI:
             return SharedConfig::TIMETYPE_UNTRACKED_REALTIME;
         default:
             return SharedConfig::TIMETYPE_UNTRACKED_MONOTONIC;
