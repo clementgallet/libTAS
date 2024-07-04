@@ -113,6 +113,7 @@
 * Fix snd_pcm_wait() softlock having incorrect comparison operators
 * Prevent games from seeing window resizing to fix game window detach
 * Update thread stack address when part is maked as non-rw
+* Fix game window detach when "OSD on video encode" is checked
 
 ## [1.4.5] - 2023-10-22
 ### Added

@@ -127,6 +127,10 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
     static bool show_unity = false;
     static bool show_demo = false;
     
+    /* If encoding, we disable game detach feature for now */
+    if (Global::shared_config.av_dumping)
+        show_game_window = false;
+    
     int w = 0, h = 0;
     ScreenCapture::getDimensions(w, h);
 

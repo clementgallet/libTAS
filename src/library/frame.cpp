@@ -307,52 +307,12 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     if (!Global::skipping_draw)
         WindowTitle::update(fps, lfps);
 
-    /* If we want HUD to appear in encodes, we need to draw it before saving
-     * the window surface/texture/etc. This has the small drawback that we
-     * won't be able to remove HUD messages during that frame. */
-    if (!Global::skipping_draw && Global::shared_config.osd_encode) {
-        if (draw) {
-            AllInputsFlat preview_ai;
-            preview_ai.clear();
-            hud.drawAll(framecount, nondraw_framecount, Inputs::ai, preview_ai);
-            hud.render();            
-        }
-        else {
-            /* We must indicate Dear ImGui that the frame ends without drawing */
-            hud.endFrame();
-        }
+    /* Copy the screen window */
+    if (!Global::skipping_draw && draw) {
+        ScreenCapture::copyScreenToSurface();
     }
 
     if (!Global::skipping_draw) {
-        if (draw) {
-            ScreenCapture::copyScreenToSurface();
-        }
-    }
-
-    /* Audio mixing is done above, so encode must be called after */
-    /* Dumping audio and video */
-    if (Global::shared_config.av_dumping) {
-
-        /* First, create the AVEncoder is needed */
-        if (!avencoder) {
-            LOG(LL_DEBUG, LCF_DUMP, "Start AV dumping on file %s", AVEncoder::dumpfile);
-            avencoder.reset(new AVEncoder());
-        }
-
-        /* Write the current frame */
-        avencoder->encodeOneFrame(!!draw, timeIncrement);
-    }
-    else {
-        /* If there is still an encoder object, it means we just stopped
-         * encoding, so we must delete the encoder object.
-         */
-        if (avencoder) {
-            LOG(LL_DEBUG, LCF_DUMP, "Stop AV dumping");
-            avencoder.reset(nullptr);
-        }
-    }
-
-    if (!Global::skipping_draw && !Global::shared_config.osd_encode) {
         if (draw) {
             AllInputsFlat preview_ai;
             preview_ai.clear();
@@ -383,6 +343,76 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 
     /* No more socket messages here, unlocking the socket. */
     unlockSocket();
+
+    /* Dumping audio and video 
+     * We encode at the end so that we can encode with or without the OSD easily
+     */    
+    if (Global::shared_config.av_dumping) {
+        if (Global::shared_config.osd_encode) {
+            /* We need to recapture the whole screen with OSD, so we redo the 
+             * whole steps without the final `draw()` call */
+            if (!Global::skipping_draw && draw) {
+                
+                int redraw_count = 2;
+                AllInputsFlat preview_ai;
+                preview_ai.clear();
+
+                for (int r = 0; r < redraw_count-1; r++) {
+                    /* We don't need to draw everything, just the ImGui to update for
+                     * new elements */
+                    hud.newFrame();
+                    hud.drawAll(framecount, nondraw_framecount, Inputs::ai, preview_ai);
+                    hud.endFrame();
+                }
+                
+                /* FIXME: I needed to perform an extra draw so the encode works... */
+                hud.newFrame();
+                if (hud.renderGameWindow())
+                    ScreenCapture::clearScreen();
+                else
+                    ScreenCapture::copySurfaceToScreen();
+                hud.drawAll(framecount, nondraw_framecount, Inputs::ai, preview_ai);
+                hud.render();
+                NATIVECALL(draw());
+                /* End of FIXME */
+
+                /* Now the real redraw */
+                hud.newFrame();
+
+                /* Render the game onto the full window, or inside an ImGui window */
+                if (hud.renderGameWindow())
+                    ScreenCapture::clearScreen();
+                else
+                    ScreenCapture::copySurfaceToScreen();
+                hud.drawAll(framecount, nondraw_framecount, Inputs::ai, preview_ai);
+                hud.render();
+
+                /* All this to capture the game screen with OSD here */
+                ScreenCapture::copyScreenToSurface();
+                
+                /* Draw is mandatory to release the acquired image */
+                NATIVECALL(draw());
+            }
+        }
+
+        /* First, create the AVEncoder is needed */
+        if (!avencoder) {
+            LOG(LL_DEBUG, LCF_DUMP, "Start AV dumping on file %s", AVEncoder::dumpfile);
+            avencoder.reset(new AVEncoder());
+        }
+
+        /* Write the current frame */
+        avencoder->encodeOneFrame(!!draw, timeIncrement);
+    }
+    else {
+        /* If there is still an encoder object, it means we just stopped
+         * encoding, so we must delete the encoder object.
+         */
+        if (avencoder) {
+            LOG(LL_DEBUG, LCF_DUMP, "Stop AV dumping");
+            avencoder.reset(nullptr);
+        }
+    }
 
     /* Some methods of drawing on screen don't always update the full screen.
      * Our current screen may be dirty with OSD, so in that case, we must
