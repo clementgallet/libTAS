@@ -1,5 +1,10 @@
 ## [Unreleased]
 ### Added
+### Changed
+### Fixed
+
+## [1.4.6] - 2024-07-05
+### Added
 
 * Screenshot
 * Add double-click on Ram Watch window to edit watches

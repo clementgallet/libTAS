@@ -1,3 +1,115 @@
+libtas (1.4.6) unstable; urgency=medium
+
+  * Screenshot
+  * Add double-click on Ram Watch window to edit watches
+  * Highlight hovered column in the input editor
+  * Add Shift modifier for text input
+  * Handle softlock inside snd_pcm_wait()
+  * Set corresponding radio button when changing a screen resolution value
+  * Save and intersect pointermaps
+  * Check for more Steam interface versions
+  * [ImGui] Show redraw fps on main menu
+  * [ImGui] Idling when no activity
+  * [ImGui] New audio debug window
+  * [ImGui] Show game inside a window (OpenGL)
+  * [ImGui] Show game inside a window (Vulkan)
+  * Add lua memory.baseAddress() function (#561)
+  * Autodetect game engine and enforce some settings
+  * [ImGui] When detached, game window can be resized
+  * Disable a dotnet speed check (#590)
+  * Hook getrandom()
+  * Implement mouse wheel input
+  * RMB + wheel does advance and rewind frames (#594)
+  * Add a Markers table in input editor
+  * Hook AkAudio to enforce ALSA
+  * Add ALSA asynchronous playback
+  * Program can download and load some common missing libraries to run games
+  * Remove multiple markers (#596)
+  * Add more lua functions (savestates, ff)
+  * Implement ppoll
+  * Implement snd_async_handler_get_callback_private
+  * Allow users to resize analog columns in input editor
+  * Add more options to lua gui.text
+  * Add lua memory.readcstring()
+  * Add lua quad draw
+  * Sync newer Unity engine games that are bundled with symbols
+  * Support game window detach on SDL2 renderer
+  * Show number of selected frames in input editor
+  * Clip lua shapes inside game window
+  * Show a progress bar when seeking
+  * Add lua window
+  * Implement SDL grab functions
+  * Add ImPlot and Unity job count debug window
+  * Prevent games from knowing that game window is hidden or minimized
+  * More checks and display errors on Ram Search
+  * Add SteamInternal_SteamAPI_Init implementation
+  * Option to hide markers view (#603)
+  * Optimize the movie prefix check by using information from the state list
+  * Implement autohold and autofire on input editor
+  * Debugger can be attached during game execution
+  * Prevent games from using Wayland
+  * Allow attaching debugger for systems having restricted ptrace
+  * Add log level
+  * Add hooks for the new stat/lstat/fstat aliases (#611)
+  * Add checkboxes to enable/disable all log categories
+  * When input editor is opened, always load savestates in playback mode
+  * Speedup movie loading and input pasting by not using regex
+  * Framerate display more clear in input editor
+  * Switch OSD to Dear ImGui
+  * Default monotonic time to 1s to prevent weird behaviours on some Unity games
+  * Improve the way to detect the location of SDL_DYNAPI_entry address
+  * Improve "Skip unmapped pages" by detecting uncommitted segments
+  * Cleaner state saving code and compress with stream instead of packets
+  * Queue saving memory pages for less write() calls
+  * Queue saving compressed memory pages to be saved in temporary memory segment
+  * Change ImGui font to Roboto Medium
+  * Change streching in some fields of main window (#599)
+  * Accept floats for lua draw commands
+  * Don't sleep on main thread when fast-forwarding
+  * Don't execute lua onPaint callbacks when non rendering to improve fast-forward
+  * We can duplicate multiple selected rows, and improve insertion/deletion
+  * Remove backtrack savestate and invalidation
+  * Pick a better state to rewind to
+  * Better handling of infinite poll with ALSA
+  * Update BalloonTip class from Dolphin
+  * Make menu bar transparent
+  * Lua can now modify movie inputs even in playback mode
+  * Use a splitter between input editor and marker panel
+  * Expand last column of Marker panel
+  * Disable backtrack savestate when encoding
+  * Fix hookpatching a function that starts with CALL instruction
+  * Update hookpatch method
+  * Fix no-recording backup movie not stored in savestates
+  * [ImGui] Force redraw before state saving/loading
+  * Support glViewport() for OpenGL resizing
+  * Support rebuilding swapchain after window resize (#558)
+  * Get all Vulkan function addresses in advance, so that we don't rely on the
+    game getting those 
+  * Use our own Vulkan descriptor pool to control the descriptor set count
+  * Add correct Vulkan pixel size, and fill fourCC values for encoding
+  * Add hidden version argument to FMOD_System_Create (#560)
+  * Protect adding logs to ImGui
+  * Prevent ImGui log during savestates, because it could allocate memory
+  * Guess ImGui input window size so that it is not truncated during encode
+  * Tab key now work as hotkey when input editor has focus
+  * Fix pointer scan for 32-bit games
+  * Fix audio mixing with non-integer samples per frame (#600)
+  * Inserting a marker does update correctly the marker table
+  * Add sanity check when no buffer size is provided in SDL_OpenAudio()
+  * Ruffle OpenGL ES GUI fixed by ImGui update (#604)
+  * Fix ImGui X11 to append selected events instead of replacing them
+  * Scale lua draws when game window is detached
+  * Scale pointer coordinates when game window is detached
+  * Fix some savestate crashes by allocating memory on each thread stack before
+    suspending, so that the mutex lock call always happens at the same place in
+    stack
+  * Fix snd_pcm_wait() softlock having incorrect comparison operators
+  * Prevent games from seeing window resizing to fix game window detach
+  * Update thread stack address when part is maked as non-rw
+  * Fix game window detach when "OSD on video encode" is checked
+
+ -- clement <clement.gallet@ens-lyon.org>  Fri, 05 Jul 2024 20:24:42 +0200
+
 libtas (1.4.5) unstable; urgency=medium
 
   * Add a "Save as default" button for the Encode window (#507)
@@ -49,7 +161,7 @@ libtas (1.4.5) unstable; urgency=medium
   * Fix lua stack when calling a callback
   * Prevent triggering a setting save when loading settings (fix #582)
 
- -- clement <clement@debian.home>  Sun, 22 Oct 2023 15:01:00 +0200
+ -- clement <clement.gallet@ens-lyon.org>  Sun, 22 Oct 2023 15:01:00 +0200
 
 libtas (1.4.4) unstable; urgency=medium
 
@@ -75,7 +187,7 @@ libtas (1.4.4) unstable; urgency=medium
   * Fix hitting "New" in RAM search not doing anything the first time
   * Prevent using "Search" before "New" in RAM search (#504)
 
- -- clement <clement@debian.home>  Tue, 25 Oct 2022 12:25:45 +0200
+ -- clement <clement.gallet@ens-lyon.org>  Tue, 25 Oct 2022 12:25:45 +0200
 
 libtas (1.4.3) unstable; urgency=medium
 
