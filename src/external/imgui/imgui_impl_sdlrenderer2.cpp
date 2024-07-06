@@ -52,8 +52,10 @@ extern int SDL_SetTextureScaleMode(SDL_Texture * texture, SDL_ScaleMode scaleMod
 #endif
 
 #if !SDL_VERSION_ATLEAST(2,0,17)
-struct SDL_Vertex;
-extern int SDL_RenderGeometry(SDL_Renderer *renderer, SDL_Texture *texture, const SDL_Vertex *vertices, int num_vertices, const int *indices, int num_indices);
+extern int SDL_RenderGeometryRaw(SDL_Renderer *renderer, SDL_Texture *texture,
+    const float *xy, int xy_stride, const SDL_Color *color, int color_stride,
+    const float *uv, int uv_stride, int num_vertices,
+    const void *indices, int num_indices, int size_indices);
 #endif
 
 #include "hook.h"
