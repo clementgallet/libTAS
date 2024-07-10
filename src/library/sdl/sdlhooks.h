@@ -347,6 +347,7 @@ SDL_HOOK(SDL_SetWindowMouseGrab)
 SDL_HOOK(SDL_GetWindowGrab)
 SDL_HOOK(SDL_GetWindowMouseGrab)
 SDL_HOOK(SDL_GetGrabbedWindow)
+SDL_LINK(SDL_Log)
 
 #undef SDL_HOOK
 #undef SDL_LINK

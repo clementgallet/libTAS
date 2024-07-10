@@ -72,7 +72,8 @@ namespace libtas {
     DECLARE_ORIG_POINTER(SDL_CreateTexture)
     DECLARE_ORIG_POINTER(SDL_UpdateTexture)
     DECLARE_ORIG_POINTER(SDL_SetTextureBlendMode)
-    DECLARE_ORIG_POINTER(SDL_DestroyTexture)    
+    DECLARE_ORIG_POINTER(SDL_DestroyTexture)
+    DECLARE_ORIG_POINTER(SDL_Log)
 }
 
 #define SDL_RenderSetClipRect libtas::orig::SDL_RenderSetClipRect
@@ -87,6 +88,7 @@ namespace libtas {
 #define SDL_UpdateTexture libtas::orig::SDL_UpdateTexture
 #define SDL_SetTextureBlendMode libtas::orig::SDL_SetTextureBlendMode
 #define SDL_DestroyTexture libtas::orig::SDL_DestroyTexture
+#define SDL_Log libtas::orig::SDL_Log
 
 // SDL_Renderer data
 struct ImGui_ImplSDLRenderer2_Data
