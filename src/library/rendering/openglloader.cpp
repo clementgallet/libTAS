@@ -44,9 +44,10 @@ struct GLProcs glProcs;
 
 void gl_load_procs(GLGetProcAddressProc proc)
 {
-    static bool procs_loaded = false;
-    if (procs_loaded)
+    static GLGetProcAddressProc old_proc = nullptr;
+    if (proc == old_proc)
         return;
+    old_proc = proc;
     
     GET_GL_POINTER(XMakeCurrent)
     GET_GL_POINTER(XMakeContextCurrent)
@@ -183,8 +184,6 @@ void gl_load_procs(GLGetProcAddressProc proc)
     #ifdef GL_EXT_vertex_array
     GET_GL_POINTER(DrawArraysEXT)
     #endif
-    
-    procs_loaded = true;  
 }
 
 }
