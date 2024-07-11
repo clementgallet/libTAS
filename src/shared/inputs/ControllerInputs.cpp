@@ -55,31 +55,29 @@ bool ControllerInputs::isDefaultController() const
 int ControllerInputs::getInput(const SingleInput &si) const
 {
     bool is_axis = si.inputTypeToAxisFlag();
-    int type = si.inputTypeToInputNumber();
 
     if (is_axis)
-        return axes[type];
-    return (buttons >> type) & 0x1;
+        return axes[si.which];
+    return (buttons >> si.which) & 0x1;
 }
 
 void ControllerInputs::setInput(const SingleInput &si, int value)
 {
     bool is_axis = si.inputTypeToAxisFlag();
-    int type = si.inputTypeToInputNumber();
 
     if (is_axis) {
         if (value > INT16_MAX)
-            axes[type] = INT16_MAX;
+            axes[si.which] = INT16_MAX;
         else if (value < INT16_MIN)
-            axes[type] = INT16_MIN;
+            axes[si.which] = INT16_MIN;
         else
-            axes[type] = static_cast<short>(value);
+            axes[si.which] = static_cast<short>(value);
     }
     else {
         if (value)
-            buttons |= (0x1 << type);
+            buttons |= (0x1 << si.which);
         else
-            buttons &= ~(0x1 << type);
+            buttons &= ~(0x1 << si.which);
     }
 }
 
@@ -87,17 +85,17 @@ void ControllerInputs::extractInputs(std::set<SingleInput> &input_set, int contr
 {
     SingleInput si;
 
-    for (int a = 0; a < MAXAXES; a++) {
+    for (unsigned int a = 0; a < MAXAXES; a++) {
         if (axes[a]) {
-            si = {(((controller_id+1) << SingleInput::IT_CONTROLLER_ID_SHIFT) | SingleInput::IT_CONTROLLER_AXIS_MASK) + a, 1, ""};
+            si = {SingleInput::IT_CONTROLLER1_AXIS+2*controller_id, a, ""};
             input_set.insert(si);
         }
     }
 
     if (buttons) {
-        for (int b=0; b<16; b++) {
+        for (unsigned int b=0; b<16; b++) {
             if (buttons & (1 << b)) {
-                si = {((controller_id+1) << SingleInput::IT_CONTROLLER_ID_SHIFT) + b, 1, ""};
+                si = {SingleInput::IT_CONTROLLER1_BUTTON+2*controller_id, b, ""};
                 input_set.insert(si);
             }
         }

@@ -52,7 +52,7 @@ KeyMappingXcb::KeyMappingXcb(void* c) : KeyMapping(c)
     for (int ks = 0; ks < 256; ks++) {
         SingleInput si;
         si.type = SingleInput::IT_KEYBOARD;
-        si.value = 0x0000 | ks;
+        si.which = 0x0000 | ks;
         const char* str = KEYSYM_TO_DESC_LATIN(ks);
         if (str) {
             si.description = str;
@@ -64,7 +64,7 @@ KeyMappingXcb::KeyMappingXcb(void* c) : KeyMapping(c)
     for (int ks = 0; ks < 256; ks++) {
         SingleInput si;
         si.type = SingleInput::IT_KEYBOARD;
-        si.value = 0xff00 | ks;
+        si.which = 0xff00 | ks;
         const char* str = KEYSYM_TO_DESC_MISC(ks);
         if (str) {
             si.description = str;
@@ -220,14 +220,14 @@ void KeyMappingXcb::default_inputs()
         if (ks == XCB_NO_SYMBOL) continue;
 
         for (auto iter : input_list[INPUTLIST_KEYBOARD_LATIN])
-            if (iter.value == ks) {
-                input_mapping[iter.value] = iter;
+            if (iter.which == ks) {
+                input_mapping[iter.which] = iter;
                 break;
             }
             
         for (auto iter : input_list[INPUTLIST_KEYBOARD_MISC])
-            if (iter.value == ks) {
-                input_mapping[iter.value] = iter;
+            if (iter.which == ks) {
+                input_mapping[iter.which] = iter;
                 break;
             }
 
@@ -256,8 +256,8 @@ void KeyMappingXcb::default_input(int tab, int input_index)
 
         for (int k=min_keycode; k<=max_keycode; k++) {
             xcb_keysym_t ks = xcb_key_symbols_get_keysym(keysyms, k, 0);
-            if (ks == si.value) {
-                input_mapping[si.value] = si;
+            if (ks == si.which) {
+                input_mapping[si.which] = si;
                 break;
             }
         }
@@ -347,40 +347,29 @@ void KeyMappingXcb::buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig&
                     }
 
                     /* Saving the key */
-                    ai.keyboard[keysym_i++] = si.value;
+                    ai.keyboard[keysym_i++] = si.which;
                 }
 
                 if (si.type == SingleInput::IT_FLAG) {
                     if (!ai.misc)
                         ai.misc.reset(new MiscInputs{});
                     
-                    ai.misc->flags |= (1 << si.value);
+                    ai.misc->flags |= (1 << si.which);
                 }
 
                 if (sc.mouse_support) {
-                    if (si.type >= SingleInput::IT_POINTER_B1 && si.type <= SingleInput::IT_POINTER_B5)
+                    if (si.type == SingleInput::IT_POINTER_BUTTON) {
                         if (!ai.pointer)
                             ai.pointer.reset(new MouseInputs{});
-
-                    if (si.type == SingleInput::IT_POINTER_B1)
-                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B1);
-                    if (si.type == SingleInput::IT_POINTER_B2)
-                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B2);
-                    if (si.type == SingleInput::IT_POINTER_B3)
-                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B3);
-                    if (si.type == SingleInput::IT_POINTER_B4)
-                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B4);
-                    if (si.type == SingleInput::IT_POINTER_B5)
-                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B5);
+                        
+                        ai.pointer->mask |= (0x1u << si.which);
+                    }
                 }
 
                 if (si.inputTypeIsController()) {
                     /* Key is mapped to a game controller */
 
-                    /* Getting Controller id
-                     * Arithmetic on enums is bad, no?
-                     */
-                    int controller_i = (si.type >> SingleInput::IT_CONTROLLER_ID_SHIFT) - 1;
+                    int controller_i = si.inputTypeToControllerNumber();
 
                     /* Check if we support this joystick */
                     if (controller_i >= sc.nb_controllers)
@@ -388,13 +377,10 @@ void KeyMappingXcb::buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig&
 
                     if (!ai.controllers[controller_i])
                         ai.controllers[controller_i].reset(new ControllerInputs{});
-                    int controller_axis = si.type & SingleInput::IT_CONTROLLER_AXIS_MASK;
-                    int controller_type = si.type & SingleInput::IT_CONTROLLER_TYPE_MASK;
-                    if (controller_axis) {
-                        ai.controllers[controller_i]->axes[controller_type] = static_cast<short>(si.value);
-                    }
-                    else {
-                        ai.controllers[controller_i]->buttons |= (si.value & 0x1) << controller_type;
+                        
+                    /* We don't support mapping to axes */
+                    if (!si.inputTypeToAxisFlag()) {
+                        ai.controllers[controller_i]->buttons |= (1 << si.which);
                     }
                 }
             }

@@ -26,12 +26,12 @@
 #include <iostream>
 
 QDataStream &operator<<(QDataStream &out, const SingleInput &obj) {
-    out << obj.type << obj.value;
+    out << obj.type << obj.which;
     return out;
 }
 
 QDataStream &operator>>(QDataStream &in, SingleInput &obj) {
-    in >> obj.type >> obj.value;
+    in >> obj.type >> obj.which;
     return in;
 }
 
@@ -95,76 +95,76 @@ KeyMapping::KeyMapping(void* c)
     input_list[INPUTLIST_FLAG].push_back({SingleInput::IT_FLAG, SingleInput::FLAG_FOCUS_UNFOCUS, "Focus/Unfocus window"});
 
     /* Add mouse button mapping */
-    input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_B1, 1, "Mouse button 1"});
-    input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_B2, 1, "Mouse button 2"});
-    input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_B3, 1, "Mouse button 3"});
-    input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_B4, 1, "Mouse button 4"});
-    input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_B5, 1, "Mouse button 5"});
+    input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_BUTTON, SingleInput::POINTER_B1, "Mouse button 1"});
+    input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_BUTTON, SingleInput::POINTER_B2, "Mouse button 2"});
+    input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_BUTTON, SingleInput::POINTER_B3, "Mouse button 3"});
+    input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_BUTTON, SingleInput::POINTER_B4, "Mouse button 4"});
+    input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_BUTTON, SingleInput::POINTER_B5, "Mouse button 5"});
 
     /* Add controller mapping */
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON_A, 1, "Joy1 A"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON_B, 1, "Joy1 B"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON_X, 1, "Joy1 X"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON_Y, 1, "Joy1 Y"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON_BACK, 1, "Joy1 Back"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON_GUIDE, 1, "Joy1 Guide"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON_START, 1, "Joy1 Start"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON_LEFTSTICK, 1, "Joy1 LeftStick"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON_RIGHTSTICK, 1, "Joy1 RightStick"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON_LEFTSHOULDER, 1, "Joy1 LeftShoulder"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON_RIGHTSHOULDER, 1, "Joy1 RightShoulder"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON_DPAD_UP, 1, "Joy1 Up"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON_DPAD_DOWN, 1, "Joy1 Down"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON_DPAD_LEFT, 1, "Joy1 Left"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON_DPAD_RIGHT, 1, "Joy1 Right"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_A, "Joy1 A"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_B, "Joy1 B"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_X, "Joy1 X"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_Y, "Joy1 Y"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_BACK, "Joy1 Back"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_GUIDE, "Joy1 Guide"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_START, "Joy1 Start"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_LEFTSTICK, "Joy1 LeftStick"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_RIGHTSTICK, "Joy1 RightStick"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_LEFTSHOULDER, "Joy1 LeftShoulder"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_RIGHTSHOULDER, "Joy1 RightShoulder"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_DPAD_UP, "Joy1 Up"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_DPAD_DOWN, "Joy1 Down"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_DPAD_LEFT, "Joy1 Left"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_DPAD_RIGHT, "Joy1 Right"});
 
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON_A, 1, "Joy2 A"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON_B, 1, "Joy2 B"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON_X, 1, "Joy2 X"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON_Y, 1, "Joy2 Y"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON_BACK, 1, "Joy2 Back"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON_GUIDE, 1, "Joy2 Guide"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON_START, 1, "Joy2 Start"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON_LEFTSTICK, 1, "Joy2 LeftStick"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON_RIGHTSTICK, 1, "Joy2 RightStick"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON_LEFTSHOULDER, 1, "Joy2 LeftShoulder"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON_RIGHTSHOULDER, 1, "Joy2 RightShoulder"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON_DPAD_UP, 1, "Joy2 Up"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON_DPAD_DOWN, 1, "Joy2 Down"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON_DPAD_LEFT, 1, "Joy2 Left"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON_DPAD_RIGHT, 1, "Joy2 Right"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON, SingleInput::BUTTON_A, "Joy2 A"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON, SingleInput::BUTTON_B, "Joy2 B"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON, SingleInput::BUTTON_X, "Joy2 X"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON, SingleInput::BUTTON_Y, "Joy2 Y"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON, SingleInput::BUTTON_BACK, "Joy2 Back"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON, SingleInput::BUTTON_GUIDE, "Joy2 Guide"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON, SingleInput::BUTTON_START, "Joy2 Start"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON, SingleInput::BUTTON_LEFTSTICK, "Joy2 LeftStick"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON, SingleInput::BUTTON_RIGHTSTICK, "Joy2 RightStick"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON, SingleInput::BUTTON_LEFTSHOULDER, "Joy2 LeftShoulder"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON, SingleInput::BUTTON_RIGHTSHOULDER, "Joy2 RightShoulder"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON, SingleInput::BUTTON_DPAD_UP, "Joy2 Up"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON, SingleInput::BUTTON_DPAD_DOWN, "Joy2 Down"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON, SingleInput::BUTTON_DPAD_LEFT, "Joy2 Left"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER2_BUTTON, SingleInput::BUTTON_DPAD_RIGHT, "Joy2 Right"});
 
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON_A, 1, "Joy3 A"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON_B, 1, "Joy3 B"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON_X, 1, "Joy3 X"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON_Y, 1, "Joy3 Y"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON_BACK, 1, "Joy3 Back"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON_GUIDE, 1, "Joy3 Guide"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON_START, 1, "Joy3 Start"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON_LEFTSTICK, 1, "Joy3 LeftStick"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON_RIGHTSTICK, 1, "Joy3 RightStick"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON_LEFTSHOULDER, 1, "Joy3 LeftShoulder"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON_RIGHTSHOULDER, 1, "Joy3 RightShoulder"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON_DPAD_UP, 1, "Joy3 Up"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON_DPAD_DOWN, 1, "Joy3 Down"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON_DPAD_LEFT, 1, "Joy3 Left"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON_DPAD_RIGHT, 1, "Joy3 Right"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON, SingleInput::BUTTON_A, "Joy3 A"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON, SingleInput::BUTTON_B, "Joy3 B"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON, SingleInput::BUTTON_X, "Joy3 X"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON, SingleInput::BUTTON_Y, "Joy3 Y"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON, SingleInput::BUTTON_BACK, "Joy3 Back"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON, SingleInput::BUTTON_GUIDE, "Joy3 Guide"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON, SingleInput::BUTTON_START, "Joy3 Start"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON, SingleInput::BUTTON_LEFTSTICK, "Joy3 LeftStick"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON, SingleInput::BUTTON_RIGHTSTICK, "Joy3 RightStick"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON, SingleInput::BUTTON_LEFTSHOULDER, "Joy3 LeftShoulder"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON, SingleInput::BUTTON_RIGHTSHOULDER, "Joy3 RightShoulder"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON, SingleInput::BUTTON_DPAD_UP, "Joy3 Up"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON, SingleInput::BUTTON_DPAD_DOWN, "Joy3 Down"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON, SingleInput::BUTTON_DPAD_LEFT, "Joy3 Left"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER3_BUTTON, SingleInput::BUTTON_DPAD_RIGHT, "Joy3 Right"});
 
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON_A, 1, "Joy4 A"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON_B, 1, "Joy4 B"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON_X, 1, "Joy4 X"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON_Y, 1, "Joy4 Y"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON_BACK, 1, "Joy4 Back"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON_GUIDE, 1, "Joy4 Guide"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON_START, 1, "Joy4 Start"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON_LEFTSTICK, 1, "Joy4 LeftStick"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON_RIGHTSTICK, 1, "Joy4 RightStick"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON_LEFTSHOULDER, 1, "Joy4 LeftShoulder"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON_RIGHTSHOULDER, 1, "Joy4 RightShoulder"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON_DPAD_UP, 1, "Joy4 Up"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON_DPAD_DOWN, 1, "Joy4 Down"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON_DPAD_LEFT, 1, "Joy4 Left"});
-    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON_DPAD_RIGHT, 1, "Joy4 Right"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_A, "Joy4 A"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_B, "Joy4 B"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_X, "Joy4 X"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_Y, "Joy4 Y"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_BACK, "Joy4 Back"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_GUIDE, "Joy4 Guide"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_START, "Joy4 Start"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_LEFTSTICK, "Joy4 LeftStick"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_RIGHTSTICK, "Joy4 RightStick"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_LEFTSHOULDER, "Joy4 LeftShoulder"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_RIGHTSHOULDER, "Joy4 RightShoulder"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_DPAD_UP, "Joy4 Up"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_DPAD_DOWN, "Joy4 Down"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_DPAD_LEFT, "Joy4 Left"});
+    input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_DPAD_RIGHT, "Joy4 Right"});
 
     /* Hidden mapping. They cannot be remapped, but we need to define them
      * to have a description for input editor */
@@ -184,40 +184,40 @@ KeyMapping::KeyMapping(void* c)
     input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_REALTIME_NSEC, 1, "Realtime nsec"});
     
     /* Add controller mapping */
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS_LEFTX, 1, "Joy1 LeftStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS_LEFTY, 1, "Joy1 LeftStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS_RIGHTX, 1, "Joy1 RightStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS_RIGHTY, 1, "Joy1 RightStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS_TRIGGERLEFT, 1, "Joy1 LeftTrigger"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS_TRIGGERRIGHT, 1, "Joy1 RightTrigger"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_LEFTX, "Joy1 LeftStickX"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_LEFTY, "Joy1 LeftStickY"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_RIGHTX, "Joy1 RightStickX"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_RIGHTY, "Joy1 RightStickY"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_TRIGGERLEFT, "Joy1 LeftTrigger"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_TRIGGERRIGHT, "Joy1 RightTrigger"});
 
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS_LEFTX, 1, "Joy2 LeftStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS_LEFTY, 1, "Joy2 LeftStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS_RIGHTX, 1, "Joy2 RightStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS_RIGHTY, 1, "Joy2 RightStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS_TRIGGERLEFT, 1, "Joy2 LeftTrigger"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS_TRIGGERRIGHT, 1, "Joy2 RightTrigger"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_LEFTX, "Joy2 LeftStickX"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_LEFTY, "Joy2 LeftStickY"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_RIGHTX, "Joy2 RightStickX"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_RIGHTY, "Joy2 RightStickY"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_TRIGGERLEFT, "Joy2 LeftTrigger"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_TRIGGERRIGHT, "Joy2 RightTrigger"});
 
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS_LEFTX, 1, "Joy3 LeftStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS_LEFTY, 1, "Joy3 LeftStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS_RIGHTX, 1, "Joy3 RightStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS_RIGHTY, 1, "Joy3 RightStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS_TRIGGERLEFT, 1, "Joy3 LeftTrigger"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS_TRIGGERRIGHT, 1, "Joy3 RightTrigger"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_LEFTX, "Joy3 LeftStickX"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_LEFTY, "Joy3 LeftStickY"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_RIGHTX, "Joy3 RightStickX"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_RIGHTY, "Joy3 RightStickY"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_TRIGGERLEFT, "Joy3 LeftTrigger"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_TRIGGERRIGHT, "Joy3 RightTrigger"});
 
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS_LEFTX, 1, "Joy4 LeftStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS_LEFTY, 1, "Joy4 LeftStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS_RIGHTX, 1, "Joy4 RightStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS_RIGHTY, 1, "Joy4 RightStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS_TRIGGERLEFT, 1, "Joy4 LeftTrigger"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS_TRIGGERRIGHT, 1, "Joy4 RightTrigger"});    
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_LEFTX, "Joy4 LeftStickX"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_LEFTY, "Joy4 LeftStickY"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_RIGHTX, "Joy4 RightStickX"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_RIGHTY, "Joy4 RightStickY"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_TRIGGERLEFT, "Joy4 LeftTrigger"});
+    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_TRIGGERRIGHT, "Joy4 RightTrigger"});    
 }
 
 std::string KeyMapping::input_description(keysym_t ks)
 {
     for (auto iter : input_list[INPUTLIST_KEYBOARD_LATIN]) {
         if (iter.type == SingleInput::IT_KEYBOARD) {
-            if (iter.value == ks) {
+            if (iter.which == ks) {
                 return iter.description;
             }
         }
@@ -225,7 +225,7 @@ std::string KeyMapping::input_description(keysym_t ks)
 
     for (auto iter : input_list[INPUTLIST_KEYBOARD_MISC]) {
         if (iter.type == SingleInput::IT_KEYBOARD) {
-            if (iter.value == ks) {
+            if (iter.which == ks) {
                 return iter.description;
             }
         }
@@ -239,7 +239,7 @@ void KeyMapping::default_hotkeys()
     hotkey_mapping.clear();
     for (auto iter : hotkey_list) {
         if (iter.default_input.type == SingleInput::IT_KEYBOARD) {
-            hotkey_mapping[iter.default_input.value] = iter;
+            hotkey_mapping[iter.default_input.which] = iter;
         }
     }
 }
@@ -258,7 +258,7 @@ void KeyMapping::default_hotkey(int hotkey_index)
     }
 
     if (hk.default_input.type == SingleInput::IT_KEYBOARD)
-        hotkey_mapping[hk.default_input.value] = hk;
+        hotkey_mapping[hk.default_input.which] = hk;
 
 }
 

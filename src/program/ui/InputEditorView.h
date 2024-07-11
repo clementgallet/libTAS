@@ -27,6 +27,7 @@
 struct Context;
 class InputEditorModel;
 class KeyPressedDialog;
+class InputEventWindow;
 
 class InputEditorView : public QTableView {
     Q_OBJECT
@@ -53,6 +54,7 @@ public slots:
     void autofireInput(bool checked);
 
     void mainMenu(QPoint pos);
+    void editEvents();
     void duplicateInput();
     void insertInput();
     void insertInputs();
@@ -108,8 +110,10 @@ private:
     int minToggleRow;
     int mouseValue;
     KeyPressedDialog* keyDialog;
+    InputEventWindow* inputEventWindow;
     std::string currentMarkerText;
 
+    QAction *eventAct;
     QAction *duplicateAct;
     QAction *insertAct;
     QAction *insertsAct;

@@ -63,13 +63,161 @@
 
 namespace libtas {
 
+/* Generate one keyreleased event */
+static void generateKeyEvent(int event_key, bool pressed)
+{
+    struct timespec time = DeterministicTimer::get().getTicks();
+    int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+
+    /* Key was released. Generate event */
+    if (Global::game_info.keyboard & GameInfo::SDL2) {
+        SDL_Event event2;
+        event2.type = pressed ? SDL_KEYDOWN : SDL_KEYUP;
+        event2.key.state = pressed ? SDL_PRESSED : SDL_RELEASED;
+        event2.key.windowID = 1;
+        event2.key.timestamp = timestamp;
+        event2.key.repeat = 0;
+
+        SDL_Keysym keysym;
+        xkeysymToSDL(&keysym, event_key);
+        keysym.mod = xkeyboardToSDLMod(Inputs::game_ai.keyboard);
+        event2.key.keysym = keysym;
+
+        sdlEventQueue.insert(&event2);
+
+        LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event %s with key %d", pressed?"KEYDOWN":"KEYUP", event2.key.keysym.sym);
+
+        /* Generate a text input event if active */
+        if (pressed) {
+            SDL_bool isTextInputActive;
+            NOLOGCALL(isTextInputActive = SDL_IsTextInputActive());
+            if ((isTextInputActive == SDL_TRUE) && ((event2.key.keysym.sym >> 8) == 0)) {
+                event2.type = SDL_TEXTINPUT;
+                event2.text.windowID = 1;
+                event2.text.timestamp = timestamp;
+                /* SDL keycode is identical to its char number for common chars */
+                event2.text.text[0] = static_cast<char>(event2.key.keysym.sym & 0xff);
+                event2.text.text[1] = '\0';
+                
+                sdlEventQueue.insert(&event2);
+                
+                LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event SDL_TEXTINPUT with text %s", event2.text.text);
+            }
+        }
+    }
+
+    if (Global::game_info.keyboard & GameInfo::SDL1) {
+        SDL1::SDL_Event event1;
+        event1.type = pressed ? SDL1::SDL_KEYDOWN : SDL1::SDL_KEYUP;
+        event1.key.state = pressed ? SDL_PRESSED : SDL_RELEASED;            
+        event1.key.which = 0; // FIXME: I don't know what is going here
+
+        SDL1::SDL_keysym keysym;
+        xkeysymToSDL1(&keysym, event_key);
+        event1.key.keysym = keysym;
+
+        int isUnicodeEnabled;
+        NOLOGCALL(isUnicodeEnabled = SDL_EnableUNICODE(-1));
+        if (isUnicodeEnabled) {
+            /* Add an Unicode representation of the key */
+            /* SDL keycode is identical to its char number for common chars */
+            event1.key.keysym.unicode = static_cast<char>(event1.key.keysym.sym & 0xff);
+        }
+
+        sdlEventQueue.insert(&event1);
+
+        LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event %s with key %d", pressed?"KEYDOWN":"KEYUP", event1.key.keysym.sym);
+    }
+
+#ifdef __unix__
+    if ((Global::game_info.keyboard & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
+        XEvent event;
+        event.xkey.type = pressed ? KeyPress : KeyRelease;
+        event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
+        event.xkey.window = x11::gameXWindows.front();
+        event.xkey.time = timestamp; // TODO: Wrong! timestamp is from X server start
+        event.xkey.same_screen = 1;
+        event.xkey.send_event = 0;
+        event.xkey.subwindow = 0;
+        event.xkey.root = x11::rootWindow;
+        NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(nullptr, event_key));
+        event.xkey.state = xkeyboardToXMod(Inputs::game_ai.keyboard);
+        for (int d=0; d<GAMEDISPLAYNUM; d++) {
+            if (x11::gameDisplays[d]) {
+                event.xkey.root = XRootWindow(x11::gameDisplays[d], 0);
+                xlibEventQueueList.insert(x11::gameDisplays[d], &event);
+            }
+        }
+
+        LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XEvent %s with keycode %d", pressed?"KeyPress":"KeyRelease", event.xkey.keycode);
+    }
+
+    if ((Global::game_info.keyboard & GameInfo::XCBEVENTS) && !x11::gameXWindows.empty()) {
+        xcb_key_release_event_t event;
+        event.response_type = pressed ? XCB_KEY_PRESS : XCB_KEY_RELEASE;
+        event.state = 0; // TODO: Do we have to set the key modifiers?
+        event.event = x11::gameXWindows.front();
+        event.time = timestamp; // TODO: Wrong! timestamp is from X server start
+        event.same_screen = 1;
+        event.child = 0;
+        event.root = x11::rootWindow;
+        NOLOGCALL(event.detail = XKeysymToKeycode(nullptr, event_key));
+        event.state = static_cast<uint16_t>(xkeyboardToXMod(Inputs::game_ai.keyboard));
+        for (int c=0; c<GAMECONNECTIONNUM; c++) {
+            if (x11::gameConnections[c]) {
+                // event.root = XRootWindow(x11::gameConnections[c], 0);
+                xcbEventQueueList.insert(x11::gameConnections[c], reinterpret_cast<xcb_generic_event_t*>(&event), false);
+            }
+        }
+
+        LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate xcb %s with keycode %d", pressed?"XCB_KEY_PRESS":"XCB_KEY_RELEASE", event.detail);
+    }
+
+    if ((Global::game_info.keyboard & GameInfo::XIEVENTS) && !x11::gameXWindows.empty()) {
+        XEvent event;
+        XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
+        event.xcookie.type = GenericEvent;
+        event.xcookie.extension = xinput_opcode;
+        event.xcookie.evtype = pressed ? XI_KeyPress : XI_KeyRelease;
+        event.xcookie.data = dev;
+        dev->evtype = event.xcookie.evtype;
+        dev->event = x11::gameXWindows.front();
+        dev->time = timestamp; // TODO: Wrong! timestamp is from X server start
+        dev->deviceid = 3;
+        dev->sourceid = 3;
+        NOLOGCALL(dev->detail = XKeysymToKeycode(nullptr, event_key));
+        dev->mods.effective = xkeyboardToXMod(Inputs::game_ai.keyboard); // We should not need to fill the other members
+        for (int d=0; d<GAMEDISPLAYNUM; d++) {
+            if (x11::gameDisplays[d]) {
+                dev->root = XRootWindow(x11::gameDisplays[d], 0);
+                xlibEventQueueList.insert(x11::gameDisplays[d], &event);
+            }
+        }
+
+        LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent %s with keycode %d", pressed?"KeyPress":"KeyRelease", dev->detail);
+    }
+
+    if (Global::game_info.keyboard & GameInfo::XIRAWEVENTS) {
+        XEvent event;
+        XIRawEvent *rev = static_cast<XIRawEvent*>(calloc(1, sizeof(XIRawEvent)));
+        event.xcookie.type = GenericEvent;
+        event.xcookie.extension = xinput_opcode;
+        event.xcookie.evtype = pressed ? XI_RawKeyPress : XI_RawKeyRelease;
+        event.xcookie.data = rev;
+        rev->evtype = event.xcookie.evtype;
+        rev->time = timestamp; // TODO: Wrong! timestamp is from X server start
+        NOLOGCALL(rev->detail = XKeysymToKeycode(nullptr, event_key));
+        xlibEventQueueList.insert(&event);
+
+        LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent %s with keycode %d", pressed?"RawKeyPress":"RawKeyRelease", rev->detail);
+    }
+#endif
+}
+
 /* Generate events of type SDL_KEYUP or KeyRelease */
 static void generateKeyUpEvents(void)
 {
     int i, j;
-
-    struct timespec time = DeterministicTimer::get().getTicks();
-    int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (i=0; i<AllInputsFlat::MAXKEYS; i++) {
         if (!Inputs::old_game_ai.keyboard[i]) {
@@ -82,131 +230,7 @@ static void generateKeyUpEvents(void)
             }
         }
         if (j == AllInputsFlat::MAXKEYS) {
-            /* Key was released. Generate event */
-            if (Global::game_info.keyboard & GameInfo::SDL2) {
-                SDL_Event event2;
-                event2.type = SDL_KEYUP;
-                event2.key.state = SDL_RELEASED;
-                event2.key.windowID = 1;
-                event2.key.timestamp = timestamp;
-                event2.key.repeat = 0;
-
-                SDL_Keysym keysym;
-                xkeysymToSDL(&keysym, Inputs::old_game_ai.keyboard[i]);
-                keysym.mod = xkeyboardToSDLMod(Inputs::game_ai.keyboard);
-                event2.key.keysym = keysym;
-
-                sdlEventQueue.insert(&event2);
-
-                LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYUP with key %d", event2.key.keysym.sym);
-            }
-
-            if (Global::game_info.keyboard & GameInfo::SDL1) {
-                SDL1::SDL_Event event1;
-                event1.type = SDL1::SDL_KEYUP;
-                event1.key.which = 0; // FIXME: I don't know what is going here
-                event1.key.state = SDL_RELEASED;
-
-                SDL1::SDL_keysym keysym;
-                xkeysymToSDL1(&keysym, Inputs::old_game_ai.keyboard[i]);
-                event1.key.keysym = keysym;
-
-                int isUnicodeEnabled;
-                NOLOGCALL(isUnicodeEnabled = SDL_EnableUNICODE(-1));
-                if (isUnicodeEnabled) {
-                    /* Add an Unicode representation of the key */
-                    /* SDL keycode is identical to its char number for common chars */
-                    event1.key.keysym.unicode = static_cast<char>(event1.key.keysym.sym & 0xff);
-                }
-
-                sdlEventQueue.insert(&event1);
-
-                LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYUP with key %d", event1.key.keysym.sym);
-            }
-
-#ifdef __unix__
-            if ((Global::game_info.keyboard & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
-                XEvent event;
-                event.xkey.type = KeyRelease;
-                event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
-                event.xkey.window = x11::gameXWindows.front();
-                event.xkey.time = timestamp; // TODO: Wrong! timestamp is from X server start
-                event.xkey.same_screen = 1;
-                event.xkey.send_event = 0;
-                event.xkey.subwindow = 0;
-                event.xkey.root = x11::rootWindow;
-                NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(nullptr, Inputs::old_game_ai.keyboard[i]));
-                event.xkey.state = xkeyboardToXMod(Inputs::game_ai.keyboard);
-                for (int d=0; d<GAMEDISPLAYNUM; d++) {
-                    if (x11::gameDisplays[d]) {
-                        event.xkey.root = XRootWindow(x11::gameDisplays[d], 0);
-                        xlibEventQueueList.insert(x11::gameDisplays[d], &event);
-                    }
-                }
-
-                LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XEvent KeyRelease with keycode %d", event.xkey.keycode);
-            }
-
-            if ((Global::game_info.keyboard & GameInfo::XCBEVENTS) && !x11::gameXWindows.empty()) {
-                xcb_key_release_event_t event;
-                event.response_type = XCB_KEY_RELEASE;
-                event.state = 0; // TODO: Do we have to set the key modifiers?
-                event.event = x11::gameXWindows.front();
-                event.time = timestamp; // TODO: Wrong! timestamp is from X server start
-                event.same_screen = 1;
-                event.child = 0;
-                event.root = x11::rootWindow;
-                NOLOGCALL(event.detail = XKeysymToKeycode(nullptr, Inputs::old_game_ai.keyboard[i]));
-                event.state = static_cast<uint16_t>(xkeyboardToXMod(Inputs::game_ai.keyboard));
-                for (int c=0; c<GAMECONNECTIONNUM; c++) {
-                    if (x11::gameConnections[c]) {
-                        // event.root = XRootWindow(x11::gameConnections[c], 0);
-                        xcbEventQueueList.insert(x11::gameConnections[c], reinterpret_cast<xcb_generic_event_t*>(&event), false);
-                    }
-                }
-
-                LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate xcb XCB_KEY_RELEASE with keycode %d", event.detail);
-            }
-
-            if ((Global::game_info.keyboard & GameInfo::XIEVENTS) && !x11::gameXWindows.empty()) {
-                XEvent event;
-                XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
-                event.xcookie.type = GenericEvent;
-                event.xcookie.extension = xinput_opcode;
-                event.xcookie.evtype = XI_KeyRelease;
-                event.xcookie.data = dev;
-                dev->evtype = XI_KeyRelease;
-                dev->event = x11::gameXWindows.front();
-                dev->time = timestamp; // TODO: Wrong! timestamp is from X server start
-                dev->deviceid = 3;
-                dev->sourceid = 3;
-                NOLOGCALL(dev->detail = XKeysymToKeycode(nullptr, Inputs::old_game_ai.keyboard[i]));
-                dev->mods.effective = xkeyboardToXMod(Inputs::game_ai.keyboard); // We should not need to fill the other members
-                for (int d=0; d<GAMEDISPLAYNUM; d++) {
-                    if (x11::gameDisplays[d]) {
-                        dev->root = XRootWindow(x11::gameDisplays[d], 0);
-                        xlibEventQueueList.insert(x11::gameDisplays[d], &event);
-                    }
-                }
-
-                LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent KeyRelease with keycode %d", dev->detail);
-            }
-
-            if (Global::game_info.keyboard & GameInfo::XIRAWEVENTS) {
-                XEvent event;
-                XIRawEvent *rev = static_cast<XIRawEvent*>(calloc(1, sizeof(XIRawEvent)));
-                event.xcookie.type = GenericEvent;
-                event.xcookie.extension = xinput_opcode;
-                event.xcookie.evtype = XI_RawKeyRelease;
-                event.xcookie.data = rev;
-                rev->evtype = XI_RawKeyRelease;
-                rev->time = timestamp; // TODO: Wrong! timestamp is from X server start
-                NOLOGCALL(rev->detail = XKeysymToKeycode(nullptr, Inputs::old_game_ai.keyboard[i]));
-                xlibEventQueueList.insert(&event);
-
-                LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent RawKeyRelease with keycode %d", rev->detail);
-            }
-#endif
+            generateKeyEvent(Inputs::old_game_ai.keyboard[i], false);
         }
     }
 }
@@ -215,9 +239,6 @@ static void generateKeyUpEvents(void)
 static void generateKeyDownEvents(void)
 {
     int i,j;
-
-    struct timespec time = DeterministicTimer::get().getTicks();
-    int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     for (i=0; i<AllInputsFlat::MAXKEYS; i++) {
         if (!Inputs::game_ai.keyboard[i]) {
@@ -231,146 +252,7 @@ static void generateKeyDownEvents(void)
         }
         if (j == AllInputsFlat::MAXKEYS) {
             /* Key was pressed. Generate event */
-            if (Global::game_info.keyboard & GameInfo::SDL2) {
-                SDL_Event event2;
-                event2.type = SDL_KEYDOWN;
-                event2.key.state = SDL_PRESSED;
-                event2.key.windowID = 1;
-                event2.key.timestamp = timestamp;
-                event2.key.repeat = 0;
-
-                SDL_Keysym keysym;
-                xkeysymToSDL(&keysym, Inputs::game_ai.keyboard[i]);
-                keysym.mod = xkeyboardToSDLMod(Inputs::game_ai.keyboard);
-                event2.key.keysym = keysym;
-
-                sdlEventQueue.insert(&event2);
-
-                LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event KEYDOWN with key %d", event2.key.keysym.sym);
-
-                /* Generate a text input event if active */
-                SDL_bool isTextInputActive;
-                NOLOGCALL(isTextInputActive = SDL_IsTextInputActive());
-                if ((isTextInputActive == SDL_TRUE) && ((event2.key.keysym.sym >> 8) == 0)) {
-                    event2.type = SDL_TEXTINPUT;
-                    event2.text.windowID = 1;
-                    event2.text.timestamp = timestamp;
-                    /* SDL keycode is identical to its char number for common chars */
-                    event2.text.text[0] = static_cast<char>(event2.key.keysym.sym & 0xff);
-                    event2.text.text[1] = '\0';
-
-                    sdlEventQueue.insert(&event2);
-
-                    LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event SDL_TEXTINPUT with text %s", event2.text.text);
-                }
-            }
-
-            if (Global::game_info.keyboard & GameInfo::SDL1) {
-                SDL1::SDL_Event event1;
-                event1.type = SDL1::SDL_KEYDOWN;
-                event1.key.which = 0; // FIXME: I don't know what is going here
-                event1.key.state = SDL_PRESSED;
-
-                SDL1::SDL_keysym keysym;
-                xkeysymToSDL1(&keysym, Inputs::game_ai.keyboard[i]);
-                event1.key.keysym = keysym;
-
-                int isUnicodeEnabled;
-                NOLOGCALL(isUnicodeEnabled = SDL_EnableUNICODE(-1));
-                if (isUnicodeEnabled) {
-                    /* Add an Unicode representation of the key */
-                    /* SDL keycode is identical to its char number for common chars */
-                    event1.key.keysym.unicode = static_cast<char>(event1.key.keysym.sym & 0xff);
-                }
-
-                sdlEventQueue.insert(&event1);
-
-                LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL1 event KEYDOWN with key %d", event1.key.keysym.sym);
-            }
-
-#ifdef __unix__
-            if ((Global::game_info.keyboard & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
-                XEvent event;
-                event.xkey.type = KeyPress;
-                event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
-                event.xkey.window = x11::gameXWindows.front();
-                event.xkey.time = timestamp;
-                event.xkey.same_screen = 1;
-                event.xkey.send_event = 0;
-                event.xkey.subwindow = 0;
-                event.xkey.root = x11::rootWindow;
-                NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(nullptr, Inputs::game_ai.keyboard[i]));
-                event.xkey.state = xkeyboardToXMod(Inputs::game_ai.keyboard);
-                for (int d=0; d<GAMEDISPLAYNUM; d++) {
-                    if (x11::gameDisplays[d]) {
-                        event.xkey.root = XRootWindow(x11::gameDisplays[d], 0);
-                        xlibEventQueueList.insert(x11::gameDisplays[d], &event);
-                    }
-                }
-
-                LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XEvent KeyPress with keycode %d", event.xkey.keycode);
-            }
-
-            if ((Global::game_info.keyboard & GameInfo::XCBEVENTS) && !x11::gameXWindows.empty()) {
-                xcb_key_press_event_t event;
-                event.response_type = XCB_KEY_PRESS;
-                event.state = 0; // TODO: Do we have to set the key modifiers?
-                event.event = x11::gameXWindows.front();
-                event.time = timestamp; // TODO: Wrong! timestamp is from X server start
-                event.same_screen = 1;
-                event.child = 0;
-                event.root = x11::rootWindow;
-                NOLOGCALL(event.detail = XKeysymToKeycode(nullptr, Inputs::game_ai.keyboard[i]));
-                event.state = static_cast<uint16_t>(xkeyboardToXMod(Inputs::game_ai.keyboard));
-                for (int c=0; c<GAMECONNECTIONNUM; c++) {
-                    if (x11::gameConnections[c]) {
-                        // event.root = XRootWindow(x11::gameConnections[c], 0);
-                        xcbEventQueueList.insert(x11::gameConnections[c], reinterpret_cast<xcb_generic_event_t*>(&event), false);
-                    }
-                }
-
-                LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate xcb XCB_KEY_PRESS with keycode %d", event.detail);
-            }
-
-            if ((Global::game_info.keyboard & GameInfo::XIEVENTS) && !x11::gameXWindows.empty()) {
-                XEvent event;
-                XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
-                event.xcookie.type = GenericEvent;
-                event.xcookie.extension = xinput_opcode;
-                event.xcookie.evtype = XI_KeyPress;
-                event.xcookie.data = dev;
-                dev->evtype = XI_KeyPress;
-                dev->event = x11::gameXWindows.front();
-                dev->time = timestamp;
-                dev->deviceid = 3;
-                dev->sourceid = 3;
-                NOLOGCALL(dev->detail = XKeysymToKeycode(nullptr, Inputs::game_ai.keyboard[i]));
-                dev->mods.effective = xkeyboardToXMod(Inputs::game_ai.keyboard); // We should not need to fill the other members
-                for (int d=0; d<GAMEDISPLAYNUM; d++) {
-                    if (x11::gameDisplays[d]) {
-                        dev->root = XRootWindow(x11::gameDisplays[d], 0);
-                        xlibEventQueueList.insert(x11::gameDisplays[d], &event);
-                    }
-                }
-
-                LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent KeyPress with keycode %d", dev->detail);
-            }
-
-            if (Global::game_info.keyboard & GameInfo::XIRAWEVENTS) {
-                XEvent event;
-                XIRawEvent *rev = static_cast<XIRawEvent*>(calloc(1, sizeof(XIRawEvent)));
-                event.xcookie.type = GenericEvent;
-                event.xcookie.extension = xinput_opcode;
-                event.xcookie.evtype = XI_RawKeyPress;
-                event.xcookie.data = rev;
-                rev->evtype = XI_RawKeyPress;
-                rev->time = timestamp;
-                NOLOGCALL(rev->detail = XKeysymToKeycode(nullptr, Inputs::game_ai.keyboard[i]));
-                xlibEventQueueList.insert(&event);
-
-                LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent RawKeyPress with keycode %d", rev->detail);
-            }
-#endif
+            generateKeyEvent(Inputs::game_ai.keyboard[i], true);
         }
     }
 }
@@ -890,7 +772,171 @@ static void generateMouseMotionEvents(void)
 }
 
 /* Same as above with the MouseButton event */
-void generateMouseButtonEvents(void)
+static void generateMouseButtonEvent(int button, bool pressed)
+{
+    struct timespec time = DeterministicTimer::get().getTicks();
+    int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+
+    /* Fill the event structure */
+    if (Global::game_info.mouse & GameInfo::SDL2) {
+        SDL_Event event2;
+        if (pressed) {
+            event2.type = SDL_MOUSEBUTTONDOWN;
+            event2.button.state = SDL_PRESSED;
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONDOWN with button %d", SingleInput::toSDL2PointerButton(button));
+        }
+        else {
+            event2.type = SDL_MOUSEBUTTONUP;
+            event2.button.state = SDL_RELEASED;
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONUP with button %d", SingleInput::toSDL2PointerButton(button));
+        }
+        event2.button.timestamp = timestamp;
+        event2.button.windowID = 1;
+        event2.button.which = 0; // TODO: Same as above...
+        event2.button.button = SingleInput::toSDL2PointerButton(button);
+        event2.button.clicks = 1;
+        event2.button.x = Inputs::game_ai.pointer.x;
+        event2.button.y = Inputs::game_ai.pointer.y;
+        sdlEventQueue.insert(&event2);
+    }
+
+    if (Global::game_info.mouse & GameInfo::SDL1) {
+        SDL1::SDL_Event event1;
+        if (pressed) {
+            event1.type = SDL1::SDL_MOUSEBUTTONDOWN;
+            event1.button.state = SDL_PRESSED;
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONDOWN with button %d", SingleInput::toSDL1PointerButton(button));
+        }
+        else {
+            event1.type = SDL1::SDL_MOUSEBUTTONUP;
+            event1.button.state = SDL_RELEASED;
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONUP with button %d", SingleInput::toSDL1PointerButton(button));
+        }
+        event1.button.which = 0; // TODO: Same as above...
+        event1.button.button = SingleInput::toSDL1PointerButton(button);
+        event1.button.x = (Uint16) Inputs::game_ai.pointer.x;
+        event1.button.y = (Uint16) Inputs::game_ai.pointer.y;
+        sdlEventQueue.insert(&event1);
+    }
+
+#ifdef __unix__
+    if ((Global::game_info.mouse & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
+        XEvent event;
+        if (pressed) {
+            event.xbutton.type = ButtonPress;
+            LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate Xlib event ButtonPress with button %d", SingleInput::toXlibPointerButton(button));
+        }
+        else {
+            event.xbutton.type = ButtonRelease;
+            LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate Xlib event ButtonRelease with button %d", SingleInput::toXlibPointerButton(button));
+        }
+        event.xbutton.state = SingleInput::toXlibPointerMask(Inputs::game_ai.pointer.mask);
+        event.xbutton.x = Inputs::game_ai.pointer.x;
+        event.xbutton.y = Inputs::game_ai.pointer.y;
+        event.xbutton.x_root = event.xbutton.x;
+        event.xbutton.y_root = event.xbutton.y;
+        event.xbutton.button = SingleInput::toXlibPointerButton(button);
+        if (pointer_grab_window != None)
+            event.xbutton.window = pointer_grab_window;
+        else
+            event.xbutton.window = x11::gameXWindows.front();
+        event.xbutton.same_screen = 1;
+        event.xbutton.send_event = 0;
+        event.xbutton.subwindow = 0;
+        event.xbutton.root = x11::rootWindow;
+
+        xlibEventQueueList.insert(&event);
+    }
+
+    if ((Global::game_info.mouse & GameInfo::XCBEVENTS) && !x11::gameXWindows.empty()) {
+        xcb_button_press_event_t event; // same as xcb_button_release_event_t
+        if (pressed) {
+            event.response_type = XCB_BUTTON_PRESS;
+            LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_BUTTON_PRESS with button %d", SingleInput::toXlibPointerButton(button));
+        }
+        else {
+            event.response_type = XCB_BUTTON_RELEASE;
+            LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_BUTTON_RELEASE with button %d", SingleInput::toXlibPointerButton(button));
+        }
+        event.state = SingleInput::toXlibPointerMask(Inputs::game_ai.pointer.mask);
+        event.event_x = Inputs::game_ai.pointer.x;
+        event.event_y = Inputs::game_ai.pointer.y;
+        event.root_x = Inputs::game_ai.pointer.x;
+        event.root_y = Inputs::game_ai.pointer.y;
+        event.detail = SingleInput::toXlibPointerButton(button);
+        event.event = x11::gameXWindows.front();
+        event.same_screen = 1;
+        event.child = 0;
+        event.root = x11::rootWindow;
+
+        xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
+    }
+
+    if ((Global::game_info.mouse & GameInfo::XIEVENTS) && !x11::gameXWindows.empty()) {
+        XEvent event;
+        XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
+        event.xcookie.type = GenericEvent;
+        event.xcookie.extension = xinput_opcode;
+        if (pressed) {
+            LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_ButtonPress with button %d", button+1);
+            event.xcookie.evtype = XI_ButtonPress;
+            dev->evtype = XI_ButtonPress;
+        }
+        else {
+            LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_ButtonRelease with button %d", button+1);
+            event.xcookie.evtype = XI_ButtonRelease;
+            dev->evtype = XI_ButtonRelease;
+        }
+        event.xcookie.data = dev;
+        dev->event = x11::gameXWindows.front();
+        dev->time = timestamp;
+        dev->deviceid = 2;
+        dev->sourceid = 2;
+        dev->event_x = Inputs::game_ai.pointer.x;
+        dev->event_y = Inputs::game_ai.pointer.y;
+        dev->root_x = dev->event_x;
+        dev->root_y = dev->event_y;
+        dev->detail = button+1;
+        dev->buttons.mask = static_cast<unsigned char*>(malloc(1*sizeof(unsigned char)));
+        dev->buttons.mask_len = 1;
+        for (int bj=0; bj<5; bj++) {
+            if (Inputs::game_ai.pointer.mask & (1 << bj)) {
+                XISetMask(dev->buttons.mask, bj);
+            }
+        }
+        for (int d=0; d<GAMEDISPLAYNUM; d++) {
+            if (x11::gameDisplays[d]) {
+                dev->root = XRootWindow(x11::gameDisplays[d], 0);
+                xlibEventQueueList.insert(x11::gameDisplays[d], &event);
+            }
+        }
+    }
+
+    if (Global::game_info.mouse & GameInfo::XIRAWEVENTS) {
+        XEvent event;
+        XIRawEvent *rev = static_cast<XIRawEvent*>(calloc(1, sizeof(XIRawEvent)));
+        event.xcookie.type = GenericEvent;
+        event.xcookie.extension = xinput_opcode;
+        if (pressed) {
+            LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_RawButtonPress with button %d", button+1);
+            event.xcookie.evtype = XI_RawButtonPress;
+            rev->evtype = XI_RawButtonPress;
+        }
+        else {
+            LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_RawButtonRelease with button %d", button+1);
+            event.xcookie.evtype = XI_RawButtonRelease;
+            rev->evtype = XI_RawButtonRelease;
+        }
+        event.xcookie.data = rev;
+        rev->time = timestamp;
+        rev->detail = button+1;
+        xlibEventQueueList.insert(&event);
+    }
+#endif
+}
+
+/* Same as above with the MouseButton event */
+static void generateMouseButtonEvents(void)
 {
     struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
@@ -902,163 +948,7 @@ void generateMouseButtonEvents(void)
     for (int bi=0; bi<5; bi++) {
         if ((Inputs::game_ai.pointer.mask ^ Inputs::old_game_ai.pointer.mask) & (1 << buttons[bi])) {
             /* We got a change in a button state */
-
-            /* Fill the event structure */
-            if (Global::game_info.mouse & GameInfo::SDL2) {
-                SDL_Event event2;
-                if (Inputs::game_ai.pointer.mask & (1 << buttons[bi])) {
-                    event2.type = SDL_MOUSEBUTTONDOWN;
-                    event2.button.state = SDL_PRESSED;
-                    LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONDOWN with button %d", SingleInput::toSDL2PointerButton(buttons[bi]));
-                }
-                else {
-                    event2.type = SDL_MOUSEBUTTONUP;
-                    event2.button.state = SDL_RELEASED;
-                    LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONUP with button %d", SingleInput::toSDL2PointerButton(buttons[bi]));
-                }
-                event2.button.timestamp = timestamp;
-                event2.button.windowID = 1;
-                event2.button.which = 0; // TODO: Same as above...
-                event2.button.button = SingleInput::toSDL2PointerButton(buttons[bi]);
-                event2.button.clicks = 1;
-                event2.button.x = Inputs::game_ai.pointer.x;
-                event2.button.y = Inputs::game_ai.pointer.y;
-                sdlEventQueue.insert(&event2);
-            }
-
-            if (Global::game_info.mouse & GameInfo::SDL1) {
-                SDL1::SDL_Event event1;
-                if (Inputs::game_ai.pointer.mask & (1 << buttons[bi])) {
-                    event1.type = SDL1::SDL_MOUSEBUTTONDOWN;
-                    event1.button.state = SDL_PRESSED;
-                    LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONDOWN with button %d", SingleInput::toSDL1PointerButton(buttons[bi]));
-                }
-                else {
-                    event1.type = SDL1::SDL_MOUSEBUTTONUP;
-                    event1.button.state = SDL_RELEASED;
-                    LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONUP with button %d", SingleInput::toSDL1PointerButton(buttons[bi]));
-                }
-                event1.button.which = 0; // TODO: Same as above...
-                event1.button.button = SingleInput::toSDL1PointerButton(buttons[bi]);
-                event1.button.x = (Uint16) Inputs::game_ai.pointer.x;
-                event1.button.y = (Uint16) Inputs::game_ai.pointer.y;
-                sdlEventQueue.insert(&event1);
-            }
-
-#ifdef __unix__
-            if ((Global::game_info.mouse & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
-                XEvent event;
-                if (Inputs::game_ai.pointer.mask & (1 << buttons[bi])) {
-                    event.xbutton.type = ButtonPress;
-                    LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate Xlib event ButtonPress with button %d", SingleInput::toXlibPointerButton(buttons[bi]));
-                }
-                else {
-                    event.xbutton.type = ButtonRelease;
-                    LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate Xlib event ButtonRelease with button %d", SingleInput::toXlibPointerButton(buttons[bi]));
-                }
-                event.xbutton.state = SingleInput::toXlibPointerMask(Inputs::game_ai.pointer.mask);
-                event.xbutton.x = Inputs::game_ai.pointer.x;
-                event.xbutton.y = Inputs::game_ai.pointer.y;
-                event.xbutton.x_root = event.xbutton.x;
-                event.xbutton.y_root = event.xbutton.y;
-                event.xbutton.button = SingleInput::toXlibPointerButton(buttons[bi]);
-                if (pointer_grab_window != None)
-                    event.xbutton.window = pointer_grab_window;
-                else
-                    event.xbutton.window = x11::gameXWindows.front();
-                event.xbutton.same_screen = 1;
-                event.xbutton.send_event = 0;
-                event.xbutton.subwindow = 0;
-                event.xbutton.root = x11::rootWindow;
-
-                xlibEventQueueList.insert(&event);
-            }
-
-            if ((Global::game_info.mouse & GameInfo::XCBEVENTS) && !x11::gameXWindows.empty()) {
-                xcb_button_press_event_t event; // same as xcb_button_release_event_t
-                if (Inputs::game_ai.pointer.mask & (1 << buttons[bi])) {
-                    event.response_type = XCB_BUTTON_PRESS;
-                    LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_BUTTON_PRESS with button %d", SingleInput::toXlibPointerButton(buttons[bi]));
-                }
-                else {
-                    event.response_type = XCB_BUTTON_RELEASE;
-                    LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_BUTTON_RELEASE with button %d", SingleInput::toXlibPointerButton(buttons[bi]));
-                }
-                event.state = SingleInput::toXlibPointerMask(Inputs::game_ai.pointer.mask);
-                event.event_x = Inputs::game_ai.pointer.x;
-                event.event_y = Inputs::game_ai.pointer.y;
-                event.root_x = Inputs::game_ai.pointer.x;
-                event.root_y = Inputs::game_ai.pointer.y;
-                event.detail = SingleInput::toXlibPointerButton(buttons[bi]);
-                event.event = x11::gameXWindows.front();
-                event.same_screen = 1;
-                event.child = 0;
-                event.root = x11::rootWindow;
-
-                xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
-            }
-
-            if ((Global::game_info.mouse & GameInfo::XIEVENTS) && !x11::gameXWindows.empty()) {
-                XEvent event;
-                XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
-                event.xcookie.type = GenericEvent;
-                event.xcookie.extension = xinput_opcode;
-                if (Inputs::game_ai.pointer.mask & (1 << buttons[bi])) {
-                    LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_ButtonPress with button %d", bi+1);
-                    event.xcookie.evtype = XI_ButtonPress;
-                    dev->evtype = XI_ButtonPress;
-                }
-                else {
-                    LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_ButtonRelease with button %d", bi+1);
-                    event.xcookie.evtype = XI_ButtonRelease;
-                    dev->evtype = XI_ButtonRelease;
-                }
-                event.xcookie.data = dev;
-                dev->event = x11::gameXWindows.front();
-                dev->time = timestamp;
-                dev->deviceid = 2;
-                dev->sourceid = 2;
-                dev->event_x = Inputs::game_ai.pointer.x;
-                dev->event_y = Inputs::game_ai.pointer.y;
-                dev->root_x = dev->event_x;
-                dev->root_y = dev->event_y;
-                dev->detail = bi+1;
-                dev->buttons.mask = static_cast<unsigned char*>(malloc(1*sizeof(unsigned char)));
-                dev->buttons.mask_len = 1;
-                for (int bj=0; bj<5; bj++) {
-                    if (Inputs::game_ai.pointer.mask & (1 << buttons[bj])) {
-                        XISetMask(dev->buttons.mask, bj);
-                    }
-                }
-                for (int d=0; d<GAMEDISPLAYNUM; d++) {
-                    if (x11::gameDisplays[d]) {
-                        dev->root = XRootWindow(x11::gameDisplays[d], 0);
-                        xlibEventQueueList.insert(x11::gameDisplays[d], &event);
-                    }
-                }
-            }
-
-            if (Global::game_info.mouse & GameInfo::XIRAWEVENTS) {
-                XEvent event;
-                XIRawEvent *rev = static_cast<XIRawEvent*>(calloc(1, sizeof(XIRawEvent)));
-                event.xcookie.type = GenericEvent;
-                event.xcookie.extension = xinput_opcode;
-                if (Inputs::game_ai.pointer.mask & (1 << buttons[bi])) {
-                    LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_RawButtonPress with button %d", bi+1);
-                    event.xcookie.evtype = XI_RawButtonPress;
-                    rev->evtype = XI_RawButtonPress;
-                }
-                else {
-                    LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XIEvent XI_RawButtonRelease with button %d", bi+1);
-                    event.xcookie.evtype = XI_RawButtonRelease;
-                    rev->evtype = XI_RawButtonRelease;
-                }
-                event.xcookie.data = rev;
-                rev->time = timestamp;
-                rev->detail = bi+1;
-                xlibEventQueueList.insert(&event);
-            }
-#endif
+            generateMouseButtonEvent(buttons[bi], Inputs::game_ai.pointer.mask & (1 << buttons[bi]));
         }
     }
     
@@ -1159,8 +1049,27 @@ static void generateFocusEvents(void)
     win_focused = !win_focused;
 }
 
+static void generateEventList()
+{
+    for (const auto& event : Inputs::game_ai.events) {
+        switch (event.type) {
+            case SingleInput::IT_KEYBOARD:
+                generateKeyEvent(event.which, event.value);
+                break;
+            case SingleInput::IT_POINTER_BUTTON:
+                generateMouseButtonEvent(event.which, event.value);
+                break;
+        }
+    }
+}
+
 void generateInputEvents(void)
 {
+    /* If we have input events, only handle those */
+    if (!Inputs::game_ai.events.empty()) {
+        generateEventList();
+        return;
+    }
     generateKeyUpEvents();
     generateKeyDownEvents();
     generateControllerAdded();

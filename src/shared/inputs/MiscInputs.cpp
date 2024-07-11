@@ -54,7 +54,7 @@ int MiscInputs::getInput(const SingleInput &si) const
     switch (si.type) {
         /* Flag inputs */
         case SingleInput::IT_FLAG:
-            return (flags >> si.value) & 0x1;
+            return (flags >> si.which) & 0x1;
 
         /* Framerate inputs */
         case SingleInput::IT_FRAMERATE_NUM:
@@ -77,9 +77,9 @@ void MiscInputs::setInput(const SingleInput &si, int value)
         /* Flag input */
         case SingleInput::IT_FLAG:
             if (value)
-                flags |= (0x1 << si.value);
+                flags |= (0x1 << si.which);
             else
-                flags &= ~(0x1 << si.value);
+                flags &= ~(0x1 << si.which);
             break;
 
         /* Framerate inputs */

@@ -197,7 +197,7 @@ void ControllerTabWindow::keyPressEvent(QKeyEvent *e)
     if (context->config.km->input_mapping.find(ks) != context->config.km->input_mapping.end()) {
         SingleInput si = context->config.km->input_mapping[ks];
         if (si.inputTypeIsController())
-            return slotButtonToggle(si.inputTypeToControllerNumber(), si.inputTypeToInputNumber(), true);
+            return slotButtonToggle(si.inputTypeToControllerNumber(), si.which, true);
     }
 
     QWidget::keyPressEvent(e);
@@ -221,7 +221,7 @@ void ControllerTabWindow::keyReleaseEvent(QKeyEvent *e)
     if (context->config.km->input_mapping.find(ks) != context->config.km->input_mapping.end()) {
         SingleInput si = context->config.km->input_mapping[ks];
         if (si.inputTypeIsController())
-            return slotButtonToggle(si.inputTypeToControllerNumber(), si.inputTypeToInputNumber(), false);
+            return slotButtonToggle(si.inputTypeToControllerNumber(), si.which, false);
     }
 
     QWidget::keyReleaseEvent(e);

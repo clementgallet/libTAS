@@ -22,6 +22,7 @@
 
 #include "SingleInput.h"
 #include "AllInputs.h"
+#include "InputEvent.h"
 
 #include <array>
 #include <set>
@@ -40,6 +41,7 @@ struct AllInputsFlat {
     MouseInputs pointer;
     std::array<ControllerInputs,MAXJOYS> controllers;
     MiscInputs misc;
+    std::vector<InputEvent> events;
 
     /* Clear all fields */
     void clear();

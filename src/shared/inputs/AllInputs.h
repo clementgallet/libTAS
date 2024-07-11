@@ -24,11 +24,13 @@
 #include "ControllerInputs.h"
 #include "MouseInputs.h"
 #include "MiscInputs.h"
+#include "InputEvent.h"
 
 #include <array>
 #include <set>
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 /* Input structure that is filled by libTAS and send to the game every frame
  * Structure is inspired by SDL.
@@ -64,6 +66,9 @@ class AllInputs {
 
         std::unique_ptr<MiscInputs> misc;
 
+        /* We don't need a pointer here because it already has variable size */
+        std::vector<InputEvent> events;
+
         /* Operator needed for comparing movies */
         bool operator==(const AllInputs& other) const;
 
@@ -92,6 +97,9 @@ class AllInputs {
 
         /* Extract all single inputs and insert them in the set */
         void extractInputs(std::set<SingleInput> &set) const;
+
+        /* Set the input state to the state after all events have been processed */
+        void processEvents();
 
         /* Send inputs through the socket */
         void send(bool preview);

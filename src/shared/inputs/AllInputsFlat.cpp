@@ -34,6 +34,7 @@ void AllInputsFlat::clear() {
         controllers[j].clear();
     }
     misc.clear();
+    events.clear();
 }
 
 void AllInputsFlat::recv()
@@ -58,6 +59,13 @@ void AllInputsFlat::recv()
 
             case MSGN_MISC_INPUTS:
                 receiveData(&misc, sizeof(MiscInputs));
+                break;
+                
+            case MSGN_EVENT_INPUTS:
+                int size;
+                receiveData(&size, sizeof(int));
+                events.resize(size);
+                receiveData(events.data(), size*sizeof(InputEvent));
                 break;
         }
         message = receiveMessage();

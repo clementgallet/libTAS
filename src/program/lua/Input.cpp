@@ -117,19 +117,19 @@ int Lua::Input::getMouseCoords(lua_State *L)
 
 int Lua::Input::setMouseButtons(lua_State *L)
 {
-    int button = static_cast<int>(lua_tointeger(L, 1));
+    unsigned int button = static_cast<unsigned int>(lua_tointeger(L, 1));
     int state = static_cast<int>(lua_tointeger(L, 2));
     
-    SingleInput si = {SingleInput::IT_POINTER_B1 + button, 0, ""};
+    SingleInput si = {SingleInput::IT_POINTER_BUTTON, button, ""};
     ai->setInput(si, state);
     return 0;
 }
 
 int Lua::Input::getMouseButtons(lua_State *L)
 {
-    int button = static_cast<int>(lua_tointeger(L, 1));
+    unsigned int button = static_cast<unsigned int>(lua_tointeger(L, 1));
 
-    SingleInput si = {SingleInput::IT_POINTER_B1 + button, 0, ""};
+    SingleInput si = {SingleInput::IT_POINTER_BUTTON, button, ""};
     lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     return 1;
 }
@@ -137,10 +137,10 @@ int Lua::Input::getMouseButtons(lua_State *L)
 int Lua::Input::setControllerButton(lua_State *L)
 {
     int controller = static_cast<int>(lua_tointeger(L, 1));
-    int button = static_cast<int>(lua_tointeger(L, 2));
+    unsigned int button = static_cast<unsigned int>(lua_tointeger(L, 2));
     int state = static_cast<int>(lua_tointeger(L, 3));
     
-    SingleInput si = {(controller << SingleInput::IT_CONTROLLER_ID_SHIFT) | button, 0, ""};
+    SingleInput si = {2*(controller-1)+SingleInput::IT_CONTROLLER1_BUTTON, button, ""};
     ai->setInput(si, state);
     return 0;
 }
@@ -148,9 +148,9 @@ int Lua::Input::setControllerButton(lua_State *L)
 int Lua::Input::getControllerButton(lua_State *L)
 {
     int controller = static_cast<int>(lua_tointeger(L, 1));
-    int button = static_cast<int>(lua_tointeger(L, 2));
+    unsigned int button = static_cast<unsigned int>(lua_tointeger(L, 2));
     
-    SingleInput si = {(controller << SingleInput::IT_CONTROLLER_ID_SHIFT) | button, 0, ""};
+    SingleInput si = {2*(controller-1)+SingleInput::IT_CONTROLLER1_BUTTON, button, ""};
     lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     return 1;
 }
@@ -158,10 +158,10 @@ int Lua::Input::getControllerButton(lua_State *L)
 int Lua::Input::setControllerAxis(lua_State *L)
 {
     int controller = static_cast<int>(lua_tointeger(L, 1));
-    int axis = static_cast<int>(lua_tointeger(L, 2));
+    unsigned int axis = static_cast<unsigned int>(lua_tointeger(L, 2));
     short value = static_cast<short>(lua_tointeger(L, 3));
     
-    SingleInput si = {(controller << SingleInput::IT_CONTROLLER_ID_SHIFT) | SingleInput::IT_CONTROLLER_AXIS_MASK | axis, 0, ""};
+    SingleInput si = {2*(controller-1)+SingleInput::IT_CONTROLLER1_AXIS, axis, ""};
     ai->setInput(si, value);
     return 0;
 }
@@ -169,9 +169,9 @@ int Lua::Input::setControllerAxis(lua_State *L)
 int Lua::Input::getControllerAxis(lua_State *L)
 {
     int controller = static_cast<int>(lua_tointeger(L, 1));
-    int axis = static_cast<int>(lua_tointeger(L, 2));
+    unsigned int axis = static_cast<unsigned int>(lua_tointeger(L, 2));
     
-    SingleInput si = {(controller << SingleInput::IT_CONTROLLER_ID_SHIFT) | SingleInput::IT_CONTROLLER_AXIS_MASK | axis, 0, ""};
+    SingleInput si = {2*(controller-1)+SingleInput::IT_CONTROLLER1_AXIS, axis, ""};
     lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     return 1;
 }

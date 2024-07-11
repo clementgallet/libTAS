@@ -157,7 +157,7 @@ void InputWindow::updateInputRow(int tab, int row)
             QString str;
             /* Special case for visibility:
              * if mapped to itself print <self> */
-            if ((si.type == SingleInput::IT_KEYBOARD) && (si.value == itermap.first))
+            if ((si.type == SingleInput::IT_KEYBOARD) && (si.which == itermap.first))
                 str += "<self>";
             else
                 str += context->config.km->input_description(itermap.first).c_str();

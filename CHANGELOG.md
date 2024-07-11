@@ -1,5 +1,8 @@
 ## [Unreleased]
 ### Added
+
+* Add input events in movies
+
 ### Changed
 ### Fixed
 

@@ -20,6 +20,7 @@
 #include "KeyPressedDialog.h"
 #include "InputEditorView.h"
 #include "InputEditorModel.h"
+#include "InputEventWindow.h"
 #include "MainWindow.h"
 #include "qtutils.h"
 #include "settings/tooltip/BalloonTip.h"
@@ -110,6 +111,8 @@ InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTa
     keyDialog = new KeyPressedDialog(c, this);
     keyDialog->withModifiers = false;
 
+    inputEventWindow = new InputEventWindow(c, movie, this);
+
     currentMarkerText = "";
 
     scrollBarWidth = verticalScrollBar()->sizeHint().width() + 20;
@@ -120,6 +123,8 @@ void InputEditorView::fillMenu(QMenu* frameMenu)
     menu = frameMenu;
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &QWidget::customContextMenuRequested, this, &InputEditorView::mainMenu);
+
+    eventAct = menu->addAction(tr("Edit frame events"), this, &InputEditorView::editEvents);
 
     insertAct = menu->addAction(tr("Insert"), this, &InputEditorView::insertInput, QKeySequence(Qt::CTRL + Qt::Key_Plus));
 
@@ -300,6 +305,7 @@ void InputEditorView::updateMenu()
     unmarkAct->setEnabled(markers_count);
 
     if (static_cast<uint32_t>(min_row) < context->framecount) {
+        eventAct->setEnabled(false);
         duplicateAct->setEnabled(false);
         insertAct->setEnabled(false);
         insertsAct->setEnabled(false);
@@ -311,6 +317,7 @@ void InputEditorView::updateMenu()
         pasteInsertAct->setEnabled(false);
     }
     else {
+        eventAct->setEnabled(true);
         duplicateAct->setEnabled(true);
         insertAct->setEnabled(true);
         insertsAct->setEnabled(true);
@@ -628,14 +635,14 @@ void InputEditorView::addInputColumn()
     if (ks != 0) {
         /* Get the remapped input if available */
         if (context->config.km->input_mapping.find(ks) != context->config.km->input_mapping.end()) {
-            ks = context->config.km->input_mapping[ks].value;
+            ks = context->config.km->input_mapping[ks].which;
         }
 
         /* Get the input with description if available */
         for (int i=0; i<KeyMapping::INPUTLIST_SIZE; i++) {
             for (auto iter : context->config.km->input_list[i]) {
                 if (iter.type == SingleInput::IT_KEYBOARD) {
-                    if (iter.value == ks) {
+                    if (iter.which == ks) {
                         inputEditorModel->addUniqueInput(iter);
                         return;
                     }
@@ -646,7 +653,7 @@ void InputEditorView::addInputColumn()
         /* Didn't find the input in the list, insert it with the value as description */
         SingleInput si;
         si.type = SingleInput::IT_KEYBOARD;
-        si.value = ks;
+        si.which = ks;
         si.description = std::to_string(ks);
         inputEditorModel->addUniqueInput(si);
     }
@@ -765,6 +772,18 @@ void InputEditorView::removeMarker()
             emit removeMarkerSignal(index.row());
     
     InputEditorView::updateMenu();
+}
+
+void InputEditorView::editEvents()
+{
+    const QModelIndexList indexes = selectionModel()->selectedRows();
+
+    /* If no row was selected, return */
+    if (indexes.count() == 0)
+        return;
+
+    inputEventWindow->setFrame(indexes[0].row());
+    inputEventWindow->exec();
 }
 
 void InputEditorView::duplicateInput()

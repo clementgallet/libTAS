@@ -63,6 +63,12 @@ enum {
      * Argument: MiscInputs
      */
     MSGN_MISC_INPUTS,
+
+    /*
+     * Send event inputs
+     * Argument: size and vector
+     */
+    MSGN_EVENT_INPUTS,
     
     /*
      * Send a controller id and inputs

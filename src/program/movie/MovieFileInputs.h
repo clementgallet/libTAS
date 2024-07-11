@@ -34,10 +34,11 @@ struct Context;
 
 /* Struct to push movie changes from the UI to the main thread. UI thread should
  * never modify the movie */
-struct InputEvent {
+struct InputPending {
     uint64_t framecount;
     SingleInput si;
     int value;
+    bool isEvent;
 };
 
 class MovieFileInputs {
@@ -60,7 +61,7 @@ public:
     unsigned int framerate_num, framerate_den;
 
     /* Queue of movie input changes that where pushed by the UI, to process by the main thread */
-    ConcurrentQueue<InputEvent> input_event_queue;
+    ConcurrentQueue<InputPending> input_queue;
 
     /* Prepare a movie file from the context */
     MovieFileInputs(Context* c);
@@ -128,12 +129,12 @@ public:
 
     /* Queue an input change in the movie, usually performed by the UI thread, 
      * so that it can applied by main thread */
-    void queueInput(uint64_t pos, SingleInput si, int value);
+    void queueInput(uint64_t pos, SingleInput si, int value, bool isEvent);
     
     /* Process an input event pushed by the UI thread, and returns the modified
      * framecount, so that the UI can be updated accordingly.
      * If no event left, returns UINT64_MAX */
-    uint64_t processEvent();
+    uint64_t processPendingInputs();
     
     /* Return the movie frame count */
     uint64_t size();
@@ -147,6 +148,9 @@ private:
     /* We need to protect the input list access, because both the main and UI
      * threads can read and write to the list */
     std::mutex input_list_mutex;
+
+    /* Read one event input string */
+    int readEventFrame(std::istringstream& input_string, AllInputs& inputs);
 
     /* Read the keyboard input string */
     int readKeyboardFrame(std::istringstream& input_string, AllInputs& inputs);

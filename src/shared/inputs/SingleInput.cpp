@@ -45,22 +45,43 @@ bool SingleInput::isAnalog() const
 
 int SingleInput::inputTypeIsController() const
 {
-    return (type >= IT_CONTROLLER1_BUTTON_A) && (type <= IT_CONTROLLER4_AXIS_TRIGGERRIGHT);
+    return (type >= IT_CONTROLLER1_BUTTON) && (type <= IT_CONTROLLER4_AXIS);
 }
 
 int SingleInput::inputTypeToControllerNumber() const
 {
-    return (type >> IT_CONTROLLER_ID_SHIFT) - 1;
+    switch (type) {
+        case IT_CONTROLLER1_BUTTON:
+        case IT_CONTROLLER1_AXIS:
+            return 0;
+        case IT_CONTROLLER2_BUTTON:
+        case IT_CONTROLLER2_AXIS:
+            return 1;
+        case IT_CONTROLLER3_BUTTON:
+        case IT_CONTROLLER3_AXIS:
+            return 2;
+        case IT_CONTROLLER4_BUTTON:
+        case IT_CONTROLLER4_AXIS:
+            return 3;
+    }
+    return 0;
 }
 
 bool SingleInput::inputTypeToAxisFlag() const
 {
-    return type & IT_CONTROLLER_AXIS_MASK;
-}
-
-int SingleInput::inputTypeToInputNumber() const
-{
-    return type & IT_CONTROLLER_TYPE_MASK;
+    switch (type) {
+        case IT_CONTROLLER1_BUTTON:
+        case IT_CONTROLLER2_BUTTON:
+        case IT_CONTROLLER3_BUTTON:
+        case IT_CONTROLLER4_BUTTON:
+            return false;
+        case IT_CONTROLLER1_AXIS:
+        case IT_CONTROLLER2_AXIS:
+        case IT_CONTROLLER3_AXIS:
+        case IT_CONTROLLER4_AXIS:
+            return true;
+    }
+    return false;
 }
 
 #ifdef __unix__

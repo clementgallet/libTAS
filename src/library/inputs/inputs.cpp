@@ -54,8 +54,8 @@ void Inputs::update()
         if (old_game_ai.pointer.mode == SingleInput::POINTER_MODE_RELATIVE) {
             game_ai.pointer.x = old_game_ai.pointer.x;
             game_ai.pointer.y = old_game_ai.pointer.y;
-            game_unclipped_pointer.x = game_unclipped_pointer.x;
-            game_unclipped_pointer.y = game_unclipped_pointer.y;
+            game_unclipped_pointer.x = old_game_unclipped_pointer.x;
+            game_unclipped_pointer.y = old_game_unclipped_pointer.y;
         }
         else {
             game_ai.pointer.x += ai.pointer.x - old_ai.pointer.x;
@@ -86,6 +86,7 @@ void Inputs::update()
     }
 
     game_ai.misc.flags = ai.misc.flags;
+    game_ai.events = ai.events;
 
     old_ai = ai;
 }

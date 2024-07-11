@@ -49,7 +49,12 @@ bool AllInputs::operator==(const AllInputs& other) const
     }
 
     if (misc && other.misc) {
-        return (*misc == *other.misc);
+        if (!(*misc == *other.misc))
+            return false;
+    }
+
+    if (!(events == other.events)) {
+        return false;
     }
     
     return true;
@@ -133,6 +138,8 @@ AllInputs& AllInputs::operator=(const AllInputs& other)
         *misc = *other.misc;
     }
     
+    events = other.events;
+    
     return *this;
 }
 
@@ -152,6 +159,8 @@ void AllInputs::clear() {
 
     if (misc)
         misc->clear();
+        
+    events.clear();
 }
 
 void AllInputs::buildAndClear()
@@ -185,7 +194,7 @@ int AllInputs::getInput(const SingleInput &si) const
         /* Keyboard inputs */
         case SingleInput::IT_KEYBOARD:
             for (const uint32_t& ks : keyboard) {
-                if (si.value == ks) {
+                if (si.which == ks) {
                     return 1;
                 }
             }
@@ -196,11 +205,7 @@ int AllInputs::getInput(const SingleInput &si) const
         case SingleInput::IT_POINTER_Y:
         case SingleInput::IT_POINTER_WHEEL:
         case SingleInput::IT_POINTER_MODE:
-        case SingleInput::IT_POINTER_B1:
-        case SingleInput::IT_POINTER_B2:
-        case SingleInput::IT_POINTER_B3:
-        case SingleInput::IT_POINTER_B4:
-        case SingleInput::IT_POINTER_B5:
+        case SingleInput::IT_POINTER_BUTTON:
             if (pointer)
                 return pointer->getInput(si);
             else
@@ -245,7 +250,7 @@ void AllInputs::setInput(const SingleInput &si, int value)
                     }
                     break;
                 }
-                if (si.value == keyboard[k]) {
+                if (si.which == keyboard[k]) {
                     is_set = true;
                     if (!value) {
                         index_set = k;
@@ -257,7 +262,7 @@ void AllInputs::setInput(const SingleInput &si, int value)
             /* If not set, add it */
             if (!is_set && value) {
                 if (k < AllInputs::MAXKEYS) {
-                    keyboard[k] = si.value;
+                    keyboard[k] = si.which;
                 }
             }
         }
@@ -268,11 +273,7 @@ void AllInputs::setInput(const SingleInput &si, int value)
         case SingleInput::IT_POINTER_Y:
         case SingleInput::IT_POINTER_WHEEL:
         case SingleInput::IT_POINTER_MODE:
-        case SingleInput::IT_POINTER_B1:
-        case SingleInput::IT_POINTER_B2:
-        case SingleInput::IT_POINTER_B3:
-        case SingleInput::IT_POINTER_B4:
-        case SingleInput::IT_POINTER_B5:
+        case SingleInput::IT_POINTER_BUTTON:
             if (!pointer)
                 pointer.reset(new MouseInputs{});
             return pointer->setInput(si, value);
@@ -331,6 +332,16 @@ void AllInputs::extractInputs(std::set<SingleInput> &input_set) const
     }
 }
 
+void AllInputs::processEvents()
+{
+    for (const auto& event : events) {
+        SingleInput si;
+        si.type = event.type;
+        si.which = event.which;
+        setInput(si, event.value);
+    }
+}
+
 void AllInputs::send(bool preview)
 {
     if (preview)
@@ -356,6 +367,13 @@ void AllInputs::send(bool preview)
     if (misc) {
         sendMessage(MSGN_MISC_INPUTS);
         sendData(misc.get(), sizeof(MiscInputs));        
+    }
+
+    if (!events.empty()) {
+        sendMessage(MSGN_EVENT_INPUTS);
+        int size = events.size();
+        sendData(&size, sizeof(int));
+        sendData(events.data(), sizeof(InputEvent)*size);
     }
     
     sendMessage(MSGN_END_INPUTS);

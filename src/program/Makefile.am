@@ -6,6 +6,7 @@ libTAS_QTSOURCES = \
     lua/Print.h \
     ramsearch/MemScanner.h \
     ui/AnnotationsWindow.h \
+    ui/ComboBoxItemDelegate.h \
     ui/ControllerAxisWidget.h \
     ui/ControllerTabWindow.h \
     ui/ControllerWidget.h \
@@ -15,6 +16,8 @@ libTAS_QTSOURCES = \
     ui/InputEditorModel.h \
     ui/InputEditorView.h \
     ui/InputEditorWindow.h \
+    ui/InputEventModel.h \
+    ui/InputEventWindow.h \
     ui/InputWindow.h \
     ui/KeyPressedDialog.h \
     ui/LuaConsoleWindow.h \
@@ -74,6 +77,7 @@ libTAS_SOURCES = \
     movie/MovieFileHeader.cpp \
     movie/MovieFileInputs.cpp \
     ui/AnnotationsWindow.cpp \
+    ui/ComboBoxItemDelegate.cpp \
     ui/ControllerAxisWidget.cpp \
     ui/ControllerTabWindow.cpp \
     ui/ControllerWidget.cpp \
@@ -84,6 +88,8 @@ libTAS_SOURCES = \
     ui/InputEditorModel.cpp \
     ui/InputEditorView.cpp \
     ui/InputEditorWindow.cpp \
+    ui/InputEventModel.cpp \
+    ui/InputEventWindow.cpp \
     ui/InputWindow.cpp \
     ui/KeyPressedDialog.cpp \
     ui/LuaConsoleWindow.cpp \

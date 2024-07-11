@@ -83,6 +83,18 @@ void MovieFileInputs::save()
 
 int MovieFileInputs::writeFrame(std::ostream& input_stream, const AllInputs& inputs)
 {
+    /* Write only events if present */
+    if (!inputs.events.empty()) {
+        for (const auto& event : inputs.events) {
+            input_stream.put('|');
+            input_stream.put('E');
+            input_stream << std::dec;
+            input_stream << event.type << ':' << event.which << ':' << event.value;
+        }
+        input_stream << '|' << std::endl;
+        return 1;
+    }
+    
     /* Write keyboard inputs */
     input_stream.put('|');
     input_stream.put('K');
@@ -193,8 +205,12 @@ int MovieFileInputs::readFrame(const std::string& line, AllInputs& inputs)
         return -1;
 
     d = input_string.peek();
-    while (d != std::char_traits<char>::eof()) {    
+    while (d != std::char_traits<char>::eof()) {
         switch (d) {
+            case 'E':
+                input_string >> d;
+                ret = readEventFrame(input_string, inputs);
+                break;
             case 'K':
                 input_string >> d;
                 ret = readKeyboardFrame(input_string, inputs);
@@ -254,6 +270,25 @@ int MovieFileInputs::readFrame(const std::string& line, AllInputs& inputs)
         d = input_string.peek();
     }
 
+    /* If we imported events, we need to fill the remaining state to the state
+     * at the end of event processing. */
+    inputs.processEvents();
+
+    return 0;
+}
+
+int MovieFileInputs::readEventFrame(std::istringstream& input_string, AllInputs& inputs)
+{
+    char d;
+    InputEvent ie;
+    input_string >> std::dec;
+    input_string >> ie.type >> d;
+    if (d != ':') return -1;
+    input_string >> ie.which >> d;
+    if (d != ':') return -1;
+    input_string >> ie.value >> d;
+
+    inputs.events.push_back(ie);
     return 0;
 }
 
@@ -572,21 +607,22 @@ void MovieFileInputs::wasModified()
     modifiedSinceLastStateLoad = true;
 }
 
-void MovieFileInputs::queueInput(uint64_t pos, SingleInput si, int value)
+void MovieFileInputs::queueInput(uint64_t pos, SingleInput si, int value, bool isEvent)
 {
-    InputEvent ie;
+    InputPending ie;
     ie.framecount = pos;
     ie.si = si;
     ie.value = value;
-    input_event_queue.push(ie);
+    ie.isEvent = isEvent;
+    input_queue.push(ie);
 }
 
-uint64_t MovieFileInputs::processEvent()
+uint64_t MovieFileInputs::processPendingInputs()
 {
     /* Process input events */
-    while (!input_event_queue.empty()) {
-        InputEvent ie;
-        input_event_queue.pop(ie);
+    while (!input_queue.empty()) {
+        InputPending ie;
+        input_queue.pop(ie);
         
         /* Check for setting inputs before current framecount */
         if (ie.framecount < context->framecount)
@@ -597,8 +633,15 @@ uint64_t MovieFileInputs::processEvent()
         if (ie.framecount >= input_list.size())
             continue;
 
-        AllInputs& ai = input_list[ie.framecount];        
-        ai.setInput(ie.si, ie.value);
+        AllInputs& ai = input_list[ie.framecount];
+        if ((ie.si.type == SingleInput::IT_NONE) && ie.isEvent)
+            ai.clear();
+        else if (ie.isEvent) {
+            ai.events.push_back({ie.si.type, ie.si.which, ie.value});
+            ai.processEvents(); // TODO: Unoptimal to call it everytime
+        }
+        else
+            ai.setInput(ie.si, ie.value);
         wasModified();
         return ie.framecount;
     }

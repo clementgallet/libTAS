@@ -61,12 +61,8 @@ int MouseInputs::getInput(const SingleInput &si) const
             return wheel;
         case SingleInput::IT_POINTER_MODE:
             return mode;
-        case SingleInput::IT_POINTER_B1:
-        case SingleInput::IT_POINTER_B2:
-        case SingleInput::IT_POINTER_B3:
-        case SingleInput::IT_POINTER_B4:
-        case SingleInput::IT_POINTER_B5:
-            return (mask >> (si.type - SingleInput::IT_POINTER_B1)) & 0x1;
+        case SingleInput::IT_POINTER_BUTTON:
+            return (mask >> si.which) & 0x1;
     }
     return 0;
 }
@@ -86,15 +82,11 @@ void MouseInputs::setInput(const SingleInput &si, int value)
         case SingleInput::IT_POINTER_MODE:
             mode = value;
             break;
-        case SingleInput::IT_POINTER_B1:
-        case SingleInput::IT_POINTER_B2:
-        case SingleInput::IT_POINTER_B3:
-        case SingleInput::IT_POINTER_B4:
-        case SingleInput::IT_POINTER_B5:
+        case SingleInput::IT_POINTER_BUTTON:
             if (value)
-                mask |= (0x1u << (si.type - SingleInput::IT_POINTER_B1));
+                mask |= (0x1u << si.which);
             else
-                mask &= ~(0x1u << (si.type - SingleInput::IT_POINTER_B1));
+                mask &= ~(0x1u << si.which);
             break;
     }
 }
@@ -121,7 +113,7 @@ void MouseInputs::extractInputs(std::set<SingleInput> &input_set) const
     }
     for (int b=0; b<5; b++) {
         if (mask & (1 << b)) {
-            si = {SingleInput::IT_POINTER_B1 + b, 1, ""};
+            si = {SingleInput::IT_POINTER_BUTTON, b, ""};
             input_set.insert(si);
         }
     }

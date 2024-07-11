@@ -145,8 +145,8 @@ void KeyMappingQuartz::default_inputs()
     /* Map all keycode to their respective keysym. The other keysyms are unmapped. */
     for (int kc = 0; kc < 128; kc++) {
         for (auto iter : input_list[INPUTLIST_KEYBOARD_LATIN])
-            if (iter.value == keyboard_layout[kc]) {
-                input_mapping[iter.value] = iter;
+            if (iter.which == keyboard_layout[kc]) {
+                input_mapping[iter.which] = iter;
                 break;
             }
     }
@@ -168,8 +168,8 @@ void KeyMappingQuartz::default_input(int tab, int input_index)
     /* Check if there's a keycode mapped to this keysym */
     if (si.type == SingleInput::IT_KEYBOARD) {
         for (int kc = 0; kc < 128; kc++) {
-            if (si.value == keyboard_layout[kc]) {
-                input_mapping[si.value] = si;
+            if (si.which == keyboard_layout[kc]) {
+                input_mapping[si.which] = si;
                 break;
             }
         }
@@ -229,40 +229,29 @@ void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConf
                     }
 
                     /* Saving the key */
-                    ai.keyboard[keysym_i++] = si.value;
+                    ai.keyboard[keysym_i++] = si.which;
                 }
 
                 if (si.type == SingleInput::IT_FLAG) {
                     if (!ai.misc)
                         ai.misc.reset(new MiscInputs{});
                     
-                    ai.misc->flags |= (1 << si.value);
+                    ai.misc->flags |= (1 << si.which);
                 }
 
                 if (sc.mouse_support) {
-                    if (si.type >= SingleInput::IT_POINTER_B1 && si.type <= SingleInput::IT_POINTER_B5)
+                    if (si.type == SingleInput::IT_POINTER_BUTTON) {
                         if (!ai.pointer)
                             ai.pointer.reset(new MouseInputs{});
-                    
-                    if (si.type == SingleInput::IT_POINTER_B1)
-                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B1);
-                    if (si.type == SingleInput::IT_POINTER_B2)
-                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B2);
-                    if (si.type == SingleInput::IT_POINTER_B3)
-                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B3);
-                    if (si.type == SingleInput::IT_POINTER_B4)
-                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B4);
-                    if (si.type == SingleInput::IT_POINTER_B5)
-                        ai.pointer->mask |= (0x1u << SingleInput::POINTER_B5);
+                        
+                        ai.pointer->mask |= (0x1u << si.which);
+                    }
                 }
 
                 if (si.inputTypeIsController()) {
                     /* Key is mapped to a game controller */
 
-                    /* Getting Controller id
-                     * Arithmetic on enums is bad, no?
-                     */
-                    int controller_i = (si.type >> SingleInput::IT_CONTROLLER_ID_SHIFT) - 1;
+                    int controller_i = si.inputTypeToControllerNumber();
 
                     /* Check if we support this joystick */
                     if (controller_i >= sc.nb_controllers)
@@ -270,13 +259,10 @@ void KeyMappingQuartz::buildAllInputs(AllInputs& ai, uint32_t window, SharedConf
 
                     if (!ai.controllers[controller_i])
                         ai.controllers[controller_i].reset(new ControllerInputs{});
-                    int controller_axis = si.type & SingleInput::IT_CONTROLLER_AXIS_MASK;
-                    int controller_type = si.type & SingleInput::IT_CONTROLLER_TYPE_MASK;
-                    if (controller_axis) {
-                        ai.controllers[controller_i]->axes[controller_type] = static_cast<short>(si.value);
-                    }
-                    else {
-                        ai.controllers[controller_i]->buttons |= (si.value & 0x1) << controller_type;
+                        
+                    /* We don't support mapping to axes */
+                    if (!si.inputTypeToAxisFlag()) {
+                        ai.controllers[controller_i]->buttons |= (1 << si.which);
                     }
                 }
             }
@@ -448,7 +434,7 @@ void KeyMappingQuartz::initKeyboardLayout()
                             /* Insert key in the misc list */
                             SingleInput si;
                             si.type = SingleInput::IT_KEYBOARD;
-                            si.value = keyboard_layout[kc];
+                            si.which = keyboard_layout[kc];
                             si.description = str;
                             input_list[INPUTLIST_KEYBOARD_MISC].push_back(si);
                         }
@@ -467,7 +453,7 @@ void KeyMappingQuartz::initKeyboardLayout()
                         /* Insert key in the ascii list */
                         SingleInput si;
                         si.type = SingleInput::IT_KEYBOARD;
-                        si.value = keyboard_layout[kc];
+                        si.which = keyboard_layout[kc];
                         si.description = str;
                         input_list[INPUTLIST_KEYBOARD_LATIN].push_back(si);
                     }

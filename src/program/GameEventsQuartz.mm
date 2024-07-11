@@ -64,7 +64,7 @@ static CGEventRef eventTapFunction(CGEventTapProxy proxy, CGEventType type, CGEv
          if (context->config.km->input_mapping.find(keycode) != context->config.km->input_mapping.end()) {
          SingleInput si = context->config.km->input_mapping[keycode];
          if (si.inputTypeIsController())
-         emit controllerButtonToggled(si.inputTypeToControllerNumber(), si.inputTypeToInputNumber(), type == kCGEventKeyDown);
+         emit controllerButtonToggled(si.inputTypeToControllerNumber(), si.which, type == kCGEventKeyDown);
          }*/
         
         /* Build modifiers */

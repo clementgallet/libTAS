@@ -179,7 +179,7 @@ GameEventsXcb::EventType GameEventsXcb::nextEvent(struct HotKey &hk)
                 if (context->config.km->input_mapping.find(ks) != context->config.km->input_mapping.end()) {
                     SingleInput si = context->config.km->input_mapping[ks];
                     if (si.inputTypeIsController())
-                        emit controllerButtonToggled(si.inputTypeToControllerNumber(), si.inputTypeToInputNumber(), response_type == XCB_KEY_PRESS);
+                        emit controllerButtonToggled(si.inputTypeToControllerNumber(), si.which, response_type == XCB_KEY_PRESS);
                 }
 
                 /* If the key is a modifier, skip it */
