@@ -397,3 +397,86 @@ int SingleInput::toDevHatY(int buttons)
     return haty;
 }
 #endif
+
+const char* SingleInput::typeToStr(int type)
+{
+    switch (type) {
+        case IT_KEYBOARD:
+            return "Key";
+        case IT_POINTER_BUTTON:
+            return "Mouse Button";
+        case IT_CONTROLLER1_BUTTON:
+            return "Joy1 Button";
+        case IT_CONTROLLER1_AXIS:
+            return "Joy1 Axis";
+        case IT_CONTROLLER2_BUTTON:
+            return "Joy2 Button";
+        case IT_CONTROLLER2_AXIS:
+            return "Joy2 Axis";
+        case IT_CONTROLLER3_BUTTON:
+            return "Joy3 Button";
+        case IT_CONTROLLER3_AXIS:
+            return "Joy3 Axis";
+        case IT_CONTROLLER4_BUTTON:
+            return "Joy4 Button";
+        case IT_CONTROLLER4_AXIS:
+            return "Joy4 Axis";
+    }
+    return "";
+}
+
+const char* SingleInput::buttonToStr(int button)
+{
+    switch (button) {
+        case BUTTON_A:
+            return "A";
+        case BUTTON_B:
+            return "B";
+        case BUTTON_X:
+            return "X";
+        case BUTTON_Y:
+            return "Y";
+        case BUTTON_BACK:
+            return "Back";
+        case BUTTON_GUIDE:
+            return "Guide";
+        case BUTTON_START:
+            return "Start";
+        case BUTTON_LEFTSTICK:
+            return "Left Stick";
+        case BUTTON_RIGHTSTICK:
+            return "Right Stick";
+        case BUTTON_LEFTSHOULDER:
+            return "Left Shoulder";
+        case BUTTON_RIGHTSHOULDER:
+            return "Right Shoulder";
+        case BUTTON_DPAD_UP:
+            return "Up";
+        case BUTTON_DPAD_DOWN:
+            return "Down";
+        case BUTTON_DPAD_LEFT:
+            return "Left";
+        case BUTTON_DPAD_RIGHT:
+            return "Right";
+    }
+    return "";
+}
+
+const char* SingleInput::axisToStr(int axis)
+{
+    switch (axis) {
+        case AXIS_LEFTX:
+            return "LeftX";
+        case AXIS_LEFTY:
+            return "LeftY";
+        case AXIS_RIGHTX:
+            return "RightX";
+        case AXIS_RIGHTY:
+            return "RightY";
+        case AXIS_TRIGGERLEFT:
+            return "Left Trigger";
+        case AXIS_TRIGGERRIGHT:
+            return "Right Trigger";
+    }
+    return "";
+}

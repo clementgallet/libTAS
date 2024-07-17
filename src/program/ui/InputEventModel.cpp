@@ -22,15 +22,6 @@
 #include "utils.h"
 #include "Context.h"
 
-// #include <sstream>
-// #include <fstream>
-// #include <iostream>
-// #include <iterator>
-// #include <QtGui/QColor>
-// #include <QtGui/QPalette>
-// #include <QtGui/QBrush>
-// #include <QtGui/QGuiApplication>
-
 InputEventModel::InputEventModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c) {}
 
 int InputEventModel::rowCount(const QModelIndex & /*parent*/) const
@@ -73,12 +64,7 @@ QVariant InputEventModel::data(const QModelIndex &index, int role) const
 
     if (role == Qt::DisplayRole) {
         if (index.column() == 0) {
-            switch (event.type) {
-                case SingleInput::IT_KEYBOARD:
-                    return tr("Key");
-                case SingleInput::IT_POINTER_BUTTON:
-                    return tr("Mouse Button");
-            }
+            return tr(SingleInput::typeToStr(event.type));
         }
         else if (index.column() == 1) {
             switch (event.type) {
@@ -86,6 +72,16 @@ QVariant InputEventModel::data(const QModelIndex &index, int role) const
                     return QString(context->config.km->input_description(event.which).c_str());
                 case SingleInput::IT_POINTER_BUTTON:
                     return QString("Button %1").arg(event.which+1);
+                case SingleInput::IT_CONTROLLER1_BUTTON:
+                case SingleInput::IT_CONTROLLER2_BUTTON:
+                case SingleInput::IT_CONTROLLER3_BUTTON:
+                case SingleInput::IT_CONTROLLER4_BUTTON:
+                    return tr(SingleInput::buttonToStr(event.which));
+                case SingleInput::IT_CONTROLLER1_AXIS:
+                case SingleInput::IT_CONTROLLER2_AXIS:
+                case SingleInput::IT_CONTROLLER3_AXIS:
+                case SingleInput::IT_CONTROLLER4_AXIS:
+                    return tr(SingleInput::axisToStr(event.which));
             }
         }
         else {
@@ -94,18 +90,13 @@ QVariant InputEventModel::data(const QModelIndex &index, int role) const
     }
     else if (role == Qt::EditRole) {
         if (index.column() == 0) {
-            switch (event.type) {
-                case SingleInput::IT_KEYBOARD:
-                    return QVariant(SingleInput::IT_KEYBOARD);
-                case SingleInput::IT_POINTER_BUTTON:
-                    return QVariant(SingleInput::IT_POINTER_BUTTON);
-            }
+            return event.type;
         }
         else if (index.column() == 1) {
             return ((unsigned long long)event.type << 32ULL) | event.which;
         }
         else {
-            return QVariant(event.value);
+            return event.value;
         }
     }
     return QVariant();

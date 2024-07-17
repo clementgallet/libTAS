@@ -111,7 +111,7 @@ void MouseInputs::extractInputs(std::set<SingleInput> &input_set) const
         si = {SingleInput::IT_POINTER_MODE, 1, ""};
         input_set.insert(si);
     }
-    for (int b=0; b<5; b++) {
+    for (unsigned int b=0; b<5; b++) {
         if (mask & (1 << b)) {
             si = {SingleInput::IT_POINTER_BUTTON, b, ""};
             input_set.insert(si);

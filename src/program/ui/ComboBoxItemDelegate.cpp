@@ -32,8 +32,16 @@ QWidget *ComboBoxItemDelegate::createEditor(QWidget *parent, const QStyleOptionV
     QComboBox *cb = new QComboBox(parent);
     const int col = index.column();
     if (col == 0) {
-        cb->addItem(tr("Key"), SingleInput::IT_KEYBOARD);
-        cb->addItem(tr("Mouse Button"), SingleInput::IT_POINTER_BUTTON);
+        cb->addItem(tr(SingleInput::typeToStr(SingleInput::IT_KEYBOARD)), SingleInput::IT_KEYBOARD);
+        cb->addItem(tr(SingleInput::typeToStr(SingleInput::IT_POINTER_BUTTON)), SingleInput::IT_POINTER_BUTTON);
+        cb->addItem(tr(SingleInput::typeToStr(SingleInput::IT_CONTROLLER1_BUTTON)), SingleInput::IT_CONTROLLER1_BUTTON);
+        cb->addItem(tr(SingleInput::typeToStr(SingleInput::IT_CONTROLLER1_AXIS)), SingleInput::IT_CONTROLLER1_AXIS);
+        cb->addItem(tr(SingleInput::typeToStr(SingleInput::IT_CONTROLLER2_BUTTON)), SingleInput::IT_CONTROLLER2_BUTTON);
+        cb->addItem(tr(SingleInput::typeToStr(SingleInput::IT_CONTROLLER2_AXIS)), SingleInput::IT_CONTROLLER2_AXIS);
+        cb->addItem(tr(SingleInput::typeToStr(SingleInput::IT_CONTROLLER3_BUTTON)), SingleInput::IT_CONTROLLER3_BUTTON);
+        cb->addItem(tr(SingleInput::typeToStr(SingleInput::IT_CONTROLLER3_AXIS)), SingleInput::IT_CONTROLLER3_AXIS);
+        cb->addItem(tr(SingleInput::typeToStr(SingleInput::IT_CONTROLLER4_BUTTON)), SingleInput::IT_CONTROLLER4_BUTTON);
+        cb->addItem(tr(SingleInput::typeToStr(SingleInput::IT_CONTROLLER4_AXIS)), SingleInput::IT_CONTROLLER4_AXIS);
     }
     else {
         int type = index.data(Qt::EditRole).toULongLong() >> 32;
@@ -50,6 +58,20 @@ QWidget *ComboBoxItemDelegate::createEditor(QWidget *parent, const QStyleOptionV
                 cb->addItem(tr("Button 3"), SingleInput::POINTER_B3);
                 cb->addItem(tr("Button 4"), SingleInput::POINTER_B4);
                 cb->addItem(tr("Button 5"), SingleInput::POINTER_B5);
+                break;
+            case SingleInput::IT_CONTROLLER1_BUTTON:
+            case SingleInput::IT_CONTROLLER2_BUTTON:
+            case SingleInput::IT_CONTROLLER3_BUTTON:
+            case SingleInput::IT_CONTROLLER4_BUTTON:
+                for (int b=0; b < SingleInput::BUTTON_LAST; b++)
+                    cb->addItem(tr(SingleInput::buttonToStr(b)), b);
+                break;
+            case SingleInput::IT_CONTROLLER1_AXIS:
+            case SingleInput::IT_CONTROLLER2_AXIS:
+            case SingleInput::IT_CONTROLLER3_AXIS:
+            case SingleInput::IT_CONTROLLER4_AXIS:
+                for (int a=0; a < SingleInput::AXIS_LAST; a++)
+                    cb->addItem(tr(SingleInput::axisToStr(a)), a);
                 break;
         }
     }

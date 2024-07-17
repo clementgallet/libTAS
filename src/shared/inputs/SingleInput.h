@@ -192,6 +192,15 @@ public:
     static int toDevHatY(int buttons);
 #endif
 
+    /* Returns string representation of input type */
+    static const char* typeToStr(int type);
+
+    /* Returns string representation of button */
+    static const char* buttonToStr(int button);
+
+    /* Returns string representation of axis */
+    static const char* axisToStr(int axis);
+
 };
 
 #endif
