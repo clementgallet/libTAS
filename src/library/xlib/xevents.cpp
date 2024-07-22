@@ -120,16 +120,14 @@ void pushNativeXlibEvents(Display *display)
         return;
     }
 
-    LINK_NAMESPACE_GLOBAL(XSync);
-    LINK_NAMESPACE_GLOBAL(XPending);
-    LINK_NAMESPACE_GLOBAL(XNextEvent);
-
-    NOLOGCALL(XLockDisplay(display));
+    NATIVECALL(XLockDisplay(display));
     int n;
-    NOLOGCALL(n = orig::XPending(display));
+    NATIVECALL(n = XPending(display));
     while (n > 0) {
         XEvent event;
-        NOLOGCALL(orig::XNextEvent(display, &event));
+        NATIVECALL(XNextEvent(display, &event));
+        LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "Push native event:");
+        debugEvent(&event);
 
         if (event.type == ClientMessage) {
             /* Catch the close event */
@@ -171,7 +169,7 @@ void pushNativeXlibEvents(Display *display)
                     RenderHUD::detachGameWindow();
 
                     /* Skip the event */
-                    NOLOGCALL(n = orig::XPending(display));
+                    NATIVECALL(n = XPending(display));
                     continue;
                 }
                 
@@ -186,9 +184,9 @@ void pushNativeXlibEvents(Display *display)
             xlibEventQueueList.insert(display, &event);
         }
 
-        NOLOGCALL(n = orig::XPending(display));
+        NATIVECALL(n = XPending(display));
     }
-    NOLOGCALL(XUnlockDisplay(display));
+    NATIVECALL(XUnlockDisplay(display));
 }
 
 int XNextEvent(Display *display, XEvent *event_return)
