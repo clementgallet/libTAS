@@ -22,6 +22,7 @@
 
 #include "Context.h"
 #include "movie/MovieFile.h"
+#include "movie/InputSerialization.h"
 #include "SaveStateList.h"
 #include "SaveState.h"
 #include "../shared/inputs/SingleInput.h"
@@ -709,7 +710,7 @@ void InputEditorModel::copyInputs(int row, int count, std::ostringstream& inputS
     /* Translate inputs into a string */
     for (int r=row; r < row+count; r++) {
         const AllInputs& ai = movie->inputs->getInputs(r);
-        movie->inputs->writeFrame(inputString, ai);
+        InputSerialization::writeFrame(inputString, ai);
     }
 }
 
@@ -723,17 +724,7 @@ int InputEditorModel::pasteInputs(int row)
     std::istringstream inputString(clipboard->text().toStdString());
 
     std::vector<AllInputs> paste_ais;
-    std::string line;
-    while (std::getline(inputString, line)) {
-        if (!line.empty() && (line[0] == '|')) {
-            paste_ais.emplace_back();
-            int ret = movie->inputs->readFrame(line, paste_ais.back());
-            if (ret < 0) {
-                paste_ais.pop_back();
-                break;
-            }
-        }
-    }
+    InputSerialization::readInputs(inputString, paste_ais);
 
     /* Check if we need to insert frames */
     int insertedFrames = row + paste_ais.size() - movie->inputs->nbFrames();
@@ -774,17 +765,7 @@ void InputEditorModel::pasteInputsInRange(int row, int count)
     std::istringstream inputString(clipboard->text().toStdString());
 
     std::vector<AllInputs> paste_ais;
-    std::string line;
-    while (std::getline(inputString, line)) {
-        if (!line.empty() && (line[0] == '|')) {
-            paste_ais.emplace_back();
-            int ret = movie->inputs->readFrame(line, paste_ais.back());
-            if (ret < 0) {
-                paste_ais.pop_back();
-                break;
-            }
-        }
-    }
+    InputSerialization::readInputs(inputString, paste_ais);
 
     /* Update the movie by ranges of pasted inputs */
     for (int i = 0; i < count; i+=paste_ais.size()) {
@@ -817,17 +798,7 @@ int InputEditorModel::pasteInsertInputs(int row)
     std::istringstream inputString(clipboard->text().toStdString());
 
     std::vector<AllInputs> paste_ais;
-    std::string line;
-    while (std::getline(inputString, line)) {
-        if (!line.empty() && (line[0] == '|')) {
-            paste_ais.emplace_back();
-            int ret = movie->inputs->readFrame(line, paste_ais.back());
-            if (ret < 0) {
-                paste_ais.pop_back();
-                break;
-            }
-        }
-    }
+    InputSerialization::readInputs(inputString, paste_ais);
 
     beginInsertRows(QModelIndex(), row, row + paste_ais.size() - 1);
     

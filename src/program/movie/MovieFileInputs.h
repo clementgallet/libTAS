@@ -58,9 +58,6 @@ public:
      * Used to determine when a state loading increments the rerecord count. */
     bool modifiedSinceLastStateLoad;
 
-    /* Initial framerate values */
-    unsigned int framerate_num, framerate_den;
-
     /* Queue of movie input changes that where pushed by the UI, to process by the main thread */
     ConcurrentQueue<InputPending> input_queue;
 
@@ -68,6 +65,8 @@ public:
     MovieFileInputs(Context* c);
 
     void setChangeLog(MovieFileChangeLog* mcl);
+
+    void setFramerate(unsigned int num, unsigned int den);
 
     /* Clear */
     void clear();
@@ -78,12 +77,6 @@ public:
 
     /* Write the inputs into a file and compress to the whole moviefile */
     void save();
-
-    /* Write a single frame of inputs into the input stream */
-    int writeFrame(std::ostream& input_stream, const AllInputs& inputs);
-
-    /* Read a single frame of inputs from the line of inputs */
-    int readFrame(const std::string& line, AllInputs& inputs);
 
     /* Get the number of frames of the current movie */
     uint64_t nbFrames();
@@ -155,34 +148,15 @@ private:
 
     MovieFileChangeLog* movie_changelog;
 
+    /* Initial framerate values */
+    unsigned int framerate_num, framerate_den;
+
     /* The list of inputs */
     std::vector<AllInputs> input_list;
 
     /* We need to protect the input list access, because both the main and UI
      * threads can read and write to the list */
     std::mutex input_list_mutex;
-
-    /* Read one event input string */
-    int readEventFrame(std::istringstream& input_string, AllInputs& inputs);
-
-    /* Read the keyboard input string */
-    int readKeyboardFrame(std::istringstream& input_string, AllInputs& inputs);
-
-    /* Read the mouse input string */
-    int readMouseFrame(std::istringstream& input_string, AllInputs& inputs);
-
-    /* Read one controller input string */
-    int readControllerFrame(std::istringstream& input_string, AllInputs& inputs, int joy);
-
-    /* Read the flag input string */
-    int readFlagFrame(std::istringstream& input_string, AllInputs& inputs);
-
-    /* Read the framerate input string */
-    int readFramerateFrame(std::istringstream& input_string, AllInputs& inputs);
-
-    /* Read the realtime input string */
-    int readRealtimeFrame(std::istringstream& input_string, AllInputs& inputs);
-
 };
 
 #endif

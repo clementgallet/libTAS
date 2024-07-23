@@ -129,8 +129,7 @@ int MovieFile::loadMovie(const std::string& moviefile)
     editor->load();
 
     /* Copy framerate values to inputs */
-    inputs->framerate_num = header->framerate_num;
-    inputs->framerate_den = header->framerate_den;
+    inputs->setFramerate(header->framerate_num, header->framerate_den);
 
     if (context->config.sc.movie_framecount != inputs->nbFrames()) {
         std::cerr << "Warning: movie framecount and movie config mismatch!" << std::endl;
