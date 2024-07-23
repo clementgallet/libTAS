@@ -24,6 +24,7 @@
 #include "MovieFileEditor.h"
 #include "MovieFileHeader.h"
 #include "MovieFileInputs.h"
+#include "MovieFileChangeLog.h"
 
 #include <string>
 #include <stdint.h>
@@ -38,6 +39,7 @@ public:
     MovieFileInputs* inputs;
     MovieFileAnnotations* annotations;
     MovieFileEditor* editor;
+    MovieFileChangeLog* changelog;
 
     /* List of error codes */
     enum Error {

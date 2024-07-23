@@ -129,13 +129,16 @@ void LuaFunctionList::switchForFile(int row, bool active)
     }
 }
 
-void LuaFunctionList::call(NamedLuaFunction::CallbackType c)
+bool LuaFunctionList::call(NamedLuaFunction::CallbackType c)
 {
+    bool wasCalled = false;
     for (auto& nlf : functions) {
         if (nlf.active && nlf.type == c) {
             nlf.call();
+            wasCalled = true;
         }
     }
+    return wasCalled;
 }
 
 int LuaFunctionList::fileCount() const

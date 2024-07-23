@@ -20,6 +20,8 @@
 #ifndef LIBTAS_INPUTEDITORMODEL_H_INCLUDED
 #define LIBTAS_INPUTEDITORMODEL_H_INCLUDED
 
+#include "../shared/inputs/SingleInput.h"
+
 #include <QtCore/QAbstractTableModel>
 #include <vector>
 #include <sstream>
@@ -28,7 +30,6 @@
 /* Forward declaration */
 struct Context;
 class MovieFile;
-class SingleInput;
 class AllInputs;
 
 class InputEditorModel : public QAbstractTableModel {
@@ -68,6 +69,12 @@ public:
     /* Build the unique set of inputs present in the movie */
     void buildInputSet();
 
+    /* Start a paint procedure initiated by dragging the mouse */
+    void startPaint(int col, int minRow, int maxRow, int value, int autofire);
+
+    /* End paint procedure and set input range if possible */
+    void endPaint();
+
     /* Return the current label of an input */
     std::string inputLabel(int column);
 
@@ -105,7 +112,7 @@ public:
     void lockUniqueInput(int column, bool locked);
 
     /* Clear input */
-    void clearInput(int row);
+    void clearInputs(int row, int count);
 
     /* Copy selected inputs into the stream */
     void copyInputs(int row, int count, std::ostringstream& inputString);
@@ -145,9 +152,6 @@ public:
     bool isAutofireInput(int index) const;
 
 public slots:
-    /* Toggle a single input and return the new value */
-    bool toggleInput(const QModelIndex &index);
-
     /* Prepare for a change of inputs */
     void beginModifyInputs();
 
@@ -188,6 +192,13 @@ private:
     /* Current hovered cell */
     QModelIndex hoveredIndex;
     
+    /* Parameters of the current range being painted */
+    SingleInput paintInput;
+    int paintMinRow;
+    int paintMaxRow;
+    int paintValue;
+    int paintAutofire;
+
 signals:
     void inputSetChanged();
     void stateLoaded();

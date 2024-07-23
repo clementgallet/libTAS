@@ -19,28 +19,22 @@
 
 #include "MarkerView.h"
 #include "MarkerModel.h"
-#include "MainWindow.h"
 
 #include "Context.h"
 
 #include <QtWidgets/QHeaderView>
+#include <QtGui/QMouseEvent>
 
 #include <stdint.h>
 #include <climits>
 
-MarkerView::MarkerView(Context* c, QWidget *parent, QWidget *gp) : QTableView(parent), context(c)
+MarkerView::MarkerView(Context* c, MovieFile *movie, QWidget *parent) : QTableView(parent), context(c)
 {
     setSelectionBehavior(QAbstractItemView::SelectRows);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     setShowGrid(true);
     setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-
-    MovieFile *movie = nullptr;
-    MainWindow *mw = qobject_cast<MainWindow*>(gp);
-    if (mw) {
-        movie = &mw->gameLoop->movie;
-    }
 
     markerModel = new MarkerModel(context, movie);
     setModel(markerModel);

@@ -17,37 +17,28 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_LUACALLBACKS_H_INCLUDED
-#define LIBTAS_LUACALLBACKS_H_INCLUDED
+#ifndef LIBTAS_MOVIEACTIONPAINT_H_INCLUDED
+#define LIBTAS_MOVIEACTIONPAINT_H_INCLUDED
 
-#include "NamedLuaFunction.h"
-#include "LuaFunctionList.h"
+#include "IMovieAction.h"
+#include "../shared/inputs/SingleInput.h"
 
-extern "C" {
-#include <lua.h>
-}
+#include <cstdint>
+#include <vector>
 
-namespace Lua {
+class MovieFileInputs;
 
-namespace Callbacks {
+class MovieActionPaint : public IMovieAction {
+public:
+    MovieActionPaint(uint64_t start_frame, uint64_t end_frame, SingleInput si, int newV, MovieFileInputs* movie_inputs);
 
-    /* Register all functions */
-    void registerFunctions(lua_State *L);
+    void undo(MovieFileInputs* movie_inputs);
+    void redo(MovieFileInputs* movie_inputs);
     
-    void clear();
-
-    int onStartup(lua_State *L);
-
-    int onInput(lua_State *L);
-
-    int onFrame(lua_State *L);
-
-    int onPaint(lua_State *L);
-    
-    bool call(NamedLuaFunction::CallbackType type);
-    
-    LuaFunctionList& getList();
-}
-}
+private:
+    SingleInput input;
+    std::vector<int> old_values;
+    int new_value;
+};
 
 #endif

@@ -17,37 +17,28 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_LUACALLBACKS_H_INCLUDED
-#define LIBTAS_LUACALLBACKS_H_INCLUDED
+#ifndef LIBTAS_MOVIEACTIONINSERTFRAMES_H_INCLUDED
+#define LIBTAS_MOVIEACTIONINSERTFRAMES_H_INCLUDED
 
-#include "NamedLuaFunction.h"
-#include "LuaFunctionList.h"
+#include "IMovieAction.h"
+#include "../shared/inputs/AllInputs.h"
 
-extern "C" {
-#include <lua.h>
-}
+#include <vector>
+#include <cstdint>
 
-namespace Lua {
+class MovieFileInputs;
 
-namespace Callbacks {
+class MovieActionInsertFrames : public IMovieAction {
+public:
+    MovieActionInsertFrames(uint64_t insert_from, const std::vector<AllInputs>& inserted_frames);
+    MovieActionInsertFrames(uint64_t insert_from, int count);
+    MovieActionInsertFrames(uint64_t insert_from, const AllInputs& inserted_frame);
 
-    /* Register all functions */
-    void registerFunctions(lua_State *L);
+    void undo(MovieFileInputs* movie_inputs);
+    void redo(MovieFileInputs* movie_inputs);
     
-    void clear();
-
-    int onStartup(lua_State *L);
-
-    int onInput(lua_State *L);
-
-    int onFrame(lua_State *L);
-
-    int onPaint(lua_State *L);
-    
-    bool call(NamedLuaFunction::CallbackType type);
-    
-    LuaFunctionList& getList();
-}
-}
+private:
+    std::vector<AllInputs> new_frames;
+};
 
 #endif

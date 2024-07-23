@@ -21,11 +21,11 @@
 #include "InputEditorView.h"
 #include "InputEditorModel.h"
 #include "InputEventWindow.h"
-#include "MainWindow.h"
 #include "qtutils.h"
 #include "settings/tooltip/BalloonTip.h"
 
 #include "Context.h"
+#include "movie/MovieFile.h"
 
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QHeaderView>
@@ -37,19 +37,13 @@
 
 #include <stdint.h>
 
-InputEditorView::InputEditorView(Context* c, QWidget *parent, QWidget *gp) : QTableView(parent), context(c)
+InputEditorView::InputEditorView(Context* c, MovieFile *m, QWidget *parent) : QTableView(parent), context(c), movie(m)
 {
     setSelectionBehavior(QAbstractItemView::SelectRows);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     setShowGrid(true);
     setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
     setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
-
-    MovieFile *movie = nullptr;
-    MainWindow *mw = qobject_cast<MainWindow*>(gp);
-    if (mw) {
-        movie = &mw->gameLoop->movie;
-    }
 
     inputEditorModel = new InputEditorModel(context, movie);
     setModel(inputEditorModel);
@@ -160,7 +154,7 @@ void InputEditorView::fillMenu(QMenu* frameMenu)
     this->addAction(deleteAct);
 
     truncateAct = menu->addAction(tr("Truncate"), this, &InputEditorView::truncateInputs);
-    clearAct = menu->addAction(tr("Clear"), this, &InputEditorView::clearInput, QKeySequence::Delete);
+    clearAct = menu->addAction(tr("Clear"), this, &InputEditorView::clearInputs, QKeySequence::Delete);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     clearAct->setShortcutVisibleInContextMenu(true);
 #endif
@@ -189,7 +183,20 @@ void InputEditorView::fillMenu(QMenu* frameMenu)
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     pasteInsertAct->setShortcutVisibleInContextMenu(true);
 #endif
-    this->addAction(pasteInsertAct);    
+    this->addAction(pasteInsertAct);
+
+    menu->addSeparator();
+    undoAct = menu->addAction(tr("Undo"), movie->changelog, &MovieFileChangeLog::undo, QKeySequence::Undo);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
+    undoAct->setShortcutVisibleInContextMenu(true);
+#endif
+    this->addAction(undoAct);
+
+    redoAct = menu->addAction(tr("Redo"), movie->changelog, &MovieFileChangeLog::redo, QKeySequence::Redo);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
+    redoAct->setShortcutVisibleInContextMenu(true);
+#endif
+    this->addAction(redoAct);
 }
 
 void InputEditorView::resizeAllColumns()
@@ -328,6 +335,9 @@ void InputEditorView::updateMenu()
         pasteAct->setEnabled(true);
         pasteInsertAct->setEnabled(true);
     }
+    
+    undoAct->setEnabled(movie->changelog->canUndo());
+    redoAct->setEnabled(movie->changelog->canRedo());
 }
 
 void InputEditorView::mousePressEvent(QMouseEvent *event)
@@ -361,16 +371,18 @@ void InputEditorView::mousePressEvent(QMouseEvent *event)
     }
 
     /* For editable items, copy the value. Else, copy the opposite value */
-    if (inputEditorModel->flags(index) & Qt::ItemIsEditable) {
-        mouseValue = inputEditorModel->data(index, Qt::EditRole).toInt(nullptr);
-        return QTableView::mousePressEvent(event);
+    mouseValue = inputEditorModel->data(index, Qt::EditRole).toInt();
+    if (!(inputEditorModel->flags(index) & Qt::ItemIsEditable)) {
+        if (event->modifiers() & Qt::ControlModifier)
+            mouseValue = 1; // autofire always starts with setting input
+        else
+            mouseValue = !mouseValue;
     }
-    else {
-        mouseValue = inputEditorModel->toggleInput(index);
-
-        /* Set the min row to toggle inputs */
-        minToggleRow = (mouseRow<context->framecount)?mouseRow:context->framecount;
-    }
+    
+    if (event->modifiers() & Qt::ControlModifier)
+        inputEditorModel->startPaint(mouseColumn, mouseRow, mouseRow, mouseValue, (mouseRow%2)+1);
+    else
+        inputEditorModel->startPaint(mouseColumn, mouseRow, mouseRow, mouseValue, 0);
 
     event->accept();
 }
@@ -453,39 +465,20 @@ void InputEditorView::mouseMoveEvent(QMouseEvent *event)
     if ((index.row() >= mouseMinRow) && (index.row() <= mouseMaxRow))
         return;
 
-    /* Prevent toggle past the first toggle frame when rewinding, and
-     * if we started to toggle future inputs, don't trigger a rewind */
-    if (index.row() < minToggleRow) {
-        return;
-    }
-
-    int newMouseValue = mouseValue;
-
-    /* Toggle all cells from mouse to minRow-1, or maxRow+1 to mouse */
-    int minLoop, maxLoop;
     if (index.row() < mouseMinRow) {
-        minLoop = index.row();
-        maxLoop = mouseMinRow - 1;
         mouseMinRow = index.row();
     }
     else {
-        minLoop = mouseMaxRow + 1;
-        maxLoop = index.row();
         mouseMaxRow = index.row();        
     }
 
-    for (int i = minLoop; i <= maxLoop; i++) {
-        /* Check if we need to alternate the input state */
-        if (event->modifiers() & Qt::ControlModifier) {
-            if ((i - mouseRow) % 2)
-                newMouseValue = !newMouseValue;
-        }
-        
-        /* Toggle the cell with the same row as the cell under the mouse */
-        QModelIndex toggle_index = inputEditorModel->index(i, mouseColumn);
-        
-        inputEditorModel->setData(toggle_index, QVariant(newMouseValue), Qt::EditRole);        
-    }
+    inputEditorModel->startPaint(mouseColumn, mouseMinRow, mouseMaxRow, mouseValue, -1);
+}
+
+void InputEditorView::mouseReleaseEvent(QMouseEvent *event)
+{
+    inputEditorModel->endPaint();
+    return QTableView::mouseReleaseEvent(event);
 }
 
 void InputEditorView::timerEvent(QTimerEvent* event)
@@ -935,11 +928,9 @@ void InputEditorView::truncateInputs()
     inputEditorModel->removeRows(indexes[0].row()+1, nbRows-indexes[0].row()-1);
 }
 
-void InputEditorView::clearInput()
+void InputEditorView::clearInputs()
 {
-    for (const QModelIndex index : selectionModel()->selectedRows()) {
-        inputEditorModel->clearInput(index.row());
-    }
+    applyToSelectedRanges([this](int min, int max){inputEditorModel->clearInputs(min, max);});
 }
 
 void InputEditorView::copyInputs()

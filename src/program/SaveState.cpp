@@ -230,6 +230,9 @@ int SaveState::postLoad(Context* context, MovieFile& m, bool branch, bool inputE
                 (context->config.sc.recording == SharedConfig::RECORDING_WRITE &&
                  inputEditor)))) {
             movie->copyTo(m);
+            
+            /* Reset the movie changelog */
+            m.changelog->clear();
         }
 
         /* If the movie was modified since last state load, increment

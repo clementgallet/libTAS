@@ -3,6 +3,7 @@ bin_PROGRAMS = libTAS
 libTAS_QTSOURCES = \
     GameEvents.h \
     GameLoop.h \
+    movie/MovieFileChangeLog.h \
     lua/Print.h \
     ramsearch/MemScanner.h \
     ui/AnnotationsWindow.h \
@@ -13,6 +14,8 @@ libTAS_QTSOURCES = \
     ui/EncodeWindow.h \
     ui/ExecutableWindow.h \
     ui/GameInfoWindow.h \
+    ui/InputChangeLogModel.h \
+    ui/InputChangeLogWindow.h \
     ui/InputEditorModel.h \
     ui/InputEditorView.h \
     ui/InputEditorWindow.h \
@@ -71,8 +74,13 @@ libTAS_SOURCES = \
     lua/Movie.cpp \
     lua/Print.cpp \
     lua/Runtime.cpp \
+    movie/MovieActionEditFrames.cpp \
+    movie/MovieActionInsertFrames.cpp \
+    movie/MovieActionPaint.cpp \
+    movie/MovieActionRemoveFrames.cpp \
     movie/MovieFile.cpp \
     movie/MovieFileAnnotations.cpp \
+    movie/MovieFileChangeLog.cpp \
     movie/MovieFileEditor.cpp \
     movie/MovieFileHeader.cpp \
     movie/MovieFileInputs.cpp \
@@ -85,6 +93,8 @@ libTAS_SOURCES = \
     ui/ErrorChecking.cpp \
     ui/ExecutableWindow.cpp \
     ui/GameInfoWindow.cpp \
+    ui/InputChangeLogModel.cpp \
+    ui/InputChangeLogWindow.cpp \
     ui/InputEditorModel.cpp \
     ui/InputEditorView.cpp \
     ui/InputEditorWindow.cpp \

@@ -28,14 +28,16 @@
 
 /* Forward declaration */
 struct Context;
+class MovieFile;
 class InputEditorView;
 class MarkerView;
+class InputChangeLogWindow;
 
 class InputEditorWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    InputEditorWindow(Context *c, QWidget *parent = Q_NULLPTR);
+    InputEditorWindow(Context *c, MovieFile *movie, QWidget *parent = Q_NULLPTR);
     void resetInputs();
     QSize sizeHint() const override;
 
@@ -45,6 +47,7 @@ public:
     
     InputEditorView *inputEditorView;
     MarkerView *markerView;
+    InputChangeLogWindow* inputChangeLogWindow;
 
 public slots:
     void isWindowVisible(bool &visible);

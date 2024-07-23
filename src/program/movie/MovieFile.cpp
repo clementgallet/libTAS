@@ -34,6 +34,9 @@ MovieFile::MovieFile(Context* c) : context(c)
     inputs = new MovieFileInputs(c);
     annotations = new MovieFileAnnotations(c);
     editor = new MovieFileEditor(c);
+    changelog = new MovieFileChangeLog(c, inputs);
+    
+    inputs->setChangeLog(changelog);
 }
 
 const char* MovieFile::errorString(int error_code) {
@@ -61,6 +64,7 @@ void MovieFile::clear()
     inputs->clear();
     annotations->clear();
     editor->clear();
+    changelog->clear();
 }
 
 int MovieFile::extractMovie(const std::string& moviefile)
@@ -257,31 +261,21 @@ void MovieFile::updateLength()
 
 void MovieFile::applyAutoHoldFire()
 {
-    AllInputs ai;
-    inputs->getInputs(ai);
-
-    bool modified = false;
     for (size_t i = 0; i < editor->autohold.size(); i++) {
         if (editor->autohold[i] > 0) {
             SingleInput si = editor->input_set[i];
             int value = 1;
             
             /* When autohold an analog value, we take the previous value */
-            if (si.isAnalog() == (context->framecount > 0)) {
-                const AllInputs& ai = inputs->getInputs(context->framecount - 1);
-                value = ai.getInput(si);
+            if (si.isAnalog() && (context->framecount > 0)) {
+                const AllInputs& old_ai = inputs->getInputs(context->framecount - 1);
+                value = old_ai.getInput(si);
             }
 
             if (editor->autohold[i] >= 2) // Auto-fire
                 value = (context->framecount % 2) == (editor->autohold[i] % 2);
 
-            ai.setInput(si, value);
-
-            inputs->wasModified();
-            modified = true;
+            inputs->paintInput(si, value, context->framecount, context->framecount);
         }
     }
-
-    if (modified)
-        inputs->setInputs(ai, true);
 }

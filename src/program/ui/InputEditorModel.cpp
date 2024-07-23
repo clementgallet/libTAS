@@ -36,7 +36,9 @@
 #include <iostream>
 #include <set>
 
-InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : QAbstractTableModel(parent), context(c), movie(m) {}
+InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : QAbstractTableModel(parent), context(c), movie(m) {
+    paintMinRow = -1;
+}
 
 int InputEditorModel::frameCount() const
 {
@@ -176,6 +178,8 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
 
         QColor color = QGuiApplication::palette().text().color();
         const SingleInput si = movie->editor->input_set[index.column()-COLUMN_SPECIAL_SIZE];
+        const AllInputs& ai = movie->inputs->getInputs(row);
+        int current_value = ai.getInput(si);
 
         /* Show inputs with transparancy when they are pending due to rewind */
         bool pending_input = false;
@@ -192,18 +196,36 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
                     color.setAlpha(128);
                 }
                 else {
-                    if (it->value) {
-                        color.setAlpha(192);
-                    }
-                    else {
-                        color.setAlpha(64);
-                    }
+                    int alpha = 0;
+                    if (it->value) alpha += 192;
+                    if (current_value) alpha += 63;
+                    color.setAlpha(alpha);
                 }
                 /* We don't return the brush immediatly, because users may change
                  * multiple times the same input. */
             }
         }
         movie->inputs->input_queue.unlock();
+
+        /* Show the current paint operation */
+        if (paintMinRow != -1) {
+            if ((row >= paintMinRow) && (row <= paintMaxRow) && (si == paintInput)) {
+                pending_input = true;
+                /* For analog, use half-transparancy. Otherwise,
+                 * use strong/weak transparancy of set/clear input */
+                if (si.isAnalog()) {
+                    color.setAlpha(128);
+                }
+                else {
+                    int alpha = 0;
+                    int newpaintValue = paintValue;
+                    if ((((row+1)%2)+1) == paintAutofire) newpaintValue = !paintValue;
+                    if (newpaintValue) alpha += 192;
+                    if (current_value) alpha += 63;
+                    color.setAlpha(alpha);
+                }
+            }
+        }
 
         /* If hovering on the cell, show a preview of the input for the following:
          * - the cell is blank
@@ -379,6 +401,21 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         }
         movie->inputs->input_queue.unlock();
 
+        /* If the current value is being painted, load the new value */
+        if (paintMinRow != -1) {
+            if ((row >= paintMinRow) && (row <= paintMaxRow) && (si == paintInput)) {
+                if (si.isAnalog()) {
+                    value = paintValue;
+                }
+                else {
+                    /* For non-analog values, always print the value, and the
+                     * transparancy value will indicate if the value is being
+                     * cleared or set. */
+                    value = 1;
+                }
+            }
+        }
+
         if (si.isAnalog()) {
             /* Default framerate has a value of 0, which may be confusing,
              * so we just print `-` in place. */
@@ -422,10 +459,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
 
         /* Get the value of the single input in movie inputs */
         int value = ai.getInput(si);
-
-        if (si.isAnalog()) {
-            return QVariant(value);
-        }
+        return QVariant(value);
     }
 
     return QVariant();
@@ -474,7 +508,7 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
         }
 
         /* Modifying the movie is only performed by the main thread */
-        movie->inputs->queueInput(row, si, value.toInt(), false);
+        movie->inputs->paintInput(si, value.toInt(), row, row);
         emit dataChanged(index, index, {role});
         return true;
     }
@@ -511,31 +545,61 @@ void InputEditorModel::buildInputSet()
     }
 }
 
-bool InputEditorModel::toggleInput(const QModelIndex &index)
+void InputEditorModel::startPaint(int col, int minRow, int maxRow, int value, int autofire)
 {
-    /* Don't toggle savestate / frame count */
-    if (index.column() < COLUMN_SPECIAL_SIZE)
-        return false;
+    paintInput = movie->editor->input_set[col-COLUMN_SPECIAL_SIZE];
 
-    unsigned int row = index.row();
+    /* Don't edit locked input */
+    if (movie->editor->locked_inputs.find(paintInput) != movie->editor->locked_inputs.end())
+        return;
 
-    /* Don't toggle past inputs before root savestate */
-    uint64_t root_frame = SaveStateList::rootStateFramecount();
-    if (!root_frame) {
-        if (row < context->framecount)
-            return false;
+    paintMinRow = minRow;
+    paintMaxRow = maxRow;
+    paintValue = value;
+    if (autofire >= 0)
+        paintAutofire = autofire;
+    emit dataChanged(index(minRow, col), index(maxRow, col));
+}
+
+void InputEditorModel::endPaint()
+{
+    if (paintMinRow == -1) return;
+
+    /* Rewind to past frame if needed, otherwise paint whatever is possible */
+    if (paintMinRow < context->framecount) {
+        bool ret = rewind(paintMinRow, true);
+        if (!ret) {
+            /* Try rewinding to the earliest frame possible and paint what is possible */
+            uint64_t root_frame = SaveStateList::rootStateFramecount();
+            if (root_frame > paintMaxRow) {
+                paintMinRow = -1;
+                return;
+            }
+            if (root_frame > paintMinRow)
+                paintMinRow = root_frame;
+            ret = rewind(root_frame, true);
+            if (!ret) {
+                paintMinRow = -1;
+                return;
+            }
+        }
+    }
+
+    /* Update the seek frame if we changed an earlier frame */
+    if ((context->seek_frame) && !context->config.editor_rewind_seek
+                                    && (paintMinRow < context->seek_frame)) {
+        context->seek_frame = paintMinRow;
+    }
+
+    if (paintAutofire == 0) {
+        movie->inputs->paintInput(paintInput, paintValue, paintMinRow, paintMaxRow);
     }
     else {
-        if (row < root_frame)
-            return false;        
+        for (int r = paintMinRow; r <= paintMaxRow; r++) {
+            movie->inputs->paintInput(paintInput, ((r%2)==(paintAutofire%2))?!paintValue:paintValue, r, r);
+        }
     }
-
-    const AllInputs& ai = movie->inputs->getInputs(row);
-    const SingleInput si = movie->editor->input_set[index.column()-COLUMN_SPECIAL_SIZE];
-    int value = !ai.getInput(si);
-
-    setData(index, value, Qt::EditRole);
-    return value;
+    paintMinRow = -1;
 }
 
 std::string InputEditorModel::inputLabel(int column)
@@ -676,20 +740,20 @@ int InputEditorModel::pasteInputs(int row)
 
     if (insertedFrames > 0) {
         beginInsertRows(QModelIndex(), rowCount(), rowCount() + insertedFrames - 1);
+        movie->inputs->insertInputsBefore(movie->inputs->nbFrames(), insertedFrames);
+        endInsertRows();
     }
 
+    movie->inputs->editInputs(paste_ais, row);
+
+    /* Update the list of unique inputs */
     AllInputs newais;
     newais.clear();
     
-    for (size_t r = 0; r < paste_ais.size(); r++) {
-        movie->inputs->setInputs(paste_ais[r], row + r, true);
-        newais |= paste_ais[r];
+    for (const AllInputs& ai : paste_ais) {
+        newais |= ai;
     }
     addUniqueInputs(newais);
-
-    if (insertedFrames > 0) {
-        endInsertRows();
-    }
 
     /* Update the movie framecount */
     movie->updateLength();
@@ -722,13 +786,17 @@ void InputEditorModel::pasteInputsInRange(int row, int count)
         }
     }
 
-    size_t r = 0;
+    /* Update the movie by ranges of pasted inputs */
+    for (int i = 0; i < count; i+=paste_ais.size()) {
+        size_t range_size = std::min(paste_ais.size(), (size_t)(count-i));
+        movie->inputs->editInputs(paste_ais, row, range_size);
+    }
+
+    /* Update the list of unique inputs */
     AllInputs newais;
     newais.clear();
-    for (int f = row; f < (row+count); f++) {
-        movie->inputs->setInputs(paste_ais[r], f, true);
-        newais |= paste_ais[r];
-        r = (r+1)%paste_ais.size();
+    for (const AllInputs& ai : paste_ais) {
+        newais |= ai;
     }
     addUniqueInputs(newais);
 
@@ -762,14 +830,13 @@ int InputEditorModel::pasteInsertInputs(int row)
     }
 
     beginInsertRows(QModelIndex(), row, row + paste_ais.size() - 1);
-
     
-    movie->inputs->insertInputsBefore(paste_ais.data(), row, paste_ais.size());
+    movie->inputs->insertInputsBefore(paste_ais, row);
     
     AllInputs newais;
     newais.clear();
-    for (size_t r = 0; r < paste_ais.size(); r++) {
-        newais |= paste_ais[r];
+    for (const AllInputs& ai : paste_ais) {
+        newais |= ai;
     }
     addUniqueInputs(newais);
 
@@ -847,7 +914,7 @@ void InputEditorModel::clearUniqueInput(int column)
         return;
 
     for (unsigned int f = context->framecount; f < movie->inputs->nbFrames(); f++) {
-        movie->inputs->queueInput(f, si, 0, false);
+        movie->inputs->paintInput(si, 0, f, f);
     }
 }
 
@@ -864,7 +931,7 @@ bool InputEditorModel::removeUniqueInput(int column)
 
     /* Clear remaining frames */
     for (unsigned int f = context->framecount; f < movie->inputs->nbFrames(); f++) {
-        movie->inputs->queueInput(f, si, 0, false);
+        movie->inputs->paintInput(si, 0, f, f);
     }
 
     /* Remove clear locked state */
@@ -912,10 +979,10 @@ void InputEditorModel::lockUniqueInput(int column, bool locked)
 }
 
 
-void InputEditorModel::clearInput(int row)
+void InputEditorModel::clearInputs(int min_row, int max_row)
 {
-    movie->inputs->clearInputs(row);
-    emit dataChanged(index(row, 0), index(row, columnCount()));
+    movie->inputs->clearInputs(min_row, max_row);
+    emit dataChanged(index(min_row, 0), index(max_row, columnCount()));
 }
 
 void InputEditorModel::beginModifyInputs()

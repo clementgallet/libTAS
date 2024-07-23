@@ -31,6 +31,7 @@
 #include <stdint.h>
 
 struct Context;
+class MovieFileChangeLog;
 
 /* Struct to push movie changes from the UI to the main thread. UI thread should
  * never modify the movie */
@@ -66,6 +67,8 @@ public:
     /* Prepare a movie file from the context */
     MovieFileInputs(Context* c);
 
+    void setChangeLog(MovieFileChangeLog* mcl);
+
     /* Clear */
     void clear();
 
@@ -91,22 +94,30 @@ public:
     /* Set inputs in the current frame, and truncate if keep_inputs is false */
     int setInputs(const AllInputs& inputs, bool keep_inputs);
 
+    int setInputs(const AllInputs& inputs, uint64_t pos);
+    int setInputs(const AllInputs& inputs);
+
     /* Load inputs from a certain frame */
-    int getInputs(AllInputs& inputs, uint64_t pos);
-    AllInputs& getInputs(uint64_t pos);
+    const AllInputs& getInputs(uint64_t pos);
 
     /* Load inputs from the current frame */
-    int getInputs(AllInputs& inputs);
-    AllInputs& getInputs();
+    const AllInputs& getInputs();
 
-    /* Clear a single frame of inputs */
-    void clearInputs(uint64_t pos);
+    /* Clear a range of frame inputs */
+    void clearInputs(int minFrame, int maxFrame);
+
+    /* Paint a single input in a range of frames */
+    void paintInput(SingleInput si, int value, int minFrame, int maxFrame);
+
+    /* Edit a range of frame inputs */
+    void editInputs(const std::vector<AllInputs>& inputs, uint64_t pos);
+    void editInputs(const std::vector<AllInputs>& inputs, uint64_t pos, int count);
 
     /* Insert blank inputs before the requested pos */
     void insertInputsBefore(uint64_t pos, int count);
 
     /* Insert inputs from an array before the requested pos */
-    void insertInputsBefore(const AllInputs inputs[], uint64_t pos, int count);
+    void insertInputsBefore(const std::vector<AllInputs>& inputs, uint64_t pos);
 
     /* Delete inputs at the requested pos */
     void deleteInputs(uint64_t pos, int count);
@@ -141,6 +152,8 @@ public:
 
 private:
     Context* context;
+
+    MovieFileChangeLog* movie_changelog;
 
     /* The list of inputs */
     std::vector<AllInputs> input_list;

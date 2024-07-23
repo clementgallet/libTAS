@@ -25,6 +25,7 @@
 
 /* Forward declaration */
 struct Context;
+class MovieFile;
 class InputEditorModel;
 class KeyPressedDialog;
 class InputEventWindow;
@@ -33,7 +34,7 @@ class InputEditorView : public QTableView {
     Q_OBJECT
 
 public:
-    InputEditorView(Context *c, QWidget *parent, QWidget *gp);
+    InputEditorView(Context *c, MovieFile *movie, QWidget *parent);
 
     /* Fill menu action */
     void fillMenu(QMenu* menu);
@@ -60,7 +61,7 @@ public slots:
     void insertInputs();
     void deleteInput();
     void truncateInputs();
-    void clearInput();
+    void clearInputs();
     void addMarker();
     void removeMarker();
     void getCurrentMarkerText(std::string &marker);
@@ -81,6 +82,7 @@ public slots:
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
@@ -107,11 +109,11 @@ private:
     int mouseRow;
     int mouseMinRow;
     int mouseMaxRow;
-    int minToggleRow;
     int mouseValue;
     KeyPressedDialog* keyDialog;
     InputEventWindow* inputEventWindow;
     std::string currentMarkerText;
+    MovieFile* movie;
 
     QAction *eventAct;
     QAction *duplicateAct;
@@ -126,6 +128,8 @@ private:
     QAction *pasteInsertAct;
     QAction *markAct;
     QAction *unmarkAct;
+    QAction *undoAct;
+    QAction *redoAct;
 
     QAction *lockAction;
     QAction *autoholdAction;

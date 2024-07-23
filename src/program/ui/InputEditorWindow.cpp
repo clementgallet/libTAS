@@ -22,6 +22,7 @@
 #include "InputEditorModel.h"
 #include "MarkerView.h"
 #include "MarkerModel.h"
+#include "InputChangeLogWindow.h"
 #include "MainWindow.h"
 
 #include "Context.h"
@@ -34,15 +35,16 @@
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QSplitter>
 
-InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(parent), context(c)
+InputEditorWindow::InputEditorWindow(Context* c, MovieFile *movie, QWidget *parent) : QMainWindow(parent), context(c)
 {
     setWindowTitle("Input Editor");
 
     /* Table */
-    inputEditorView = new InputEditorView(c, this, parent);
+    inputEditorView = new InputEditorView(c, movie, this);
 
-    /* Markers */
-    markerView = new MarkerView(c, this, parent);
+    /* Panels/Windows */
+    markerView = new MarkerView(c, movie, this);
+    inputChangeLogWindow = new InputChangeLogWindow(c, movie, this);
 
     /* Signals */
     connect(markerView, &MarkerView::seekSignal, inputEditorView->inputEditorModel, &InputEditorModel::seekToFrame);
@@ -71,6 +73,8 @@ InputEditorWindow::InputEditorWindow(Context* c, QWidget *parent) : QMainWindow(
         [=](bool checked){context->config.editor_panel_marker = checked; markerBox->setVisible(checked);});
 
     markerPanelAct->setCheckable(true);
+
+    panelMenu->addAction(tr("Change Log"), inputChangeLogWindow, &InputChangeLogWindow::show);
 
     QMenu* optionMenu = menuBar()->addMenu(tr("Options"));
     

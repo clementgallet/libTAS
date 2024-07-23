@@ -17,55 +17,30 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_MARKERVIEW_H_INCLUDED
-#define LIBTAS_MARKERVIEW_H_INCLUDED
+#ifndef LIBTAS_INPUTCHANGELOGVIEW_H_INCLUDED
+#define LIBTAS_INPUTCHANGELOGVIEW_H_INCLUDED
 
-#include <QtWidgets/QTableView>
+#include <QtWidgets/QDialog>
 #include <QtWidgets/QMenu>
 
 /* Forward declaration */
 struct Context;
 class MovieFile;
-class MarkerModel;
+class InputChangeLogModel;
+class QTableView;
 
-class MarkerView : public QTableView {
+class InputChangeLogWindow : public QDialog {
     Q_OBJECT
 
 public:
-    MarkerView(Context *c, MovieFile *movie, QWidget *parent);
+    InputChangeLogWindow(Context *c, MovieFile *m, QWidget *parent);
 
-    /* Fill menu action */
-    void fillMenu();
-
-    void resetMarkers();
-    MarkerModel *markerModel;
-
-public slots:
-    void mainMenu(QPoint pos);
-    void seekSlot();
-    void scrollSlot();
-    void removeSlot();
-
-protected:
-    void mouseDoubleClickEvent(QMouseEvent *event) override;
-
-signals:
-    void seekSignal(unsigned long long frame);
-    void scrollSignal(unsigned long long frame);
-
-private slots:
+    QTableView* inputChangeLogView;
+    InputChangeLogModel* inputChangeLogModel;
 
 private:
-    unsigned long long getMarkerFrameFromSelection();
-
     Context *context;
-    QMenu *menu;
 
-    QAction *seekAct;
-    QAction *scrollAct;
-    QAction *editAct;
-    QAction *editFrameAct;
-    QAction *removeAct;
 };
 
 #endif

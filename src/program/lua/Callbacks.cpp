@@ -77,9 +77,9 @@ int Callbacks::onPaint(lua_State *L)
     return 0;
 }
 
-void Callbacks::call(NamedLuaFunction::CallbackType type)
+bool Callbacks::call(NamedLuaFunction::CallbackType type)
 {
-    getList().call(type);
+    return getList().call(type);
 }
 
 LuaFunctionList& Callbacks::getList()

@@ -168,7 +168,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     gameInfoWindow = new GameInfoWindow(this);
     ramSearchWindow = new RamSearchWindow(c, this);
     ramWatchWindow = new RamWatchWindow(c, this);
-    inputEditorWindow = new InputEditorWindow(c, this);
+    inputEditorWindow = new InputEditorWindow(c, &gameLoop->movie, this);
     annotationsWindow = new AnnotationsWindow(c, this);
     timeTraceWindow = new TimeTraceWindow(c, this);
     luaConsoleWindow = new LuaConsoleWindow(c, this);

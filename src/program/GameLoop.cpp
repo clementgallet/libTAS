@@ -815,16 +815,13 @@ void GameLoop::processInputs(AllInputs &ai)
             }
 
             if (context->framecount < moviecount) { // movie has inputs for current frame
-                /* Get a reference to the movie inputs, so that lua can modify it */
-                AllInputs& movie_ai = movie.inputs->getInputs();
+                ai = movie.inputs->getInputs();
 
                 /* Allow lua to modify movie inputs even in playback mode */
-                Lua::Input::registerInputs(&movie_ai);
-                Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackInput);
-
-                /* Copy inputs to the object that we will later send to the game,
-                 * so that we don't risk modifying the movie inputs more. */
-                ai = movie_ai;
+                Lua::Input::registerInputs(&ai);
+                bool movieMayBeModifed = Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackInput);
+                if (movieMayBeModifed)
+                    movie.inputs->setInputs(ai, true);
 
                 /* Update framerate */
                 uint32_t new_framerate_num = 0;

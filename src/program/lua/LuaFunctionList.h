@@ -65,8 +65,8 @@ public:
     /* Activate or deactivate all callbacks from a file */
     void switchForFile(int row, bool active);
     
-    /* Call all callbacks from a type */
-    void call(NamedLuaFunction::CallbackType c);
+    /* Call all callbacks from a type. Returns if at least one callback was called */
+    bool call(NamedLuaFunction::CallbackType c);
     
     /* Returns the number of registered lua files */
     int fileCount() const;
