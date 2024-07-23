@@ -35,6 +35,8 @@ class InputChangeLogWindow : public QDialog {
 public:
     InputChangeLogWindow(Context *c, MovieFile *m, QWidget *parent);
 
+    QSize sizeHint() const override;
+
     QTableView* inputChangeLogView;
     InputChangeLogModel* inputChangeLogModel;
 

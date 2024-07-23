@@ -63,3 +63,8 @@ InputChangeLogWindow::InputChangeLogWindow(Context* c, MovieFile *movie, QWidget
     mainLayout->addWidget(inputChangeLogView);
     setLayout(mainLayout);
 }
+
+QSize InputChangeLogWindow::sizeHint() const
+{
+    return QSize(300, 500);
+}
