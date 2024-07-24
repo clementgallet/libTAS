@@ -205,15 +205,15 @@ int MovieFile::saveBackupMovie()
     return saveMovie(backupfile);
 }
 
-void MovieFile::copyTo(MovieFile& movie) const
+void MovieFile::copyFrom(const MovieFile& movie)
 {
     /* This will only be used for savestate movies, we only care to copy relevant data */
-    movie.editor->input_set = editor->input_set;
-    movie.editor->nondraw_frames = editor->nondraw_frames;
-    movie.header->framerate_num = header->framerate_num;
-    movie.header->framerate_den = header->framerate_den;
-    movie.header->savestate_framecount = context->framecount;
-    inputs->copyTo(movie.inputs);
+    editor->input_set = movie.editor->input_set;
+    editor->nondraw_frames = movie.editor->nondraw_frames;
+    header->framerate_num = movie.header->framerate_num;
+    header->framerate_den = movie.header->framerate_den;
+    header->savestate_framecount = context->framecount;
+    inputs->copyFrom(movie.inputs);
 }
 
 void MovieFile::setLockedInputs(AllInputs& inp)

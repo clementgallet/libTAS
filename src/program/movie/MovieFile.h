@@ -81,7 +81,7 @@ public:
     int saveMovie(const std::string& moviefile, uint64_t frame_nb);
 
     /* Copy movie to another one */
-    void copyTo(MovieFile& movie) const;
+    void copyFrom(const MovieFile& movie);
 
     /* Copy locked inputs from the current inputs to the inputs in argument */
     void setLockedInputs(AllInputs& inputs);

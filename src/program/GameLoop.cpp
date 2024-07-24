@@ -752,19 +752,6 @@ void GameLoop::processInputs(AllInputs &ai)
                 bool past_inputs = context->framecount < movie.inputs->nbFrames();
                 emit isInputEditorVisible(keep_inputs);
 
-                /* Send signal before saving the input */
-                if (past_inputs) {
-                    if (keep_inputs) {
-                        emit inputsToBeEdited(context->framecount);
-                    }
-                    else {
-                        emit inputsToBeChanged();
-                    }
-                }
-                else {
-                    emit inputsToBeAdded();
-                }
-
                 /* If some inputs are locked, copy the inputs from the movie.
                  * Only do this if the input editor is opened, and if there are
                  * inputs to copy. */
@@ -773,19 +760,6 @@ void GameLoop::processInputs(AllInputs &ai)
 
                 /* Save inputs to moviefile */
                 movie.inputs->setInputs(ai, keep_inputs);
-
-                /* Send signal after saving the input */
-                if (past_inputs) {
-                    if (keep_inputs) {
-                        emit inputsEdited(context->framecount);
-                    }
-                    else {
-                        emit inputsChanged();
-                    }
-                }
-                else {
-                    emit inputsAdded();
-                }
 
                 AutoSave::update(context, movie);
             }

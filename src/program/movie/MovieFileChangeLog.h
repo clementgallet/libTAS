@@ -68,6 +68,8 @@ private:
     bool is_recording;
 
 signals:
+    void beginResetHistory();
+    void endResetHistory();
     void beginAddHistory(int frame);
     void endAddHistory();
     void beginRemoveHistory(int first_frame, int last_frame);

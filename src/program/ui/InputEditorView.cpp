@@ -186,13 +186,13 @@ void InputEditorView::fillMenu(QMenu* frameMenu)
     this->addAction(pasteInsertAct);
 
     menu->addSeparator();
-    undoAct = menu->addAction(tr("Undo"), movie->changelog, &MovieFileChangeLog::undo, QKeySequence::Undo);
+    undoAct = menu->addAction(tr("Undo"), this, &InputEditorView::undoInputs, QKeySequence::Undo);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     undoAct->setShortcutVisibleInContextMenu(true);
 #endif
     this->addAction(undoAct);
 
-    redoAct = menu->addAction(tr("Redo"), movie->changelog, &MovieFileChangeLog::redo, QKeySequence::Redo);
+    redoAct = menu->addAction(tr("Redo"), this, &InputEditorView::redoInputs, QKeySequence::Redo);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     redoAct->setShortcutVisibleInContextMenu(true);
 #endif
@@ -749,7 +749,7 @@ void InputEditorView::addMarkerFrame(int frame)
         emit addMarkerSignal(frame, newText);
     }
     
-    InputEditorView::updateMenu();
+    updateMenu();
 }
 
 void InputEditorView::removeMarker()
@@ -764,7 +764,7 @@ void InputEditorView::removeMarker()
         if (inputEditorModel->hasMarker(index.row()))
             emit removeMarkerSignal(index.row());
     
-    InputEditorView::updateMenu();
+    updateMenu();
 }
 
 void InputEditorView::editEvents()
@@ -1002,6 +1002,18 @@ void InputEditorView::pasteInsertInputs()
     selectionModel()->clear();
     selectionModel()->select(QItemSelection(top, bottom), QItemSelectionModel::Select | QItemSelectionModel::Rows);
     setCurrentIndex(top);
+}
+
+void InputEditorView::undoInputs()
+{
+    movie->changelog->undo();
+    updateMenu();
+}
+
+void InputEditorView::redoInputs()
+{
+    movie->changelog->redo();
+    updateMenu();
 }
 
 void InputEditorView::manualScroll(int)

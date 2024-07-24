@@ -93,6 +93,12 @@ public:
     /* Add all new input columns from an AllInput object */
     void addUniqueInputs(const AllInputs &ai);
 
+    /* Add all new input columns from a range of movie inputs */
+    void addUniqueInputs(int minRow, int maxRow);
+
+    /* Add all new input columns from a list of inputs */
+    void addUniqueInputs(const std::vector<AllInputs>& new_inputs);
+    
     /* Clear a single input from the entire movie */
     void clearUniqueInput(int column);
 
@@ -153,22 +159,28 @@ public:
 
 public slots:
     /* Prepare for a change of inputs */
-    void beginModifyInputs();
+    void beginResetInputs();
 
     /* End change of inputs */
-    void endModifyInputs();
+    void endResetInputs();
 
     /* Prepare for new inputs */
-    void beginAddInputs();
+    void beginInsertInputs(int minRow, int maxRow);
 
     /* End new inputs */
-    void endAddInputs();
+    void endInsertInputs(int minRow, int maxRow);
+
+    /* Prepare for remove inputs */
+    void beginRemoveInputs(int minRow, int maxRow);
+
+    /* End remove inputs */
+    void endRemoveInputs(int minRow, int maxRow);
 
     /* Prepare for edit inputs */
-    void beginEditInputs(unsigned long long framecount);
+    void beginEditInputs(int minRow, int maxRow);
 
     /* End edit inputs */
-    void endEditInputs(unsigned long long framecount);
+    void endEditInputs(int minRow, int maxRow);
 
     /* Register a savestate for display */
     void registerSavestate(int slot, unsigned long long frame);

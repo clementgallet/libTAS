@@ -38,6 +38,15 @@
 #include <set>
 
 InputEditorModel::InputEditorModel(Context* c, MovieFile* m, QObject *parent) : QAbstractTableModel(parent), context(c), movie(m) {
+    connect(movie->inputs, &MovieFileInputs::inputsToBeRemoved, this, &InputEditorModel::beginRemoveInputs);
+    connect(movie->inputs, &MovieFileInputs::inputsRemoved, this, &InputEditorModel::endRemoveInputs);
+    connect(movie->inputs, &MovieFileInputs::inputsToBeInserted, this, &InputEditorModel::beginInsertInputs);
+    connect(movie->inputs, &MovieFileInputs::inputsInserted, this, &InputEditorModel::endInsertInputs);
+    connect(movie->inputs, &MovieFileInputs::inputsToBeEdited, this, &InputEditorModel::beginEditInputs);
+    connect(movie->inputs, &MovieFileInputs::inputsEdited, this, &InputEditorModel::endEditInputs);
+    connect(movie->inputs, &MovieFileInputs::inputsToBeReset, this, &InputEditorModel::beginResetInputs);
+    connect(movie->inputs, &MovieFileInputs::inputsReset, this, &InputEditorModel::endResetInputs);
+
     paintMinRow = -1;
 }
 
@@ -510,7 +519,6 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
 
         /* Modifying the movie is only performed by the main thread */
         movie->inputs->paintInput(si, value.toInt(), row, row);
-        emit dataChanged(index, index, {role});
         return true;
     }
     return false;
@@ -655,8 +663,6 @@ bool InputEditorModel::insertRows(int row, int count, bool duplicate, const QMod
     if (row < static_cast<int>(context->framecount))
         return false;
 
-    beginInsertRows(parent, row, row+count-1);
-
     movie->inputs->insertInputsBefore(row, count);
 
     if (duplicate) {
@@ -665,8 +671,6 @@ bool InputEditorModel::insertRows(int row, int count, bool duplicate, const QMod
             movie->inputs->setInputs(ai, row + i, true);
         }
     }
-
-    endInsertRows();
 
     /* Update the movie framecount. Should it be done here ?? */
     movie->updateLength();
@@ -680,11 +684,7 @@ bool InputEditorModel::removeRows(int row, int count, const QModelIndex &parent)
     if (row < static_cast<int>(context->framecount))
         return false;
 
-    beginRemoveRows(parent, row, row+count-1);
-
     movie->inputs->deleteInputs(row, count);
-
-    endRemoveRows();
 
     /* Update the movie framecount */
     movie->updateLength();
@@ -730,27 +730,13 @@ int InputEditorModel::pasteInputs(int row)
     int insertedFrames = row + paste_ais.size() - movie->inputs->nbFrames();
 
     if (insertedFrames > 0) {
-        beginInsertRows(QModelIndex(), rowCount(), rowCount() + insertedFrames - 1);
         movie->inputs->insertInputsBefore(movie->inputs->nbFrames(), insertedFrames);
-        endInsertRows();
     }
 
     movie->inputs->editInputs(paste_ais, row);
 
-    /* Update the list of unique inputs */
-    AllInputs newais;
-    newais.clear();
-    
-    for (const AllInputs& ai : paste_ais) {
-        newais |= ai;
-    }
-    addUniqueInputs(newais);
-
     /* Update the movie framecount */
     movie->updateLength();
-
-    /* Update the paste inputs view */
-    emit dataChanged(index(row,0), index(row+paste_ais.size()-1,columnCount()));
 
     return paste_ais.size();
 }
@@ -770,22 +756,11 @@ void InputEditorModel::pasteInputsInRange(int row, int count)
     /* Update the movie by ranges of pasted inputs */
     for (int i = 0; i < count; i+=paste_ais.size()) {
         size_t range_size = std::min(paste_ais.size(), (size_t)(count-i));
-        movie->inputs->editInputs(paste_ais, row, range_size);
+        movie->inputs->editInputs(paste_ais, row+i, range_size);
     }
-
-    /* Update the list of unique inputs */
-    AllInputs newais;
-    newais.clear();
-    for (const AllInputs& ai : paste_ais) {
-        newais |= ai;
-    }
-    addUniqueInputs(newais);
 
     /* Update the movie framecount */
     movie->updateLength();
-
-    /* Update the paste inputs view */
-    emit dataChanged(index(row,0), index(row+count-1,columnCount()));
 }
 
 int InputEditorModel::pasteInsertInputs(int row)
@@ -800,18 +775,7 @@ int InputEditorModel::pasteInsertInputs(int row)
     std::vector<AllInputs> paste_ais;
     InputSerialization::readInputs(inputString, paste_ais);
 
-    beginInsertRows(QModelIndex(), row, row + paste_ais.size() - 1);
-    
     movie->inputs->insertInputsBefore(paste_ais, row);
-    
-    AllInputs newais;
-    newais.clear();
-    for (const AllInputs& ai : paste_ais) {
-        newais |= ai;
-    }
-    addUniqueInputs(newais);
-
-    endInsertRows();
 
     /* Update the movie framecount */
     movie->updateLength();
@@ -874,6 +838,27 @@ void InputEditorModel::addUniqueInputs(const AllInputs &ai)
     
     if (any_new_input)
         emit inputSetChanged();
+}
+
+void InputEditorModel::addUniqueInputs(int minRow, int maxRow)
+{
+    AllInputs newais;
+    newais.clear();
+    for (int row = minRow; row <= maxRow; row++) {
+        const AllInputs& ai = movie->inputs->getInputs(row);
+        newais |= ai;
+    }
+    addUniqueInputs(newais);
+}
+
+void InputEditorModel::addUniqueInputs(const std::vector<AllInputs>& new_inputs)
+{
+    AllInputs newais;
+    newais.clear();
+    for (const AllInputs& ai : new_inputs) {
+        newais |= ai;
+    }
+    addUniqueInputs(newais);
 }
 
 void InputEditorModel::clearUniqueInput(int column)
@@ -953,47 +938,53 @@ void InputEditorModel::lockUniqueInput(int column, bool locked)
 void InputEditorModel::clearInputs(int min_row, int max_row)
 {
     movie->inputs->clearInputs(min_row, max_row);
-    emit dataChanged(index(min_row, 0), index(max_row, columnCount()));
 }
 
-void InputEditorModel::beginModifyInputs()
+void InputEditorModel::beginResetInputs()
 {
     beginResetModel();
 }
 
-void InputEditorModel::endModifyInputs()
+void InputEditorModel::endResetInputs()
 {
     buildInputSet();
     endResetModel();
     emit inputSetChanged();
 }
 
-void InputEditorModel::beginAddInputs()
+void InputEditorModel::beginInsertInputs(int minRow, int maxRow)
 {
-    beginInsertRows(QModelIndex(), rowCount(), rowCount());
+    beginInsertRows(QModelIndex(), minRow, maxRow);
 }
 
-void InputEditorModel::endAddInputs()
+void InputEditorModel::endInsertInputs(int minRow, int maxRow)
 {
     endInsertRows();
 
     /* We have to check if new inputs were added */
-    const AllInputs& ai = movie->inputs->getInputs(movie->inputs->nbFrames()-1);
-
-    addUniqueInputs(ai);
+    addUniqueInputs(minRow, maxRow);
 }
 
-void InputEditorModel::beginEditInputs(unsigned long long framecount)
+void InputEditorModel::beginEditInputs(int minRow, int maxRow)
 {
 }
 
-void InputEditorModel::endEditInputs(unsigned long long framecount)
+void InputEditorModel::endEditInputs(int minRow, int maxRow)
 {
-    emit dataChanged(index(framecount,0), index(framecount,columnCount()-1));
+    emit dataChanged(index(minRow,0), index(maxRow,columnCount()-1));
 
     /* We have to check if new inputs were added */
-    const AllInputs& ai = movie->inputs->getInputs(framecount);
-    addUniqueInputs(ai);
+    addUniqueInputs(minRow, maxRow);
+}
+
+void InputEditorModel::beginRemoveInputs(int minRow, int maxRow)
+{
+    beginRemoveRows(QModelIndex(), minRow, maxRow);
+}
+
+void InputEditorModel::endRemoveInputs(int minRow, int maxRow)
+{
+    endRemoveRows();
 }
 
 void InputEditorModel::update()

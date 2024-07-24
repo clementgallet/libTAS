@@ -226,9 +226,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
                 }
 
                 /* Loading the movie */
-                emit inputsToBeChanged();
                 movie->loadSavestateMovie(SaveStateList::get(statei).getMoviePath());
-                emit inputsChanged();
 
                 /* Return if we already are on the correct frame */
                 if (context->framecount == movie->header->savestate_framecount)
@@ -264,8 +262,6 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
                 return false;                
             }
 
-            emit inputsToBeChanged();
-
             /* Processing after state loading */
             int message = SaveStateList::postLoad(statei, context, *movie, load_branch, inputEditor);
 
@@ -281,8 +277,6 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
             if (message == MSGB_LOADING_SUCCEEDED) {
                 emit savestatePerformed(statei, 0);
             }
-
-            emit inputsChanged();
 
             return false;
         }
@@ -305,9 +299,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
                     emit alertToShow(QString("Cannot write to a movie after its end"));
                 }
                 else {
-                    emit inputsToBeChanged();
                     context->config.sc.recording = SharedConfig::RECORDING_WRITE;
-                    emit inputsChanged();
                     {
                         std::string msg = "Switched to recording mode";
                         sendMessage(MSGN_OSD_MSG);
@@ -400,7 +392,6 @@ int GameEvents::handleEvent()
         else {
             uint64_t input_framecount = movie->inputs->processPendingInputs();
             while (input_framecount != UINT64_MAX) {
-                emit inputsEdited(input_framecount);
                 input_framecount = movie->inputs->processPendingInputs();
             }
         }

@@ -4,6 +4,7 @@ libTAS_QTSOURCES = \
     GameEvents.h \
     GameLoop.h \
     movie/MovieFileChangeLog.h \
+    movie/MovieFileInputs.h \
     lua/Print.h \
     ramsearch/MemScanner.h \
     ui/AnnotationsWindow.h \

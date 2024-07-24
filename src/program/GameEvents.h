@@ -89,9 +89,6 @@ signals:
 
     void isInputEditorVisible(bool &isVisible);
     /* Signals for notifying the input editor */
-    void inputsToBeChanged();
-    void inputsChanged();
-    void inputsEdited(unsigned long long framecount);
 
     /* register a savestate */
     void savestatePerformed(int slot, unsigned long long frame);

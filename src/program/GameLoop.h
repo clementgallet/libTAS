@@ -89,12 +89,6 @@ signals:
 
     /* Signals for notifying the input editor */
     void isInputEditorVisible(bool &isVisible);
-    void inputsToBeChanged();
-    void inputsChanged();
-    void inputsToBeAdded();
-    void inputsAdded();
-    void inputsToBeEdited(unsigned long long framecount);
-    void inputsEdited(unsigned long long framecount);
 
     void getRamWatch(std::string &watch);
     

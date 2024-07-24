@@ -90,7 +90,7 @@ const std::string& SaveState::getMoviePath() const
 int SaveState::save(Context* context, const MovieFile& m)
 {    
     /* Save the movie file */
-    m.copyTo(*movie);
+    movie->copyFrom(m);
     
     /* Send the savestate index */
     sendMessage(MSGN_SAVESTATE_INDEX);
@@ -229,10 +229,7 @@ int SaveState::postLoad(Context* context, MovieFile& m, bool branch, bool inputE
             (context->config.sc.recording == SharedConfig::RECORDING_READ ||
                 (context->config.sc.recording == SharedConfig::RECORDING_WRITE &&
                  inputEditor)))) {
-            movie->copyTo(m);
-            
-            /* Reset the movie changelog */
-            m.changelog->clear();
+            m.copyFrom(*movie);
         }
 
         /* If the movie was modified since last state load, increment

@@ -31,15 +31,15 @@ MovieFileChangeLog::MovieFileChangeLog(Context* c, MovieFileInputs* mi) : contex
 {
     max_steps = 100;
     is_recording = true;
-    clear();
+    history_index = 0;
 }
 
 void MovieFileChangeLog::clear()
 {
-    emit beginRemoveHistory(0, history.size()-1);
+    emit beginResetHistory();
     history.clear();
     history_index = 0;
-    emit endRemoveHistory();
+    emit endResetHistory();
 }
 
 void MovieFileChangeLog::truncateLog(int frame)

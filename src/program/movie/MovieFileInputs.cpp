@@ -37,7 +37,9 @@
 MovieFileInputs::MovieFileInputs(Context* c) : context(c)
 {
     InputSerialization::setContext(c);
-    clear();
+    modifiedSinceLastSave = false;
+    modifiedSinceLastAutoSave = false;
+    modifiedSinceLastStateLoad = false;
 }
 
 void MovieFileInputs::setChangeLog(MovieFileChangeLog* mcl)
@@ -57,11 +59,16 @@ void MovieFileInputs::clear()
     modifiedSinceLastSave = false;
     modifiedSinceLastAutoSave = false;
     modifiedSinceLastStateLoad = false;
+    emit inputsToBeReset();
     input_list.clear();
+    emit inputsReset();
+    movie_changelog->clear();
 }
 
 void MovieFileInputs::load()
 {
+    emit inputsToBeReset();
+
     /* Clear structures */
     input_list.clear();
     
@@ -73,6 +80,8 @@ void MovieFileInputs::load()
 
     input_stream.close();
 
+    movie_changelog->clear();
+    emit inputsReset();
     return;
 }
 
@@ -89,7 +98,6 @@ void MovieFileInputs::save()
 
 uint64_t MovieFileInputs::nbFrames()
 {
-    std::unique_lock<std::mutex> lock(input_list_mutex);
     return input_list.size();
 }
 
@@ -118,7 +126,9 @@ int MovieFileInputs::setInputs(const AllInputs& inputs, uint64_t pos, bool keep_
     /* Check that we are writing to the next frame */
     if (pos == input_list.size()) {
         movie_changelog->registerInsertFrame(pos, inputs);
+        emit inputsToBeInserted(pos, pos);
         input_list.push_back(inputs);
+        emit inputsInserted(pos, pos);
         wasModified();
         return 0;
     }
@@ -129,13 +139,21 @@ int MovieFileInputs::setInputs(const AllInputs& inputs, uint64_t pos, bool keep_
          */
         if (keep_inputs) {
             movie_changelog->registerEditFrame(pos, inputs);
+            emit inputsToBeEdited(pos, pos);
             input_list[pos] = inputs;
+            emit inputsEdited(pos, pos);
         }
         else {
             movie_changelog->registerRemoveFrames(pos+1, input_list.size()-1);
             movie_changelog->registerEditFrame(pos, inputs);
+
+            emit inputsToBeRemoved(pos, input_list.size()-1);
             input_list.resize(pos);
+            emit inputsRemoved(pos, input_list.size()-1);
+
+            emit inputsToBeInserted(pos, pos);
             input_list.push_back(inputs);
+            emit inputsInserted(pos, pos);
         }
         wasModified();
         return 0;
@@ -179,16 +197,20 @@ void MovieFileInputs::clearInputs(int minFrame, int maxFrame)
     
     movie_changelog->registerClearFrames(minFrame, maxFrame);
 
+    emit inputsToBeEdited(minFrame, maxFrame);
     for (int i = minFrame; i <= maxFrame; i++)
         input_list[i].clear();
+    emit inputsEdited(minFrame, maxFrame);
     wasModified();
 }
 
 void MovieFileInputs::paintInput(SingleInput si, int value, int minFrame, int maxFrame)
 {
     movie_changelog->registerPaint(minFrame, maxFrame, si, value);
+    emit inputsToBeEdited(minFrame, maxFrame);
     for (int i = minFrame; i <= maxFrame; i++)
         queueInput(i, si, value, false);
+    emit inputsEdited(minFrame, maxFrame);
 }
 
 void MovieFileInputs::editInputs(const std::vector<AllInputs>& inputs, uint64_t pos)
@@ -204,7 +226,9 @@ void MovieFileInputs::editInputs(const std::vector<AllInputs>& inputs, uint64_t 
         return;
 
     movie_changelog->registerEditFrames(pos, pos+count-1, inputs);
+    emit inputsToBeEdited(pos, pos+count-1);
     std::copy(inputs.begin(), inputs.begin() + count, input_list.begin() + pos);
+    emit inputsEdited(pos, pos+count-1);
     wasModified();
 }
 
@@ -219,7 +243,9 @@ void MovieFileInputs::insertInputsBefore(uint64_t pos, int count)
     ai.clear();
 
     movie_changelog->registerInsertFrames(pos, count);
+    emit inputsToBeInserted(pos, pos+count-1);
     input_list.insert(input_list.begin() + pos, count, ai);
+    emit inputsInserted(pos, pos+count-1);
     wasModified();
 }
 
@@ -231,7 +257,9 @@ void MovieFileInputs::insertInputsBefore(const std::vector<AllInputs>& inputs, u
         return;
 
     movie_changelog->registerInsertFrames(pos, inputs);
+    emit inputsToBeInserted(pos, pos+inputs.size()-1);
     input_list.insert(input_list.begin() + pos, inputs.begin(), inputs.end());
+    emit inputsInserted(pos, pos+inputs.size()-1);
     wasModified();
 }
 
@@ -243,10 +271,12 @@ void MovieFileInputs::deleteInputs(uint64_t pos, int count)
         return;
 
     movie_changelog->registerRemoveFrames(pos, pos+count-1);
+    emit inputsToBeRemoved(pos, pos+count-1);
     if ((pos + count) == input_list.size())
         input_list.resize(pos);
     else
         input_list.erase(input_list.begin() + pos, input_list.begin() + pos + count);
+    emit inputsRemoved(pos, pos+count-1);
     wasModified();
 }
 
@@ -259,10 +289,13 @@ void MovieFileInputs::extractInputs(std::set<SingleInput> &set)
     }
 }
 
-void MovieFileInputs::copyTo(MovieFileInputs* movie_inputs) const
+void MovieFileInputs::copyFrom(const MovieFileInputs* movie_inputs)
 {
-    movie_inputs->input_list.resize(input_list.size());
-    std::copy(input_list.begin(), input_list.end(), movie_inputs->input_list.begin());
+    emit inputsToBeReset();
+    input_list.resize(movie_inputs->input_list.size());
+    std::copy(movie_inputs->input_list.begin(), movie_inputs->input_list.end(), input_list.begin());
+    emit inputsReset();
+    movie_changelog->clear();
 }
 
 void MovieFileInputs::close()
@@ -322,8 +355,11 @@ uint64_t MovieFileInputs::processPendingInputs()
             ai.events.push_back({ie.si.type, ie.si.which, ie.value});
             ai.processEvents(); // TODO: Unoptimal to call it everytime
         }
-        else
+        else {
+            emit inputsToBeEdited(ie.framecount, ie.framecount);
             ai.setInput(ie.si, ie.value);
+            emit inputsEdited(ie.framecount, ie.framecount);
+        }
         wasModified();
         return ie.framecount;
     }

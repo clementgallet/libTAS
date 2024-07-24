@@ -95,6 +95,8 @@ protected:
 private slots:
     void resizeAllColumns();
     void showMarkerToolTip(const QModelIndex &index);
+    void undoInputs();
+    void redoInputs();
 
 signals:
     void addMarkerSignal(int frame, QString text);

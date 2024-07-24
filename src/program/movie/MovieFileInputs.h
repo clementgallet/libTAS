@@ -23,6 +23,7 @@
 #include "ConcurrentQueue.h"
 #include "../shared/inputs/AllInputs.h"
 
+#include <QtCore/QObject>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -42,7 +43,8 @@ struct InputPending {
     bool isEvent;
 };
 
-class MovieFileInputs {
+class MovieFileInputs : public QObject {
+    Q_OBJECT
 public:
 
     /* Flag storing if the movie has been modified since last save.
@@ -119,7 +121,7 @@ public:
     void extractInputs(std::set<SingleInput> &set);
 
     /* Copy inputs to another one */
-    void copyTo(MovieFileInputs* movie_inputs) const;
+    void copyFrom(const MovieFileInputs* movie_inputs);
 
     /* Close the moviefile */
     void close();
@@ -157,6 +159,17 @@ private:
     /* We need to protect the input list access, because both the main and UI
      * threads can read and write to the list */
     std::mutex input_list_mutex;
+    
+signals:
+    void inputsToBeRemoved(int min_frame, int max_frame);
+    void inputsRemoved(int min_frame, int max_frame);
+    void inputsToBeInserted(int min_frame, int max_frame);
+    void inputsInserted(int min_frame, int max_frame);
+    void inputsToBeEdited(int min_frame, int max_frame);
+    void inputsEdited(int min_frame, int max_frame);
+    void inputsToBeReset();
+    void inputsReset();
+
 };
 
 #endif

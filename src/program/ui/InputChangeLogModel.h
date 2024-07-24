@@ -45,6 +45,8 @@ private:
     MovieFile *movie;
     
 public slots:
+    void beginResetHistory();
+    void endResetHistory();
     void beginAddHistory(int frame);
     void endAddHistory();
     void beginRemoveHistory(int first_frame, int last_frame);

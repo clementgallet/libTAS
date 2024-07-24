@@ -28,6 +28,8 @@
 #include <QtGui/QPalette>
 
 InputChangeLogModel::InputChangeLogModel(Context* c, MovieFile* m, QObject *parent) : QAbstractTableModel(parent), context(c), movie(m) {
+    connect(movie->changelog, &MovieFileChangeLog::beginResetHistory, this, &InputChangeLogModel::beginResetHistory);
+    connect(movie->changelog, &MovieFileChangeLog::endResetHistory, this, &InputChangeLogModel::endResetHistory);
     connect(movie->changelog, &MovieFileChangeLog::beginAddHistory, this, &InputChangeLogModel::beginAddHistory);
     connect(movie->changelog, &MovieFileChangeLog::endAddHistory, this, &InputChangeLogModel::endAddHistory);
     connect(movie->changelog, &MovieFileChangeLog::beginRemoveHistory, this, &InputChangeLogModel::beginRemoveHistory);
@@ -114,6 +116,16 @@ QVariant InputChangeLogModel::data(const QModelIndex &index, int role) const
     }
 
     return QVariant();
+}
+
+void InputChangeLogModel::beginResetHistory()
+{
+    beginResetModel();
+}
+
+void InputChangeLogModel::endResetHistory()
+{
+    endResetModel();
 }
 
 void InputChangeLogModel::beginAddHistory(int frame)
