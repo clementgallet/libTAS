@@ -213,6 +213,15 @@ void MovieFileInputs::paintInput(SingleInput si, int value, int minFrame, int ma
     emit inputsEdited(minFrame, maxFrame);
 }
 
+void MovieFileInputs::paintInput(SingleInput si, std::vector<int>& values, int minFrame)
+{
+    movie_changelog->registerPaint(minFrame, si, values);
+    emit inputsToBeEdited(minFrame, minFrame+values.size()-1);
+    for (int i = 0; i < values.size(); i++)
+        queueInput(minFrame+i, si, values[i], false);
+    emit inputsEdited(minFrame, minFrame+values.size()-1);
+}
+
 void MovieFileInputs::editInputs(const std::vector<AllInputs>& inputs, uint64_t pos)
 {
     return editInputs(inputs, pos, inputs.size());

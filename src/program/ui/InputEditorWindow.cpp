@@ -141,7 +141,6 @@ QSize InputEditorWindow::sizeHint() const
 
 void InputEditorWindow::resetInputs()
 {
-    inputEditorView->resetInputs();
     markerView->resetMarkers();
 }
 

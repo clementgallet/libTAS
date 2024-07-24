@@ -125,6 +125,16 @@ void MovieFileChangeLog::registerPaint(uint64_t start_frame, uint64_t end_frame,
     emit endAddHistory();
 }
 
+void MovieFileChangeLog::registerPaint(uint64_t start_frame, SingleInput si, const std::vector<int>& newV)
+{
+    if (!is_recording) return;
+    
+    registerAction();
+    emit beginAddHistory(history.size());
+    history.push_back(new MovieActionPaint(start_frame, si, newV, movie_inputs));
+    emit endAddHistory();
+}
+
 void MovieFileChangeLog::registerClearFrames(uint64_t start_frame, uint64_t end_frame)
 {
     if (!is_recording) return;

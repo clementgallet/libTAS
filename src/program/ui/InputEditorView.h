@@ -40,7 +40,6 @@ public:
     void fillMenu(QMenu* menu);
 
     void update();
-    void resetInputs();
     InputEditorModel *inputEditorModel;
     int scrollBarWidth;
 

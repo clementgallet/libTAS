@@ -104,6 +104,9 @@ public:
     /* Paint a single input in a range of frames */
     void paintInput(SingleInput si, int value, int minFrame, int maxFrame);
 
+    /* Paint a single input in a range of frames */
+    void paintInput(SingleInput si, std::vector<int>& values, int minFrame);
+
     /* Edit a range of frame inputs */
     void editInputs(const std::vector<AllInputs>& inputs, uint64_t pos);
     void editInputs(const std::vector<AllInputs>& inputs, uint64_t pos, int count);

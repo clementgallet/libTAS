@@ -46,6 +46,7 @@ public:
     bool redo();
     void registerAction();
     void registerPaint(uint64_t start_frame, uint64_t end_frame, SingleInput si, int newV);
+    void registerPaint(uint64_t start_frame, SingleInput si, const std::vector<int>& newV);
     void registerClearFrames(uint64_t start_frame, uint64_t end_frame);
     void registerEditFrame(uint64_t edit_from, const AllInputs& edited_frame);
     void registerEditFrames(uint64_t edit_from, const std::vector<AllInputs>& edited_frames);
@@ -59,13 +60,14 @@ public:
     
     /* Index to the next inserted action */
     unsigned int history_index;
+    
+    bool is_recording;
 
 private:
     Context* context;
     unsigned int max_steps;
 
     MovieFileInputs* movie_inputs;
-    bool is_recording;
 
 signals:
     void beginResetHistory();

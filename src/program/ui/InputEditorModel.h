@@ -23,9 +23,11 @@
 #include "../shared/inputs/SingleInput.h"
 
 #include <QtCore/QAbstractTableModel>
+#include <QtCore/QTimer>
 #include <vector>
 #include <sstream>
 #include <stdint.h>
+#include <chrono>
 
 /* Forward declaration */
 struct Context;
@@ -62,9 +64,6 @@ public:
 
     /* Update the content of the table */
     void update();
-
-    /* Reset the content of the table */
-    void resetInputs();
 
     /* Build the unique set of inputs present in the movie */
     void buildInputSet();
@@ -191,6 +190,9 @@ public slots:
     /* Seek to marker frame */
     void seekToFrame(unsigned long long frame);
 
+    /* Timer update function to highlight last undo/redo */
+    void highlightUndo();
+
 private:
     Context *context;
     MovieFile *movie;
@@ -210,6 +212,13 @@ private:
     int paintMaxRow;
     int paintValue;
     int paintAutofire;
+
+    /* Parameters to highlight the undo/redo operation */
+    int undoMinRow, undoMaxRow, undoMinCol, undoMaxCol;
+    float undoTimeoutSec;
+    const float maxUndoTimeoutSec = 0.5f;
+    std::chrono::time_point<std::chrono::steady_clock> undoStart;
+    QTimer* undoTimer;
 
 signals:
     void inputSetChanged();

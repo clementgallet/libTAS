@@ -282,11 +282,6 @@ void InputEditorView::scrollToFrame(unsigned long long frame)
     connect(verticalScrollBar(), &QAbstractSlider::valueChanged, this, &InputEditorView::manualScroll);
 }
 
-void InputEditorView::resetInputs()
-{
-    inputEditorModel->resetInputs();
-}
-
 void InputEditorView::updateMenu()
 {
     /* Sanity check if this slot is called too early */

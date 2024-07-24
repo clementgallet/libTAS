@@ -3,6 +3,7 @@
 
 * Add input events in movies
 * Offer undo/redo in input editor
+* Highlight undo/redo operations
 
 ### Changed
 ### Fixed
