@@ -4,6 +4,7 @@
 * Add input events in movies
 * Offer undo/redo in input editor
 * Highlight undo/redo operations
+* Audio gain setting
 
 ### Changed
 ### Fixed

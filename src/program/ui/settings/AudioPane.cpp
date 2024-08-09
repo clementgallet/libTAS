@@ -25,9 +25,12 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QFormLayout>
+#include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QCheckBox>
+#include <QtWidgets/QSpinBox>
+#include <QtWidgets/QSlider>
 
 AudioPane::AudioPane(Context* c) : context(c)
 {
@@ -83,9 +86,29 @@ void AudioPane::initLayout()
     controlLayout->addWidget(disableBox);
     controlLayout->addWidget(preferOpenAlBox);
 
-    QVBoxLayout* const mainLayout = new QVBoxLayout;
-    mainLayout->addWidget(formatBox);
-    mainLayout->addWidget(controlBox);
+    QGroupBox* gainBox = new QGroupBox(tr("Audio Gain"));
+    QVBoxLayout* gainLayout = new QVBoxLayout;
+    gainBox->setLayout(gainLayout);
+
+    gainSlider = new QSlider(Qt::Vertical);
+    gainSlider->setRange(0, 100);
+    gainSlider->setSingleStep(1);
+    gainSlider->setPageStep(10);
+    gainSlider->setTracking(false);
+
+    gainValue = new QSpinBox();
+    gainValue->setRange(0, 100);
+
+    gainLayout->addWidget(gainSlider);
+    gainLayout->addWidget(gainValue);
+
+    QVBoxLayout* const sideLayout = new QVBoxLayout;
+    sideLayout->addWidget(formatBox);
+    sideLayout->addWidget(controlBox);
+
+    QHBoxLayout* const mainLayout = new QHBoxLayout;
+    mainLayout->addLayout(sideLayout, 1);
+    mainLayout->addWidget(gainBox);
 
     setLayout(mainLayout);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -99,6 +122,10 @@ void AudioPane::initSignals()
     connect(muteBox, &QAbstractButton::clicked, this, &AudioPane::saveConfig);
     connect(disableBox, &QAbstractButton::clicked, this, &AudioPane::saveConfig);    
     connect(preferOpenAlBox, &QAbstractButton::clicked, this, &AudioPane::saveConfig);
+    connect(gainValue, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), gainSlider, &QSlider::setValue);
+    connect(gainValue, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &AudioPane::saveConfig);
+    connect(gainSlider, &QSlider::valueChanged, this, &AudioPane::saveConfig);
+    connect(gainSlider, &QSlider::valueChanged, gainValue, &QSpinBox::setValue);
 }
 
 void AudioPane::initToolTips()
@@ -142,6 +169,13 @@ void AudioPane::loadConfig()
     muteBox->setChecked(context->config.sc.audio_mute);
     disableBox->setChecked(context->config.sc.audio_disabled);
     preferOpenAlBox->setChecked(context->config.sc.openal_soft);
+
+    gainValue->setValue(context->config.sc.audio_gain * 100.0f);
+    
+    /* Disconnect to not trigger valueChanged() signal */
+    disconnect(gainSlider, &QSlider::valueChanged, this, &AudioPane::saveConfig);
+    gainSlider->setValue(context->config.sc.audio_gain * 100.0f);
+    connect(gainSlider, &QSlider::valueChanged, this, &AudioPane::saveConfig);
 }
 
 void AudioPane::saveConfig()
@@ -152,6 +186,7 @@ void AudioPane::saveConfig()
     context->config.sc.audio_mute = muteBox->isChecked();
     context->config.sc.audio_disabled = disableBox->isChecked();
     context->config.sc.openal_soft = preferOpenAlBox->isChecked();
+    context->config.sc.audio_gain = ((float) gainValue->value()) / 100.0f;
     context->config.sc_modified = true;
 }
 

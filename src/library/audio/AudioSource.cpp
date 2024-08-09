@@ -225,7 +225,10 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
      *
      * TODO: This is where we can support panning.
      */
-    float resultVolume = (volume * outVolume) > 1.0?1.0:(volume*outVolume);
+    float resultVolume = volume * outVolume * Global::shared_config.audio_gain;
+    if (resultVolume > 1.0f)
+        resultVolume = 1.0f;
+
     int lvas = (int)(resultVolume * 65536.0f);
     int rvas = (int)(resultVolume * 65536.0f);
 

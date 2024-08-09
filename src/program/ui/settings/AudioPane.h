@@ -25,6 +25,8 @@
 class Context;
 class QComboBox;
 class QCheckBox;
+class QSpinBox;
+class QSlider;
 class ToolTipCheckBox;
 
 class AudioPane : public QWidget {
@@ -46,6 +48,9 @@ private:
     QComboBox* freqChoice;
     QComboBox* depthChoice;
     QComboBox* channelChoice;
+
+    QSlider* gainSlider;
+    QSpinBox* gainValue;
 
     ToolTipCheckBox* muteBox;
     ToolTipCheckBox* disableBox;

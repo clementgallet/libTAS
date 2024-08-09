@@ -88,6 +88,9 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Frequency of buffer in Hz */
     int audio_frequency = 44100;
 
+    /* Audio gain from 0.0 to 1.0 */
+    float audio_gain = 1.0f;
+
     /* Video codec */
     enum VCodec {
         VCODEC_X264,
