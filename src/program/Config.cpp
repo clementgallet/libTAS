@@ -155,6 +155,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("audio_bitdepth", sc.audio_bitdepth);
     settings.setValue("audio_channels", sc.audio_channels);
     settings.setValue("audio_frequency", sc.audio_frequency);
+    settings.setValue("audio_gain", sc.audio_gain);
     settings.setValue("audio_mute", sc.audio_mute);
     settings.setValue("audio_disabled", sc.audio_disabled);
     settings.setValue("video_codec", sc.video_codec);
@@ -320,6 +321,7 @@ void Config::load(const std::string& gamepath) {
     sc.audio_bitdepth = settings.value("audio_bitdepth", sc.audio_bitdepth).toInt();
     sc.audio_channels = settings.value("audio_channels", sc.audio_channels).toInt();
     sc.audio_frequency = settings.value("audio_frequency", sc.audio_frequency).toInt();
+    sc.audio_gain = settings.value("audio_gain", sc.audio_gain).toFloat();
     sc.audio_mute = settings.value("audio_mute", sc.audio_mute).toBool();
     sc.audio_disabled = settings.value("audio_disabled", sc.audio_disabled).toBool();
     sc.openal_soft = settings.value("openal_soft", sc.openal_soft).toBool();
