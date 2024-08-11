@@ -19,7 +19,6 @@
 
 #include "RamWatchModel.h"
 
-#include "ramsearch/IRamWatchDetailed.h"
 #include "ramsearch/RamWatchDetailed.h"
 
 #include <QtWidgets/QMessageBox>
@@ -57,7 +56,7 @@ QVariant RamWatchModel::headerData(int section, Qt::Orientation orientation, int
 QVariant RamWatchModel::data(const QModelIndex &index, int role) const
 {
     if (role == Qt::DisplayRole) {
-        const std::unique_ptr<IRamWatchDetailed> &watch = ramwatches.at(index.row());
+        const std::unique_ptr<RamWatchDetailed> &watch = ramwatches.at(index.row());
         switch(index.column()) {
             case 0:
                 if (watch->isPointer)
@@ -65,7 +64,7 @@ QVariant RamWatchModel::data(const QModelIndex &index, int role) const
                 else
                     return QString("%1").arg(watch->address, 0, 16);
             case 1:
-                return QString(watch->value_str().c_str());
+                return QString(watch->value_str());
             case 2:
                 return QString(watch->label.c_str());
             default:
@@ -75,7 +74,7 @@ QVariant RamWatchModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-void RamWatchModel::addWatch(std::unique_ptr<IRamWatchDetailed> ramwatch)
+void RamWatchModel::addWatch(std::unique_ptr<RamWatchDetailed> ramwatch)
 {
     beginInsertRows(QModelIndex(), ramwatches.size(), ramwatches.size());
     ramwatches.push_back(std::move(ramwatch));
@@ -93,11 +92,11 @@ void RamWatchModel::saveSettings(QSettings& watchSettings)
 {
     watchSettings.beginWriteArray("watches");
     int i = 0;
-    for (const std::unique_ptr<IRamWatchDetailed>& w : ramwatches) {
+    for (const std::unique_ptr<RamWatchDetailed>& w : ramwatches) {
         watchSettings.setArrayIndex(i++);
         watchSettings.setValue("address", static_cast<unsigned long long>(w->address));
         watchSettings.setValue("label", w->label.c_str());
-        watchSettings.setValue("type", w->type());
+        watchSettings.setValue("type", w->value_type);
         watchSettings.setValue("hex", w->hex);
         watchSettings.setValue("isPointer", w->isPointer);
         if (w->isPointer) {
@@ -124,46 +123,13 @@ void RamWatchModel::loadSettings(QSettings& watchSettings)
     for (int i = 0; i < size; ++i) {
         watchSettings.setArrayIndex(i);
 
-        std::unique_ptr<IRamWatchDetailed> ramwatch;
+        std::unique_ptr<RamWatchDetailed> ramwatch;
         int type = watchSettings.value("type").toInt();
         uintptr_t addr = watchSettings.value("address").toULongLong();
 
         /* Build the ram watch using the right type as template */
-        switch (type) {
-            case RamUnsignedChar:
-                ramwatch.reset(new RamWatchDetailed<unsigned char>(addr));
-                break;
-            case RamChar:
-                ramwatch.reset(new RamWatchDetailed<char>(addr));
-                break;
-            case RamUnsignedShort:
-                ramwatch.reset(new RamWatchDetailed<unsigned short>(addr));
-                break;
-            case RamShort:
-                ramwatch.reset(new RamWatchDetailed<short>(addr));
-                break;
-            case RamUnsignedInt:
-                ramwatch.reset(new RamWatchDetailed<unsigned int>(addr));
-                break;
-            case RamInt:
-                ramwatch.reset(new RamWatchDetailed<int>(addr));
-                break;
-            case RamUnsignedLong:
-                ramwatch.reset(new RamWatchDetailed<uint64_t>(addr));
-                break;
-            case RamLong:
-                ramwatch.reset(new RamWatchDetailed<int64_t>(addr));
-                break;
-            case RamFloat:
-                ramwatch.reset(new RamWatchDetailed<float>(addr));
-                break;
-            case RamDouble:
-                ramwatch.reset(new RamWatchDetailed<double>(addr));
-                break;
-            default:
-                QMessageBox::critical(nullptr, "Error", "Could not determine type of ram watch");
-                return;
-        }
+        ramwatch.reset(new RamWatchDetailed(addr, type));
+
         ramwatch->label = watchSettings.value("label").toString().toStdString();
         ramwatch->hex = watchSettings.value("hex").toBool();
         ramwatch->isPointer = watchSettings.value("isPointer").toBool();

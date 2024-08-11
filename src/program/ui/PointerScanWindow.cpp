@@ -27,9 +27,7 @@
 
 #include "Context.h"
 #include "ramsearch/CompareOperations.h"
-#include "ramsearch/IRamWatchDetailed.h"
 #include "ramsearch/RamWatchDetailed.h"
-#include "ramsearch/RamWatchDetailedBuilder.h"
 #include "ramsearch/BaseAddresses.h"
 
 #include <QtWidgets/QTableView>
@@ -171,7 +169,7 @@ void PointerScanWindow::slotAdd()
         for (int i = 0; i < indexes.count(); i++) {
             const QModelIndex sourceIndex = proxyModel->mapToSource(indexes[i]);
             const std::pair<uintptr_t, std::vector<int>> &chain = pointerScanModel->pointer_chains.at(sourceIndex.row());
-            std::unique_ptr<IRamWatchDetailed> watch(RamWatchDetailedBuilder::new_watch(addr, type_index));
+            std::unique_ptr<RamWatchDetailed> watch(new RamWatchDetailed(addr, type_index));
 
             watch->isPointer = true;
             watch->base_address = chain.first;

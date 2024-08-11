@@ -17,7 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "IRamWatchDetailed.h"
+#include "RamWatchDetailed.h"
 #include "MemSection.h"
 #include "MemLayout.h"
 #include "MemAccess.h"
@@ -29,9 +29,9 @@
 #include <fstream>
 #include <iostream>
 
-bool IRamWatchDetailed::isValid;
+bool RamWatchDetailed::isValid;
 
-void IRamWatchDetailed::update_addr()
+void RamWatchDetailed::update_addr()
 {
     isValid = true;
     if (isPointer) {
@@ -61,5 +61,35 @@ void IRamWatchDetailed::update_addr()
             address = next_address + offset;
         }
     }
+}
 
+value_t RamWatchDetailed::get_value()
+{
+    update_addr();
+
+    value_t value;
+    value.v_uint64_t = 0;
+
+    if (!isValid)
+        return value;
+
+    isValid = (MemAccess::read(&value, reinterpret_cast<void*>(address), MemValue::type_size(value_type)) == (size_t)MemValue::type_size(value_type));
+    return value;
+}
+
+const char* RamWatchDetailed::value_str()
+{
+    value_t value = get_value();
+    if (!isValid)
+        return "??????";
+
+    return MemValue::to_string(&value, value_type, hex);
+}
+
+int RamWatchDetailed::poke_value(const char* str_value)
+{
+    value_t value = MemValue::from_string(str_value, value_type, hex);
+
+    /* Write value into the game process address */
+    return MemAccess::write(&value, reinterpret_cast<void*>(address), MemValue::type_size(value_type));
 }

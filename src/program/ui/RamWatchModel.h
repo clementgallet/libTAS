@@ -20,7 +20,7 @@
 #ifndef LIBTAS_RAMWATCHMODEL_H_INCLUDED
 #define LIBTAS_RAMWATCHMODEL_H_INCLUDED
 
-#include "ramsearch/IRamWatchDetailed.h"
+#include "ramsearch/RamWatchDetailed.h"
 
 #include <QtCore/QAbstractTableModel>
 #include <QtCore/QSettings>
@@ -34,7 +34,7 @@ public:
     RamWatchModel(QObject *parent = Q_NULLPTR);
 
     /* A reference to the vector of addresses to watch */
-    std::vector<std::unique_ptr<IRamWatchDetailed>> ramwatches;
+    std::vector<std::unique_ptr<RamWatchDetailed>> ramwatches;
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
@@ -44,7 +44,7 @@ public:
 
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
-    void addWatch(std::unique_ptr<IRamWatchDetailed> ramwatch);
+    void addWatch(std::unique_ptr<RamWatchDetailed> ramwatch);
     void removeWatch(int row);
 
     void saveSettings(QSettings& watchSettings);

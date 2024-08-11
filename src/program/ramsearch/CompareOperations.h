@@ -46,9 +46,6 @@ namespace CompareOperations {
 
     /* Compute the comparaison between the content of value and the old value */
     bool check_previous(const void* value, const void* old_value);
-    
-    /* Format a value to be shown */
-    const char* tostring(const void* value, bool hex);
 }
 
 #endif

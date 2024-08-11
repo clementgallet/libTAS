@@ -20,83 +20,44 @@
 #ifndef LIBTAS_RAMWATCHDETAILED_H_INCLUDED
 #define LIBTAS_RAMWATCHDETAILED_H_INCLUDED
 
-#include "IRamWatchDetailed.h"
-#include "TypeIndex.h"
-#include "MemAccess.h"
+#include <string>
+#include <vector>
+#include <cstdint>
 
-#include <sstream>
-#include <iostream>
+#include "MemValue.h"
 
-template <class T>
-class RamWatchDetailed : public IRamWatchDetailed {
+class RamWatchDetailed {
 public:
-    RamWatchDetailed(uintptr_t addr) : IRamWatchDetailed(addr) {};
+    RamWatchDetailed(uintptr_t addr, int type) : value_type(type), address(addr) {};
 
-    T get_value()
-    {
-        update_addr();
+    /* Update the actual address to look at (in case of pointer chain) */
+    void update_addr();
 
-        if (!isValid)
-            return 0;
+    /* Return the current value of the ram watch as a value_t type */
+    value_t get_value();
 
-        T value = 0;
-        isValid = (MemAccess::read(&value, reinterpret_cast<void*>(address), sizeof(T)) == sizeof(T));
-        return value;
-    }
+    /* Return the current value of the ram watch as a string */
+    const char* value_str();
 
-    std::string value_str()
-    {
-        std::ostringstream oss;
-        if (hex) oss << std::hex;
-        /* Output char and unsigned char as integer values. There might be a
-         * more elegant solution.
-         */
-        if (std::is_same<T, char>::value) {
-            oss << static_cast<int>(get_value());
-        }
-        else if (std::is_same<T, unsigned char>::value) {
-            oss << static_cast<unsigned int>(get_value());
-        }
-        else {
-            oss << get_value();
-        }
-        if (!isValid)
-            return std::string("??????");
+    /* Poke a value (given as a string) into the ram watch address. Return
+     * the result of process_vm_writev call
+     */
+    int poke_value(const char* str_value);
 
-        return oss.str();
-    }
+    int value_type;
+    uintptr_t address;
+    std::string label;
+    bool hex;
 
-    int poke_value(std::string str_value)
-    {
-        std::istringstream iss(str_value);
-        T value;
-        if (hex) iss >> std::hex;
+    bool isPointer;
+    std::vector<int> pointer_offsets;
+    /* Intermediate addresses, only for indication */
+    std::vector<uintptr_t> pointer_addresses;
+    uintptr_t base_address;
+    off_t base_file_offset;
+    std::string base_file;
 
-        /* ISS will consider char and unsigned char as text element. To get the
-         * integer value, I need to cast it to another integer type.
-         */
-        if (std::is_same<T, char>::value) {
-            int intval;
-            iss >> intval;
-            value = static_cast<char>(intval);
-        }
-        else if (std::is_same<T, unsigned char>::value) {
-            unsigned int uintval;
-            iss >> uintval;
-            value = static_cast<unsigned char>(uintval);
-        }
-        else {
-            iss >> value;
-        }
-
-        /* Write value into the game process address */
-        return MemAccess::write(&value, reinterpret_cast<void*>(address), sizeof(T));
-    }
-
-    int type()
-    {
-        return type_index<T>();
-    }
+    static bool isValid;
 
 };
 

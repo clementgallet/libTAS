@@ -138,13 +138,13 @@ libTAS_SOURCES = \
     ui/settings/tooltip/ToolTipSpinBox.cpp \
     ramsearch/BaseAddresses.cpp \
     ramsearch/CompareOperations.cpp \
-    ramsearch/IRamWatchDetailed.cpp \
+    ramsearch/RamWatchDetailed.cpp \
     ramsearch/MemAccess.cpp \
     ramsearch/MemLayout.cpp \
     ramsearch/MemScanner.cpp \
     ramsearch/MemScannerThread.cpp \
     ramsearch/MemSection.cpp \
-    ramsearch/RamWatchDetailedBuilder.cpp \
+    ramsearch/MemValue.cpp \
     ../shared/inputs/AllInputs.cpp \
     ../shared/inputs/ControllerInputs.cpp \
     ../shared/inputs/MiscInputs.cpp \

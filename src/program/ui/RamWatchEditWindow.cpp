@@ -19,10 +19,7 @@
 
 #include "RamWatchEditWindow.h"
 
-#include "ramsearch/TypeIndex.h"
-#include "ramsearch/IRamWatchDetailed.h"
 #include "ramsearch/RamWatchDetailed.h"
-#include "ramsearch/RamWatchDetailedBuilder.h"
 
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QPushButton>
@@ -132,20 +129,20 @@ void RamWatchEditWindow::clear()
     slotPointer(false);
 }
 
-void RamWatchEditWindow::fill(std::unique_ptr<IRamWatchDetailed> &watch)
+void RamWatchEditWindow::fill(std::unique_ptr<RamWatchDetailed> &watch)
 {
     /* Fill address */
     addressInput->setText(QString("%1").arg(watch->address, 0, 16));
     addressInput->setEnabled(!watch->isPointer);
 
     /* Fill value */
-    valueInput->setText(watch->value_str().c_str());
+    valueInput->setText(watch->value_str());
 
     /* Fill label */
     labelInput->setText(watch->label.c_str());
 
     /* Fill type using virtual function */
-    typeBox->setCurrentIndex(watch->type());
+    typeBox->setCurrentIndex(watch->value_type);
 
     /* Fill display */
     if (watch->hex)
@@ -267,7 +264,7 @@ void RamWatchEditWindow::slotPoke()
     /* Save fields into the ram watch */
     slotSave();
 
-    int res = ramwatch->poke_value(valueInput->text().toStdString());
+    int res = ramwatch->poke_value(valueInput->text().toLocal8Bit().constData());
 
     if (res < 0) {
         if (res == EFAULT) {
@@ -297,7 +294,7 @@ void RamWatchEditWindow::slotSave()
         reject();
 
     /* Build the ram watch using the right type as template */
-    ramwatch.reset(RamWatchDetailedBuilder::new_watch(addr, typeBox->currentIndex()));
+    ramwatch.reset(new RamWatchDetailed(addr, typeBox->currentIndex()));
 
     ramwatch->hex = (displayBox->currentIndex() == 1);
     ramwatch->label = labelInput->text().toStdString();

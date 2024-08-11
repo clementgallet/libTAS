@@ -17,10 +17,10 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_TYPEINDEX_H_INCLUDED
-#define LIBTAS_TYPEINDEX_H_INCLUDED
+#ifndef LIBTAS_MEMVALUE_H_INCLUDED
+#define LIBTAS_MEMVALUE_H_INCLUDED
 
-#include <stdint.h>
+#include <cstdint>
 
 enum RamType {
     RamUnsignedChar,
@@ -35,17 +35,29 @@ enum RamType {
     RamDouble,
 };
 
-/* This looks aaawwwful */
-template <typename T> static inline int type_index() {return 0;}
-template <> inline int type_index<unsigned char>() {return RamUnsignedChar;}
-template <> inline int type_index<char>() {return RamChar;}
-template <> inline int type_index<unsigned short>() {return RamUnsignedShort;}
-template <> inline int type_index<short>() {return RamShort;}
-template <> inline int type_index<unsigned int>() {return RamUnsignedInt;}
-template <> inline int type_index<int>() {return RamInt;}
-template <> inline int type_index<uint64_t>() {return RamUnsignedLong;}
-template <> inline int type_index<int64_t>() {return RamLong;}
-template <> inline int type_index<float>() {return RamFloat;}
-template <> inline int type_index<double>() {return RamDouble;}
+typedef union {
+    int8_t v_int8_t;
+    uint8_t v_uint8_t;
+    int16_t v_int16_t;
+    uint16_t v_uint16_t;
+    int32_t v_int32_t;
+    uint32_t v_uint32_t;
+    int64_t v_int64_t;
+    uint64_t v_uint64_t;
+    float v_float;
+    double v_double;
+} value_t;
+
+namespace MemValue {
+    
+    /* Returns the size of a type index */
+    int type_size(int type_index);
+    
+    /* Format a value to be shown */
+    const char* to_string(const void* value, int value_type, bool hex);
+
+    /* Extract a value from a string and type */
+    value_t from_string(const char* str, int value_type, bool hex);
+}
 
 #endif

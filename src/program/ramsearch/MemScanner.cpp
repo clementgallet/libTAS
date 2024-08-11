@@ -17,11 +17,11 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "TypeIndex.h"
 #include "MemAccess.h"
 #include "MemLayout.h"
 #include "MemScanner.h"
 #include "MemScannerThread.h"
+#include "MemValue.h"
 
 #include <sstream>
 #include <fstream>
@@ -331,7 +331,7 @@ const char* MemScanner::get_previous_value(int index, bool hex) const
     if (old_values.empty())
         return "";
         
-    return CompareOperations::tostring(&old_values[index*value_type_size], hex);
+    return MemValue::to_string(&old_values[index*value_type_size], value_type, hex);
 }
 
 const char* MemScanner::get_current_value(int index, bool hex) const
@@ -342,7 +342,7 @@ const char* MemScanner::get_current_value(int index, bool hex) const
     if (readValues != value_type_size)
         return "";
 
-    return CompareOperations::tostring(value, hex);
+    return MemValue::to_string(value, value_type, hex);
 }
 
 void MemScanner::clear()

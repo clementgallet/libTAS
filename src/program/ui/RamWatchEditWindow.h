@@ -20,7 +20,7 @@
 #ifndef LIBTAS_RAMWATCHEDITWINDOW_H_INCLUDED
 #define LIBTAS_RAMWATCHEDITWINDOW_H_INCLUDED
 
-#include "ramsearch/IRamWatchDetailed.h"
+#include "ramsearch/RamWatchDetailed.h"
 
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QLineEdit>
@@ -41,10 +41,10 @@ public:
     RamWatchEditWindow(QWidget *parent = Q_NULLPTR);
 
     void clear();
-    void fill(std::unique_ptr<IRamWatchDetailed> &watch);
+    void fill(std::unique_ptr<RamWatchDetailed> &watch);
     void fill(uintptr_t addr, int type);
 
-    std::unique_ptr<IRamWatchDetailed> ramwatch;
+    std::unique_ptr<RamWatchDetailed> ramwatch;
 
 private:
     QLineEdit *addressInput;
