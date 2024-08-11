@@ -37,7 +37,7 @@ class MemScanner : public QObject {
         static void init(std::string path);
 
         /* First memory scan. Returns 0 if no error, or error code */
-        int first_scan(pid_t pid, int mem_flags, int type, CompareType ct, CompareOperator co, double cv, double dv);
+        int first_scan(pid_t pid, int mem_flags, int type, int align, CompareType ct, CompareOperator co, double cv, double dv);
 
         /* Generic memory scan method. Returns 0 if no error, or error code */
         int scan(bool first, CompareType ct, CompareOperator co, double cv, double dv);
@@ -80,7 +80,7 @@ class MemScanner : public QObject {
         CompareOperator compare_operator;
         double compare_value;
         double different_value;
-        
+        int alignment;
         bool is_stopped = false;
         
     private:

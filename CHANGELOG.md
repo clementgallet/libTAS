@@ -5,6 +5,7 @@
 * Offer undo/redo in input editor
 * Highlight undo/redo operations
 * Audio gain setting
+* Add alignment to ram search
 
 ### Changed
 ### Fixed

@@ -45,7 +45,7 @@ void MemScanner::init(std::string path)
     addresses_path = ossoa.str();
 }
 
-int MemScanner::first_scan(pid_t pid, int mem_flags, int type, CompareType ct, CompareOperator co, double cv, double dv)
+int MemScanner::first_scan(pid_t pid, int mem_flags, int type, int align, CompareType ct, CompareOperator co, double cv, double dv)
 {
     value_type = type;
     switch (value_type) {
@@ -68,6 +68,12 @@ int MemScanner::first_scan(pid_t pid, int mem_flags, int type, CompareType ct, C
             value_type_size = 8;
             break;
     }
+
+    alignment = align;
+    if (alignment == 0)
+        alignment = value_type_size;
+    else if (alignment > value_type_size)
+        alignment = value_type_size;
 
     /* Read the whole memory layout */
     std::unique_ptr<MemLayout> memlayout (new MemLayout(pid));

@@ -56,7 +56,7 @@ public:
     double different_value;
 
     /* Perform a new search and returns the error code */
-    int newWatches(int mem_flags, int type, CompareType ct, CompareOperator co, double cv, double dv);
+    int newWatches(int mem_flags, int type, int alignment, CompareType ct, CompareOperator co, double cv, double dv);
 
     /* Precompute the size of the next scan (for progress bar) */
     int predictScanCount(int mem_flags);

@@ -136,10 +136,18 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     displayBox->addItem("decimal");
     displayBox->addItem("hexadecimal");
 
+    alignmentBox = new QComboBox();
+    alignmentBox->addItem("default", 0);
+    alignmentBox->addItem("1", 1);
+    alignmentBox->addItem("2", 2);
+    alignmentBox->addItem("4", 4);
+    alignmentBox->setCurrentIndex(0);
+
     formatGroupBox = new QGroupBox(tr("Format"));
     QFormLayout *formatLayout = new QFormLayout;
     formatLayout->addRow(new QLabel(tr("Type:")), typeBox);
     formatLayout->addRow(new QLabel(tr("Display:")), displayBox);
+    formatLayout->addRow(new QLabel(tr("Alignment:")), alignmentBox);
     formatGroupBox->setLayout(formatLayout);
 
     /* Buttons */
@@ -286,9 +294,10 @@ void RamSearchWindow::threadedNew(int memflags)
     getCompareParameters(compare_type, compare_operator, compare_value, different_value);
 
     ramSearchModel->hex = (displayBox->currentIndex() == 1);
+    int alignment = alignmentBox->currentData().toInt();
 
     /* Call the RamSearch new function using the right type */
-    int err = ramSearchModel->newWatches(memflags, typeBox->currentIndex(), compare_type, compare_operator, compare_value, different_value);
+    int err = ramSearchModel->newWatches(memflags, typeBox->currentIndex(), alignment, compare_type, compare_operator, compare_value, different_value);
 
     if (err < 0)
         searchProgress->reset();

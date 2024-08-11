@@ -78,6 +78,7 @@ private:
     QGroupBox *formatGroupBox;
     QComboBox *typeBox;
     QComboBox *displayBox;
+    QComboBox *alignmentBox;
 
     QPushButton *newButton;
     QPushButton *searchButton;
