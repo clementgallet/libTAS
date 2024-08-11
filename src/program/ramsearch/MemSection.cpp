@@ -62,7 +62,7 @@ void MemSection::readMap(std::string& line)
     sharedflag = (flags.find('s') != std::string::npos);
 
     /* Read the rest */
-    iss >> offset >> device >> inode;
+    iss >> offset >> device >> std::dec >> inode;
 
     /* Put the rest of the line into filename */
     std::getline(iss, filename);

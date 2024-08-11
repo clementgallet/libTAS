@@ -59,7 +59,7 @@ class MemSection {
         bool sharedflag;
         off_t offset;
         std::string device;
-        int inode;
+        ino_t inode;
         std::string filename;
 
         /* Memory section type determined with protections and filename */
