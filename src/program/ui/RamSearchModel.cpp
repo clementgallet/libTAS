@@ -88,7 +88,7 @@ uint64_t RamSearchModel::scanSize()
     return memscanner.scan_size();
 }
 
-int RamSearchModel::newWatches(int mem_flags, int type, int alignment, CompareType ct, CompareOperator co, double cv, double dv)
+int RamSearchModel::newWatches(int mem_flags, int type, int alignment, CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv)
 {
     compare_type = ct;
     compare_operator = co;
@@ -104,7 +104,7 @@ int RamSearchModel::newWatches(int mem_flags, int type, int alignment, CompareTy
     return err;
 }
 
-int RamSearchModel::searchWatches(CompareType ct, CompareOperator co, double cv, double dv)
+int RamSearchModel::searchWatches(CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv)
 {
     beginResetModel();
 

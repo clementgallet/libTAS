@@ -33,8 +33,8 @@ public:
     /* Update the actual address to look at (in case of pointer chain) */
     void update_addr();
 
-    /* Return the current value of the ram watch as a value_t type */
-    value_t get_value();
+    /* Return the current value of the ram watch as a MemValueType */
+    MemValueType get_value();
 
     /* Return the current value of the ram watch as a string */
     const char* value_str();

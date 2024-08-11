@@ -45,30 +45,10 @@ void MemScanner::init(std::string path)
     addresses_path = ossoa.str();
 }
 
-int MemScanner::first_scan(pid_t pid, int mem_flags, int type, int align, CompareType ct, CompareOperator co, double cv, double dv)
+int MemScanner::first_scan(pid_t pid, int mem_flags, int type, int align, CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv)
 {
     value_type = type;
-    switch (value_type) {
-        case RamChar:
-        case RamUnsignedChar:
-            value_type_size = 1;
-            break;
-        case RamShort:
-        case RamUnsignedShort:
-            value_type_size = 2;
-            break;
-        case RamInt:
-        case RamUnsignedInt:
-        case RamFloat:
-            value_type_size = 4;
-            break;
-        case RamLong:
-        case RamUnsignedLong:
-        case RamDouble:
-            value_type_size = 8;
-            break;
-    }
-
+    value_type_size = MemValue::type_size(value_type);
     alignment = align;
     if (alignment == 0)
         alignment = value_type_size;
@@ -92,7 +72,7 @@ int MemScanner::first_scan(pid_t pid, int mem_flags, int type, int align, Compar
     return scan(true, ct, co, cv, dv);
 }
 
-int MemScanner::scan(bool first, CompareType ct, CompareOperator co, double cv, double dv)
+int MemScanner::scan(bool first, CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv)
 {
     is_stopped = false;
 

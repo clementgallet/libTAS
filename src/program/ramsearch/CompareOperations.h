@@ -21,6 +21,7 @@
 #define LIBTAS_COMPAREOPERATIONS_H_INCLUDED
 
 #include <cstdint>
+#include "ramsearch/MemValue.h"
 
 enum class CompareType {
     Previous,
@@ -39,7 +40,7 @@ enum class CompareOperator {
 
 namespace CompareOperations {
 
-    void init(int value_type, CompareOperator compare_operator, double compare_value_db, double different_value_db);
+    void init(int value_type, CompareOperator compare_operator, MemValueType compare_value_db, MemValueType different_value_db);
 
     /* Compute the comparaison between the content of value and the stored contant value */
     bool check_value(const void* value);

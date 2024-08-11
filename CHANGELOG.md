@@ -8,6 +8,9 @@
 * Add alignment to ram search
 
 ### Changed
+
+* Change ram search field from double to string that is then parsed
+
 ### Fixed
 
 * Games may try different OpenGL function loaders, so reload again all functions 

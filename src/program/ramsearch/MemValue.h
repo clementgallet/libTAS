@@ -46,7 +46,7 @@ typedef union {
     uint64_t v_uint64_t;
     float v_float;
     double v_double;
-} value_t;
+} MemValueType;
 
 namespace MemValue {
     
@@ -57,7 +57,7 @@ namespace MemValue {
     const char* to_string(const void* value, int value_type, bool hex);
 
     /* Extract a value from a string and type */
-    value_t from_string(const char* str, int value_type, bool hex);
+    MemValueType from_string(const char* str, int value_type, bool hex);
 }
 
 #endif

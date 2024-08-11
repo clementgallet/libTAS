@@ -25,40 +25,40 @@
 #include <inttypes.h>
 
 /* Cast once the compared values to the appropriate type */
-static value_t compare_value;
-static value_t different_value;
+static MemValueType compare_value;
+static MemValueType different_value;
 
-typedef bool (*compare_t)(const value_t*);
+typedef bool (*compare_t)(const MemValueType*);
 static compare_t compare_method;
 
 static int value_type;
 
 #define DEFINE_CHECK_TYPED(T) \
-static bool check_equal_##T(const value_t* value) \
+static bool check_equal_##T(const MemValueType* value) \
 {\
     return value->v_##T == compare_value.v_##T;\
 }\
-static bool check_notequal_##T(const value_t* value) \
+static bool check_notequal_##T(const MemValueType* value) \
 {\
     return value->v_##T != compare_value.v_##T;\
 }\
-static bool check_less_##T(const value_t* value) \
+static bool check_less_##T(const MemValueType* value) \
 {\
     return value->v_##T < compare_value.v_##T;\
 }\
-static bool check_greater_##T(const value_t* value) \
+static bool check_greater_##T(const MemValueType* value) \
 {\
     return value->v_##T > compare_value.v_##T;\
 }\
-static bool check_lessequal_##T(const value_t* value) \
+static bool check_lessequal_##T(const MemValueType* value) \
 {\
     return value->v_##T <= compare_value.v_##T;\
 }\
-static bool check_greaterequal_##T(const value_t* value) \
+static bool check_greaterequal_##T(const MemValueType* value) \
 {\
     return value->v_##T>= compare_value.v_##T;\
 }\
-static bool check_different_##T(const value_t* value) \
+static bool check_different_##T(const MemValueType* value) \
 {\
     return (value->v_##T - compare_value.v_##T) == different_value.v_##T;\
 }\
@@ -75,8 +75,6 @@ DEFINE_CHECK_TYPED(float)
 DEFINE_CHECK_TYPED(double)
 
 #define DEFINE_COMPARE_METHOD_TYPED(T) \
-compare_value.v_##T = static_cast<T>(compare_value_db);\
-different_value.v_##T = static_cast<T>(different_value_db);\
 switch(compare_operator) {\
     case CompareOperator::Equal:\
         compare_method = &check_equal_##T;\
@@ -101,9 +99,11 @@ switch(compare_operator) {\
         break;\
 }\
 
-void CompareOperations::init(int vt, CompareOperator compare_operator, double compare_value_db, double different_value_db)
+void CompareOperations::init(int vt, CompareOperator compare_operator, MemValueType compare_v, MemValueType different_v)
 {
     value_type = vt;
+    compare_value = compare_v;
+    different_value = different_v;
     
     /* Initialize the comparaison method and values */
     switch(value_type) {
@@ -142,11 +142,11 @@ void CompareOperations::init(int vt, CompareOperator compare_operator, double co
 
 bool CompareOperations::check_value(const void* value)
 {
-    return compare_method(static_cast<const value_t*>(value));
+    return compare_method(static_cast<const MemValueType*>(value));
 }
 
 bool CompareOperations::check_previous(const void* value, const void* old_value)
 {
-    compare_value = *static_cast<const value_t*>(old_value);
-    return compare_method(static_cast<const value_t*>(value));
+    compare_value = *static_cast<const MemValueType*>(old_value);
+    return compare_method(static_cast<const MemValueType*>(value));
 }

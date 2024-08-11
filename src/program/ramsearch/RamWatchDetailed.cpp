@@ -63,11 +63,11 @@ void RamWatchDetailed::update_addr()
     }
 }
 
-value_t RamWatchDetailed::get_value()
+MemValueType RamWatchDetailed::get_value()
 {
     update_addr();
 
-    value_t value;
+    MemValueType value;
     value.v_uint64_t = 0;
 
     if (!isValid)
@@ -79,7 +79,7 @@ value_t RamWatchDetailed::get_value()
 
 const char* RamWatchDetailed::value_str()
 {
-    value_t value = get_value();
+    MemValueType value = get_value();
     if (!isValid)
         return "??????";
 
@@ -88,7 +88,7 @@ const char* RamWatchDetailed::value_str()
 
 int RamWatchDetailed::poke_value(const char* str_value)
 {
-    value_t value = MemValue::from_string(str_value, value_type, hex);
+    MemValueType value = MemValue::from_string(str_value, value_type, hex);
 
     /* Write value into the game process address */
     return MemAccess::write(&value, reinterpret_cast<void*>(address), MemValue::type_size(value_type));

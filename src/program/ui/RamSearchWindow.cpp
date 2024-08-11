@@ -87,9 +87,7 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     comparePreviousButton = new QRadioButton("Unknown/Previous Value");
     comparePreviousButton->setChecked(true);
     compareValueButton = new QRadioButton("Specific Value:");
-    comparingValueBox = new QDoubleSpinBox();
-    comparingValueBox->setRange(std::numeric_limits<double>::lowest(),std::numeric_limits<double>::max());
-    comparingValueBox->setDecimals(15);
+    comparingValueBox = new QLineEdit();
 
     QGroupBox *compareGroupBox = new QGroupBox(tr("Compare To"));
     QVBoxLayout *compareLayout = new QVBoxLayout;
@@ -107,9 +105,7 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     operatorLessEqualButton = new QRadioButton("Less Than Or Equal To");
     operatorGreaterEqualButton = new QRadioButton("Greater Than Or Equal To");
     operatorDifferenceButton = new QRadioButton("Different By");
-    differenceValueBox = new QDoubleSpinBox();
-    differenceValueBox->setRange(std::numeric_limits<double>::lowest(),std::numeric_limits<double>::max());
-    differenceValueBox->setDecimals(5);
+    differenceValueBox = new QLineEdit();
 
     QGroupBox *operatorGroupBox = new QGroupBox(tr("Comparison Operator"));
     QGridLayout *operatorLayout = new QGridLayout;
@@ -215,12 +211,12 @@ void RamSearchWindow::update()
     ramSearchModel->update();
 }
 
-void RamSearchWindow::getCompareParameters(CompareType& compare_type, CompareOperator& compare_operator, double& compare_value, double& different_value)
+void RamSearchWindow::getCompareParameters(CompareType& compare_type, CompareOperator& compare_operator, MemValueType& compare_value, MemValueType& different_value)
 {
     compare_type = CompareType::Previous;
     if (compareValueButton->isChecked()) {
         compare_type = CompareType::Value;
-        compare_value = comparingValueBox->value();
+        compare_value = MemValue::from_string(qPrintable(comparingValueBox->text()), typeBox->currentIndex(), false);
     }
 
     compare_operator = CompareOperator::Equal;
@@ -236,7 +232,7 @@ void RamSearchWindow::getCompareParameters(CompareType& compare_type, CompareOpe
         compare_operator = CompareOperator::GreaterEqual;
     if (operatorDifferenceButton->isChecked()) {
         compare_operator = CompareOperator::Different;
-        different_value = differenceValueBox->value();
+        different_value = MemValue::from_string(qPrintable(differenceValueBox->text()), typeBox->currentIndex(), false);
     }
 }
 
@@ -289,8 +285,8 @@ void RamSearchWindow::threadedNew(int memflags)
     /* Get the comparison parameters */
     CompareType compare_type;
     CompareOperator compare_operator;
-    double compare_value;
-    double different_value;
+    MemValueType compare_value;
+    MemValueType different_value;
     getCompareParameters(compare_type, compare_operator, compare_value, different_value);
 
     ramSearchModel->hex = (displayBox->currentIndex() == 1);
@@ -367,8 +363,8 @@ void RamSearchWindow::threadedSearch()
 {
     CompareType compare_type;
     CompareOperator compare_operator;
-    double compare_value;
-    double different_value;
+    MemValueType compare_value;
+    MemValueType different_value;
     getCompareParameters(compare_type, compare_operator, compare_value, different_value);
 
     int err = ramSearchModel->searchWatches(compare_type, compare_operator, compare_value, different_value);

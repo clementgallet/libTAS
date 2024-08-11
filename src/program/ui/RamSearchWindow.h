@@ -21,12 +21,13 @@
 #define LIBTAS_RAMSEARCHWINDOW_H_INCLUDED
 
 #include "ramsearch/CompareOperations.h"
+#include "ramsearch/MemValue.h"
 
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QRadioButton>
-#include <QtWidgets/QDoubleSpinBox>
+#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QProgressBar>
 #include <QtWidgets/QLabel>
@@ -64,7 +65,7 @@ private:
 
     QRadioButton *comparePreviousButton;
     QRadioButton *compareValueButton;
-    QDoubleSpinBox *comparingValueBox;
+    QLineEdit *comparingValueBox;
 
     QRadioButton *operatorEqualButton;
     QRadioButton *operatorNotEqualButton;
@@ -73,7 +74,7 @@ private:
     QRadioButton *operatorLessEqualButton;
     QRadioButton *operatorGreaterEqualButton;
     QRadioButton *operatorDifferenceButton;
-    QDoubleSpinBox *differenceValueBox;
+    QLineEdit *differenceValueBox;
 
     QGroupBox *formatGroupBox;
     QComboBox *typeBox;
@@ -92,7 +93,7 @@ private:
 
     std::atomic<bool> isSearching;
 
-    void getCompareParameters(CompareType& compare_type, CompareOperator& compare_operator, double& compare_value, double& different_value);
+    void getCompareParameters(CompareType& compare_type, CompareOperator& compare_operator, MemValueType& compare_value, MemValueType& different_value);
 
     /* Actual RAM search done in another thread */
     void threadedNew(int memflags);

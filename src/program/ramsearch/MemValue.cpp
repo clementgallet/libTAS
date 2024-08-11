@@ -48,7 +48,7 @@ int MemValue::type_size(int value_type)
 const char* MemValue::to_string(const void* value, int value_type, bool hex)
 {
     static char str[30];
-    const value_t* v = static_cast<const value_t*>(value);
+    const MemValueType* v = static_cast<const MemValueType*>(value);
 
     switch (value_type) {
         case RamChar:
@@ -106,9 +106,9 @@ const char* MemValue::to_string(const void* value, int value_type, bool hex)
 }
 
 
-value_t MemValue::from_string(const char* str, int value_type, bool hex)
+MemValueType MemValue::from_string(const char* str, int value_type, bool hex)
 {
-    value_t value;
+    MemValueType value;
     std::istringstream iss(str);
     if (hex) iss >> std::hex;
 

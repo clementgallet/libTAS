@@ -22,6 +22,7 @@
 
 #include "ramsearch/CompareOperations.h"
 #include "ramsearch/MemScanner.h"
+#include "ramsearch/MemValue.h"
 
 #include <QtCore/QAbstractTableModel>
 #include <vector>
@@ -52,11 +53,11 @@ public:
      * removed by the search */
     CompareType compare_type;
     CompareOperator compare_operator;
-    double compare_value;
-    double different_value;
+    MemValueType compare_value;
+    MemValueType different_value;
 
     /* Perform a new search and returns the error code */
-    int newWatches(int mem_flags, int type, int alignment, CompareType ct, CompareOperator co, double cv, double dv);
+    int newWatches(int mem_flags, int type, int alignment, CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv);
 
     /* Precompute the size of the next scan (for progress bar) */
     int predictScanCount(int mem_flags);
@@ -68,7 +69,7 @@ public:
     uint64_t scanSize();
 
     /* Perform a following search and returns the error code */
-    int searchWatches(CompareType ct, CompareOperator co, double cv, double dv);
+    int searchWatches(CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv);
 
     /* Return the address of the given row, used to fill ramwatch */
     uintptr_t address(int row);
