@@ -450,6 +450,9 @@ GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXCont
             case GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB:
                 Global::game_info.opengl_profile = GameInfo::COMPATIBILITY;
                 break;
+            case GLX_CONTEXT_ES_PROFILE_BIT_EXT:    
+                Global::game_info.opengl_profile = GameInfo::ES;
+                break;
             default:
                 break;
             }

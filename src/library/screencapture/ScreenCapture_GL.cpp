@@ -68,7 +68,9 @@ void ScreenCapture_GL::initScreenSurface()
 
     GLint default_fb_color_encoding = 0;
     GL_CALL(BindFramebuffer, (GL_FRAMEBUFFER, 0));
-    GL_CALL(GetFramebufferAttachmentParameteriv, (GL_FRAMEBUFFER, GL_BACK, GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING, &default_fb_color_encoding));
+    GL_CALL(GetFramebufferAttachmentParameteriv, (GL_FRAMEBUFFER,
+        (Global::game_info.opengl_profile == GameInfo::ES) ? GL_BACK : GL_BACK_LEFT, 
+        GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING, &default_fb_color_encoding));
 
     if (screenFBO == 0) {
         GL_CALL(GenFramebuffers, (1, &screenFBO));

@@ -12,6 +12,7 @@
 
 * Games may try different OpenGL function loaders, so reload again all functions 
   everytime
+* Use GL_BACK_LEFT for glGetFramebufferAttachmentParameteriv in OpenGL
 
 ## [1.4.6] - 2024-07-05
 ### Added

@@ -219,6 +219,36 @@ EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_
 {
     LOGTRACE(LCF_OGL);
     LINK_NAMESPACE(eglCreateContext, "EGL");
+
+    int i = 0;
+    while (attrib_list[i] != 0) {
+        if (attrib_list[i] == EGL_CONTEXT_MAJOR_VERSION) {
+            Global::game_info.opengl_major = attrib_list[i+1];
+        }
+        if (attrib_list[i] == EGL_CONTEXT_MINOR_VERSION) {
+            Global::game_info.opengl_minor = attrib_list[i+1];
+        }
+        if (attrib_list[i] == EGL_CONTEXT_OPENGL_PROFILE_MASK) {
+            switch(attrib_list[i+1]) {
+            case EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT:
+                Global::game_info.opengl_profile = GameInfo::CORE;
+                break;
+            case EGL_CONTEXT_OPENGL_COMPATIBILITY_PROFILE_BIT:
+                Global::game_info.opengl_profile = GameInfo::COMPATIBILITY;
+                break;
+            default:
+                break;
+            }
+        }
+
+        i += 2;
+    }
+    
+    if (bindAPI == EGL_OPENGL_ES_API)
+        Global::game_info.opengl_profile = GameInfo::ES;
+    
+    Global::game_info.tosend = true;
+    
     return orig::eglCreateContext (dpy, config, share_context, attrib_list);
 }
 
