@@ -70,7 +70,7 @@ void openFile(const char* file, int fd)
     /* Check if we already registered the file */
     for (const FileHandle &fh : filehandles) {
         if (fh.fds[0] == fd) {
-            LOG(LL_ERROR, LCF_FILEIO, "Opened file descriptor %d was already registered!", fd);
+            LOG(LL_WARN, LCF_FILEIO, "Opened file descriptor %d was already registered!", fd);
             return;
         }
     }
@@ -89,7 +89,7 @@ void openFile(const char* file, FILE* f)
     /* Check if we already registered the file */
     for (const FileHandle &fh : filehandles) {
         if (fh.stream == f) {
-            LOG(LL_ERROR, LCF_FILEIO, "Opened file %p was already registered!", f);
+            LOG(LL_WARN, LCF_FILEIO, "Opened file %p was already registered!", f);
             return;
         }
     }
@@ -240,7 +240,7 @@ void recoverAllFiles()
             if (fh.stream) {
                 fseeko(fh.stream, 0, SEEK_END);
                 current_size = ftello(fh.stream);
-                ret = fseeko(fh.stream, 0, SEEK_SET);
+                ret = fseeko(fh.stream, fh.fileOffset, SEEK_SET);
             }
             else {
                 current_size = lseek(fh.fds[0], 0, SEEK_END);
