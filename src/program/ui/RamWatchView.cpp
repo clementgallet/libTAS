@@ -26,9 +26,13 @@
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QHeaderView>
 #include <QtGui/QMouseEvent>
+#include <QtGui/QFontDatabase>
 
 RamWatchView::RamWatchView(Context* c, QWidget *parent) : QTableView(parent), context(c)
 {
+    const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    setFont(fixedFont);
+
     setSelectionBehavior(QAbstractItemView::SelectRows);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     setShowGrid(false);

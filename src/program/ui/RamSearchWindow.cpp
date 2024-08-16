@@ -35,6 +35,7 @@
 #include <QtWidgets/QFormLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QMessageBox>
+#include <QtGui/QFontDatabase>
 
 #include <limits>
 #include <thread>
@@ -42,6 +43,9 @@
 RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
     setWindowTitle("Ram Search");
+
+    /* Get monospace font */
+    const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
     /* Table */
     ramSearchView = new QTableView(this);
@@ -52,6 +56,7 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     ramSearchView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ramSearchView->horizontalHeader()->setHighlightSections(false);
     ramSearchView->verticalHeader()->hide();
+    ramSearchView->setFont(fixedFont);
 
     ramSearchModel = new RamSearchModel(context);
     ramSearchView->setModel(ramSearchModel);
@@ -79,6 +84,8 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     memEndLine = new QLineEdit("00007fffffffffff");
     memBeginLine->setMaxLength(16);
     memEndLine->setMaxLength(16);
+    memBeginLine->setFont(fixedFont);
+    memEndLine->setFont(fixedFont);
 
     memGroupBox = new QGroupBox(tr("Included Memory Flags"));
     QGridLayout *memLayout = new QGridLayout;
@@ -96,6 +103,7 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     comparePreviousButton->setChecked(true);
     compareValueButton = new QRadioButton("Specific Value:");
     comparingValueBox = new QLineEdit();
+    comparingValueBox->setFont(fixedFont);
 
     QGroupBox *compareGroupBox = new QGroupBox(tr("Compare To"));
     QVBoxLayout *compareLayout = new QVBoxLayout;
@@ -114,6 +122,7 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     operatorGreaterEqualButton = new QRadioButton("Greater Than Or Equal To");
     operatorDifferenceButton = new QRadioButton("Different By");
     differenceValueBox = new QLineEdit();
+    differenceValueBox->setFont(fixedFont);
 
     QGroupBox *operatorGroupBox = new QGroupBox(tr("Comparison Operator"));
     QGridLayout *operatorLayout = new QGridLayout;

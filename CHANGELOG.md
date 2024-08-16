@@ -11,6 +11,7 @@
 ### Changed
 
 * Change ram search field from double to string that is then parsed
+* Use monospace font for ramwatch/search addresses and values
 
 ### Fixed
 
