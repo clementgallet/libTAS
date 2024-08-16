@@ -42,6 +42,8 @@ void LogWindow::addLog(const char* beg, const char* end, bool newline)
 {
     /* Logs can be added from multiple threads */
     std::lock_guard<std::mutex> lock(mutex);
+    if (buffer.size() > 1000000)
+        buffer.clear();
     buffer.append(beg, end);
     /* We always push a string with at most one `\n` character at the end */
     if (newline)
