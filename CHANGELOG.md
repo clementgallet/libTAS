@@ -6,6 +6,7 @@
 * Highlight undo/redo operations
 * Audio gain setting
 * Add alignment to ram search
+* Add begin/end addresses in ram search
 
 ### Changed
 

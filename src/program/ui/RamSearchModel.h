@@ -57,7 +57,7 @@ public:
     MemValueType different_value;
 
     /* Perform a new search and returns the error code */
-    int newWatches(int mem_flags, int type, int alignment, CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv);
+    int newWatches(int mem_flags, int type, int alignment, CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv, uintptr_t ba, uintptr_t ea);
 
     /* Precompute the size of the next scan (for progress bar) */
     int predictScanCount(int mem_flags);

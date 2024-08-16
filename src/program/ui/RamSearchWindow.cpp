@@ -75,12 +75,20 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     memROBox->setChecked(true);
     memExecBox = new QCheckBox("Exclude executable regions");
     memExecBox->setChecked(true);
+    memBeginLine = new QLineEdit("0000000000000000");
+    memEndLine = new QLineEdit("00007fffffffffff");
+    memBeginLine->setMaxLength(16);
+    memEndLine->setMaxLength(16);
 
     memGroupBox = new QGroupBox(tr("Included Memory Flags"));
-    QVBoxLayout *memLayout = new QVBoxLayout;
-    memLayout->addWidget(memSpecialBox);
-    memLayout->addWidget(memROBox);
-    memLayout->addWidget(memExecBox);
+    QGridLayout *memLayout = new QGridLayout;
+    memLayout->addWidget(memSpecialBox, 0, 0, 1, 2);
+    memLayout->addWidget(memROBox, 1, 0, 1, 2);
+    memLayout->addWidget(memExecBox, 2, 0, 1, 2);
+    memLayout->addWidget(new QLabel(tr("Start:")), 3, 0, 1, 1);
+    memLayout->addWidget(memBeginLine, 3, 1, 1, 1);
+    memLayout->addWidget(new QLabel(tr("Stop:")), 4, 0, 1, 1);
+    memLayout->addWidget(memEndLine, 4, 1, 1, 1);
     memGroupBox->setLayout(memLayout);
 
     /* Comparisons */
@@ -292,8 +300,11 @@ void RamSearchWindow::threadedNew(int memflags)
     ramSearchModel->hex = (displayBox->currentIndex() == 1);
     int alignment = alignmentBox->currentData().toInt();
 
+    uintptr_t begin_address = std::strtoul(qPrintable(memBeginLine->text()), nullptr, 16);
+    uintptr_t end_address = std::strtoul(qPrintable(memEndLine->text()), nullptr, 16);
+
     /* Call the RamSearch new function using the right type */
-    int err = ramSearchModel->newWatches(memflags, typeBox->currentIndex(), alignment, compare_type, compare_operator, compare_value, different_value);
+    int err = ramSearchModel->newWatches(memflags, typeBox->currentIndex(), alignment, compare_type, compare_operator, compare_value, different_value, begin_address, end_address);
 
     if (err < 0)
         searchProgress->reset();

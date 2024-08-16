@@ -45,7 +45,7 @@ void MemScanner::init(std::string path)
     addresses_path = ossoa.str();
 }
 
-int MemScanner::first_scan(pid_t pid, int mem_flags, int type, int align, CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv)
+int MemScanner::first_scan(pid_t pid, int mem_flags, int type, int align, CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv, uintptr_t begin_address, uintptr_t end_address)
 {
     value_type = type;
     value_type_size = MemValue::type_size(value_type);
@@ -55,6 +55,11 @@ int MemScanner::first_scan(pid_t pid, int mem_flags, int type, int align, Compar
     else if (alignment > value_type_size)
         alignment = value_type_size;
 
+    /* Align begin/end addresses to the next page size */
+    uintptr_t page_mask = 4095;
+    begin_address &= (~page_mask);
+    end_address = (end_address + page_mask) & (~page_mask);
+
     /* Read the whole memory layout */
     std::unique_ptr<MemLayout> memlayout (new MemLayout(pid));
 
@@ -63,6 +68,16 @@ int MemScanner::first_scan(pid_t pid, int mem_flags, int type, int align, Compar
     MemSection section;
     total_size = 0;
     while (memlayout->nextSection(MemSection::MemAll, mem_flags, section)) {
+        /* Filter for begin/end address here */
+        if (section.addr >= end_address)
+            continue;
+        if (section.endaddr <= begin_address)
+            continue;
+            
+        section.addr = std::max(section.addr, begin_address);
+        section.endaddr = std::min(section.endaddr, end_address);
+        section.size = section.endaddr - section.addr;
+            
         memsections.push_back(section);
         total_size += section.size;
     }

@@ -62,6 +62,8 @@ private:
     QCheckBox *memSpecialBox;
     QCheckBox *memROBox;
     QCheckBox *memExecBox;
+    QLineEdit *memBeginLine;
+    QLineEdit *memEndLine;
 
     QRadioButton *comparePreviousButton;
     QRadioButton *compareValueButton;
