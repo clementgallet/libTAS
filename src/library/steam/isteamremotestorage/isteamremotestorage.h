@@ -17,6 +17,11 @@ namespace libtas {
 
 void SteamSetRemoteStorageFolder(std::string path);
 
+struct RemoteStorageFileWriteAsyncComplete_t
+{
+    EResult m_eResult;
+};
+
 struct ISteamRemoteStorage
 {
 	union

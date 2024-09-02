@@ -25,6 +25,9 @@
 #include "isteamremotestorage014.h"
 #include "isteamremotestorage016.h"
 
+#include "steam/CCallback.h"
+#include "steam/CCallbackManager.h"
+
 #include "logging.h"
 #include "hook.h"
 #include "Utils.h"
@@ -163,7 +166,17 @@ SteamAPICall_t ISteamRemoteStorage_FileWriteAsync( void* iface, const char *pchF
     LOGTRACE(LCF_STEAM);
     /* Calling the sync version */
 	ISteamRemoteStorage_FileWrite(iface, pchFile, pvData, cubData);
-    return 1;
+    
+    SteamAPICall_t api_call = CCallbackManager::AwaitApiCallResultOutput();
+
+    struct RemoteStorageFileWriteAsyncComplete_t remote_storage_received;
+    bool io_failure = false;
+
+    remote_storage_received.m_eResult = 1; // k_EResultOK
+    
+    CCallbackManager::DispatchApiCallResultOutput(api_call, STEAM_CALLBACK_TYPE_CLIENT_REMOTE_STORAGE_FILE_WRITE_ASYNC_COMPLETE, io_failure, &remote_storage_received, sizeof(remote_storage_received));
+    
+    return api_call;
 }
 
 // static int asyncfd = 0;

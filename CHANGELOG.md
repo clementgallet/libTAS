@@ -20,6 +20,7 @@
 * Use GL_BACK_LEFT for glGetFramebufferAttachmentParameteriv in OpenGL
 * Fix inode parsing when reading game memory layout
 * Fix seeking to stream after savestating
+* Add a steam callback for async filewrite
 
 ## [1.4.6] - 2024-07-05
 ### Added
