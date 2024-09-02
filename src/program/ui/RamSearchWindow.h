@@ -106,6 +106,7 @@ private slots:
     void slotSearch();
     void slotAdd();
     void slotStop();
+    void slotTypeChanged(int index);
 
 };
 

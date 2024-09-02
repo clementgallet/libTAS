@@ -48,12 +48,19 @@ void MemScanner::init(std::string path)
 int MemScanner::first_scan(pid_t pid, int mem_flags, int type, int align, CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv, uintptr_t begin_address, uintptr_t end_address)
 {
     value_type = type;
-    value_type_size = MemValue::type_size(value_type);
     alignment = align;
-    if (alignment == 0)
-        alignment = value_type_size;
-    else if (alignment > value_type_size)
-        alignment = value_type_size;
+    if (type == RamArray) {
+        value_type_size = cv.v_array[RAM_ARRAY_MAX_SIZE];
+        if (alignment == 0)
+            alignment = 1;
+    }
+    else {
+        value_type_size = MemValue::type_size(value_type);
+        if (alignment == 0)
+            alignment = value_type_size;
+        else if (alignment > value_type_size)
+            alignment = value_type_size;
+    }
 
     /* Align begin/end addresses to the next page size */
     uintptr_t page_mask = 4095;
@@ -325,19 +332,19 @@ const char* MemScanner::get_previous_value(int index, bool hex) const
 {
     if (old_values.empty())
         return "";
-        
-    return MemValue::to_string(&old_values[index*value_type_size], value_type, hex);
+    
+    return MemValue::to_string(&old_values[index*value_type_size], value_type, hex, value_type_size);
 }
 
 const char* MemScanner::get_current_value(int index, bool hex) const
 {
     uintptr_t addr = get_address(index);
-    uint8_t value[8];
-    int readValues = MemAccess::read(value, reinterpret_cast<void*>(addr), value_type_size);
+    MemValueType value;
+    int readValues = MemAccess::read(&value, reinterpret_cast<void*>(addr), value_type_size);
     if (readValues != value_type_size)
         return "";
 
-    return MemValue::to_string(value, value_type, hex);
+    return MemValue::to_string(&value, value_type, hex, value_type_size);
 }
 
 void MemScanner::clear()

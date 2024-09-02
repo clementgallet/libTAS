@@ -33,7 +33,10 @@ enum RamType {
     RamLong,
     RamFloat,
     RamDouble,
+    RamArray,
 };
+
+#define RAM_ARRAY_MAX_SIZE 15
 
 typedef union {
     int8_t v_int8_t;
@@ -46,6 +49,7 @@ typedef union {
     uint64_t v_uint64_t;
     float v_float;
     double v_double;
+    uint8_t v_array[RAM_ARRAY_MAX_SIZE+1];
 } MemValueType;
 
 namespace MemValue {
@@ -55,6 +59,9 @@ namespace MemValue {
     
     /* Format a value to be shown */
     const char* to_string(const void* value, int value_type, bool hex);
+
+    /* Format a value to be shown with specified array size for array type */
+    const char* to_string(const void* value, int value_type, bool hex, int array_size);
 
     /* Extract a value from a string and type */
     MemValueType from_string(const char* str, int value_type, bool hex);

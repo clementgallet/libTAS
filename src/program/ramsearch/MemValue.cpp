@@ -23,6 +23,8 @@
 #include <cstdio>
 #include <inttypes.h>
 #include <sstream>
+#include <cstring>
+#include <iostream>
 
 int MemValue::type_size(int value_type)
 {
@@ -41,11 +43,23 @@ int MemValue::type_size(int value_type)
         case RamUnsignedLong:
         case RamDouble:
             return 8;
+        case RamArray:
+            return 0;
     }
     return 0;
 }
 
 const char* MemValue::to_string(const void* value, int value_type, bool hex)
+{
+    if (value_type == RamArray) {
+        const MemValueType* v = static_cast<const MemValueType*>(value);
+        int array_size = v->v_array[RAM_ARRAY_MAX_SIZE];
+        return to_string(value, value_type, hex, array_size);
+    }
+    return to_string(value, value_type, hex, 0);    
+}
+
+const char* MemValue::to_string(const void* value, int value_type, bool hex, int array_size)
 {
     static char str[30];
     const MemValueType* v = static_cast<const MemValueType*>(value);
@@ -99,6 +113,15 @@ const char* MemValue::to_string(const void* value, int value_type, bool hex)
         case RamDouble:
         {
             snprintf(str, 30, hex?"%la":"%lg", v->v_double);
+            return str;
+        }
+        case RamArray:
+        {
+            int size = 0;
+            for (int i = 0; i < array_size; i++) {
+                snprintf(str+size, 30-size, hex?"%02x ":"%03u ", v->v_array[i]);
+                size = strlen(str);
+            }
             return str;
         }
     }
@@ -167,6 +190,20 @@ MemValueType MemValue::from_string(const char* str, int value_type, bool hex)
         case RamDouble:
         {
             iss >> value.v_double;
+            return value;
+        }
+        case RamArray:
+        {
+            int intval;
+            int array_size = 0;
+            while (iss) {
+                iss >> intval;
+                if (!iss) break;
+                value.v_array[array_size] = static_cast<uint8_t>(intval);
+                array_size++;
+            }
+            value.v_array[RAM_ARRAY_MAX_SIZE] = array_size;
+            std::cout << "array_size " << array_size << std::endl;
             return value;
         }
     }

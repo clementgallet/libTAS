@@ -7,6 +7,7 @@
 * Audio gain setting
 * Add alignment to ram search
 * Add begin/end addresses in ram search
+* Add byte array type in ram search
 
 ### Changed
 

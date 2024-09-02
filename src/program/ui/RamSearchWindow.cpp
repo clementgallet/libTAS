@@ -141,9 +141,10 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     QStringList typeList;
     typeList << "unsigned char" << "char" << "unsigned short" << "short";
     typeList << "unsigned int" << "int" << "unsigned int64" << "int64";
-    typeList << "float" << "double";
+    typeList << "float" << "double" << "byte array";
     typeBox->addItems(typeList);
     typeBox->setCurrentText("int");
+    connect(typeBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &RamSearchWindow::slotTypeChanged);
 
     displayBox = new QComboBox();
     displayBox->addItem("decimal");
@@ -455,4 +456,28 @@ void RamSearchWindow::slotAdd()
 void RamSearchWindow::slotStop()
 {
     ramSearchModel->stopSearch();
+}
+
+void RamSearchWindow::slotTypeChanged(int index)
+{
+    if (index == RamArray) {
+        compareValueButton->setChecked(true);
+        comparePreviousButton->setEnabled(false);
+        operatorEqualButton->setChecked(true);
+        operatorNotEqualButton->setEnabled(false);
+        operatorLessButton->setEnabled(false);
+        operatorGreaterButton->setEnabled(false);
+        operatorLessEqualButton->setEnabled(false);
+        operatorGreaterEqualButton->setEnabled(false);
+        operatorDifferenceButton->setEnabled(false);
+    }
+    else {
+        comparePreviousButton->setEnabled(true);
+        operatorNotEqualButton->setEnabled(true);
+        operatorLessButton->setEnabled(true);
+        operatorGreaterButton->setEnabled(true);
+        operatorLessEqualButton->setEnabled(true);
+        operatorGreaterEqualButton->setEnabled(true);
+        operatorDifferenceButton->setEnabled(true);
+    }
 }

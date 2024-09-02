@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <inttypes.h>
+#include <cstring>
 
 /* Cast once the compared values to the appropriate type */
 static MemValueType compare_value;
@@ -99,6 +100,11 @@ switch(compare_operator) {\
         break;\
 }\
 
+static bool check_equal_array(const MemValueType* value)
+{
+    return 0 == memcmp(value->v_array, compare_value.v_array, compare_value.v_array[RAM_ARRAY_MAX_SIZE]);
+}
+
 void CompareOperations::init(int vt, CompareOperator compare_operator, MemValueType compare_v, MemValueType different_v)
 {
     value_type = vt;
@@ -136,6 +142,9 @@ void CompareOperations::init(int vt, CompareOperator compare_operator, MemValueT
             break;
         case RamDouble:
             DEFINE_COMPARE_METHOD_TYPED(double)
+            break;
+        case RamArray:
+            compare_method = check_equal_array;
             break;
     }
 }

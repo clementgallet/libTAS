@@ -48,6 +48,7 @@ public:
     uintptr_t address;
     std::string label;
     bool hex;
+    int array_size;
 
     bool isPointer;
     std::vector<int> pointer_offsets;

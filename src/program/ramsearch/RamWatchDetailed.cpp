@@ -73,7 +73,12 @@ MemValueType RamWatchDetailed::get_value()
     if (!isValid)
         return value;
 
-    isValid = (MemAccess::read(&value, reinterpret_cast<void*>(address), MemValue::type_size(value_type)) == (size_t)MemValue::type_size(value_type));
+    if (value_type == RamType::RamArray) {
+        isValid = (MemAccess::read(&value, reinterpret_cast<void*>(address), array_size) == (size_t)array_size);
+        value.v_array[RAM_ARRAY_MAX_SIZE] = array_size;
+    }
+    else
+        isValid = (MemAccess::read(&value, reinterpret_cast<void*>(address), MemValue::type_size(value_type)) == (size_t)MemValue::type_size(value_type));
     return value;
 }
 
@@ -91,5 +96,8 @@ int RamWatchDetailed::poke_value(const char* str_value)
     MemValueType value = MemValue::from_string(str_value, value_type, hex);
 
     /* Write value into the game process address */
-    return MemAccess::write(&value, reinterpret_cast<void*>(address), MemValue::type_size(value_type));
+    if (value_type == RamType::RamArray)
+        return MemAccess::write(&value, reinterpret_cast<void*>(address), value.v_array[RAM_ARRAY_MAX_SIZE]);
+    else
+        return MemAccess::write(&value, reinterpret_cast<void*>(address), MemValue::type_size(value_type));
 }
