@@ -8,6 +8,7 @@
 * Add alignment to ram search
 * Add begin/end addresses in ram search
 * Add byte array type in ram search
+* Add minimal hooks for xkbcommon to fix ruffle keyboard layout
 
 ### Changed
 

@@ -95,6 +95,7 @@ libtas_so_SOURCES = \
     inputs/winekeyboardlayout.cpp \
     inputs/xcbkeyboard.cpp \
     inputs/xcbpointer.cpp \
+    inputs/xkbcommon.cpp \
     inputs/xkeyboard.cpp \
     inputs/xkeyboardlayout.cpp \
     inputs/xinput.cpp \
