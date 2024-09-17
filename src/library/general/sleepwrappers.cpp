@@ -41,8 +41,10 @@ DEFINE_ORIG_POINTER(nanosleep)
 void transfer_sleep(const struct timespec &ts, struct timespec *rem)
 {    
     /* Skip sleeping when main thread and fast-forwarding */
-    if (!ThreadManager::isMainThread() || !Global::shared_config.fastforward)
+    if (!ThreadManager::isMainThread() || !Global::shared_config.fastforward) {
+        LINK_NAMESPACE_GLOBAL(nanosleep);
         orig::nanosleep(&ts, rem);
+    }
 
     if (ts.tv_sec == 0 && ts.tv_nsec == 0)
         return;
