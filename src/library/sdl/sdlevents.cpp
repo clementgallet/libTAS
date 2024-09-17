@@ -349,21 +349,14 @@ void pushNativeSDLEvents(void)
     NOLOGCALL(SDL_PumpEvents());
 
     struct timespec mssleep = {0, 1000000};
-    if (event) {
-        while (! sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true)) {
-            NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
-            pushNativeSDLEvents();
-        }
-        return 1;
+    SDL_Event ev;
+    if (!event) event = &ev;
+
+    while (! sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true)) {
+        NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
+        pushNativeSDLEvents();
     }
-    else {
-        SDL_Event ev;
-        while (! sdlEventQueue.pop(&ev, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, false)) {
-            NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
-            pushNativeSDLEvents();
-        }
-        return 1;
-    }
+    return 1;
 }
 
 /* Override */ int SDL_WaitEventTimeout(SDL_Event * event, int timeout)
@@ -380,29 +373,18 @@ void pushNativeSDLEvents(void)
 
     int t;
     struct timespec mssleep = {0, 1000000};
-    if (event) {
+    SDL_Event ev;
+    if (!event) event = &ev;
+
+    if (sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true))
+        return 1;
+    for (t=0; t<timeout; t++) {
+        NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
+        pushNativeSDLEvents();
         if (sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true))
-            return 1;
-        for (t=0; t<timeout; t++) {
-            NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
-            pushNativeSDLEvents();
-            if (sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true))
-                break;
-        }
-        return (t<timeout);
+            break;
     }
-    else {
-        SDL_Event ev;
-        if (sdlEventQueue.pop(&ev, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, false))
-            return 1;
-        for (t=0; t<timeout; t++) {
-            if (sdlEventQueue.pop(&ev, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, false))
-                break;
-            NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
-            pushNativeSDLEvents();
-        }
-        return (t<timeout);
-    }
+    return (t<timeout);
 }
 
 /* Override */ int SDL_PushEvent(SDL_Event * event)
@@ -436,7 +418,11 @@ void pushNativeSDLEvents(void)
     int ret = sdlEventQueue.insert(event);
 
     if (event->type == SDL_QUIT) {
-        Global::is_exiting = true;
+        /* SDL may be used only for controllers. In that case, exiting SDL does
+        * not mean that the game is stopped */
+        Uint32 init_flags = SDL_WasInit(0);
+        if (init_flags & SDL_INIT_VIDEO)
+            Global::is_exiting = true;
     }
 
     return ret;
