@@ -269,18 +269,6 @@ void ThreadManager::addToList(ThreadInfo* thread)
 {
     lockList();
 
-    /* Check for a thread with the same tid. If it is the same thread then we
-     * have nothing to do. Otherwise, remove it.
-     */
-    ThreadInfo* cur_thread = getThread(thread->pthread_id);
-    if (cur_thread) {
-        if (thread == cur_thread) {
-            unlockList();
-            return;
-        }
-        threadIsDead(cur_thread);
-    }
-
     /* Add the new thread to the list */
     thread->next = thread_list;
     thread->prev = nullptr;

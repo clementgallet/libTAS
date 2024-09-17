@@ -159,7 +159,21 @@ static void *pthread_native_start(void *arg)
 
     LOG(LL_TRACE, LCF_THREAD, "Joining thread id %p tid %d", pthread_id, ThreadManager::getThreadTid(pthread_id));
 
-    ThreadInfo* thread = ThreadManager::getThread(pthread_id);
+    const ThreadInfo* thread = nullptr;
+    
+    /* We may get multiple threads having the same id, because pthread may reuse
+     * an id when one thread is terminated, and it is still in our list because
+     * it hasn't been joined yet. So we look first for a zombie thread */
+    const ThreadInfo* thread_list = ThreadManager::getThreadList();
+    for (const ThreadInfo* th = thread_list; th != nullptr; th = th->next) {
+        if (th->pthread_id == pthread_id) {
+            LOG(LL_DEBUG, LCF_THREAD, "Found thread id %p tid %d", th->pthread_id, th->real_tid);            
+            if (th->state == ThreadInfo::ST_ZOMBIE)
+                thread = th;
+            else if (!thread)
+                thread = th;
+        }
+    }
 
     if (!thread) {
         return ESRCH;
@@ -168,6 +182,7 @@ static void *pthread_native_start(void *arg)
     if (thread->detached) {
         return EINVAL;
     }
+    LOG(LL_TRACE, LCF_THREAD, "Joining thread id %p tid %d", pthread_id, ThreadManager::getThreadTid(pthread_id));
 
     int ret = 0;
     /* Wait for the thread to become zombie */
