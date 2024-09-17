@@ -415,8 +415,15 @@ void GameLoop::initProcessMessages()
      * address if there is one */
     uint64_t sdl_addr = getSymbolAddress("SDL_DYNAPI_entry", context->gamepath.c_str());
     if (sdl_addr != 0) {
-        sendMessage(MSGN_SDL_DYNAPI_ADDR);
-        sendData(&sdl_addr, sizeof(uint64_t));
+        uintptr_t base_executable = BaseAddresses::getBaseAddress(context->gamename.c_str());
+        if (base_executable == 0) {
+            std::cerr << "Could not find base address of " <<  context->gamename << std::endl;
+        }
+        else {
+            sdl_addr += base_executable;
+            sendMessage(MSGN_SDL_DYNAPI_ADDR);
+            sendData(&sdl_addr, sizeof(uint64_t));
+        }
     }
 
     /* Check for `UnityPlayer_s.debug` presence and send symbol addresses */
