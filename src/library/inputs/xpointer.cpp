@@ -24,7 +24,7 @@
 #include "logging.h"
 #include "DeterministicTimer.h"
 #include "xlib/XlibEventQueueList.h"
-#include "xlib/xwindows.h" // x11::gameXWindows
+#include "xlib/XlibGameWindow.h"
 #include "global.h"
 #include "GlobalState.h"
 
@@ -41,13 +41,13 @@ DEFINE_ORIG_POINTER(XQueryPointer)
         unsigned int* mask_return)
 {
     LOGTRACE(LCF_MOUSE);
-    if (x11::gameXWindows.empty()) {
+    if (!XlibGameWindow::get()) {
         LINK_NAMESPACE_GLOBAL(XQueryPointer);
         return orig::XQueryPointer(display, w, root_return, child_return,
                                    root_x_return, root_y_return,
                                    win_x_return, win_y_return, mask_return);
     }
-    *root_return = x11::rootWindow;
+    *root_return = DefaultRootWindow(display);
     *root_x_return = Inputs::game_ai.pointer.x;
     *root_y_return = Inputs::game_ai.pointer.y;
     *win_x_return = Inputs::game_ai.pointer.x;
@@ -150,7 +150,7 @@ DEFINE_ORIG_POINTER(XQueryPointer)
     LOG(LL_TRACE, LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dest_w, dest_x, dest_y);
 
     /* We have to generate an MotionNotify event. */
-    if (!x11::gameXWindows.empty()) {
+    if (XlibGameWindow::get()) {
         XEvent event;
         event.xmotion.type = MotionNotify;
         event.xmotion.state = SingleInput::toXlibPointerMask(Inputs::game_ai.pointer.mask);
@@ -166,7 +166,7 @@ DEFINE_ORIG_POINTER(XQueryPointer)
         }
         event.xmotion.x_root = event.xmotion.x;
         event.xmotion.y_root = event.xmotion.y;
-        event.xmotion.window = x11::gameXWindows.front();
+        event.xmotion.window = XlibGameWindow::get();
 
         struct timespec time = DeterministicTimer::get().getTicks();
         event.xmotion.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;

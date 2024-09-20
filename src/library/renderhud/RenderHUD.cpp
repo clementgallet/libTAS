@@ -31,7 +31,7 @@
 #include "GlobalState.h"
 #include "global.h" // Global::shared_config
 #include "xlib/xdisplay.h" // x11::gameDisplays
-#include "xlib/xwindows.h" // x11::gameXWindows
+#include "xlib/XlibGameWindow.h"
 #include "FPSMonitor.h"
 #include "screencapture/ScreenCapture.h"
 #include "general/timewrappers.h" // clock_gettime
@@ -45,6 +45,9 @@
 
 #include <sstream>
 #include <math.h>
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h> // XSetWMName
 
 namespace libtas {
 
@@ -53,7 +56,7 @@ bool RenderHUD::show_game_window = false;
 bool RenderHUD::init()
 {
     if (!ImGui::GetCurrentContext()) {
-        if (x11::gameXWindows.empty())
+        if (!XlibGameWindow::get())
             return false;
         
         setWindowResizable(supportsLargerViewport());
@@ -72,7 +75,7 @@ bool RenderHUD::init()
                 /* Disable config file */
                 io.IniFilename = NULL;
                 
-                ImGui_ImplXlib_Init(x11::gameDisplays[i], x11::gameXWindows.front());
+                ImGui_ImplXlib_Init(x11::gameDisplays[i], XlibGameWindow::get());
                 return true;
             }
         }        
@@ -217,7 +220,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         /* TODO: select one display? */
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
             if (x11::gameDisplays[i]) {
-                NATIVECALL(XResizeWindow (x11::gameDisplays[i], x11::gameXWindows.front(), w, h));
+                NATIVECALL(XResizeWindow (x11::gameDisplays[i], XlibGameWindow::get(), w, h));
                 break;
             }
         }
@@ -309,7 +312,7 @@ void RenderHUD::setWindowResizable(bool resizable)
                 xsh->max_height = h;
             }
             
-            XSetWMNormalHints(x11::gameDisplays[i], x11::gameXWindows.front(), xsh);
+            XSetWMNormalHints(x11::gameDisplays[i], XlibGameWindow::get(), xsh);
             XFree(xsh);
             return;
         }

@@ -29,15 +29,6 @@
 
 namespace libtas {
 
-namespace x11 {
-    /* Game window (we suppose there is only one) */
-    extern std::list<Window> gameXWindows;
-
-    /* Root window */
-    extern Window rootWindow;
-}
-
-
 OVERRIDE Bool XQueryExtension(Display* display, const char* name, int* major_opcode_return, int* first_event_return, int* first_error_return);
 
 OVERRIDE Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int klass, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes);

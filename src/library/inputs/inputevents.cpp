@@ -51,7 +51,7 @@
 #include "xcb/xcbconnection.h" // x11::gameConnections
 #include "xlib/xevents.h"
 #include "xlib/xdisplay.h" // x11::gameDisplays
-#include "xlib/xwindows.h" // x11::gameXWindows
+#include "xlib/XlibGameWindow.h"
 #endif
 
 #include <stdlib.h>
@@ -130,21 +130,20 @@ static void generateKeyEvent(int event_key, bool pressed)
     }
 
 #ifdef __unix__
-    if ((Global::game_info.keyboard & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
+    if ((Global::game_info.keyboard & GameInfo::XEVENTS) && XlibGameWindow::get()) {
         XEvent event;
         event.xkey.type = pressed ? KeyPress : KeyRelease;
         event.xkey.state = 0; // TODO: Do we have to set the key modifiers?
-        event.xkey.window = x11::gameXWindows.front();
+        event.xkey.window = XlibGameWindow::get();
         event.xkey.time = timestamp; // TODO: Wrong! timestamp is from X server start
         event.xkey.same_screen = 1;
         event.xkey.send_event = 0;
         event.xkey.subwindow = 0;
-        event.xkey.root = x11::rootWindow;
         NOLOGCALL(event.xkey.keycode = XKeysymToKeycode(nullptr, event_key));
         event.xkey.state = xkeyboardToXMod(Inputs::game_ai.keyboard);
         for (int d=0; d<GAMEDISPLAYNUM; d++) {
             if (x11::gameDisplays[d]) {
-                event.xkey.root = XRootWindow(x11::gameDisplays[d], 0);
+                event.xkey.root = DefaultRootWindow(x11::gameDisplays[d]);
                 xlibEventQueueList.insert(x11::gameDisplays[d], &event);
             }
         }
@@ -152,20 +151,18 @@ static void generateKeyEvent(int event_key, bool pressed)
         LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate XEvent %s with keycode %d", pressed?"KeyPress":"KeyRelease", event.xkey.keycode);
     }
 
-    if ((Global::game_info.keyboard & GameInfo::XCBEVENTS) && !x11::gameXWindows.empty()) {
+    if ((Global::game_info.keyboard & GameInfo::XCBEVENTS) && XlibGameWindow::get()) {
         xcb_key_release_event_t event;
         event.response_type = pressed ? XCB_KEY_PRESS : XCB_KEY_RELEASE;
         event.state = 0; // TODO: Do we have to set the key modifiers?
-        event.event = x11::gameXWindows.front();
+        event.event = XlibGameWindow::get();
         event.time = timestamp; // TODO: Wrong! timestamp is from X server start
         event.same_screen = 1;
         event.child = 0;
-        event.root = x11::rootWindow;
         NOLOGCALL(event.detail = XKeysymToKeycode(nullptr, event_key));
         event.state = static_cast<uint16_t>(xkeyboardToXMod(Inputs::game_ai.keyboard));
         for (int c=0; c<GAMECONNECTIONNUM; c++) {
             if (x11::gameConnections[c]) {
-                // event.root = XRootWindow(x11::gameConnections[c], 0);
                 xcbEventQueueList.insert(x11::gameConnections[c], reinterpret_cast<xcb_generic_event_t*>(&event), false);
             }
         }
@@ -173,7 +170,7 @@ static void generateKeyEvent(int event_key, bool pressed)
         LOG(LL_DEBUG, LCF_EVENTS | LCF_KEYBOARD, "Generate xcb %s with keycode %d", pressed?"XCB_KEY_PRESS":"XCB_KEY_RELEASE", event.detail);
     }
 
-    if ((Global::game_info.keyboard & GameInfo::XIEVENTS) && !x11::gameXWindows.empty()) {
+    if ((Global::game_info.keyboard & GameInfo::XIEVENTS) && XlibGameWindow::get()) {
         XEvent event;
         XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
         event.xcookie.type = GenericEvent;
@@ -181,7 +178,7 @@ static void generateKeyEvent(int event_key, bool pressed)
         event.xcookie.evtype = pressed ? XI_KeyPress : XI_KeyRelease;
         event.xcookie.data = dev;
         dev->evtype = event.xcookie.evtype;
-        dev->event = x11::gameXWindows.front();
+        dev->event = XlibGameWindow::get();
         dev->time = timestamp; // TODO: Wrong! timestamp is from X server start
         dev->deviceid = 3;
         dev->sourceid = 3;
@@ -189,7 +186,7 @@ static void generateKeyEvent(int event_key, bool pressed)
         dev->mods.effective = xkeyboardToXMod(Inputs::game_ai.keyboard); // We should not need to fill the other members
         for (int d=0; d<GAMEDISPLAYNUM; d++) {
             if (x11::gameDisplays[d]) {
-                dev->root = XRootWindow(x11::gameDisplays[d], 0);
+                dev->root = DefaultRootWindow(x11::gameDisplays[d]);
                 xlibEventQueueList.insert(x11::gameDisplays[d], &event);
             }
         }
@@ -701,7 +698,7 @@ static void generateMouseMotionEvents(void)
     }
 
 #ifdef __unix__
-    if ((Global::game_info.mouse & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
+    if ((Global::game_info.mouse & GameInfo::XEVENTS) && XlibGameWindow::get()) {
         XEvent event;
         event.xmotion.type = MotionNotify;
         event.xmotion.state = SingleInput::toXlibPointerMask(Inputs::game_ai.pointer.mask);
@@ -712,10 +709,9 @@ static void generateMouseMotionEvents(void)
         if (pointer_grab_window != None)
             event.xmotion.window = pointer_grab_window;
         else
-            event.xmotion.window = x11::gameXWindows.front();
+            event.xmotion.window = XlibGameWindow::get();
         event.xmotion.send_event = 0;
         event.xmotion.subwindow = 0;
-        event.xmotion.root = x11::rootWindow;
         event.xmotion.same_screen = 1;
         event.xmotion.time = timestamp;
         event.xmotion.is_hint = 0;
@@ -724,7 +720,7 @@ static void generateMouseMotionEvents(void)
         LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate Xlib event MotionNotify with new position (%d,%d)", Inputs::game_ai.pointer.x, Inputs::game_ai.pointer.y);
     }
 
-    if ((Global::game_info.mouse & GameInfo::XCBEVENTS) && !x11::gameXWindows.empty()) {
+    if ((Global::game_info.mouse & GameInfo::XCBEVENTS) && XlibGameWindow::get()) {
         xcb_motion_notify_event_t event;
         event.response_type = XCB_MOTION_NOTIFY;
         event.state = SingleInput::toXlibPointerMask(Inputs::game_ai.pointer.mask);
@@ -732,17 +728,17 @@ static void generateMouseMotionEvents(void)
         event.event_y = Inputs::game_ai.pointer.y;
         event.root_x = Inputs::game_ai.pointer.x;
         event.root_y = Inputs::game_ai.pointer.y;
-        event.event = x11::gameXWindows.front();
+        event.event = XlibGameWindow::get();
         event.time = timestamp;
         event.same_screen = 1;
         event.child = 0;
-        event.root = x11::rootWindow;
+        // event.root = x11::rootWindow;
 
         xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
         LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_MOTION_NOTIFY with new position (%d,%d)", Inputs::game_ai.pointer.x, Inputs::game_ai.pointer.y);
     }
 
-    if ((Global::game_info.mouse & GameInfo::XIEVENTS) && !x11::gameXWindows.empty()) {
+    if ((Global::game_info.mouse & GameInfo::XIEVENTS) && XlibGameWindow::get()) {
         XEvent event;
         XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
         event.xcookie.type = GenericEvent;
@@ -750,7 +746,7 @@ static void generateMouseMotionEvents(void)
         event.xcookie.evtype = XI_Motion;
         event.xcookie.data = dev;
         dev->evtype = XI_Motion;
-        dev->event = x11::gameXWindows.front();
+        dev->event = XlibGameWindow::get();
         dev->time = timestamp;
         dev->deviceid = 2;
         dev->sourceid = 2;
@@ -761,7 +757,7 @@ static void generateMouseMotionEvents(void)
         dev->detail = 0;
         for (int d=0; d<GAMEDISPLAYNUM; d++) {
             if (x11::gameDisplays[d]) {
-                dev->root = XRootWindow(x11::gameDisplays[d], 0);
+                dev->root = DefaultRootWindow(x11::gameDisplays[d]);
                 xlibEventQueueList.insert(x11::gameDisplays[d], &event);
             }
         }
@@ -820,7 +816,7 @@ static void generateMouseButtonEvent(int button, bool pressed)
     }
 
 #ifdef __unix__
-    if ((Global::game_info.mouse & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
+    if ((Global::game_info.mouse & GameInfo::XEVENTS) && XlibGameWindow::get()) {
         XEvent event;
         if (pressed) {
             event.xbutton.type = ButtonPress;
@@ -839,16 +835,16 @@ static void generateMouseButtonEvent(int button, bool pressed)
         if (pointer_grab_window != None)
             event.xbutton.window = pointer_grab_window;
         else
-            event.xbutton.window = x11::gameXWindows.front();
+            event.xbutton.window = XlibGameWindow::get();
         event.xbutton.same_screen = 1;
         event.xbutton.send_event = 0;
         event.xbutton.subwindow = 0;
-        event.xbutton.root = x11::rootWindow;
+        // event.xbutton.root = x11::rootWindow;
 
         xlibEventQueueList.insert(&event);
     }
 
-    if ((Global::game_info.mouse & GameInfo::XCBEVENTS) && !x11::gameXWindows.empty()) {
+    if ((Global::game_info.mouse & GameInfo::XCBEVENTS) && XlibGameWindow::get()) {
         xcb_button_press_event_t event; // same as xcb_button_release_event_t
         if (pressed) {
             event.response_type = XCB_BUTTON_PRESS;
@@ -864,15 +860,15 @@ static void generateMouseButtonEvent(int button, bool pressed)
         event.root_x = Inputs::game_ai.pointer.x;
         event.root_y = Inputs::game_ai.pointer.y;
         event.detail = SingleInput::toXlibPointerButton(button);
-        event.event = x11::gameXWindows.front();
+        event.event = XlibGameWindow::get();
         event.same_screen = 1;
         event.child = 0;
-        event.root = x11::rootWindow;
+        // event.root = x11::rootWindow;
 
         xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
     }
 
-    if ((Global::game_info.mouse & GameInfo::XIEVENTS) && !x11::gameXWindows.empty()) {
+    if ((Global::game_info.mouse & GameInfo::XIEVENTS) && XlibGameWindow::get()) {
         XEvent event;
         XIDeviceEvent *dev = static_cast<XIDeviceEvent*>(calloc(1, sizeof(XIDeviceEvent)));
         event.xcookie.type = GenericEvent;
@@ -888,7 +884,7 @@ static void generateMouseButtonEvent(int button, bool pressed)
             dev->evtype = XI_ButtonRelease;
         }
         event.xcookie.data = dev;
-        dev->event = x11::gameXWindows.front();
+        dev->event = XlibGameWindow::get();
         dev->time = timestamp;
         dev->deviceid = 2;
         dev->sourceid = 2;
@@ -906,7 +902,7 @@ static void generateMouseButtonEvent(int button, bool pressed)
         }
         for (int d=0; d<GAMEDISPLAYNUM; d++) {
             if (x11::gameDisplays[d]) {
-                dev->root = XRootWindow(x11::gameDisplays[d], 0);
+                dev->root = DefaultRootWindow(x11::gameDisplays[d]);
                 xlibEventQueueList.insert(x11::gameDisplays[d], &event);
             }
         }
@@ -1009,7 +1005,7 @@ static void generateFocusEvents(void)
     }
 
 #ifdef __unix__
-    if ((Global::game_info.keyboard & GameInfo::XEVENTS) && !x11::gameXWindows.empty()) {
+    if ((Global::game_info.keyboard & GameInfo::XEVENTS) && XlibGameWindow::get()) {
         XEvent event;
         if (win_focused) {
             event.type = FocusOut;
@@ -1019,27 +1015,27 @@ static void generateFocusEvents(void)
             event.type = FocusIn;
             LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate Xlib event FocusIn");            
         }
-        event.xfocus.window = x11::gameXWindows.front();
+        event.xfocus.window = XlibGameWindow::get();
         event.xfocus.mode = NotifyNormal; // TODO
         event.xfocus.send_event = 0;
         event.xfocus.detail = NotifyDetailNone; // TODO
         xlibEventQueueList.insert(&event);
     }
 
-    if ((Global::game_info.keyboard & GameInfo::XCBEVENTS) && !x11::gameXWindows.empty()) {
+    if ((Global::game_info.keyboard & GameInfo::XCBEVENTS) && XlibGameWindow::get()) {
         
         if (win_focused) {
             xcb_focus_out_event_t event;
             event.response_type = XCB_FOCUS_OUT;
             LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_FOCUS_OUT");
-            event.event = x11::gameXWindows.front();
+            event.event = XlibGameWindow::get();
             xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
         }
         else {
             xcb_focus_in_event_t event;
             event.response_type = XCB_FOCUS_IN;
             LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE, "Generate xcb event XCB_FOCUS_IN");
-            event.event = x11::gameXWindows.front();
+            event.event = XlibGameWindow::get();
             xcbEventQueueList.insert(reinterpret_cast<xcb_generic_event_t*>(&event), false);
         }
     }

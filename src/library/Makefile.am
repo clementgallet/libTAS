@@ -188,6 +188,7 @@ libtas_so_SOURCES = \
     xcb/xcbwindows.cpp \
     xlib/XlibEventQueue.cpp \
     xlib/XlibEventQueueList.cpp \
+    xlib/XlibGameWindow.cpp \
     xlib/xatom.cpp \
     xlib/xcursor.cpp \
     xlib/xdisplay.cpp \

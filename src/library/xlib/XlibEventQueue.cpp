@@ -43,7 +43,7 @@ void XlibEventQueue::setMask(Window w, long event_mask)
         ev.xcrossing.state = SingleInput::toXlibPointerMask(Inputs::game_ai.pointer.mask);
         ev.xcrossing.send_event = 0;
         ev.xcrossing.same_screen = 1;
-        ev.xcrossing.root = x11::rootWindow;
+        ev.xcrossing.root = DefaultRootWindow(display);
         ev.xcrossing.mode = NotifyNormal;
         ev.xcrossing.detail = NotifyNonlinear;
 

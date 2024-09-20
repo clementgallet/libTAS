@@ -26,7 +26,7 @@
 #include "renderhud/RenderHUD_GL.h"
 #include "screencapture/ScreenCapture.h"
 #include "frame.h"
-#include "xlib/xwindows.h" // x11::gameXWindows
+#include "xlib/XlibGameWindow.h"
 #include "UnityHacks.h"
 #include "global.h"
 #include "GlobalState.h"
@@ -263,7 +263,7 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
 
     LOGTRACE(LCF_WINDOW | LCF_OGL);
 
-    if (drawable && (!x11::gameXWindows.empty())) {
+    if (drawable && XlibGameWindow::get()) {
         Global::game_info.video |= GameInfo::OPENGL;
         Global::game_info.tosend = true;
 
@@ -293,7 +293,7 @@ Bool glXMakeContextCurrent( Display *dpy, GLXDrawable draw, GLXDrawable read, GL
 
     LOGTRACE(LCF_WINDOW | LCF_OGL);
 
-    if (draw && (!x11::gameXWindows.empty())) {
+    if (draw && XlibGameWindow::get()) {
         Global::game_info.video |= GameInfo::OPENGL;
         Global::game_info.tosend = true;
 

@@ -25,7 +25,7 @@
 #include "GlobalState.h"
 #include "logging.h"
 #include "screencapture/ScreenCapture.h"
-#include "xlib/xwindows.h" // x11::gameXWindows
+#include "xlib/XlibGameWindow.h"
 #include "global.h"
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
@@ -102,13 +102,8 @@ xcb_create_window_checked (xcb_connection_t *c,
     }
 
     /* Only save the Window identifier for top-level windows */
-    xcb_screen_t *s = xcb_setup_roots_iterator (xcb_get_setup (c)).data;
-
-    if (s->root == parent) {
-        /* Saving top-level window */
-        if (x11::gameXWindows.empty())
-            LOG(LL_DEBUG, LCF_WINDOW, "   set game window to %d", wid);
-        x11::gameXWindows.push_back(wid);
+    if (XlibGameWindow::isRootWindow(c, parent)) {
+        XlibGameWindow::push(wid);
     }
 
     return ret;
@@ -161,13 +156,8 @@ xcb_create_window (xcb_connection_t *c,
     }
 
     /* Only save the Window identifier for top-level windows */
-    xcb_screen_t *s = xcb_setup_roots_iterator (xcb_get_setup (c)).data;
-
-    if (s->root == parent) {
-        /* Saving top-level window */
-        if (x11::gameXWindows.empty())
-            LOG(LL_DEBUG, LCF_WINDOW, "   set game window to %d", wid);
-        x11::gameXWindows.push_back(wid);
+    if (XlibGameWindow::isRootWindow(c, parent)) {
+        XlibGameWindow::push(wid);
     }
 
     return ret;
@@ -200,13 +190,8 @@ xcb_create_window_aux_checked (xcb_connection_t                     *c,
     Global::game_info.tosend = true;
 
     /* Only save the Window identifier for top-level windows */
-    xcb_screen_t *s = xcb_setup_roots_iterator (xcb_get_setup (c)).data;
-
-    if (s->root == parent) {
-        /* Saving top-level window */
-        if (x11::gameXWindows.empty())
-            LOG(LL_DEBUG, LCF_WINDOW, "   set game window to %d", wid);
-        x11::gameXWindows.push_back(wid);
+    if (XlibGameWindow::isRootWindow(c, parent)) {
+        XlibGameWindow::push(wid);
     }
 
     return ret;
@@ -238,26 +223,11 @@ xcb_create_window_aux (xcb_connection_t                     *c,
     Global::game_info.tosend = true;
 
     /* Only save the Window identifier for top-level windows */
-    xcb_screen_t *s = xcb_setup_roots_iterator (xcb_get_setup (c)).data;
-
-    if (s->root == parent) {
-        /* Saving top-level window */
-        if (x11::gameXWindows.empty())
-            LOG(LL_DEBUG, LCF_WINDOW, "   set game window to %d", wid);
-        x11::gameXWindows.push_back(wid);
+    if (XlibGameWindow::isRootWindow(c, parent)) {
+        XlibGameWindow::push(wid);
     }
 
     return ret;
-}
-
-static void sendXWindow(Window w)
-{
-    uint32_t i = (uint32_t)w;
-    lockSocket();
-    sendMessage(MSGB_WINDOW_ID);
-    sendData(&i, sizeof(i));
-    unlockSocket();
-    LOG(LL_DEBUG, LCF_WINDOW, "Sent X11 window id %d", w);
 }
 
 xcb_void_cookie_t xcb_destroy_window_checked (xcb_connection_t *c, xcb_window_t window)
@@ -266,29 +236,7 @@ xcb_void_cookie_t xcb_destroy_window_checked (xcb_connection_t *c, xcb_window_t 
     LINK_NAMESPACE_GLOBAL(xcb_destroy_window_checked);
 
     /* If current game window, switch to another one on the list */
-    if (!x11::gameXWindows.empty() && window == x11::gameXWindows.front()) {
-        ScreenCapture::fini();
-
-        x11::gameXWindows.pop_front();
-        if (x11::gameXWindows.empty()) {
-            /* Tells the program we don't have a window anymore to gather inputs */
-            sendXWindow(0);
-        }
-        else {
-            /* Switch to the next game window */
-            LOG(LL_DEBUG, LCF_WINDOW, "   set game window to %d", x11::gameXWindows.front());
-            sendXWindow(x11::gameXWindows.front());
-        }
-    }
-    else {
-        /* If another game window, remove it from the list */
-        for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
-            if (window == *iter) {
-                x11::gameXWindows.erase(iter);
-                break;
-            }
-        }
-    }
+    XlibGameWindow::pop(window);
 
     return orig::xcb_destroy_window_checked(c, window);
 }
@@ -299,29 +247,7 @@ xcb_void_cookie_t xcb_destroy_window (xcb_connection_t *c, xcb_window_t window)
     LINK_NAMESPACE_GLOBAL(xcb_destroy_window);
 
     /* If current game window, switch to another one on the list */
-    if (!x11::gameXWindows.empty() && window == x11::gameXWindows.front()) {
-        ScreenCapture::fini();
-
-        x11::gameXWindows.pop_front();
-        if (x11::gameXWindows.empty()) {
-            /* Tells the program we don't have a window anymore to gather inputs */
-            sendXWindow(0);
-        }
-        else {
-            /* Switch to the next game window */
-            LOG(LL_DEBUG, LCF_WINDOW, "   set game window to %d", x11::gameXWindows.front());
-            sendXWindow(x11::gameXWindows.front());
-        }
-    }
-    else {
-        /* If another game window, remove it from the list */
-        for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
-            if (window == *iter) {
-                x11::gameXWindows.erase(iter);
-                break;
-            }
-        }
-    }
+    XlibGameWindow::pop(window);
 
     return orig::xcb_destroy_window(c, window);
 }
@@ -332,16 +258,8 @@ xcb_void_cookie_t xcb_map_window_checked (xcb_connection_t *c, xcb_window_t wind
     LINK_NAMESPACE_GLOBAL(xcb_map_window_checked);
     xcb_void_cookie_t ret = orig::xcb_map_window_checked(c, window);
 
-    /* We must wait until the window is mapped to send it to the program.
-     * We are checking the content of x11::gameXWindows to see if we must send it */
-    for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
-        if (window == *iter) {
-            x11::gameXWindows.erase(iter);
-            x11::gameXWindows.push_front(window);
-            sendXWindow(window);
-            break;
-        }
-    }
+    /* We must wait until the window is mapped to send it to the program. */
+    XlibGameWindow::promote(window);
 
     return ret;
 }
@@ -352,16 +270,8 @@ xcb_void_cookie_t xcb_map_window (xcb_connection_t *c, xcb_window_t window)
     LINK_NAMESPACE_GLOBAL(xcb_map_window);
     xcb_void_cookie_t ret = orig::xcb_map_window(c, window);
 
-    /* We must wait until the window is mapped to send it to the program.
-     * We are checking the content of x11::gameXWindows to see if we must send it */
-    for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
-        if (window == *iter) {
-            x11::gameXWindows.erase(iter);
-            x11::gameXWindows.push_front(window);
-            sendXWindow(window);
-            break;
-        }
-    }
+    /* We must wait until the window is mapped to send it to the program. */
+    XlibGameWindow::promote(window);
 
     return ret;
 }
@@ -394,7 +304,7 @@ xcb_void_cookie_t xcb_configure_window_checked (xcb_connection_t *c, xcb_window_
     uint32_t new_width = 0, new_height = 0;
     uint32_t new_list[16] = {};
     
-    if (!x11::gameXWindows.empty() && (x11::gameXWindows.front() == window)) {
+    if (XlibGameWindow::get() == window) {
         /* Search through the value list */
         int index = 0;
         int new_index = 0;
@@ -444,7 +354,7 @@ xcb_void_cookie_t xcb_configure_window (xcb_connection_t *c, xcb_window_t window
     uint32_t new_width = 0, new_height = 0;
     uint32_t new_list[16] = {};
     
-    if (!x11::gameXWindows.empty() && (x11::gameXWindows.front() == window)) {
+    if (XlibGameWindow::get() == window) {
         /* Search through the value list */
         int index = 0;
         int new_index = 0;

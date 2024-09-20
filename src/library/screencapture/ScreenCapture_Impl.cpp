@@ -27,6 +27,7 @@
 #include "GlobalState.h"
 #include "xlib/xwindows.h"
 #include "xlib/xdisplay.h"
+#include "xlib/XlibGameWindow.h"
 
 #include <X11/Xlib.h>
 // #include <SDL2/SDL.h>
@@ -41,7 +42,7 @@ int ScreenCapture_Impl::init()
 {
 #ifdef __unix__
     /* Don't initialize if window is not registered */
-    if (x11::gameXWindows.empty())
+    if (!XlibGameWindow::get())
         return -1;
 #else
 #error "ScreenCapture not implemented for MacOS"
@@ -67,7 +68,7 @@ int ScreenCapture_Impl::init()
         Window root;
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
             if (x11::gameDisplays[i]) {
-                orig::XGetGeometry(x11::gameDisplays[i], x11::gameXWindows.front(), &root, &x, &y, &w, &h, &border_width, &depth);
+                orig::XGetGeometry(x11::gameDisplays[i], XlibGameWindow::get(), &root, &x, &y, &w, &h, &border_width, &depth);
                 break;
             }
         }
@@ -110,7 +111,7 @@ void ScreenCapture_Impl::resize(int w, int h)
 {
 #ifdef __unix__
     /* Don't resize if window is not registered */
-    if (x11::gameXWindows.empty()) {
+    if (!XlibGameWindow::get()) {
         return;
     }
 #endif

@@ -24,7 +24,7 @@
 #include "xcb/XcbEventQueueList.h"
 #include "DeterministicTimer.h"
 #include "hook.h"
-#include "xlib/xwindows.h" // x11::gameXWindows
+#include "xlib/XlibGameWindow.h"
 #include "global.h"
 #include "GlobalState.h"
 
@@ -56,7 +56,7 @@ namespace libtas {
     // reply->root = ; TODO
     reply->root_x = Inputs::game_ai.pointer.x;
     reply->root_y = Inputs::game_ai.pointer.y;
-    reply->child = x11::gameXWindows.front();
+    reply->child = XlibGameWindow::get();
     reply->win_x = Inputs::game_ai.pointer.x;
     reply->win_y = Inputs::game_ai.pointer.y;
     reply->mask = SingleInput::toXlibPointerMask(Inputs::game_ai.pointer.mask);
@@ -79,7 +79,7 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
     LOG(LL_TRACE, LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dst_window, dst_x, dst_y);
 
     /* Does this generate a XCB_MOTION_NOTIFY event? */
-    if (!x11::gameXWindows.empty()) {
+    if (XlibGameWindow::get()) {
         xcb_motion_notify_event_t event;
         event.response_type = XCB_MOTION_NOTIFY;
         event.state = SingleInput::toXlibPointerMask(Inputs::game_ai.pointer.mask);
@@ -96,7 +96,7 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
         }
         event.root_x = event.event_x;
         event.root_y = event.event_y;
-        event.event = x11::gameXWindows.front();
+        event.event = XlibGameWindow::get();
 
         struct timespec time = DeterministicTimer::get().getTicks();
         event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
@@ -155,7 +155,7 @@ xcb_warp_pointer (xcb_connection_t *c,
     LOG(LL_TRACE, LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dst_window, dst_x, dst_y);
 
     /* Does this generate a XCB_MOTION_NOTIFY event? */
-    if (!x11::gameXWindows.empty()) {
+    if (XlibGameWindow::get()) {
         xcb_motion_notify_event_t event;
         event.response_type = XCB_MOTION_NOTIFY;
         event.state = SingleInput::toXlibPointerMask(Inputs::game_ai.pointer.mask);
@@ -172,7 +172,7 @@ xcb_warp_pointer (xcb_connection_t *c,
         }
         event.root_x = event.event_x;
         event.root_y = event.event_y;
-        event.event = x11::gameXWindows.front();
+        event.event = XlibGameWindow::get();
 
         struct timespec time = DeterministicTimer::get().getTicks();
         event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;

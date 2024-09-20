@@ -22,7 +22,7 @@
 #include "xkeyboardlayout.h"
 
 #include "logging.h"
-#include "xlib/xwindows.h" // x11::gameXWindows
+#include "xlib/XlibGameWindow.h"
 #include "GlobalState.h"
 #include "../shared/inputs/AllInputsFlat.h"
 
@@ -83,8 +83,8 @@ namespace libtas {
 
     LOGTRACE(LCF_KEYBOARD);
     /* Returing the game Xlib window */
-    if (focus_return && !x11::gameXWindows.empty()) {
-        *focus_return = x11::gameXWindows.front();
+    if (focus_return && XlibGameWindow::get()) {
+        *focus_return = XlibGameWindow::get();
     }
     return 0;
 }

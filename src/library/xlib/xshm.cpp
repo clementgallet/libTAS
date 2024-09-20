@@ -18,7 +18,7 @@
  */
 
 #include "xshm.h"
-#include "xwindows.h" // x11::gameXWindows
+#include "XlibGameWindow.h"
 
 #include "hook.h"
 #include "logging.h"
@@ -68,23 +68,7 @@ OVERRIDE Bool XShmPutImage(
     x11::gameXImage = image;
 
     /* Set the game window to that window */
-    if (x11::gameXWindows.empty() || x11::gameXWindows.front() != d) {
-        /* Remove window from the list if it is already present */
-        for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
-            if (d == *iter) {
-                x11::gameXWindows.erase(iter);
-                break;
-            }
-        }
-
-        x11::gameXWindows.push_front(d);
-        uint32_t i = static_cast<uint32_t>(d);
-        lockSocket();
-        sendMessage(MSGB_WINDOW_ID);
-        sendData(&i, sizeof(i));
-        unlockSocket();
-        LOG(LL_DEBUG, LCF_WINDOW, "Sent X11 window id %d", i);
-    }
+    XlibGameWindow::promote(d);
 
     /* The surface can change size independently of the window size, so we
      * must check here everytime. */

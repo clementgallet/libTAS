@@ -54,7 +54,7 @@
 #include "xcb/xcbevents.h"
 #include "xlib/xatom.h"
 #include "xlib/XlibEventQueueList.h"
-#include "xlib/xwindows.h" // x11::gameXWindows
+#include "xlib/XlibGameWindow.h"
 #endif
 #include "../shared/sockethelpers.h"
 #include "../shared/inputs/AllInputsFlat.h"
@@ -523,13 +523,13 @@ static void pushQuitEvent(void)
     }
 
 #ifdef __unix__
-    if (x11::gameXWindows.empty())
+    if (XlibGameWindow::get() == 0)
         return;
 
     GlobalNoLog gnl;
     XEvent xev;
     xev.xclient.type = ClientMessage;
-    xev.xclient.window = x11::gameXWindows.front();
+    xev.xclient.window = XlibGameWindow::get();
     xev.xclient.format = 32;
     xev.xclient.data.l[1] = CurrentTime;
 
@@ -537,7 +537,7 @@ static void pushQuitEvent(void)
         if (x11::gameDisplays[i]) {
             xev.xclient.message_type = x11_atom(WM_PROTOCOLS);
             xev.xclient.data.l[0] = x11_atom(WM_DELETE_WINDOW);
-            NATIVECALL(XSendEvent(x11::gameDisplays[i], x11::gameXWindows.front(), False, NoEventMask, &xev));
+            NATIVECALL(XSendEvent(x11::gameDisplays[i], XlibGameWindow::get(), False, NoEventMask, &xev));
             NATIVECALL(XSync(x11::gameDisplays[i], false));
         }
     }

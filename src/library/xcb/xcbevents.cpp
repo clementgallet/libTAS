@@ -25,7 +25,7 @@
 #include "logging.h"
 #include "hook.h"
 #include "xlib/xatom.h"
-#include "xlib/xwindows.h" // x11::gameXWindows
+#include "xlib/XlibGameWindow.h"
 #include "global.h"
 #include "GlobalState.h"
 
@@ -218,7 +218,7 @@ xcb_send_event_checked (xcb_connection_t *c,
             /* Detect and disable fullscreen switching */
             if (static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
                 LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
-                if (!x11::gameXWindows.empty() && (client_event->window != x11::gameXWindows.front())) {
+                if (XlibGameWindow::get() && (client_event->window != XlibGameWindow::get())) {
                     LOG(LL_WARN, LCF_EVENTS | LCF_WINDOW, "   fullscreen window is not game window!");
                 }
 
@@ -285,7 +285,7 @@ xcb_send_event (xcb_connection_t *c,
             /* Detect and disable fullscreen switching */
             if (static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
                 LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
-                if (!x11::gameXWindows.empty() && (client_event->window != x11::gameXWindows.front())) {
+                if (XlibGameWindow::get() && (client_event->window != XlibGameWindow::get())) {
                     LOG(LL_WARN, LCF_EVENTS | LCF_WINDOW, "   fullscreen window is not game window!");
                 }
 

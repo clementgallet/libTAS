@@ -27,7 +27,7 @@
 #include "renderhud/RenderHUD.h"
 #include "DeterministicTimer.h"
 #include "backtrace.h"
-#include "xlib/xwindows.h" // x11::gameXWindows
+#include "xlib/XlibGameWindow.h"
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
 
@@ -72,22 +72,7 @@ VdpStatus VdpPresentationQueueTargetCreateX11(VdpDevice device, Drawable drawabl
     LOGTRACE(LCF_WINDOW);
 
     /* Set the game window to that window */
-
-    /* Remove window from the list if it is already present */
-    for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
-        if (drawable == *iter) {
-            x11::gameXWindows.erase(iter);
-            break;
-        }
-    }
-
-    x11::gameXWindows.push_front(drawable);
-    uint32_t i = static_cast<uint32_t>(drawable);
-    lockSocket();
-    sendMessage(MSGB_WINDOW_ID);
-    sendData(&i, sizeof(i));
-    unlockSocket();
-    LOG(LL_DEBUG, LCF_WINDOW, "Sent X11 window id %d", i);
+    XlibGameWindow::promote(drawable);
 
     return orig::VdpPresentationQueueTargetCreateX11(device, drawable, target);
 }

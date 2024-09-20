@@ -28,7 +28,7 @@
 #include "DeterministicTimer.h"
 #include "screencapture/ScreenCapture.h"
 #include "xlib/xatom.h"
-#include "xlib/xwindows.h" // x11::gameXWindows
+#include "xlib/XlibGameWindow.h"
 #include "global.h"
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
@@ -56,16 +56,6 @@ DEFINE_ORIG_POINTER(xcb_send_request_with_fds64)
 // x11rb does not use xcb_create_window and friends
 // rather, it uses xcb_send_request64 with XCB_REQUEST_RAW
 // due to this, we need to hook onto xcb_send_request and friends
-
-static void sendXWindow(xcb_window_t w)
-{
-    uint32_t i = (uint32_t)w;
-    lockSocket();
-    sendMessage(MSGB_WINDOW_ID);
-    sendData(&i, sizeof(i));
-    unlockSocket();
-    LOG(LL_DEBUG, LCF_WINDOW, "Sent X11 window id %d", w);
-}
 
 // the handling here is assuming some relatively "standard" vectors sent
 // i.e. main struct, padding to next uint32_t (possibly omitted if already uint32_t aligned), variable length list (if present)
@@ -113,13 +103,8 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
             }
 
             /* Only save the Window identifier for top-level windows */
-            xcb_screen_t* s = xcb_setup_roots_iterator(xcb_get_setup(c)).data;
-
-            if (s->root == req->parent) {
-                /* Saving top-level window */
-                if (x11::gameXWindows.empty())
-                    LOG(LL_DEBUG, LCF_WINDOW, "   set game window to %d", req->wid);
-                x11::gameXWindows.push_back(req->wid);
+            if (XlibGameWindow::isRootWindow(c, req->parent)) {
+                XlibGameWindow::push(req->wid);
             }
 
             break;
@@ -131,29 +116,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
             LOG(LL_TRACE, LCF_WINDOW, "XCB_DESTROY_WINDOW raw request with window %d", req->window);
 
             /* If current game window, switch to another one on the list */
-            if (!x11::gameXWindows.empty() && req->window == x11::gameXWindows.front()) {
-                ScreenCapture::fini();
-
-                x11::gameXWindows.pop_front();
-                if (x11::gameXWindows.empty()) {
-                    /* Tells the program we don't have a window anymore to gather inputs */
-                    sendXWindow(0);
-                }
-                else {
-                    /* Switch to the next game window */
-                    LOG(LL_DEBUG, LCF_WINDOW, "   set game window to %d", x11::gameXWindows.front());
-                    sendXWindow(x11::gameXWindows.front());
-                }
-            }
-            else {
-                /* If another game window, remove it from the list */
-                for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
-                    if (req->window == *iter) {
-                        x11::gameXWindows.erase(iter);
-                        break;
-                    }
-                }
-            }
+            XlibGameWindow::pop(req->window);
 
             send_request(vector);
             break;
@@ -166,16 +129,8 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
 
             send_request(vector);
 
-            /* We must wait until the window is mapped to send it to the program.
-             * We are checking the content of x11::gameXWindows to see if we must send it */
-            for (auto iter = x11::gameXWindows.begin(); iter != x11::gameXWindows.end(); iter++) {
-                if (req->window == *iter) {
-                    x11::gameXWindows.erase(iter);
-                    x11::gameXWindows.push_front(req->window);
-                    sendXWindow(req->window);
-                    break;
-                }
-            }
+            /* We must wait until the window is mapped to send it to the program. */
+            XlibGameWindow::promote(req->window);
 
             break;
         }
@@ -217,7 +172,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
             uint32_t new_width = 0, new_height = 0;
             uint32_t* new_list = reinterpret_cast<uint32_t*>(new_vector[4].iov_base);
 
-            if (!x11::gameXWindows.empty() && (x11::gameXWindows.front() == new_req->window)) {
+            if (XlibGameWindow::get() == new_req->window) {
                 /* Search through the value list */
                 int index = 0;
                 int new_index = 0;
@@ -276,7 +231,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                     /* Detect and disable fullscreen switching */
                     if (static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
                         LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
-                        if (!x11::gameXWindows.empty() && (client_event->window != x11::gameXWindows.front())) {
+                        if (XlibGameWindow::get() && (client_event->window != XlibGameWindow::get())) {
                             LOG(LL_WARN, LCF_EVENTS | LCF_WINDOW, "   fullscreen window is not game window!");
                         }
 
@@ -360,7 +315,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
             LOG(LL_TRACE, LCF_MOUSE, "XCB_WARP_POINTER raw request called with dest_w %d and dest_x %d and dest_y %d", req->dst_window, req->dst_x, req->dst_y);
 
             /* Does this generate a XCB_MOTION_NOTIFY event? */
-            if (!x11::gameXWindows.empty()) {
+            if (XlibGameWindow::get()) {
                 xcb_motion_notify_event_t event;
                 event.response_type = XCB_MOTION_NOTIFY;
                 event.state = SingleInput::toXlibPointerMask(Inputs::game_ai.pointer.mask);
@@ -377,7 +332,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                 }
                 event.root_x = event.event_x;
                 event.root_y = event.event_y;
-                event.event = x11::gameXWindows.front();
+                event.event = XlibGameWindow::get();
 
                 struct timespec time = DeterministicTimer::get().getTicks();
                 event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
@@ -483,7 +438,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                                 }
                             }
 
-                            if (!(Global::game_info.keyboard & (GameInfo::SDL1 | GameInfo::SDL2)) && !x11::gameXWindows.empty()) {
+                            if (!(Global::game_info.keyboard & (GameInfo::SDL1 | GameInfo::SDL2)) && XlibGameWindow::get()) {
                                 if (event_mask & XCB_INPUT_XI_EVENT_MASK_FOCUS_IN) {
                                     xcb_input_focus_in_event_t event{};
                                     event.response_type = XCB_GE_GENERIC;
@@ -493,8 +448,8 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                                     event.sourceid = event.deviceid = 3; // "Virtual core keyboard"
                                     struct timespec time = DeterministicTimer::get().getTicks();
                                     event.time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
-                                    event.root = x11::rootWindow;
-                                    event.event = x11::gameXWindows.front();
+                                    // event.root = x11::rootWindow;
+                                    event.event = XlibGameWindow::get();
                                     event.child = 0;
                                     event.root_x = event.event_x = Inputs::game_ai.pointer.x;
                                     event.root_y = event.event_y = Inputs::game_ai.pointer.y;
@@ -515,7 +470,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                                         dev->evtype = XI_FocusIn;
                                         dev->time = time.tv_sec * 1000 + time.tv_nsec / 1000000;
                                         dev->deviceid = dev->sourceid = 3;
-                                        dev->event = x11::gameXWindows.front();
+                                        dev->event = XlibGameWindow::get();
                                         dev->root_x = dev->event_x = Inputs::game_ai.pointer.x;
                                         dev->root_y = dev->event_y = Inputs::game_ai.pointer.y;
                                         dev->focus = True;
@@ -523,7 +478,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                                         LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE | LCF_KEYBOARD, "   Inserting an Xlib event XI_FocusIn");
                                         for (int d=0; d<GAMEDISPLAYNUM; d++) {
                                             if (x11::gameDisplays[d]) {
-                                                dev->root = XRootWindow(x11::gameDisplays[d], 0);
+                                                dev->root = DefaultRootWindow(x11::gameDisplays[d]);
                                                 xlibEventQueueList.insert(x11::gameDisplays[d], &xev);
                                             }
                                         }

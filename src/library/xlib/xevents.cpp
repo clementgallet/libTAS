@@ -22,7 +22,7 @@
 #include "XlibEventQueueList.h"
 #include "xatom.h"
 #include "xdisplay.h" // x11::gameDisplays
-#include "xwindows.h" // x11::gameXWindows
+#include "XlibGameWindow.h"
 #include "xrandr.h"
 
 #include "logging.h"
@@ -514,7 +514,7 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
             /* Detect and disable fullscreen switching */
             if (static_cast<Atom>(event_send->xclient.data.l[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
                 LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
-                if (!x11::gameXWindows.empty() && (event_send->xclient.window != x11::gameXWindows.front())) {
+                if (XlibGameWindow::get() && (event_send->xclient.window != XlibGameWindow::get())) {
                     LOG(LL_WARN, LCF_EVENTS | LCF_WINDOW, "   fullscreen window is not game window!");
                 }
 

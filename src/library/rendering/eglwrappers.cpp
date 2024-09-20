@@ -27,7 +27,7 @@
 #include "renderhud/RenderHUD_GL.h"
 #include "screencapture/ScreenCapture.h"
 #include "frame.h"
-#include "xlib/xwindows.h" // x11::gameXWindows
+#include "xlib/XlibGameWindow.h"
 #include "GlobalState.h"
 
 #include <string.h>
@@ -162,7 +162,7 @@ EGLBoolean eglMakeCurrent( EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
 
     LOGTRACE(LCF_WINDOW | LCF_OGL);
 
-    if (draw && (!x11::gameXWindows.empty())) {
+    if (draw && XlibGameWindow::get()) {
         Global::game_info.video |= GameInfo::EGL | GameInfo::OPENGL;
         Global::game_info.tosend = true;
     }
