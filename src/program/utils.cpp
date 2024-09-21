@@ -138,12 +138,13 @@ void remove_savestates(Context* context)
 
 int extractBinaryType(std::string path)
 {
+    int extra_flags = 0;
+    
     /* Check for MacOS app file, and extract the actual executable if so. */
-    int macappflag = 0;
     std::string executable_path = extractMacOSExecutable(path);
     if (!executable_path.empty()) {
         path = executable_path;
-        macappflag = BT_MACOSAPP;
+        extra_flags = BT_MACOSAPP;
     }
     
     std::string cmd = "file --brief --dereference \"";
@@ -152,43 +153,47 @@ int extractBinaryType(std::string path)
 
     std::string outputstr = queryCmd(cmd);
 
+    if (outputstr.find("pie executable") != std::string::npos) {
+        extra_flags |= BT_PIEAPP;
+    }
+
     if (outputstr.find("ELF 32-bit") != std::string::npos) {
-        return BT_ELF32 | macappflag;
+        return BT_ELF32 | extra_flags;
     }
 
     if (outputstr.find("ELF 64-bit") != std::string::npos) {
-        return BT_ELF64 | macappflag;
+        return BT_ELF64 | extra_flags;
     }
 
     if (outputstr.find("PE32 executable") != std::string::npos) {
-        return BT_PE32 | macappflag;
+        return BT_PE32 | extra_flags;
     }
 
     if (outputstr.find("PE32+ executable") != std::string::npos) {
-        return BT_PE32P | macappflag;
+        return BT_PE32P | extra_flags;
     }
 
     if (outputstr.find("MS-DOS executable, NE") != std::string::npos) {
-        return BT_NE | macappflag;
+        return BT_NE | extra_flags;
     }
 
     if (outputstr.find("Bourne-Again shell script") != std::string::npos) {
-        return BT_SH | macappflag;
+        return BT_SH | extra_flags;
     }
 
     if (outputstr.find("Mach-O universal binary") != std::string::npos) {
-        return BT_MACOSUNI | macappflag;
+        return BT_MACOSUNI | extra_flags;
     }
 
     if (outputstr.find("Mach-O executable i386") != std::string::npos) {
-        return BT_MACOS32 | macappflag;
+        return BT_MACOS32 | extra_flags;
     }
 
     if (outputstr.find("Mach-O 64-bit") != std::string::npos) {
-        return BT_MACOS64 | macappflag;
+        return BT_MACOS64 | extra_flags;
     }
 
-    return BT_UNKNOWN | macappflag;
+    return BT_UNKNOWN | extra_flags;
 }
 
 std::string extractMacOSExecutable(std::string path)

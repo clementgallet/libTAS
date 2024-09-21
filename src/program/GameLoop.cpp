@@ -415,15 +415,21 @@ void GameLoop::initProcessMessages()
      * address if there is one */
     uint64_t sdl_addr = getSymbolAddress("SDL_DYNAPI_entry", context->gamepath.c_str());
     if (sdl_addr != 0) {
-        uintptr_t base_executable = BaseAddresses::getBaseAddress(context->gamename.c_str());
-        if (base_executable == 0) {
-            std::cerr << "Could not find base address of " <<  context->gamename << std::endl;
-        }
-        else {
+        /* If the executable is position-independent (pie), it will be mapped
+         * somewhere, and the symbol is only an offset, so we need the base 
+         * address of the executable and adds to it. We use `file` to determine
+         * if the executable is pie */
+        int gameArch = extractBinaryType(context->gamepath);
+        if (gameArch & BT_PIEAPP) {
+            uintptr_t base_executable = BaseAddresses::getBaseAddress(context->gamename.c_str());
+            if (base_executable == 0) {
+                std::cerr << "Could not find base address of " <<  context->gamename << std::endl;
+            }
             sdl_addr += base_executable;
-            sendMessage(MSGN_SDL_DYNAPI_ADDR);
-            sendData(&sdl_addr, sizeof(uint64_t));
         }
+
+        sendMessage(MSGN_SDL_DYNAPI_ADDR);
+        sendData(&sdl_addr, sizeof(uint64_t));
     }
 
     /* Check for `UnityPlayer_s.debug` presence and send symbol addresses */

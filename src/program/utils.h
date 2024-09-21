@@ -43,17 +43,18 @@ void remove_savestates(Context* context);
 /* List of error codes */
 enum BinaryType {
     BT_UNKNOWN,
-    BT_ELF32,
-    BT_ELF64,
-    BT_PE32,
-    BT_PE32P,
-    BT_NE,
-    BT_SH,
-    BT_MACOS32,
-    BT_MACOS64,
-    BT_MACOSUNI,
+    BT_ELF32, // 32-bit ELF file
+    BT_ELF64, // 64-bit ELF file
+    BT_PE32, // Windows 32-bit executable
+    BT_PE32P, // Windows 64-bit executable
+    BT_NE, // Windows 16-bit executable
+    BT_SH, // Shell script
+    BT_MACOS32, // MacOS 32-bit executable
+    BT_MACOS64, // MacOS 64-bit executable
+    BT_MACOSUNI, // MacOS universal binary
     BT_TYPEMASK = 0xff,
-    BT_MACOSAPP = 0x100,
+    BT_MACOSAPP = 0x100, // MacOS .app executable format
+    BT_PIEAPP = 0x200, // Position-independent executable
 };
 
 /* Run the `file` command from a shell and extract the output of the command. */

@@ -128,8 +128,7 @@ bool ErrorChecking::checkArchType(Context* context)
     }
 
     /* Checking the type of game binary */
-    int gameArch = extractBinaryType(context->gamepath);
-    gameArch &= BT_TYPEMASK; // Remove the flag for MacOS .app
+    int gameArch = extractBinaryType(context->gamepath) & BT_TYPEMASK; // Remove the extra flags
 
     if (gameArch == BT_UNKNOWN) {
         critical(QString("Could not determine arch of file %1").arg(context->gamepath.c_str()), context->interactive);
@@ -141,7 +140,7 @@ bool ErrorChecking::checkArchType(Context* context)
         return false;
     }
 
-    int libtasArch = extractBinaryType(context->libtaspath);
+    int libtasArch = extractBinaryType(context->libtaspath) & BT_TYPEMASK;
     if (libtasArch <= 0) {
         critical(QString("Could not determine arch of file %1").arg(context->libtaspath.c_str()), context->interactive);
         return false;
@@ -168,7 +167,7 @@ bool ErrorChecking::checkArchType(Context* context)
             critical(QString("Trying to launch a 32-bit game with a 64-bit build of libTAS, but no libtas32.so library could be found at %1. Make sure that libTAS was built with dual-arch support and that the libtas32.so file is in the same directory as the libTAS executable").arg(context->libtas32path.c_str()), context->interactive);
             return false;
         } else {
-            libtasArch = extractBinaryType(context->libtas32path);
+            libtasArch = extractBinaryType(context->libtas32path) & BT_TYPEMASK;
         }
     }
 

@@ -32,13 +32,12 @@ int AutoDetect::arch(Context *context)
 {
     /* Change settings based on game arch */
     int gameArch = extractBinaryType(context->gamepath);
-    int libtasArch = extractBinaryType(context->libtaspath);
+    int libtasArch = extractBinaryType(context->libtaspath) & BT_TYPEMASK;
 
     /* Switch to libtas32.so if required */
     if ((((gameArch&BT_TYPEMASK) == BT_ELF32) || ((gameArch&BT_TYPEMASK) == BT_PE32) || ((gameArch&BT_TYPEMASK) == BT_NE)) && (libtasArch == BT_ELF64)) {
-        context->libtaspath = context->libtas32path;
         /* libtas32.so presence was already checked in ui/ErrorChecking.cpp */
-        libtasArch = extractBinaryType(context->libtaspath);
+        context->libtaspath = context->libtas32path;
     }
 
     return gameArch;
@@ -82,7 +81,7 @@ void AutoDetect::game_libraries(Context *context)
     if (context->config.allow_downloads != 1)
         return;
     
-    int gameArch = extractBinaryType(context->gamepath);
+    int gameArch = extractBinaryType(context->gamepath) & BT_TYPEMASK;
     if (gameArch != BT_ELF32 && gameArch != BT_ELF64)
         return;
     
