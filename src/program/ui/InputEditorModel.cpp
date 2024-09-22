@@ -60,7 +60,7 @@ int InputEditorModel::frameCount() const
 
 int InputEditorModel::rowCount(const QModelIndex & /*parent*/) const
 {
-    return frameCount() + 1;
+    return frameCount() + ROW_EXTRAS;
 }
 
 int InputEditorModel::columnCount(const QModelIndex & /*parent*/) const
@@ -86,6 +86,9 @@ Qt::ItemFlags InputEditorModel::flags(const QModelIndex &index) const
         if (static_cast<uint64_t>(index.row()) < root_frame)
             return QAbstractItemModel::flags(index);
     }
+
+    if (index.row() >= frameCount())
+        return QAbstractItemModel::flags(index);
 
     const AllInputs& ai = movie->inputs->getInputs(index.row());
     const SingleInput si = movie->editor->input_set[index.column()-COLUMN_SPECIAL_SIZE];
@@ -183,7 +186,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
     }
 
     if (role == Qt::ForegroundRole) {
-        if (row >= movie->inputs->nbFrames()) {
+        if (row >= frameCount()) {
             return QGuiApplication::palette().text();
         }
         if (col < COLUMN_SPECIAL_SIZE) {
@@ -262,6 +265,10 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
     if (role == Qt::BackgroundRole) {
         /* Main color */
         QColor color = QGuiApplication::palette().window().color();
+        
+        if (row >= frameCount())
+            return QBrush(color);
+            
         bool lightTheme = isLightTheme();
         int r, g, b;
         color.getRgb(&r, &g, &b, nullptr);
@@ -383,9 +390,32 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
     }
 
     if (role == Qt::DisplayRole) {
-        if (row >= movie->inputs->nbFrames()) {
+        if (row >= frameCount()) {
+            /* If one of the extra rows, the only thing we can display is a
+             * preview of the input and current paint range */
+            if (col >= COLUMN_SPECIAL_SIZE) {
+                const SingleInput si = movie->editor->input_set[col-COLUMN_SPECIAL_SIZE];
+
+                if (col == hoveredIndex.column() &&
+                    row == hoveredIndex.row() &&
+                    !si.isAnalog()) {
+                    return QString(si.description.c_str());
+                }
+                
+                if (paintMinRow != -1) {
+                    if ((row >= paintMinRow) && (row <= paintMaxRow) && (si == paintInput)) {
+                        if (si.isAnalog()) {
+                            return QString().setNum(paintValue);
+                        }
+                        else if (paintValue) {
+                            return QString(si.description.c_str());
+                        }
+                    }
+                }
+            }
             return QVariant();
         }
+        
         if (col == COLUMN_SAVESTATE) {
             int savestate_frame = SaveStateList::stateAtFrame(row);
             if (savestate_frame != -1) {
@@ -473,7 +503,7 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
     }
 
     if (role == Qt::EditRole) {
-        if (row >= movie->inputs->nbFrames()) {
+        if (row >= frameCount()) {
             return QVariant();
         }
         if (col < COLUMN_SPECIAL_SIZE) {
@@ -510,9 +540,9 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
         if (movie->editor->locked_inputs.find(si) != movie->editor->locked_inputs.end())
             return false;
 
-        /* Add a row if necessary */
-        if (row == movie->inputs->nbFrames()) {
-            insertRows(movie->inputs->nbFrames(), 1, QModelIndex());
+        /* Add rows if necessary */
+        if (row >= frameCount()) {
+            insertRows(movie->inputs->nbFrames(), row - frameCount() + 1, QModelIndex());
         }
 
         /* Rewind to past frame is needed */
@@ -619,6 +649,11 @@ void InputEditorModel::endPaint()
     if ((context->seek_frame) && !context->config.editor_rewind_seek
                                     && (paintMinRow < context->seek_frame)) {
         context->seek_frame = paintMinRow;
+    }
+
+    /* Add rows if necessary */
+    if (paintMaxRow >= frameCount()) {
+        insertRows(movie->inputs->nbFrames(), paintMaxRow - frameCount() + 1, QModelIndex());
     }
 
     if (paintAutofire == 0) {

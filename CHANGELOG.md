@@ -10,6 +10,7 @@
 * Add byte array type in ram search
 * Add minimal hooks for xkbcommon to fix ruffle keyboard layout
 * Add a window to modify movie settings
+* Add more extra rows in input editor
 
 ### Changed
 
@@ -24,6 +25,7 @@
 * Fix inode parsing when reading game memory layout
 * Fix seeking to stream after savestating
 * Add a steam callback for async filewrite
+* Fix input editor crash when no movie loaded
 
 ## [1.4.6] - 2024-07-05
 ### Added

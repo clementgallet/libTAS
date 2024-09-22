@@ -44,6 +44,10 @@ public:
         COLUMN_FRAME = 1,
         COLUMN_SPECIAL_SIZE,
     };
+
+    enum {
+        ROW_EXTRAS = 10,
+    };
     
     InputEditorModel(Context* c, MovieFile* m, QObject *parent = Q_NULLPTR);
 
