@@ -29,6 +29,7 @@ libTAS_QTSOURCES = \
     ui/MainWindow.h \
     ui/MarkerModel.h \
     ui/MarkerView.h \
+    ui/MovieSettingsWindow.h \
     ui/PointerScanModel.h \
     ui/PointerScanWindow.h \
     ui/RamSearchModel.h \
@@ -109,6 +110,7 @@ libTAS_SOURCES = \
     ui/MainWindow.cpp \
     ui/MarkerModel.cpp \
     ui/MarkerView.cpp \
+    ui/MovieSettingsWindow.cpp \
     ui/PointerScanModel.cpp \
     ui/PointerScanWindow.cpp \
     ui/RamSearchModel.cpp \

@@ -62,6 +62,7 @@ class AnnotationsWindow;
 class AutoSaveWindow;
 class TimeTraceWindow;
 class LuaConsoleWindow;
+class MovieSettingsWindow;
 
 class MainWindow : public QMainWindow
 {
@@ -93,12 +94,14 @@ public:
     AutoSaveWindow* autoSaveWindow;
     TimeTraceWindow* timeTraceWindow;
     LuaConsoleWindow* luaConsoleWindow;
+    MovieSettingsWindow* movieSettingsWindow;
 
     QList<QWidget*> disabledWidgetsOnStart;
     QList<QAction*> disabledActionsOnStart;
 
     QAction *saveMovieAction;
     QAction *exportMovieAction;
+    QAction *settingsMovieAction;
     QAction *annotateMovieAction;
 
     QAction *autoRestartAction;

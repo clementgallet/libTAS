@@ -33,6 +33,7 @@
 #include "TimeTraceWindow.h"
 #include "TimeTraceModel.h"
 #include "LuaConsoleWindow.h"
+#include "MovieSettingsWindow.h"
 #include "ErrorChecking.h"
 #include "settings/SettingsWindow.h"
 
@@ -172,6 +173,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     annotationsWindow = new AnnotationsWindow(c, this);
     timeTraceWindow = new TimeTraceWindow(c, this);
     luaConsoleWindow = new LuaConsoleWindow(c, this);
+    movieSettingsWindow = new MovieSettingsWindow(c, &gameLoop->movie, this);
 
     connect(gameLoop, &GameLoop::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);
     connect(gameLoop->gameEvents, &GameEvents::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);
@@ -611,6 +613,8 @@ void MainWindow::createMenus()
     saveMovieAction->setEnabled(false);
     exportMovieAction = movieMenu->addAction(tr("Export Movie..."), this, &MainWindow::slotExportMovie);
     exportMovieAction->setEnabled(false);
+    settingsMovieAction = movieMenu->addAction(tr("Movie Settings..."), movieSettingsWindow, &MovieSettingsWindow::exec);
+    settingsMovieAction->setEnabled(false);
     action = movieMenu->addAction(tr("Don't enforce movie settings"), this, [=](bool checked){gameLoop->movie.header->skipLoadSettings = checked;});
     action->setCheckable(true);
     action->setToolTip("When checked, settings stored inside the movie metadata won't be enforced (e.g. initial time, mouse/controller support, framerate...). You can then save your movie with the new settings.");
@@ -952,9 +956,9 @@ void MainWindow::updateMovieParams()
         }
 
         annotationsWindow->update();
-
         saveMovieAction->setEnabled(true);
         exportMovieAction->setEnabled(true);
+        settingsMovieAction->setEnabled(true);
     }
     else {
         context->config.sc.movie_framecount = 0;
@@ -971,6 +975,7 @@ void MainWindow::updateMovieParams()
         
         saveMovieAction->setEnabled(false);
         exportMovieAction->setEnabled(false);
+        settingsMovieAction->setEnabled(false);
     }
     inputEditorWindow->resetInputs();
     movieFrameCount->setValue(context->config.sc.movie_framecount);
