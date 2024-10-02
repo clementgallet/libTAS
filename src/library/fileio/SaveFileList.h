@@ -25,6 +25,8 @@
 
 namespace libtas {
 
+class SaveFile;
+
 namespace SaveFileList {
 
 /* Is the file considered a savefile? */
@@ -54,6 +56,9 @@ int removeSaveFile(const char *file);
  * -1 if an error occurred during renaming (and errno set)
  */
 int renameSaveFile(const char *oldfile, const char *newfile);
+
+/* Get the savefile object */
+const SaveFile* getSaveFile(const char *file);
 
 /* Get the file descriptor of a savefile, or 0 if not a savefile */
 int getSaveFileFd(const char *file);

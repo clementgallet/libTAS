@@ -59,6 +59,11 @@ public:
     /* Remove a savefile and return 0 for success and -1 for error (+ errno set) */
     int remove();
 
+    /* Write the content of a savefile in its original path */
+    bool saveOnDisk() const;
+    
+    /* Remove the file located in the path of the savefile */
+    bool removeFromDisk() const;
 };
 
 }

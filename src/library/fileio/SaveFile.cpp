@@ -55,20 +55,8 @@ SaveFile::SaveFile(const char *file) {
 
 SaveFile::~SaveFile() {
     /* Save back data into the file */
-    if (Global::shared_config.write_savefiles_on_exit && (fd != 0)) {
-        LOG(LL_INFO, LCF_FILEIO, "Save back into file %s", filename.c_str());
-        GlobalNative gn;
-        lseek(fd, 0, SEEK_SET);
-        int file_fd = creat(filename.c_str(), 00777);
-        if (file_fd >= 0) {
-            char tmp_buf[4096];
-            ssize_t s;
-            do {
-                s = Utils::readAll(fd, tmp_buf, 4096);
-                Utils::writeAll(file_fd, tmp_buf, s);
-            } while(s > 0);
-            close(file_fd);
-        }
+    if (Global::shared_config.write_savefiles_on_exit) {
+        saveOnDisk();
     }
 
     if (stream) {
@@ -411,6 +399,46 @@ int SaveFile::remove()
     }
 
     return 0;
+}
+
+bool SaveFile::saveOnDisk() const {
+    if (fd == 0)
+        return true;
+    
+    LOG(LL_DEBUG, LCF_FILEIO, "Save back fd %d into file %s", fd, filename.c_str());
+    GlobalNative gn;
+    lseek(fd, 0, SEEK_SET);
+    int file_fd = creat(filename.c_str(), 00777);
+    
+    if (file_fd < 0) {
+        LOG(LL_WARN, LCF_FILEIO, "Could not create savefile real path %s", filename.c_str());
+        return false;
+    }
+        
+    char tmp_buf[4096];
+    ssize_t s;
+    do {
+        s = Utils::readAll(fd, tmp_buf, 4096);
+        Utils::writeAll(file_fd, tmp_buf, s);
+    } while(s > 0);
+    close(file_fd);
+    
+    return true;
+}
+
+bool SaveFile::removeFromDisk() const {
+    if (fd == 0)
+        return true;
+    
+    LOG(LL_DEBUG, LCF_FILEIO, "Remove file %s from disk", filename.c_str());
+    GlobalNative gn;
+    int ret = ::remove(filename.c_str());
+    if (ret < 0) {
+        LOG(LL_WARN, LCF_FILEIO, "Could not remove file %s", filename.c_str());
+        return false;
+    }
+    
+    return true;
 }
 
 }

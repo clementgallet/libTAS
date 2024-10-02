@@ -32,6 +32,8 @@
 #include "backtrace.h"
 #include "GameHacks.h"
 #include "UnityHacks.h"
+#include "fileio/SaveFileList.h"
+#include "fileio/SaveFile.h"
 #include "../external/elfhacks.h"
 #include "../dyld_func_lookup_helper/dyld_func_lookup_helper.h"
 
@@ -268,6 +270,19 @@ __attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
 
     if (result && file && std::strstr(file, "libcoreclr.so") != nullptr)
         GameHacks::setCoreclr();
+
+    if (!result) {
+        /* Maybe the file is a savefile, so it is missing in the actual path.
+         * There is no function to load a library from a file descriptor, so
+         * we write back the file and remove it after. */
+        const SaveFile* savefile = SaveFileList::getSaveFile(file);
+        if (savefile) {
+            LOG(LL_DEBUG, LCF_HOOK, "Write back savefile %s to disk", file);
+            savefile->saveOnDisk();
+            result = orig::dlopen(file, mode);
+            savefile->removeFromDisk();
+        }
+    }
 
     return result;
 }

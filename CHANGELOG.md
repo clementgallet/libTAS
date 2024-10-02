@@ -26,6 +26,7 @@
 * Fix seeking to stream after savestating
 * Add a steam callback for async filewrite
 * Fix input editor crash when no movie loaded
+* dlopen() supports passing a savefile
 
 ## [1.4.6] - 2024-07-05
 ### Added
