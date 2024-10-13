@@ -21,6 +21,7 @@
 #include "RamWatchWindow.h"
 #include "RamWatchModel.h"
 #include "PointerScanWindow.h"
+#include "HexViewWindow.h"
 
 #include "Context.h"
 
@@ -31,7 +32,7 @@
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QLineEdit>
 
-RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
+RamWatchWindow::RamWatchWindow(Context* c, HexViewWindow* view, QWidget *parent) : QDialog(parent), context(c), hexViewWindow(view)
 {
     setWindowTitle("Ram Watch");
 
@@ -48,6 +49,9 @@ RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent) : QDialog(parent), c
     QPushButton *removeWatch = new QPushButton(tr("Remove Watch"));
     connect(removeWatch, &QAbstractButton::clicked, ramWatchView, &RamWatchView::slotRemove);
 
+    QPushButton *hexWatch = new QPushButton(tr("Hex View"));
+    connect(hexWatch, &QAbstractButton::clicked, this, &RamWatchWindow::slotHexView);
+
     QPushButton *scanWatch = new QPushButton(tr("Scan Pointer"));
     connect(scanWatch, &QAbstractButton::clicked, this, &RamWatchWindow::slotScanPointer);
 
@@ -55,6 +59,7 @@ RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent) : QDialog(parent), c
     buttonBox->addButton(addWatch, QDialogButtonBox::ActionRole);
     buttonBox->addButton(editWatch, QDialogButtonBox::ActionRole);
     buttonBox->addButton(removeWatch, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(hexWatch, QDialogButtonBox::ActionRole);
     buttonBox->addButton(scanWatch, QDialogButtonBox::ActionRole);
 
     /* Other buttons */
@@ -83,6 +88,18 @@ RamWatchWindow::RamWatchWindow(Context* c, QWidget *parent) : QDialog(parent), c
 void RamWatchWindow::update()
 {
     ramWatchView->update();
+}
+
+void RamWatchWindow::slotHexView()
+{
+    const QModelIndex index = ramWatchView->selectionModel()->currentIndex();
+
+    /* If no watch was selected, return */
+    if (!index.isValid())
+        return;
+
+    hexViewWindow->seek(ramWatchView->ramWatchModel->ramwatches.at(index.row())->address);
+    hexViewWindow->show();
 }
 
 void RamWatchWindow::slotScanPointer()

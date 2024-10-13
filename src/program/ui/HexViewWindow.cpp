@@ -90,3 +90,41 @@ void HexViewWindow::switch_section()
     iodevice->setSection(section);
     view->setBaseAddress(section.addr);
 }
+
+void HexViewWindow::seek(uintptr_t addr)
+{
+    if (memsections.empty())
+        return;
+        
+    qint64 seek_offset = -1;
+    for (int i=0; i<memsections.size(); i++) {
+        const MemSection& section = memsections[i];
+        if (addr >= section.addr && addr < section.endaddr) {
+            seek_offset = addr - section.addr;
+            sectionChoice->setCurrentIndex(i);
+            switch_section();
+            break;
+        }
+    }
+    
+    /* If not found, update the memory layout */
+    if (seek_offset == -1) {
+        update_layout();
+
+        for (int i=0; i<memsections.size(); i++) {
+            const MemSection& section = memsections[i];
+            if (addr >= section.addr && addr < section.endaddr) {
+                seek_offset = addr - section.addr;
+                sectionChoice->setCurrentIndex(i);
+                switch_section();
+                break;
+            }
+        }
+    }
+
+    if (seek_offset == -1)
+        return;
+
+    QHexCursor* cursor = view->hexCursor();
+    cursor->move(seek_offset);
+}

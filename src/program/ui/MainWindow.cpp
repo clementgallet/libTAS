@@ -169,13 +169,13 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     controllerTabWindow = new ControllerTabWindow(c, this);
     gameInfoWindow = new GameInfoWindow(this);
     ramSearchWindow = new RamSearchWindow(c, this);
-    ramWatchWindow = new RamWatchWindow(c, this);
+    hexViewWindow = new HexViewWindow(this);
+    ramWatchWindow = new RamWatchWindow(c, hexViewWindow, this);
     inputEditorWindow = new InputEditorWindow(c, &gameLoop->movie, this);
     annotationsWindow = new AnnotationsWindow(c, this);
     timeTraceWindow = new TimeTraceWindow(c, this);
     luaConsoleWindow = new LuaConsoleWindow(c, this);
     movieSettingsWindow = new MovieSettingsWindow(c, &gameLoop->movie, this);
-    hexViewWindow = new HexViewWindow(this);
 
     connect(gameLoop, &GameLoop::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);
     connect(gameLoop->gameEvents, &GameEvents::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);

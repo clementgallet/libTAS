@@ -26,12 +26,13 @@
 struct Context;
 class PointerScanWindow;
 class RamWatchView;
+class HexViewWindow;
 
 class RamWatchWindow : public QDialog {
     Q_OBJECT
 
 public:
-    RamWatchWindow(Context *c, QWidget *parent = Q_NULLPTR);
+    RamWatchWindow(Context *c, HexViewWindow* view, QWidget *parent = Q_NULLPTR);
     void update();
 
     PointerScanWindow *pointerScanWindow;
@@ -40,10 +41,12 @@ public:
 private:
     Context *context;
     QString defaultPath; // Latest saved/loaded watch file used at default
+    HexViewWindow* hexViewWindow;
 
 public slots:
 
 private slots:
+    void slotHexView();
     void slotScanPointer();
     void slotSave();
     void slotLoad();

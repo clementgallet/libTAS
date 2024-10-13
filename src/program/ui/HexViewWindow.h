@@ -38,6 +38,8 @@ public:
     /* Update UI elements */
     void start();
 
+    void seek(uintptr_t addr);
+
 private:
     IOProcessDevice* iodevice;
     QHexView *view;
@@ -51,7 +53,6 @@ public slots:
     void update_layout();
     void update_sections();
     void switch_section();
-
 
 };
 
