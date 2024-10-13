@@ -52,6 +52,11 @@ void HexViewWindow::start()
     update_layout();
 }
 
+void HexViewWindow::update()
+{
+    view->viewport()->update();
+}
+
 void HexViewWindow::update_layout()
 {
     /* Read the whole memory layout */

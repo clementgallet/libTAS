@@ -916,6 +916,11 @@ void MainWindow::updateUIFrequent()
 
     /* Update input editor */
     inputEditorWindow->update();
+
+    /* Update hex viewer */
+    if (hexViewWindow->isVisible()) {
+        hexViewWindow->update();
+    }
     
     /* Detect if the debugger was detached from the game and allow user to attach again */
     if (context->attach_gdb && debugger_pid) {

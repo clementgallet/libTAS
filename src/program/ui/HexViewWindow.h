@@ -35,8 +35,10 @@ class HexViewWindow : public QDialog {
 public:
     HexViewWindow(QWidget *parent = Q_NULLPTR);
 
-    /* Update UI elements */
     void start();
+
+    /* Update UI elements */
+    void update();
 
     void seek(uintptr_t addr, int size);
 
