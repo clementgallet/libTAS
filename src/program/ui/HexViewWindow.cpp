@@ -24,6 +24,7 @@
 #include "ramsearch/IOProcessDevice.h"
 #include "ramsearch/BaseAddresses.h"
 #include "ramsearch/MemSection.h"
+#include "ramsearch/MemLayout.h"
 
 #include <QtWidgets/QVBoxLayout>
 #include <iostream>
@@ -37,13 +38,55 @@ HexViewWindow::HexViewWindow(QWidget *parent) : QDialog(parent)
     view = new QHexView(this);
     view->setDocument(doc);
 
+    sectionChoice = new QComboBox();
+    connect(sectionChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &HexViewWindow::switch_section);
+
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addWidget(view);
+    mainLayout->addWidget(sectionChoice);
     setLayout(mainLayout);
 }
 
-void HexViewWindow::update()
+void HexViewWindow::start()
 {
-    iodevice->setSection(BaseAddresses::getExecutableSection());
-    view->setBaseAddress(BaseAddresses::getExecutableSection()->addr);
+    update_layout();
+}
+
+void HexViewWindow::update_layout()
+{
+    /* Read the whole memory layout */
+    MemLayout memlayout;
+
+    memsections.clear();
+    
+    MemSection section;
+    while (memlayout.nextSection(MemSection::MemAll, 0, section)) {
+        memsections.push_back(section);
+    }
+
+    update_sections();
+}
+
+void HexViewWindow::update_sections()
+{
+    sectionChoice->clear();
+    
+    for (int i=0; i<memsections.size(); i++) {
+        const MemSection& section = memsections[i];
+        QString label = QString("%1-%2 %3").arg(section.addr, 0, 16).arg(section.endaddr, 0, 16).arg(section.filename.c_str());
+        sectionChoice->addItem(label);
+    }
+
+    sectionChoice->setCurrentIndex(0);
+    switch_section();
+}
+
+void HexViewWindow::switch_section()
+{
+    if (memsections.empty())
+        return;
+        
+    const MemSection& section = memsections[sectionChoice->currentIndex()];
+    iodevice->setSection(section);
+    view->setBaseAddress(section.addr);
 }

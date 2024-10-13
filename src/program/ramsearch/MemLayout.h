@@ -30,6 +30,7 @@
 class MemLayout {
     public:
 
+        MemLayout();
         MemLayout(pid_t pid);
         ~MemLayout();
         

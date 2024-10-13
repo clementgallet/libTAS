@@ -23,26 +23,24 @@
 
 #include <iostream>
 
-IOProcessDevice::IOProcessDevice(QObject *parent) : QIODevice(parent) {}
+IOProcessDevice::IOProcessDevice(QObject *parent) : QIODevice(parent) {
+    mem_section.addr = 0;
+    mem_section.size = 0;
+}
 
-void IOProcessDevice::setSection(const MemSection* section)
+void IOProcessDevice::setSection(const MemSection& section)
 {
     mem_section = section;
 }
 
 qint64 IOProcessDevice::size() const
 {
-    if (!mem_section)
-        return 0;
-    return static_cast<qint64>(mem_section->size);
+    return static_cast<qint64>(mem_section.size);
 }
 
 qint64 IOProcessDevice::readData(char *data, qint64 maxSize)
 {
-    if (!mem_section)
-        return -1;
-
-    size_t size = MemAccess::read(data, reinterpret_cast<void*>(mem_section->addr+offset), maxSize);
+    size_t size = MemAccess::read(data, reinterpret_cast<void*>(mem_section.addr+offset), maxSize);
     if (size < 0)
         return -1;
 
@@ -52,10 +50,7 @@ qint64 IOProcessDevice::readData(char *data, qint64 maxSize)
 
 qint64 IOProcessDevice::writeData(const char *data, qint64 maxSize)
 {
-    if (!mem_section)
-        return -1;
-
-    size_t size = MemAccess::write(const_cast<char *>(data), reinterpret_cast<void*>(mem_section->addr+offset), maxSize);
+    size_t size = MemAccess::write(const_cast<char *>(data), reinterpret_cast<void*>(mem_section.addr+offset), maxSize);
     if (size < 0)
         return -1;
     offset += size;
@@ -64,9 +59,6 @@ qint64 IOProcessDevice::writeData(const char *data, qint64 maxSize)
 
 bool IOProcessDevice::seek(qint64 pos)
 {
-    if (!mem_section)
-        return false;
-
     QIODevice::seek(pos);
     offset = pos;
     return true;

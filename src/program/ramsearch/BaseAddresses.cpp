@@ -50,7 +50,7 @@ void BaseAddresses::load()
 {
     library_addresses.clear();
     
-    std::unique_ptr<MemLayout> memlayout (new MemLayout(MemAccess::getPid()));
+    std::unique_ptr<MemLayout> memlayout (new MemLayout());
     
     MemSection section;
     std::string previous_file = ""; // file of previous section
@@ -93,7 +93,7 @@ void BaseAddresses::load()
 
 uintptr_t BaseAddresses::findNewFile(std::string file)
 {
-    std::unique_ptr<MemLayout> memlayout (new MemLayout(MemAccess::getPid()));
+    std::unique_ptr<MemLayout> memlayout (new MemLayout());
     
     MemSection section;
     uintptr_t base_addr = 0;

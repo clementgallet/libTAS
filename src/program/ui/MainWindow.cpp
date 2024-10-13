@@ -784,7 +784,7 @@ void MainWindow::updateStatus(int status)
                 saveMovieAction->setEnabled(true);
                 exportMovieAction->setEnabled(true);
             }
-            hexViewWindow->update();
+            hexViewWindow->start();
             break;
         case Context::QUITTING:
             launchGdbButton->setEnabled(false);

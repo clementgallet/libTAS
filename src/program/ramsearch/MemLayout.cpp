@@ -18,9 +18,15 @@
  */
 
 #include "MemLayout.h"
+#include "MemAccess.h"
 
 #include <sstream>
 #include <iostream>
+
+MemLayout::MemLayout()
+{
+    pid = MemAccess::getPid();
+}
 
 MemLayout::MemLayout(pid_t p)
 {

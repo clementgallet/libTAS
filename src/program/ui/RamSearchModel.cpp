@@ -97,7 +97,7 @@ int RamSearchModel::newWatches(int mem_flags, int type, int alignment, CompareTy
 
     beginResetModel();
 
-    int err = memscanner.first_scan(context->game_pid, mem_flags, type, alignment, ct, co, cv, dv, ba, ea);
+    int err = memscanner.first_scan(mem_flags, type, alignment, ct, co, cv, dv, ba, ea);
 
     endResetModel();
     

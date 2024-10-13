@@ -45,7 +45,7 @@ void MemScanner::init(std::string path)
     addresses_path = ossoa.str();
 }
 
-int MemScanner::first_scan(pid_t pid, int mem_flags, int type, int align, CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv, uintptr_t begin_address, uintptr_t end_address)
+int MemScanner::first_scan(int mem_flags, int type, int align, CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv, uintptr_t begin_address, uintptr_t end_address)
 {
     value_type = type;
     alignment = align;
@@ -68,7 +68,7 @@ int MemScanner::first_scan(pid_t pid, int mem_flags, int type, int align, Compar
     end_address = (end_address + page_mask) & (~page_mask);
 
     /* Read the whole memory layout */
-    std::unique_ptr<MemLayout> memlayout (new MemLayout(pid));
+    std::unique_ptr<MemLayout> memlayout (new MemLayout());
 
     memsections.clear();
     

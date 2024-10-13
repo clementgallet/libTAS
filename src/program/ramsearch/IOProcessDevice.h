@@ -24,7 +24,7 @@
 #include <sys/types.h>
 #include <QtCore/QIODevice>
 
-class MemSection;
+#include "MemSection.h"
 
 /* Interface to read and write memory to the game process */
 class IOProcessDevice : public QIODevice {
@@ -33,7 +33,7 @@ class IOProcessDevice : public QIODevice {
 public:
     IOProcessDevice(QObject *parent);
 
-    void setSection(const MemSection* section);
+    void setSection(const MemSection& section);
     
     qint64 size() const override;
     qint64 readData(char *data, qint64 maxSize) override;
@@ -43,7 +43,7 @@ public:
     
 private:
     uintptr_t offset;
-    const MemSection* mem_section;
+    MemSection mem_section;
 };
 
 #endif

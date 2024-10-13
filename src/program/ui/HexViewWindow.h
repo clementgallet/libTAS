@@ -20,7 +20,12 @@
 #ifndef LIBTAS_HEXVIEWWINDOW_H_INCLUDED
 #define LIBTAS_HEXVIEWWINDOW_H_INCLUDED
 
+#include "ramsearch/MemSection.h"
+
 #include <QtWidgets/QDialog>
+#include <QtWidgets/QComboBox>
+
+#include <vector>
 
 class QHexView;
 class IOProcessDevice;
@@ -30,13 +35,23 @@ class HexViewWindow : public QDialog {
 public:
     HexViewWindow(QWidget *parent = Q_NULLPTR);
 
+    /* Update UI elements */
+    void start();
+
 private:
     IOProcessDevice* iodevice;
     QHexView *view;
 
+    QComboBox* sectionChoice;
+
+    /* Array of all memory sections parsed from /proc/self/maps */
+    std::vector<MemSection> memsections;
+
 public slots:
-    /* Update UI elements */
-    void update();
+    void update_layout();
+    void update_sections();
+    void switch_section();
+
 
 };
 
