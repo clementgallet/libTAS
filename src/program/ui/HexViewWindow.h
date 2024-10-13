@@ -24,6 +24,7 @@
 
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QComboBox>
+#include <QtWidgets/QLabel>
 
 #include <vector>
 
@@ -35,6 +36,7 @@ class HexViewWindow : public QDialog {
 public:
     HexViewWindow(QWidget *parent = Q_NULLPTR);
 
+    QSize sizeHint() const override;
     void start();
 
     /* Update UI elements */
@@ -46,6 +48,7 @@ private:
     IOProcessDevice* iodevice;
     QHexView *view;
 
+    QLabel* selectionLabel;
     QComboBox* sectionChoice;
 
     /* Array of all memory sections parsed from /proc/self/maps */
@@ -55,6 +58,7 @@ public slots:
     void update_layout();
     void update_sections();
     void switch_section();
+    void positionChanged();
 
 };
 

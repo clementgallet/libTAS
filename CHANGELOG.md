@@ -13,6 +13,7 @@
 * Add more extra rows in input editor
 * Add hex viewer
 * Open and seek hex viewer from ram watch
+* Show converted values from hex view selection
 
 ### Changed
 
