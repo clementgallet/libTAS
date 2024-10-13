@@ -6,6 +6,7 @@ libTAS_QTSOURCES = \
     movie/MovieFileChangeLog.h \
     movie/MovieFileInputs.h \
     lua/Print.h \
+    ramsearch/IOProcessDevice.h \
     ramsearch/MemScanner.h \
     ui/AnnotationsWindow.h \
     ui/ComboBoxItemDelegate.h \
@@ -15,6 +16,7 @@ libTAS_QTSOURCES = \
     ui/EncodeWindow.h \
     ui/ExecutableWindow.h \
     ui/GameInfoWindow.h \
+    ui/HexViewWindow.h \
     ui/InputChangeLogModel.h \
     ui/InputChangeLogWindow.h \
     ui/InputEditorModel.h \
@@ -48,7 +50,25 @@ libTAS_QTSOURCES = \
     ui/settings/DebugPane.h \
     ui/settings/GameSpecificPane.h \
     ui/settings/SettingsWindow.h \
-    ui/settings/tooltip/BalloonTip.h
+    ui/settings/tooltip/BalloonTip.h \
+	../external/qhexview/include/QHexView/model/buffer/qdevicebuffer.h \
+	../external/qhexview/include/QHexView/model/buffer/qhexbuffer.h \
+	../external/qhexview/include/QHexView/model/buffer/qmappedfilebuffer.h \
+	../external/qhexview/include/QHexView/model/buffer/qmemorybuffer.h \
+	../external/qhexview/include/QHexView/model/buffer/qmemoryrefbuffer.h \
+	../external/qhexview/include/QHexView/model/commands/hexcommand.h \
+	../external/qhexview/include/QHexView/model/commands/insertcommand.h \
+	../external/qhexview/include/QHexView/model/commands/removecommand.h \
+	../external/qhexview/include/QHexView/model/commands/replacecommand.h \
+	../external/qhexview/include/QHexView/model/commands/replacecommand.h \
+	../external/qhexview/include/QHexView/model/qhexcursor.h \
+	../external/qhexview/include/QHexView/model/qhexdelegate.h \
+	../external/qhexview/include/QHexView/model/qhexdocument.h \
+	../external/qhexview/include/QHexView/model/qhexmetadata.h \
+	../external/qhexview/include/QHexView/model/qhexoptions.h \
+	../external/qhexview/include/QHexView/model/qhexutils.h \
+	../external/qhexview/include/QHexView/qhexview.h
+
 
 libTAS_MOCSOURCES = $(libTAS_QTSOURCES:.h=_moc.cpp)
 
@@ -96,6 +116,7 @@ libTAS_SOURCES = \
     ui/ErrorChecking.cpp \
     ui/ExecutableWindow.cpp \
     ui/GameInfoWindow.cpp \
+    ui/HexViewWindow.cpp \
     ui/InputChangeLogModel.cpp \
     ui/InputChangeLogWindow.cpp \
     ui/InputEditorModel.cpp \
@@ -140,6 +161,7 @@ libTAS_SOURCES = \
     ui/settings/tooltip/ToolTipSpinBox.cpp \
     ramsearch/BaseAddresses.cpp \
     ramsearch/CompareOperations.cpp \
+    ramsearch/IOProcessDevice.cpp \
     ramsearch/RamWatchDetailed.cpp \
     ramsearch/MemAccess.cpp \
     ramsearch/MemLayout.cpp \
@@ -153,9 +175,24 @@ libTAS_SOURCES = \
     ../shared/inputs/MouseInputs.cpp \
     ../shared/inputs/SingleInput.cpp \
     ../shared/sockethelpers.cpp \
+	../external/qhexview/src/model/commands/hexcommand.cpp \
+	../external/qhexview/src/model/commands/insertcommand.cpp \
+	../external/qhexview/src/model/commands/removecommand.cpp \
+	../external/qhexview/src/model/commands/replacecommand.cpp \
+	../external/qhexview/src/model/buffer/qdevicebuffer.cpp \
+	../external/qhexview/src/model/buffer/qhexbuffer.cpp \
+	../external/qhexview/src/model/buffer/qmemorybuffer.cpp \
+	../external/qhexview/src/model/buffer/qmemoryrefbuffer.cpp \
+	../external/qhexview/src/model/buffer/qmappedfilebuffer.cpp \
+	../external/qhexview/src/model/qhexdelegate.cpp \
+	../external/qhexview/src/model/qhexutils.cpp \
+	../external/qhexview/src/model/qhexcursor.cpp \
+	../external/qhexview/src/model/qhexmetadata.cpp \
+	../external/qhexview/src/model/qhexdocument.cpp \
+	../external/qhexview/src/qhexview.cpp \
     $(libTAS_MOCSOURCES)
 
-libTAS_CXXFLAGS = $(QT5_CFLAGS) $(LIBLUA_CFLAGS) -fno-stack-protector -Wno-float-equal -fPIC
+libTAS_CXXFLAGS = $(QT5_CFLAGS) $(LIBLUA_CFLAGS) -fno-stack-protector -Wno-float-equal -fPIC -I$(top_srcdir)/src/external/qhexview/include
 libTAS_LDADD = $(QT5_LIBS) $(LIBLUA_LIBS) $(PROGRAM_LIBS)
 
 .h_moc.cpp:

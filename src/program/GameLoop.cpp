@@ -297,9 +297,6 @@ void GameLoop::init()
     context->config.sc.write_savefiles_on_exit =
         (context->config.sc.recording != SharedConfig::NO_RECORDING) &&
         (context->config.auto_restart);
-
-    context->status = Context::ACTIVE;
-    emit statusChanged(context->status);
 }
 
 void GameLoop::initProcessMessages()
@@ -457,6 +454,9 @@ void GameLoop::initProcessMessages()
 
     /* End message */
     sendMessage(MSGN_END_INIT);
+    
+    context->status = Context::ACTIVE;
+    emit statusChanged(context->status);
 }
 
 uint64_t GameLoop::getSymbolAddress(const char* symbol, const char* file)

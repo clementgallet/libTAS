@@ -11,6 +11,7 @@
 * Add minimal hooks for xkbcommon to fix ruffle keyboard layout
 * Add a window to modify movie settings
 * Add more extra rows in input editor
+* Add hex viewer
 
 ### Changed
 

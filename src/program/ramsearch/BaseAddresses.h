@@ -25,6 +25,8 @@
 #include <string>
 #include <cstdint>
 
+class MemSection;
+
 /* Holds the base address for executable and each loaded library */
 namespace BaseAddresses {
 
@@ -36,6 +38,9 @@ namespace BaseAddresses {
 
     /* Return the base address of a specific file */
     uintptr_t getBaseAddress(std::string file);
+
+    /* Return the memory section of the mapped game executable */    
+    const MemSection* getExecutableSection();
 
     /* Get the file and offset from an address */
     std::string getFileAndOffset(uintptr_t addr, off_t &offset);

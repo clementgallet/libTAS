@@ -26,6 +26,7 @@
 #include "RamSearchWindow.h"
 #include "RamWatchWindow.h"
 #include "RamWatchView.h"
+#include "HexViewWindow.h"
 #include "InputEditorWindow.h"
 #include "InputEditorView.h"
 #include "InputEditorModel.h"
@@ -174,6 +175,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     timeTraceWindow = new TimeTraceWindow(c, this);
     luaConsoleWindow = new LuaConsoleWindow(c, this);
     movieSettingsWindow = new MovieSettingsWindow(c, &gameLoop->movie, this);
+    hexViewWindow = new HexViewWindow(this);
 
     connect(gameLoop, &GameLoop::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);
     connect(gameLoop->gameEvents, &GameEvents::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);
@@ -664,6 +666,7 @@ void MainWindow::createMenus()
 
     toolsMenu->addAction(tr("Ram Search..."), ramSearchWindow, &RamSearchWindow::show);
     toolsMenu->addAction(tr("Ram Watch..."), ramWatchWindow, &RamWatchWindow::show);
+    toolsMenu->addAction(tr("Hex Edit..."), hexViewWindow, &HexViewWindow::show);
 
     toolsMenu->addSeparator();
 
@@ -781,7 +784,7 @@ void MainWindow::updateStatus(int status)
                 saveMovieAction->setEnabled(true);
                 exportMovieAction->setEnabled(true);
             }
-
+            hexViewWindow->update();
             break;
         case Context::QUITTING:
             launchGdbButton->setEnabled(false);

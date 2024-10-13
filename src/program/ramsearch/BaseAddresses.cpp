@@ -20,6 +20,7 @@
 #include "BaseAddresses.h"
 #include "MemLayout.h"
 #include "MemAccess.h"
+#include "MemSection.h"
 
 #include "utils.h"
 
@@ -43,6 +44,7 @@
 // #endif
 
 static std::map<std::string,std::pair<uintptr_t, uintptr_t>> library_addresses;
+static MemSection sectionExecutable;
 
 void BaseAddresses::load()
 {
@@ -55,6 +57,9 @@ void BaseAddresses::load()
     bool previous_stored = false; // was the last section stored?
     while (memlayout->nextSection(MemSection::MemAll, 0, section)) {
         std::string file = fileFromPath(section.filename);
+        if (section.type == MemSection::MemText) {
+            sectionExecutable = section;
+        }
         
         /* Special case for BSS, which belongs to executable memory */
         if (section.type == MemSection::MemBSS) {
@@ -126,6 +131,14 @@ uintptr_t BaseAddresses::getBaseAddress(std::string file)
     else {
         return findNewFile(file);
     }
+}
+
+const MemSection* BaseAddresses::getExecutableSection()
+{
+    if (library_addresses.empty())
+        load();
+
+    return &sectionExecutable;
 }
 
 std::string BaseAddresses::getFileAndOffset(uintptr_t addr, off_t &offset)

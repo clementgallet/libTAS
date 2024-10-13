@@ -183,3 +183,7 @@ libTAS is distributed under the terms of the GNU General Public License v3.
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>
+
+Dear ImGui is licensed under the MIT License
+
+QHexView is licensed under the MIT License

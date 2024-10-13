@@ -63,6 +63,7 @@ class AutoSaveWindow;
 class TimeTraceWindow;
 class LuaConsoleWindow;
 class MovieSettingsWindow;
+class HexViewWindow;
 
 class MainWindow : public QMainWindow
 {
@@ -95,6 +96,7 @@ public:
     TimeTraceWindow* timeTraceWindow;
     LuaConsoleWindow* luaConsoleWindow;
     MovieSettingsWindow* movieSettingsWindow;
+    HexViewWindow* hexViewWindow;
 
     QList<QWidget*> disabledWidgetsOnStart;
     QList<QAction*> disabledActionsOnStart;
