@@ -91,7 +91,7 @@ void HexViewWindow::switch_section()
     view->setBaseAddress(section.addr);
 }
 
-void HexViewWindow::seek(uintptr_t addr)
+void HexViewWindow::seek(uintptr_t addr, int size)
 {
     if (memsections.empty())
         return;
@@ -127,4 +127,5 @@ void HexViewWindow::seek(uintptr_t addr)
 
     QHexCursor* cursor = view->hexCursor();
     cursor->move(seek_offset);
+    cursor->select(seek_offset+size);
 }

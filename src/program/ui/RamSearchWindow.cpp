@@ -22,7 +22,7 @@
 #include "RamWatchView.h"
 #include "RamWatchWindow.h"
 #include "RamWatchEditWindow.h"
-#include "MainWindow.h"
+#include "HexViewWindow.h"
 
 #include "Context.h"
 #include "ramsearch/CompareOperations.h"
@@ -40,7 +40,7 @@
 #include <limits>
 #include <thread>
 
-RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
+RamSearchWindow::RamSearchWindow(Context* c, HexViewWindow* view, RamWatchWindow* ram, QWidget *parent) : QDialog(parent), context(c), hexViewWindow(view), ramWatchWindow(ram)
 {
     setWindowTitle("Ram Search");
 
@@ -68,10 +68,36 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     watchCount = new QLabel();
     // watchCount->setHeight(searchProgress->height());
 
+    /* Buttons */
+    newButton = new QPushButton(tr("New"));
+    connect(newButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotNew);
+
+    searchButton = new QPushButton(tr("Search"));
+    connect(searchButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotSearch);
+    searchButton->setDisabled(true);
+
+    stopButton = new QPushButton(tr("Force Stop"));
+    connect(stopButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotStop);
+    stopButton->setDisabled(true);
+
+    QPushButton *addButton = new QPushButton(tr("Add Watch"));
+    connect(addButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotAdd);
+
+    QPushButton *hexButton = new QPushButton(tr("Hex View"));
+    connect(hexButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotHex);
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox();
+    buttonBox->addButton(newButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(searchButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(stopButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(addButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(hexButton, QDialogButtonBox::ActionRole);
+
     QVBoxLayout *watchLayout = new QVBoxLayout;
     watchLayout->addWidget(ramSearchView);
     watchLayout->addWidget(searchProgress);
     watchLayout->addWidget(watchCount);
+    watchLayout->addWidget(buttonBox);
 
     /* Memory regions */
     memSpecialBox = new QCheckBox("Exclude special regions");
@@ -164,35 +190,12 @@ RamSearchWindow::RamSearchWindow(Context* c, QWidget *parent) : QDialog(parent),
     formatLayout->addRow(new QLabel(tr("Alignment:")), alignmentBox);
     formatGroupBox->setLayout(formatLayout);
 
-    /* Buttons */
-    newButton = new QPushButton(tr("New"));
-    connect(newButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotNew);
-
-    searchButton = new QPushButton(tr("Search"));
-    connect(searchButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotSearch);
-    searchButton->setDisabled(true);
-
-    stopButton = new QPushButton(tr("Force Stop"));
-    connect(stopButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotStop);
-    stopButton->setDisabled(true);
-
-    QPushButton *addButton = new QPushButton(tr("Add Watch"));
-    connect(addButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotAdd);
-
-    QDialogButtonBox *buttonBox = new QDialogButtonBox();
-    buttonBox->addButton(newButton, QDialogButtonBox::ActionRole);
-    buttonBox->addButton(searchButton, QDialogButtonBox::ActionRole);
-    buttonBox->addButton(stopButton, QDialogButtonBox::ActionRole);
-    buttonBox->addButton(addButton, QDialogButtonBox::ActionRole);
-
     /* Create the options layout */
     QVBoxLayout *optionLayout = new QVBoxLayout;
     optionLayout->addWidget(memGroupBox);
     optionLayout->addWidget(compareGroupBox);
     optionLayout->addWidget(operatorGroupBox);
     optionLayout->addWidget(formatGroupBox);
-    optionLayout->addStretch(1);
-    optionLayout->addWidget(buttonBox);
 
     QHBoxLayout *mainLayout = new QHBoxLayout;
 
@@ -444,13 +447,20 @@ void RamSearchWindow::slotAdd()
     int row = index.row();
 
     /* Fill the watch edit window with parameters from the selected watch */
+    ramWatchWindow->ramWatchView->editWindow->fill(ramSearchModel->address(row), typeBox->currentIndex());
+    ramWatchWindow->ramWatchView->slotAdd();
+}
 
-    MainWindow *mw = qobject_cast<MainWindow*>(parent());
-    if (mw) {
-        
-        mw->ramWatchWindow->ramWatchView->editWindow->fill(ramSearchModel->address(row), typeBox->currentIndex());
-        mw->ramWatchWindow->ramWatchView->slotAdd();
-    }
+void RamSearchWindow::slotHex()
+{
+    const QModelIndex index = ramSearchView->selectionModel()->currentIndex();
+
+    /* If no watch was selected, return */
+    if (!index.isValid())
+        return;
+
+    hexViewWindow->seek(ramSearchModel->address(index.row()), MemValue::type_size(typeBox->currentIndex()));
+    hexViewWindow->show();
 }
 
 void RamSearchWindow::slotStop()

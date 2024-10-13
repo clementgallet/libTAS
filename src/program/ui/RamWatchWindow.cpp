@@ -98,7 +98,9 @@ void RamWatchWindow::slotHexView()
     if (!index.isValid())
         return;
 
-    hexViewWindow->seek(ramWatchView->ramWatchModel->ramwatches.at(index.row())->address);
+    const std::unique_ptr<RamWatchDetailed>& ramwatch = ramWatchView->ramWatchModel->ramwatches.at(index.row());
+
+    hexViewWindow->seek(ramwatch->address, MemValue::type_size(ramwatch->value_type));
     hexViewWindow->show();
 }
 

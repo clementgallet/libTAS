@@ -41,18 +41,22 @@
 /* Forward declaration */
 struct Context;
 class RamSearchModel;
+class RamWatchWindow;
+class HexViewWindow;
 
 class RamSearchWindow : public QDialog {
     Q_OBJECT
 
 public:
-    RamSearchWindow(Context *c, QWidget *parent = Q_NULLPTR);
+    RamSearchWindow(Context *c, HexViewWindow* view, RamWatchWindow* ram, QWidget *parent = Q_NULLPTR);
 
     void update();
 
 private:
     Context *context;
     QTableView *ramSearchView;
+    HexViewWindow* hexViewWindow;
+    RamWatchWindow* ramWatchWindow;
 
     RamSearchModel *ramSearchModel;
     QProgressBar *searchProgress;
@@ -105,6 +109,7 @@ private slots:
     void slotNew();
     void slotSearch();
     void slotAdd();
+    void slotHex();
     void slotStop();
     void slotTypeChanged(int index);
 

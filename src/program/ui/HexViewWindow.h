@@ -38,7 +38,7 @@ public:
     /* Update UI elements */
     void start();
 
-    void seek(uintptr_t addr);
+    void seek(uintptr_t addr, int size);
 
 private:
     IOProcessDevice* iodevice;

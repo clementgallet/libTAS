@@ -168,9 +168,9 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     executableWindow = new ExecutableWindow(c, this);
     controllerTabWindow = new ControllerTabWindow(c, this);
     gameInfoWindow = new GameInfoWindow(this);
-    ramSearchWindow = new RamSearchWindow(c, this);
     hexViewWindow = new HexViewWindow(this);
     ramWatchWindow = new RamWatchWindow(c, hexViewWindow, this);
+    ramSearchWindow = new RamSearchWindow(c, hexViewWindow, ramWatchWindow, this);
     inputEditorWindow = new InputEditorWindow(c, &gameLoop->movie, this);
     annotationsWindow = new AnnotationsWindow(c, this);
     timeTraceWindow = new TimeTraceWindow(c, this);
