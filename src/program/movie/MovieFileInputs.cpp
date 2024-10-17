@@ -118,8 +118,6 @@ int MovieFileInputs::setInputs(const AllInputs& inputs, bool keep_inputs)
 
 int MovieFileInputs::setInputs(const AllInputs& inputs, uint64_t pos, bool keep_inputs)
 {
-    std::unique_lock<std::mutex> lock(input_list_mutex);
-
     if (pos < context->framecount)
         return -1;
         
