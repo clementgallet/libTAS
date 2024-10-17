@@ -20,9 +20,13 @@
 #include "MovieActionPaint.h"
 #include "MovieFileInputs.h"
 
-MovieActionPaint::MovieActionPaint(uint64_t start_frame, uint64_t end_frame, SingleInput si, int newV, MovieFileInputs* movie_inputs) {
+#include "Context.h"
+
+MovieActionPaint::MovieActionPaint(uint64_t start_frame, uint64_t end_frame, SingleInput si, int newV, MovieFileInputs* mi)
+{
     first_frame = start_frame;
     last_frame = end_frame;
+    movie_inputs = mi;
     input = si;
     new_value = newV;
     
@@ -32,21 +36,18 @@ MovieActionPaint::MovieActionPaint(uint64_t start_frame, uint64_t end_frame, Sin
     }
 
     if (first_frame == last_frame) {
-        description = "Paint frame ";
-        description += std::to_string(first_frame);
+        setText(QString("Paint frame %1").arg(first_frame));
     }
     else {
-        description = "Paint frames ";
-        description += std::to_string(first_frame);
-        description += " - ";
-        description += std::to_string(last_frame);
+        setText(QString("Paint frames %1 - %2").arg(first_frame).arg(last_frame));
     }
 }
 
-MovieActionPaint::MovieActionPaint(uint64_t start_frame, SingleInput si, const std::vector<int>& newV, MovieFileInputs* movie_inputs)
+MovieActionPaint::MovieActionPaint(uint64_t start_frame, SingleInput si, const std::vector<int>& newV, MovieFileInputs* mi)
 {
     first_frame = start_frame;
     last_frame = start_frame + newV.size() - 1;
+    movie_inputs = mi;
     input = si;
     new_values = newV;
     
@@ -56,24 +57,37 @@ MovieActionPaint::MovieActionPaint(uint64_t start_frame, SingleInput si, const s
     }
 
     if (first_frame == last_frame) {
-        description = "Paint frame ";
-        description += std::to_string(first_frame);
+        setText(QString("Paint frame %1").arg(first_frame));
     }
     else {
-        description = "Paint frames ";
-        description += std::to_string(first_frame);
-        description += " - ";
-        description += std::to_string(last_frame);
+        setText(QString("Paint frames %1 - %2").arg(first_frame).arg(last_frame));
     }
 }
 
-void MovieActionPaint::undo(MovieFileInputs* movie_inputs) {
-    movie_inputs->paintInput(input, old_values, first_frame);
+void MovieActionPaint::undo() {
+    if (first_frame < movie_inputs->context->framecount) return;
+
+    for (size_t i = 0; i < old_values.size(); i++)
+        movie_inputs->queueInput(first_frame+i, input, old_values[i], false);
+
+    /* Process paint actions synchronously, because the order of undo/redo 
+     * actions must be enforced */
+    movie_inputs->processPendingInputs();
 }
 
-void MovieActionPaint::redo(MovieFileInputs* movie_inputs) {
-    if (new_values.empty())
-        movie_inputs->paintInput(input, new_value, first_frame, last_frame);
-    else
-        movie_inputs->paintInput(input, new_values, first_frame);
+void MovieActionPaint::redo() {
+    if (first_frame < movie_inputs->context->framecount) return;
+
+    if (new_values.empty()) {
+        for (uint64_t i = first_frame; i <= last_frame; i++)
+            movie_inputs->queueInput(i, input, new_value, false);
+    }
+    else {
+        for (size_t i = 0; i < new_values.size(); i++)
+            movie_inputs->queueInput(first_frame+i, input, new_values[i], false);
+    }
+
+    /* Process paint actions synchronously, because the order of undo/redo 
+     * actions must be enforced */
+    movie_inputs->processPendingInputs();
 }

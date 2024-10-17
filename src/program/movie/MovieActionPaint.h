@@ -29,12 +29,13 @@
 class MovieFileInputs;
 
 class MovieActionPaint : public IMovieAction {
+    // Q_OBJECT
 public:
     MovieActionPaint(uint64_t start_frame, uint64_t end_frame, SingleInput si, int newV, MovieFileInputs* movie_inputs);
     MovieActionPaint(uint64_t start_frame, SingleInput si, const std::vector<int>& newV, MovieFileInputs* movie_inputs);
 
-    void undo(MovieFileInputs* movie_inputs);
-    void redo(MovieFileInputs* movie_inputs);
+    void undo() override;
+    void redo() override;
     
 private:
     SingleInput input;

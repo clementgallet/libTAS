@@ -126,10 +126,6 @@ int MovieFileInputs::setInputs(const AllInputs& inputs, uint64_t pos, bool keep_
     /* Check that we are writing to the next frame */
     if (pos == input_list.size()) {
         movie_changelog->registerInsertFrame(pos, inputs);
-        emit inputsToBeInserted(pos, pos);
-        input_list.push_back(inputs);
-        emit inputsInserted(pos, pos);
-        wasModified();
         return 0;
     }
     else if (pos < input_list.size()) {
@@ -139,23 +135,11 @@ int MovieFileInputs::setInputs(const AllInputs& inputs, uint64_t pos, bool keep_
          */
         if (keep_inputs) {
             movie_changelog->registerEditFrame(pos, inputs);
-            emit inputsToBeEdited(pos, pos);
-            input_list[pos] = inputs;
-            emit inputsEdited(pos, pos);
         }
         else {
             movie_changelog->registerRemoveFrames(pos+1, input_list.size()-1);
             movie_changelog->registerEditFrame(pos, inputs);
-
-            emit inputsToBeRemoved(pos, input_list.size()-1);
-            input_list.resize(pos);
-            emit inputsRemoved(pos, input_list.size()-1);
-
-            emit inputsToBeInserted(pos, pos);
-            input_list.push_back(inputs);
-            emit inputsInserted(pos, pos);
         }
-        wasModified();
         return 0;
     }
     else {
@@ -190,36 +174,20 @@ const AllInputs& MovieFileInputs::getInputs(uint64_t pos)
 
 void MovieFileInputs::clearInputs(int minFrame, int maxFrame)
 {
-    std::unique_lock<std::mutex> lock(input_list_mutex);
-
     if (maxFrame >= input_list.size())
         return;
     
     movie_changelog->registerClearFrames(minFrame, maxFrame);
-
-    emit inputsToBeEdited(minFrame, maxFrame);
-    for (int i = minFrame; i <= maxFrame; i++)
-        input_list[i].clear();
-    emit inputsEdited(minFrame, maxFrame);
-    wasModified();
 }
 
 void MovieFileInputs::paintInput(SingleInput si, int value, int minFrame, int maxFrame)
 {
     movie_changelog->registerPaint(minFrame, maxFrame, si, value);
-    emit inputsToBeEdited(minFrame, maxFrame);
-    for (int i = minFrame; i <= maxFrame; i++)
-        queueInput(i, si, value, false);
-    emit inputsEdited(minFrame, maxFrame);
 }
 
 void MovieFileInputs::paintInput(SingleInput si, std::vector<int>& values, int minFrame)
 {
     movie_changelog->registerPaint(minFrame, si, values);
-    emit inputsToBeEdited(minFrame, minFrame+values.size()-1);
-    for (int i = 0; i < values.size(); i++)
-        queueInput(minFrame+i, si, values[i], false);
-    emit inputsEdited(minFrame, minFrame+values.size()-1);
 }
 
 void MovieFileInputs::editInputs(const std::vector<AllInputs>& inputs, uint64_t pos)
@@ -229,64 +197,34 @@ void MovieFileInputs::editInputs(const std::vector<AllInputs>& inputs, uint64_t 
 
 void MovieFileInputs::editInputs(const std::vector<AllInputs>& inputs, uint64_t pos, int count)
 {
-    std::unique_lock<std::mutex> lock(input_list_mutex);
-
     if ((pos + count) > input_list.size())
         return;
 
     movie_changelog->registerEditFrames(pos, pos+count-1, inputs);
-    emit inputsToBeEdited(pos, pos+count-1);
-    std::copy(inputs.begin(), inputs.begin() + count, input_list.begin() + pos);
-    emit inputsEdited(pos, pos+count-1);
-    wasModified();
 }
 
 void MovieFileInputs::insertInputsBefore(uint64_t pos, int count)
 {
-    std::unique_lock<std::mutex> lock(input_list_mutex);
-
     if (pos > input_list.size())
         return;
-
-    AllInputs ai;
-    ai.clear();
-
+        
     movie_changelog->registerInsertFrames(pos, count);
-    emit inputsToBeInserted(pos, pos+count-1);
-    input_list.insert(input_list.begin() + pos, count, ai);
-    emit inputsInserted(pos, pos+count-1);
-    wasModified();
 }
 
 void MovieFileInputs::insertInputsBefore(const std::vector<AllInputs>& inputs, uint64_t pos)
 {
-    std::unique_lock<std::mutex> lock(input_list_mutex);
-
     if (pos > input_list.size())
         return;
 
     movie_changelog->registerInsertFrames(pos, inputs);
-    emit inputsToBeInserted(pos, pos+inputs.size()-1);
-    input_list.insert(input_list.begin() + pos, inputs.begin(), inputs.end());
-    emit inputsInserted(pos, pos+inputs.size()-1);
-    wasModified();
 }
 
 void MovieFileInputs::deleteInputs(uint64_t pos, int count)
 {
-    std::unique_lock<std::mutex> lock(input_list_mutex);
-
     if ((pos + count) > input_list.size())
         return;
 
     movie_changelog->registerRemoveFrames(pos, pos+count-1);
-    emit inputsToBeRemoved(pos, pos+count-1);
-    if ((pos + count) == input_list.size())
-        input_list.resize(pos);
-    else
-        input_list.erase(input_list.begin() + pos, input_list.begin() + pos + count);
-    emit inputsRemoved(pos, pos+count-1);
-    wasModified();
 }
 
 void MovieFileInputs::extractInputs(std::set<SingleInput> &set)
@@ -341,7 +279,7 @@ void MovieFileInputs::queueInput(uint64_t pos, SingleInput si, int value, bool i
     input_queue.push(ie);
 }
 
-uint64_t MovieFileInputs::processPendingInputs()
+void MovieFileInputs::processPendingInputs()
 {
     /* Process input events */
     while (!input_queue.empty()) {
@@ -370,9 +308,7 @@ uint64_t MovieFileInputs::processPendingInputs()
             emit inputsEdited(ie.framecount, ie.framecount);
         }
         wasModified();
-        return ie.framecount;
     }
-    return UINT64_MAX;
 }
 
 uint64_t MovieFileInputs::size()

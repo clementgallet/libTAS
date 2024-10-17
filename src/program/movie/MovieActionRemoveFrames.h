@@ -32,8 +32,8 @@ class MovieActionRemoveFrames : public IMovieAction {
 public:
     MovieActionRemoveFrames(uint64_t remove_from, uint64_t remove_to, MovieFileInputs* movie_inputs);
 
-    void undo(MovieFileInputs* movie_inputs);
-    void redo(MovieFileInputs* movie_inputs);
+    void undo() override;
+    void redo() override;
     
 private:
     std::vector<AllInputs> old_frames;

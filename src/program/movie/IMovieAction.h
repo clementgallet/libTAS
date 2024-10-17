@@ -22,17 +22,15 @@
 
 #include <cstdint>
 #include <string>
+#include <QtWidgets/QUndoCommand>
 
 class MovieFileInputs;
 
-class IMovieAction {
+class IMovieAction : public QUndoCommand {
 public:
-    virtual void undo(MovieFileInputs* movie_inputs) = 0;
-    virtual void redo(MovieFileInputs* movie_inputs) = 0;
-    
+    MovieFileInputs* movie_inputs;
     uint64_t first_frame;
     uint64_t last_frame;
-    std::string description;
 };
 
 #endif

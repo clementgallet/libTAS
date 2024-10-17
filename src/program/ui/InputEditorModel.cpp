@@ -1022,7 +1022,7 @@ void InputEditorModel::endInsertInputs(int minRow, int maxRow)
     addUniqueInputs(minRow, maxRow);
     
     /* Detect undo/redo operation */
-    if (!movie->changelog->is_recording) {
+    // if (!movie->changelog->is_recording) {
         undoMinRow = minRow;
         undoMaxRow = maxRow;
         undoMinCol = 0;
@@ -1030,7 +1030,7 @@ void InputEditorModel::endInsertInputs(int minRow, int maxRow)
         undoTimeoutSec = maxUndoTimeoutSec;
         undoStart = std::chrono::steady_clock::now();
         undoTimer->start(50);
-    }
+    // }
 }
 
 void InputEditorModel::beginEditInputs(int minRow, int maxRow)
@@ -1045,7 +1045,7 @@ void InputEditorModel::endEditInputs(int minRow, int maxRow)
     addUniqueInputs(minRow, maxRow);
     
     /* Detect undo/redo operation */
-    if (!movie->changelog->is_recording) {
+    // if (!movie->changelog->is_recording) {
         undoMinRow = minRow;
         undoMaxRow = maxRow;
         undoMinCol = 0;
@@ -1053,7 +1053,7 @@ void InputEditorModel::endEditInputs(int minRow, int maxRow)
         undoTimeoutSec = maxUndoTimeoutSec;
         undoStart = std::chrono::steady_clock::now();
         undoTimer->start(50);
-    }
+    // }
 }
 
 void InputEditorModel::beginRemoveInputs(int minRow, int maxRow)
@@ -1066,7 +1066,7 @@ void InputEditorModel::endRemoveInputs(int minRow, int maxRow)
     endRemoveRows();
 
     /* Detect undo/redo operation */
-    if (!movie->changelog->is_recording) {
+    // if (!movie->changelog->is_recording) {
         undoMinRow = std::min(minRow, rowCount()-1);
         undoMaxRow = std::min(maxRow, rowCount()-1);
         undoMinCol = 0;
@@ -1074,7 +1074,7 @@ void InputEditorModel::endRemoveInputs(int minRow, int maxRow)
         undoTimeoutSec = maxUndoTimeoutSec;
         undoStart = std::chrono::steady_clock::now();
         undoTimer->start(50);
-    }
+    // }
 }
 
 void InputEditorModel::update()

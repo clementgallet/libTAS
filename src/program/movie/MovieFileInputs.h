@@ -140,10 +140,8 @@ public:
      * so that it can applied by main thread */
     void queueInput(uint64_t pos, SingleInput si, int value, bool isEvent);
     
-    /* Process an input event pushed by the UI thread, and returns the modified
-     * framecount, so that the UI can be updated accordingly.
-     * If no event left, returns UINT64_MAX */
-    uint64_t processPendingInputs();
+    /* Process all input events pushed by the UI thread */
+    void processPendingInputs();
     
     /* Return the movie frame count */
     uint64_t size();
@@ -173,6 +171,10 @@ signals:
     void inputsToBeReset();
     void inputsReset();
 
+    friend class MovieActionEditFrames;
+    friend class MovieActionInsertFrames;
+    friend class MovieActionPaint;
+    friend class MovieActionRemoveFrames;
 };
 
 #endif

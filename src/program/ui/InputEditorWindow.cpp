@@ -120,6 +120,7 @@ InputEditorWindow::InputEditorWindow(Context* c, MovieFile *movie, QWidget *pare
 void InputEditorWindow::update()
 {
     inputEditorView->update();
+    inputChangeLogWindow->update();
     updateProgressBar();
 }
 

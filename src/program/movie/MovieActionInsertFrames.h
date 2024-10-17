@@ -30,12 +30,12 @@ class MovieFileInputs;
 
 class MovieActionInsertFrames : public IMovieAction {
 public:
-    MovieActionInsertFrames(uint64_t insert_from, const std::vector<AllInputs>& inserted_frames);
-    MovieActionInsertFrames(uint64_t insert_from, int count);
-    MovieActionInsertFrames(uint64_t insert_from, const AllInputs& inserted_frame);
+    MovieActionInsertFrames(uint64_t insert_from, const std::vector<AllInputs>& inserted_frames, MovieFileInputs* movie_inputs);
+    MovieActionInsertFrames(uint64_t insert_from, int count, MovieFileInputs* movie_inputs);
+    MovieActionInsertFrames(uint64_t insert_from, const AllInputs& inserted_frame, MovieFileInputs* movie_inputs);
 
-    void undo(MovieFileInputs* movie_inputs);
-    void redo(MovieFileInputs* movie_inputs);
+    void undo() override;
+    void redo() override;
     
 private:
     std::vector<AllInputs> new_frames;

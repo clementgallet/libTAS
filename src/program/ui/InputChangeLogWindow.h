@@ -27,7 +27,7 @@
 struct Context;
 class MovieFile;
 class InputChangeLogModel;
-class QTableView;
+class QListView;
 
 class InputChangeLogWindow : public QDialog {
     Q_OBJECT
@@ -37,11 +37,16 @@ public:
 
     QSize sizeHint() const override;
 
-    QTableView* inputChangeLogView;
+    QListView* inputChangeLogView;
     InputChangeLogModel* inputChangeLogModel;
 
 private:
     Context *context;
+    MovieFile *movie;
+
+public slots:
+    void update();
+    void moveChangeLog(const QModelIndex &index);
 
 };
 

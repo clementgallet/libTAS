@@ -25,6 +25,7 @@
 #include "IMovieAction.h"
 
 #include <QtCore/QObject>
+#include <QtWidgets/QUndoStack>
 #include <list>
 #include <vector>
 #include <cstdint>
@@ -32,17 +33,14 @@
 struct Context;
 class MovieFileInputs;
 
-class MovieFileChangeLog : public QObject {
+class MovieFileChangeLog : public QUndoStack {
     Q_OBJECT
 public:
+
     /* Prepare a movie file from the context */
     MovieFileChangeLog(Context* c, MovieFileInputs* mi);
 
-    void clear();
-    void truncateLog(int frame);
-    bool canUndo();
     bool undo();
-    bool canRedo();
     bool redo();
     void registerAction();
     void registerPaint(uint64_t start_frame, uint64_t end_frame, SingleInput si, int newV);
@@ -56,28 +54,12 @@ public:
     void registerInsertFrames(uint64_t insert_from, int count);
     void registerRemoveFrames(uint64_t remove_from, uint64_t remove_to);
     
-    std::list<IMovieAction*> history;
-    
-    /* Index to the next inserted action */
-    unsigned int history_index;
-    
-    bool is_recording;
-
 private:
     Context* context;
-    unsigned int max_steps;
-
     MovieFileInputs* movie_inputs;
 
 signals:
-    void beginResetHistory();
-    void endResetHistory();
-    void beginAddHistory(int frame);
-    void endAddHistory();
-    void beginRemoveHistory(int first_frame, int last_frame);
-    void endRemoveHistory();
-    void changeHistory(int frame);
-
+    void updateChangeLog();
 };
 
 #endif

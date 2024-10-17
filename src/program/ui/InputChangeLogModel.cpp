@@ -27,39 +27,50 @@
 #include <QtGui/QGuiApplication>
 #include <QtGui/QPalette>
 
-InputChangeLogModel::InputChangeLogModel(Context* c, MovieFile* m, QObject *parent) : QAbstractTableModel(parent), context(c), movie(m) {
-    connect(movie->changelog, &MovieFileChangeLog::beginResetHistory, this, &InputChangeLogModel::beginResetHistory);
-    connect(movie->changelog, &MovieFileChangeLog::endResetHistory, this, &InputChangeLogModel::endResetHistory);
-    connect(movie->changelog, &MovieFileChangeLog::beginAddHistory, this, &InputChangeLogModel::beginAddHistory);
-    connect(movie->changelog, &MovieFileChangeLog::endAddHistory, this, &InputChangeLogModel::endAddHistory);
-    connect(movie->changelog, &MovieFileChangeLog::beginRemoveHistory, this, &InputChangeLogModel::beginRemoveHistory);
-    connect(movie->changelog, &MovieFileChangeLog::endRemoveHistory, this, &InputChangeLogModel::endRemoveHistory);
-    connect(movie->changelog, &MovieFileChangeLog::changeHistory, this, &InputChangeLogModel::changeHistory);
+InputChangeLogModel::InputChangeLogModel(Context* c, MovieFile* m, QObject *parent) : QAbstractItemModel(parent), context(c), movie(m) {
+    // connect(movie->changelog, &MovieFileChangeLog::updateChangeLog, this, &InputChangeLogModel::updateChangeLog);
+    // connect(movie->changelog, &MovieFileChangeLog::beginAddHistory, this, &InputChangeLogModel::beginAddHistory);
+    // connect(movie->changelog, &MovieFileChangeLog::endAddHistory, this, &InputChangeLogModel::endAddHistory);
+    // connect(movie->changelog, &MovieFileChangeLog::beginRemoveHistory, this, &InputChangeLogModel::beginRemoveHistory);
+    // connect(movie->changelog, &MovieFileChangeLog::endRemoveHistory, this, &InputChangeLogModel::endRemoveHistory);
+    // connect(movie->changelog, &MovieFileChangeLog::changeHistory, this, &InputChangeLogModel::changeHistory);
 }
 
 int InputChangeLogModel::rowCount(const QModelIndex & /*parent*/) const
 {
-    return movie->changelog->history.size();
+    return movie->changelog->count() + 1;
 }
 
 int InputChangeLogModel::columnCount(const QModelIndex & /*parent*/) const
 {
-    return 2;
+    return 1;
+}
+
+QModelIndex InputChangeLogModel::index(int row, int column, const QModelIndex &parent = QModelIndex()) const
+{
+    return createIndex(row, column);
+}
+
+QModelIndex InputChangeLogModel::parent(const QModelIndex &index) const
+{
+    return QModelIndex();
 }
 
 Qt::ItemFlags InputChangeLogModel::flags(const QModelIndex &index) const
 {
-    return QAbstractItemModel::flags(index);
+    Qt::ItemFlags flag = QAbstractItemModel::flags(index);
+    if (index.row() <= disabledUndoRow)
+        flag &= ~Qt::ItemIsEnabled;
+    if (index.row() >= disabledRedoRow)
+        flag &= ~Qt::ItemIsEnabled;
+    return flag;
 }
 
 QVariant InputChangeLogModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role == Qt::DisplayRole) {
         if (orientation == Qt::Horizontal) {
-            if (section == 0)
-                return QString(tr("Index"));
-            if (section == 1)
-                return QString(tr("Action"));
+            return QString(tr("Action"));
         }
     }
 
@@ -73,83 +84,97 @@ QVariant InputChangeLogModel::data(const QModelIndex &index, int role) const
     if (row >= rowCount())
         return QVariant();
 
-    if (role == Qt::BackgroundRole) {
-        /* Main color */
-        QColor color = QGuiApplication::palette().window().color();
-        bool lightTheme = isLightTheme();
-        int r, g, b;
-        color.getRgb(&r, &g, &b, nullptr);
-        
-        if (lightTheme) {
-            /* Light theme */
-            if (row == (movie->changelog->history_index-1))
-                color.setRgb(r - 0x30, g - 0x10, b);
-            else if (row < (movie->changelog->history_index-1)) {
-                color.setRgb(r - 0x20, g, b - 0x20);
-            }
-            else {
-                color.setRgb(r, g, b - 0x10);
-            }
-        }
-        else {
-            /* Dark theme */
-            if (row == movie->changelog->history_index)
-                color.setRgb(r, g + 0x10, b + 0x20);
-            else if (row < movie->changelog->history_index) {
-                color.setRgb(r, g + 0x18, b);
-            }
-            else {
-                color.setRgb(r + 0x08, g + 0x08, b);
-            }
-        }
-        
-        return QBrush(color);
-    }
+    // if (role == Qt::BackgroundRole) {
+    //     /* Main color */
+    //     QColor color = QGuiApplication::palette().window().color();
+    //     bool lightTheme = isLightTheme();
+    //     int r, g, b;
+    //     color.getRgb(&r, &g, &b, nullptr);
+    // 
+    //     if (lightTheme) {
+    //         /* Light theme */
+    //         if (row == (movie->changelog->index()-1))
+    //             color.setRgb(r - 0x30, g - 0x10, b);
+    //         else if (row < (movie->changelog->index()-1)) {
+    //             color.setRgb(r - 0x20, g, b - 0x20);
+    //         }
+    //         else {
+    //             color.setRgb(r, g, b - 0x10);
+    //         }
+    //     }
+    //     else {
+    //         /* Dark theme */
+    //         if (row == movie->changelog->index())
+    //             color.setRgb(r, g + 0x10, b + 0x20);
+    //         else if (row < movie->changelog->index()) {
+    //             color.setRgb(r, g + 0x18, b);
+    //         }
+    //         else {
+    //             color.setRgb(r + 0x08, g + 0x08, b);
+    //         }
+    //     }
+    // 
+    //     return QBrush(color);
+    // }
 
     if (role == Qt::DisplayRole) {
-        if (index.column() == 0) {
-            return row;
-        }
-        if (index.column() == 1) {
-            return QString((*std::next(movie->changelog->history.begin(), row))->description.c_str());
-        }
+        if (row == 0)
+            return QString(tr("--- start ---"));
+        else
+            return QString(movie->changelog->command(row-1)->text());
     }
 
     return QVariant();
 }
 
-void InputChangeLogModel::beginResetHistory()
+void InputChangeLogModel::updateChangeLog()
 {
     beginResetModel();
-}
+    
+    /* Disable all items that would need a rewind */
+    int currentRow = movie->changelog->index();
+    disabledUndoRow = -1;
+    for (int i = currentRow-1; i >= 0; i--) {
+        const IMovieAction* action = dynamic_cast<const IMovieAction*>(movie->changelog->command(i));
+        if (action->first_frame < context->framecount) {
+            disabledUndoRow = i;
+            break;
+        }
+    }
 
-void InputChangeLogModel::endResetHistory()
-{
+    disabledRedoRow = 1<<30;
+    for (int i = currentRow; i < movie->changelog->count(); i++) {
+        const IMovieAction* action = dynamic_cast<const IMovieAction*>(movie->changelog->command(i));
+        if (action->first_frame < context->framecount) {
+            disabledRedoRow = i+1;
+            break;
+        }
+    }
+    
     endResetModel();
 }
 
-void InputChangeLogModel::beginAddHistory(int frame)
-{
-    beginInsertRows(QModelIndex(), frame, frame);
-}
-
-void InputChangeLogModel::endAddHistory()
-{
-    endInsertRows();
-}
-
-void InputChangeLogModel::beginRemoveHistory(int first_frame, int last_frame)
-{
-    beginRemoveRows(QModelIndex(), first_frame, last_frame);
-}
-
-void InputChangeLogModel::endRemoveHistory()
-{
-    endRemoveRows();
-}
-
-void InputChangeLogModel::changeHistory(int frame)
-{
-    emit dataChanged(index(frame-1,0), index(frame,1));
-
-}
+// void InputChangeLogModel::beginAddHistory(int frame)
+// {
+//     beginInsertRows(QModelIndex(), frame, frame);
+// }
+// 
+// void InputChangeLogModel::endAddHistory()
+// {
+//     endInsertRows();
+// }
+// 
+// void InputChangeLogModel::beginRemoveHistory(int first_frame, int last_frame)
+// {
+//     beginRemoveRows(QModelIndex(), first_frame, last_frame);
+// }
+// 
+// void InputChangeLogModel::endRemoveHistory()
+// {
+//     endRemoveRows();
+// }
+// 
+// void InputChangeLogModel::changeHistory(int frame)
+// {
+//     emit dataChanged(index(frame-1,0), index(frame,1));
+// }

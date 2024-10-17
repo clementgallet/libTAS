@@ -20,13 +20,13 @@
 #ifndef LIBTAS_INPUTCHANGELOGMODEL_H_INCLUDED
 #define LIBTAS_INPUTCHANGELOGMODEL_H_INCLUDED
 
-#include <QtCore/QAbstractTableModel>
+#include <QtCore/QAbstractItemModel>
 
 /* Forward declaration */
 struct Context;
 class MovieFile;
 
-class InputChangeLogModel : public QAbstractTableModel {
+class InputChangeLogModel : public QAbstractItemModel {
     Q_OBJECT
 
 public:
@@ -35,6 +35,8 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 
+    QModelIndex index(int row, int column, const QModelIndex &parent) const override;
+    QModelIndex parent(const QModelIndex &index) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
@@ -43,15 +45,17 @@ public:
 private:
     Context *context;
     MovieFile *movie;
+    int disabledUndoRow;
+    int disabledRedoRow;
     
 public slots:
-    void beginResetHistory();
-    void endResetHistory();
-    void beginAddHistory(int frame);
-    void endAddHistory();
-    void beginRemoveHistory(int first_frame, int last_frame);
-    void endRemoveHistory();
-    void changeHistory(int frame);
+    void updateChangeLog();
+    // void endResetHistory();
+    // void beginAddHistory(int frame);
+    // void endAddHistory();
+    // void beginRemoveHistory(int first_frame, int last_frame);
+    // void endRemoveHistory();
+    // void changeHistory(int frame);
 };
 
 #endif

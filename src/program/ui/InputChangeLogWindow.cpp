@@ -25,39 +25,25 @@
 
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QVBoxLayout>
-#include <QtWidgets/QTableView>
+#include <QtWidgets/QListView>
 
 #include <stdint.h>
 #include <climits>
 
-InputChangeLogWindow::InputChangeLogWindow(Context* c, MovieFile *movie, QWidget *parent) : QDialog(parent), context(c)
+InputChangeLogWindow::InputChangeLogWindow(Context* c, MovieFile *m, QWidget *parent) : QDialog(parent), context(c), movie(m)
 {
     setWindowTitle("Movie Change Log");
 
-    inputChangeLogView = new QTableView(this);
+    inputChangeLogView = new QListView(this);
 
-    inputChangeLogView->setSelectionMode(QAbstractItemView::NoSelection);
-    inputChangeLogView->setShowGrid(true);
-    inputChangeLogView->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
-    inputChangeLogView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    inputChangeLogView->setSelectionMode(QAbstractItemView::SingleSelection);
 
-    inputChangeLogModel = new InputChangeLogModel(context, movie);
+    inputChangeLogModel = new InputChangeLogModel(context, movie, this);
     inputChangeLogView->setModel(inputChangeLogModel);
 
-    /* Horizontal header */
-    inputChangeLogView->horizontalHeader()->setMinimumSectionSize(20);
-    inputChangeLogView->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    inputChangeLogView->horizontalHeader()->setResizeContentsPrecision(1);
+    connect(movie->changelog, &MovieFileChangeLog::updateChangeLog, this, &InputChangeLogWindow::update);
+    connect(inputChangeLogView, &QListView::clicked, this, &InputChangeLogWindow::moveChangeLog);
 
-    /* Frame column is fixed */
-    inputChangeLogView->horizontalHeader()->resizeSection(0, 60);
-    inputChangeLogView->horizontalHeader()->setStretchLastSection(true);
-
-    /* Vertical header */
-    inputChangeLogView->verticalHeader()->setVisible(false);
-    inputChangeLogView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    inputChangeLogView->verticalHeader()->setDefaultSectionSize(inputChangeLogView->verticalHeader()->minimumSectionSize());
-    
     /* Layout */
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addWidget(inputChangeLogView);
@@ -67,4 +53,38 @@ InputChangeLogWindow::InputChangeLogWindow(Context* c, MovieFile *movie, QWidget
 QSize InputChangeLogWindow::sizeHint() const
 {
     return QSize(300, 500);
+}
+
+void InputChangeLogWindow::update()
+{
+    inputChangeLogModel->updateChangeLog();
+    
+    /* Set the selection to the current changelog item */
+    inputChangeLogView->setCurrentIndex(inputChangeLogModel->index(movie->changelog->index(), 0, QModelIndex()));
+}
+
+void InputChangeLogWindow::moveChangeLog(const QModelIndex &index)
+{
+    disconnect(movie->changelog, &MovieFileChangeLog::updateChangeLog, this, &InputChangeLogWindow::update);
+
+    int currentRow = movie->changelog->index();
+    int newRow = index.row();
+    
+    if (newRow > currentRow) {
+        bool didRedo = true;
+        while ((currentRow < newRow) && didRedo) {
+            didRedo = movie->changelog->redo();
+            currentRow++;
+        }
+    }
+    else {
+        bool didUndo = true;
+        while ((currentRow > newRow) && didUndo) {
+            didUndo = movie->changelog->undo();
+            currentRow--;
+        }
+    }
+    
+    update();
+    connect(movie->changelog, &MovieFileChangeLog::updateChangeLog, this, &InputChangeLogWindow::update);
 }

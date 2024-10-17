@@ -390,10 +390,7 @@ int GameEvents::handleEvent()
                 flags |= RETURN_FLAG_ADVANCE;
         }
         else {
-            uint64_t input_framecount = movie->inputs->processPendingInputs();
-            while (input_framecount != UINT64_MAX) {
-                input_framecount = movie->inputs->processPendingInputs();
-            }
+            movie->inputs->processPendingInputs();
         }
     } while (eventType != EVENT_TYPE_NONE && !(flags & RETURN_FLAG_ADVANCE));
 
