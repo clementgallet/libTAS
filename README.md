@@ -37,7 +37,7 @@ You can download the latest stable version of the software in the [Releases](htt
 * `liblua5.4-0`
 * `ffmpeg`
 * `file`
-* `libswresample2` or `libswresample3` or `libswresample4`, `libasound2`
+* `libswresample2` or `libswresample3` or `libswresample4` or `libswresample5`, `libasound2`
 
 Installing with the debian package will install all the required packages as well.
 
