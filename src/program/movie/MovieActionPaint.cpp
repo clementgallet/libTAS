@@ -30,7 +30,7 @@ MovieActionPaint::MovieActionPaint(uint64_t start_frame, uint64_t end_frame, Sin
     input = si;
     new_value = newV;
     
-    for (uint64_t frame = first_frame; frame <= end_frame; frame++) {
+    for (uint64_t frame = first_frame; frame <= last_frame; frame++) {
         const AllInputs& ai = movie_inputs->getInputs(frame);
         old_values.push_back(ai.getInput(si));
     }
@@ -67,27 +67,39 @@ MovieActionPaint::MovieActionPaint(uint64_t start_frame, SingleInput si, const s
 void MovieActionPaint::undo() {
     if (first_frame < movie_inputs->context->framecount) return;
 
-    for (size_t i = 0; i < old_values.size(); i++)
-        movie_inputs->queueInput(first_frame+i, input, old_values[i], false);
+    if (last_frame >= movie_inputs->input_list.size()) return;
+    
+    std::unique_lock<std::mutex> lock(movie_inputs->input_list_mutex);
 
-    /* Process paint actions synchronously, because the order of undo/redo 
-     * actions must be enforced */
-    movie_inputs->processPendingInputs();
+    emit movie_inputs->inputsToBeEdited(first_frame, last_frame);
+    for (size_t i = 0; i < old_values.size(); i++) {
+        AllInputs& ai = movie_inputs->input_list[first_frame+i];
+        ai.setInput(input, old_values[i]);
+    }
+    emit movie_inputs->inputsEdited(first_frame, last_frame);
+    movie_inputs->wasModified();
 }
 
 void MovieActionPaint::redo() {
     if (first_frame < movie_inputs->context->framecount) return;
 
+    if (last_frame >= movie_inputs->input_list.size()) return;
+    
+    std::unique_lock<std::mutex> lock(movie_inputs->input_list_mutex);
+
+    emit movie_inputs->inputsToBeEdited(first_frame, last_frame);
     if (new_values.empty()) {
-        for (uint64_t i = first_frame; i <= last_frame; i++)
-            movie_inputs->queueInput(i, input, new_value, false);
+        for (uint64_t i = first_frame; i <= last_frame; i++) {
+            AllInputs& ai = movie_inputs->input_list[i];
+            ai.setInput(input, new_value);
+        }
     }
     else {
-        for (size_t i = 0; i < new_values.size(); i++)
-            movie_inputs->queueInput(first_frame+i, input, new_values[i], false);
+        for (size_t i = 0; i < new_values.size(); i++) {
+            AllInputs& ai = movie_inputs->input_list[first_frame+i];
+            ai.setInput(input, new_values[i]);
+        }
     }
-
-    /* Process paint actions synchronously, because the order of undo/redo 
-     * actions must be enforced */
-    movie_inputs->processPendingInputs();
+    emit movie_inputs->inputsEdited(first_frame, last_frame);
+    movie_inputs->wasModified();
 }
