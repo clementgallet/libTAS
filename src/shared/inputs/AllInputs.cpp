@@ -82,17 +82,23 @@ AllInputs& AllInputs::operator|=(const AllInputs& ai)
         }
     }
     
-    if (pointer && ai.pointer) {
+    if (ai.pointer) {
+        if (!pointer)
+            pointer.reset(new MouseInputs{});
         *pointer |= *ai.pointer;
     }
     
     for (int j=0; j<MAXJOYS; j++) {
-        if (controllers[j] && ai.controllers[j]) {
+        if (ai.controllers[j]) {
+            if (!controllers[j])
+                controllers[j].reset(new ControllerInputs{});
             *controllers[j] |= *ai.controllers[j];
         }
     }
 
-    if (misc && ai.misc) {
+    if (ai.misc) {
+        if (!misc)
+            misc.reset(new MiscInputs{});
         *misc |= *ai.misc;
     }
 
