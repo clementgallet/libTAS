@@ -367,7 +367,7 @@ void InputEditorView::mousePressEvent(QMouseEvent *event)
 
     /* For editable items, copy the value. Else, copy the opposite value */
     mouseValue = inputEditorModel->data(index, Qt::EditRole).toInt();
-    if (!(inputEditorModel->flags(index) & Qt::ItemIsEditable)) {
+    if (!inputEditorModel->isInputAnalog(mouseColumn)) {
         if (event->modifiers() & Qt::ControlModifier)
             mouseValue = 1; // autofire always starts with setting input
         else
@@ -378,6 +378,10 @@ void InputEditorView::mousePressEvent(QMouseEvent *event)
         inputEditorModel->startPaint(mouseColumn, mouseRow, mouseRow, mouseValue, (mouseRow%2)+1);
     else
         inputEditorModel->startPaint(mouseColumn, mouseRow, mouseRow, mouseValue, 0);
+
+    /* Return the original function, so that double click is triggered */
+    if (inputEditorModel->isInputAnalog(mouseColumn))
+        return QTableView::mousePressEvent(event);
 
     event->accept();
 }
