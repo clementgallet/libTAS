@@ -47,10 +47,11 @@ void MovieFileInputs::setChangeLog(MovieFileChangeLog* mcl)
     movie_changelog = mcl;
 }
 
-void MovieFileInputs::setFramerate(unsigned int num, unsigned int den)
+void MovieFileInputs::setFramerate(unsigned int num, unsigned int den, bool variable)
 {
     framerate_num = num;
     framerate_den = den;
+    variable_framerate = variable;
     InputSerialization::setFramerate(framerate_num, framerate_den);
 }
 
@@ -265,6 +266,7 @@ void MovieFileInputs::wasModified()
     modifiedSinceLastSave = true;
     modifiedSinceLastAutoSave = true;
     modifiedSinceLastStateLoad = true;
+    updateLength();
 }
 
 void MovieFileInputs::queueInput(uint64_t pos, SingleInput si, int value, bool isEvent)
@@ -312,4 +314,69 @@ void MovieFileInputs::processPendingInputs()
 uint64_t MovieFileInputs::size()
 {
     return input_list.size();
+}
+
+void MovieFileInputs::updateLength()
+{
+    context->config.sc_modified = true;
+    context->config.sc.movie_framecount = nbFrames();
+
+    if (!variable_framerate) {
+        /* Compute movie length from framecount */
+        length_sec = (uint64_t)(context->config.sc.movie_framecount) * context->config.sc.initial_framerate_den / context->config.sc.initial_framerate_num;
+        length_nsec = ((1000000000ull * (uint64_t)context->config.sc.movie_framecount * context->config.sc.initial_framerate_den) / context->config.sc.initial_framerate_num) % 1000000000ull;
+        return;
+    }
+
+    /* Compute movie length by summing each frame length when variable fps */
+    length_sec = 0;
+    length_nsec = 0;
+
+    /* Current framerate */
+    uint32_t cur_framerate_num = framerate_num;
+    uint32_t cur_framerate_den = framerate_den;
+
+    /* Store one frame of time increment for the current framerate */
+    int64_t increment_tv_sec = cur_framerate_den / cur_framerate_num;
+    int64_t increment_tv_nsec = 1000000000LL * (int64_t)(cur_framerate_den % cur_framerate_num) / cur_framerate_num;
+    int64_t fractional_increment = 1000000000LL * (int64_t)(cur_framerate_den % cur_framerate_num) % cur_framerate_num;
+    int64_t fractional_part = 0;
+    
+    for (const AllInputs &ai : input_list) {
+
+        uint32_t new_framerate_num = framerate_num;
+        uint32_t new_framerate_den = framerate_den;
+
+        if (ai.misc && (ai.misc->framerate_den || ai.misc->framerate_num)) {
+            new_framerate_num = ai.misc->framerate_num;
+            new_framerate_den = ai.misc->framerate_den;
+        }
+
+        /* Framerate was modified, update time increments */
+        if (new_framerate_num != cur_framerate_num || new_framerate_den != cur_framerate_den) {
+            cur_framerate_num = new_framerate_num;
+            cur_framerate_den = new_framerate_den;
+
+            increment_tv_sec = cur_framerate_den / cur_framerate_num;
+            increment_tv_nsec = 1000000000LL * (int64_t)(cur_framerate_den % cur_framerate_num) / cur_framerate_num;
+            fractional_increment = 1000000000LL * (int64_t)(cur_framerate_den % cur_framerate_num) % cur_framerate_num;
+            fractional_part = 0;
+        }
+
+        /* Increment the current length */
+        length_sec += increment_tv_sec;
+        length_nsec += increment_tv_nsec;
+        fractional_part += fractional_increment;
+        while (fractional_part >= cur_framerate_num)
+        {
+            length_nsec++;
+            fractional_part -= cur_framerate_num;
+        }
+
+        /* Sanitize current length */
+        if (length_nsec >= 1000000000LL) {
+            length_sec += length_nsec / 1000000000LL;
+            length_nsec = length_nsec % 1000000000LL;
+        }
+    }
 }

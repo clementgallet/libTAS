@@ -96,9 +96,6 @@ public:
     /* Close the moviefile */
     void close();
 
-    /* Update movie length from movie framecount */
-    void updateLength();
-
 private:
     Context* context;    
 

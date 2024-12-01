@@ -129,7 +129,9 @@ int MovieFile::loadMovie(const std::string& moviefile)
     editor->load();
 
     /* Copy framerate values to inputs */
-    inputs->setFramerate(header->framerate_num, header->framerate_den);
+    inputs->setFramerate(header->framerate_num, header->framerate_den, header->variable_framerate);
+    inputs->length_sec = header->length_sec;
+    inputs->length_nsec = header->length_nsec;
 
     if (context->config.sc.movie_framecount != inputs->nbFrames()) {
         std::cerr << "Warning: movie framecount and movie config mismatch!" << std::endl;
@@ -154,6 +156,8 @@ int MovieFile::loadSavestateMovie(const std::string& moviefile)
     inputs->load();
     editor->load();
     header->loadSavestate();
+    inputs->length_sec = header->length_sec;
+    inputs->length_nsec = header->length_nsec;
 
     return 0;
 }
@@ -165,6 +169,9 @@ int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
         return ENOMOVIE;
 
     inputs->save();
+    header->variable_framerate = inputs->variable_framerate;
+    header->length_sec = inputs->length_sec;
+    header->length_nsec = inputs->length_nsec;
     header->save(inputs->nbFrames(), nb_frames);
     annotations->save();
     editor->save();
@@ -236,26 +243,6 @@ void MovieFile::close()
 {
     inputs->close();
     editor->close();
-}
-
-void MovieFile::updateLength()
-{
-    if (context->config.sc.movie_framecount != inputs->nbFrames()) {
-        context->config.sc.movie_framecount = inputs->nbFrames();
-
-        /* Unvalidate movie length when variable framerate */
-        if (context->config.sc.variable_framerate) {
-            header->length_sec = -1;
-            header->length_nsec = -1;
-        }
-        else {
-            /* Compute movie length from framecount */
-            header->length_sec = (uint64_t)(context->config.sc.movie_framecount) * context->config.sc.initial_framerate_den / context->config.sc.initial_framerate_num;
-            header->length_nsec = ((1000000000ull * (uint64_t)context->config.sc.movie_framecount * context->config.sc.initial_framerate_den) / context->config.sc.initial_framerate_num) % 1000000000ull;
-        }
-
-        context->config.sc_modified = true;
-    }
 }
 
 void MovieFile::applyAutoHoldFire()

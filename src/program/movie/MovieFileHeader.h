@@ -60,6 +60,9 @@ public:
 
     /* MD5 hash of the game executable that is stored in the movie */
     std::string md5_movie;
+    
+    /* Store if movie has variable framerate */
+    bool variable_framerate;
 
 private:
     Context* context;

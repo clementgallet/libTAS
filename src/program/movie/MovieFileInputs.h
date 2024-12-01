@@ -63,12 +63,18 @@ public:
     /* Queue of movie input changes that where pushed by the UI, to process by the main thread */
     ConcurrentQueue<InputPending> input_queue;
 
+    /* Movie length */
+    int64_t length_sec, length_nsec;
+
+    /* Variable framerate */
+    bool variable_framerate;
+
     /* Prepare a movie file from the context */
     MovieFileInputs(Context* c);
 
     void setChangeLog(MovieFileChangeLog* mcl);
 
-    void setFramerate(unsigned int num, unsigned int den);
+    void setFramerate(unsigned int num, unsigned int den, bool variable);
 
     /* Clear */
     void clear();
@@ -146,6 +152,8 @@ public:
     /* Return the movie frame count */
     uint64_t size();
 
+    /* Compute the length of the movie file */
+    void updateLength();
 private:
     Context* context;
 
@@ -153,7 +161,7 @@ private:
 
     /* Initial framerate values */
     unsigned int framerate_num, framerate_den;
-
+    
     /* The list of inputs */
     std::vector<AllInputs> input_list;
 

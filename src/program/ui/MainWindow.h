@@ -107,7 +107,6 @@ public:
     QAction *annotateMovieAction;
 
     QAction *autoRestartAction;
-    QAction *variableFramerateAction;
 
     QAction *renderSoftAction;
     QAction *renderPerfAction;
@@ -244,7 +243,6 @@ private slots:
     void slotToggleEncode();
     void slotScreenshot();
     void slotPauseMovie();
-    void slotVariableFramerate(bool checked);
     void slotRealTimeFormat();
 };
 

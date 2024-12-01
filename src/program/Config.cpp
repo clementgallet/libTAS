@@ -173,7 +173,6 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("sleep_handling", sc.sleep_handling);
     settings.setValue("game_specific_timing", sc.game_specific_timing);
     settings.setValue("game_specific_sync", sc.game_specific_sync);
-    settings.setValue("variable_framerate", sc.variable_framerate);
 
     settings.beginWriteArray("main_gettimes_threshold");
     for (int t=0; t<SharedConfig::TIMETYPE_NUMTRACKEDTYPES; t++) {
@@ -332,7 +331,6 @@ void Config::load(const std::string& gamepath) {
     sc.sleep_handling = settings.value("sleep_handling", sc.sleep_handling).toInt();
     sc.game_specific_timing = settings.value("game_specific_timing", sc.game_specific_timing).toInt();
     sc.game_specific_sync = settings.value("game_specific_sync", sc.game_specific_sync).toInt();
-    sc.variable_framerate = settings.value("variable_framerate", sc.variable_framerate).toBool();
 
     sc.video_codec = settings.value("video_codec", sc.video_codec).toInt();
     sc.video_bitrate = settings.value("video_bitrate", sc.video_bitrate).toInt();

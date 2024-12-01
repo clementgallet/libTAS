@@ -243,11 +243,10 @@ int InputSerialization::readFrame(const std::string& line, AllInputs& inputs)
                 if (ret < 0)
                     return ret;
 
-                if (context->config.sc.variable_framerate) {
-                    ret = readFramerateFrame(input_string, inputs);
-                    if (ret < 0)
-                        return ret;
-                }
+                ret = readFramerateFrame(input_string, inputs);
+                if (ret < 0)
+                    return ret;
+                
                 break;
         }
         if (ret < 0)

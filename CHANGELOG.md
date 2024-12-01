@@ -20,6 +20,7 @@
 * Change ram search field from double to string that is then parsed
 * Use monospace font for ramwatch/search addresses and values
 * Allow setting a video encode framerate even without variable fps
+* Remove variable framerate setting
 
 ### Fixed
 

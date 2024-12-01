@@ -244,12 +244,18 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     fpsNumField = new QSpinBox();
     fpsNumField->setMaximum(std::numeric_limits<int>::max());
     fpsNumField->setMinimum(1);
-    connect(fpsNumField, QOverload<int>::of(&QSpinBox::valueChanged),[=](int i){context->current_framerate_num = i;});
+    connect(fpsNumField, QOverload<int>::of(&QSpinBox::valueChanged),[=](int i){
+        context->current_framerate_num = i;
+        gameLoop->movie.inputs->variable_framerate = true;
+    });
 
     fpsDenField = new QSpinBox();
     fpsDenField->setMaximum(std::numeric_limits<int>::max());
     fpsDenField->setMinimum(1);
-    connect(fpsDenField, QOverload<int>::of(&QSpinBox::valueChanged),[=](int i){context->current_framerate_den = i;});
+    connect(fpsDenField, QOverload<int>::of(&QSpinBox::valueChanged),[=](int i){
+        context->current_framerate_den = i;
+        gameLoop->movie.inputs->variable_framerate = true;
+    });
 
     fpsValues = new QLabel("Current FPS: - / -");
 
@@ -620,10 +626,6 @@ void MainWindow::createMenus()
     action = movieMenu->addAction(tr("Don't enforce movie settings"), this, [=](bool checked){gameLoop->movie.header->skipLoadSettings = checked;});
     action->setCheckable(true);
     action->setToolTip("When checked, settings stored inside the movie metadata won't be enforced (e.g. initial time, mouse/controller support, framerate...). You can then save your movie with the new settings.");
-    variableFramerateAction = movieMenu->addAction(tr("Variable framerate"), this, &MainWindow::slotVariableFramerate);
-    variableFramerateAction->setCheckable(true);
-    variableFramerateAction->setToolTip("When checked, you will be able to modify the framerate values during the game execution");
-    disabledActionsOnStart.append(variableFramerateAction);
 
     movieMenu->addSeparator();
 
@@ -756,10 +758,6 @@ void MainWindow::updateStatus(int status)
             for (QAction* a : disabledActionsOnStart)
                 a->setEnabled(false);
 
-            if (!context->config.sc.variable_framerate) {
-                fpsNumField->setReadOnly(true);
-                fpsDenField->setReadOnly(true);
-            }
             elapsedTimeSec->setReadOnly(true);
             elapsedTimeNsec->setReadOnly(true);
 
@@ -886,15 +884,10 @@ void MainWindow::updateUIFrequent()
 
     /* Format movie length */
     if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
-        if (gameLoop->movie.header->length_sec != -1) {
-            double msec = gameLoop->movie.header->length_sec + ((double)gameLoop->movie.header->length_nsec)/1000000000.0;
-            int immin = (int)(msec/60);
-            double dmsec = msec - 60*immin;
-            movieLength->setText(QString("Movie length: %1m %2s").arg(immin).arg(dmsec, 0, 'f', 2));
-        }
-        else {
-            movieLength->setText("Movie length: -");
-        }
+        double msec = gameLoop->movie.inputs->length_sec + ((double)gameLoop->movie.inputs->length_nsec)/1000000000.0;
+        int immin = (int)(msec/60);
+        double dmsec = msec - 60*immin;
+        movieLength->setText(QString("Movie length: %1m %2s").arg(immin).arg(dmsec, 0, 'f', 2));
     }
 
     /* Update rerecord count */
@@ -940,15 +933,10 @@ void MainWindow::updateMovieParams()
         authorField->setReadOnly(true);
 
         /* Format movie length */
-        if (gameLoop->movie.header->length_sec != -1) {
-            double msec = gameLoop->movie.header->length_sec + ((double)gameLoop->movie.header->length_nsec)/1000000000.0;
-            int immin = (int)(msec/60);
-            double dmsec = msec - 60*immin;
-            movieLength->setText(QString("Movie length: %1m %2s").arg(immin).arg(dmsec, 0, 'f', 2));
-        }
-        else {
-            movieLength->setText("Movie length: -");
-        }
+        double msec = gameLoop->movie.header->length_sec + ((double)gameLoop->movie.header->length_nsec)/1000000000.0;
+        int immin = (int)(msec/60);
+        double dmsec = msec - 60*immin;
+        movieLength->setText(QString("Movie length: %1m %2s").arg(immin).arg(dmsec, 0, 'f', 2));
 
         /* If move exists, default to read mode except in non-interactive mode */
         if (context->interactive) {
@@ -996,7 +984,6 @@ void MainWindow::updateMovieParams()
     realTimeSec->setValue(context->config.sc.initial_time_sec);
     realTimeNsec->setValue(context->config.sc.initial_time_nsec);
     autoRestartAction->setChecked(context->config.auto_restart);
-    variableFramerateAction->setChecked(context->config.sc.variable_framerate);
 }
 
 void MainWindow::updateUIFromConfig()
@@ -1384,12 +1371,6 @@ void MainWindow::slotScreenshot()
     }
     
     context->hotkey_pressed_queue.push(HOTKEY_SCREENSHOT);
-}
-
-void MainWindow::slotVariableFramerate(bool checked)
-{
-    context->config.sc.variable_framerate = checked;
-    encodeWindow->update_config();
 }
 
 void MainWindow::slotRealTimeFormat()

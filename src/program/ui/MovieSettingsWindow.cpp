@@ -64,10 +64,6 @@ MovieSettingsWindow::MovieSettingsWindow(Context *c, MovieFile *m, QWidget *pare
     framerateDen = new QSpinBox();
     framerateDen->setMaximum(1000000000);
     
-    variableFramerate = new QComboBox();
-    variableFramerate->addItem(tr("No"), 0);
-    variableFramerate->addItem(tr("Yes"), 1);
-
     autoRestart = new QComboBox();
     autoRestart->addItem(tr("No"), 0);
     autoRestart->addItem(tr("Yes"), 1);
@@ -89,7 +85,6 @@ MovieSettingsWindow::MovieSettingsWindow(Context *c, MovieFile *m, QWidget *pare
     timeLayout->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
     timeLayout->addRow(new QLabel(tr("Framerate numerator:")), framerateNum);
     timeLayout->addRow(new QLabel(tr("Framerate denominator:")), framerateDen);
-    timeLayout->addRow(new QLabel(tr("Variable framerate:")), variableFramerate);
     timeLayout->addRow(new QLabel(tr("Auto-restart:")), autoRestart);
     timeLayout->addRow(new QLabel(tr("Initial elapsed time seconds:")), initialMonotonicSec);
     timeLayout->addRow(new QLabel(tr("Initial elapsed time nanoseconds:")), initialMonotonicNSec);
@@ -188,7 +183,6 @@ void MovieSettingsWindow::loadConfig()
 
     framerateNum->setValue(context->config.sc.initial_framerate_num);
     framerateDen->setValue(context->config.sc.initial_framerate_den);
-    variableFramerate->setCurrentIndex(context->config.sc.variable_framerate);
     autoRestart->setCurrentIndex(context->config.auto_restart);
 
     initialSec->setValue(context->config.sc.initial_time_sec);
@@ -214,7 +208,6 @@ void MovieSettingsWindow::saveConfig()
     context->config.sc.nb_controllers = joystickSupportChoice->currentData().toInt();
     context->config.sc.initial_framerate_num = framerateNum->value();
     context->config.sc.initial_framerate_den = framerateDen->value();
-    context->config.sc.variable_framerate = variableFramerate->currentData().toBool();
     context->config.auto_restart = autoRestart->currentData().toBool();
 
     context->config.sc.initial_time_sec = initialSec->value();

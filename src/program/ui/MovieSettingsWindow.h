@@ -45,7 +45,6 @@ private:
 
     QSpinBox *framerateNum;
     QSpinBox *framerateDen;
-    QComboBox *variableFramerate;
     QComboBox *autoRestart;
 
     QSpinBox *initialSec;

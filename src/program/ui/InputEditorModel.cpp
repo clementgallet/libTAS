@@ -728,9 +728,6 @@ bool InputEditorModel::insertRows(int row, int count, bool duplicate, const QMod
         }
     }
 
-    /* Update the movie framecount. Should it be done here ?? */
-    movie->updateLength();
-
     return true;
 }
 
@@ -741,9 +738,6 @@ bool InputEditorModel::removeRows(int row, int count, const QModelIndex &parent)
         return false;
 
     movie->inputs->deleteInputs(row, count);
-
-    /* Update the movie framecount */
-    movie->updateLength();
 
     return true;
 }
@@ -791,9 +785,6 @@ int InputEditorModel::pasteInputs(int row)
 
     movie->inputs->editInputs(paste_ais, row);
 
-    /* Update the movie framecount */
-    movie->updateLength();
-
     return paste_ais.size();
 }
 
@@ -814,9 +805,6 @@ void InputEditorModel::pasteInputsInRange(int row, int count)
         size_t range_size = std::min(paste_ais.size(), (size_t)(count-i));
         movie->inputs->editInputs(paste_ais, row+i, range_size);
     }
-
-    /* Update the movie framecount */
-    movie->updateLength();
 }
 
 int InputEditorModel::pasteInsertInputs(int row)
@@ -832,9 +820,6 @@ int InputEditorModel::pasteInsertInputs(int row)
     InputSerialization::readInputs(inputString, paste_ais);
 
     movie->inputs->insertInputsBefore(paste_ais, row);
-
-    /* Update the movie framecount */
-    movie->updateLength();
 
     return paste_ais.size();
 }

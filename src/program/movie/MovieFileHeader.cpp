@@ -67,7 +67,7 @@ void MovieFileHeader::load()
         context->config.sc.initial_framerate_den = framerate_den;
         
         context->config.auto_restart = config.value("auto_restart").toBool();
-        context->config.sc.variable_framerate = config.value("variable_framerate").toBool();
+        variable_framerate = config.value("variable_framerate").toBool();
         
         config.beginGroup("mainthread_timetrack");
         context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME] = config.value("time", -1).toInt();
@@ -117,6 +117,7 @@ void MovieFileHeader::loadSavestate()
     length_sec = config.value("length_sec").toULongLong();
     length_nsec = config.value("length_nsec").toULongLong();
     savestate_framecount = config.value("savestate_frame_count").toULongLong();
+    variable_framerate = config.value("variable_framerate").toBool();
 }
 
 void MovieFileHeader::save(uint64_t tot_frames, uint64_t nb_frames)
@@ -149,7 +150,7 @@ void MovieFileHeader::save(uint64_t tot_frames, uint64_t nb_frames)
     config.setValue("libtas_patch_version", PATCHVERSION);
     config.setValue("savestate_frame_count", static_cast<unsigned long long>(nb_frames));
     config.setValue("auto_restart", context->config.auto_restart);
-    config.setValue("variable_framerate", context->config.sc.variable_framerate);
+    config.setValue("variable_framerate", variable_framerate);
 
     if (!context->md5_game.empty())
         config.setValue("md5", context->md5_game.c_str());

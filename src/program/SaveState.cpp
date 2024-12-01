@@ -256,11 +256,11 @@ int SaveState::postLoad(Context* context, MovieFile& m, bool branch, bool inputE
     context->new_realtime_sec = context->current_realtime_sec;
     context->new_realtime_nsec = context->current_realtime_nsec;    
 
-    if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
-        context->config.sc.movie_framecount = context->framecount;
-        m.header->length_sec = context->current_time_sec;
-        m.header->length_nsec = context->current_time_nsec;
-    }
+    // if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
+    //     context->config.sc.movie_framecount = context->framecount;
+    //     m.header->length_sec = context->current_time_sec;
+    //     m.header->length_nsec = context->current_time_nsec;
+    // }
 
     if (didLoad) {
         sendMessage(MSGN_OSD_MSG);

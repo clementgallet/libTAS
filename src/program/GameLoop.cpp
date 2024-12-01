@@ -510,52 +510,52 @@ bool GameLoop::startFrameMessages()
             context->new_realtime_sec = context->current_realtime_sec;
             context->new_realtime_nsec = context->current_realtime_nsec;    
 
-            if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
-                /* If the input editor is opened, recording does not truncate inputs */
-                bool notTruncInputs = false;
-                emit isInputEditorVisible(notTruncInputs);
-
-                if (!notTruncInputs || (context->framecount > context->config.sc.movie_framecount)) {
-                    context->config.sc.movie_framecount = context->framecount;
-                    movie.header->length_sec = context->current_time_sec - context->config.sc.initial_monotonic_time_sec;
-                    movie.header->length_nsec = context->current_time_nsec - context->config.sc.initial_monotonic_time_nsec;
-                    if (movie.header->length_nsec < 0) {
-                        movie.header->length_nsec += 1000000000;
-                        movie.header->length_sec--;
-                    }
-                }
-            }
+            // if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
+            //     /* If the input editor is opened, recording does not truncate inputs */
+            //     bool notTruncInputs = false;
+            //     emit isInputEditorVisible(notTruncInputs);
+            // 
+            //     if (!notTruncInputs || (context->framecount > context->config.sc.movie_framecount)) {
+            //         context->config.sc.movie_framecount = context->framecount;
+            //         movie.header->length_sec = context->current_time_sec - context->config.sc.initial_monotonic_time_sec;
+            //         movie.header->length_nsec = context->current_time_nsec - context->config.sc.initial_monotonic_time_nsec;
+            //         if (movie.header->length_nsec < 0) {
+            //             movie.header->length_nsec += 1000000000;
+            //             movie.header->length_sec--;
+            //         }
+            //     }
+            // }
             
             /* Check and update the moviefile length when reaching the end of
              * the movie, useful when variable framerate is being used */
-            else if (context->config.sc.recording == SharedConfig::RECORDING_READ && 
-                context->framecount == context->config.sc.movie_framecount) {
-
-                uint64_t cur_sec = context->current_time_sec - context->config.sc.initial_monotonic_time_sec;
-                uint64_t cur_nsec = context->current_time_nsec - context->config.sc.initial_monotonic_time_nsec;
-
-                if (movie.header->length_sec != cur_sec ||
-                    movie.header->length_nsec != cur_nsec) {
-
-                    if (movie.header->length_sec != -1)
-                        emit alertToShow(QString("Movie length mismatch. Metadata stores %1.%2 seconds but end time is %3.%4 seconds.").arg(movie.header->length_sec).arg(movie.header->length_nsec, 9, 10, QChar('0')).arg(cur_sec).arg(cur_nsec, 9, 10, QChar('0')));
-
-                    movie.header->length_sec = cur_sec;
-                    movie.header->length_nsec = cur_nsec;
-                    movie.inputs->wasModified();
-                }
-            }
+            // else if (context->config.sc.recording == SharedConfig::RECORDING_READ && 
+            //     context->framecount == context->config.sc.movie_framecount) {
+            // 
+            //     uint64_t cur_sec = context->current_time_sec - context->config.sc.initial_monotonic_time_sec;
+            //     uint64_t cur_nsec = context->current_time_nsec - context->config.sc.initial_monotonic_time_nsec;
+            // 
+            //     if (movie.header->length_sec != cur_sec ||
+            //         movie.header->length_nsec != cur_nsec) {
+            // 
+            //         if (movie.header->length_sec != -1)
+            //             emit alertToShow(QString("Movie length mismatch. Metadata stores %1.%2 seconds but end time is %3.%4 seconds.").arg(movie.header->length_sec).arg(movie.header->length_nsec, 9, 10, QChar('0')).arg(cur_sec).arg(cur_nsec, 9, 10, QChar('0')));
+            // 
+            //         movie.header->length_sec = cur_sec;
+            //         movie.header->length_nsec = cur_nsec;
+            //         movie.inputs->wasModified();
+            //     }
+            // }
             
             /* When not recording, always truncate the movie */
-            if (context->config.sc.recording == SharedConfig::NO_RECORDING) {
-                context->config.sc.movie_framecount = context->framecount;
-                movie.header->length_sec = context->current_time_sec - context->config.sc.initial_monotonic_time_sec;
-                movie.header->length_nsec = context->current_time_nsec - context->config.sc.initial_monotonic_time_nsec;
-                if (movie.header->length_nsec < 0) {
-                    movie.header->length_nsec += 1000000000;
-                    movie.header->length_sec--;
-                }
-            }
+            // if (context->config.sc.recording == SharedConfig::NO_RECORDING) {
+            //     context->config.sc.movie_framecount = context->framecount;
+            //     movie.header->length_sec = context->current_time_sec - context->config.sc.initial_monotonic_time_sec;
+            //     movie.header->length_nsec = context->current_time_nsec - context->config.sc.initial_monotonic_time_nsec;
+            //     if (movie.header->length_nsec < 0) {
+            //         movie.header->length_nsec += 1000000000;
+            //         movie.header->length_sec--;
+            //     }
+            // }
 
             break;
         case MSGB_GAMEINFO:
