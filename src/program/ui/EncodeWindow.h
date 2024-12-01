@@ -25,6 +25,7 @@
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QSpinBox>
+#include <QtWidgets/QGroupBox>
 
 /* Forward declaration */
 struct Context;
@@ -49,6 +50,7 @@ private:
     QSpinBox *audioBitrate;
     QLineEdit *ffmpegOptions;
     QSpinBox *videoFramerate;
+    QGroupBox *framerateGroupBox;
 
 private slots:
     void slotBrowseEncodePath();

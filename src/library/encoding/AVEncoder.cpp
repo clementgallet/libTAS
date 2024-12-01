@@ -81,7 +81,7 @@ void AVEncoder::initMuxer() {
 
     /* Initialize the muxer with either framerate or video framerate */
     AudioContext& audiocontext = AudioContext::get();
-    if (Global::shared_config.variable_framerate)
+    if (Global::shared_config.video_framerate)
         nutMuxer = new NutMuxer(width, height, Global::shared_config.video_framerate, 1, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
     else
         nutMuxer = new NutMuxer(width, height, Global::shared_config.initial_framerate_num, Global::shared_config.initial_framerate_den, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
@@ -127,7 +127,7 @@ void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
     /* Number of frames to encode */
     int frames = 1;
 
-    if (Global::shared_config.variable_framerate) {
+    if (Global::shared_config.video_framerate) {
         /* We must send as many video frames to match the video framerate parameter */
         frame_remainder += (frametime.tv_sec + ((double)frametime.tv_nsec) / 1000000000.0) * Global::shared_config.video_framerate;
 

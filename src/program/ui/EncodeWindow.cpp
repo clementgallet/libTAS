@@ -91,12 +91,20 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent) : QDialog(parent), conte
     encodeCodecLayout->addWidget(new QLabel(tr("ffmpeg options:")), 2, 0);
     encodeCodecLayout->addWidget(ffmpegOptions, 2, 1, 1, 4);
 
-    encodeCodecLayout->addWidget(new QLabel(tr("Video framerate:")), 3, 0);
-    encodeCodecLayout->addWidget(videoFramerate, 3, 1, 1, 4);
-
     encodeCodecLayout->setColumnMinimumWidth(2, 50);
     encodeCodecLayout->setColumnStretch(2, 1);
     codecGroupBox->setLayout(encodeCodecLayout);
+
+    framerateGroupBox = new QGroupBox(tr("Custom framerate"));
+    framerateGroupBox->setCheckable(true);
+    framerateGroupBox->setChecked(false);
+
+    QHBoxLayout *framerateLayout = new QHBoxLayout;
+    framerateLayout->addWidget(new QLabel(tr("Video framerate:")));
+    framerateLayout->addWidget(videoFramerate);
+    framerateLayout->setStretch(1, 1);
+    
+    framerateGroupBox->setLayout(framerateLayout);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -112,6 +120,7 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent) : QDialog(parent), conte
 
     mainLayout->addWidget(encodeFileGroupBox);
     mainLayout->addWidget(codecGroupBox);
+    mainLayout->addWidget(framerateGroupBox);
     mainLayout->addStretch(1);
     mainLayout->addWidget(buttonBox);
 
@@ -141,8 +150,8 @@ void EncodeWindow::update_config()
     ffmpegOptions->setText(context->config.ffmpegoptions.c_str());
 
     /* Set video framerate */
-    videoFramerate->setEnabled(context->config.sc.variable_framerate);
-    if (context->config.sc.variable_framerate)
+    framerateGroupBox->setChecked(context->config.sc.video_framerate);
+    if (context->config.sc.video_framerate)
         videoFramerate->setValue(context->config.sc.video_framerate);
     else
         videoFramerate->setValue(context->config.sc.initial_framerate_num / context->config.sc.initial_framerate_den);
@@ -215,7 +224,10 @@ void EncodeWindow::slotOk()
     context->config.sc.audio_bitrate = audioBitrate->value();
     context->config.ffmpegoptions = ffmpegOptions->text().toStdString();
 
-    context->config.sc.video_framerate = videoFramerate->value();
+    if (framerateGroupBox->isChecked())
+        context->config.sc.video_framerate = videoFramerate->value();
+    else
+        context->config.sc.video_framerate = 0;
 
     context->config.sc_modified = true;
 
