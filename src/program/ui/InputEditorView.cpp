@@ -962,14 +962,7 @@ void InputEditorView::pasteInputs()
 
     /* If we selected only one row, paste the all inputs at that row */
     if (indexes.count() == 1) {
-        int nbFrames = inputEditorModel->pasteInputs(indexes[0].row());
-
-        /* Select the pasted inputs */
-        QModelIndex top = inputEditorModel->index(indexes[0].row(), 0);
-        QModelIndex bottom = inputEditorModel->index(indexes[0].row()+nbFrames-1, 0);
-        selectionModel()->clear();
-        selectionModel()->select(QItemSelection(top, bottom), QItemSelectionModel::Select | QItemSelectionModel::Rows);        
-        setCurrentIndex(top);
+        inputEditorModel->pasteInputs(indexes[0].row());
     }
     
     /* Else, paste inputs inside the selected range, with repeated inputs if
@@ -979,6 +972,8 @@ void InputEditorView::pasteInputs()
     else {
         applyToSelectedRanges([this](int min, int max){inputEditorModel->pasteInputsInRange(min, max-min+1);});
     }
+    
+    selectionModel()->clear();
 }
 
 void InputEditorView::pasteInsertInputs()
@@ -989,14 +984,9 @@ void InputEditorView::pasteInsertInputs()
     if (indexes.count() == 0)
         return;
 
-    int nbFrames = inputEditorModel->pasteInsertInputs(indexes[0].row());
+    inputEditorModel->pasteInsertInputs(indexes[0].row());
 
-    /* Select the pasted inputs */
-    QModelIndex top = inputEditorModel->index(indexes[0].row(), 0);
-    QModelIndex bottom = inputEditorModel->index(indexes[0].row()+nbFrames-1, 0);
     selectionModel()->clear();
-    selectionModel()->select(QItemSelection(top, bottom), QItemSelectionModel::Select | QItemSelectionModel::Rows);
-    setCurrentIndex(top);
 }
 
 void InputEditorView::undoInputs()
