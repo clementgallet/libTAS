@@ -79,12 +79,14 @@ int InputSerialization::writeFrame(std::ostream& stream, const AllInputs& inputs
     }
     
     /* Write keyboard inputs */
-    stream.put('|');
-    stream.put('K');
-    stream << std::hex;
-    for (int k=0; k<AllInputs::MAXKEYS; k++) {
-        if (!inputs.keyboard[k]) break;
-        stream << (k>0?":":"") << inputs.keyboard[k];
+    if (inputs.keyboard[0]) {
+        stream.put('|');
+        stream.put('K');
+        stream << std::hex;
+        for (int k=0; k<AllInputs::MAXKEYS; k++) {
+            if (!inputs.keyboard[k]) break;
+            stream << (k>0?":":"") << inputs.keyboard[k];
+        }
     }
 
     /* Write mouse inputs */
