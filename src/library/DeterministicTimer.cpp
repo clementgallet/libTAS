@@ -146,7 +146,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
          * of potential options to tweak. */
         main_gettimes[type]++;
         if (main_gettimes[type] == ALERT_CALL_THRESHOLD) {            
-            LOG(LL_WARN, LCF_TIMESET, "WARNING! many calls to function %s, you may need to enable time-tracking", gettimes_names[type]);
+            LOG(LL_WARN, LCF_TIMESET, "WARNING! many calls to function %s. If game is softlocked, enabling time-tracking may fix it", gettimes_names[type]);
         }
     }
 
