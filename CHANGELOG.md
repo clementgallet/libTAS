@@ -14,6 +14,7 @@
 * Add hex viewer
 * Open and seek hex viewer from ram watch
 * Show converted values from hex view selection
+* Implement `XRRGetCrtcTransform()`
 
 ### Changed
 

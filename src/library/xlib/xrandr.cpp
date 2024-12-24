@@ -40,6 +40,7 @@ DEFINE_ORIG_POINTER(XRRSetCrtcConfig)
 DEFINE_ORIG_POINTER(XRRSetScreenConfig)
 DEFINE_ORIG_POINTER(XRRSetScreenConfigAndRate)
 DEFINE_ORIG_POINTER(XRRSetScreenSize)
+DEFINE_ORIG_POINTER(XRRGetCrtcTransform)
 
 static const char *output_name = "libTAS fake XRR output";
 static const char *mode_name = "libTAS fake XRR mode";
@@ -205,6 +206,30 @@ void XRRSetScreenSize (Display *dpy, Window window, int width, int height, int m
 {
     LOGTRACE(LCF_WINDOW);
     /* We prevent games from changing the screen size */
+}
+
+Status XRRGetCrtcTransform (Display *dpy, RRCrtc crtc, XRRCrtcTransformAttributes **attributes)
+{
+    if (Global::shared_config.screen_width) {
+        static XRRCrtcTransformAttributes output_attributes;
+        
+        static const XTransform identity = {{
+            {0x10000, 0,       0      },
+            {0,       0x10000, 0      },
+            {0,       0,       0x10000}
+        }};
+
+        output_attributes.pendingTransform = identity;
+        output_attributes.pendingFilter = 0;
+        output_attributes.pendingNparams = 0;
+        output_attributes.currentTransform = identity;
+        output_attributes.currentFilter = 0;
+        output_attributes.currentNparams = 0;
+        *attributes = &output_attributes;
+        return RRSetConfigSuccess;
+    }
+    LINK_NAMESPACE_FULLNAME(XRRGetCrtcTransform, "libXrandr.so.2");
+    return orig::XRRGetCrtcTransform(dpy, crtc, attributes);
 }
 
 void get_monitor_resolution(int& width, int& height)
