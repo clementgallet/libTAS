@@ -48,8 +48,8 @@ void AutoDetect::game_libraries(Context *context)
     /* Build a command to parse the first missing library from the game executable,
      * look at game directory and sub-directories for it */
     std::ostringstream oss_ml;
-    oss_ml << "ldd '" << context->gamepath;
-    oss_ml << "' | awk '/ => not found/ { print $1 }' | head -1";
+    oss_ml << "ldd \"" << context->gamepath;
+    oss_ml << "\" | awk '/ => not found/ { print $1 }' | head -1";
     
     std::string missing_lib = queryCmd(oss_ml.str());
     if (missing_lib.empty()) return;
@@ -58,7 +58,7 @@ void AutoDetect::game_libraries(Context *context)
 
     std::string gamedir = dirFromPath(context->gamepath);
     std::ostringstream oss_lp;
-    oss_lp << "find '" << gamedir << "' -name " << missing_lib << " -type f -print -quit";
+    oss_lp << "find \"" << gamedir << "\" -name " << missing_lib << " -type f -print -quit";
 
     std::string found_lib = queryCmd(oss_lp.str());
     if (!found_lib.empty()) {
@@ -194,8 +194,8 @@ void AutoDetect::game_engine(Context *context)
         if (stat(data.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)) {
             std::cout << "Unity game detected" << std::endl;
             std::ostringstream oss;
-            oss << "strings '" << data;
-            oss << "/Resources/unity_builtin_extra' | head -n 1";
+            oss << "strings \"" << data;
+            oss << "/Resources/unity_builtin_extra\" | head -n 1";
 
             std::string version = queryCmd(oss.str());
             if (!version.empty())
@@ -233,8 +233,8 @@ void AutoDetect::game_engine(Context *context)
     /* Check for Godot:
      * Look at symbols inside the game executable and count `godot_*` */
     std::ostringstream oss;
-    oss << "readelf -WsC '" << context->gamepath;
-    oss << "' | grep godot_ | wc -l ";
+    oss << "readelf -WsC \"" << context->gamepath;
+    oss << "\" | grep godot_ | wc -l ";
 
     std::string godotcount = queryCmd(oss.str());
     if (!godotcount.empty() && (std::strtoul(godotcount.c_str(), nullptr, 10) > 100)) {
