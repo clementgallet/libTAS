@@ -57,6 +57,9 @@ void MovieFileInputs::setFramerate(unsigned int num, unsigned int den, bool vari
 
 void MovieFileInputs::clear()
 {
+    /* For new movies, will be overwritten when loading a moviefile */
+    setFramerate(context->config.sc.initial_framerate_num, context->config.sc.initial_framerate_den, false);
+
     modifiedSinceLastSave = false;
     modifiedSinceLastAutoSave = false;
     modifiedSinceLastStateLoad = false;
