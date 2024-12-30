@@ -33,6 +33,7 @@ plugins:
 
 header_pages:
   - news.md
+  - showcase.md
   - help.md
   - faq.md
 
