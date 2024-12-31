@@ -55,6 +55,7 @@ AudioConverterSwr::AudioConverterSwr(void)
     {
         GlobalNoLog gnl;
         LINK_NAMESPACE(swr_alloc, "swresample");
+        LINK_NAMESPACE_FULLNAME(swr_alloc, "libswresample.so.5");
         LINK_NAMESPACE_FULLNAME(swr_alloc, "libswresample.so.4");
         LINK_NAMESPACE_FULLNAME(swr_alloc, "libswresample.so.3");
         LINK_NAMESPACE_FULLNAME(swr_alloc, "libswresample.so.2");
