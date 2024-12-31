@@ -126,8 +126,6 @@ void pushNativeXlibEvents(Display *display)
     while (n > 0) {
         XEvent event;
         NATIVECALL(XNextEvent(display, &event));
-        LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "Push native event:");
-        debugEvent(&event);
 
         if (event.type == ClientMessage) {
             /* Catch the close event */
