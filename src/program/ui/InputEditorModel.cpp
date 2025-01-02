@@ -200,29 +200,29 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
 
         /* Show inputs with transparancy when they are pending due to rewind */
         bool pending_input = false;
-        movie->inputs->input_queue.lock();
-        for (auto it = movie->inputs->input_queue.begin(); it != movie->inputs->input_queue.end(); it++) {
-            if (it->framecount != row)
-                continue;
-
-            if (si == it->si) {
-                pending_input = true;
-                /* For analog, use half-transparancy. Otherwise,
-                 * use strong/weak transparancy of set/clear input */
-                if (si.isAnalog()) {
-                    color.setAlpha(128);
-                }
-                else {
-                    int alpha = 0;
-                    if (it->value) alpha += 192;
-                    if (current_value) alpha += 63;
-                    color.setAlpha(alpha);
-                }
-                /* We don't return the brush immediatly, because users may change
-                 * multiple times the same input. */
-            }
-        }
-        movie->inputs->input_queue.unlock();
+        // movie->inputs->input_queue.lock();
+        // for (auto it = movie->inputs->input_queue.begin(); it != movie->inputs->input_queue.end(); it++) {
+        //     if (it->framecount != row)
+        //         continue;
+        // 
+        //     if (si == it->si) {
+        //         pending_input = true;
+        //         /* For analog, use half-transparancy. Otherwise,
+        //          * use strong/weak transparancy of set/clear input */
+        //         if (si.isAnalog()) {
+        //             color.setAlpha(128);
+        //         }
+        //         else {
+        //             int alpha = 0;
+        //             if (it->value) alpha += 192;
+        //             if (current_value) alpha += 63;
+        //             color.setAlpha(alpha);
+        //         }
+        //         /* We don't return the brush immediatly, because users may change
+        //          * multiple times the same input. */
+        //     }
+        // }
+        // movie->inputs->input_queue.unlock();
 
         /* Show the current paint operation */
         if (paintMinRow != -1) {
@@ -444,23 +444,23 @@ QVariant InputEditorModel::data(const QModelIndex &index, int role) const
         }
 
         /* If the value is currently being modified, load the new value */
-        movie->inputs->input_queue.lock();
-        for (auto it = movie->inputs->input_queue.begin(); it != movie->inputs->input_queue.end(); it++) {
-            if (it->framecount != row)
-                continue;
-            if (si == it->si) {
-                if (si.isAnalog()) {
-                    value = it->value;
-                }
-                else {
-                    /* For non-analog values, always print the value, and the
-                     * transparancy value will indicate if the value is being
-                     * cleared or set. */
-                    value = 1;
-                }
-            }
-        }
-        movie->inputs->input_queue.unlock();
+        // movie->inputs->input_queue.lock();
+        // for (auto it = movie->inputs->input_queue.begin(); it != movie->inputs->input_queue.end(); it++) {
+        //     if (it->framecount != row)
+        //         continue;
+        //     if (si == it->si) {
+        //         if (si.isAnalog()) {
+        //             value = it->value;
+        //         }
+        //         else {
+        //             /* For non-analog values, always print the value, and the
+        //              * transparancy value will indicate if the value is being
+        //              * cleared or set. */
+        //             value = 1;
+        //         }
+        //     }
+        // }
+        // movie->inputs->input_queue.unlock();
 
         /* If the current value is being painted, load the new value */
         if (paintMinRow != -1) {

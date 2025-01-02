@@ -37,14 +37,14 @@ class InputEventWindow : public QDialog {
 public:
     InputEventWindow(Context *c, MovieFile *movie, QWidget *parent = Q_NULLPTR);
 
-    void setFrame(int frame);
+    void setFrame(uint64_t frame);
     
 private:
     Context *context;
     QTableView *inputEventView;
     InputEventModel *inputEventModel;
     MovieFile *movie;
-    int frame;
+    uint64_t frame;
 
     QPushButton *newButton;
 

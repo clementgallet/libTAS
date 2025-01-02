@@ -34,7 +34,7 @@ MovieFile::MovieFile(Context* c) : context(c)
     inputs = new MovieFileInputs(c);
     annotations = new MovieFileAnnotations(c);
     editor = new MovieFileEditor(c);
-    changelog = new MovieFileChangeLog(c, inputs);
+    changelog = new MovieFileChangeLog(c);
     
     inputs->setChangeLog(changelog);
 }

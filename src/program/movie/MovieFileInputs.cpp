@@ -20,6 +20,11 @@
 #include "MovieFileInputs.h"
 #include "MovieFileChangeLog.h"
 #include "InputSerialization.h"
+#include "IMovieAction.h"
+#include "MovieActionEditFrames.h"
+#include "MovieActionInsertFrames.h"
+#include "MovieActionPaint.h"
+#include "MovieActionRemoveFrames.h"
 
 #include "utils.h"
 #include "Context.h"
@@ -127,7 +132,7 @@ int MovieFileInputs::setInputs(const AllInputs& inputs, uint64_t pos, bool keep_
         
     /* Check that we are writing to the next frame */
     if (pos == input_list.size()) {
-        movie_changelog->registerInsertFrame(pos, inputs);
+        action_queue.push(new MovieActionInsertFrames(pos, inputs, this));
         return 0;
     }
     else if (pos < input_list.size()) {
@@ -136,11 +141,11 @@ int MovieFileInputs::setInputs(const AllInputs& inputs, uint64_t pos, bool keep_
          * the end.
          */
         if (keep_inputs) {
-            movie_changelog->registerEditFrame(pos, inputs);
+            action_queue.push(new MovieActionEditFrames(pos, inputs, this));
         }
         else {
-            movie_changelog->registerRemoveFrames(pos+1, input_list.size()-1);
-            movie_changelog->registerEditFrame(pos, inputs);
+            action_queue.push(new MovieActionRemoveFrames(pos+1, input_list.size()-1, this));
+            action_queue.push(new MovieActionEditFrames(pos, inputs, this));
         }
         return 0;
     }
@@ -176,57 +181,42 @@ const AllInputs& MovieFileInputs::getInputs(uint64_t pos)
 
 void MovieFileInputs::clearInputs(int minFrame, int maxFrame)
 {
-    if (maxFrame >= input_list.size())
-        return;
-    
-    movie_changelog->registerClearFrames(minFrame, maxFrame);
+    action_queue.push(new MovieActionEditFrames(minFrame, maxFrame, this));
 }
 
 void MovieFileInputs::paintInput(SingleInput si, int value, int minFrame, int maxFrame)
 {
-    movie_changelog->registerPaint(minFrame, maxFrame, si, value);
+    action_queue.push(new MovieActionPaint(minFrame, maxFrame, si, value, this));
 }
 
 void MovieFileInputs::paintInput(SingleInput si, std::vector<int>& values, int minFrame)
 {
-    movie_changelog->registerPaint(minFrame, si, values);
+    action_queue.push(new MovieActionPaint(minFrame, si, values, this));
 }
 
 void MovieFileInputs::editInputs(const std::vector<AllInputs>& inputs, uint64_t pos)
 {
-    return editInputs(inputs, pos, inputs.size());
+    action_queue.push(new MovieActionEditFrames(pos, inputs, this));
 }
 
 void MovieFileInputs::editInputs(const std::vector<AllInputs>& inputs, uint64_t pos, int count)
 {
-    if ((pos + count) > input_list.size())
-        return;
-
-    movie_changelog->registerEditFrames(pos, pos+count-1, inputs);
+    action_queue.push(new MovieActionEditFrames(pos, pos+count-1, inputs, this));
 }
 
 void MovieFileInputs::insertInputsBefore(uint64_t pos, int count)
 {
-    if (pos > input_list.size())
-        return;
-        
-    movie_changelog->registerInsertFrames(pos, count);
+    action_queue.push(new MovieActionInsertFrames(pos, count, this));
 }
 
 void MovieFileInputs::insertInputsBefore(const std::vector<AllInputs>& inputs, uint64_t pos)
 {
-    if (pos > input_list.size())
-        return;
-
-    movie_changelog->registerInsertFrames(pos, inputs);
+    action_queue.push(new MovieActionInsertFrames(pos, inputs, this));
 }
 
 void MovieFileInputs::deleteInputs(uint64_t pos, int count)
 {
-    if ((pos + count) > input_list.size())
-        return;
-
-    movie_changelog->registerRemoveFrames(pos, pos+count-1);
+    action_queue.push(new MovieActionRemoveFrames(pos, pos+count-1, this));
 }
 
 void MovieFileInputs::extractInputs(std::set<SingleInput> &set)
@@ -272,45 +262,14 @@ void MovieFileInputs::wasModified()
     updateLength();
 }
 
-void MovieFileInputs::queueInput(uint64_t pos, SingleInput si, int value, bool isEvent)
-{
-    InputPending ie;
-    ie.framecount = pos;
-    ie.si = si;
-    ie.value = value;
-    ie.isEvent = isEvent;
-    input_queue.push(ie);
-}
-
-void MovieFileInputs::processPendingInputs()
+void MovieFileInputs::processPendingActions()
 {
     /* Process input events */
-    while (!input_queue.empty()) {
-        InputPending ie;
-        input_queue.pop(ie);
-        
-        /* Check for setting inputs before current framecount */
-        if (ie.framecount < context->framecount)
-            continue;
-        
-        std::unique_lock<std::mutex> lock(input_list_mutex);
-
-        if (ie.framecount >= input_list.size())
-            continue;
-
-        AllInputs& ai = input_list[ie.framecount];
-        if ((ie.si.type == SingleInput::IT_NONE) && ie.isEvent)
-            ai.clear();
-        else if (ie.isEvent) {
-            ai.events.push_back({ie.si.type, ie.si.which, ie.value});
-            ai.processEvents(); // TODO: Unoptimal to call it everytime
-        }
-        else {
-            emit inputsToBeEdited(ie.framecount, ie.framecount);
-            ai.setInput(ie.si, ie.value);
-            emit inputsEdited(ie.framecount, ie.framecount);
-        }
-        wasModified();
+    while (!action_queue.empty()) {
+        IMovieAction* action;
+        action_queue.pop(action);
+        movie_changelog->push(action);
+        emit movie_changelog->updateChangeLog();
     }
 }
 

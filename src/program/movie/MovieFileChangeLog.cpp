@@ -27,7 +27,7 @@
 #include "Context.h"
 #include "../shared/inputs/AllInputs.h"
 
-MovieFileChangeLog::MovieFileChangeLog(Context* c, MovieFileInputs* mi) : QUndoStack(), context(c), movie_inputs(mi)
+MovieFileChangeLog::MovieFileChangeLog(Context* c) : QUndoStack(), context(c)
 {
     clear();
     setUndoLimit(100);
@@ -59,68 +59,4 @@ bool MovieFileChangeLog::redo()
     QUndoStack::redo();
     emit updateChangeLog();
     return true;
-}
-
-void MovieFileChangeLog::registerPaint(uint64_t start_frame, uint64_t end_frame, SingleInput si, int newV)
-{
-    push(new MovieActionPaint(start_frame, end_frame, si, newV, movie_inputs));
-    emit updateChangeLog();
-}
-
-void MovieFileChangeLog::registerPaint(uint64_t start_frame, SingleInput si, const std::vector<int>& newV)
-{
-    push(new MovieActionPaint(start_frame, si, newV, movie_inputs));
-    emit updateChangeLog();
-}
-
-void MovieFileChangeLog::registerClearFrames(uint64_t start_frame, uint64_t end_frame)
-{
-    push(new MovieActionEditFrames(start_frame, end_frame, movie_inputs));
-    emit updateChangeLog();
-}
-
-void MovieFileChangeLog::registerEditFrame(uint64_t edit_from, const AllInputs& edited_frame)
-{
-    push(new MovieActionEditFrames(edit_from, edited_frame, movie_inputs));
-    emit updateChangeLog();
-}
-
-void MovieFileChangeLog::registerEditFrames(uint64_t edit_from, const std::vector<AllInputs>& edited_frames)
-{
-    push(new MovieActionEditFrames(edit_from, edited_frames, movie_inputs));
-    emit updateChangeLog();
-}
-
-void MovieFileChangeLog::registerEditFrames(uint64_t edit_from, uint64_t edit_to, const std::vector<AllInputs>& edited_frames)
-{
-    push(new MovieActionEditFrames(edit_from, edit_to, edited_frames, movie_inputs));
-    emit updateChangeLog();
-}
-
-void MovieFileChangeLog::registerInsertFrame(uint64_t insert_from, const AllInputs& inserted_frame)
-{
-    push(new MovieActionInsertFrames(insert_from, inserted_frame, movie_inputs));
-    emit updateChangeLog();
-}
-
-void MovieFileChangeLog::registerInsertFrames(uint64_t insert_from, const std::vector<AllInputs>& inserted_frames)
-{
-    push(new MovieActionInsertFrames(insert_from, inserted_frames, movie_inputs));
-    emit updateChangeLog();
-}
-
-void MovieFileChangeLog::registerInsertFrames(uint64_t insert_from, int count)
-{
-    if (count <= 0)
-        return;
-    push(new MovieActionInsertFrames(insert_from, count, movie_inputs));
-    emit updateChangeLog();
-}
-
-void MovieFileChangeLog::registerRemoveFrames(uint64_t remove_from, uint64_t remove_to)
-{
-    if (remove_to < remove_from)
-        return;
-    push(new MovieActionRemoveFrames(remove_from, remove_to, movie_inputs));
-    emit updateChangeLog();
 }

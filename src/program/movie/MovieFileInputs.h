@@ -33,15 +33,7 @@
 
 struct Context;
 class MovieFileChangeLog;
-
-/* Struct to push movie changes from the UI to the main thread. UI thread should
- * never modify the movie */
-struct InputPending {
-    uint64_t framecount;
-    SingleInput si;
-    int value;
-    bool isEvent;
-};
+class IMovieAction;
 
 class MovieFileInputs : public QObject {
     Q_OBJECT
@@ -61,7 +53,7 @@ public:
     bool modifiedSinceLastStateLoad;
 
     /* Queue of movie input changes that where pushed by the UI, to process by the main thread */
-    ConcurrentQueue<InputPending> input_queue;
+    ConcurrentQueue<IMovieAction*> action_queue;
 
     /* Movie length */
     int64_t length_sec, length_nsec;
@@ -147,7 +139,7 @@ public:
     void queueInput(uint64_t pos, SingleInput si, int value, bool isEvent);
     
     /* Process all input events pushed by the UI thread */
-    void processPendingInputs();
+    void processPendingActions();
     
     /* Return the movie frame count */
     uint64_t size();

@@ -31,32 +31,18 @@
 #include <cstdint>
 
 struct Context;
-class MovieFileInputs;
 
 class MovieFileChangeLog : public QUndoStack {
     Q_OBJECT
 public:
 
     /* Prepare a movie file from the context */
-    MovieFileChangeLog(Context* c, MovieFileInputs* mi);
+    MovieFileChangeLog(Context* c);
 
     bool undo();
-    bool redo();
-    void registerAction();
-    void registerPaint(uint64_t start_frame, uint64_t end_frame, SingleInput si, int newV);
-    void registerPaint(uint64_t start_frame, SingleInput si, const std::vector<int>& newV);
-    void registerClearFrames(uint64_t start_frame, uint64_t end_frame);
-    void registerEditFrame(uint64_t edit_from, const AllInputs& edited_frame);
-    void registerEditFrames(uint64_t edit_from, const std::vector<AllInputs>& edited_frames);
-    void registerEditFrames(uint64_t edit_from, uint64_t edit_to, const std::vector<AllInputs>& edited_frames);
-    void registerInsertFrame(uint64_t insert_from, const AllInputs& inserted_frame);
-    void registerInsertFrames(uint64_t insert_from, const std::vector<AllInputs>& inserted_frames);
-    void registerInsertFrames(uint64_t insert_from, int count);
-    void registerRemoveFrames(uint64_t remove_from, uint64_t remove_to);
-    
+    bool redo();    
 private:
     Context* context;
-    MovieFileInputs* movie_inputs;
 
 signals:
     void updateChangeLog();

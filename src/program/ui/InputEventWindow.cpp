@@ -86,7 +86,7 @@ InputEventWindow::InputEventWindow(Context* c, MovieFile *m, QWidget *parent) : 
     setLayout(mainLayout);
 }
 
-void InputEventWindow::setFrame(int f)
+void InputEventWindow::setFrame(uint64_t f)
 {
     frame = f;
     setWindowTitle(QString("Edit Frame %1 Events").arg(frame));
@@ -106,19 +106,11 @@ void InputEventWindow::updateSelection()
 
 void InputEventWindow::slotSave()
 {
-    SingleInput si;
-    
-    /* First send a special input to clear all inputs */
-    si.type = SingleInput::IT_NONE;
-    si.which = 0;
-    movie->inputs->queueInput(frame, si, 0, true);
-    
-    /* Send each event */
-    for (const auto& event : inputEventModel->events) {
-        si.type = event.type;
-        si.which = event.which;
-        movie->inputs->queueInput(frame, si, event.value, true);        
-    }    
+    AllInputs ai;
+    ai.clear();
+    ai.events = inputEventModel->events;
+    ai.processEvents();
+    movie->inputs->setInputs(ai, frame);
     accept();
 }
 

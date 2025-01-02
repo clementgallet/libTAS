@@ -390,7 +390,7 @@ int GameEvents::handleEvent()
                 flags |= RETURN_FLAG_ADVANCE;
         }
         else {
-            movie->inputs->processPendingInputs();
+            movie->inputs->processPendingActions();
         }
     } while (eventType != EVENT_TYPE_NONE && !(flags & RETURN_FLAG_ADVANCE));
 
