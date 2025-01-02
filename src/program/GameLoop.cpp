@@ -280,6 +280,9 @@ void GameLoop::init()
             AllInputs ai;
             ai.clear();
             movie.inputs->setInputs(ai, false);
+            /* Process the input change immediatly, we don't want to wait for
+             * the next frame because the framecount will be 1 */
+            movie.inputs->processPendingActions();
         }
     }
 
@@ -859,6 +862,8 @@ void GameLoop::processInputs(AllInputs &ai)
             AutoSave::update(context, movie);
             break;
     }
+    
+    movie.inputs->processPendingActions();
 }
 
 void GameLoop::endFrameMessages(AllInputs &ai)
