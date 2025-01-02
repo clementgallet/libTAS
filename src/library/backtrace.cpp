@@ -19,27 +19,10 @@
 
 #include "backtrace.h"
 
-#include <cxxabi.h>
 #include <execinfo.h>
-#include <memory>
-#include <cstdio>
-#include <cstdlib>
+#include <unistd.h>
 
 namespace libtas {
-
-/* Code taken from http://stackoverflow.com/a/19190421 */
-static const char* demangle( const char* const symbol )
-{
-    /*
-    const std::unique_ptr< char, decltype( &std::free ) > demangled(
-            abi::__cxa_demangle( symbol, 0, 0, 0 ), &std::free );
-    if( demangled ) {
-        return demangled.get();
-    }
-    else {*/
-        return symbol;
-    //}
-}
 
 void printBacktrace(void)
 {
@@ -48,42 +31,12 @@ void printBacktrace(void)
         return;
     recurs = 1;
 
-    //threadState.setNoLog(true);
     void* addresses[256];
     const int n = backtrace(addresses, 256);
-    char** symbols = backtrace_symbols(addresses, n);
-    for( int i = 0; i < n; ++i ) {
-        /* We parse the symbols retrieved from backtrace_symbols() to
-         * extract the "real" symbols that represent the mangled names.
-         */
-        char* const symbol = symbols[i];
-        char* end = symbol;
-        while( *end ) {
-            ++end;
-        }
-        /* Scanning is done backwards, since the module name
-         * might contain both '+' or '(' characters.
-         */
-        while( end != symbol && *end != '+' ) {
-            --end;
-        }
-        char* begin = end;
-        while( begin != symbol && *begin != '(' ) {
-            --begin;
-        }
-
-        if( begin != symbol ) {
-            fprintf(stderr, "%.*s", static_cast<int>(++begin - symbol), symbol);
-            *end++ = '\0';
-            fprintf(stderr, "%s+%s\n", demangle( begin ), end);
-        }
-        else {
-            fprintf(stderr, "%s\n", symbol);
-        }
-    }
-    fprintf(stderr, "\n");
-    free(symbols);
-    //threadState.setNoLog(false);
+    /* Use `backtrace_symbols_fd` instead of `backtrace_symbols` to avoid using
+     * `malloc`. Also, don't print the top three functions as those are libtas
+     * functions calling this */
+    backtrace_symbols_fd(addresses+3, n-3, STDERR_FILENO);
     recurs = 0;
 }
 

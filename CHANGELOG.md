@@ -17,6 +17,7 @@
 * Implement `XRRGetCrtcTransform()`
 * Use Mesa's lavapipe when "force software rendering" is checked
 * Extend the rewind to all input operations
+* Add stacktrace to logging and coloured log levels
 
 ### Changed
 

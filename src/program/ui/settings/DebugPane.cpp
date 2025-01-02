@@ -73,14 +73,14 @@ void DebugPane::initLayout()
 
     QGroupBox* logLevelBox = new QGroupBox(tr("Level"));
     logLevelSlider = new QSlider(Qt::Horizontal);
-    logLevelSlider->setRange(0, 5);
+    logLevelSlider->setRange(0, 6);
     logLevelSlider->setSingleStep(1);
     logLevelSlider->setPageStep(1);
     logLevelSlider->setTickPosition(QSlider::TicksBelow);
     logLevelSlider->setTracking(false);
 
     QGridLayout *logLevelLayout = new QGridLayout;
-    logLevelLayout->addWidget(logLevelSlider, 0, 1, 1, 10);
+    logLevelLayout->addWidget(logLevelSlider, 0, 1, 1, 12);
 
     QLabel* label = new QLabel("Fatal");
     label->setAlignment(Qt::AlignHCenter);
@@ -105,6 +105,10 @@ void DebugPane::initLayout()
     label = new QLabel("Trace");
     label->setAlignment(Qt::AlignHCenter);
     logLevelLayout->addWidget(label, 1, 10, 1, 2);
+
+    label = new QLabel("Stack");
+    label->setAlignment(Qt::AlignHCenter);
+    logLevelLayout->addWidget(label, 1, 12, 1, 2);
     
     logLevelBox->setLayout(logLevelLayout);
 

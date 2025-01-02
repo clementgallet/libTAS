@@ -22,6 +22,7 @@
 #include "frame.h" // For framecount
 #include "global.h" // Global::shared_config
 #include "GlobalState.h"
+#include "backtrace.h"
 #include "renderhud/LogWindow.h"
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
@@ -83,8 +84,8 @@ void debuglogfull(LogLevel ll, LogCategoryFlag lcf, const char* file, int line, 
     GlobalNoLog tnl;
 
     /* Sanitize values */
-    if (ll > LL_TRACE)
-        ll = LL_TRACE;
+    if (ll >= LL_SIZE)
+        ll = LL_SIZE-1;
 
     /* Build main log string */
 
@@ -96,17 +97,10 @@ void debuglogfull(LogLevel ll, LogCategoryFlag lcf, const char* file, int line, 
     int size = 0;
 
     /* We only print colors if displayed on a terminal */
-    bool isTerm = isatty(/*cerr*/ 2);
+    bool isTerm = isatty(STDERR_FILENO);
     if (isTerm) {
-        if (ll <= LL_ERROR)
-            /* Write the header text in red */
-            strncat(s, ANSI_COLOR_RED, maxsize-size-1);
-        else if (ll == LL_WARN)
-            /* Write the header text in light red */
-            strncat(s, ANSI_COLOR_LIGHT_RED, maxsize-size-1);
-        else
-            /* Write the header text in white */
-            strncat(s, ANSI_COLOR_LIGHT_GRAY, maxsize-size-1);
+        /* Write the header text in white */
+        strncat(s, ANSI_COLOR_LIGHT_GRAY, maxsize-size-1);
     }
     size = strlen(s);
 
@@ -127,8 +121,8 @@ void debuglogfull(LogLevel ll, LogCategoryFlag lcf, const char* file, int line, 
     size = strlen(s);
 
     if (isTerm) {
-        /* Reset color change */
-        strncat(s, ANSI_COLOR_RESET, maxsize-size-1);
+        /* Set level color change */
+        strncat(s, LL_COLORS[ll], maxsize-size-1);
         size = strlen(s);
     }
 
@@ -141,6 +135,17 @@ void debuglogfull(LogLevel ll, LogCategoryFlag lcf, const char* file, int line, 
         snprintf(s + size, maxsize-size-1, "%s: ", LL_NAMES[ll]);
     }
     size = strlen(s);
+
+    if (!(lcf & LCF_CHECKPOINT))
+        LogWindow::addLog(s + beg_size, s + size, true);
+
+    if (isTerm) {
+        /* Reset color change */
+        strncat(s, ANSI_COLOR_RESET, maxsize-size-1);
+        size = strlen(s);
+    }
+
+    beg_size = size;
 
     va_list args;
     va_start(args, line);
@@ -167,6 +172,16 @@ void debuglogfull(LogLevel ll, LogCategoryFlag lcf, const char* file, int line, 
 #else
     fputs(s, stderr);
 #endif
+
+    if (Global::shared_config.logging_level == LL_STACK && ll == LL_TRACE) {
+        if (isTerm) {
+            fputs_unlocked(LL_COLORS[LL_STACK], stderr);
+        }
+        printBacktrace();
+        if (isTerm) {
+            fputs_unlocked(ANSI_COLOR_RESET, stderr);
+        }
+    }
 }
 
 void sendAlertMsg(const std::string alert)

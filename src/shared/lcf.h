@@ -23,15 +23,18 @@
 /* Log level, should be combined with a log category */
 typedef unsigned int LogLevel; enum
 {
-    LL_FATAL    = 0, // things that shouldn't happen and that we won't recover.
-    LL_ERROR    = 1, // things that shouldn't happen.
-    LL_WARN     = 2, // things that users should be warned about.
-    LL_INFO     = 3, // things that users may want to know about.
-    LL_DEBUG    = 4, // things that devs may want to know about.
-    LL_TRACE    = 5, // reserved for logging each hooked function call.
+    LL_FATAL, // things that shouldn't happen and that we won't recover.
+    LL_ERROR, // things that shouldn't happen.
+    LL_WARN , // things that users should be warned about.
+    LL_INFO , // things that users may want to know about.
+    LL_DEBUG, // things that devs may want to know about.
+    LL_TRACE, // reserved for logging each hooked function call.
+    LL_STACK, // print additional backtrace.
+    LL_SIZE ,
 };
 
-const char* const LL_NAMES[] = { "FATAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE" };
+const char* const LL_NAMES[] = { "FATAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE", "STACK" };
+const char* const LL_COLORS[] = { "\x1b[31m", "\x1b[31m", "\x1b[33m", "\x1b[37m", "\x1b[32m", "\x1b[34m", "\x1b[94m" };
 
 typedef unsigned int LogCategoryFlag; enum
 {
