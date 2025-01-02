@@ -547,7 +547,7 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
 
         /* Rewind to past frame is needed */
         if (row < context->framecount) {
-            bool ret = rewind(row, true);
+            bool ret = rewind(row);
             if (!ret)
                 return false;
         }
@@ -627,7 +627,7 @@ void InputEditorModel::endPaint()
 
     /* Rewind to past frame if needed, otherwise paint whatever is possible */
     if (paintMinRow < context->framecount) {
-        bool ret = rewind(paintMinRow, true);
+        bool ret = rewind(paintMinRow);
         if (!ret) {
             /* Try rewinding to the earliest frame possible and paint what is possible */
             uint64_t root_frame = SaveStateList::rootStateFramecount();
@@ -637,7 +637,7 @@ void InputEditorModel::endPaint()
             }
             if (root_frame > paintMinRow)
                 paintMinRow = root_frame;
-            ret = rewind(root_frame, true);
+            ret = rewind(root_frame);
             if (!ret) {
                 paintMinRow = -1;
                 return;
@@ -715,9 +715,13 @@ bool InputEditorModel::insertRows(int row, int count, const QModelIndex &parent)
 
 bool InputEditorModel::insertRows(int row, int count, bool duplicate, const QModelIndex &parent)
 {
-    /* Don't insert past inputs */
-    if (row < static_cast<int>(context->framecount))
-        return false;
+    /* Rewind to past frame if needed */
+    if (row < static_cast<int>(context->framecount)) {
+        bool ret = rewind(row);
+        if (!ret) {
+            return 0;
+        }
+    }
 
     movie->inputs->insertInputsBefore(row, count);
 
@@ -733,9 +737,13 @@ bool InputEditorModel::insertRows(int row, int count, bool duplicate, const QMod
 
 bool InputEditorModel::removeRows(int row, int count, const QModelIndex &parent)
 {
-    /* Don't delete past inputs */
-    if (row < static_cast<int>(context->framecount))
-        return false;
+    /* Rewind to past frame if needed */
+    if (row < static_cast<int>(context->framecount)) {
+        bool ret = rewind(row);
+        if (!ret) {
+            return 0;
+        }
+    }
 
     movie->inputs->deleteInputs(row, count);
 
@@ -766,10 +774,14 @@ void InputEditorModel::copyInputs(int row, int count, std::ostringstream& inputS
 
 int InputEditorModel::pasteInputs(int row)
 {
-    /* Don't modify past inputs */
-    if (row < static_cast<int>(context->framecount))
-        return 0;
-
+    /* Rewind to past frame if needed */
+    if (row < static_cast<int>(context->framecount)) {
+        bool ret = rewind(row);
+        if (!ret) {
+            return 0;
+        }
+    }
+    
     QClipboard *clipboard = QGuiApplication::clipboard();
     std::istringstream inputString(clipboard->text().toStdString());
 
@@ -790,9 +802,13 @@ int InputEditorModel::pasteInputs(int row)
 
 void InputEditorModel::pasteInputsInRange(int row, int count)
 {
-    /* Don't modify past inputs */
-    if (row < static_cast<int>(context->framecount))
-        return;
+    /* Rewind to past frame if needed */
+    if (row < static_cast<int>(context->framecount)) {
+        bool ret = rewind(row);
+        if (!ret) {
+            return;
+        }
+    }
 
     QClipboard *clipboard = QGuiApplication::clipboard();
     std::istringstream inputString(clipboard->text().toStdString());
@@ -809,9 +825,13 @@ void InputEditorModel::pasteInputsInRange(int row, int count)
 
 int InputEditorModel::pasteInsertInputs(int row)
 {
-    /* Don't modify past inputs */
-    if (row < static_cast<int>(context->framecount))
-        return 0;
+    /* Rewind to past frame if needed */
+    if (row < static_cast<int>(context->framecount)) {
+        bool ret = rewind(row);
+        if (!ret) {
+            return 0;
+        }
+    }
 
     QClipboard *clipboard = QGuiApplication::clipboard();
     std::istringstream inputString(clipboard->text().toStdString());
@@ -978,6 +998,14 @@ void InputEditorModel::lockUniqueInput(int column, bool locked)
 
 void InputEditorModel::clearInputs(int min_row, int max_row)
 {
+    /* Rewind to past frame if needed */
+    if (min_row < static_cast<int>(context->framecount)) {
+        bool ret = rewind(min_row);
+        if (!ret) {
+            return;
+        }
+    }
+
     movie->inputs->clearInputs(min_row, max_row);
 }
 
@@ -1123,7 +1151,12 @@ void InputEditorModel::moveInputs(int oldIndex, int newIndex)
     movie->editor->input_set.insert(movie->editor->input_set.begin() + newIndex, si);
 }
 
-bool InputEditorModel::rewind(uint64_t framecount, bool toggle)
+bool InputEditorModel::rewind(uint64_t framecount)
+{
+    return rewind(framecount, false);
+}
+
+bool InputEditorModel::rewind(uint64_t framecount, bool enforce_seek)
 {
     /* If another rewind is already performing, don't do anything but let
      * the possibility to change the input (the movie will check it it's
@@ -1164,7 +1197,7 @@ bool InputEditorModel::rewind(uint64_t framecount, bool toggle)
     
     if (framecount > state_framecount) {
         /* Seek to either the modified frame or the current frame */
-        if (toggle && context->config.editor_rewind_seek)
+        if (!enforce_seek && context->config.editor_rewind_seek)
             context->seek_frame = current_framecount;
         else
             context->seek_frame = framecount;
@@ -1217,7 +1250,7 @@ void InputEditorModel::setHoveredCell(const QModelIndex &i)
 
 void InputEditorModel::seekToFrame(unsigned long long frame)
 {
-    rewind(frame, false);
+    rewind(frame, true); // rewind and enforce seek to frame
 }
 
 void InputEditorModel::setAutoholdInput(int i, bool checked)

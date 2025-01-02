@@ -138,10 +138,6 @@ public:
     /* User moved a column */
     void moveInputs(int oldIndex, int newIndex);
 
-    /* Rewind to frame, specify if it was called from input toggle or seeking
-     * return if succeeded */
-    bool rewind(uint64_t framecount, bool toggle);
-
     /* Returns if scroll is frozen */
     bool isScrollFreeze();
 
@@ -223,6 +219,13 @@ private:
     const float maxUndoTimeoutSec = 0.5f;
     std::chrono::time_point<std::chrono::steady_clock> undoStart;
     QTimer* undoTimer;
+
+    /* Rewind to frame, specify if we should enforce seeking to that frame, or
+     * follow the setting. Return if succeeded */
+    bool rewind(uint64_t framecount, bool enforce_seek);
+
+    /* Rewind without enforce seeking */
+    bool rewind(uint64_t framecount);
 
 signals:
     void inputSetChanged();

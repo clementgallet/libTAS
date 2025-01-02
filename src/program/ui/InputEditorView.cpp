@@ -308,27 +308,9 @@ void InputEditorView::updateMenu()
 
     if (static_cast<uint32_t>(min_row) < context->framecount) {
         eventAct->setEnabled(false);
-        duplicateAct->setEnabled(false);
-        insertAct->setEnabled(false);
-        insertsAct->setEnabled(false);
-        deleteAct->setEnabled(false);
-        truncateAct->setEnabled(false);
-        clearAct->setEnabled(false);
-        cutAct->setEnabled(false);
-        pasteAct->setEnabled(false);
-        pasteInsertAct->setEnabled(false);
     }
     else {
         eventAct->setEnabled(true);
-        duplicateAct->setEnabled(true);
-        insertAct->setEnabled(true);
-        insertsAct->setEnabled(true);
-        deleteAct->setEnabled(true);
-        truncateAct->setEnabled(true);
-        clearAct->setEnabled(true);
-        cutAct->setEnabled(true);
-        pasteAct->setEnabled(true);
-        pasteInsertAct->setEnabled(true);
     }
     
     undoAct->setEnabled(movie->changelog->canUndo());
@@ -361,7 +343,7 @@ void InputEditorView::mousePressEvent(QMouseEvent *event)
 
     /* Rewind when clicking for column */
     if (mouseColumn == InputEditorModel::COLUMN_SAVESTATE) {
-        inputEditorModel->rewind(mouseRow, false);
+        inputEditorModel->seekToFrame(mouseRow);
         return;
     }
 
@@ -423,7 +405,7 @@ void InputEditorView::wheelEvent(QWheelEvent *event)
         /* Only rewind when paused, which should prevent rewinding during the end
          * of another rewind */
         if (context->framecount > 0 && !context->config.sc.running)
-            inputEditorModel->rewind(context->framecount - 1, false);
+            inputEditorModel->seekToFrame(context->framecount - 1);
     }
     
     event->accept();

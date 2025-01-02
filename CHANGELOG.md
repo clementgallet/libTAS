@@ -16,6 +16,7 @@
 * Show converted values from hex view selection
 * Implement `XRRGetCrtcTransform()`
 * Use Mesa's lavapipe when "force software rendering" is checked
+* Extend the rewind to all input operations
 
 ### Changed
 
