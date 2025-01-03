@@ -40,7 +40,7 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent) : QDialog(parent), conte
     browseEncodePath = new QPushButton("Browse...");
     connect(browseEncodePath, &QAbstractButton::clicked, this, &EncodeWindow::slotBrowseEncodePath);
 
-    QGroupBox *encodeFileGroupBox = new QGroupBox(tr("Encode file path"));
+    QGroupBox *encodeFileGroupBox = new QGroupBox(tr("Encode file path - you must specify a valid file extension (.mkv, .mp4, etc.)"));
     QHBoxLayout *encodeFileLayout = new QHBoxLayout;
     encodeFileLayout->addWidget(encodePath);
     encodeFileLayout->addWidget(browseEncodePath);

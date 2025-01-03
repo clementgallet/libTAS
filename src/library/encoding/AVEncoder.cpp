@@ -48,12 +48,15 @@ AVEncoder::AVEncoder() {
     commandline << "ffmpeg -hide_banner -y -f nut -i - ";
     commandline << ffmpeg_options;
     commandline << " \"";
-    commandline.write(dumpfile, static_cast<int>(strrchr(dumpfile, '.') - dumpfile));
+    char* dumpfile_ext = strrchr(dumpfile, '.');
+    if (dumpfile_ext == NULL) dumpfile_ext = dumpfile + strnlen(dumpfile, 4096);
+    
+    commandline.write(dumpfile, static_cast<int>(dumpfile_ext - dumpfile));
     /* Add segment number to filename if not the first */
     if (segment_number > 0) {
         commandline << "_" << segment_number;
     }
-    commandline << strrchr(dumpfile, '.');
+    commandline << dumpfile_ext;
     commandline << "\"";
 
     NATIVECALL(ffmpeg_pipe = popen(commandline.str().c_str(), "w"));
