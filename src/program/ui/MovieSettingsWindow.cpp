@@ -27,6 +27,7 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QFormLayout>
+#include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QComboBox>
@@ -154,10 +155,16 @@ MovieSettingsWindow::MovieSettingsWindow(Context *c, MovieFile *m, QWidget *pare
     connect(buttonBox, &QDialogButtonBox::accepted, this, &MovieSettingsWindow::saveConfig);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &MovieSettingsWindow::reject);
 
+    QVBoxLayout* const leftLayout = new QVBoxLayout;
+    leftLayout->addWidget(inputBox);
+    leftLayout->addWidget(timeBox);
+
+    QHBoxLayout* const settingsLayout = new QHBoxLayout;
+    settingsLayout->addLayout(leftLayout);
+    settingsLayout->addWidget(timeTrackingBox);
+
     QVBoxLayout* const mainLayout = new QVBoxLayout;
-    mainLayout->addWidget(inputBox);
-    mainLayout->addWidget(timeBox);
-    mainLayout->addWidget(timeTrackingBox);
+    mainLayout->addLayout(settingsLayout);
     mainLayout->addWidget(buttonBox);
 
     setLayout(mainLayout);
