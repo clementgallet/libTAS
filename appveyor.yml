@@ -1,9 +1,16 @@
 version: 1.0.{build}
+
 branches:
   only:
   - master
+
 skip_tags: true
+
 image: Ubuntu2204
+
+cache:
+  - linuxdeploy-x86_64.AppImage
+
 install:
 - sh: >-
     sudo dpkg --add-architecture i386
@@ -17,14 +24,24 @@ install:
     sudo ln -f -s /usr/bin/gcc-11 /usr/bin/gcc
 
     sudo ln -f -s /usr/bin/g++-11 /usr/bin/g++
+    
+    wget -nc https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+    
+    chmod +x linuxdeploy-x86_64.AppImage
+    
 build_script:
 - sh: sudo dpkg-buildpackage -us -uc -b
 after_build:
 - sh: sudo mv ../libtas*deb ./
 - sh: for f in libtas*deb; do mv $f ${f/_amd/_${APPVEYOR_REPO_COMMIT:0:7}_amd}; done;
+- sh: ARCH=x86_64 NO_CLEANUP=1 ./linuxdeploy-x86_64.AppImage --appimage-extract-and-run --appdir debian/libtas/ --output appimage
+- sh: mv libTAS-x86_64.AppImage libtas_${APPVEYOR_REPO_COMMIT:0:7}_amd64.AppImage
 artifacts:
 - path: libtas*.deb
   name: libtas
 
 - path: libtas-dbgsym*.ddeb
   name: libtas-dbgsym
+
+- path: libtas*_amd64.AppImage
+  name: libtas-appimage
