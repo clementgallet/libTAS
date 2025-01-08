@@ -452,7 +452,7 @@ static void readAllAreas()
 
     /* Now that the memory layout matches the savestate, we load savestate into memory */
     saved_state.restart();
-    saved_area = saved_state.nextArea();
+    saved_area = saved_state.getArea();
     
     /* Load base and parent savestates */
     SaveStateLoading parent_state(parentpagemappath, parentpagespath, getPagemapFd(parent_ss_index), getPagesFd(parent_ss_index));
