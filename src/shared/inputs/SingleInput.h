@@ -169,6 +169,9 @@ public:
     /* Convert a button number to a SDL2 button number */
     static int toSDL2Button(int button);
 
+    /* Returns if a button belongs to a hat */
+    static bool isButtonHat(int button);
+
     /* Convert button flags to a SDL1/2 hat number */
     static int toSDLHat(int buttons);
 

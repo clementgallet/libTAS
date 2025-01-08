@@ -95,7 +95,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
             return orig::ioctl(fd, request, argp);
         }
         char* buttons = static_cast<char*>(argp);
-        *buttons = 11;
+        *buttons = SingleInput::BUTTON_LAST;
         return 0;
     }
 
@@ -260,7 +260,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
         int len = _IOC_SIZE(request);
         uint8_t* bits = static_cast<uint8_t*>(argp);
 
-        for (int bi=0; bi<11; bi++) {
+        for (int bi=0; bi<SingleInput::BUTTON_LAST; bi++) {
             if (buttons & (1 << bi)) CHECK_LEN_AND_SET_BIT(SingleInput::toEvdevButton(bi), bits, len);
         }
         return 0;
@@ -304,7 +304,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
                 if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
                     return orig::ioctl(fd, request, argp);
                 }
-                for (int bi=0; bi<11; bi++) {
+                for (int bi=0; bi<SingleInput::BUTTON_LAST; bi++) {
                     CHECK_LEN_AND_SET_BIT(SingleInput::toEvdevButton(bi), bits, len);
                 }
                 return 0;

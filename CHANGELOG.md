@@ -18,6 +18,7 @@
 * Use Mesa's lavapipe when "force software rendering" is checked
 * Extend the rewind to all input operations
 * Add stacktrace to logging and coloured log levels
+* Jsdev protocol can send jostick hat inputs as buttons
 
 ### Changed
 

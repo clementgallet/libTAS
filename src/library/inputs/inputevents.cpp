@@ -427,7 +427,7 @@ static void generateControllerEvents(void)
          * but we still check here if hat has changed */
         bool hatHasChanged = false;
 
-        for (int bi=0; bi<16; bi++) {
+        for (int bi=0; bi<SingleInput::BUTTON_LAST; bi++) {
             if (((buttons >> bi) & 0x1) != ((old_buttons >> bi) & 0x1)) {
                 /* We got a change in a button state */
 
@@ -452,7 +452,10 @@ static void generateControllerEvents(void)
                     }
 
                     if (genJoy) {
-                        if (bi < 11) {
+                        if (SingleInput::isButtonHat(bi)) {
+                            hatHasChanged = true;
+                        }
+                        else {
                             /* SDL2 joystick button */
                             SDL_Event event2;
                             if ((buttons >> bi) & 0x1) {
@@ -470,15 +473,14 @@ static void generateControllerEvents(void)
                             event2.jbutton.button = bi;
                             sdlEventQueue.insert(&event2);
                         }
-
-                        else {
-                            hatHasChanged = true;
-                        }
                     }
                 }
 
                 if (Global::game_info.joystick & GameInfo::SDL1) {
-                    if (bi < 11) {
+                    if (SingleInput::isButtonHat(bi)) {
+                        hatHasChanged = true;
+                    }
+                    else {
                         /* SDL1 joystick button */
                         SDL1::SDL_Event event1;
                         if ((buttons >> bi) & 0x1) {
@@ -495,39 +497,36 @@ static void generateControllerEvents(void)
                         event1.jbutton.button = bi;
                         sdlEventQueue.insert(&event1);
                     }
-                    else {
-                        hatHasChanged = true;
-                    }
                 }
 
 #ifdef __linux__
                 if (Global::game_info.joystick & GameInfo::JSDEV) {
-                    if (bi < 11) { // JSDEV joystick only has 11 buttons
-                        struct js_event ev;
-                        ev.time = timestamp;
-                        ev.type = JS_EVENT_BUTTON;
-                        ev.number = SingleInput::toJsdevButton(bi);
-                        ev.value = (buttons >> bi) & 0x1;
-                        LOG(LL_DEBUG, LCF_EVENTS | LCF_JOYSTICK, "Generate jsdev event JS_EVENT_BUTTON with button %d", bi);
-                        write_jsdev(ev, ji);
-                    }
-                    else {
+                    /* JSDEV joystick can generate hat as both buttons and axes */
+                    struct js_event ev;
+                    ev.time = timestamp;
+                    ev.type = JS_EVENT_BUTTON;
+                    ev.number = SingleInput::toJsdevButton(bi);
+                    ev.value = (buttons >> bi) & 0x1;
+                    LOG(LL_DEBUG, LCF_EVENTS | LCF_JOYSTICK, "Generate jsdev event JS_EVENT_BUTTON with button %d", bi);
+                    write_jsdev(ev, ji);
+
+                    if (SingleInput::isButtonHat(bi)) {
                         hatHasChanged = true;
                     }
                 }
 
                 if (Global::game_info.joystick & GameInfo::EVDEV) {
-                    if (bi < 11) { // EVDEV joystick only has 11 buttons
-                        struct input_event ev;
-                        ev.time.tv_sec = time.tv_sec;
-                        ev.time.tv_usec = time.tv_nsec / 1000;
-                        ev.type = EV_KEY;
-                        ev.code = SingleInput::toEvdevButton(bi);
-                        ev.value = (buttons >> bi) & 0x1;
-                        LOG(LL_DEBUG, LCF_EVENTS | LCF_JOYSTICK, "Generate evdev event EV_KEY with button %d", bi);
-                        write_evdev(ev, ji);
-                    }
-                    else {
+                    /* EVDEV joystick can generate hat as both buttons and axes */
+                    struct input_event ev;
+                    ev.time.tv_sec = time.tv_sec;
+                    ev.time.tv_usec = time.tv_nsec / 1000;
+                    ev.type = EV_KEY;
+                    ev.code = SingleInput::toEvdevButton(bi);
+                    ev.value = (buttons >> bi) & 0x1;
+                    LOG(LL_DEBUG, LCF_EVENTS | LCF_JOYSTICK, "Generate evdev event EV_KEY with button %d", bi);
+                    write_evdev(ev, ji);
+
+                    if (SingleInput::isButtonHat(bi)) {
                         hatHasChanged = true;
                     }
                 }

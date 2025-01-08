@@ -89,7 +89,7 @@ int open_jsdev(const char* source, int flags)
         struct timespec ts = DeterministicTimer::get().getTicks();
         ev.time = ts.tv_sec*1000 + ts.tv_nsec/1000000;
         ev.value = 0;
-        for (int button = 0; button < 11; button++) {
+        for (int button = 0; button < SingleInput::BUTTON_LAST; button++) {
             ev.type = JS_EVENT_BUTTON | JS_EVENT_INIT;
             ev.number = button;
             write_jsdev(ev, jsnum);

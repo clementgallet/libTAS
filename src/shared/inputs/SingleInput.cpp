@@ -252,6 +252,18 @@ int SingleInput::toSDL2Button(int button)
     }
 }
 
+bool SingleInput::isButtonHat(int button)
+{
+    switch(button) {
+        case SingleInput::BUTTON_DPAD_UP:
+        case SingleInput::BUTTON_DPAD_DOWN:
+        case SingleInput::BUTTON_DPAD_LEFT:
+        case SingleInput::BUTTON_DPAD_RIGHT:
+            return true;
+    }
+    return false;
+}
+
 int SingleInput::toSDLHat(int buttons)
 {
     /* Fortunately, we use the fact that SDL_HAT_X constants
@@ -322,6 +334,14 @@ int SingleInput::toJsdevButton(int button)
             return 4;
         case SingleInput::BUTTON_RIGHTSHOULDER:
             return 5;
+        case SingleInput::BUTTON_DPAD_UP:
+            return 13;
+        case SingleInput::BUTTON_DPAD_DOWN:
+            return 14;
+        case SingleInput::BUTTON_DPAD_LEFT:
+            return 11;
+        case SingleInput::BUTTON_DPAD_RIGHT:
+            return 12;
         default:
             return -1;
     }
@@ -372,6 +392,14 @@ int SingleInput::toEvdevButton(int button)
             return BTN_TL;
         case SingleInput::BUTTON_RIGHTSHOULDER:
             return BTN_TR;
+        case SingleInput::BUTTON_DPAD_UP:
+            return BTN_DPAD_UP;
+        case SingleInput::BUTTON_DPAD_DOWN:
+            return BTN_DPAD_DOWN;
+        case SingleInput::BUTTON_DPAD_LEFT:
+            return BTN_DPAD_LEFT;
+        case SingleInput::BUTTON_DPAD_RIGHT:
+            return BTN_DPAD_RIGHT;
         default:
             return -1;
     }
