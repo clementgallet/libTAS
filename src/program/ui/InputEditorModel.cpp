@@ -930,9 +930,7 @@ void InputEditorModel::clearUniqueInput(int column)
     if (movie->editor->locked_inputs.find(si) != movie->editor->locked_inputs.end())
         return;
 
-    for (unsigned int f = context->framecount; f < movie->inputs->nbFrames(); f++) {
-        movie->inputs->paintInput(si, 0, f, f);
-    }
+    movie->inputs->paintInput(si, 0, context->framecount, movie->inputs->nbFrames()-1);
 }
 
 bool InputEditorModel::removeUniqueInput(int column)
@@ -947,9 +945,7 @@ bool InputEditorModel::removeUniqueInput(int column)
     }
 
     /* Clear remaining frames */
-    for (unsigned int f = context->framecount; f < movie->inputs->nbFrames(); f++) {
-        movie->inputs->paintInput(si, 0, f, f);
-    }
+    movie->inputs->paintInput(si, 0, context->framecount, movie->inputs->nbFrames()-1);
 
     /* Remove clear locked state */
     if (movie->editor->locked_inputs.find(si) != movie->editor->locked_inputs.end())
