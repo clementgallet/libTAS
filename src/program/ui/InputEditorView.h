@@ -49,6 +49,7 @@ public slots:
     void addInputColumn();
     void clearInputColumn();
     void removeInputColumn();
+    void factorInputColumn();
     void lockInputColumn(bool checked);
     void autoholdInput(bool checked);
     void autofireInput(bool checked);
@@ -132,6 +133,7 @@ private:
     QAction *undoAct;
     QAction *redoAct;
 
+    QAction *factorAction;
     QAction *lockAction;
     QAction *autoholdAction;
     QAction *autofireAction;

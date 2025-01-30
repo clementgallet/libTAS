@@ -963,6 +963,21 @@ bool InputEditorModel::removeUniqueInput(int column)
     return true;
 }
 
+void InputEditorModel::columnFactor(int column, double factor)
+{
+    SingleInput si = movie->editor->input_set[column-COLUMN_SPECIAL_SIZE];
+
+    std::vector<int> new_values;
+
+    for (unsigned int f = context->framecount; f < movie->inputs->nbFrames(); f++) {
+        const AllInputs& ai = movie->inputs->getInputs(f);
+        int value = ai.getInput(si);
+        new_values.push_back(factor*value);
+    }
+    
+    movie->inputs->paintInput(si, new_values, context->framecount);
+}
+
 bool InputEditorModel::isLockedUniqueInput(int column)
 {
     if (column < COLUMN_SPECIAL_SIZE)

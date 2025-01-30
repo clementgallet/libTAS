@@ -108,6 +108,9 @@ public:
     /* Remove a single input from the entire movie. Returns if the column was removed */
     bool removeUniqueInput(int column);
 
+    /* Multiple values of a column with a factor */
+    void columnFactor(int column, double factor);
+
     /* Insert rows, and specify if we want to duplicate the selected input row */
     bool insertRows(int row, int count, bool duplicate, const QModelIndex &parent = QModelIndex());
 

@@ -19,6 +19,7 @@
 * Extend the rewind to all input operations
 * Add stacktrace to logging and coloured log levels
 * Jsdev protocol can send jostick hat inputs as buttons
+* Option to multiple an entire input column by a factor
 
 ### Changed
 

@@ -82,6 +82,7 @@ InputEditorView::InputEditorView(Context* c, MovieFile *m, QWidget *parent) : QT
     horMenu->addAction(tr("Add input column"), this, &InputEditorView::addInputColumn);
     horMenu->addAction(tr("Clear input column"), this, &InputEditorView::clearInputColumn);
     horMenu->addAction(tr("Remove input column"), this, &InputEditorView::removeInputColumn);
+    factorAction = horMenu->addAction(tr("Multiple values by factor"), this, &InputEditorView::factorInputColumn);
     lockAction = horMenu->addAction(tr("Lock input column"), this, &InputEditorView::lockInputColumn);
     lockAction->setCheckable(true);
     autoholdAction = horMenu->addAction(tr("Auto-hold"), this, &InputEditorView::autoholdInput);
@@ -574,6 +575,9 @@ void InputEditorView::horizontalMenu(QPoint pos)
     if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
         return;
 
+    /* Only enable factor for analog values */
+    factorAction->setEnabled(inputEditorModel->isInputAnalog(contextSection));
+
     /* Update the status of the lock action */
     lockAction->setChecked(inputEditorModel->isLockedUniqueInput(contextSection));
 
@@ -651,6 +655,19 @@ void InputEditorView::removeInputColumn()
     /* Show alert window if failed */
     if (!removed)
         QMessageBox::information(this, "Column not removed", tr("Column could not be removed, because the input is present in past frames."));
+}
+
+void InputEditorView::factorInputColumn()
+{
+    if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
+        return;
+
+    bool ok;
+    double factor = QInputDialog::getDouble(this, tr("Multiply values by a factor"), tr("Factor: "), 1.0, 0, 100.0, 4, &ok);
+
+    if (ok) {
+        inputEditorModel->columnFactor(contextSection, factor);
+    }
 }
 
 void InputEditorView::lockInputColumn(bool checked)
