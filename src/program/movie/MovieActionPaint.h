@@ -34,6 +34,8 @@ public:
     MovieActionPaint(uint64_t start_frame, uint64_t end_frame, SingleInput si, int newV, MovieFileInputs* movie_inputs);
     MovieActionPaint(uint64_t start_frame, SingleInput si, const std::vector<int>& newV, MovieFileInputs* movie_inputs);
 
+    void storeOldInputs() override;
+
     void undo() override;
     void redo() override;
     

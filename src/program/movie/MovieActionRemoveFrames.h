@@ -32,6 +32,8 @@ class MovieActionRemoveFrames : public IMovieAction {
 public:
     MovieActionRemoveFrames(uint64_t remove_from, uint64_t remove_to, MovieFileInputs* movie_inputs);
 
+    void storeOldInputs() override;
+
     void undo() override;
     void redo() override;
     

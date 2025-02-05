@@ -36,6 +36,8 @@ public:
     MovieActionEditFrames(uint64_t edit_from, MovieFileInputs* movie_inputs);
     MovieActionEditFrames(uint64_t edit_from, uint64_t edit_to, MovieFileInputs* movie_inputs);
 
+    void storeOldInputs() override;
+
     void undo() override;
     void redo() override;
     

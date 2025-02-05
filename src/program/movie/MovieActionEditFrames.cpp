@@ -27,11 +27,6 @@ MovieActionEditFrames::MovieActionEditFrames(uint64_t edit_from, const std::vect
     first_frame = edit_from;
     last_frame = first_frame + edited_frames.size() - 1;
     movie_inputs = mi;
-    
-    for (uint64_t frame = first_frame; frame <= last_frame; frame++) {
-        const AllInputs& ai = movie_inputs->getInputs(frame);
-        old_frames.push_back(ai);
-    }
 
     new_frames = edited_frames;
     setText(QString("Edit frames %1 - %2").arg(first_frame).arg(last_frame));
@@ -43,11 +38,6 @@ MovieActionEditFrames::MovieActionEditFrames(uint64_t edit_from, uint64_t edit_t
     last_frame = edit_to;
     movie_inputs = mi;
     
-    for (uint64_t frame = first_frame; frame <= last_frame; frame++) {
-        const AllInputs& ai = movie_inputs->getInputs(frame);
-        old_frames.push_back(ai);
-    }
-
     new_frames.assign(edited_frames.begin(), edited_frames.begin()+(edit_to-edit_from+1));
     setText(QString("Edit frames %1 - %2").arg(first_frame).arg(last_frame));
 }
@@ -57,8 +47,6 @@ MovieActionEditFrames::MovieActionEditFrames(uint64_t edit_from, const AllInputs
     first_frame = edit_from;
     last_frame = edit_from;
     movie_inputs = mi;
-    const AllInputs& ai = movie_inputs->getInputs(edit_from);
-    old_frames.push_back(ai);
     new_frames.push_back(edited_frame);
     setText(QString("Edit frame %1").arg(edit_from));
 }
@@ -68,8 +56,6 @@ MovieActionEditFrames::MovieActionEditFrames(uint64_t edit_from, MovieFileInputs
     first_frame = edit_from;
     last_frame = edit_from;
     movie_inputs = mi;
-    const AllInputs& ai = movie_inputs->getInputs(edit_from);
-    old_frames.push_back(ai);
     AllInputs clear_ai;
     clear_ai.clear();
     new_frames.push_back(clear_ai);
@@ -82,12 +68,15 @@ MovieActionEditFrames::MovieActionEditFrames(uint64_t edit_from, uint64_t edit_t
     last_frame = edit_to;
     movie_inputs = mi;
     
+    setText(QString("Clear frames %1 - %2").arg(first_frame).arg(last_frame));
+}
+
+void MovieActionEditFrames::storeOldInputs()
+{
     for (uint64_t frame = first_frame; frame <= last_frame; frame++) {
         const AllInputs& ai = movie_inputs->getInputs(frame);
         old_frames.push_back(ai);
     }
-    
-    setText(QString("Clear frames %1 - %2").arg(first_frame).arg(last_frame));
 }
 
 void MovieActionEditFrames::undo() {

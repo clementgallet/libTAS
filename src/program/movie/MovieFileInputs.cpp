@@ -265,6 +265,11 @@ void MovieFileInputs::processPendingActions()
     while (!action_queue.empty()) {
         IMovieAction* action;
         action_queue.pop(action);
+        
+        /* We must store old inputs here instead of during the action creation,
+         * because old inputs may change depending on previous pending actions */
+        action->storeOldInputs();
+        
         movie_changelog->push(action);
         emit movie_changelog->updateChangeLog();
     }

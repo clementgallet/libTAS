@@ -28,6 +28,10 @@ class MovieFileInputs;
 
 class IMovieAction : public QUndoCommand {
 public:
+    
+    /* Store old inputs used by undo operation */
+    virtual void storeOldInputs() {}
+    
     MovieFileInputs* movie_inputs;
     uint64_t first_frame;
     uint64_t last_frame;

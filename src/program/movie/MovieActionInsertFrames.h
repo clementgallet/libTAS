@@ -34,6 +34,8 @@ public:
     MovieActionInsertFrames(uint64_t insert_from, int count, MovieFileInputs* movie_inputs);
     MovieActionInsertFrames(uint64_t insert_from, const AllInputs& inserted_frame, MovieFileInputs* movie_inputs);
 
+    void storeOldInputs() override;
+
     void undo() override;
     void redo() override;
     

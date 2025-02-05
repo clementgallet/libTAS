@@ -49,6 +49,8 @@ MovieActionInsertFrames::MovieActionInsertFrames(uint64_t insert_from, const All
     setText(QString("Insert at frame %1").arg(insert_from));
 }
 
+void MovieActionInsertFrames::storeOldInputs() {}
+
 void MovieActionInsertFrames::undo() {
     if (first_frame < movie_inputs->context->framecount) return;
 

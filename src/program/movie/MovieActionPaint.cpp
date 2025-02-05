@@ -30,11 +30,6 @@ MovieActionPaint::MovieActionPaint(uint64_t start_frame, uint64_t end_frame, Sin
     input = si;
     new_value = newV;
     
-    for (uint64_t frame = first_frame; frame <= last_frame; frame++) {
-        const AllInputs& ai = movie_inputs->getInputs(frame);
-        old_values.push_back(ai.getInput(si));
-    }
-
     if (first_frame == last_frame) {
         setText(QString("Paint frame %1").arg(first_frame));
     }
@@ -51,16 +46,19 @@ MovieActionPaint::MovieActionPaint(uint64_t start_frame, SingleInput si, const s
     input = si;
     new_values = newV;
     
-    for (uint64_t frame = first_frame; frame <= last_frame; frame++) {
-        const AllInputs& ai = movie_inputs->getInputs(frame);
-        old_values.push_back(ai.getInput(si));
-    }
-
     if (first_frame == last_frame) {
         setText(QString("Paint frame %1").arg(first_frame));
     }
     else {
         setText(QString("Paint frames %1 - %2").arg(first_frame).arg(last_frame));
+    }
+}
+
+void MovieActionPaint::storeOldInputs()
+{
+    for (uint64_t frame = first_frame; frame <= last_frame; frame++) {
+        const AllInputs& ai = movie_inputs->getInputs(frame);
+        old_values.push_back(ai.getInput(input));
     }
 }
 

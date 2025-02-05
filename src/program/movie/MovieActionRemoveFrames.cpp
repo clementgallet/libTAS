@@ -36,6 +36,14 @@ MovieActionRemoveFrames::MovieActionRemoveFrames(uint64_t remove_from, uint64_t 
     setText(QString("Remove frames %1 - %2").arg(first_frame).arg(last_frame));
 }
 
+void MovieActionRemoveFrames::storeOldInputs()
+{
+    for (uint64_t frame = first_frame; frame <= last_frame; frame++) {
+        const AllInputs& ai = movie_inputs->getInputs(frame);
+        old_frames.push_back(ai);
+    }
+}
+
 void MovieActionRemoveFrames::undo() {
     if (first_frame < movie_inputs->context->framecount) return;
 
