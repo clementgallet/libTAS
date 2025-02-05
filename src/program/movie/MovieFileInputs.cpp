@@ -127,9 +127,6 @@ int MovieFileInputs::setInputs(const AllInputs& inputs, bool keep_inputs)
 
 int MovieFileInputs::setInputs(const AllInputs& inputs, uint64_t pos, bool keep_inputs)
 {
-    if (pos < context->framecount)
-        return -1;
-        
     /* Check that we are writing to the next frame */
     if (pos == input_list.size()) {
         action_queue.push(new MovieActionInsertFrames(pos, inputs, this));
