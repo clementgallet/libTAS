@@ -723,22 +723,16 @@ bool InputEditorModel::insertRows(int row, int count, bool duplicate, const QMod
         }
     }
 
-    /* Because input operations are asynchronous, we don't know when the insert
-     * operation below will be performed. So we copy first the inputs to
-     * duplicate before inserting */
-    std::vector<AllInputs> duplicate_ais;
     if (duplicate) {
+        std::vector<AllInputs> duplicate_ais;
         for (int i=0; i<count; i++) {
             duplicate_ais.push_back(movie->inputs->getInputs(row + i));
         }
+
+        movie->inputs->insertInputsBefore(duplicate_ais, row);
     }
-
-    movie->inputs->insertInputsBefore(row, count);
-
-    if (duplicate) {
-        for (int i=0; i<count; i++) {
-            movie->inputs->setInputs(duplicate_ais[i], row + i, true);
-        }
+    else {
+        movie->inputs->insertInputsBefore(row, count);
     }
 
     return true;
