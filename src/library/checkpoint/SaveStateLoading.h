@@ -41,6 +41,8 @@ class SaveStateLoading
     Area getArea();
     Area nextArea();
 
+    void checkHash();
+    
     // Reset back to first area
     void restart();
 

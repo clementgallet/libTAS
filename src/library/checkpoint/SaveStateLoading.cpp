@@ -25,6 +25,12 @@
 #include "Utils.h"
 #include "logging.h"
 #include "../external/lz4.h"
+#define XXH_INLINE_ALL
+#define XXH_STATIC_LINKING_ONLY
+#define XXH_NO_STDLIB
+#define XXH_NO_STREAM
+#include "../external/xxhash.h"
+
 #include "global.h"
 #include "GlobalState.h"
 
@@ -114,7 +120,7 @@ Area SaveStateLoading::nextArea()
 {
     if (flags_remaining > 0)
         lseek(pmfd, flags_remaining, SEEK_CUR);
-    Utils::readAll(pmfd, &area, sizeof(Area));
+    Utils::readAll(pmfd, &area, sizeof(area));
     next_pfd_offset = area.page_offset;
     current_addr = static_cast<char*>(area.addr);
     flag_i = 4096;
@@ -129,6 +135,18 @@ Area SaveStateLoading::nextArea()
 Area SaveStateLoading::getArea()
 {
     return area;
+}
+
+void SaveStateLoading::checkHash()
+{
+    if (Global::shared_config.logging_level < LL_DEBUG)
+        return;
+    
+    uint64_t hash = XXH3_64bits(area.addr, area.size);
+
+    if (hash != area.hash) {
+        LOG(LL_WARN, LCF_CHECKPOINT, "Area hash mismatch! (stored %llx, new %llx)", area.hash, hash);
+    }
 }
 
 char SaveStateLoading::getPageFlag(char* addr)

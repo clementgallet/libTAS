@@ -105,7 +105,7 @@ static int reallocateArea(Area *saved_area, Area *current_area);
 static void readAnArea(SaveStateLoading &saved_area, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state);
 
 static void writeAllAreas(bool base);
-static size_t writeAnArea(SaveStateSaving state, int spmfd, SaveStateLoading &parent_state, bool base);
+static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveStateLoading &parent_state, bool base);
 
 void Checkpoint::setSavestatePath(std::string path)
 {
@@ -774,6 +774,8 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
     base_state.finishLoad();
     saved_state.finishLoad();
 
+    saved_state.checkHash();
+
     /* Recover permission to the area */
     if (!(saved_area.prot & PROT_WRITE) || !(saved_area.prot & PROT_READ)) {
         MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot) == 0)
@@ -938,8 +940,7 @@ static void writeAllAreas(bool base)
     bool not_eof = memMapLayout.getNextArea(&area);
     
     while (not_eof) {
-        state.processArea(area);
-        savestate_size += writeAnArea(state, spmfd, parent_state, base);
+        savestate_size += writeAnArea(state, area, spmfd, parent_state, base);
         not_eof = memMapLayout.getNextArea(&area);
     }
 
@@ -999,18 +1000,24 @@ static void writeAllAreas(bool base)
 }
 
 /* Write a memory area into the savestate. Returns the size of the area in bytes */
-static size_t writeAnArea(SaveStateSaving state, int spmfd, SaveStateLoading &parent_state, bool base)
+static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveStateLoading &parent_state, bool base)
 {
-    Area area = state.getArea();    
-    size_t area_size = sizeof(area);
-
-    if (area.skip || area.uncommitted)
-        return area_size;
-
-    area.print("Save");
     if (!(area.prot & PROT_READ)) {
         MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ)) == 0)
     }
+
+    state.processArea(&area);
+    size_t area_size = sizeof(area);
+
+    if (area.skip || area.uncommitted) {
+        if (!(area.prot & PROT_READ)) {
+            MYASSERT(mprotect(area.addr, area.size, area.prot) == 0)
+        }
+
+        return area_size;
+    }
+
+    area.print("Save");
 
     if (spmfd != -1) {
         /* Seek at the beginning of the area pagemap */

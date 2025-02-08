@@ -20,6 +20,7 @@
 * Add stacktrace to logging and coloured log levels
 * Jsdev protocol can send jostick hat inputs as buttons
 * Option to multiple an entire input column by a factor
+* Add hashes in savestates for debugging
 
 ### Changed
 

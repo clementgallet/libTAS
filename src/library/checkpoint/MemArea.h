@@ -75,6 +75,7 @@ struct Area {
     bool skip;
     bool uncommitted;
     off_t page_offset; // position of the first area page in the pages file (in bytes)
+    uint64_t hash;
     
     enum {
         FILENAMESIZE = 1024

@@ -25,6 +25,12 @@
 #include "Utils.h"
 #include "logging.h"
 #include "../external/lz4.h"
+
+#define XXH_INLINE_ALL
+#define XXH_STATIC_LINKING_ONLY
+#define XXH_NO_STDLIB
+#define XXH_NO_STREAM
+#include "../external/xxhash.h"
 #include "global.h"
 #include "GlobalState.h"
 
@@ -50,35 +56,35 @@ SaveStateSaving::SaveStateSaving(int pagemapfd, int pagesfd, int selfpagemapfd)
     LZ4_initStream(&lz4s, sizeof(lz4s));
 }
 
-void SaveStateSaving::processArea(Area a)
+void SaveStateSaving::processArea(Area* area)
 {
-    area = a;
-    
     /* Save the position of the first area page in the pages file */
-    area.page_offset = lseek(pfd, 0, SEEK_CUR);
-    MYASSERT(area.page_offset != -1)
+    area->page_offset = lseek(pfd, 0, SEEK_CUR);
+    MYASSERT(area->page_offset != -1)
 
     /* Write the area struct */
-    area.skip = area.isSkipped();
+    area->skip = area->isSkipped();
 
     if (Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT)
-        area.uncommitted = area.isUncommitted(spmfd);
+        area->uncommitted = area->isUncommitted(spmfd);
     else
-        area.uncommitted = false;
-    
-    Utils::writeAll(pmfd, &area, sizeof(area));
-}
+        area->uncommitted = false;
 
-Area SaveStateSaving::getArea()
-{
-    return area;
+    if (Global::shared_config.logging_level >= LL_DEBUG) {
+        if (area->skip || area->uncommitted)
+            area->hash = 0;
+        else
+            area->hash = XXH3_64bits(area->addr, area->size);
+    }
+
+    Utils::writeAll(pmfd, area, sizeof(*area));
 }
 
 void SaveStateSaving::savePageFlag(char flag)
 {
     /* We write a chunk of savestate pagemaps if it is full */
-    if (ss_pagemap_i >= 4096) {
-        Utils::writeAll(pmfd, ss_pagemaps, 4096);
+    if (ss_pagemap_i >= PAGEMAP_CHUNK) {
+        Utils::writeAll(pmfd, ss_pagemaps, PAGEMAP_CHUNK);
         ss_pagemap_i = 0;
     }
 
@@ -171,6 +177,7 @@ size_t SaveStateSaving::finishSave()
     
     /* Writing the last savestate pagemap chunk */
     Utils::writeAll(pmfd, ss_pagemaps, ss_pagemap_i);
+    ss_pagemap_i = 0;
     
     return returned_size;
 }

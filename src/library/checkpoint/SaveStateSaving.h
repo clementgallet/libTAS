@@ -26,7 +26,7 @@
 #include "../external/lz4.h"
 
 namespace libtas {
-    
+
 struct StateHeader;
 
 class SaveStateSaving
@@ -35,10 +35,8 @@ public:
     SaveStateSaving(int pagemapfd, int pagesfd, int selfpagemapfd);
 
     /* Import an area and fill some missing members */
-    void processArea(Area area);
+    void processArea(Area* area);
     
-    Area getArea();
-
     /* Saving the page flag */
     void savePageFlag(char flag);
     
@@ -56,8 +54,12 @@ private:
     /* Flush the queue of compressed data, and returns the number of written bytes */
     size_t flushCompressedSave();
 
+    enum {
+        PAGEMAP_CHUNK = 4096
+    };
+
     /* Chunk of savestate pagemap values */
-    char ss_pagemaps[4096];
+    char ss_pagemaps[PAGEMAP_CHUNK];
 
     /* Current index in the savestate pagemap array */
     int ss_pagemap_i = 0;
@@ -79,8 +81,6 @@ private:
     /* Target address and size of the compressed memory segments that are queued to be saved */
     char* queued_target_addr;
     int queued_compressed_size;
-
-    Area area;
 };
 }
 
