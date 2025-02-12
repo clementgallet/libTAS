@@ -217,6 +217,12 @@ bool ProcSelfMaps::getNextArea(Area *area)
     if (strcmp(area->name, "[heap]") == 0)
         area->flags |= Area::AREA_HEAP;
 
+    if (strstr(area->name, "/memfd:")) {
+        area->flags |= Area::AREA_MEMFD;
+        area->memfd_fd = 0;
+        area->memfd_size = 0;
+    }
+
     /* Sometimes the [heap] is split into several contiguous segments, such as
      * after a dumping was made (but why...?). This can screw up our code for
      * loading and remapping the [heap] using brk, so we always read the [heap]

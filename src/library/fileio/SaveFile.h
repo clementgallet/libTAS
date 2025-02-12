@@ -40,6 +40,8 @@ public:
     bool removed = false;
     bool closed = true;
 
+    void* mapped_addr = nullptr;
+    size_t mapped_size = 0;
 
     /* Remove duplicate /, /./ and /../ from a path */
     static char* canonicalizeFile(const char *file);
@@ -64,6 +66,9 @@ public:
     
     /* Remove the file located in the path of the savefile */
     bool removeFromDisk() const;
+    
+    /* Map file to memory so that it is stored in savestates */
+    bool mapToMemory();
 };
 
 }

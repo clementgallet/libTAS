@@ -535,6 +535,27 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
                 copy_size = saved_area->size;
             }
+
+            /* Special case for memfd savefiles, always try to resize the Area */
+            if (saved_area->flags & Area::AREA_MEMFD) {
+#ifdef __linux__
+                LOG(LL_DEBUG, LCF_CHECKPOINT, "Changing memfd size from %d to %d", current_area->size, saved_area->size);
+                void *newAddr = mremap(current_area->addr, current_area->size, saved_area->size, 0);
+
+                if (newAddr == MAP_FAILED) {
+                    LOG(LL_FATAL, LCF_CHECKPOINT, "Resizing failed");
+                    return 0;
+                }
+
+                if (newAddr != saved_area->addr) {
+                    LOG(LL_FATAL, LCF_CHECKPOINT, "mremap relocated the area");
+                    return 0;
+                }
+#else
+                LOG(LL_FATAL, LCF_CHECKPOINT, "memfd size changed but mremap is not available");
+#endif
+                copy_size = saved_area->size;
+            }
         }
 
         /* Apply the protections from the saved area if needed */
@@ -542,7 +563,9 @@ static int reallocateArea(Area *saved_area, Area *current_area)
             MYASSERT(mprotect(saved_area->addr, copy_size, saved_area->prot) == 0)
         }
 
-        if ((saved_area->endAddr == current_area->endAddr) || (saved_area->name[0] == '[')) {
+        if ((saved_area->endAddr == current_area->endAddr) ||
+            (saved_area->name[0] == '[') || 
+            (saved_area->flags & Area::AREA_MEMFD)) {
             /* If the Areas have the same size, or it was a special section,
              * we have nothing to do.
              */
@@ -585,6 +608,40 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
         /* This saved area must be allocated */
         LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %d must be allocated", saved_area->addr, saved_area->name, saved_area->size);
+
+        if (saved_area->flags & Area::AREA_MEMFD) {
+            /* Special case for memfd savefiles, we must mmap memfd file descriptor */
+            if (saved_area->memfd_fd >= 0) {
+                LOG(LL_DEBUG, LCF_CHECKPOINT, "Restoring memfd area, %d bytes at %p with file fd %d and size %zu", saved_area->size, saved_area->addr, saved_area->memfd_fd, saved_area->memfd_size);
+
+                void *mmappedat = mmap(saved_area->addr, saved_area->size, saved_area->prot,
+                                       MAP_SHARED, saved_area->memfd_fd, 0);
+
+                if (mmappedat == MAP_FAILED) {
+                    LOG(LL_FATAL, LCF_CHECKPOINT, "Mapping %d bytes at %p failed: errno %d", saved_area->size, saved_area->addr, errno);
+                }
+
+                if (mmappedat != saved_area->addr) {
+                    LOG(LL_FATAL, LCF_CHECKPOINT, "Area at %p got mmapped to %p", saved_area->addr, mmappedat);
+                }
+            }
+            else {
+                LOG(LL_DEBUG, LCF_CHECKPOINT, "Restoring memfd area but no file descriptor, allocate anonymous area");
+
+                void *mmappedat = mmap(saved_area->addr, saved_area->size, saved_area->prot,
+                                       MAP_ANONYMOUS, 0, 0);
+
+                if (mmappedat == MAP_FAILED) {
+                    LOG(LL_FATAL, LCF_CHECKPOINT, "Mapping %d bytes at %p failed: errno %d", saved_area->size, saved_area->addr, errno);
+                }
+
+                if (mmappedat != saved_area->addr) {
+                    LOG(LL_FATAL, LCF_CHECKPOINT, "Area at %p got mmapped to %p", saved_area->addr, mmappedat);
+                }                
+            }
+
+            return -1;
+        }
 
         int imagefd = -1;
         if (saved_area->flags & Area::AREA_FILE) {

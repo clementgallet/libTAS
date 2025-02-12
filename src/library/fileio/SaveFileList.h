@@ -69,6 +69,12 @@ bool isSaveFileRemoved(const char *file);
 /* Get the n-th save file inside directory `dir`. Returns empty string if not present */
 std::string getSaveFileInsideDir(std::string dir, int n);
 
+/* Map all files to memory */
+void mapFiles();
+
+/* Get a savefile from its mapped address */
+const SaveFile* getSaveFileFromAddr(void* addr);
+
 }
 
 }

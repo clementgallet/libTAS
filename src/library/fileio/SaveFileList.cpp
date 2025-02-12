@@ -323,6 +323,30 @@ std::string getSaveFileInsideDir(std::string dir, int n)
     return "";
 }
 
+void mapFiles()
+{
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
+    auto& savefiles = getSaveFileList();
+    for (const auto& savefile : savefiles) {
+        savefile->mapToMemory();
+    }
+}
+
+const SaveFile* getSaveFileFromAddr(void* addr)
+{
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
+    auto& savefiles = getSaveFileList();
+    for (const auto& savefile : savefiles) {
+        if (savefile->mapped_addr == addr) {
+            return savefile.get();
+        }
+    }
+
+    return nullptr;
+}
+
 }
 
 }

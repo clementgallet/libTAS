@@ -21,6 +21,7 @@
 * Jsdev protocol can send jostick hat inputs as buttons
 * Option to multiple an entire input column by a factor
 * Add hashes in savestates for debugging
+* Map savefiles in memory so that they are saved in states
 
 ### Changed
 

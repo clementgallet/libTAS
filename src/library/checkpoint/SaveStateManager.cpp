@@ -38,6 +38,7 @@
 #include "audio/AudioPlayerCoreAudio.h"
 #endif
 #include "fileio/FileHandleList.h"
+#include "fileio/SaveFileList.h"
 #include "renderhud/MessageWindow.h"
 #ifdef __unix__
 #include "xcb/xcbconnection.h" // x11::gameConnections
@@ -270,6 +271,9 @@ int SaveStateManager::checkpoint(int slot)
      * done AFTER suspending threads.
      */
     FileHandleList::trackAllFiles();
+
+    /* Map all savefiles to memory, so that they will be saved into savestates */ 
+    SaveFileList::mapFiles();
 
     /* We set the alternate stack to our reserved memory. The game might
      * register its own alternate stack, so we set our own just before the

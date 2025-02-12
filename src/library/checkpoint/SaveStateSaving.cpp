@@ -25,6 +25,8 @@
 #include "Utils.h"
 #include "logging.h"
 #include "../external/lz4.h"
+#include "fileio/SaveFile.h"
+#include "fileio/SaveFileList.h"
 
 #define XXH_INLINE_ALL
 #define XXH_STATIC_LINKING_ONLY
@@ -75,6 +77,15 @@ void SaveStateSaving::processArea(Area* area)
             area->hash = 0;
         else
             area->hash = XXH3_64bits(area->addr, area->size);
+    }
+    
+    /* Grab information about our savefiles mapped in memory */
+    if (area->flags & Area::AREA_MEMFD) {
+        const SaveFile* savefile = SaveFileList::getSaveFileFromAddr(area->addr);
+        if (savefile) {
+            area->memfd_fd = savefile->fd;
+            area->memfd_size = savefile->mapped_size;
+        }
     }
 
     Utils::writeAll(pmfd, area, sizeof(*area));

@@ -67,6 +67,7 @@ struct Area {
         AREA_SHARED = 0x08, /* Shared mapping */
         AREA_STACK = 0x10, /* Stack */
         AREA_HEAP = 0x20, /* Heap */
+        AREA_MEMFD = 0x40, /* Region created by memfd_create() */
     };
     int flags;
     unsigned int long devmajor;
@@ -76,7 +77,9 @@ struct Area {
     bool uncommitted;
     off_t page_offset; // position of the first area page in the pages file (in bytes)
     uint64_t hash;
-    
+    int memfd_fd;
+    size_t memfd_size;
+
     enum {
         FILENAMESIZE = 1024
     };
