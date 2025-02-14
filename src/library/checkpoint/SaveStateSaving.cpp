@@ -89,6 +89,8 @@ void SaveStateSaving::processArea(Area* area)
     }
 
     Utils::writeAll(pmfd, area, sizeof(*area));
+    
+    LZ4_resetStream_fast(&lz4s);
 }
 
 void SaveStateSaving::savePageFlag(char flag)
@@ -114,7 +116,15 @@ size_t SaveStateSaving::queuePageSave(char* addr)
         }
             
         /* Append the compressed data to the current stream */
-        int compressed_size = LZ4_compress_fast_continue(&lz4s, addr, queued_compressed_base_addr + queued_compressed_size + sizeof(int), 4096, queued_compressed_max_size - (queued_compressed_size + sizeof(int)), 1);
+        int compressed_size;
+        if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
+            /* For incremental savestates, not all blocks may be decompressed, so
+             * we must compress each block independantly */
+            compressed_size = LZ4_compress_fast(addr, queued_compressed_base_addr + queued_compressed_size + sizeof(int), 4096, queued_compressed_max_size - (queued_compressed_size + sizeof(int)), 1);
+        }
+        else {
+            compressed_size = LZ4_compress_fast_continue(&lz4s, addr, queued_compressed_base_addr + queued_compressed_size + sizeof(int), 4096, queued_compressed_max_size - (queued_compressed_size + sizeof(int)), 1);
+        }
         if (compressed_size) {
             /* Flush the uncompressed buffer if any */
             returned_size = flushSave();

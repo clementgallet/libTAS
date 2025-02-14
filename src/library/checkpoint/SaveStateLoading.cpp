@@ -89,8 +89,6 @@ void SaveStateLoading::readHeader(StateHeader* sh)
 
 void SaveStateLoading::restart()
 {
-    LZ4_setStreamDecode(&lz4s, nullptr, 0);
-    
     /* Seek after the savestate header */
     lseek(pmfd, sizeof(StateHeader), SEEK_SET);
     flags_remaining = 0;
@@ -129,6 +127,7 @@ Area SaveStateLoading::nextArea()
     } else {
         flags_remaining = area.size / 4096;
     }
+    LZ4_setStreamDecode(&lz4s, nullptr, 0);
     return area;
 }
 
@@ -145,7 +144,7 @@ void SaveStateLoading::checkHash()
     uint64_t hash = XXH3_64bits(area.addr, area.size);
 
     if (hash != area.hash) {
-        LOG(LL_WARN, LCF_CHECKPOINT, "Area hash mismatch! (stored %llx, new %llx)", area.hash, hash);
+        LOG(LL_WARN, LCF_CHECKPOINT, "     Area hash mismatch! (stored %llx, new %llx)", area.hash, hash);
     }
 }
 
@@ -236,8 +235,39 @@ void SaveStateLoading::queuePageLoad(char* addr)
     else if (current_flag == Area::COMPRESSED_PAGE) {
         char compressed[LZ4_COMPRESSBOUND(4096)];
         Utils::readAll(pfd, compressed, compressed_length);
-        LZ4_decompress_safe_continue (&lz4s, compressed, addr, compressed_length, 4096);
+        
+        if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
+            /* For incremental savestates, block compression is independant */
+            LZ4_decompress_safe(compressed, addr, compressed_length, 4096);
+        }
+        else {
+            LZ4_decompress_safe_continue(&lz4s, compressed, addr, compressed_length, 4096);
+        }
     }
+}
+
+bool SaveStateLoading::debugIsMatchingPage(char* addr)
+{
+    char current_page[4096];
+    
+    if (current_flag == Area::FULL_PAGE) {
+        lseek(pfd, next_pfd_offset - 4096, SEEK_SET);
+        Utils::readAll(pfd, current_page, 4096);
+    }
+    else if (current_flag == Area::COMPRESSED_PAGE) {
+        char compressed[LZ4_COMPRESSBOUND(4096)];
+        Utils::readAll(pfd, compressed, compressed_length);
+        LZ4_decompress_safe(compressed, current_page, compressed_length, 4096);
+    }
+    
+    uint64_t *buf = (uint64_t *)addr;
+    uint64_t *buf2 = (uint64_t *)current_page;
+
+    for (int i = 0; i < 4096/8; i++) {
+        if (buf[i] != buf2[i])
+            return false;
+    }
+    return true;
 }
 
 }

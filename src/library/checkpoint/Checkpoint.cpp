@@ -105,7 +105,7 @@ static int reallocateArea(Area *saved_area, Area *current_area);
 static void readAnArea(SaveStateLoading &saved_area, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state);
 
 static void writeAllAreas(bool base);
-static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveStateLoading &parent_state, bool base);
+static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state, bool base);
 
 void Checkpoint::setSavestatePath(std::string path)
 {
@@ -737,6 +737,13 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
     /* Current index in the pagemaps array */
     int pagemap_i = 512;
 
+    /* Stats to print */
+    int pagecount_unmapped = 0;
+    int pagecount_zero = 0;
+    int pagecount_full = 0;
+    int pagecount_base = 0;
+    int pagecount_skip = 0;
+
     char* endAddr = static_cast<char*>(saved_area.endAddr);
     for (char* curAddr = static_cast<char*>(saved_area.addr);
     curAddr < endAddr;
@@ -763,6 +770,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
          * on one stage, advancing to the next stage, loading the state and 
          * advancing to next stage again. */
         if (flag == Area::NO_PAGE) {
+            pagecount_unmapped++;
             if (page_present && (!Utils::isZeroPage(static_cast<void*>(curAddr)))) {
                 if (!(saved_area.prot & PROT_WRITE)) {
                     MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
@@ -771,6 +779,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
             }
         }
         else if (flag == Area::ZERO_PAGE) {
+            pagecount_zero++;
             if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
                 /* In case incremental savestates is enabled, we can guess that
                  * the page is already zero if the parent page is zero and the
@@ -781,6 +790,13 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
                         MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
                     }
                     memset(static_cast<void*>(curAddr), 0, 4096);
+                }
+                else {
+                    if (Global::shared_config.logging_level >= LL_DEBUG) {
+                        if (!Utils::isZeroPage(static_cast<void*>(curAddr))) {
+                            LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be zero, but is actually not!", curAddr);
+                        }
+                    }
                 }
             }
             else {
@@ -812,6 +828,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
                      */
                     base_state.getPageFlag(curAddr);
                     base_state.queuePageLoad(curAddr);
+                    pagecount_base++;
                 }
                 else {
                     if (soft_dirty) {
@@ -820,16 +837,46 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
                          */
                         base_state.getPageFlag(curAddr);
                         base_state.queuePageLoad(curAddr);
+                        pagecount_base++;
+                    }
+                    else {
+                        pagecount_skip++;
+                        /* Double-check that page is indeed identical to the base savestate */
+                        if (Global::shared_config.logging_level >= LL_DEBUG) {
+                            base_state.getPageFlag(curAddr);
+                            if (!base_state.debugIsMatchingPage(curAddr)) {
+                                LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be identical to base state, but is actually not!", curAddr);                                
+                            }
+                        }
+
                     }
                 }
             }
             else {
+                pagecount_full++;
                 saved_state.queuePageLoad(curAddr);
             }
         }
     }
     base_state.finishLoad();
     saved_state.finishLoad();
+
+    if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
+        if (Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT) {
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d, unmapped: %d, base: %d, skipped: %d", pagecount_full, pagecount_zero, pagecount_unmapped, pagecount_base, pagecount_skip);
+        }
+        else {
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d, base: %d, skipped: %d", pagecount_full, pagecount_zero, pagecount_base, pagecount_skip);
+        }
+    }
+    else {
+        if (Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT) {
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d, unmapped: %d", pagecount_full, pagecount_zero, pagecount_unmapped);
+        }
+        else {
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d", pagecount_full, pagecount_zero);
+        }
+    }
 
     saved_state.checkHash();
 
@@ -984,6 +1031,7 @@ static void writeAllAreas(bool base)
     /* Load the parent savestate if any. */
     SaveStateSaving state(pmfd, pfd, spmfd);
     SaveStateLoading parent_state(parentpagemappath, parentpagespath, getPagemapFd(parent_ss_index), getPagesFd(parent_ss_index));
+    SaveStateLoading base_state(basepagemappath, basepagespath, getPagemapFd(base_ss_index), getPagesFd(base_ss_index));
 
     /* Read the memory mapping */
 #ifdef __unix__
@@ -997,7 +1045,7 @@ static void writeAllAreas(bool base)
     bool not_eof = memMapLayout.getNextArea(&area);
     
     while (not_eof) {
-        savestate_size += writeAnArea(state, area, spmfd, parent_state, base);
+        savestate_size += writeAnArea(state, area, spmfd, parent_state, base_state, base);
         not_eof = memMapLayout.getNextArea(&area);
     }
 
@@ -1057,7 +1105,7 @@ static void writeAllAreas(bool base)
 }
 
 /* Write a memory area into the savestate. Returns the size of the area in bytes */
-static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveStateLoading &parent_state, bool base)
+static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state, bool base)
 {
     if (!(area.prot & PROT_READ)) {
         MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ)) == 0)
@@ -1093,6 +1141,12 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
     /* Current index in the pagemaps array */
     int pagemap_i = 512;
 
+    /* Stats to print */
+    int pagecount_unmapped = 0;
+    int pagecount_zero = 0;
+    int pagecount_full = 0;
+    int pagecount_base = 0;
+    
     char* endAddr = static_cast<char*>(area.endAddr);
     for (char* curAddr = static_cast<char*>(area.addr); curAddr < endAddr; curAddr += 4096, page_i++) {
 
@@ -1111,11 +1165,13 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
         /* Check if page is present */
         if ((Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT) && (!page_present)) {
             state.savePageFlag(Area::NO_PAGE);
+            pagecount_unmapped++;
         }
 
         /* Check if page is zero (only check on anonymous memory)*/
         else if ((area.flags & Area::AREA_ANON) && Utils::isZeroPage(static_cast<void*>(curAddr))) {
             state.savePageFlag(Area::ZERO_PAGE);
+            pagecount_zero++;
         }
 
         /* Check if page was not modified since last savestate */
@@ -1128,17 +1184,46 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
                      * saving the full page. */
 
                     area_size += state.queuePageSave(curAddr);
+                    pagecount_full++;
                 }
                 else {
+                    if (parent_flag == Area::ZERO_PAGE) {
+                        pagecount_zero++;
+                        
+                        /* Double-check that page is indeed zero */
+                        if (Global::shared_config.logging_level >= LL_DEBUG) {
+                            if (!Utils::isZeroPage(static_cast<void*>(curAddr))) {
+                                LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be zero, but is actually not!", curAddr);
+                            }
+                        }
+                    }
+                    else {
+                        pagecount_base++;
+
+                        /* Double-check that page is indeed identical to the base savestate */
+                        if (Global::shared_config.logging_level >= LL_DEBUG) {
+                            char base_flag = base_state.getPageFlag(curAddr);
+                            
+                            if ((base_flag != Area::FULL_PAGE) && (base_flag != Area::COMPRESSED_PAGE)) {
+                                LOG(LL_WARN, LCF_CHECKPOINT, "     No base page for %p, this should not happen!", curAddr);
+                            }
+
+                            if (!base_state.debugIsMatchingPage(curAddr)) {
+                                LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be identical to base state, but is actually not!", curAddr);                                
+                            }
+                        }
+                    }
                     state.savePageFlag(parent_flag);
                 }
             }
             else {
                 state.savePageFlag(Area::BASE_PAGE);
+                pagecount_base++;
             }
         }
         else {
             area_size += state.queuePageSave(curAddr);
+            pagecount_full++;
         }
     }
 
@@ -1149,6 +1234,23 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
 
     if (!(area.prot & PROT_READ)) {
         MYASSERT(mprotect(area.addr, area.size, area.prot) == 0)
+    }
+
+    if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
+        if (Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT) {
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d, unmapped: %d, base: %d. Size %zu", pagecount_full, pagecount_zero, pagecount_unmapped, pagecount_base, area_size);
+        }
+        else {
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d, base: %d. Size %zu", pagecount_full, pagecount_zero, pagecount_base, area_size);
+        }
+    }
+    else {
+        if (Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT) {
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d, unmapped: %d. Size %zu", pagecount_full, pagecount_zero, pagecount_unmapped, area_size);
+        }
+        else {
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d. Size %zu", pagecount_full, pagecount_zero, area_size);
+        }
     }
 
     return area_size;

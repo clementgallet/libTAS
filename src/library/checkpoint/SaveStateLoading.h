@@ -51,6 +51,8 @@ class SaveStateLoading
     void queuePageLoad(char* addr);
     void finishLoad();
 
+    bool debugIsMatchingPage(char* addr);
+
     explicit operator bool() const {
         return (pmfd != -1);
     }
