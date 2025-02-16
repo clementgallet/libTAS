@@ -260,14 +260,7 @@ bool SaveStateLoading::debugIsMatchingPage(char* addr)
         LZ4_decompress_safe(compressed, current_page, compressed_length, 4096);
     }
     
-    uint64_t *buf = (uint64_t *)addr;
-    uint64_t *buf2 = (uint64_t *)current_page;
-
-    for (int i = 0; i < 4096/8; i++) {
-        if (buf[i] != buf2[i])
-            return false;
-    }
-    return true;
+    return 0 == memcmp(addr, current_page, 4096);
 }
 
 }

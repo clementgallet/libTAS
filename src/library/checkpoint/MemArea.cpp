@@ -114,6 +114,11 @@ bool Area::isSkipped() const
         return false;
     }
 
+    /* Savefiles must be saved */
+    if (flags & Area::AREA_MEMFD) {
+        return false;
+    }
+
     return true;
 }
 

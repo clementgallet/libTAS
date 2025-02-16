@@ -78,15 +78,6 @@ void SaveStateSaving::processArea(Area* area)
         else
             area->hash = XXH3_64bits(area->addr, area->size);
     }
-    
-    /* Grab information about our savefiles mapped in memory */
-    if (area->flags & Area::AREA_MEMFD) {
-        const SaveFile* savefile = SaveFileList::getSaveFileFromAddr(area->addr);
-        if (savefile) {
-            area->memfd_fd = savefile->fd;
-            area->memfd_size = savefile->mapped_size;
-        }
-    }
 
     Utils::writeAll(pmfd, area, sizeof(*area));
     

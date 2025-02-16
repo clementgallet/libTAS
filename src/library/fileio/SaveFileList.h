@@ -22,12 +22,17 @@
 
 #include <cstdio> // FILE
 #include <string>
+#include <forward_list>
+#include <memory>
 
 namespace libtas {
 
 class SaveFile;
 
 namespace SaveFileList {
+
+std::forward_list<std::unique_ptr<SaveFile>>::const_iterator begin();
+std::forward_list<std::unique_ptr<SaveFile>>::const_iterator end();
 
 /* Is the file considered a savefile? */
 bool isSaveFile(const char *file, const char *modes);
@@ -68,12 +73,6 @@ bool isSaveFileRemoved(const char *file);
 
 /* Get the n-th save file inside directory `dir`. Returns empty string if not present */
 std::string getSaveFileInsideDir(std::string dir, int n);
-
-/* Map all files to memory */
-void mapFiles();
-
-/* Get a savefile from its mapped address */
-const SaveFile* getSaveFileFromAddr(void* addr);
 
 }
 

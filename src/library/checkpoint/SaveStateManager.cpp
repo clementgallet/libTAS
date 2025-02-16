@@ -272,9 +272,6 @@ int SaveStateManager::checkpoint(int slot)
      */
     FileHandleList::trackAllFiles();
 
-    /* Map all savefiles to memory, so that they will be saved into savestates */ 
-    SaveFileList::mapFiles();
-
     /* We set the alternate stack to our reserved memory. The game might
      * register its own alternate stack, so we set our own just before the
      * checkpoint and we restore the game's alternate stack just after.

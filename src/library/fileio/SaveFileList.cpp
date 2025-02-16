@@ -49,6 +49,16 @@ static std::mutex& getSaveFileListMutex() {
     return *mutex;
 }
 
+std::forward_list<std::unique_ptr<SaveFile>>::const_iterator begin() {
+    const auto& savefiles = getSaveFileList();
+    return savefiles.cbegin();
+}
+
+std::forward_list<std::unique_ptr<SaveFile>>::const_iterator end() {
+    const auto& savefiles = getSaveFileList();
+    return savefiles.cend();
+}
+
 /* Check if the file open permission allows for write operation */
 bool isSaveFile(const char *file, const char *modes)
 {
@@ -321,30 +331,6 @@ std::string getSaveFileInsideDir(std::string dir, int n)
     }
 
     return "";
-}
-
-void mapFiles()
-{
-    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
-
-    auto& savefiles = getSaveFileList();
-    for (const auto& savefile : savefiles) {
-        savefile->mapToMemory();
-    }
-}
-
-const SaveFile* getSaveFileFromAddr(void* addr)
-{
-    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
-
-    auto& savefiles = getSaveFileList();
-    for (const auto& savefile : savefiles) {
-        if (savefile->mapped_addr == addr) {
-            return savefile.get();
-        }
-    }
-
-    return nullptr;
 }
 
 }

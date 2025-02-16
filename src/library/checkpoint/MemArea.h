@@ -51,6 +51,7 @@ struct Area {
         FULL_PAGE, /* Area contains a copy of the page */
         BASE_PAGE, /* Page was not modified from base savestate */
         COMPRESSED_PAGE, /* Full page but compressed */
+        FILE_PAGE, /* Page is identical to the original mapped file */
     };
 
     void* addr;

@@ -39,6 +39,8 @@
 #include "global.h"
 #include "GlobalState.h"
 #include "Utils.h"
+#include "fileio/SaveFile.h"
+#include "fileio/SaveFileList.h"
 #include "renderhud/RenderHUD.h"
 #include "../shared/sockethelpers.h"
 #ifdef __unix__
@@ -106,6 +108,7 @@ static void readAnArea(SaveStateLoading &saved_area, int spmfd, SaveStateLoading
 
 static void writeAllAreas(bool base);
 static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state, bool base);
+static size_t writeSaveFiles(SaveStateSaving &state);
 
 void Checkpoint::setSavestatePath(std::string path)
 {
@@ -251,7 +254,7 @@ int Checkpoint::checkRestore()
         lseek(pmfd, 0, SEEK_SET);
     }
     else {
-        NATIVECALL(pmfd = open(pagemappath, O_RDONLY));
+        pmfd = open(pagemappath, O_RDONLY);
         if (pmfd == -1)
             return SaveStateManager::ESTATE_NOSTATE;
     }
@@ -260,7 +263,7 @@ int Checkpoint::checkRestore()
     StateHeader sh;
     Utils::readAll(pmfd, &sh, sizeof(sh));
     if (!(Global::shared_config.savestate_settings & SharedConfig::SS_RAM)) {
-        NATIVECALL(close(pmfd));
+        close(pmfd);
     }
 
     return SaveStateManager::ESTATE_OK;
@@ -268,6 +271,8 @@ int Checkpoint::checkRestore()
 
 void Checkpoint::handler(int signum, siginfo_t *info, void *ucontext)
 {
+    GlobalNative gn;
+
 #ifdef __unix__
     /* Check that we are using our alternate stack by looking at the address
      * of this local variable.
@@ -309,9 +314,9 @@ void Checkpoint::handler(int signum, siginfo_t *info, void *ucontext)
 #endif
 
         TimeHolder old_time, new_time, delta_time;
-        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &old_time));
+        clock_gettime(CLOCK_MONOTONIC, &old_time);
         readAllAreas();
-        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &new_time));
+        clock_gettime(CLOCK_MONOTONIC, &new_time);
         delta_time = new_time - old_time;
         LOG(LL_INFO, LCF_CHECKPOINT, "Loaded state %d in %f seconds", ss_index, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
 
@@ -401,13 +406,13 @@ static void readAllAreas()
 
     int spmfd = -1;
     if (Global::shared_config.savestate_settings & (SharedConfig::SS_INCREMENTAL | SharedConfig::SS_PRESENT)) {
-        NATIVECALL(spmfd = open("/proc/self/pagemap", O_RDONLY));
+        spmfd = open("/proc/self/pagemap", O_RDONLY);
         MYASSERT(spmfd != -1);
     }
 
     int crfd = -1;
     if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
-        NATIVECALL(crfd = open("/proc/self/clear_refs", O_WRONLY));
+        crfd = open("/proc/self/clear_refs", O_WRONLY);
         MYASSERT(crfd != -1);
     }
 
@@ -470,11 +475,11 @@ static void readAllAreas()
     if (crfd != -1) {
         /* Clear soft-dirty bits */
         Utils::writeAll(crfd, "4\n", 2);
-        NATIVECALL(close(crfd));
+        close(crfd);
     }
 
     if (spmfd != -1) {
-        NATIVECALL(close(spmfd));
+        close(spmfd);
     }
 }
 
@@ -648,7 +653,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
             /* We shouldn't be creating any special section such as [heap] or [stack] */
             MYASSERT(saved_area->name[0] == '/')
 
-            NATIVECALL(imagefd = open(saved_area->name, O_RDWR, 0));
+            imagefd = open(saved_area->name, O_RDWR, 0);
             if (imagefd >= 0) {
                 /* If the current file size is smaller than the original, we map the region
                 * as private anonymous. Note that with this we lose the name of the region
@@ -656,7 +661,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
                 */
                 off_t curr_size = lseek(imagefd, 0, SEEK_END);
                 if ((curr_size != -1) && (static_cast<size_t>(curr_size) < saved_area->offset + saved_area->size)) {
-                    NATIVECALL(close(imagefd));
+                    close(imagefd);
                     imagefd = -1;
                     saved_area->offset = 0;
                     saved_area->flags = Area::AREA_ANON;
@@ -690,7 +695,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
         /* Close image file (fd only gets in the way) */
         if (imagefd >= 0) {
-            NATIVECALL(close(imagefd));
+            close(imagefd);
         }
 
         return -1;
@@ -891,7 +896,7 @@ static void writeAllAreas(bool base)
 {
     if (Global::shared_config.savestate_settings & SharedConfig::SS_FORK) {
         pid_t pid;
-        NATIVECALL(pid = fork());
+        pid = fork();
         if (pid != 0)
             return;
 
@@ -899,7 +904,7 @@ static void writeAllAreas(bool base)
     }
 
     TimeHolder old_time, new_time, delta_time;
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &old_time));
+    clock_gettime(CLOCK_MONOTONIC, &old_time);
 
     int pmfd, pfd;
 
@@ -965,17 +970,17 @@ static void writeAllAreas(bool base)
         if (!(Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL)) {
             LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in %s and %s", pagemappath, pagespath);
 
-            NATIVECALL(unlink(pagemappath));
-            NATIVECALL(pmfd = creat(pagemappath, 0644));
+            unlink(pagemappath);
+            pmfd = creat(pagemappath, 0644);
 
-            NATIVECALL(unlink(pagespath));
-            NATIVECALL(pfd = creat(pagespath, 0644));
+            unlink(pagespath);
+            pfd = creat(pagespath, 0644);
         }
         else if (base) {
             LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in %s", basepagespath);
 
-            NATIVECALL(pmfd = creat(basepagemappath, 0644));
-            NATIVECALL(pfd = creat(basepagespath, 0644));
+            pmfd = creat(basepagemappath, 0644);
+            pfd = creat(basepagespath, 0644);
         }
         else {
             strcpy(temppagemappath, pagemappath);
@@ -986,11 +991,11 @@ static void writeAllAreas(bool base)
 
             LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in %s and %s", temppagemappath, temppagespath);
 
-            NATIVECALL(unlink(temppagemappath));
-            NATIVECALL(pmfd = creat(temppagemappath, 0644));
+            unlink(temppagemappath);
+            pmfd = creat(temppagemappath, 0644);
 
-            NATIVECALL(unlink(temppagespath));
-            NATIVECALL(pfd = creat(temppagespath, 0644));
+            unlink(temppagespath);
+            pfd = creat(temppagespath, 0644);
         }
     }
 
@@ -998,7 +1003,7 @@ static void writeAllAreas(bool base)
     MYASSERT(pfd != -1)
 
     int spmfd = -1;
-    NATIVECALL(spmfd = open("/proc/self/pagemap", O_RDONLY));
+    spmfd = open("/proc/self/pagemap", O_RDONLY);
     if (Global::shared_config.savestate_settings & (SharedConfig::SS_INCREMENTAL | SharedConfig::SS_PRESENT)) {
         /* We need /proc/self/pagemap for incremental savestates */
         MYASSERT(spmfd != -1);
@@ -1006,7 +1011,7 @@ static void writeAllAreas(bool base)
 
     int crfd = -1;
     if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
-        NATIVECALL(crfd = open("/proc/self/clear_refs", O_WRONLY));
+        crfd = open("/proc/self/clear_refs", O_WRONLY);
         MYASSERT(crfd != -1);
     }
 
@@ -1049,6 +1054,8 @@ static void writeAllAreas(bool base)
         not_eof = memMapLayout.getNextArea(&area);
     }
 
+    savestate_size += writeSaveFiles(state);
+
     /* Add the last null (eof) area */
     area.addr = nullptr; // End of data
     area.size = 0; // End of data
@@ -1061,17 +1068,17 @@ static void writeAllAreas(bool base)
     }
 
     if (crfd != 1) {
-        NATIVECALL(close(crfd));
+        close(crfd);
     }
 
     if (spmfd != -1) {
-        NATIVECALL(close(spmfd));
+        close(spmfd);
     }
 
     /* Closing the savestate files */
     if (!(Global::shared_config.savestate_settings & SharedConfig::SS_RAM)) {
-        NATIVECALL(close(pmfd));
-        NATIVECALL(close(pfd));
+        close(pmfd);
+        close(pfd);
     }
 
     /* Rename the savestate files */
@@ -1079,19 +1086,19 @@ static void writeAllAreas(bool base)
         if (Global::shared_config.savestate_settings & SharedConfig::SS_RAM) {
             /* Closing the old savestate memfds and replace with the new one */
             if (getPagemapFd(current_ss_index)) {
-                NATIVECALL(close(getPagemapFd(current_ss_index)));
-                NATIVECALL(close(getPagesFd(current_ss_index)));
+                close(getPagemapFd(current_ss_index));
+                close(getPagesFd(current_ss_index));
             }
             setPagemapFd(current_ss_index, pmfd);
             setPagesFd(current_ss_index, pfd);
         }
         else {
-            NATIVECALL(rename(temppagemappath, pagemappath));
-            NATIVECALL(rename(temppagespath, pagespath));
+            rename(temppagemappath, pagemappath);
+            rename(temppagespath, pagespath);
         }
     }
 
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &new_time));
+    clock_gettime(CLOCK_MONOTONIC, &new_time);
     delta_time = new_time - old_time;
     LOG(LL_INFO, LCF_CHECKPOINT, "Saved state %d of size %zu in %f seconds", base?0:ss_index, savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
 
@@ -1254,6 +1261,133 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
     }
 
     return area_size;
+}
+
+/* Write a memory area into the savestate. Returns the size of the area in bytes */
+static size_t writeSaveFiles(SaveStateSaving &state)
+{
+    size_t total_size = 0;
+    
+    for (auto it = SaveFileList::begin(); it != SaveFileList::end(); it++) {
+        const std::unique_ptr<SaveFile>& savefile = *it;
+        /* Don't map if file was closed and removed (TODO: handle this!)*/
+        if (savefile->fd == 0)
+            continue;
+            
+        Area area;
+        area.flags = Area::AREA_MEMFD;
+        area.memfd_fd = savefile->fd;
+        
+        /* Get current file length and map at least this amount of bytes */
+        struct stat filestat;
+        int rv = fstat(area.memfd_fd, &filestat);
+
+        if (rv < 0)
+            continue;
+        
+        area.memfd_size = filestat.st_size;
+        
+        if (area.memfd_size == 0) {
+            LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "     Don't map empty/missing file %s with fd %d", savefile->filename.c_str(), savefile->fd);        
+            continue;
+        }
+        
+        area.addr = mmap(nullptr, area.memfd_size, PROT_READ, MAP_PRIVATE | MAP_FILE, savefile->fd, 0);
+        // area.size = ((area.memfd_size + 4095) / 4096) * 4096;
+        area.size = area.memfd_size;
+        
+        if (area.addr == MAP_FAILED) {
+            LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "     Cound not map file %s with fd %d and size %zu", savefile->filename.c_str(), savefile->fd, area.memfd_size);
+            continue;
+        }
+
+        LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "Save file %s with fd %d and size %zu", savefile->filename.c_str(), savefile->fd, area.memfd_size);
+
+        /* Map the original file */
+        int orig_fd = -1;
+        size_t orig_file_mapped_size = 0;
+        void* orig_file_mapped_addr = nullptr;
+        
+        rv = stat(savefile->filename.c_str(), &filestat);
+
+        if (rv < 0)
+            LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "     Cound not call stat() on original savefile");
+        else if (! S_ISREG(filestat.st_mode) || (filestat.st_size == 0))
+            LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "    Original file is missing or not regular, skip it");
+        else {
+            orig_fd = open(savefile->filename.c_str(), O_RDONLY);
+            
+            if (orig_fd == -1)
+                LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "     Cound not locate original savefile");
+            else {
+                orig_file_mapped_size = filestat.st_size;
+                orig_file_mapped_addr = mmap(nullptr, filestat.st_size, PROT_READ | PROT_EXEC, MAP_PRIVATE | MAP_FILE, orig_fd, 0);
+            }
+        }
+        
+        /* Go through both original and current mapped files, and only store 
+         * pages that are different */
+        char* mapped_addr_begin = static_cast<char*>(area.addr);
+        char* mapped_addr_end = mapped_addr_begin + area.memfd_size;
+        
+        char* orig_file_mapped_begin = static_cast<char*>(orig_file_mapped_addr);
+        char* orig_file_mapped_end = orig_file_mapped_begin + orig_file_mapped_size;
+
+        /* Stats to print */
+        int pagecount_full = 0;
+        int pagecount_file = 0;
+
+        state.processArea(&area);
+        size_t area_size = sizeof(area);
+
+        for (;mapped_addr_begin < mapped_addr_end; mapped_addr_begin += 4096, orig_file_mapped_begin += 4096) {
+            size_t page_len = (mapped_addr_end - mapped_addr_begin) > 4096 ? 4096 : (mapped_addr_end - mapped_addr_begin);
+
+            /* Check difference with original file */
+            if (orig_file_mapped_addr) {
+                
+                /* If we reached the end of the original file, save all remaining pages */
+                if (orig_file_mapped_begin > orig_file_mapped_end) {
+                    area_size += state.queuePageSave(mapped_addr_begin);
+                    pagecount_full++;
+                }
+                else {
+                    int diff = memcmp(mapped_addr_begin, orig_file_mapped_begin, page_len);
+                    if (diff == 0) {
+                        state.savePageFlag(Area::FILE_PAGE);
+                        pagecount_file++;
+                    }
+                    else {
+                        area_size += state.queuePageSave(mapped_addr_begin);
+                        pagecount_full++;
+                    }
+                }
+            }
+            else {
+                area_size += state.queuePageSave(mapped_addr_begin);
+                pagecount_full++;
+            }
+        }
+        
+        area_size += state.finishSave();
+
+        /* Add the number of page flags to the total size */
+        area_size += (area.memfd_size + 4095) / 4096;
+
+        LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, file: %d. Size %zu", pagecount_full, pagecount_file, area_size);
+
+        total_size += area_size;
+
+        /* Unmap files */
+        if (area.addr != MAP_FAILED)
+            munmap(area.addr, area.memfd_size);
+
+        if (orig_file_mapped_addr != MAP_FAILED)
+            munmap(orig_file_mapped_addr, filestat.st_size);
+
+    }
+
+    return total_size;
 }
 
 }

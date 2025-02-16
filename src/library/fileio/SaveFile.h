@@ -40,9 +40,6 @@ public:
     bool removed = false;
     bool closed = true;
 
-    void* mapped_addr = nullptr;
-    size_t mapped_size = 0;
-
     /* Remove duplicate /, /./ and /../ from a path */
     static char* canonicalizeFile(const char *file);
 

@@ -442,40 +442,4 @@ bool SaveFile::removeFromDisk() const {
     return true;
 }
 
-bool SaveFile::mapToMemory()
-{
-    if (mapped_addr)
-        return true;
-        
-    /* Don't map if file was closed and removed (TODO: handle this!)*/
-    if (fd == 0)
-        return false;
-    
-    /* Get current file length and map at least this amount of bytes */
-    GlobalNative gn;
-    struct stat filestat;
-    int rv = fstat(fd, &filestat);
-
-    if (rv < 0)
-        return false;
-    
-    mapped_size = filestat.st_size;
-    
-    if (mapped_size == 0) {
-        LOG(LL_DEBUG, LCF_FILEIO, "Don't map empty/missing file %s with fd %d", filename.c_str(), fd);        
-        return false;
-    }
-        
-    mapped_addr = mmap(nullptr, mapped_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    
-    if (mapped_addr == MAP_FAILED) {
-        LOG(LL_DEBUG, LCF_FILEIO, "Cound not map file %s with fd %d and size %zu", filename.c_str(), fd, mapped_size);
-        mapped_addr = 0;
-        return false;
-    }
-
-    LOG(LL_DEBUG, LCF_FILEIO, "File %s with fd %d and size %zu was mapped to %p", filename.c_str(), fd, mapped_size, mapped_addr);
-    return true;
-}
-
 }
