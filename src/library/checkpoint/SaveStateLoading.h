@@ -38,8 +38,8 @@ class SaveStateLoading
     // Also resets back to first area
     void readHeader(StateHeader* sh);
 
-    Area getArea();
-    Area nextArea();
+    Area& getArea();
+    Area& nextArea();
 
     void checkHash();
     

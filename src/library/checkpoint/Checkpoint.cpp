@@ -105,6 +105,7 @@ static _xstate ss_fpregset;
 static void readAllAreas();
 static int reallocateArea(Area *saved_area, Area *current_area);
 static void readAnArea(SaveStateLoading &saved_area, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state);
+static void readASavefile(SaveStateLoading &saved_state);
 
 static void writeAllAreas(bool base);
 static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state, bool base);
@@ -421,7 +422,7 @@ static void readAllAreas()
     saved_state.readHeader(&sh);
 
     Area current_area;
-    Area saved_area = saved_state.getArea();
+    Area& saved_area = saved_state.getArea();
 
     LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing restore.");
 
@@ -469,6 +470,12 @@ static void readAllAreas()
     bool same_state = (ss_index == parent_ss_index);
     while (saved_area) {
         readAnArea(saved_state, spmfd, same_state?saved_state:parent_state, base_state);
+        saved_area = saved_state.nextArea();
+    }
+    
+    /* The remaining areas are savefiles */
+    while (saved_area.size) {
+        readASavefile(saved_state);
         saved_area = saved_state.nextArea();
     }
 
@@ -540,27 +547,6 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
                 copy_size = saved_area->size;
             }
-
-            /* Special case for memfd savefiles, always try to resize the Area */
-            if (saved_area->flags & Area::AREA_MEMFD) {
-#ifdef __linux__
-                LOG(LL_DEBUG, LCF_CHECKPOINT, "Changing memfd size from %d to %d", current_area->size, saved_area->size);
-                void *newAddr = mremap(current_area->addr, current_area->size, saved_area->size, 0);
-
-                if (newAddr == MAP_FAILED) {
-                    LOG(LL_FATAL, LCF_CHECKPOINT, "Resizing failed");
-                    return 0;
-                }
-
-                if (newAddr != saved_area->addr) {
-                    LOG(LL_FATAL, LCF_CHECKPOINT, "mremap relocated the area");
-                    return 0;
-                }
-#else
-                LOG(LL_FATAL, LCF_CHECKPOINT, "memfd size changed but mremap is not available");
-#endif
-                copy_size = saved_area->size;
-            }
         }
 
         /* Apply the protections from the saved area if needed */
@@ -613,40 +599,6 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
         /* This saved area must be allocated */
         LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %d must be allocated", saved_area->addr, saved_area->name, saved_area->size);
-
-        if (saved_area->flags & Area::AREA_MEMFD) {
-            /* Special case for memfd savefiles, we must mmap memfd file descriptor */
-            if (saved_area->memfd_fd >= 0) {
-                LOG(LL_DEBUG, LCF_CHECKPOINT, "Restoring memfd area, %d bytes at %p with file fd %d and size %zu", saved_area->size, saved_area->addr, saved_area->memfd_fd, saved_area->memfd_size);
-
-                void *mmappedat = mmap(saved_area->addr, saved_area->size, saved_area->prot,
-                                       MAP_SHARED, saved_area->memfd_fd, 0);
-
-                if (mmappedat == MAP_FAILED) {
-                    LOG(LL_FATAL, LCF_CHECKPOINT, "Mapping %d bytes at %p failed: errno %d", saved_area->size, saved_area->addr, errno);
-                }
-
-                if (mmappedat != saved_area->addr) {
-                    LOG(LL_FATAL, LCF_CHECKPOINT, "Area at %p got mmapped to %p", saved_area->addr, mmappedat);
-                }
-            }
-            else {
-                LOG(LL_DEBUG, LCF_CHECKPOINT, "Restoring memfd area but no file descriptor, allocate anonymous area");
-
-                void *mmappedat = mmap(saved_area->addr, saved_area->size, saved_area->prot,
-                                       MAP_ANONYMOUS, 0, 0);
-
-                if (mmappedat == MAP_FAILED) {
-                    LOG(LL_FATAL, LCF_CHECKPOINT, "Mapping %d bytes at %p failed: errno %d", saved_area->size, saved_area->addr, errno);
-                }
-
-                if (mmappedat != saved_area->addr) {
-                    LOG(LL_FATAL, LCF_CHECKPOINT, "Area at %p got mmapped to %p", saved_area->addr, mmappedat);
-                }                
-            }
-
-            return -1;
-        }
 
         int imagefd = -1;
         if (saved_area->flags & Area::AREA_FILE) {
@@ -891,6 +843,90 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
     }
 }
 
+/* Write a memory area into the savestate. Returns the size of the area in bytes */
+static void readASavefile(SaveStateLoading &saved_state)
+{
+    const Area& saved_area = saved_state.getArea();
+
+    if (!(saved_area.flags & Area::AREA_MEMFD))
+        return;
+    
+    int ret = ftruncate(saved_area.memfd_fd, saved_area.size);
+    
+    if (ret < 0) {
+        LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "     Cound not truncate the savefile %s with fd %d and size %zu", saved_area.name, saved_area.memfd_fd, saved_area.size);
+        return;
+    }
+    
+    void* saved_area_addr = mmap(nullptr, saved_area.size, PROT_WRITE, MAP_SHARED, saved_area.memfd_fd, 0);
+        
+    if (saved_area_addr == MAP_FAILED) {
+        LOG(LL_ERROR, LCF_CHECKPOINT | LCF_FILEIO, "     Cound not map file %s with fd %d and size %zu", saved_area.name, saved_area.memfd_fd, saved_area.size);
+        return;
+    }
+
+    LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "Restore file %s with fd %d and size %zu", saved_area.name, saved_area.memfd_fd, saved_area.size);
+
+    /* Map the original file */
+    int orig_fd = -1;
+    void* orig_file_mapped_addr = nullptr;
+    
+    struct stat filestat;
+    int rv = stat(saved_area.name, &filestat);
+
+    if (rv < 0)
+        LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "     Cound not call stat() on original savefile");
+    else if (! S_ISREG(filestat.st_mode) || (filestat.st_size == 0))
+        LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "    Original file is missing or not regular, skip it");
+    else {
+        orig_fd = open(saved_area.name, O_RDONLY);
+        
+        if (orig_fd == -1)
+            LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "     Cound not locate original savefile");
+        else {
+            orig_file_mapped_addr = mmap(nullptr, filestat.st_size, PROT_READ | PROT_EXEC, MAP_PRIVATE | MAP_FILE, orig_fd, 0);
+            close(orig_fd);
+        }
+    }
+    
+    /* Go through both original and current mapped files, and only store 
+     * pages that are different */
+    char* mapped_addr_begin = static_cast<char*>(saved_area_addr);
+    char* mapped_addr_end = mapped_addr_begin + saved_area.size;
+    
+    char* orig_file_mapped_begin = static_cast<char*>(orig_file_mapped_addr);
+
+    for (;mapped_addr_begin < mapped_addr_end; mapped_addr_begin += 4096, orig_file_mapped_begin += 4096) {
+        size_t page_len = (mapped_addr_end - mapped_addr_begin) > 4096 ? 4096 : (mapped_addr_end - mapped_addr_begin);
+
+        char flag = saved_state.getNextPageFlag();
+
+        if (flag == Area::FILE_PAGE) {
+            /* Copy the original file into this file */
+            if (orig_file_mapped_addr) {
+                memcpy(mapped_addr_begin, orig_file_mapped_begin, page_len);                
+            }
+            else {
+                LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "     Page %p is not stored but original file is missing!", mapped_addr_begin);
+            }
+        }
+        else {
+            saved_state.queuePageLoad(mapped_addr_begin);
+        }
+    }
+    
+    saved_state.finishLoad();
+    
+    saved_state.getArea().addr = saved_area_addr;
+    saved_state.checkHash();
+
+    /* Unmap files */
+    if (saved_area_addr != MAP_FAILED)
+        munmap(saved_area_addr, saved_area.size);
+
+    if (orig_file_mapped_addr != MAP_FAILED)
+        munmap(orig_file_mapped_addr, filestat.st_size);
+}
 
 static void writeAllAreas(bool base)
 {
@@ -1277,6 +1313,7 @@ static size_t writeSaveFiles(SaveStateSaving &state)
         Area area;
         area.flags = Area::AREA_MEMFD;
         area.memfd_fd = savefile->fd;
+        strncpy(area.name, savefile->filename.c_str(), Area::FILENAMESIZE-1);
         
         /* Get current file length and map at least this amount of bytes */
         struct stat filestat;
@@ -1285,23 +1322,21 @@ static size_t writeSaveFiles(SaveStateSaving &state)
         if (rv < 0)
             continue;
         
-        area.memfd_size = filestat.st_size;
+        area.size = filestat.st_size;
         
-        if (area.memfd_size == 0) {
+        if (area.size == 0) {
             LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "     Don't map empty/missing file %s with fd %d", savefile->filename.c_str(), savefile->fd);        
             continue;
         }
         
-        area.addr = mmap(nullptr, area.memfd_size, PROT_READ, MAP_PRIVATE | MAP_FILE, savefile->fd, 0);
-        // area.size = ((area.memfd_size + 4095) / 4096) * 4096;
-        area.size = area.memfd_size;
+        area.addr = mmap(nullptr, area.size, PROT_READ, MAP_PRIVATE | MAP_FILE, savefile->fd, 0);
         
         if (area.addr == MAP_FAILED) {
-            LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "     Cound not map file %s with fd %d and size %zu", savefile->filename.c_str(), savefile->fd, area.memfd_size);
+            LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "     Cound not map file %s with fd %d and size %zu", savefile->filename.c_str(), savefile->fd, area.size);
             continue;
         }
 
-        LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "Save file %s with fd %d and size %zu", savefile->filename.c_str(), savefile->fd, area.memfd_size);
+        LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "Save file %s with fd %d and size %zu", savefile->filename.c_str(), savefile->fd, area.size);
 
         /* Map the original file */
         int orig_fd = -1;
@@ -1322,13 +1357,14 @@ static size_t writeSaveFiles(SaveStateSaving &state)
             else {
                 orig_file_mapped_size = filestat.st_size;
                 orig_file_mapped_addr = mmap(nullptr, filestat.st_size, PROT_READ | PROT_EXEC, MAP_PRIVATE | MAP_FILE, orig_fd, 0);
+                close(orig_fd);
             }
         }
         
         /* Go through both original and current mapped files, and only store 
          * pages that are different */
         char* mapped_addr_begin = static_cast<char*>(area.addr);
-        char* mapped_addr_end = mapped_addr_begin + area.memfd_size;
+        char* mapped_addr_end = mapped_addr_begin + area.size;
         
         char* orig_file_mapped_begin = static_cast<char*>(orig_file_mapped_addr);
         char* orig_file_mapped_end = orig_file_mapped_begin + orig_file_mapped_size;
@@ -1372,7 +1408,7 @@ static size_t writeSaveFiles(SaveStateSaving &state)
         area_size += state.finishSave();
 
         /* Add the number of page flags to the total size */
-        area_size += (area.memfd_size + 4095) / 4096;
+        area_size += (area.size + 4095) / 4096;
 
         LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, file: %d. Size %zu", pagecount_full, pagecount_file, area_size);
 
@@ -1380,7 +1416,7 @@ static size_t writeSaveFiles(SaveStateSaving &state)
 
         /* Unmap files */
         if (area.addr != MAP_FAILED)
-            munmap(area.addr, area.memfd_size);
+            munmap(area.addr, area.size);
 
         if (orig_file_mapped_addr != MAP_FAILED)
             munmap(orig_file_mapped_addr, filestat.st_size);

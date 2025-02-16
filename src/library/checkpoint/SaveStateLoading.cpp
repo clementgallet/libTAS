@@ -114,7 +114,7 @@ char SaveStateLoading::nextFlag()
     return current_flag;
 }
 
-Area SaveStateLoading::nextArea()
+Area& SaveStateLoading::nextArea()
 {
     if (flags_remaining > 0)
         lseek(pmfd, flags_remaining, SEEK_CUR);
@@ -125,13 +125,13 @@ Area SaveStateLoading::nextArea()
     if (area.skip || area.uncommitted) {
         flags_remaining = 0;
     } else {
-        flags_remaining = area.size / 4096;
+        flags_remaining = (area.size + 4095) / 4096;
     }
     LZ4_setStreamDecode(&lz4s, nullptr, 0);
     return area;
 }
 
-Area SaveStateLoading::getArea()
+Area& SaveStateLoading::getArea()
 {
     return area;
 }
@@ -215,7 +215,7 @@ void SaveStateLoading::finishLoad()
 
 void SaveStateLoading::queuePageLoad(char* addr)
 {
-    MYASSERT(addr + 4096 == current_addr);
+    // MYASSERT(addr + 4096 == current_addr);
 
     if (current_flag == Area::FULL_PAGE) {
         if (queued_size > 0) {

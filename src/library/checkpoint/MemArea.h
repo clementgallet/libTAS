@@ -79,7 +79,6 @@ struct Area {
     off_t page_offset; // position of the first area page in the pages file (in bytes)
     uint64_t hash;
     int memfd_fd;
-    size_t memfd_size;
 
     enum {
         FILENAMESIZE = 1024

@@ -79,7 +79,16 @@ void SaveStateSaving::processArea(Area* area)
             area->hash = XXH3_64bits(area->addr, area->size);
     }
 
+    /* Little hack, set addr to NULL for memfd, so that state loading won't 
+     * process this area, without extra code. We needed a valid address until now
+     * for computing the hash. */
+    void* old_addr = area->addr;
+    if (area->flags & Area::AREA_MEMFD)
+        area->addr = nullptr;
+
     Utils::writeAll(pmfd, area, sizeof(*area));
+
+    area->addr = old_addr;
     
     LZ4_resetStream_fast(&lz4s);
 }

@@ -62,6 +62,11 @@ int Area::toMmapFlag() const
 
 bool Area::isSkipped() const
 {
+    /* Savefiles must be saved */
+    if (flags & Area::AREA_MEMFD) {
+        return false;
+    }
+
     /* If it's readable, but it's VDSO, it will be dangerous to restore it.
     * In 32-bit mode later Red Hat RHEL Linux 2.6.9 releases use 0xffffe000,
     * the last page of virtual memory.  Note 0xffffe000 >= HIGHEST_VA
@@ -111,11 +116,6 @@ bool Area::isSkipped() const
      * games or libs could change protections
      */
     if (flags & Area::AREA_ANON) {
-        return false;
-    }
-
-    /* Savefiles must be saved */
-    if (flags & Area::AREA_MEMFD) {
         return false;
     }
 
