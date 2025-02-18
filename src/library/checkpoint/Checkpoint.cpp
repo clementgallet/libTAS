@@ -405,11 +405,8 @@ static void readAllAreas()
 {
     SaveStateLoading saved_state(pagemappath, pagespath, getPagemapFd(ss_index), getPagesFd(ss_index));
 
-    int spmfd = -1;
-    if (Global::shared_config.savestate_settings & (SharedConfig::SS_INCREMENTAL | SharedConfig::SS_PRESENT)) {
-        spmfd = open("/proc/self/pagemap", O_RDONLY);
-        MYASSERT(spmfd != -1);
-    }
+    int spmfd = open("/proc/self/pagemap", O_RDONLY);
+    MYASSERT(spmfd != -1);
 
     int crfd = -1;
     if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
@@ -485,9 +482,7 @@ static void readAllAreas()
         close(crfd);
     }
 
-    if (spmfd != -1) {
-        close(spmfd);
-    }
+    close(spmfd);
 }
 
 static int reallocateArea(Area *saved_area, Area *current_area)
@@ -678,9 +673,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
         MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot | PROT_READ) == 0)
     }
 
-    if (spmfd != -1) {
-        MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(saved_area.addr) / (4096/8)), SEEK_SET));
-    }
+    MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(saved_area.addr) / (4096/8)), SEEK_SET));
 
     /* Number of pages in the area */
     size_t nb_pages = saved_area.size / 4096;
@@ -696,10 +689,14 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
 
     /* Stats to print */
     int pagecount_unmapped = 0;
-    int pagecount_zero = 0;
+    int pagecount_zero_or_file = 0;
     int pagecount_full = 0;
     int pagecount_base = 0;
     int pagecount_skip = 0;
+
+    /* Original file descriptor. Do not open the file yet, because we may not 
+     * need to open it at all. */
+    int orig_fd = -1;
 
     char* endAddr = static_cast<char*>(saved_area.endAddr);
     for (char* curAddr = static_cast<char*>(saved_area.addr);
@@ -707,7 +704,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
     curAddr += 4096, page_i++, pagemap_i++) {
 
         /* We read pagemap flags in chunks to avoid too many read syscalls. */
-        if ((spmfd != -1) && (pagemap_i >= 512)) {
+        if (pagemap_i >= 512) {
             size_t remaining_pages = (nb_pages-page_i)>512?512:(nb_pages-page_i);
             Utils::readAll(spmfd, pagemaps, remaining_pages*8);
             pagemap_i = 0;
@@ -716,8 +713,9 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
         char flag = saved_area.uncommitted ? Area::NO_PAGE : saved_state.getNextPageFlag();
 
         /* Gather the flag for the page map */
-        uint64_t page = (spmfd != -1)?pagemaps[pagemap_i++]:-1;
+        uint64_t page = pagemaps[pagemap_i++];
         bool soft_dirty = page & (0x1ull << 55);
+        bool page_file = page & (0x1ull << 61);
         bool page_present = page & (0x1ull << 63);
 
         /* It seems that static memory is both zero and unmapped, so we still
@@ -733,10 +731,15 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
                     MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
                 }
                 memset(static_cast<void*>(curAddr), 0, 4096);
+                pagecount_zero_or_file++;
             }
+            else {
+                pagecount_skip++;
+            }
+            continue;
         }
-        else if (flag == Area::ZERO_PAGE) {
-            pagecount_zero++;
+        
+        if (flag == Area::ZERO_PAGE) {
             if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
                 /* In case incremental savestates is enabled, we can guess that
                  * the page is already zero if the parent page is zero and the
@@ -747,8 +750,10 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
                         MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
                     }
                     memset(static_cast<void*>(curAddr), 0, 4096);
+                    pagecount_zero_or_file++;
                 }
                 else {
+                    pagecount_skip++;
                     if (Global::shared_config.logging_level >= LL_DEBUG) {
                         if (!Utils::isZeroPage(static_cast<void*>(curAddr))) {
                             LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be zero, but is actually not!", curAddr);
@@ -764,75 +769,99 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
                         MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
                     }
                     memset(static_cast<void*>(curAddr), 0, 4096);
+                    pagecount_zero_or_file++;
+                }
+                else {
+                    pagecount_skip++;                    
+                }
+            }
+            continue;
+        }
+        
+        if (flag == Area::FILE_PAGE) {
+            if (!page_file) {
+                /* Page was modified, we need to restore the content of the
+                 * original file */
+                if (orig_fd == -1) {
+                    /* File was not opened yet, do it */
+                    orig_fd = open(saved_area.name, O_RDONLY);
+                    if (orig_fd == -1) {
+                        LOG(LL_WARN, LCF_CHECKPOINT, "     File %s was opened to recover one page of the file mapped region, and failed!", saved_area.name);                                
+                        orig_fd = -2; // Save a special value, so we don't try again
+                    }
+                }
+                
+                if (orig_fd >= 0) {
+                    if (!(saved_area.prot & PROT_WRITE)) {
+                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
+                    }
+                    
+                    lseek(orig_fd, page_i*4096 + saved_area.offset, SEEK_SET);
+                    Utils::readAll(orig_fd, curAddr, 4096);
+                    pagecount_zero_or_file++;
+                }
+            }
+            else {
+                pagecount_skip++;
+            }
+            continue;
+        }
+
+        /* From here, we are sure to write to the page */
+        if (!(saved_area.prot & PROT_WRITE)) {
+            MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
+        }
+        
+        if (flag == Area::BASE_PAGE) {
+            /* The memory page of the loading savestate is the same as the base
+             * savestate. We must check if we actually need to read from the
+             * base savestate or if the page already contains the correct values.
+             */
+
+            char parent_flag = parent_state.getPageFlag(curAddr);
+
+            if (parent_flag != Area::BASE_PAGE) {
+                /* Memory page has been modified between the two savestates.
+                 * We must read from the base savestate.
+                 */
+                base_state.getPageFlag(curAddr);
+                base_state.queuePageLoad(curAddr);
+                pagecount_base++;
+                continue;
+            }
+            
+            if (soft_dirty) {
+                /* Memory page has been modified after parent state.
+                 * We must read from the base savestate.
+                 */
+                base_state.getPageFlag(curAddr);
+                base_state.queuePageLoad(curAddr);
+                pagecount_base++;
+                continue;
+            }
+
+            pagecount_skip++;
+            /* Double-check that page is indeed identical to the base savestate */
+            if (Global::shared_config.logging_level >= LL_DEBUG) {
+                base_state.getPageFlag(curAddr);
+                if (!base_state.debugIsMatchingPage(curAddr)) {
+                    LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be identical to base state, but is actually not!", curAddr);                                
                 }
             }
         }
         else {
-            if (!(saved_area.prot & PROT_WRITE)) {
-                MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
-            }
-            if (flag == Area::BASE_PAGE) {
-                /* The memory page of the loading savestate is the same as the base
-                 * savestate. We must check if we actually need to read from the
-                 * base savestate or if the page already contains the correct values.
-                 */
-
-                char parent_flag = parent_state.getPageFlag(curAddr);
-
-                if (parent_flag != Area::BASE_PAGE) {
-                    /* Memory page has been modified between the two savestates.
-                     * We must read from the base savestate.
-                     */
-                    base_state.getPageFlag(curAddr);
-                    base_state.queuePageLoad(curAddr);
-                    pagecount_base++;
-                }
-                else {
-                    if (soft_dirty) {
-                        /* Memory page has been modified after parent state.
-                         * We must read from the base savestate.
-                         */
-                        base_state.getPageFlag(curAddr);
-                        base_state.queuePageLoad(curAddr);
-                        pagecount_base++;
-                    }
-                    else {
-                        pagecount_skip++;
-                        /* Double-check that page is indeed identical to the base savestate */
-                        if (Global::shared_config.logging_level >= LL_DEBUG) {
-                            base_state.getPageFlag(curAddr);
-                            if (!base_state.debugIsMatchingPage(curAddr)) {
-                                LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be identical to base state, but is actually not!", curAddr);                                
-                            }
-                        }
-
-                    }
-                }
-            }
-            else {
-                pagecount_full++;
-                saved_state.queuePageLoad(curAddr);
-            }
+            pagecount_full++;
+            saved_state.queuePageLoad(curAddr);
         }
     }
     base_state.finishLoad();
     saved_state.finishLoad();
 
     if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
-        if (Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT) {
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d, unmapped: %d, base: %d, skipped: %d", pagecount_full, pagecount_zero, pagecount_unmapped, pagecount_base, pagecount_skip);
-        }
-        else {
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d, base: %d, skipped: %d", pagecount_full, pagecount_zero, pagecount_base, pagecount_skip);
-        }
+        LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero/file: %d, base: %d, skipped: %d", pagecount_full, pagecount_zero_or_file, pagecount_base, pagecount_skip);
     }
     else {
-        if (Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT) {
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d, unmapped: %d", pagecount_full, pagecount_zero, pagecount_unmapped);
-        }
-        else {
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d", pagecount_full, pagecount_zero);
-        }
+        LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero/file: %d, skipped: %d", pagecount_full, pagecount_zero_or_file, pagecount_skip);
     }
 
     saved_state.checkHash();
@@ -841,6 +870,9 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
     if (!(saved_area.prot & PROT_WRITE) || !(saved_area.prot & PROT_READ)) {
         MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot) == 0)
     }
+    
+    if (orig_fd >= 0)
+        close(orig_fd);
 }
 
 /* Write a memory area into the savestate. Returns the size of the area in bytes */
@@ -1038,12 +1070,8 @@ static void writeAllAreas(bool base)
     MYASSERT(pmfd != -1)
     MYASSERT(pfd != -1)
 
-    int spmfd = -1;
-    spmfd = open("/proc/self/pagemap", O_RDONLY);
-    if (Global::shared_config.savestate_settings & (SharedConfig::SS_INCREMENTAL | SharedConfig::SS_PRESENT)) {
-        /* We need /proc/self/pagemap for incremental savestates */
-        MYASSERT(spmfd != -1);
-    }
+    int spmfd = open("/proc/self/pagemap", O_RDONLY);
+    MYASSERT(spmfd != -1);
 
     int crfd = -1;
     if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
@@ -1107,9 +1135,7 @@ static void writeAllAreas(bool base)
         close(crfd);
     }
 
-    if (spmfd != -1) {
-        close(spmfd);
-    }
+    close(spmfd);
 
     /* Closing the savestate files */
     if (!(Global::shared_config.savestate_settings & SharedConfig::SS_RAM)) {
@@ -1167,10 +1193,8 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
 
     area.print("Save");
 
-    if (spmfd != -1) {
-        /* Seek at the beginning of the area pagemap */
-        MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(area.addr) / (4096/8)), SEEK_SET));
-    }
+    /* Seek at the beginning of the area pagemap */
+    MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(area.addr) / (4096/8)), SEEK_SET));
 
     /* Number of pages in the area */
     size_t nb_pages = area.size / 4096;
@@ -1186,39 +1210,69 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
 
     /* Stats to print */
     int pagecount_unmapped = 0;
-    int pagecount_zero = 0;
+    int pagecount_zero_or_file = 0;
     int pagecount_full = 0;
     int pagecount_base = 0;
     
+    /* File descriptor of mapped file, only for debugging */
+    int orig_fd = -1;
+
     char* endAddr = static_cast<char*>(area.endAddr);
     for (char* curAddr = static_cast<char*>(area.addr); curAddr < endAddr; curAddr += 4096, page_i++) {
 
         /* We read pagemap flags in chunks to avoid too many read syscalls. */
-        if ((spmfd != -1) && (pagemap_i >= 512)) {
+        if (pagemap_i >= 512) {
             size_t remaining_pages = (nb_pages-page_i)>512?512:(nb_pages-page_i);
             Utils::readAll(spmfd, pagemaps, remaining_pages*8);
             pagemap_i = 0;
         }
 
         /* Gather the flag for the current pagemap. */
-        uint64_t page = (spmfd != -1)?pagemaps[pagemap_i++]:-1;
-        bool page_present = page & (0x1ull << 63);
+        uint64_t page = pagemaps[pagemap_i++];
         bool soft_dirty = page & (0x1ull << 55);
+        bool page_file = page & (0x1ull << 61);
+        bool page_present = page & (0x1ull << 63);
 
         /* Check if page is present */
         if ((Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT) && (!page_present)) {
             state.savePageFlag(Area::NO_PAGE);
             pagecount_unmapped++;
+            continue;
         }
 
         /* Check if page is zero (only check on anonymous memory)*/
-        else if ((area.flags & Area::AREA_ANON) && Utils::isZeroPage(static_cast<void*>(curAddr))) {
+        if ((area.flags & Area::AREA_ANON) && Utils::isZeroPage(static_cast<void*>(curAddr))) {
             state.savePageFlag(Area::ZERO_PAGE);
-            pagecount_zero++;
+            pagecount_zero_or_file++;
+            continue;
+        }
+
+        /* Check if page was mapped from file and was not modified since. */
+        if ((area.flags & Area::AREA_PRIV) && (area.flags & Area::AREA_FILE) && page_file) {
+            state.savePageFlag(Area::FILE_PAGE);
+            pagecount_zero_or_file++;
+            
+            /* Double-check that page is indeed identical to file */
+            if (Global::shared_config.logging_level >= LL_DEBUG) {
+                if (orig_fd == -1) {
+                    orig_fd = open(area.name, O_RDONLY);
+                    if (orig_fd == -1)
+                        orig_fd = -2; // don't try again
+                }
+                if (orig_fd >= 0) {
+                    lseek(orig_fd, page_i*4096 + area.offset, SEEK_SET);
+                    char buf[4096];
+                    Utils::readAll(orig_fd, buf, 4096);
+                    if (0 != memcmp(curAddr, buf, 4096)) {
+                        LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be identical to file, but is actually not!", curAddr);
+                    }
+                }
+            }
+            continue;
         }
 
         /* Check if page was not modified since last savestate */
-        else if (!soft_dirty && (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) && !base) {
+        if (!soft_dirty && (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) && !base) {
             /* Copy the value of the parent savestate if any */
             if (parent_state) {
                 char parent_flag = parent_state.getPageFlag(curAddr);
@@ -1228,36 +1282,36 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
 
                     area_size += state.queuePageSave(curAddr);
                     pagecount_full++;
+                    continue;
+                }
+                
+                if (parent_flag == Area::ZERO_PAGE) {
+                    pagecount_zero_or_file++;
+                    
+                    /* Double-check that page is indeed zero */
+                    if (Global::shared_config.logging_level >= LL_DEBUG) {
+                        if (!Utils::isZeroPage(static_cast<void*>(curAddr))) {
+                            LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be zero, but is actually not!", curAddr);
+                        }
+                    }
                 }
                 else {
-                    if (parent_flag == Area::ZERO_PAGE) {
-                        pagecount_zero++;
+                    pagecount_base++;
+
+                    /* Double-check that page is indeed identical to the base savestate */
+                    if (Global::shared_config.logging_level >= LL_DEBUG) {
+                        char base_flag = base_state.getPageFlag(curAddr);
                         
-                        /* Double-check that page is indeed zero */
-                        if (Global::shared_config.logging_level >= LL_DEBUG) {
-                            if (!Utils::isZeroPage(static_cast<void*>(curAddr))) {
-                                LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be zero, but is actually not!", curAddr);
-                            }
+                        if ((base_flag != Area::FULL_PAGE) && (base_flag != Area::COMPRESSED_PAGE)) {
+                            LOG(LL_WARN, LCF_CHECKPOINT, "     No base page for %p, this should not happen!", curAddr);
+                        }
+
+                        if (!base_state.debugIsMatchingPage(curAddr)) {
+                            LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be identical to base state, but is actually not!", curAddr);                                
                         }
                     }
-                    else {
-                        pagecount_base++;
-
-                        /* Double-check that page is indeed identical to the base savestate */
-                        if (Global::shared_config.logging_level >= LL_DEBUG) {
-                            char base_flag = base_state.getPageFlag(curAddr);
-                            
-                            if ((base_flag != Area::FULL_PAGE) && (base_flag != Area::COMPRESSED_PAGE)) {
-                                LOG(LL_WARN, LCF_CHECKPOINT, "     No base page for %p, this should not happen!", curAddr);
-                            }
-
-                            if (!base_state.debugIsMatchingPage(curAddr)) {
-                                LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be identical to base state, but is actually not!", curAddr);                                
-                            }
-                        }
-                    }
-                    state.savePageFlag(parent_flag);
                 }
+                state.savePageFlag(parent_flag);
             }
             else {
                 state.savePageFlag(Area::BASE_PAGE);
@@ -1281,20 +1335,23 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
 
     if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
         if (Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT) {
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d, unmapped: %d, base: %d. Size %zu", pagecount_full, pagecount_zero, pagecount_unmapped, pagecount_base, area_size);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero/file: %d, unmapped: %d, base: %d. Size %zu", pagecount_full, pagecount_zero_or_file, pagecount_unmapped, pagecount_base, area_size);
         }
         else {
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d, base: %d. Size %zu", pagecount_full, pagecount_zero, pagecount_base, area_size);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero/file: %d, base: %d. Size %zu", pagecount_full, pagecount_zero_or_file, pagecount_base, area_size);
         }
     }
     else {
         if (Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT) {
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d, unmapped: %d. Size %zu", pagecount_full, pagecount_zero, pagecount_unmapped, area_size);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero/file: %d, unmapped: %d. Size %zu", pagecount_full, pagecount_zero_or_file, pagecount_unmapped, area_size);
         }
         else {
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero: %d. Size %zu", pagecount_full, pagecount_zero, area_size);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, zero/file: %d. Size %zu", pagecount_full, pagecount_zero_or_file, area_size);
         }
     }
+
+    if (orig_fd >= 0)
+        close(orig_fd);
 
     return area_size;
 }
