@@ -779,7 +779,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
         }
         
         if (flag == Area::FILE_PAGE) {
-            if (!page_file) {
+            if (page_present && !page_file) {
                 /* Page was modified, we need to restore the content of the
                  * original file */
                 if (orig_fd == -1) {
