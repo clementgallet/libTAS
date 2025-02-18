@@ -1233,41 +1233,43 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
         bool page_file = page & (0x1ull << 61);
         bool page_present = page & (0x1ull << 63);
 
-        /* Check if page is present */
-        if ((Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT) && (!page_present)) {
-            state.savePageFlag(Area::NO_PAGE);
-            pagecount_unmapped++;
-            continue;
-        }
+        if (area.flags & Area::AREA_ANON) {
+            /* Check if page is present */
+            if ((Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT) && (!page_present)) {
+                state.savePageFlag(Area::NO_PAGE);
+                pagecount_unmapped++;
+                continue;
+            }
 
-        /* Check if page is zero (only check on anonymous memory)*/
-        if ((area.flags & Area::AREA_ANON) && Utils::isZeroPage(static_cast<void*>(curAddr))) {
-            state.savePageFlag(Area::ZERO_PAGE);
-            pagecount_zero_or_file++;
-            continue;
+            /* Check if page is zero (only check on anonymous memory)*/
+            if (Utils::isZeroPage(static_cast<void*>(curAddr))) {
+                state.savePageFlag(Area::ZERO_PAGE);
+                pagecount_zero_or_file++;
+                continue;
+            }
         }
 
         /* Check if page was mapped from file and was not modified since. */
-        if ((area.flags & Area::AREA_PRIV) && (area.flags & Area::AREA_FILE) && page_file) {
+        if ((area.flags & Area::AREA_PRIV) && (area.flags & Area::AREA_FILE) && (!page_present || page_file)) {
             state.savePageFlag(Area::FILE_PAGE);
             pagecount_zero_or_file++;
-            
+
             /* Double-check that page is indeed identical to file */
-            if (Global::shared_config.logging_level >= LL_DEBUG) {
-                if (orig_fd == -1) {
-                    orig_fd = open(area.name, O_RDONLY);
-                    if (orig_fd == -1)
-                        orig_fd = -2; // don't try again
-                }
-                if (orig_fd >= 0) {
-                    lseek(orig_fd, page_i*4096 + area.offset, SEEK_SET);
-                    char buf[4096];
-                    Utils::readAll(orig_fd, buf, 4096);
-                    if (0 != memcmp(curAddr, buf, 4096)) {
-                        LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be identical to file, but is actually not!", curAddr);
-                    }
-                }
-            }
+            // if (Global::shared_config.logging_level >= LL_DEBUG) {
+            //     if (orig_fd == -1) {
+            //         orig_fd = open(area.name, O_RDONLY);
+            //         if (orig_fd == -1)
+            //             orig_fd = -2; // don't try again
+            //     }
+            //     if (orig_fd >= 0) {
+            //         lseek(orig_fd, page_i*4096 + area.offset, SEEK_SET);
+            //         char buf[4096];
+            //         Utils::readAll(orig_fd, buf, 4096);
+            //         if (0 != memcmp(curAddr, buf, 4096)) {
+            //             LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be identical to file, but is actually not!", curAddr);
+            //         }
+            //     }
+            // }
             continue;
         }
 

@@ -23,6 +23,7 @@
 #include "GlobalState.h"
 #include "logging.h"
 #include "Utils.h"
+#include "SaveFileStream.h"
 
 #include <cstring>
 #include <fcntl.h>
@@ -209,8 +210,15 @@ FILE* SaveFile::open(const char *modes) {
 
     if (stream == nullptr) {
 
-        /* Open a new memory stream using pointers to these entries */
-        
+        /* Open a new memory stream using our own custom functions */
+        stream = SaveFileStream::open(filename.c_str(), modes);
+        if (stream != nullptr) {
+            setvbuf(stream, nullptr, _IONBF, 0);
+            return stream;
+        }
+
+        /* If it fails, fallback to using memfd_create() */
+
         /* Choose the right mode to open the memory stream.
          * We need to always allow read/write */
         if (strstr(modes, "r") != nullptr) {
@@ -239,17 +247,17 @@ FILE* SaveFile::open(const char *modes) {
      */
     if (strstr(modes, "w") != nullptr) {
         fseek(stream, 0, SEEK_SET);
-        ftruncate(fd, 0);
-        return stream;
+        if (fd)
+            ftruncate(fd, 0);
     }
     else if (strstr(modes, "a") != nullptr) {
         fseek(stream, 0, SEEK_END);
-        return stream;
+    }
+    else {
+        fseek(stream, 0, SEEK_SET);
     }
 
-    fseek(stream, 0, SEEK_SET);
     return stream;
-
 }
 
 int SaveFile::open(int flags)

@@ -62,6 +62,7 @@ libtas_so_SOURCES = \
     fileio/posixiowrappers.cpp \
     fileio/SaveFile.cpp \
     fileio/SaveFileList.cpp \
+    fileio/SaveFileStream.cpp \
     fileio/stdiowrappers.cpp \
     fileio/URandom.cpp \
     general/dlhook.cpp \
