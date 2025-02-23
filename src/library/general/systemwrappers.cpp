@@ -50,7 +50,7 @@ DEFINE_ORIG_POINTER(sched_getaffinity)
     void* return_address =  __builtin_return_address(0);
     char** symbols = backtrace_symbols(&return_address, 1);
     if (symbols != nullptr) {
-        if (strstr(symbols[0], "libhl.so") || strstr(symbols[0], "PapersPlease(+0x")) {
+        if (strstr(symbols[0], "libhl.so") || strstr(symbols[0], "PapersPlease(+0x") || strstr(symbols[0], "diceydungeons(")) {
             free(symbols);
             return 1234;
         }
