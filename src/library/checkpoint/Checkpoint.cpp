@@ -600,18 +600,22 @@ static int reallocateArea(Area *saved_area, Area *current_area)
             /* We shouldn't be creating any special section such as [heap] or [stack] */
             MYASSERT(saved_area->name[0] == '/')
 
-            imagefd = open(saved_area->name, O_RDWR, 0);
+            imagefd = open(saved_area->name, (saved_area->prot & PROT_WRITE) ? O_RDWR : O_RDONLY, 0);
             if (imagefd >= 0) {
-                /* If the current file size is smaller than the original, we map the region
-                * as private anonymous. Note that with this we lose the name of the region
-                * but most applications may not care.
-                */
+                /* We check if the current file has a size that can be mapped 
+                 * to the saved memory region. */
                 off_t curr_size = lseek(imagefd, 0, SEEK_END);
-                if ((curr_size != -1) && (static_cast<size_t>(curr_size) < saved_area->offset + saved_area->size)) {
-                    close(imagefd);
-                    imagefd = -1;
-                    saved_area->offset = 0;
-                    saved_area->flags = Area::AREA_ANON;
+
+                if (curr_size != -1) {
+                    LOG(LL_WARN, LCF_CHECKPOINT, "Could not seek to end of file %s", saved_area->name);
+                }
+                else {
+                    /* Round to upper page size */
+                    size_t aligned_curr_size = static_cast<size_t>(((curr_size + 4095) / 4096) * 4096);
+                    
+                    if (aligned_curr_size < (saved_area->offset + saved_area->size)) {
+                        LOG(LL_WARN, LCF_CHECKPOINT, "File %s was mapped to offset %zu but has a current size of %zd", saved_area->name, saved_area->offset + saved_area->size, curr_size);
+                    }
                 }
             }
             else {

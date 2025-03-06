@@ -42,6 +42,7 @@
 * Fix input editor crash when no movie loaded
 * dlopen() supports passing a savefile
 * Fix state loading ignoring the first memory segment
+* Fix check in file being mmaped during state loading
 
 ## [1.4.6] - 2024-07-05
 ### Added
