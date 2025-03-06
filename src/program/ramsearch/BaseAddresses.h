@@ -34,10 +34,13 @@ namespace BaseAddresses {
     void load();
 
     /* Query base and end addresses for a specific file that was not stored */
-    uintptr_t findNewFile(std::string file);
+    std::pair<uintptr_t,uintptr_t> findNewFile(std::string file);
 
     /* Return the base address of a specific file */
     uintptr_t getBaseAddress(std::string file);
+
+    /* Return the address from a file and offset */
+    uintptr_t getAddress(std::string file, off_t offset);
 
     /* Return the memory section of the mapped game executable */    
     const MemSection* getExecutableSection();

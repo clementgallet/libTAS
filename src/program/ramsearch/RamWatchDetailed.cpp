@@ -43,7 +43,7 @@ void RamWatchDetailed::update_addr()
                 base_address = base_file_offset;
             }
             else {
-                base_address = BaseAddresses::getBaseAddress(base_file) + base_file_offset;
+                base_address = BaseAddresses::getAddress(base_file, base_file_offset);
             }
         }
         

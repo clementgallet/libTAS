@@ -91,32 +91,33 @@ void BaseAddresses::load()
     }
 }
 
-uintptr_t BaseAddresses::findNewFile(std::string file)
+std::pair<uintptr_t,uintptr_t> BaseAddresses::findNewFile(std::string file)
 {
     std::unique_ptr<MemLayout> memlayout (new MemLayout());
     
     MemSection section;
-    uintptr_t base_addr = 0;
+    bool file_found = false;
     while (memlayout->nextSection(MemSection::MemAll, 0, section)) {
         std::string section_file = fileFromPath(section.filename);
         
         /* Only add the requested file */
         if (section_file.compare(file) == 0) {
-            if (section.execflag) {
-                base_addr = section.addr;
+            if (!file_found) {
                 library_addresses[file] = std::make_pair(section.addr, section.endaddr);
             }
             else {
                 library_addresses[file].second = section.endaddr;
-                /* Library mapping should end with RW section. Return here to
-                 * not load the remaining layout */
-                if (section.type == MemSection::MemFileMappingRW)
-                    return base_addr;
             }
+            file_found = true;
+        }
+        else {
+            /* If we processed all sections from the found file, we can return */
+            if (file_found)
+                return library_addresses[file];
         }
     }
     
-    return 0;
+    return std::make_pair(0, 0);
 }
 
 uintptr_t BaseAddresses::getBaseAddress(std::string file)
@@ -129,8 +130,29 @@ uintptr_t BaseAddresses::getBaseAddress(std::string file)
         return it->second.first;        
     }
     else {
-        return findNewFile(file);
+        return findNewFile(file).first;
     }
+}
+
+uintptr_t BaseAddresses::getAddress(std::string file, off_t offset)
+{
+    std::pair<uintptr_t,uintptr_t> addresses;
+    
+    if (library_addresses.empty())
+        load();
+
+    auto it = library_addresses.find(file);
+    if (it != library_addresses.end()) {
+        addresses = it->second;        
+    }
+    else {
+        addresses = findNewFile(file);
+    }
+
+    if (offset < 0)
+        return addresses.second + offset;
+
+    return addresses.first + offset;
 }
 
 const MemSection* BaseAddresses::getExecutableSection()
