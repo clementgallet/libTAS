@@ -600,13 +600,13 @@ static int reallocateArea(Area *saved_area, Area *current_area)
             /* We shouldn't be creating any special section such as [heap] or [stack] */
             MYASSERT(saved_area->name[0] == '/')
 
-            imagefd = open(saved_area->name, (saved_area->prot & PROT_WRITE) ? O_RDWR : O_RDONLY, 0);
+            imagefd = open(saved_area->name, O_RDONLY);
             if (imagefd >= 0) {
                 /* We check if the current file has a size that can be mapped 
                  * to the saved memory region. */
                 off_t curr_size = lseek(imagefd, 0, SEEK_END);
 
-                if (curr_size != -1) {
+                if (curr_size == -1) {
                     LOG(LL_WARN, LCF_CHECKPOINT, "Could not seek to end of file %s", saved_area->name);
                 }
                 else {
