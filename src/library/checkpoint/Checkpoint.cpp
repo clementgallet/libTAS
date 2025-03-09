@@ -1116,9 +1116,23 @@ static void writeAllAreas(bool base)
     /* Read the first current area */
     Area area;
     bool not_eof = memMapLayout.getNextArea(&area);
+
+    /* Multiple shared areas can point to the same memory, so we detect and 
+     * skip all those duplicate areas.
+     * TODO: this code only covers the special case of consecutive areas to 
+     * handle Ryujinx, it should be expended to detect any duplicate area */
+    Area previous_area;
+    previous_area.name[0] = '\0';
     
     while (not_eof) {
+        if ((area.flags & Area::AREA_SHARED) && (previous_area.flags & Area::AREA_SHARED) &&
+            (0 == strncmp(area.name, previous_area.name, Area::FILENAMESIZE)) &&
+            (area.offset == previous_area.offset) && 
+            (area.size == previous_area.size)) {
+            area.skip = true;    
+        }
         savestate_size += writeAnArea(state, area, spmfd, parent_state, base_state, base);
+        previous_area = area;
         not_eof = memMapLayout.getNextArea(&area);
     }
 

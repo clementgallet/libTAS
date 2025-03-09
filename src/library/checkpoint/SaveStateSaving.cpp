@@ -65,7 +65,8 @@ void SaveStateSaving::processArea(Area* area)
     MYASSERT(area->page_offset != -1)
 
     /* Write the area struct */
-    area->skip = area->isSkipped();
+    if (!area->skip)
+        area->skip = area->isSkipped();
 
     if (Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT)
         area->uncommitted = area->isUncommitted(spmfd);
