@@ -434,7 +434,7 @@ static void readAllAreas()
     bool not_eof = memMapLayout.getNextArea(&current_area);
 
     /* Reallocate areas to match the savestate areas. Nothing is written yet */
-    while (saved_area || not_eof) {
+    while (saved_area.isStandard() || not_eof) {
 
         /* Check for matching areas */
         int cmp = reallocateArea(&saved_area, &current_area);
@@ -465,13 +465,13 @@ static void readAllAreas()
      * same SaveStateLoading object to readAnArea because two SaveStateLoading objects
      * handling the same file descriptor will mess up the file offset. */
     bool same_state = (ss_index == parent_ss_index);
-    while (saved_area) {
+    while (saved_area.isStandard()) {
         readAnArea(saved_state, spmfd, same_state?saved_state:parent_state, base_state);
         saved_area = saved_state.nextArea();
     }
     
     /* The remaining areas are savefiles */
-    while (saved_area.size) {
+    while (saved_area) {
         readASavefile(saved_state);
         saved_area = saved_state.nextArea();
     }
@@ -488,7 +488,7 @@ static void readAllAreas()
 static int reallocateArea(Area *saved_area, Area *current_area)
 {
     /* Do Areas start on the same address? */
-    if ((saved_area->addr != nullptr) && (current_area->addr != nullptr) &&
+    if ((saved_area->isStandard()) && (current_area->addr != nullptr) &&
         (saved_area->addr == current_area->addr)) {
 
         /* If it is not the same area, unmap the current area */
@@ -550,8 +550,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
         }
 
         if ((saved_area->endAddr == current_area->endAddr) ||
-            (saved_area->name[0] == '[') || 
-            (saved_area->flags & Area::AREA_MEMFD)) {
+            (saved_area->name[0] == '[')) {
             /* If the Areas have the same size, or it was a special section,
              * we have nothing to do.
              */
@@ -575,7 +574,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
         }
     }
 
-    if ((saved_area->addr == nullptr) || (saved_area->addr > current_area->addr)) {
+    if ((!saved_area->isStandard()) || (saved_area->addr > current_area->addr)) {
         /* Our current area starts before the saved area */
         LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
         MYASSERT(munmap(current_area->addr, current_area->size) == 0)
@@ -692,7 +691,6 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
     int pagemap_i = 512;
 
     /* Stats to print */
-    int pagecount_unmapped = 0;
     int pagecount_zero_or_file = 0;
     int pagecount_full = 0;
     int pagecount_base = 0;
@@ -701,6 +699,32 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
     /* Original file descriptor. Do not open the file yet, because we may not 
      * need to open it at all. */
     int orig_fd = -1;
+
+    /* File descriptor of the shared mapped file, to check for holes */
+    int shared_fd = -1;
+    if (saved_area.flags & Area::AREA_SHARED) {
+        /* Try first to open the file */
+        shared_fd = open(saved_area.name, O_RDONLY);
+
+        /* If no file, shared mappings always have an underlying file accessible
+         * inside /proc/self/map_files/ */
+        if (shared_fd == -1) {
+            shared_fd = open(saved_area.map_file, O_RDONLY);
+        }
+
+        if (shared_fd != -1) {
+            /* Try to seek here */
+            off_t off = lseek(shared_fd, 0, SEEK_SET);
+            if (off == -1) {
+                LOG(LL_DEBUG, LCF_CHECKPOINT, "     Could not seek into shared map file %s", saved_area.map_file);
+                close(shared_fd);
+                shared_fd = -1;
+            }
+        }
+        else {
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "     Could not open shared map file %s", saved_area.map_file);
+        }
+    }
 
     char* endAddr = static_cast<char*>(saved_area.endAddr);
     for (char* curAddr = static_cast<char*>(saved_area.addr);
@@ -729,16 +753,39 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
          * on one stage, advancing to the next stage, loading the state and 
          * advancing to next stage again. */
         if (flag == Area::NO_PAGE) {
-            pagecount_unmapped++;
-            if (page_present && (!Utils::isZeroPage(static_cast<void*>(curAddr)))) {
-                if (!(saved_area.prot & PROT_WRITE)) {
-                    MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
+            if (saved_area.flags & Area::AREA_PRIV) {
+                if (page_present && (!Utils::isZeroPage(static_cast<void*>(curAddr)))) {
+                    if (!(saved_area.prot & PROT_WRITE)) {
+                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
+                    }
+                    memset(static_cast<void*>(curAddr), 0, 4096);
+                    pagecount_zero_or_file++;
                 }
-                memset(static_cast<void*>(curAddr), 0, 4096);
-                pagecount_zero_or_file++;
+                else {
+                    pagecount_skip++;
+                }
             }
             else {
-                pagecount_skip++;
+                /* Check for a hole in the shared mapped file (works even for anonymous
+                 * mappings, which still have an underlying file) */
+                if (shared_fd != -1) {
+                    off_t off = lseek(shared_fd, saved_area.offset + page_i*4096, SEEK_DATA);
+                    if (off >= (off_t)(saved_area.offset + (page_i+1)*4096)) {
+                        /* This page contains a hole in the underlying file */
+                        pagecount_skip++;
+                    }
+                    else {
+                        /* A hole is just filled with zeros, so we memset the page */
+                        if (!(saved_area.prot & PROT_WRITE)) {
+                            MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
+                        }
+                        memset(static_cast<void*>(curAddr), 0, 4096);
+                        pagecount_zero_or_file++;
+                    }
+                }
+                else {
+                    LOG(LL_WARN, LCF_CHECKPOINT, "     Shared map file %s was not found even if it existed when the savestate was made!", curAddr);
+                }
             }
             continue;
         }
@@ -877,6 +924,9 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
     
     if (orig_fd >= 0)
         close(orig_fd);
+
+    if (shared_fd >= 0)
+        close(shared_fd);
 }
 
 /* Write a memory area into the savestate. Returns the size of the area in bytes */
@@ -884,7 +934,7 @@ static void readASavefile(SaveStateLoading &saved_state)
 {
     const Area& saved_area = saved_state.getArea();
 
-    if (!(saved_area.flags & Area::AREA_MEMFD))
+    if (!(saved_area.flags & Area::AREA_SAVEFILE))
         return;
     
     int ret = ftruncate(saved_area.memfd_fd, saved_area.size);
@@ -1234,6 +1284,32 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
     
     /* File descriptor of mapped file, only for debugging */
     int orig_fd = -1;
+    
+    /* File descriptor of the shared mapped file, to check for holes */
+    int shared_fd = -1;
+    if (area.flags & Area::AREA_SHARED) {
+        /* Try first to open the file */
+        shared_fd = open(area.name, O_RDONLY);
+
+        /* If no file, shared mappings always have an underlying file accessible
+         * inside /proc/self/map_files/ */
+        if (shared_fd == -1) {
+            shared_fd = open(area.map_file, O_RDONLY);
+        }
+        
+        if (shared_fd != -1) {
+            /* Try to seek here */
+            off_t off = lseek(shared_fd, 0, SEEK_SET);
+            if (off == -1) {
+                LOG(LL_DEBUG, LCF_CHECKPOINT, "     Could not seek into shared map file %s", area.map_file);
+                close(shared_fd);
+                shared_fd = -1;
+            }
+        }
+        else {
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "     Could not open shared map file %s", area.map_file);
+        }
+    }
 
     char* endAddr = static_cast<char*>(area.endAddr);
     for (char* curAddr = static_cast<char*>(area.addr); curAddr < endAddr; curAddr += 4096, page_i++) {
@@ -1251,44 +1327,73 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
         bool page_file = page & (0x1ull << 61);
         bool page_present = page & (0x1ull << 63);
 
-        if (area.flags & Area::AREA_ANON) {
-            /* Check if page is present */
-            if ((Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT) && (!page_present)) {
-                state.savePageFlag(Area::NO_PAGE);
+        if (area.flags & Area::AREA_PRIV) {
+            if (area.flags & Area::AREA_ANON) {
+                /* Check if page is present */
+                if ((Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT) && (!page_present)) {
+                    state.savePageFlag(Area::NO_PAGE);
+                    pagecount_unmapped++;
+                    continue;
+                }
+                
+                /* Check if page is zero */
+                if (Utils::isZeroPage(static_cast<void*>(curAddr))) {
+                    state.savePageFlag(Area::ZERO_PAGE);
+                    pagecount_zero_or_file++;
+                    continue;
+                }
+            }
+            
+            /* Check if page was mapped from file and was not modified since. */
+            if ((area.flags & Area::AREA_FILE) && (!page_present || page_file)) {
+                state.savePageFlag(Area::FILE_PAGE);
+                pagecount_zero_or_file++;
+
+                /* Double-check that page is indeed identical to file */
+                // if (Global::shared_config.logging_level >= LL_DEBUG) {
+                //     if (orig_fd == -1) {
+                //         orig_fd = open(area.name, O_RDONLY);
+                //         if (orig_fd == -1)
+                //             orig_fd = -2; // don't try again
+                //     }
+                //     if (orig_fd >= 0) {
+                //         lseek(orig_fd, page_i*4096 + area.offset, SEEK_SET);
+                //         char buf[4096];
+                //         Utils::readAll(orig_fd, buf, 4096);
+                //         if (0 != memcmp(curAddr, buf, 4096)) {
+                //             LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be identical to file, but is actually not!", curAddr);
+                //         }
+                //     }
+                // }
+                continue;
+            }
+        }
+
+        /* If page from a shared mapping of a file is not present, we can also skip it. */
+        if (area.flags & Area::AREA_SHARED) {
+
+            /* Check for a hole in the mapped file (works even for anonymous
+             * mappings, which still have an underlying file) */
+            if (shared_fd != -1) {
+                off_t off = lseek(shared_fd, area.offset + page_i*4096, SEEK_DATA);
+                if (off >= (off_t)(area.offset + (page_i+1)*4096)) {
+                    /* This page contains a hole in the underlying file */
+                    state.savePageFlag(Area::NO_PAGE);
+                    pagecount_unmapped++;
+                    continue;
+                }
+            }
+
+            if (!page_present) {
+                state.savePageFlag(Area::FILE_PAGE);
                 pagecount_unmapped++;
                 continue;
             }
-
-            /* Check if page is zero (only check on anonymous memory)*/
             if (Utils::isZeroPage(static_cast<void*>(curAddr))) {
                 state.savePageFlag(Area::ZERO_PAGE);
                 pagecount_zero_or_file++;
                 continue;
             }
-        }
-
-        /* Check if page was mapped from file and was not modified since. */
-        if ((area.flags & Area::AREA_PRIV) && (area.flags & Area::AREA_FILE) && (!page_present || page_file)) {
-            state.savePageFlag(Area::FILE_PAGE);
-            pagecount_zero_or_file++;
-
-            /* Double-check that page is indeed identical to file */
-            // if (Global::shared_config.logging_level >= LL_DEBUG) {
-            //     if (orig_fd == -1) {
-            //         orig_fd = open(area.name, O_RDONLY);
-            //         if (orig_fd == -1)
-            //             orig_fd = -2; // don't try again
-            //     }
-            //     if (orig_fd >= 0) {
-            //         lseek(orig_fd, page_i*4096 + area.offset, SEEK_SET);
-            //         char buf[4096];
-            //         Utils::readAll(orig_fd, buf, 4096);
-            //         if (0 != memcmp(curAddr, buf, 4096)) {
-            //             LOG(LL_WARN, LCF_CHECKPOINT, "     Page %p was guessed to be identical to file, but is actually not!", curAddr);
-            //         }
-            //     }
-            // }
-            continue;
         }
 
         /* Check if page was not modified since last savestate */
@@ -1373,6 +1478,9 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
     if (orig_fd >= 0)
         close(orig_fd);
 
+    if (shared_fd >= 0)
+        close(shared_fd);
+
     return area_size;
 }
 
@@ -1388,7 +1496,7 @@ static size_t writeSaveFiles(SaveStateSaving &state)
             continue;
             
         Area area;
-        area.flags = Area::AREA_MEMFD;
+        area.flags = Area::AREA_SAVEFILE;
         area.memfd_fd = savefile->fd;
         strncpy(area.name, savefile->filename.c_str(), Area::FILENAMESIZE-1);
         

@@ -119,6 +119,9 @@ bool ProcSelfMaps::getNextArea(Area *area)
     MYASSERT(endAddr != 0)
     area->endAddr = reinterpret_cast<void*>(endAddr);
 
+    /* Save the current index to build the path to /proc/self/map_files/ */
+    int line_addr_len = line_idx;
+
     MYASSERT(line[line_idx++] == ' ')
 
     MYASSERT(endAddr >= addr)
@@ -197,6 +200,12 @@ bool ProcSelfMaps::getNextArea(Area *area)
 
     if (sflag == 's') {
         area->flags = Area::AREA_SHARED;
+        
+        /* Build the path to the underlying file in /proc/self/map_files/ */
+        line[line_addr_len] = '\0';
+        strcpy(area->map_file, "/proc/self/map_files/");
+        strcat(area->map_file, line);
+        // LOG(LL_DEBUG, LCF_CHECKPOINT, "Path to map_file: %s", area->map_file);
     }
     if (sflag == 'p') {
         area->flags = Area::AREA_PRIV;
@@ -217,10 +226,11 @@ bool ProcSelfMaps::getNextArea(Area *area)
     if (strcmp(area->name, "[heap]") == 0)
         area->flags |= Area::AREA_HEAP;
 
-    if (strstr(area->name, "/memfd:")) {
+    if (strstr(area->name, "/memfd:"))
         area->flags |= Area::AREA_MEMFD;
-        area->memfd_fd = 0;
-    }
+
+    if (strstr(area->name, "/dev/shm/"))
+        area->flags |= Area::AREA_SHM;
 
     /* Sometimes the [heap] is split into several contiguous segments, such as
      * after a dumping was made (but why...?). This can screw up our code for

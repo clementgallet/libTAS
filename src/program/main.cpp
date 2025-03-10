@@ -44,6 +44,7 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <stdint.h>
+#include <sys/capability.h>
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach-o/dyld.h> // _NSGetExecutablePath
@@ -221,6 +222,28 @@ int main(int argc, char **argv)
 #elif defined(__APPLE__) && defined(__MACH__)
     context.config.km = new KeyMappingQuartz(nullptr);
 #endif
+
+    /* Set capability CAP_CHECKPOINT_RESTORE so that games inherits it for savestating */
+    if (CAP_IS_SUPPORTED(CAP_CHECKPOINT_RESTORE)) {
+        cap_t cap = cap_get_proc();
+        if (cap) {
+            cap_value_t cap_list[1] = {CAP_CHECKPOINT_RESTORE};
+            cap_set_flag(cap, CAP_INHERITABLE, 1, cap_list, CAP_SET);
+            
+            int ret = cap_set_proc(cap);
+            if (ret == -1) {
+                std::cerr << "Setting CAP_CHECKPOINT_RESTORE capability to libTAS will allow some optimizations during savestates." << std::endl;
+                std::cerr << "To do that, run the following command: `sudo setcap cap_checkpoint_restore+eip \"$(which libTAS)\"`" << std::endl;
+            }
+            else {
+                ret = cap_set_ambient(CAP_CHECKPOINT_RESTORE, CAP_SET);
+                if (ret == -1) {
+                    std::cerr << "failed to set CAP_CHECKPOINT_RESTORE ambient flag" << std::endl;
+                }
+            }
+            cap_free(cap);
+        }
+    }
 
     /* libtas.so path */
     /* TODO: Not portable! */

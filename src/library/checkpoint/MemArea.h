@@ -69,6 +69,8 @@ struct Area {
         AREA_STACK = 0x10, /* Stack */
         AREA_HEAP = 0x20, /* Heap */
         AREA_MEMFD = 0x40, /* Region created by memfd_create() */
+        AREA_SHM = 0x80, /* Region created by mapping a file inside /dev/shm/ */
+        AREA_SAVEFILE = 0x100, /* Extra region created to store the content of savefiles */
     };
     int flags;
     unsigned int long devmajor;
@@ -85,10 +87,17 @@ struct Area {
     };
     
     char name[FILENAMESIZE];
+    
+    /* for shared area, path to the corresponding file inside /proc/self/map_files
+     * big enough to hold 64-bit addresses */
+    char map_file[46] = "/proc/self/map_files/";
 
     explicit operator bool() const {
         return (addr != nullptr);
     }
+    
+    /* Indicate if the area belongs to the standard mapping. Excludes savefiles */
+    bool isStandard() const {return (addr != nullptr) && !(flags & AreaFlag::AREA_SAVEFILE);}
 
     void print(const char* prefix) const;
 

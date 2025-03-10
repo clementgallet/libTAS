@@ -36,6 +36,7 @@ You can download the latest stable version of the software in the [Releases](htt
 * `libx11-6`, `libxcb1`, `libxcb-keysyms1`, `libxcb-xinput0`, `libxcb-xkb1`
 * `liblua5.4-0`
 * `ffmpeg`
+* `libcap`
 * `file`
 * `libswresample2` or `libswresample3` or `libswresample4` or `libswresample5`, `libasound2`
 
@@ -51,8 +52,8 @@ An PKGBUILD is available for Arch Linux on the [AUR](https://aur.archlinux.org/p
 
 You will need to download and install the following to build libTAS:
 
-* Deb: `apt-get install build-essential automake pkg-config libx11-dev libx11-xcb-dev qtbase5-dev libsdl2-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xinput-dev libxcb-xkb-dev libxcb-randr0-dev libudev-dev liblua5.4-dev libasound2-dev libavutil-dev libswresample-dev ffmpeg`
-* Arch: `pacman -S base-devel automake pkgconf qt5-base xcb-util-cursor alsa-lib lua ffmpeg sdl2`
+* Deb: `apt-get install build-essential automake pkg-config libx11-dev libx11-xcb-dev qtbase5-dev libsdl2-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xinput-dev libxcb-xkb-dev libxcb-randr0-dev libudev-dev liblua5.4-dev libasound2-dev libavutil-dev libswresample-dev ffmpeg libcap-dev`
+* Arch: `pacman -S base-devel automake pkgconf qt5-base xcb-util-cursor alsa-lib lua ffmpeg sdl2 libcap`
 
 ### Cloning
 
