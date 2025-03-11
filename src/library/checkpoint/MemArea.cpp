@@ -133,33 +133,18 @@ bool Area::isUncommitted(int spmfd) const
     if (!(flags & AREA_ANON) || !(flags & AREA_PRIV))
         return false;
     
+    /* The logic here is that if a private anon area has no permission (read or
+     * write), and has at least one uncommitted page, then all pages are uncommitted.
+     * I don't remember exactly how I came to this conclusion, it has to do with
+     * the VM_ACCOUNT flag that is set when an area becomes writable, and the 
+     * fact that two areas without matching VM_ACCOUNT flag cannot be merged. */
+    
     /* Seek at the beginning of the area pagemap */
     lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(addr) / (4096/8)), SEEK_SET);
-
-    /* Number of pages in the area */
-    size_t nb_pages = size / 4096;
-
-    /* Chunk of pagemap values */
-    uint64_t pagemaps[512];
-
-    /* Current index in the pagemaps array */
-    int pagemap_i = 512;
-
-    for (size_t page_i = 0; page_i < nb_pages; page_i++) {
-        /* We read pagemap flags in chunks to avoid too many read syscalls. */
-        if ((pagemap_i >= 512)) {
-            size_t remaining_pages = (nb_pages-page_i)>512?512:(nb_pages-page_i);
-            Utils::readAll(spmfd, pagemaps, remaining_pages*8);
-            pagemap_i = 0;
-        }
-        
-        /* Gather the flag for the current pagemap. */
-        uint64_t page = pagemaps[pagemap_i++];
-        bool page_present = page & (0x1ull << 63);
-        if (!page_present)
-            return true;
-    }
-    return false;
+    uint64_t page;
+    Utils::readAll(spmfd, &page, 8);
+    bool page_present = page & (0x1ull << 63);
+    return !page_present;
 }
 
 }
