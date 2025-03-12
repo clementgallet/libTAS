@@ -702,6 +702,9 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
 
     /* File descriptor of the shared mapped file, to check for holes */
     int shared_fd = -1;
+    off_t shared_next_off_hole = -1;
+    off_t shared_next_off_data = -1;
+
     if (saved_area.flags & Area::AREA_SHARED) {
         /* Try first to open the file */
         shared_fd = open(saved_area.name, O_RDONLY);
@@ -714,11 +717,17 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
 
         if (shared_fd != -1) {
             /* Try to seek here */
-            off_t off = lseek(shared_fd, 0, SEEK_SET);
-            if (off == -1) {
+            shared_next_off_data = lseek(shared_fd, saved_area.offset, SEEK_DATA);
+            shared_next_off_data &= ~0xfff; // truncate to page size, this may not be necessary
+            if (shared_next_off_data == -1) {
                 LOG(LL_DEBUG, LCF_CHECKPOINT, "     Could not seek into shared map file %s", saved_area.map_file);
                 close(shared_fd);
                 shared_fd = -1;
+            }
+            else {
+                shared_next_off_data &= ~0xfffl; // truncate to page size, this may not be necessary
+                shared_next_off_hole = lseek(shared_fd, saved_area.offset, SEEK_HOLE);                
+                shared_next_off_hole &= ~0xfffl;
             }
         }
         else {
@@ -769,18 +778,41 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
                 /* Check for a hole in the shared mapped file (works even for anonymous
                  * mappings, which still have an underlying file) */
                 if (shared_fd != -1) {
-                    off_t off = lseek(shared_fd, saved_area.offset + page_i*4096, SEEK_DATA);
-                    if (off >= (off_t)(saved_area.offset + (page_i+1)*4096)) {
-                        /* This page contains a hole in the underlying file */
-                        pagecount_skip++;
-                    }
-                    else {
-                        /* A hole is just filled with zeros, so we memset the page */
+                    off_t current_off = saved_area.offset + page_i*4096;
+                    
+                    if (current_off == shared_next_off_data) {
+                        /* Current page is data, but saved page is a hole, so
+                         * we memset the page. TODO: use fallocate to recreate
+                         * the hole, but that would need opening the file in 
+                         * write mode. */
+
                         if (!(saved_area.prot & PROT_WRITE)) {
                             MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
                         }
                         memset(static_cast<void*>(curAddr), 0, 4096);
                         pagecount_zero_or_file++;
+
+                        /* Update the next offset to data */
+                        shared_next_off_data += 4096;
+                        if (shared_next_off_data == shared_next_off_hole) {
+                            shared_next_off_data = lseek(shared_fd, shared_next_off_hole, SEEK_DATA);
+                            shared_next_off_data &= ~0xfffl;
+                        }
+                    }
+                    else if (current_off == shared_next_off_hole) {
+                        /* Current page is hole like saved page is, we have
+                         * nothing to do. */
+                        pagecount_skip++;
+
+                        /* Update the next offset to hole */
+                        shared_next_off_hole += 4096;
+                        if (shared_next_off_hole == shared_next_off_data) {
+                            shared_next_off_hole = lseek(shared_fd, shared_next_off_data, SEEK_HOLE);
+                            shared_next_off_hole &= ~0xfffl;
+                        }                        
+                    }
+                    else {
+                        LOG(LL_WARN, LCF_CHECKPOINT, "     Seeking into shared file shows neither data or hole!");                        
                     }
                 }
                 else {
@@ -1287,6 +1319,9 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
     
     /* File descriptor of the shared mapped file, to check for holes */
     int shared_fd = -1;
+    off_t shared_next_off_hole = -1;
+    off_t shared_next_off_data = -1;
+
     if (area.flags & Area::AREA_SHARED) {
         /* Try first to open the file */
         shared_fd = open(area.name, O_RDONLY);
@@ -1299,11 +1334,18 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
         
         if (shared_fd != -1) {
             /* Try to seek here */
-            off_t off = lseek(shared_fd, 0, SEEK_SET);
-            if (off == -1) {
+            shared_next_off_data = lseek(shared_fd, area.offset, SEEK_DATA);
+            if (shared_next_off_data == -1) {
                 LOG(LL_DEBUG, LCF_CHECKPOINT, "     Could not seek into shared map file %s", area.map_file);
                 close(shared_fd);
                 shared_fd = -1;
+            }
+            else {
+                shared_next_off_hole = lseek(shared_fd, area.offset, SEEK_HOLE);                
+                shared_next_off_hole &= ~0xfff;
+                shared_next_off_data &= ~0xfffl;
+                shared_next_off_hole = lseek(shared_fd, area.offset, SEEK_HOLE);
+                shared_next_off_hole &= ~0xfffl;
             }
         }
         else {
@@ -1375,12 +1417,34 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
             /* Check for a hole in the mapped file (works even for anonymous
              * mappings, which still have an underlying file) */
             if (shared_fd != -1) {
-                off_t off = lseek(shared_fd, area.offset + page_i*4096, SEEK_DATA);
-                if (off >= (off_t)(area.offset + (page_i+1)*4096)) {
+                off_t current_off = area.offset + page_i*4096;
+
+                if (current_off == shared_next_off_data) {
+                    /* Current page is data */
+
+                    /* Update the next offset to data */
+                    shared_next_off_data += 4096;
+                    if (shared_next_off_data == shared_next_off_hole) {
+                        shared_next_off_data = lseek(shared_fd, shared_next_off_hole, SEEK_DATA);
+                        shared_next_off_data &= ~0xfffl;
+                    }
+                }
+                else if (current_off == shared_next_off_hole) {
                     /* This page contains a hole in the underlying file */
                     state.savePageFlag(Area::NO_PAGE);
                     pagecount_unmapped++;
+
+                    /* Update the next offset to hole */
+                    shared_next_off_hole += 4096;
+                    if (shared_next_off_hole == shared_next_off_data) {
+                        shared_next_off_hole = lseek(shared_fd, shared_next_off_data, SEEK_HOLE);
+                        shared_next_off_hole &= ~0xfffl;
+                    }                        
+
                     continue;
+                }
+                else {
+                    LOG(LL_WARN, LCF_CHECKPOINT, "     Seeking into shared file shows neither data or hole!");                        
                 }
             }
 
