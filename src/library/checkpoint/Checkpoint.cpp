@@ -54,6 +54,7 @@
 #include <sys/mman.h>
 #include <cstring>
 #include <csignal>
+#include <climits>
 #include <stdint.h>
 #include <sys/statvfs.h>
 #include <cerrno>
@@ -717,16 +718,16 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
 
         if (shared_fd != -1) {
             /* Try to seek here */
-            shared_next_off_data = lseek(shared_fd, saved_area.offset, SEEK_DATA);
-            shared_next_off_data &= ~0xfff; // truncate to page size, this may not be necessary
-            if (shared_next_off_data == -1) {
+            shared_next_off_hole = lseek(shared_fd, saved_area.offset, SEEK_HOLE);                
+            if (shared_next_off_hole == -1) {
                 LOG(LL_DEBUG, LCF_CHECKPOINT, "     Could not seek into shared map file %s", saved_area.map_file);
                 close(shared_fd);
                 shared_fd = -1;
             }
             else {
+                shared_next_off_data = lseek(shared_fd, saved_area.offset, SEEK_DATA);
+                if (shared_next_off_data == -1) shared_next_off_data = LONG_MAX; // No data, set to past end of file
                 shared_next_off_data &= ~0xfffl; // truncate to page size, this may not be necessary
-                shared_next_off_hole = lseek(shared_fd, saved_area.offset, SEEK_HOLE);                
                 shared_next_off_hole &= ~0xfffl;
             }
         }
@@ -780,7 +781,16 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
                 if (shared_fd != -1) {
                     off_t current_off = saved_area.offset + page_i*4096;
                     
-                    if (current_off == shared_next_off_data) {
+                    if ((current_off > shared_next_off_data) && (current_off > shared_next_off_hole)) {
+                        /* data and hole offsets are obsolete, update both of them */
+                        shared_next_off_data = lseek(shared_fd, current_off, SEEK_DATA);
+                        if (shared_next_off_data == -1) shared_next_off_data = LONG_MAX; // No data, set to past end of file
+                        shared_next_off_data &= ~0xfffl;
+                        shared_next_off_hole = lseek(shared_fd, current_off, SEEK_HOLE);
+                        shared_next_off_hole &= ~0xfffl;
+                    }
+                    
+                    if ((current_off == shared_next_off_data) || (current_off < shared_next_off_hole)) {
                         /* Current page is data, but saved page is a hole, so
                          * we memset the page. TODO: use fallocate to recreate
                          * the hole, but that would need opening the file in 
@@ -791,28 +801,16 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
                         }
                         memset(static_cast<void*>(curAddr), 0, 4096);
                         pagecount_zero_or_file++;
-
-                        /* Update the next offset to data */
-                        shared_next_off_data += 4096;
-                        if (shared_next_off_data == shared_next_off_hole) {
-                            shared_next_off_data = lseek(shared_fd, shared_next_off_hole, SEEK_DATA);
-                            shared_next_off_data &= ~0xfffl;
-                        }
                     }
-                    else if (current_off == shared_next_off_hole) {
+                    else if ((current_off == shared_next_off_hole) || (current_off < shared_next_off_data)) {
                         /* Current page is hole like saved page is, we have
                          * nothing to do. */
                         pagecount_skip++;
-
-                        /* Update the next offset to hole */
-                        shared_next_off_hole += 4096;
-                        if (shared_next_off_hole == shared_next_off_data) {
-                            shared_next_off_hole = lseek(shared_fd, shared_next_off_data, SEEK_HOLE);
-                            shared_next_off_hole &= ~0xfffl;
-                        }                        
                     }
                     else {
-                        LOG(LL_WARN, LCF_CHECKPOINT, "     Seeking into shared file shows neither data or hole!");                        
+                        LOG(LL_WARN, LCF_CHECKPOINT, "     Seeking into shared file shows neither data or hole!");
+                        LOG(LL_WARN, LCF_CHECKPOINT, "     Start offset %lx, end of file %lx, current offset %lx, current data offset %lx, current hole offset %lx", 
+                            saved_area.offset, saved_area.offset + saved_area.size, current_off, shared_next_off_data, shared_next_off_hole);
                     }
                 }
                 else {
@@ -1334,17 +1332,16 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
         
         if (shared_fd != -1) {
             /* Try to seek here */
-            shared_next_off_data = lseek(shared_fd, area.offset, SEEK_DATA);
-            if (shared_next_off_data == -1) {
+            shared_next_off_hole = lseek(shared_fd, area.offset, SEEK_HOLE);
+            if (shared_next_off_hole == -1) {
                 LOG(LL_DEBUG, LCF_CHECKPOINT, "     Could not seek into shared map file %s", area.map_file);
                 close(shared_fd);
                 shared_fd = -1;
             }
             else {
-                shared_next_off_hole = lseek(shared_fd, area.offset, SEEK_HOLE);                
-                shared_next_off_hole &= ~0xfff;
+                shared_next_off_data = lseek(shared_fd, area.offset, SEEK_DATA);
+                if (shared_next_off_data == -1) shared_next_off_data = LONG_MAX; // No data, set to past end of file
                 shared_next_off_data &= ~0xfffl;
-                shared_next_off_hole = lseek(shared_fd, area.offset, SEEK_HOLE);
                 shared_next_off_hole &= ~0xfffl;
             }
         }
@@ -1419,27 +1416,22 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
             if (shared_fd != -1) {
                 off_t current_off = area.offset + page_i*4096;
 
-                if (current_off == shared_next_off_data) {
-                    /* Current page is data */
-
-                    /* Update the next offset to data */
-                    shared_next_off_data += 4096;
-                    if (shared_next_off_data == shared_next_off_hole) {
-                        shared_next_off_data = lseek(shared_fd, shared_next_off_hole, SEEK_DATA);
-                        shared_next_off_data &= ~0xfffl;
-                    }
+                if ((current_off > shared_next_off_data) && (current_off > shared_next_off_hole)) {
+                    /* data and hole offsets are obsolete, update both of them */
+                    shared_next_off_data = lseek(shared_fd, current_off, SEEK_DATA);
+                    if (shared_next_off_data == -1) shared_next_off_data = LONG_MAX; // No data, set to past end of file
+                    shared_next_off_data &= ~0xfffl;
+                    shared_next_off_hole = lseek(shared_fd, current_off, SEEK_HOLE);
+                    shared_next_off_hole &= ~0xfffl;
                 }
-                else if (current_off == shared_next_off_hole) {
+
+                if ((current_off == shared_next_off_data) || (current_off < shared_next_off_hole)) {
+                    /* Current page is data */
+                }
+                else if ((current_off == shared_next_off_hole) || (current_off < shared_next_off_data)) {
                     /* This page contains a hole in the underlying file */
                     state.savePageFlag(Area::NO_PAGE);
                     pagecount_unmapped++;
-
-                    /* Update the next offset to hole */
-                    shared_next_off_hole += 4096;
-                    if (shared_next_off_hole == shared_next_off_data) {
-                        shared_next_off_hole = lseek(shared_fd, shared_next_off_data, SEEK_HOLE);
-                        shared_next_off_hole &= ~0xfffl;
-                    }                        
 
                     continue;
                 }
@@ -1450,7 +1442,7 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
 
             if (!page_present) {
                 state.savePageFlag(Area::FILE_PAGE);
-                pagecount_unmapped++;
+                pagecount_zero_or_file++;
                 continue;
             }
             if (Utils::isZeroPage(static_cast<void*>(curAddr))) {
