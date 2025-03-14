@@ -26,6 +26,7 @@
 #include "AltStack.h"
 #include "ReservedMemory.h"
 #include "ThreadInfo.h"
+#include "clone_wrapper.h"
 
 #include "general/timewrappers.h" // clock_gettime
 #include "logging.h"
@@ -56,6 +57,9 @@
 #include <xcb/xproto.h> // xcb_get_input_focus_reply, xcb_get_input_focus
 #include <X11/Xlib.h> // XLockDisplay
 #endif
+#include <linux/sched.h>
+#include <sched.h>
+#include <unistd.h>
 
 namespace libtas {
 
@@ -187,6 +191,8 @@ void SaveStateManager::stateStatus(int slot, bool dirty)
 
 int SaveStateManager::checkpoint(int slot)
 {
+    GlobalNative gn;
+
     if (!stateReady(slot))
         return ESTATE_NOTCOMPLETE;
 
@@ -220,7 +226,7 @@ int SaveStateManager::checkpoint(int slot)
     /* Lock the display so we can empty events */
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i])
-            NATIVECALL(XLockDisplay(x11::gameDisplays[i]));
+            XLockDisplay(x11::gameDisplays[i]);
     }
 #endif
 
@@ -249,7 +255,7 @@ int SaveStateManager::checkpoint(int slot)
 #ifdef __unix__
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i])
-            NATIVECALL(XSync(x11::gameDisplays[i], false));
+            XSync(x11::gameDisplays[i], false);
     }
 #endif
 
@@ -284,7 +290,7 @@ int SaveStateManager::checkpoint(int slot)
      * and safely writing to the original stack.
      */
 
-    NATIVECALL(raise(sig_checkpoint));
+    raise(sig_checkpoint);
 
     /* Important note: while we are in the function to save a state, the remaining
      * part of this function is for **both** state saving and state loading!
@@ -319,14 +325,14 @@ int SaveStateManager::checkpoint(int slot)
     if (restoreInProgress) {
         for (int i=0; i<GAMECONNECTIONNUM; i++) {
             if (x11::gameConnections[i])
-                NATIVECALL(free(xcb_get_input_focus_reply(x11::gameConnections[i], xcb_get_input_focus(x11::gameConnections[i]), nullptr)));
+                free(xcb_get_input_focus_reply(x11::gameConnections[i], xcb_get_input_focus(x11::gameConnections[i]), nullptr));
         }
     }
 
     /* Unlock the display */
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i])
-            NATIVECALL(XUnlockDisplay(x11::gameDisplays[i]));
+            XUnlockDisplay(x11::gameDisplays[i]);
     }
 #endif
 
@@ -346,6 +352,8 @@ int SaveStateManager::checkpoint(int slot)
 
 int SaveStateManager::restore(int slot)
 {
+    GlobalNative gn;
+
     if (!stateReady(slot))
         return ESTATE_NOTCOMPLETE;
 
@@ -386,7 +394,7 @@ int SaveStateManager::restore(int slot)
     /* Sync all X server connections. */
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i])
-            NATIVECALL(XSync(x11::gameDisplays[i], false));
+            XSync(x11::gameDisplays[i], false);
     }
 #endif
 
@@ -416,7 +424,7 @@ int SaveStateManager::restore(int slot)
     AltStack::prepareStack();
 
     /* Here is where we load all the memory and stuff */
-    NATIVECALL(raise(sig_checkpoint));
+    raise(sig_checkpoint);
 
     /* The kernel will store the current ucontext onto the stack the signal
      * handler uses. This is the non-savestable alt stack. We ensure that
@@ -518,7 +526,7 @@ void SaveStateManager::suspendThreads()
                 if (ThreadManager::updateState(thread, ThreadInfo::ST_SIGNALED, ThreadInfo::ST_RUNNING)) {
                     /* Send the suspend signal to the thread */
                     LOG(LL_DEBUG, LCF_CHECKPOINT, "Signaling thread %d", thread->real_tid);
-                    NATIVECALL(ret = pthread_kill(thread->pthread_id, sig_suspend_threads));
+                    ret = pthread_kill(thread->pthread_id, sig_suspend_threads);
 
                     if (ret == 0) {
                         needrescan = true;
@@ -532,7 +540,7 @@ void SaveStateManager::suspendThreads()
                 break;
 
             case ThreadInfo::ST_SIGNALED:
-                NATIVECALL(ret = pthread_kill(thread->pthread_id, 0));
+                ret = pthread_kill(thread->pthread_id, 0);
 
                 if (ret == 0) {
                     needrescan = true;
@@ -568,7 +576,7 @@ void SaveStateManager::suspendThreads()
                     /* Try to cancel the thread */
                     int ret;
                     LOG(LL_DEBUG, LCF_CHECKPOINT, "Cancel thread %d", thread->real_tid);
-                    NATIVECALL(ret = pthread_cancel(thread->pthread_id));
+                    ret = pthread_cancel(thread->pthread_id);
 
                     if (ret < 0) {
                         LOG(LL_ERROR, LCF_CHECKPOINT, "Signalled thread %d died", thread->real_tid);
@@ -582,7 +590,7 @@ void SaveStateManager::suspendThreads()
                     int i = 0;
                     while (*thread->ptid != 0) {
                         LOG(LL_DEBUG, LCF_CHECKPOINT, "Wait for tid %d to become 0", *thread->ptid);                        
-                        NATIVECALL(usleep(1000));
+                        usleep(1000);
                         i++;
                         if (i > 1000)
                             break;
@@ -592,11 +600,11 @@ void SaveStateManager::suspendThreads()
                         /* If we couldn't cancel the thread, try to signal it so that
                         * it can call pthread_exit(). This is unsafe! */
                         LOG(LL_DEBUG, LCF_CHECKPOINT, "Cancel failed, signaling thread %d to terminate", thread->real_tid);
-                        NATIVECALL(ret = pthread_kill(thread->pthread_id, sig_suspend_threads));
+                        ret = pthread_kill(thread->pthread_id, sig_suspend_threads);
                         
                         while (*thread->ptid != 0) {
                             LOG(LL_DEBUG, LCF_CHECKPOINT, "Wait for tid %d to become 0", *thread->ptid);                        
-                            NATIVECALL(usleep(1000));
+                            usleep(1000);
                         }
                     }
                 }
@@ -611,14 +619,14 @@ void SaveStateManager::suspendThreads()
         }
         if (needrescan) {
             struct timespec sleepTime = { 0, 10 * 1000 };
-            NATIVECALL(nanosleep(&sleepTime, NULL));
+            nanosleep(&sleepTime, NULL);
         }
     } while (needrescan);
 
     ThreadManager::unlockList();
 
     for (int i = 0; i < numThreads; i++) {
-        NATIVECALL(sem_wait(&semNotifyCkptThread));
+        sem_wait(&semNotifyCkptThread);
     }
 
     LOG(LL_DEBUG, LCF_CHECKPOINT, "%d threads were suspended", numThreads);
@@ -634,10 +642,12 @@ void SaveStateManager::resumeThreads()
 
 void SaveStateManager::stopThisThread(int signum)
 {
+    GlobalNative gn;
+
     ThreadInfo *current_thread = ThreadManager::getCurrentThread();
 
     if (current_thread->state == ThreadInfo::ST_TERMINATED) {
-        NATIVECALL(pthread_exit(nullptr));
+        pthread_exit(nullptr);
     }
     
     if (current_thread->state == ThreadInfo::ST_CKPNTHREAD) {
@@ -664,7 +674,7 @@ void SaveStateManager::stopThisThread(int signum)
 
             /* Tell the checkpoint thread that we're all saved away */
             MYASSERT(ThreadManager::updateState(current_thread, ThreadInfo::ST_SUSPENDED, ThreadInfo::ST_SUSPINPROG))
-            NATIVECALL(sem_post(&semNotifyCkptThread));
+            sem_post(&semNotifyCkptThread);
 
             /* Then wait for the ckpt thread to write the ckpt file then wake us up */
             LOG(LL_DEBUG, LCF_CHECKPOINT, "Thread suspended");
@@ -756,6 +766,19 @@ void SaveStateManager::createNewThreads()
      * actual list */
     StateHeader* sh = static_cast<StateHeader*>(ReservedMemory::getAddr(ReservedMemory::SH_ADDR));
     
+    long returned_pid;
+    long clone_flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SYSVSEM |
+        CLONE_SIGHAND | CLONE_THREAD |
+        CLONE_PARENT_SETTID | CLONE_CHILD_CLEARTID;
+
+    int fd = -1;
+    if ((!Global::shared_config.has_clone3_set_tid) && Global::shared_config.can_set_last_pid) {
+        fd = open("/proc/sys/kernel/ns_last_pid", O_WRONLY);
+        if (fd != -1) {
+            lseek(fd, 0, SEEK_SET);
+        }
+    }
+
     /* Compare the two lists of threads and create the missing threads */
     for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
         if (!(thread->state == ThreadInfo::ST_SUSPENDED))
@@ -772,15 +795,50 @@ void SaveStateManager::createNewThreads()
             /* Thread was not found, create one */
             LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_THREAD, "Recreate thread %llx (%d) ", thread->pthread_id, thread->translated_tid);
 
-            int flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SYSVSEM |
-                        CLONE_SIGHAND | CLONE_THREAD |
-                        CLONE_PARENT_SETTID | CLONE_CHILD_CLEARTID;
-            NATIVECALL(thread->real_tid = clone(startNewThread,
-                        // -128 for red zone
-                        (void *)((char *)thread->saved_sp - 128),
-                        flags, thread, thread->ptid, NULL, thread->ptid));
+            if (Global::shared_config.has_clone3_set_tid) {
+                struct clone_args cargs;
+                cargs.flags = clone_flags;
+                cargs.child_tid = reinterpret_cast<uintptr_t>(thread->ptid);
+                cargs.parent_tid = reinterpret_cast<uintptr_t>(thread->ptid);
+                cargs.stack = reinterpret_cast<uintptr_t>(thread->stack_addr);
+                cargs.stack_size = (reinterpret_cast<uintptr_t>(thread->saved_sp) - 128) - reinterpret_cast<uintptr_t>(thread->stack_addr);
+                cargs.set_tid = reinterpret_cast<uintptr_t>(&thread->translated_tid);
+                cargs.set_tid_size = 1;
+                
+                RUN_CLONE3_RESTORE_FN(returned_pid, cargs, sizeof(cargs), thread, startNewThread);
+                
+                if (returned_pid < 0) {
+                    LOG(LL_ERROR, LCF_CHECKPOINT | LCF_THREAD, "Could not recreate thread %llx (%d): %s", thread->pthread_id, thread->translated_tid, (errno == 0)?"None":strerror(errno));
+                }
+                else if (returned_pid == 0) {
+                    /* This is for child process, but it is supposed to have called
+                    * startNewThread(), not returned here! */
+                    LOG(LL_ERROR, LCF_CHECKPOINT | LCF_THREAD, "New thread %d resume failed", thread->translated_tid);
+                }
+                thread->real_tid = returned_pid;
+            }
+            else {
+                /* Set last pid if possible */
+                if (fd != -1) {
+                    char last_pid[16];
+                    int last_pid_len = sprintf(last_pid, "%d", thread->translated_tid-1);
+                    ssize_t size = write(fd, last_pid, last_pid_len);
+                    if (size == -1) {
+                        LOG(LL_WARN, LCF_CHECKPOINT | LCF_THREAD, "Could not set last pid %s", last_pid);
+                    }
+                }
+                
+                RUN_CLONE_RESTORE_FN(returned_pid, clone_flags, reinterpret_cast<uintptr_t>(thread->saved_sp) - 128, thread->ptid, thread->ptid, thread, startNewThread);
+
+                if (returned_pid < 0) {
+                    LOG(LL_ERROR, LCF_CHECKPOINT | LCF_THREAD, "Could not recreate thread %llx (%d): %s", thread->pthread_id, thread->translated_tid, (errno == 0)?"None":strerror(errno));
+                }
+            }
         }
     }
+    
+    if (fd != -1)
+        close(fd);
 }
 
 int SaveStateManager::startNewThread(void *arg)
@@ -804,17 +862,17 @@ void SaveStateManager::waitForAllRestored(ThreadInfo *thread)
 {
     if (thread->state == ThreadInfo::ST_CKPNTHREAD) {
         for (int i = 0; i < numThreads; i++) {
-            NATIVECALL(sem_wait(&semNotifyCkptThread));
+            sem_wait(&semNotifyCkptThread);
         }
 
         /* If this was last of all, wake everyone up */
         for (int i = 0; i < numThreads; i++) {
-            NATIVECALL(sem_post(&semWaitForCkptThreadSignal));
+            sem_post(&semWaitForCkptThreadSignal);
         }
     }
     else {
-        NATIVECALL(sem_post(&semNotifyCkptThread));
-        NATIVECALL(sem_wait(&semWaitForCkptThreadSignal));
+        sem_post(&semNotifyCkptThread);
+        sem_wait(&semWaitForCkptThreadSignal);
     }
 }
 

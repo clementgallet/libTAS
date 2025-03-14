@@ -317,6 +317,12 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
 
     /* Call raise(SIGINT) in libtas::init */
     bool sigint_upon_launch = false;
+
+    /* Indicate if clone3 set tid feature is supported */
+    bool has_clone3_set_tid = false;
+    
+    /* Indicate if process can write into /proc/sys/kernel/ns_last_pid */
+    bool can_set_last_pid = false;
 };
 
 #endif

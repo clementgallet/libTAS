@@ -23,6 +23,7 @@
 * Add hashes in savestates for debugging
 * Map savefiles in memory so that they are saved in states
 * Ram Watch can use pointers to the stack
+* Attempt to set tid of recovered threads using clone3
 
 ### Changed
 
