@@ -35,6 +35,7 @@
 #include <unistd.h> // lseek
 #include <sys/ioctl.h>
 #include <fcntl.h>
+#include <dirent.h>
 
 namespace libtas {
 
@@ -112,6 +113,21 @@ std::pair<int, int> createPipe(int flags) {
     return std::make_pair(fds[0], fds[1]);
 }
 
+int fdFromFile(const char* file)
+{
+    std::lock_guard<std::mutex> lock(getFileListMutex());
+    auto& filehandles = getFileList();
+
+    for (const FileHandle &fh : filehandles) {
+        if (fh.isPipe())
+            continue;
+        if (0 == strcmp(fh.fileNameOrPipeContents, file)) {
+            return fh.fds[0];
+        }
+    }
+    return -1;
+}
+
 bool closeFile(int fd)
 {
     if (fd < 0)
@@ -145,6 +161,64 @@ bool closeFile(int fd)
 
     LOG(LL_DEBUG, LCF_FILEIO, "Unknown file descriptor %d", fd);
     return true;
+}
+
+void scanFileDescriptors()
+{
+    std::lock_guard<std::mutex> lock(getFileListMutex());
+    auto& filehandles = getFileList();
+
+    struct dirent *dp;
+
+    DIR *dir = opendir("/proc/self/fd/");
+    int dir_fd = dirfd(dir);
+    
+    while ((dp = readdir(dir))) {
+        if (dp->d_type != DT_LNK)
+            continue;
+
+        int fd = std::atoi(dp->d_name);
+        
+        /* Skip own dir file descriptor */
+        if (fd == dir_fd)
+            continue;
+        
+        /* Skip stdin/out/err */
+        if (fd < 3)
+            continue;
+        
+        /* Search if fd is already registered */
+        bool is_registered = false;
+        for (const FileHandle &fh : filehandles) {
+            if ((fh.fds[0] == fd) || (fh.fds[1] == fd)) {
+                is_registered = true;
+                break;
+            }
+        }
+        
+        if (is_registered)
+            continue;
+
+        /* Get symlink */
+        char buf[1024] = {};
+        ssize_t buf_size = readlinkat(dir_fd, dp->d_name, buf, 1024);
+        if (buf_size == -1) {
+            LOG(LL_WARN, LCF_FILEIO, "Cound not get symlink to file fd %d", fd);
+        }
+        else if (buf_size == 1024) {
+            /* Truncation occured */
+            buf[1023] = '\0';
+            LOG(LL_WARN, LCF_FILEIO, "Adding file with fd %d to file handle list failed because symlink was truncated: %s", fd, buf);
+        }
+        else {
+            /* Don't add special files, such as sockets or pipes */
+            if ((buf[0] == '/') && (0 != strncmp(buf, "/dev/", 5))) {
+                LOG(LL_DEBUG, LCF_FILEIO, "Add file %s with fd %d to file handle list", buf, fd);
+                filehandles.emplace_front(buf, fd);
+            }
+        }
+    }
+    closedir(dir);
 }
 
 

@@ -34,8 +34,15 @@ void openFile(const char* file, FILE* f);
 /* Open and register an unnamed pipe */
 std::pair<int, int> createPipe(int flags = 0);
 
+/* Return the file descriptor from a filename */
+int fdFromFile(const char* file);
+
 /* Register a file closing, and returns if we must actually close the file */
 bool closeFile(int fd);
+
+/* Scan list of file descriptors using /proc/self/fd, and add file descriptors
+ * that were not present. */
+void scanFileDescriptors();
 
 /* Mark all files as tracked, and save their offset */
 void trackAllFiles();

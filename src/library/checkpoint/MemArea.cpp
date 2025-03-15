@@ -22,6 +22,7 @@
 #include "MemArea.h"
 #include "ReservedMemory.h"
 
+#include "fileio/FileHandleList.h"
 #include "logging.h"
 #include "Utils.h"
 
@@ -63,7 +64,7 @@ int Area::toMmapFlag() const
 bool Area::isSkipped() const
 {
     /* Savefiles must be saved */
-    if (flags & Area::AREA_MEMFD) {
+    if (flags & Area::AREA_SAVEFILE) {
         return false;
     }
 
@@ -118,6 +119,10 @@ bool Area::isSkipped() const
     if (flags & Area::AREA_ANON) {
         return false;
     }
+    
+    if (flags & Area::AREA_MEMFD) {
+        return false;
+    }
 
     return true;
 }
@@ -145,6 +150,25 @@ bool Area::isUncommitted(int spmfd) const
     Utils::readAll(spmfd, &page, 8);
     bool page_present = page & (0x1ull << 63);
     return !page_present;
+}
+
+void Area::fillDeletedFd()
+{
+    /* fd may have already been filled in the case of savefiles */
+    if (fd != -1)
+        return;
+    
+    if (!(flags & Area::AREA_FILE))
+        return;
+    
+    /* If the file is deleted, look at our stored file handles for a matching
+     * file name */
+    /* FIXME: Different files may have the same filename! e.g. in the case when 
+     * memfd_create is used, the filename is only indicative, and is not
+     * necessarily unique, oops! Maybe use file inode and something like that? */
+    if (strlen(name) > 10 && (0 == strcmp(name + strlen(name) - 10, " (deleted)"))) {
+        fd = FileHandleList::fdFromFile(name);
+    }
 }
 
 }

@@ -80,7 +80,7 @@ struct Area {
     bool uncommitted;
     off_t page_offset; // position of the first area page in the pages file (in bytes)
     uint64_t hash;
-    int memfd_fd;
+    int fd; // file descriptor of the file mapped to this area
 
     enum {
         FILENAMESIZE = 1024
@@ -90,7 +90,7 @@ struct Area {
     
     /* for shared area, path to the corresponding file inside /proc/self/map_files
      * big enough to hold 64-bit addresses */
-    char map_file[46] = "/proc/self/map_files/";
+    char map_file[46];
 
     explicit operator bool() const {
         return (addr != nullptr);
@@ -107,6 +107,9 @@ struct Area {
     
     /* Returns if the area is guaranteed to be uncommitted based only on /proc/PID/maps values */
     bool isUncommitted(int spmfd) const;
+    
+    /* For deleted files, detect if a file descriptor of that file exists */
+    void fillDeletedFd();
 };
 }
 

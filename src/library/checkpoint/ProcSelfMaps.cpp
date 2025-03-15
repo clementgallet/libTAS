@@ -215,9 +215,11 @@ bool ProcSelfMaps::getNextArea(Area *area)
     }
     if (area->name[0] == '/') {
         area->flags |= Area::AREA_FILE;
+        
+        /* If the file is deleted, we may need to Recover the file fd if present */
     }
 
-    area->skip = false;
+    area->fd = -1;
 
     /* Identify specific segments */
     if (strstr(area->name, "[stack"))
@@ -252,6 +254,8 @@ bool ProcSelfMaps::getNextArea(Area *area)
             off = cur_off;
         }
     }
+
+    area->skip = area->isSkipped();
 
     return true;
 }

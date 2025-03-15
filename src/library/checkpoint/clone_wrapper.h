@@ -144,6 +144,10 @@
 
 #define RUN_CLONE3_RESTORE_FN(ret, clone_args, size, args,        \
                                  clone_restore_fn)                \
-
+    (void) ret; \
+    (void) clone_args; \
+    (void) size; \
+    (void) args; \
+    (void) clone_restore_fn;
 
 #endif

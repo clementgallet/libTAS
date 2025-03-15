@@ -273,6 +273,13 @@ int SaveStateManager::checkpoint(int slot)
     urandom_disable_handler();
 #endif
 
+    /* Scan list of file descriptors using /proc/self/fd, and add file descriptors
+     * that were not present. This can include some fds that couldn't be detected,
+     * such as memfd_create which comes from a syscall (not a function, cannot be
+     * hooked easily). This may be needed to recover some file mappings during 
+     * state loading when the file was deleted. */
+    FileHandleList::scanFileDescriptors();
+
     /* We flag all opened files as tracked and store their offset. This must be
      * done AFTER suspending threads.
      */
@@ -766,7 +773,7 @@ void SaveStateManager::createNewThreads()
      * actual list */
     StateHeader* sh = static_cast<StateHeader*>(ReservedMemory::getAddr(ReservedMemory::SH_ADDR));
     
-    long returned_pid;
+    long returned_pid = -1;
     long clone_flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SYSVSEM |
         CLONE_SIGHAND | CLONE_THREAD |
         CLONE_PARENT_SETTID | CLONE_CHILD_CLEARTID;

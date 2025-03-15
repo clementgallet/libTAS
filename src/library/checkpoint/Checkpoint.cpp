@@ -204,7 +204,7 @@ int Checkpoint::checkCheckpoint()
     bool not_eof = memMapLayout.getNextArea(&area);
 
     while (not_eof) {
-        if (!area.isSkipped()) {
+        if (!area.skip) {
             savestate_size += area.size;
         }
         not_eof = memMapLayout.getNextArea(&area);
@@ -595,8 +595,11 @@ static int reallocateArea(Area *saved_area, Area *current_area)
         /* This saved area must be allocated */
         LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %d must be allocated", saved_area->addr, saved_area->name, saved_area->size);
 
-        int imagefd = -1;
-        if (saved_area->flags & Area::AREA_FILE) {
+        /* For file mapping, we try to use an already existing file descriptor
+         * of that file. This is even necessary when the file was deleted.
+         * If not file descriptor, we try to open the file. */
+        int imagefd = saved_area->fd;
+        if ((saved_area->flags & Area::AREA_FILE) && (imagefd == -1)) {
             /* We shouldn't be creating any special section such as [heap] or [stack] */
             MYASSERT(saved_area->name[0] == '/')
 
@@ -644,8 +647,8 @@ static int reallocateArea(Area *saved_area, Area *current_area)
             LOG(LL_FATAL, LCF_CHECKPOINT, "Area at %p got mmapped to %p", saved_area->addr, mmappedat);
         }
 
-        /* Close image file (fd only gets in the way) */
-        if (imagefd >= 0) {
+        /* Close image file if we opened it */
+        if ((imagefd != -1) && (saved_area->fd != imagefd)) {
             close(imagefd);
         }
 
@@ -967,21 +970,21 @@ static void readASavefile(SaveStateLoading &saved_state)
     if (!(saved_area.flags & Area::AREA_SAVEFILE))
         return;
     
-    int ret = ftruncate(saved_area.memfd_fd, saved_area.size);
+    int ret = ftruncate(saved_area.fd, saved_area.size);
     
     if (ret < 0) {
-        LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "     Cound not truncate the savefile %s with fd %d and size %zu", saved_area.name, saved_area.memfd_fd, saved_area.size);
+        LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "     Cound not truncate the savefile %s with fd %d and size %zu", saved_area.name, saved_area.fd, saved_area.size);
         return;
     }
     
-    void* saved_area_addr = mmap(nullptr, saved_area.size, PROT_WRITE, MAP_SHARED, saved_area.memfd_fd, 0);
+    void* saved_area_addr = mmap(nullptr, saved_area.size, PROT_WRITE, MAP_SHARED, saved_area.fd, 0);
         
     if (saved_area_addr == MAP_FAILED) {
-        LOG(LL_ERROR, LCF_CHECKPOINT | LCF_FILEIO, "     Cound not map file %s with fd %d and size %zu", saved_area.name, saved_area.memfd_fd, saved_area.size);
+        LOG(LL_ERROR, LCF_CHECKPOINT | LCF_FILEIO, "     Cound not map file %s with fd %d and size %zu", saved_area.name, saved_area.fd, saved_area.size);
         return;
     }
 
-    LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "Restore file %s with fd %d and size %zu", saved_area.name, saved_area.memfd_fd, saved_area.size);
+    LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "Restore file %s with fd %d and size %zu", saved_area.name, saved_area.fd, saved_area.size);
 
     /* Map the original file */
     int orig_fd = -1;
@@ -1553,12 +1556,12 @@ static size_t writeSaveFiles(SaveStateSaving &state)
             
         Area area;
         area.flags = Area::AREA_SAVEFILE;
-        area.memfd_fd = savefile->fd;
+        area.fd = savefile->fd;
         strncpy(area.name, savefile->filename.c_str(), Area::FILENAMESIZE-1);
         
         /* Get current file length and map at least this amount of bytes */
         struct stat filestat;
-        int rv = fstat(area.memfd_fd, &filestat);
+        int rv = fstat(area.fd, &filestat);
 
         if (rv < 0)
             continue;

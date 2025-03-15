@@ -65,13 +65,13 @@ void SaveStateSaving::processArea(Area* area)
     MYASSERT(area->page_offset != -1)
 
     /* Write the area struct */
-    if (!area->skip)
-        area->skip = area->isSkipped();
-
     if (Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT)
         area->uncommitted = area->isUncommitted(spmfd);
     else
         area->uncommitted = false;
+
+    /* Fill fd of deleted files, which may be used when loading the savestate */
+    area->fillDeletedFd();
 
     // if (Global::shared_config.logging_level >= LL_DEBUG) {
     //     if (area->skip || area->uncommitted)
