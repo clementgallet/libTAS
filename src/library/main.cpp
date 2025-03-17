@@ -28,7 +28,7 @@
 #include "UnityHacks.h"
 #include "audio/AudioContext.h"
 #include "encoding/AVEncoder.h"
-#include "steam/isteamuser.h" // SteamSetUserDataFolder
+#include "steam/isteamuser/isteamuser.h" // SteamSetUserDataFolder
 #include "general/dlhook.h"
 #include "general/monowrappers.h"
 #include "steam/isteamremotestorage/isteamremotestorage.h" // SteamSetRemoteStorageFolder

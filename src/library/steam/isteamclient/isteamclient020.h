@@ -9,7 +9,7 @@
 
 #include "isteamclient.h"
 #include "steam/steamtypes.h"
-#include "steam/isteamuser.h"
+#include "steam/isteamuser/isteamuser.h"
 #include "steam/isteamuserstats.h"
 #include "steam/isteamutils.h"
 #include "steam/isteamremotestorage/isteamremotestorage.h"

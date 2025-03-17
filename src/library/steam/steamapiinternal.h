@@ -8,7 +8,7 @@
 #define LIBTAS_STEAMAPIINTERNAL_H_INCL
 
 #include "steamtypes.h"
-#include "isteamuser.h"
+#include "isteamuser/isteamuser.h"
 #include "isteamuserstats.h"
 #include "isteamutils.h"
 #include "isteamremotestorage/isteamremotestorage.h"

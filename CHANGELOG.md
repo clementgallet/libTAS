@@ -25,6 +25,7 @@
 * Ram Watch can use pointers to the stack
 * Attempt to set tid of recovered threads using clone3
 * Track opened files that were deleted so we can map them in state loading
+* Add versions for SteamUser API
 
 ### Changed
 

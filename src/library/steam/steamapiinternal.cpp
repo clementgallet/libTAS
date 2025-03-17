@@ -50,9 +50,7 @@ HSteamUser SteamAPI_GetHSteamUser()
         return orig::SteamAPI_GetHSteamUser();
     }
 
-    if (auto *user = SteamUser())
-        return user->GetHSteamUser();
-    return 0;
+    return 1;
 }
 
 HSteamPipe SteamAPI_GetHSteamPipe()

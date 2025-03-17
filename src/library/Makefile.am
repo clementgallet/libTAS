@@ -171,7 +171,11 @@ libtas_so_SOURCES = \
     steam/isteamremotestorage/isteamremotestorage016.cpp \
     steam/isteamscreenshots.cpp \
     steam/isteamugc.cpp \
-    steam/isteamuser.cpp \
+    steam/isteamuser/isteamuser.cpp \
+    steam/isteamuser/isteamuser019.cpp \
+    steam/isteamuser/isteamuser020.cpp \
+    steam/isteamuser/isteamuser021.cpp \
+    steam/isteamuser/isteamuser023.cpp \
     steam/isteamuserstats.cpp \
     steam/isteamutils.cpp \
     steam/steamapi.cpp \

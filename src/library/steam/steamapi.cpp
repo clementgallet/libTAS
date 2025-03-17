@@ -29,6 +29,10 @@
 #include "isteamclient/isteamclient016.h"
 #include "isteamclient/isteamclient017.h"
 #include "isteamclient/isteamclient020.h"
+#include "isteamuser/isteamuser019.h"
+#include "isteamuser/isteamuser020.h"
+#include "isteamuser/isteamuser021.h"
+#include "isteamuser/isteamuser023.h"
 
 #include "logging.h"
 #include "hook.h"
@@ -108,7 +112,10 @@ static bool SteamGetInterfaceVersion()
         // { STEAMUSER_INTERFACE_VERSION_016, SteamUser_set_version },
         // { STEAMUSER_INTERFACE_VERSION_017, SteamUser_set_version },
         // { STEAMUSER_INTERFACE_VERSION_018, SteamUser_set_version },
-        // { STEAMUSER_INTERFACE_VERSION_019, SteamUser_set_version },
+        { STEAMUSER_INTERFACE_VERSION_019, SteamUser_set_version },
+        { STEAMUSER_INTERFACE_VERSION_020, SteamUser_set_version },
+        { STEAMUSER_INTERFACE_VERSION_021, SteamUser_set_version },
+        { STEAMUSER_INTERFACE_VERSION_023, SteamUser_set_version },
         // { STEAMUSERSTATS_INTERFACE_VERSION_011, SteamUserStats_set_version },
         // { STEAMUTILS_INTERFACE_VERSION_001, SteamUtils_set_version },
         // { STEAMUTILS_INTERFACE_VERSION_002, SteamUtils_set_version },
@@ -251,7 +258,6 @@ DEFINE_ORIG_POINTER(SteamAPI_ManualDispatch_GetAPICallResult)
 
 DEFINE_ORIG_POINTER(SteamController)
 DEFINE_ORIG_POINTER(SteamUserStats)
-DEFINE_ORIG_POINTER(SteamUser)
 DEFINE_ORIG_POINTER(SteamUtils)
 DEFINE_ORIG_POINTER(SteamApps)
 DEFINE_ORIG_POINTER(SteamFriends)
@@ -447,18 +453,6 @@ ISteamUserStats *SteamUserStats()
 
     static ISteamUserStats steamuserstats;
     return &steamuserstats;
-}
-
-ISteamUser *SteamUser()
-{
-    LOGTRACE(LCF_STEAM);
-    if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamUser, "steam_api");
-        return orig::SteamUser();
-    }
-
-    static ISteamUser steamuser;
-    return &steamuser;
 }
 
 ISteamUtils *SteamUtils()
