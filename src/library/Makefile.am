@@ -41,6 +41,7 @@ libtas_so_SOURCES = \
     audio/openal/alext.cpp \
     audio/openal/alsoft.cpp \
     audio/openal/efx.cpp \
+    audio/pulseaudio/pulseaudio.cpp \
     audio/sdl/sdlaudio.cpp \
     checkpoint/AltStack.cpp \
     checkpoint/Checkpoint.cpp \
