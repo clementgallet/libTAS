@@ -201,3 +201,6 @@ libTAS_LDADD = $(QT5_LIBS) $(LIBLUA_LIBS) $(PROGRAM_LIBS)
 SUFFIXES = .h _moc.cpp
 
 CLEANFILES = $(libTAS_MOCSOURCES)
+
+install-exec-hook:
+	setcap cap_checkpoint_restore+eip $(DESTDIR)$(bindir)/$(bin_PROGRAMS)
