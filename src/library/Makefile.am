@@ -177,7 +177,10 @@ libtas_so_SOURCES = \
     steam/isteamuser/isteamuser020.cpp \
     steam/isteamuser/isteamuser021.cpp \
     steam/isteamuser/isteamuser023.cpp \
-    steam/isteamuserstats.cpp \
+    steam/isteamuserstats/isteamuserstats.cpp \
+    steam/isteamuserstats/isteamuserstats011.cpp \
+    steam/isteamuserstats/isteamuserstats012.cpp \
+    steam/isteamuserstats/isteamuserstats013.cpp \
     steam/isteamutils.cpp \
     steam/steamapi.cpp \
     steam/steamapiinternal.cpp \

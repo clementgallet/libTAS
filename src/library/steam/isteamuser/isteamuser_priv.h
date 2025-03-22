@@ -4,8 +4,8 @@
 //
 //=============================================================================
 
-#ifndef LIBTAS_ISTEAMREMOTESTORAGE_PRIV_H_INCL
-#define LIBTAS_ISTEAMREMOTESTORAGE_PRIV_H_INCL
+#ifndef LIBTAS_ISTEAMUSER_PRIV_H_INCL
+#define LIBTAS_ISTEAMUSER_PRIV_H_INCL
 
 #include "steam/steamtypes.h"
 

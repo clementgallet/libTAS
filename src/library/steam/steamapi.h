@@ -23,7 +23,7 @@
 #include "isteamclient/isteamclient.h"
 #include "isteamcontroller.h"
 #include "isteamuser/isteamuser.h"
-#include "isteamuserstats.h"
+#include "isteamuserstats/isteamuserstats.h"
 #include "isteamutils.h"
 #include "isteamremotestorage/isteamremotestorage.h"
 #include "isteamapps.h"
@@ -43,6 +43,15 @@
 #include "hook.h"
 
 namespace libtas {
+
+struct steam_interface
+{
+    const char *name;
+    void (*iface_set_default_version)(const char *);
+    void* (*iface_getter)(const char *);
+};
+
+const steam_interface* SteamGetAllInterfaces();
 
 OVERRIDE void SteamAPI_Shutdown();
 
@@ -106,8 +115,6 @@ OVERRIDE void SteamAPI_ManualDispatch_FreeLastCallback( HSteamPipe hSteamPipe );
 OVERRIDE bool SteamAPI_ManualDispatch_GetAPICallResult( HSteamPipe hSteamPipe, SteamAPICall_t hSteamAPICall, void *pCallback, int cubCallback, int iCallbackExpected, bool *pbFailed );
 
 OVERRIDE ISteamController *SteamController();
-OVERRIDE ISteamUserStats *SteamUserStats();
-OVERRIDE ISteamUser *SteamUser();
 OVERRIDE ISteamUtils *SteamUtils();
 OVERRIDE ISteamApps *SteamApps();
 OVERRIDE ISteamFriends *SteamFriends();

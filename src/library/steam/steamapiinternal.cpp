@@ -22,7 +22,7 @@
 #include "isteamremotestorage/isteamremotestorage.h"
 #include "isteamapps.h"
 #include "isteamugc.h"
-#include "isteamuserstats.h"
+#include "isteamuserstats/isteamuserstats.h"
 
 #include "logging.h"
 #include "hook.h"
@@ -93,6 +93,15 @@ void * SteamInternal_CreateInterface( const char *ver )
         return orig::SteamInternal_CreateInterface(ver);
     }
 
+    /* If we implemented the interface, return it */
+    const steam_interface* ifaces = SteamGetAllInterfaces();
+
+    for (int j = 0; ifaces[j].name; j++) {
+        if (strcmp(ifaces[j].name, ver) == 0) {
+            return ifaces[j].iface_getter(ver);
+        }
+    }
+
     /* The expected return from this function is a pointer to a C++ class with
      * specific virtual functions.  The format of our argument is the name
      * of the corresponding C function that has already been hooked to return
@@ -115,18 +124,12 @@ void * SteamInternal_CreateInterface( const char *ver )
         symbol = "SteamMusic";
     else if (0 == symbol.compare("STEAMMUSICREMOTE_INTERFACE_VERSION"))
         symbol = "SteamMusicRemote";
-    else if (0 == symbol.compare("STEAMREMOTESTORAGE_INTERFACE_VERSION")) {
-        SteamRemoteStorage_set_version(ver);
-        return SteamRemoteStorage();
-    }
     else if (0 == symbol.compare("STEAMSCREENSHOTS_INTERFACE_VERSION"))
         symbol = "SteamScreenshots";
     else if (0 == symbol.compare("STEAMUGC_INTERFACE_VERSION"))
         return SteamUGC();
-    else if (0 == symbol.compare("STEAMUSERSTATS_INTERFACE_VERSION"))
-        return SteamUserStats();
     else if (0 == symbol.compare("STEAMVIDEO_INTERFACE_V")) // Not a typo
-        symbol = "SteamVideo";    
+        symbol = "SteamVideo";
     
     void *(*func)() = reinterpret_cast<void *(*)()>(dlsym(RTLD_DEFAULT, symbol.c_str()));
     if (func)
@@ -140,6 +143,15 @@ void * SteamInternal_FindOrCreateUserInterface(HSteamUser steam_user, const char
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamInternal_FindOrCreateUserInterface, "steam_api");
         return orig::SteamInternal_FindOrCreateUserInterface(steam_user, version);
+    }
+
+    /* If we implemented the interface, return it */
+    const steam_interface* ifaces = SteamGetAllInterfaces();
+
+    for (int j = 0; ifaces[j].name; j++) {
+        if (strcmp(ifaces[j].name, version) == 0) {
+            return ifaces[j].iface_getter(version);
+        }
     }
 
     /* The expected return from this function is a pointer to a C++ class with
@@ -164,16 +176,10 @@ void * SteamInternal_FindOrCreateUserInterface(HSteamUser steam_user, const char
         symbol = "SteamMusic";
     else if (0 == symbol.compare("STEAMMUSICREMOTE_INTERFACE_VERSION"))
         symbol = "SteamMusicRemote";
-    else if (0 == symbol.compare("STEAMREMOTESTORAGE_INTERFACE_VERSION")) {
-        SteamRemoteStorage_set_version(version);
-        return SteamRemoteStorage();
-    }
     else if (0 == symbol.compare("STEAMSCREENSHOTS_INTERFACE_VERSION"))
         symbol = "SteamScreenshots";
     else if (0 == symbol.compare("STEAMUGC_INTERFACE_VERSION"))
         return SteamUGC();
-    else if (0 == symbol.compare("STEAMUSERSTATS_INTERFACE_VERSION"))
-        return SteamUserStats();
     else if (0 == symbol.compare("STEAMVIDEO_INTERFACE_V")) // Not a typo
         symbol = "SteamVideo";    
     
@@ -191,6 +197,15 @@ void * SteamInternal_FindOrCreateGameServerInterface(HSteamUser steam_user, cons
         return orig::SteamInternal_FindOrCreateGameServerInterface(steam_user, version);
     }
 
+    /* If we implemented the interface, return it */
+    const steam_interface* ifaces = SteamGetAllInterfaces();
+
+    for (int j = 0; ifaces[j].name; j++) {
+        if (strcmp(ifaces[j].name, version) == 0) {
+            return ifaces[j].iface_getter(version);
+        }
+    }
+
     /* The expected return from this function is a pointer to a C++ class with
      * specific virtual functions.  The format of our argument is the name
      * of the corresponding C function that has already been hooked to return
@@ -213,16 +228,10 @@ void * SteamInternal_FindOrCreateGameServerInterface(HSteamUser steam_user, cons
         symbol = "SteamMusic";
     else if (0 == symbol.compare("STEAMMUSICREMOTE_INTERFACE_VERSION"))
         symbol = "SteamMusicRemote";
-    else if (0 == symbol.compare("STEAMREMOTESTORAGE_INTERFACE_VERSION")) {
-        SteamRemoteStorage_set_version(version);
-        return SteamRemoteStorage();
-    }
     else if (0 == symbol.compare("STEAMSCREENSHOTS_INTERFACE_VERSION"))
         symbol = "SteamScreenshots";
     else if (0 == symbol.compare("STEAMUGC_INTERFACE_VERSION"))
         return SteamUGC();
-    else if (0 == symbol.compare("STEAMUSERSTATS_INTERFACE_VERSION"))
-        return SteamUserStats();
     else if (0 == symbol.compare("STEAMVIDEO_INTERFACE_V")) // Not a typo
         symbol = "SteamVideo";    
     

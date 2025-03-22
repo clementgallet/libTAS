@@ -33,6 +33,9 @@
 #include "isteamuser/isteamuser020.h"
 #include "isteamuser/isteamuser021.h"
 #include "isteamuser/isteamuser023.h"
+#include "isteamuserstats/isteamuserstats011.h"
+#include "isteamuserstats/isteamuserstats012.h"
+#include "isteamuserstats/isteamuserstats013.h"
 
 #include "logging.h"
 #include "hook.h"
@@ -47,13 +50,8 @@
 
 namespace libtas {
 
-static bool SteamGetInterfaceVersion()
-{
-    static const struct
-    {
-        const char *name;
-        void (*iface_set_default_version)(const char *);
-    } ifaces[] = {
+const steam_interface* SteamGetAllInterfaces() {
+    static const steam_interface ifaces[] = {
         // { STEAMAPPLIST_INTERFACE_VERSION_001, SteamAppList_set_version },
         // { STEAMAPPS_INTERFACE_VERSION_001, SteamApps_set_version },
         // { STEAMAPPS_INTERFACE_VERSION_003, SteamApps_set_version },
@@ -61,12 +59,12 @@ static bool SteamGetInterfaceVersion()
         // { STEAMAPPS_INTERFACE_VERSION_006, SteamApps_set_version },
         // { STEAMAPPS_INTERFACE_VERSION_007, SteamApps_set_version },
         // { STEAMAPPS_INTERFACE_VERSION_008, SteamApps_set_version },
-        { STEAMCLIENT_INTERFACE_VERSION_006, SteamClient_set_version },
-        { STEAMCLIENT_INTERFACE_VERSION_012, SteamClient_set_version },
-        { STEAMCLIENT_INTERFACE_VERSION_014, SteamClient_set_version },
-        { STEAMCLIENT_INTERFACE_VERSION_016, SteamClient_set_version },
-        { STEAMCLIENT_INTERFACE_VERSION_017, SteamClient_set_version },
-        { STEAMCLIENT_INTERFACE_VERSION_020, SteamClient_set_version },
+        { STEAMCLIENT_INTERFACE_VERSION_006, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
+        { STEAMCLIENT_INTERFACE_VERSION_012, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
+        { STEAMCLIENT_INTERFACE_VERSION_014, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
+        { STEAMCLIENT_INTERFACE_VERSION_016, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
+        { STEAMCLIENT_INTERFACE_VERSION_017, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
+        { STEAMCLIENT_INTERFACE_VERSION_020, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
         // { STEAMCONTROLLER_INTERFACE_VERSION_001, SteamController_set_version },
         // { STEAMCONTROLLER_INTERFACE_VERSION_003, SteamController_set_version },
         // { STEAMCONTROLLER_INTERFACE_VERSION_005, SteamController_set_version },
@@ -95,10 +93,10 @@ static bool SteamGetInterfaceVersion()
         // { STEAMNETWORKING_INTERFACE_VERSION_001, SteamNetworking_set_version },
         // { STEAMNETWORKING_INTERFACE_VERSION_005, SteamNetworking_set_version },
         // { STEAMPARENTALSETTINGS_INTERFACE_VERSION_001, SteamParentalSettings_set_version },
-        { STEAMREMOTESTORAGE_INTERFACE_VERSION_001, SteamRemoteStorage_set_version },
-        { STEAMREMOTESTORAGE_INTERFACE_VERSION_012, SteamRemoteStorage_set_version },
-        { STEAMREMOTESTORAGE_INTERFACE_VERSION_013, SteamRemoteStorage_set_version },
-        { STEAMREMOTESTORAGE_INTERFACE_VERSION_014, SteamRemoteStorage_set_version },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_001, SteamRemoteStorage_set_version, reinterpret_cast<void *(*)(const char*)>(SteamRemoteStorage_generic) },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_012, SteamRemoteStorage_set_version, reinterpret_cast<void *(*)(const char*)>(SteamRemoteStorage_generic) },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_013, SteamRemoteStorage_set_version, reinterpret_cast<void *(*)(const char*)>(SteamRemoteStorage_generic) },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_014, SteamRemoteStorage_set_version, reinterpret_cast<void *(*)(const char*)>(SteamRemoteStorage_generic) },
         // { STEAMSCREENSHOTS_INTERFACE_VERSION_001, SteamScreenshots_set_version },
         // { STEAMSCREENSHOTS_INTERFACE_VERSION_002, SteamScreenshots_set_version },
         // { STEAMSCREENSHOTS_INTERFACE_VERSION_003, SteamScreenshots_set_version },
@@ -112,11 +110,13 @@ static bool SteamGetInterfaceVersion()
         // { STEAMUSER_INTERFACE_VERSION_016, SteamUser_set_version },
         // { STEAMUSER_INTERFACE_VERSION_017, SteamUser_set_version },
         // { STEAMUSER_INTERFACE_VERSION_018, SteamUser_set_version },
-        { STEAMUSER_INTERFACE_VERSION_019, SteamUser_set_version },
-        { STEAMUSER_INTERFACE_VERSION_020, SteamUser_set_version },
-        { STEAMUSER_INTERFACE_VERSION_021, SteamUser_set_version },
-        { STEAMUSER_INTERFACE_VERSION_023, SteamUser_set_version },
-        // { STEAMUSERSTATS_INTERFACE_VERSION_011, SteamUserStats_set_version },
+        { STEAMUSER_INTERFACE_VERSION_019, SteamUser_set_version, reinterpret_cast<void *(*)(const char*)>(SteamUser_generic) },
+        { STEAMUSER_INTERFACE_VERSION_020, SteamUser_set_version, reinterpret_cast<void *(*)(const char*)>(SteamUser_generic) },
+        { STEAMUSER_INTERFACE_VERSION_021, SteamUser_set_version, reinterpret_cast<void *(*)(const char*)>(SteamUser_generic) },
+        { STEAMUSER_INTERFACE_VERSION_023, SteamUser_set_version, reinterpret_cast<void *(*)(const char*)>(SteamUser_generic) },
+        { STEAMUSERSTATS_INTERFACE_VERSION_011, SteamUserStats_set_version, reinterpret_cast<void *(*)(const char*)>(SteamUserStats_generic) },
+        { STEAMUSERSTATS_INTERFACE_VERSION_012, SteamUserStats_set_version, reinterpret_cast<void *(*)(const char*)>(SteamUserStats_generic) },
+        { STEAMUSERSTATS_INTERFACE_VERSION_013, SteamUserStats_set_version, reinterpret_cast<void *(*)(const char*)>(SteamUserStats_generic) },
         // { STEAMUTILS_INTERFACE_VERSION_001, SteamUtils_set_version },
         // { STEAMUTILS_INTERFACE_VERSION_002, SteamUtils_set_version },
         // { STEAMUTILS_INTERFACE_VERSION_006, SteamUtils_set_version },
@@ -128,6 +128,11 @@ static bool SteamGetInterfaceVersion()
         { NULL, NULL }
     };
 
+    return ifaces;
+}
+
+static bool SteamGetInterfaceVersion()
+{
     GlobalNative gn;
 
     /* Load SteamAPI library */
@@ -208,6 +213,8 @@ static bool SteamGetInterfaceVersion()
         return false;
     }
 
+    const steam_interface* ifaces = SteamGetAllInterfaces();
+
     for (int i = 0; i < size; i++)
     {
         char *d = &data[i];
@@ -257,7 +264,6 @@ DEFINE_ORIG_POINTER(SteamAPI_ManualDispatch_FreeLastCallback)
 DEFINE_ORIG_POINTER(SteamAPI_ManualDispatch_GetAPICallResult)
 
 DEFINE_ORIG_POINTER(SteamController)
-DEFINE_ORIG_POINTER(SteamUserStats)
 DEFINE_ORIG_POINTER(SteamUtils)
 DEFINE_ORIG_POINTER(SteamApps)
 DEFINE_ORIG_POINTER(SteamFriends)
@@ -441,18 +447,6 @@ ISteamController *SteamController()
 
     static ISteamController steamcontroller;
     return &steamcontroller;
-}
-
-ISteamUserStats *SteamUserStats()
-{
-    LOGTRACE(LCF_STEAM);
-    if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamUserStats, "steam_api");
-        return orig::SteamUserStats();
-    }
-
-    static ISteamUserStats steamuserstats;
-    return &steamuserstats;
 }
 
 ISteamUtils *SteamUtils()

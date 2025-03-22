@@ -27,6 +27,7 @@
 * Track opened files that were deleted so we can map them in state loading
 * Add versions for SteamUser API
 * Add dummy hooks for pulseaudio
+* Add versions for SteamUserStats API
 
 ### Changed
 
