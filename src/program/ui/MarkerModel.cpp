@@ -173,7 +173,7 @@ void MarkerModel::resetMarkers()
 void MarkerModel::addMarker(int frame, QString text)
 {
     int row = 0;
-    bool is_new = false;
+    bool is_new = true;
     for (auto it = movie->editor->markers.begin(); it != movie->editor->markers.end(); row++, it++) {
         if (it->first >= frame) {
             is_new = (it->first != frame);
