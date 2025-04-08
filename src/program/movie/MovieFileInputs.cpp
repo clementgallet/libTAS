@@ -159,7 +159,7 @@ const AllInputs& MovieFileInputs::getInputs()
 
 const AllInputs& MovieFileInputs::getInputs(uint64_t pos)
 {
-    // std::unique_lock<std::mutex> lock(input_list_mutex);
+    std::unique_lock<std::mutex> lock(input_list_mutex);
 
     if (pos >= input_list.size()) {
         pos = input_list.size() - 1;
