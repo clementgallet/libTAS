@@ -104,7 +104,10 @@ Note: the game starts up **paused**.
 
 ## Run Windows games through Wine
 
-This is still experimental. To launch Windows games through Wine, you first need to install Wine on your system (it must be located somewhere in $PATH).
+> [!IMPORTANT]
+> Wine support is limited and not being actively developed. If possible, you should use a Linux version of your game.
+
+To launch Windows games through Wine, you first need to install Wine on your system (it must be located somewhere in $PATH).
 
 To get audio correctly handled, you need to open winetricks, then select "Select the default wineprefix", "Change settings" and check "sound=alsa".
 
