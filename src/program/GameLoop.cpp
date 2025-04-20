@@ -369,8 +369,8 @@ void GameLoop::initProcessMessages()
     /* Send initial framecount and elapsed time */
     sendMessage(MSGN_INITIAL_FRAMECOUNT_TIME);
     sendData(&context->framecount, sizeof(uint64_t));
-    sendData(&context->current_time_sec, sizeof(uint64_t));
-    sendData(&context->current_time_nsec, sizeof(uint64_t));
+    sendData(&context->current_time_sec, sizeof(int64_t));
+    sendData(&context->current_time_nsec, sizeof(int64_t));
 
     /* Send dump file if dumping from the beginning */
     if (context->config.sc.av_dumping) {

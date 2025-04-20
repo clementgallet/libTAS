@@ -35,10 +35,10 @@ NonDeterministicTimer& NonDeterministicTimer::get() {
     return instance;
 }
 
-void NonDeterministicTimer::initialize(uint64_t initial_sec, uint64_t initial_nsec)
+void NonDeterministicTimer::initialize(int64_t initial_sec, int64_t initial_nsec)
 {
     NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lasttime));
-    ticks = {initial_sec, initial_nsec};
+    ticks = {static_cast<time_t>(initial_sec), static_cast<time_t>(initial_nsec)};
     lastEnterTicks = ticks;
     inFB = false;
     lastEnterTime = lasttime;

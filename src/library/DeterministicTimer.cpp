@@ -348,11 +348,11 @@ void DeterministicTimer::fakeAdvanceTimerFrame() {
     }
 }
 
-void DeterministicTimer::initialize(uint64_t initial_sec, uint64_t initial_nsec)
+void DeterministicTimer::initialize(int64_t initial_sec, int64_t initial_nsec)
 {
-    ticks = {initial_sec, initial_nsec};
+    ticks = {static_cast<time_t>(initial_sec), static_cast<time_t>(initial_nsec)};
     
-    realtime_delta = {Global::shared_config.initial_time_sec, Global::shared_config.initial_time_nsec};
+    realtime_delta = {static_cast<time_t>(Global::shared_config.initial_time_sec), static_cast<time_t>(Global::shared_config.initial_time_nsec)};
     realtime_delta -= ticks;
 
     setFramerate(Global::shared_config.initial_framerate_num, Global::shared_config.initial_framerate_den);

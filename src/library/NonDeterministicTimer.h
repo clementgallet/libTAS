@@ -50,7 +50,7 @@ public:
     static NonDeterministicTimer& get();
 
     /* Initialize the class members */
-    void initialize(uint64_t initial_sec, uint64_t initial_nsec);
+    void initialize(int64_t initial_sec, int64_t initial_nsec);
 
     /* Update and return the time of the non deterministic timer */
     struct timespec getTicks(void);

@@ -116,7 +116,7 @@ void __attribute__((constructor)) init(void)
     sendMessage(MSGB_END_INIT);
 
     /* Initial framecount and elapsed time */
-    uint64_t initial_sec = 0, initial_nsec = 0;
+    int64_t initial_sec = 0, initial_nsec = 0;
     framecount = 0;
 
     /* Receive information from the program */
@@ -169,8 +169,8 @@ void __attribute__((constructor)) init(void)
             case MSGN_INITIAL_FRAMECOUNT_TIME:
                 /* Set the framecount and time to their initial values */
                 receiveData(&framecount, sizeof(uint64_t));
-                receiveData(&initial_sec, sizeof(uint64_t));
-                receiveData(&initial_nsec, sizeof(uint64_t));
+                receiveData(&initial_sec, sizeof(int64_t));
+                receiveData(&initial_nsec, sizeof(int64_t));
                 break;
             case MSGN_SDL_DYNAPI_ADDR: {
                 uint64_t addr;

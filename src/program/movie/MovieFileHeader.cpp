@@ -50,10 +50,10 @@ void MovieFileHeader::load()
         context->config.sc.mouse_support = config.value("mouse_support").toBool();
 
         context->config.sc.nb_controllers = config.value("nb_controllers").toInt();
-        context->config.sc.initial_time_sec = config.value("initial_time_sec").toULongLong();
-        context->config.sc.initial_time_nsec = config.value("initial_time_nsec").toULongLong();
-        context->config.sc.initial_monotonic_time_sec = config.value("initial_monotonic_time_sec").toULongLong();
-        context->config.sc.initial_monotonic_time_nsec = config.value("initial_monotonic_time_nsec").toULongLong();
+        context->config.sc.initial_time_sec = config.value("initial_time_sec").toLongLong();
+        context->config.sc.initial_time_nsec = config.value("initial_time_nsec").toLongLong();
+        context->config.sc.initial_monotonic_time_sec = config.value("initial_monotonic_time_sec").toLongLong();
+        context->config.sc.initial_monotonic_time_nsec = config.value("initial_monotonic_time_nsec").toLongLong();
         
         framerate_num = config.value("framerate_num").toUInt();
         framerate_den = config.value("framerate_den").toUInt();
@@ -135,10 +135,10 @@ void MovieFileHeader::save(uint64_t tot_frames, uint64_t nb_frames)
     config.setValue("frame_count", static_cast<unsigned long long>(tot_frames));
     config.setValue("mouse_support", context->config.sc.mouse_support);
     config.setValue("nb_controllers", context->config.sc.nb_controllers);
-    config.setValue("initial_time_sec", static_cast<unsigned long long>(context->config.sc.initial_time_sec));
-    config.setValue("initial_time_nsec", static_cast<unsigned long long>(context->config.sc.initial_time_nsec));
-    config.setValue("initial_monotonic_time_sec", static_cast<unsigned long long>(context->config.sc.initial_monotonic_time_sec));
-    config.setValue("initial_monotonic_time_nsec", static_cast<unsigned long long>(context->config.sc.initial_monotonic_time_nsec));
+    config.setValue("initial_time_sec", static_cast<long long>(context->config.sc.initial_time_sec));
+    config.setValue("initial_time_nsec", static_cast<long long>(context->config.sc.initial_time_nsec));
+    config.setValue("initial_monotonic_time_sec", static_cast<long long>(context->config.sc.initial_monotonic_time_sec));
+    config.setValue("initial_monotonic_time_nsec", static_cast<long long>(context->config.sc.initial_monotonic_time_nsec));
     config.setValue("length_sec", static_cast<unsigned long long>(length_sec));
     config.setValue("length_nsec", static_cast<unsigned long long>(length_nsec));
     config.setValue("framerate_num", framerate_num);
