@@ -245,7 +245,7 @@ int MemScanner::scan(bool first, CompareType ct, CompareOperator co, MemValueTyp
             std::ifstream iafs(mst.addresses_path, std::ios_base::binary);
             oafs << iafs.rdbuf();
             uint64_t recorded_size = memscanners[t].new_memory_size * sizeof(uintptr_t) / value_type_size;
-            if (iafs.tellg() != recorded_size) {
+            if (iafs.tellg() != (std::streamoff) recorded_size) {
                 std::cerr << "Mismatch size between recorded (" << recorded_size << ") and file (" <<  iafs.tellg() << ") sizes" << std::endl;
                 error = MemScannerThread::EOUTPUT;
                 break;
@@ -257,7 +257,7 @@ int MemScanner::scan(bool first, CompareType ct, CompareOperator co, MemValueTyp
         }
         std::ifstream ivfs(mst.values_path, std::ios_base::binary);
         ovfs << ivfs.rdbuf();
-        if (ivfs.tellg() != memscanners[t].new_memory_size) {
+        if (ivfs.tellg() != (std::streamoff) memscanners[t].new_memory_size) {
             std::cerr << "Mismatch size between recorded (" << memscanners[t].new_memory_size << ") and file (" <<  ivfs.tellg() << ") sizes" << std::endl;
             error = MemScannerThread::EOUTPUT;
             break;

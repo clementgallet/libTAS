@@ -74,7 +74,7 @@ QVariant MarkerModel::data(const QModelIndex &index, int role) const
 
     auto it = movie->editor->markers.cbegin();
     std::advance(it, row);
-    int framecount = it->first;
+    uint64_t framecount = (uint64_t)it->first;
     const std::string& text = it->second;
     
     if (role == Qt::TextAlignmentRole) {
@@ -126,7 +126,7 @@ QVariant MarkerModel::data(const QModelIndex &index, int role) const
 
     if (role == Qt::DisplayRole) {
         if (index.column() == 0) {
-            return framecount;
+            return QVariant((int)framecount);
         }
         if (index.column() == 1) {
             return QString(text.c_str());

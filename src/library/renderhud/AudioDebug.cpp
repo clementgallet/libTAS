@@ -30,7 +30,7 @@
 
 namespace libtas {
 
-static const char* formatToString(AudioBuffer::SampleFormat format)
+__attribute__ ((unused)) static const char* formatToString(AudioBuffer::SampleFormat format)
 {
     switch (format) {
         case AudioBuffer::SAMPLE_FMT_U8:

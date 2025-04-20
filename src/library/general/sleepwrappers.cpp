@@ -96,7 +96,6 @@ void transfer_sleep(const struct timespec &ts, struct timespec *rem)
     if (GlobalState::isNative())
         return orig::nanosleep(&ts, NULL);
 
-    bool mainT = ThreadManager::isMainThread();
     LOG(LL_TRACE, LCF_SLEEP, "%s call - sleep for %d us", __func__, usec);
 
      /* A bit hackish: Disable sleeps from nvidia driver */

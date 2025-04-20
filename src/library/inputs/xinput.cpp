@@ -110,7 +110,7 @@ XIDeviceInfo* XIQueryDevice(Display* dpy, int deviceid, int* ndevices_return)
         /* Build pointer device info. Values come mostly from my mouse, while
         * keeping only the necessary number of inputs. */
         info[d].deviceid = 2;
-        info[d].name = "Virtual core pointer";
+        info[d].name = strdup("Virtual core pointer");
         info[d].use = XIMasterPointer;
         info[d].attachment = 3;
         info[d].enabled = True;
@@ -161,7 +161,7 @@ XIDeviceInfo* XIQueryDevice(Display* dpy, int deviceid, int* ndevices_return)
     if (deviceid != 3) {
         /* Build keyboard device info. */
         info[d].deviceid = 3;
-        info[d].name = "Virtual core keyboard";
+        info[d].name = strdup("Virtual core keyboard");
         info[d].use = XIMasterKeyboard;
         info[d].attachment = 2;
         info[d].enabled = True;

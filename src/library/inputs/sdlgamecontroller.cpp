@@ -272,7 +272,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
         return b;
 
     /* Check if axis is mapped */
-    if ((axis < 0) || (axis >= SingleInput::AXIS_LAST))
+    if ((axis < 0) || (axis >= (SDL_GameControllerAxis)SingleInput::AXIS_LAST))
         return b;
     
     /* Using my default xbox360 mapping */
@@ -301,7 +301,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
         return SDL_FALSE;
 
     /* Check if axis is mapped */
-    if ((axis < 0) || (axis >= SingleInput::AXIS_LAST))
+    if ((axis < 0) || (axis >= (SDL_GameControllerAxis) SingleInput::AXIS_LAST))
         return SDL_FALSE;
 
     return SDL_TRUE;
@@ -325,7 +325,7 @@ const char* xbox360Mapping = "00000000000000000000000000000000,XInput Controller
         return 0;
 
     /* Check if axis is valid */
-    if ((axis < 0) || (axis >= SingleInput::AXIS_LAST))
+    if ((axis < 0) || (axis >= (SDL_GameControllerAxis) SingleInput::AXIS_LAST))
         return 0;
 
     /* Return axis value */
@@ -355,14 +355,14 @@ SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
         return b;
 
     /* Check if button is mapped */
-    if ((button < 0) || (button >= SingleInput::BUTTON_LAST))
+    if ((button < 0) || (button >= (SDL_GameControllerButton) SingleInput::BUTTON_LAST))
         return b;
     
     /* Using my default xbox360 mapping */
     static const int bindB[11] = {0, 1, 2, 3, 6, 8, 7, 9, 10, 4, 5};
     static const int bindH[4] = {1, 4, 8, 2};
 
-    if (button < SingleInput::BUTTON_DPAD_UP) {
+    if (button < (SDL_GameControllerButton) SingleInput::BUTTON_DPAD_UP) {
         b.bindType = SDL_CONTROLLER_BINDTYPE_BUTTON;
         b.value.button = bindB[button];
     }
@@ -392,7 +392,7 @@ SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
         return SDL_FALSE;
 
     /* Check if button is mapped */
-    if ((button < 0) || (button >= SingleInput::BUTTON_LAST))
+    if ((button < 0) || (button >= (SDL_GameControllerButton) SingleInput::BUTTON_LAST))
         return SDL_FALSE;
 
     return SDL_TRUE;
@@ -417,7 +417,7 @@ SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
         return 0;
 
     /* Check if button is valid */
-    if ((button < 0) || (button >= SingleInput::BUTTON_LAST))
+    if ((button < 0) || (button >= (SDL_GameControllerButton) SingleInput::BUTTON_LAST))
         return 0;
 
     /* Return button value */

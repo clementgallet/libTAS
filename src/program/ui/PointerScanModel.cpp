@@ -86,7 +86,9 @@ void PointerScanModel::locatePointers()
             /* Update progress bar */
             emit signalProgress((int)(100 * ((float)cur_size / total_size)));
 
-            for (unsigned int i = 0; i < readValues/game_addr_size; i++, cur_size += game_addr_size) {
+            unsigned int chunk_data_size = readValues/game_addr_size;
+
+            for (unsigned int i = 0; i < chunk_data_size; i++, cur_size += game_addr_size) {
                 /* Check if the value could be a pointer */
                 bool isPointer = false;
                 

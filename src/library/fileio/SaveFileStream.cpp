@@ -60,7 +60,7 @@ static ssize_t savefile_write (void *cookie, const char *b, size_t s)
     LOG(LL_DEBUG, LCF_FILEIO, "savefile_write called with addr %p and size %zu", c->addr, s);
 
     if (c->pos + s > c->size) {
-        if (c->pos >= c->size) {
+        if (c->pos >= (off_t)c->size) {
             LOG(LL_WARN, LCF_FILEIO, "Custom savefile stream written past the end, unsupported");
             errno = ENOSPC;
             return 0;

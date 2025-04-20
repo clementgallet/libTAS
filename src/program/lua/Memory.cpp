@@ -60,7 +60,7 @@ void Lua::Memory::registerFunctions(lua_State *L)
 
 bool Lua::Memory::read(uintptr_t addr, void* return_value, int size)
 {
-    return MemAccess::read(return_value, reinterpret_cast<void*>(addr), size) == size;
+    return MemAccess::read(return_value, reinterpret_cast<void*>(addr), size) == (size_t)size;
 }
 
 /* Define a macro to declare all read functions */

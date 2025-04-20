@@ -64,7 +64,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
     /* Not to mess with row count, which may be larger due to blank rows at the end */
-    int frameCount() const;
+    unsigned int frameCount() const;
 
     /* Update the content of the table */
     void update();
@@ -211,13 +211,14 @@ private:
     
     /* Parameters of the current range being painted */
     SingleInput paintInput;
-    int paintMinRow;
-    int paintMaxRow;
+    bool paintOngoing;
+    unsigned int paintMinRow;
+    unsigned int paintMaxRow;
     int paintValue;
-    int paintAutofire;
+    unsigned int paintAutofire;
 
     /* Parameters to highlight the undo/redo operation */
-    int undoMinRow, undoMaxRow, undoMinCol, undoMaxCol;
+    unsigned int undoMinRow, undoMaxRow, undoMinCol, undoMaxCol;
     float undoTimeoutSec;
     const float maxUndoTimeoutSec = 0.5f;
     std::chrono::time_point<std::chrono::steady_clock> undoStart;

@@ -166,7 +166,7 @@ bool MovieFileEditor::isDraw(uint64_t frame)
 
 void MovieFileEditor::setAutohold(int index, bool checked)
 {
-    if (index >= autohold.size())
+    if (index >= (int)autohold.size())
         autohold.resize(index+1);
     
     autohold[index] = checked ? 1 : 0;
@@ -174,7 +174,7 @@ void MovieFileEditor::setAutohold(int index, bool checked)
 
 bool MovieFileEditor::isAutohold(int index)
 {
-    if (index >= autohold.size())
+    if (index >= (int)autohold.size())
         return false;
         
     return autohold[index] == 1;
@@ -182,7 +182,7 @@ bool MovieFileEditor::isAutohold(int index)
 
 void MovieFileEditor::setAutofire(int index, bool checked)
 {
-    if (index >= autohold.size())
+    if (index >= (int)autohold.size())
         autohold.resize(index+1);
 
     autohold[index] = checked ? (2 + (context->framecount % 2)) : 0;
@@ -190,7 +190,7 @@ void MovieFileEditor::setAutofire(int index, bool checked)
 
 bool MovieFileEditor::isAutofire(int index)
 {
-    if (index >= autohold.size())
+    if (index >= (int)autohold.size())
         return false;
         
     return autohold[index] >= 2;

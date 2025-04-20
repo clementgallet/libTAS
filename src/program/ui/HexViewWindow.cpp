@@ -85,7 +85,7 @@ void HexViewWindow::update_sections()
 {
     sectionChoice->clear();
     
-    for (int i=0; i<memsections.size(); i++) {
+    for (size_t i=0; i<memsections.size(); i++) {
         const MemSection& section = memsections[i];
         QString label = QString("%1-%2 %3").arg(section.addr, 0, 16).arg(section.endaddr, 0, 16).arg(section.filename.c_str());
         sectionChoice->addItem(label);
@@ -111,7 +111,7 @@ void HexViewWindow::seek(uintptr_t addr, int size)
         return;
         
     qint64 seek_offset = -1;
-    for (int i=0; i<memsections.size(); i++) {
+    for (size_t i=0; i<memsections.size(); i++) {
         const MemSection& section = memsections[i];
         if (addr >= section.addr && addr < section.endaddr) {
             seek_offset = addr - section.addr;
@@ -125,7 +125,7 @@ void HexViewWindow::seek(uintptr_t addr, int size)
     if (seek_offset == -1) {
         update_layout();
 
-        for (int i=0; i<memsections.size(); i++) {
+        for (size_t i=0; i<memsections.size(); i++) {
             const MemSection& section = memsections[i];
             if (addr >= section.addr && addr < section.endaddr) {
                 seek_offset = addr - section.addr;

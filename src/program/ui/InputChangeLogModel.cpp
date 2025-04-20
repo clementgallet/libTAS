@@ -79,9 +79,9 @@ QVariant InputChangeLogModel::headerData(int section, Qt::Orientation orientatio
 
 QVariant InputChangeLogModel::data(const QModelIndex &index, int role) const
 {
-    unsigned int row = index.row();
+    int row = index.row();
 
-    if (row >= rowCount())
+    if (index.row() >= rowCount())
         return QVariant();
 
     // if (role == Qt::BackgroundRole) {

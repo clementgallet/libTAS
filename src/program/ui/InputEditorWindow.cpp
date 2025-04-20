@@ -200,7 +200,7 @@ void InputEditorWindow::updateProgressBar()
     }
     
     /* Seeking frame may change during seeking */
-    if ((statusSeek->minimum() != 0) && (statusSeek->maximum() != context->seek_frame)) {
+    if ((statusSeek->minimum() != 0) && (statusSeek->maximum() != (int)context->seek_frame)) {
         statusSeek->setMaximum(context->seek_frame);
         statusSeek->setFormat(QString(tr("Seeking to frame %1")).arg(context->seek_frame));
     }

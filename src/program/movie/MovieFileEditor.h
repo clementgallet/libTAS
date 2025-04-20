@@ -37,7 +37,7 @@ public:
 
     /* List of single inputs to autohold or autofire.
      * 0: no, 1: autohold, 2: autofire on even frames, 3: autofire on odd frames */
-    std::vector<int> autohold;
+    std::vector<unsigned int> autohold;
 
     /* Ordered list of markers to be shown on the input editor */
     std::map<int, std::string> markers;
