@@ -42,8 +42,8 @@ DEFINE_ORIG_POINTER(pthread_sigmask)
 DEFINE_ORIG_POINTER(pthread_kill)
 DEFINE_ORIG_POINTER(sigaltstack)
 
-static int origUsrMaskProcess = 0;
-static thread_local int origUsrMaskThread = 0;
+static sigset_t origUsrSetProcess;
+static thread_local sigset_t origUsrSetThread;
 
 /* Override */ sighandler_t signal (int sig, sighandler_t handler) __THROW
 {
@@ -77,10 +77,16 @@ static thread_local int origUsrMaskThread = 0;
     int oldmask = orig::sigblock(mask & ~bannedMask);
 
     /* Add which of our signals were blocked */
-    oldmask |= origUsrMaskProcess;
+    if (sigismember(&origUsrSetProcess, SaveStateManager::sigSuspend()) == 1)
+        oldmask |= sigmask(SaveStateManager::sigSuspend());
+    if (sigismember(&origUsrSetProcess, SaveStateManager::sigCheckpoint()) == 1)
+        oldmask |= sigmask(SaveStateManager::sigCheckpoint());
 
     /* Update which of our signals are blocked */
-    origUsrMaskProcess |= mask & bannedMask;
+    if (mask & sigmask(SaveStateManager::sigSuspend()))
+        sigaddset(&origUsrSetProcess, SaveStateManager::sigSuspend());
+    if (mask & sigmask(SaveStateManager::sigCheckpoint()))
+        sigaddset(&origUsrSetProcess, SaveStateManager::sigCheckpoint());
 
     return oldmask;
 }
@@ -96,11 +102,17 @@ static thread_local int origUsrMaskThread = 0;
     int oldmask = orig::sigsetmask(mask & ~bannedMask);
 
     /* Update which of our signals were blocked */
-    oldmask |= origUsrMaskProcess; // logical 'or' works here because the SIGUSRX
-                            // mask bits are always cleared in oldmask
+    if (sigismember(&origUsrSetProcess, SaveStateManager::sigSuspend()) == 1)
+        oldmask |= sigmask(SaveStateManager::sigSuspend());
+    if (sigismember(&origUsrSetProcess, SaveStateManager::sigCheckpoint()) == 1)
+        oldmask |= sigmask(SaveStateManager::sigCheckpoint());
 
     /* Update which of our signals are blocked */
-    origUsrMaskProcess = mask & bannedMask;
+    sigemptyset(&origUsrSetProcess);
+    if (mask & sigmask(SaveStateManager::sigSuspend()))
+        sigaddset(&origUsrSetProcess, SaveStateManager::sigSuspend());
+    if (mask & sigmask(SaveStateManager::sigCheckpoint()))
+        sigaddset(&origUsrSetProcess, SaveStateManager::sigCheckpoint());
 
     return oldmask;
 }
@@ -113,8 +125,10 @@ static thread_local int origUsrMaskThread = 0;
     int oldmask = orig::siggetmask();
 
     /* Update which of our signals were blocked */
-    oldmask |= origUsrMaskProcess; // logical 'or' works here because the SIGUSRX
-                            // mask bits are always cleared in oldmask
+    if (sigismember(&origUsrSetProcess, SaveStateManager::sigSuspend()) == 1)
+        oldmask |= sigmask(SaveStateManager::sigSuspend());
+    if (sigismember(&origUsrSetProcess, SaveStateManager::sigCheckpoint()) == 1)
+        oldmask |= sigmask(SaveStateManager::sigCheckpoint());
 
     return oldmask;
 }
@@ -138,23 +152,32 @@ static thread_local int origUsrMaskThread = 0;
 
     if (ret != -1) {
         if (oset) {
-            if (origUsrMaskProcess & SaveStateManager::sigSuspend())
+            if (sigismember(&origUsrSetProcess, SaveStateManager::sigSuspend()) == 1)
                 sigaddset(oset, SaveStateManager::sigSuspend());
-            if (origUsrMaskProcess & SaveStateManager::sigCheckpoint())
+            if (sigismember(&origUsrSetProcess, SaveStateManager::sigCheckpoint()) == 1)
                 sigaddset(oset, SaveStateManager::sigCheckpoint());
         }
 
         if (set) {
-            int mask = 0;
-            if (sigismember(set, SaveStateManager::sigSuspend()) == 1) mask |= sigmask(SaveStateManager::sigSuspend());
-            if (sigismember(set, SaveStateManager::sigCheckpoint()) == 1) mask |= sigmask(SaveStateManager::sigCheckpoint());
-
-            if (how == SIG_BLOCK)
-                origUsrMaskProcess |= mask;
-            if (how == SIG_UNBLOCK)
-                origUsrMaskProcess &= ~mask;
-            if (how == SIG_SETMASK)
-                origUsrMaskProcess = mask;
+            if (how == SIG_BLOCK) {
+                if (sigismember(set, SaveStateManager::sigSuspend()) == 1)
+                    sigaddset(&origUsrSetProcess, SaveStateManager::sigSuspend());
+                if (sigismember(set, SaveStateManager::sigCheckpoint()) == 1)
+                    sigaddset(&origUsrSetProcess, SaveStateManager::sigCheckpoint());
+            }
+            if (how == SIG_UNBLOCK) {
+                if (sigismember(set, SaveStateManager::sigSuspend()) == 1)
+                    sigdelset(&origUsrSetProcess, SaveStateManager::sigSuspend());
+                if (sigismember(set, SaveStateManager::sigCheckpoint()) == 1)
+                    sigdelset(&origUsrSetProcess, SaveStateManager::sigCheckpoint());
+            }
+            if (how == SIG_SETMASK) {
+                sigemptyset(&origUsrSetProcess);
+                if (sigismember(set, SaveStateManager::sigSuspend()) == 1)
+                    sigaddset(&origUsrSetProcess, SaveStateManager::sigSuspend());
+                if (sigismember(set, SaveStateManager::sigCheckpoint()) == 1)
+                    sigaddset(&origUsrSetProcess, SaveStateManager::sigCheckpoint());
+            }
         }
     }
     return ret;
@@ -335,15 +358,15 @@ static thread_local int origUsrMaskThread = 0;
         if (oldmask) {
 #if defined(__APPLE__) && defined(__MACH__)
             if (!Global::is_inited) {
-                if (origUsrMaskProcess & SaveStateManager::sigSuspend())
+                if (sigismember(&origUsrSetProcess, SaveStateManager::sigSuspend()) == 1)
                     sigaddset(oldmask, SaveStateManager::sigSuspend());
-                if (origUsrMaskProcess & SaveStateManager::sigCheckpoint())
+                if (sigismember(&origUsrSetProcess, SaveStateManager::sigCheckpoint()) == 1)
                     sigaddset(oldmask, SaveStateManager::sigCheckpoint());
             } else {
 #endif
-            if (origUsrMaskThread & SaveStateManager::sigSuspend())
+            if (sigismember(&origUsrSetThread, SaveStateManager::sigSuspend()) == 1)
                 sigaddset(oldmask, SaveStateManager::sigSuspend());
-            if (origUsrMaskThread & SaveStateManager::sigCheckpoint())
+            if (sigismember(&origUsrSetThread, SaveStateManager::sigCheckpoint()) == 1)
                 sigaddset(oldmask, SaveStateManager::sigCheckpoint());
 #if defined(__APPLE__) && defined(__MACH__)
             }
@@ -351,26 +374,48 @@ static thread_local int origUsrMaskThread = 0;
         }
 
         if (newmask) {
-            int mask = 0;
-            if (sigismember(newmask, SaveStateManager::sigSuspend()) == 1) mask |= sigmask(SaveStateManager::sigSuspend());
-            if (sigismember(newmask, SaveStateManager::sigCheckpoint()) == 1) mask |= sigmask(SaveStateManager::sigCheckpoint());
-
 #if defined(__APPLE__) && defined(__MACH__)
             if (!Global::is_inited) {
-                if (how == SIG_BLOCK)
-                    origUsrMaskProcess |= mask;
-                if (how == SIG_UNBLOCK)
-                    origUsrMaskProcess &= ~mask;
-                if (how == SIG_SETMASK)
-                    origUsrMaskProcess = mask;
+                if (how == SIG_BLOCK) {
+                    if (sigismember(newmask, SaveStateManager::sigSuspend()) == 1)
+                        sigaddset(&origUsrSetProcess, SaveStateManager::sigSuspend());
+                    if (sigismember(newmask, SaveStateManager::sigCheckpoint()) == 1)
+                        sigaddset(&origUsrSetProcess, SaveStateManager::sigCheckpoint());
+                }
+                if (how == SIG_UNBLOCK) {
+                    if (sigismember(newmask, SaveStateManager::sigSuspend()) == 1)
+                        sigdelset(&origUsrSetProcess, SaveStateManager::sigSuspend());
+                    if (sigismember(newmask, SaveStateManager::sigCheckpoint()) == 1)
+                        sigdelset(&origUsrSetProcess, SaveStateManager::sigCheckpoint());
+                }
+                if (how == SIG_SETMASK) {
+                    sigemptyset(&origUsrSetProcess);
+                    if (sigismember(newmask, SaveStateManager::sigSuspend()) == 1)
+                        sigaddset(&origUsrSetProcess, SaveStateManager::sigSuspend());
+                    if (sigismember(newmask, SaveStateManager::sigCheckpoint()) == 1)
+                        sigaddset(&origUsrSetProcess, SaveStateManager::sigCheckpoint());
+                }
             } else {
 #endif
-            if (how == SIG_BLOCK)
-                origUsrMaskThread |= mask;
-            if (how == SIG_UNBLOCK)
-                origUsrMaskThread &= ~mask;
-            if (how == SIG_SETMASK)
-                origUsrMaskThread = mask;
+            if (how == SIG_BLOCK) {
+                if (sigismember(newmask, SaveStateManager::sigSuspend()) == 1)
+                    sigaddset(&origUsrSetThread, SaveStateManager::sigSuspend());
+                if (sigismember(newmask, SaveStateManager::sigCheckpoint()) == 1)
+                    sigaddset(&origUsrSetThread, SaveStateManager::sigCheckpoint());
+            }
+            if (how == SIG_UNBLOCK) {
+                if (sigismember(newmask, SaveStateManager::sigSuspend()) == 1)
+                    sigdelset(&origUsrSetThread, SaveStateManager::sigSuspend());
+                if (sigismember(newmask, SaveStateManager::sigCheckpoint()) == 1)
+                    sigdelset(&origUsrSetThread, SaveStateManager::sigCheckpoint());
+            }
+            if (how == SIG_SETMASK) {
+                sigemptyset(&origUsrSetThread);
+                if (sigismember(newmask, SaveStateManager::sigSuspend()) == 1)
+                    sigaddset(&origUsrSetThread, SaveStateManager::sigSuspend());
+                if (sigismember(newmask, SaveStateManager::sigCheckpoint()) == 1)
+                    sigaddset(&origUsrSetThread, SaveStateManager::sigCheckpoint());
+            }
 #if defined(__APPLE__) && defined(__MACH__)
             }
 #endif
