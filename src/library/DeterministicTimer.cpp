@@ -164,7 +164,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
 
 void DeterministicTimer::addDelay(struct timespec delayTicks)
 {
-    LOG(LL_DEBUG, LCF_TIMESET | LCF_SLEEP, "%s call with delay %u.%010u sec", __func__, delayTicks.tv_sec, delayTicks.tv_nsec);
+    LOG(LL_DEBUG, LCF_TIMESET | LCF_SLEEP, "%s call with delay %u.%09u sec", __func__, delayTicks.tv_sec, delayTicks.tv_nsec);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
         return NonDeterministicTimer::get().addDelay(delayTicks);
@@ -252,7 +252,7 @@ void DeterministicTimer::exitFrameBoundary()
     /* If we are not fast forwarding, and not the first frame,
      * then we wait the delta amount of time.
      */
-    if (!(Global::shared_config.fastforward && (Global::shared_config.fastforward_mode & SharedConfig::FF_SLEEP))) {
+    if (Global::shared_config.running && !(Global::shared_config.fastforward && (Global::shared_config.fastforward_mode & SharedConfig::FF_SLEEP))) {
         TimeHolder desiredTime = lastEnterTime + baseTimeIncrement * Global::shared_config.speed_divisor;
 
         /* Call the real nanosleep function */
@@ -266,10 +266,14 @@ void DeterministicTimer::exitFrameBoundary()
 #endif
         perfTimer.switchTimer(PerfTimer::FrameTimer);
         
-        /* We assume that our sleep was perfect, so we save the desired time as our
-         * current time, except if our current time was longer than the desired time.
-         */
-        if (currentTime > desiredTime) {
+        /* We try to keep a contant fps, so we set the last enter time to the 
+         * desired time, so that if the sleep time was not perfect, or the frame
+         * took too long to process, we may compensate on future frames. This 
+         * needs a threshold, otherwise we will constantly try to catch up, and
+         * no sleep will happen */
+        TimeHolder thresholdTime = lastEnterTime + baseTimeIncrement * (Global::shared_config.speed_divisor * 3); // Arbitrary value
+
+        if (currentTime > thresholdTime) {
             lastEnterTime = currentTime;
         }
         else {

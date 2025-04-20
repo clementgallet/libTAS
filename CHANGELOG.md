@@ -36,6 +36,7 @@
 * Use monospace font for ramwatch/search addresses and values
 * Allow setting a video encode framerate even without variable fps
 * Remove variable framerate setting
+* Raise threshold in deterministic timer to obtain constant running fps
 
 ### Fixed
 
