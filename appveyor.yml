@@ -29,12 +29,16 @@ install:
     
     chmod +x linuxdeploy-x86_64.AppImage
     
+    wget -nc https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+
+    chmod +x linuxdeploy-plugin-qt-x86_64.AppImage
+    
 build_script:
 - sh: sudo dpkg-buildpackage -us -uc -b
 after_build:
 - sh: sudo mv ../libtas*deb ./
 - sh: for f in libtas*deb; do mv $f ${f/_amd/_${APPVEYOR_REPO_COMMIT:0:7}_amd}; done;
-- sh: sudo ARCH=x86_64 NO_CLEANUP=1 ./linuxdeploy-x86_64.AppImage --appimage-extract-and-run --appdir debian/libtas/ --output appimage
+- sh: sudo ARCH=x86_64 NO_CLEANUP=1 ./linuxdeploy-x86_64.AppImage --appimage-extract-and-run --appdir debian/libtas/ --plugin qt --output appimage
 - sh: mv libTAS-x86_64.AppImage libtas_${APPVEYOR_REPO_COMMIT:0:7}_amd64.AppImage
 artifacts:
 - path: libtas*.deb
