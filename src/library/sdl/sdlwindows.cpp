@@ -453,8 +453,8 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     int width = 0, height = 0;
     ScreenCapture::getDimensions(width, height);
 
-    *w = width;
-    *h = height;
+    if (w) *w = width;
+    if (h) *h = height;
 }
 
 /* SDL 1.2 */
