@@ -31,7 +31,7 @@
 int AutoDetect::arch(Context *context)
 {
     /* Change settings based on game arch */
-    int gameArch = extractBinaryType(context->gamepath);
+    int gameArch = extractBinaryType(context->gameexecutable);
     int libtasArch = extractBinaryType(context->libtaspath) & BT_TYPEMASK;
 
     /* Switch to libtas32.so if required */
@@ -48,7 +48,7 @@ void AutoDetect::game_libraries(Context *context)
     /* Build a command to parse the first missing library from the game executable,
      * look at game directory and sub-directories for it */
     std::ostringstream oss_ml;
-    oss_ml << "ldd \"" << context->gamepath;
+    oss_ml << "ldd \"" << context->gameexecutable;
     oss_ml << "\" | awk '/ => not found/ { print $1 }' | head -1";
     
     std::string missing_lib = queryCmd(oss_ml.str());
@@ -56,7 +56,7 @@ void AutoDetect::game_libraries(Context *context)
     
     std::cout << "Try to find the location of " << missing_lib << " among game files."<< std::endl;
 
-    std::string gamedir = dirFromPath(context->gamepath);
+    std::string gamedir = dirFromPath(context->gameexecutable);
     std::ostringstream oss_lp;
     oss_lp << "find \"" << gamedir << "\" -name " << missing_lib << " -type f -print -quit";
 
@@ -81,7 +81,7 @@ void AutoDetect::game_libraries(Context *context)
     if (context->config.allow_downloads != 1)
         return;
     
-    int gameArch = extractBinaryType(context->gamepath) & BT_TYPEMASK;
+    int gameArch = extractBinaryType(context->gameexecutable) & BT_TYPEMASK;
     if (gameArch != BT_ELF32 && gameArch != BT_ELF64)
         return;
     
@@ -180,16 +180,29 @@ void AutoDetect::game_engine(Context *context)
 {
     struct stat sb;
     
-    /* Check for Unity:
-     * Unity executables end with `.x86` or `.x86_64`, and data directory is named
-     * after the executable with added `_Data` */
+    context->gameexecutable = context->gamepath;
+    
+    /* Get file extension */
     size_t pos = context->gamepath.find_last_of(".");
     std::string ext;
     if (pos != std::string::npos)
         ext = context->gamepath.substr(pos);
+
+    /* Check for .AppImage format and mount image */
+    if (ext == ".AppImage") {
+        const char *command[] = {context->gamepath.c_str(), "--appimage-mount", NULL};
+        std::string image_path = queryCmdPid(command, &context->appimage_pid);
+        std::cout << ".AppImage mounted to " << image_path << std::endl;
+
+        /* Replace with new executable */
+        context->gameexecutable = image_path + "/AppRun";
+    }
     
+    /* Check for Unity:
+     * Unity executables end with `.x86` or `.x86_64`, and data directory is named
+     * after the executable with added `_Data` */
     if (ext == ".x86" || ext == ".x86_64") {
-        std::string data = context->gamepath.substr(0, pos) + "_Data";
+        std::string data = context->gameexecutable.substr(0, pos) + "_Data";
 
         if (stat(data.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)) {
             std::cout << "Unity game detected" << std::endl;
@@ -215,7 +228,7 @@ void AutoDetect::game_engine(Context *context)
     
     /* Check for GM:S:
      * Games have an asset folder which contains the `game.unx` file */
-    std::string assets = dirFromPath(context->gamepath) + "/assets";
+    std::string assets = dirFromPath(context->gameexecutable) + "/assets";
     if (stat(assets.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)) {
         std::string gameunx = assets + "/game.unx";
         if (access(gameunx.c_str(), F_OK) == 0) {
@@ -233,7 +246,7 @@ void AutoDetect::game_engine(Context *context)
     /* Check for Godot:
      * Look at symbols inside the game executable and count `godot_*` */
     std::ostringstream oss;
-    oss << "readelf -WsC \"" << context->gamepath;
+    oss << "readelf -WsC \"" << context->gameexecutable;
     oss << "\" | grep godot_ | wc -l ";
 
     std::string godotcount = queryCmd(oss.str());

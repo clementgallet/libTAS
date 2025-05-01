@@ -66,4 +66,7 @@ std::string extractMacOSExecutable(std::string path);
 /* Get the result of a shell command */
 std::string queryCmd(const std::string& cmd, int* status = nullptr);
 
+/* Get the result of a shell command and returns pid */
+std::string queryCmdPid(const char **command, pid_t* popen_pid);
+
 #endif

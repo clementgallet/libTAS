@@ -97,6 +97,10 @@ struct Context {
     /* Absolute path of the game executable */
     std::string gamepath;
 
+    /* Absolute path of the real game binary to execute (which is different
+     * from gamepath for .AppImage) */
+    std::string gameexecutable;
+
     /* Name of the game executable */
     std::string gamename;
 
@@ -138,6 +142,9 @@ struct Context {
     
     /* Indicate if the current frame is a draw frame */
     bool draw_frame;
+    
+    /* PID of the appimage process that mounts the appimage structure */
+    pid_t appimage_pid = 0;
 };
 
 #endif

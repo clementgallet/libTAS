@@ -246,3 +246,48 @@ std::string queryCmd(const std::string& cmd, int* status)
     outputstr = (end == std::string::npos) ? "" : outputstr.substr(0, end + 1);
     return outputstr;
 }
+
+std::string queryCmdPid(const char **command, pid_t* popen_pid)
+{
+    std::string outputstr;
+    int p[2];
+    FILE *output;
+    pid_t pid;
+
+    if (pipe(p) != 0)
+        return "";
+
+    pid = fork();
+
+    if (pid < 0)
+        return "";
+    else if (pid == 0) {
+        close(p[STDIN_FILENO]);
+        dup2(p[STDOUT_FILENO], STDOUT_FILENO);
+
+        execvp(*command, const_cast<char* const*>(command));
+        perror("execvp");
+        _exit(1);
+    }
+
+    *popen_pid = pid;
+
+    close(p[STDOUT_FILENO]);
+    output = fdopen(p[STDIN_FILENO], "r"); 
+    
+    if (output != NULL) {
+        char buf[256];
+        if (fgets(buf, 256, output) != 0) {
+            outputstr = buf;
+        }
+    }
+
+    /* Trim the value */
+    size_t end = outputstr.find_last_not_of(" \n\r\t\f\v");
+    outputstr = (end == std::string::npos) ? "" : outputstr.substr(0, end + 1);
+
+    /* Close pipe */
+    fclose(output);
+
+    return outputstr;
+}

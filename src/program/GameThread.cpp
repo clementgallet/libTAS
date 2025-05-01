@@ -55,7 +55,7 @@ void GameThread::set_env_variables(Context *context, int gameArch)
     /* Change the working directory to the user-defined one or game directory */
     std::string newdir = context->config.rundir;
     if (newdir.empty())
-        newdir = dirFromPath(context->gamepath);
+        newdir = dirFromPath(context->gameexecutable);
 
     if (0 != chdir(newdir.c_str())) {
         std::cerr << "Could not change the working directory to " << newdir << std::endl;
@@ -170,8 +170,8 @@ std::list<std::string> GameThread::build_arg_list(Context *context, int gameArch
 
         /* Push the game executable as the first command-line argument */
         /* Wine can fail if not specifying a Windows path */
-        context->gamepath.insert(0, "Z:");
-        arg_list.push_back(context->gamepath);
+        context->gameexecutable.insert(0, "Z:");
+        arg_list.push_back(context->gameexecutable);
     }
     else {
         if (context->attach_gdb) {
@@ -256,10 +256,10 @@ std::list<std::string> GameThread::build_arg_list(Context *context, int gameArch
 
         /* If MacOS app, insert the real executable */
         if (macappflag) {
-            arg_list.push_back(extractMacOSExecutable(context->gamepath));
+            arg_list.push_back(extractMacOSExecutable(context->gameexecutable));
         }
         else {
-            arg_list.push_back(context->gamepath);
+            arg_list.push_back(context->gameexecutable);
         }
     }
 
@@ -354,7 +354,7 @@ void GameThread::attach(Context *context)
         case Config::DEBUGGER_GDB: {
             execlp("gdb", "gdb", "-q", "-ex",
                    "handle SIGSYS SIGXFSZ SIGUSR1 SIGUSR2 SIGPWR SIGXCPU SIG34 SIG35 SIG36 nostop noprint",
-                   context->gamepath.c_str(), "-p", std::to_string(context->game_pid).c_str(), (char *) NULL);
+                   context->gameexecutable.c_str(), "-p", std::to_string(context->game_pid).c_str(), (char *) NULL);
             break;
         }
         case Config::DEBUGGER_LLDB: {

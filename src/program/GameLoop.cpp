@@ -413,13 +413,13 @@ void GameLoop::initProcessMessages()
     /* Sometime games have trouble finding the address of the orginal function
      * `SDL_DYNAPI_entry()` that we hook, so we send right away the symbol
      * address if there is one */
-    uint64_t sdl_addr = getSymbolAddress("SDL_DYNAPI_entry", context->gamepath.c_str());
+    uint64_t sdl_addr = getSymbolAddress("SDL_DYNAPI_entry", context->gameexecutable.c_str());
     if (sdl_addr != 0) {
         /* If the executable is position-independent (pie), it will be mapped
          * somewhere, and the symbol is only an offset, so we need the base 
          * address of the executable and adds to it. We use `file` to determine
          * if the executable is pie */
-        int gameArch = extractBinaryType(context->gamepath);
+        int gameArch = extractBinaryType(context->gameexecutable);
         if (gameArch & BT_PIEAPP) {
             uintptr_t base_executable = BaseAddresses::getBaseAddress(context->gamename.c_str());
             if (base_executable == 0) {
@@ -433,7 +433,7 @@ void GameLoop::initProcessMessages()
     }
 
     /* Check for `UnityPlayer_s.debug` presence and send symbol addresses */
-    std::string debugfile = dirFromPath(context->gamepath) + "/UnityPlayer_s.debug";
+    std::string debugfile = dirFromPath(context->gameexecutable) + "/UnityPlayer_s.debug";
     if (access(debugfile.c_str(), F_OK) == 0) {
         
         uintptr_t base_unity = BaseAddresses::getBaseAddress("UnityPlayer.so");
@@ -592,7 +592,7 @@ bool GameLoop::startFrameMessages()
 
         case MSGB_SYMBOL_ADDRESS: {
             std::string sym = receiveString();
-            uint64_t addr = getSymbolAddress(sym.c_str(), context->gamepath.c_str());
+            uint64_t addr = getSymbolAddress(sym.c_str(), context->gameexecutable.c_str());
             sendData(&addr, sizeof(uint64_t));
             break;
         }
@@ -911,6 +911,12 @@ void GameLoop::loopExit()
 {
     /* Unvalidate the game pid */
     context->game_pid = 0;
+
+    /* Stop the appimage process */
+    if (context->appimage_pid) {
+        kill(context->appimage_pid, SIGINT);
+        context->appimage_pid = 0;
+    }
 
     /* We need to restart the game if we got a restart input, or if:
      * - auto-restart is set
