@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <memory> // std::unique_ptr
+#include <cstdint>
 
 namespace libtas {
 
