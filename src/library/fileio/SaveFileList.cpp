@@ -143,7 +143,7 @@ bool isSaveFile(const char *file)
         return false;
 
     /* We don't need to keep mesa shader cache files */
-    if (strstr(file, "/.cache/mesa_shader_cache/"))
+    if (strstr(file, "/.cache/mesa_shader_cache"))
         return false;
 
     return true;
