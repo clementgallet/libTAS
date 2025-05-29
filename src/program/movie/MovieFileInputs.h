@@ -96,6 +96,9 @@ public:
     /* Load inputs from the current frame */
     const AllInputs& getInputs();
 
+    /* Don't lock because it is locked already */
+    const AllInputs& getInputsUnprotected(uint64_t pos);
+
     /* Clear a range of frame inputs */
     void clearInputs(int minFrame, int maxFrame);
 

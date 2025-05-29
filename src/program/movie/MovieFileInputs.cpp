@@ -176,6 +176,11 @@ const AllInputs& MovieFileInputs::getInputs(uint64_t pos)
     return input_list[pos];
 }
 
+const AllInputs& MovieFileInputs::getInputsUnprotected(uint64_t pos)
+{
+    return input_list[pos];
+}
+
 void MovieFileInputs::clearInputs(int minFrame, int maxFrame)
 {
     action_queue.push(new MovieActionEditFrames(minFrame, maxFrame, this));
@@ -227,6 +232,8 @@ void MovieFileInputs::extractInputs(std::set<SingleInput> &set)
 
 void MovieFileInputs::copyFrom(const MovieFileInputs* movie_inputs)
 {
+    std::unique_lock<std::mutex> lock(input_list_mutex);
+
     emit inputsToBeReset();
     input_list.resize(movie_inputs->input_list.size());
     std::copy(movie_inputs->input_list.begin(), movie_inputs->input_list.end(), input_list.begin());

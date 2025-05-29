@@ -912,7 +912,7 @@ void InputEditorModel::addUniqueInputs(int minRow, int maxRow)
     AllInputs newais;
     newais.clear();
     for (int row = minRow; row <= maxRow; row++) {
-        const AllInputs& ai = movie->inputs->getInputs(row);
+        const AllInputs& ai = movie->inputs->getInputsUnprotected(row);
         newais |= ai;
     }
     addUniqueInputs(newais);
