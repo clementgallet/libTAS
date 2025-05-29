@@ -25,6 +25,7 @@ Here is a non-exhaustive list of tool-assisted speedruns made with this tool:
 * Myst: Masterpiece Edition - [any% by Spikestuff and Gelly](https://www.youtube.com/watch?v=mSvm87GRHgE), [TASVideos submission](https://tasvideos.org/4669M)
 * Nuclear Throne - [any% by rythin](https://www.youtube.com/watch?v=kGu3XQ6M3vY), [TASVideos submission](https://tasvideos.org/5729M)
 * Pikuniku - [any% by Zarza](https://www.youtube.com/watch?v=OV8JQN5ckzw), [TASVideos submission](https://tasvideos.org/5324M)
+* Risk of Rain - [any% by sillypilly](https://www.youtube.com/watch?v=ZoqYgZQ0yJQ)
 * Riven: The Sequel to Myst - [any% by Spikestuff](https://www.youtube.com/watch?v=qaH6d6ZCRBU), [TASVideos submission](https://tasvideos.org/5840M)
 * Shovel Knight
     - [Shovel any% by Kilaye](https://www.youtube.com/watch?v=GvfAPXCVPvQ), [TASVideos submission](https://tasvideos.org/3800M)
@@ -36,6 +37,7 @@ Here is a non-exhaustive list of tool-assisted speedruns made with this tool:
     - [any% by Matte](https://www.youtube.com/watch?v=mAQidEjCNTc)
     - [106% by Matte](https://www.youtube.com/watch?v=EF7ISgbS2-w)
 * The Binding of Isaac - [Sheol by rythin](http://www.youtube.com/watch?v=sfAQL_Y_pUY), [TASVideos submission](https://tasvideos.org/5153M)
+* The End is Nigh - [friend% by Ikod](https://www.youtube.com/watch?v=Hx4gXRKy1Lo)
 * TowerFall Ascension - [all trials by Kilaye](https://www.youtube.com/watch?v=TW3CMF0nCFM), [TASVideos submission](https://tasvideos.org/3833M)
 * Undertale
     - [neutral ending by OceanBagel](https://www.youtube.com/watch?v=ogobq3zCv3U), [TASVideos submission](https://tasvideos.org/4539M)

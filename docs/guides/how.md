@@ -46,7 +46,7 @@ takes care of:
 * Gathering and sending inputs
 * Managing settings
 * Input editor
-* Ram Watch/Ram Search ()
+* Ram Watch/Ram Search
 * Lua scripting
 
 The game executable is responsible for:
@@ -427,36 +427,58 @@ saving and loading is mostly identical.
 1. **Acquire locks**. Knowing that other threads are still running, they might be
     doing some work incompatible with savestating, such as creating new threads.
     So we must protect those calls.
+
 1. **Stop the audio playback**. Playbacking real audio if libTAS is unmuted may
     leave undetermined state of the audio driver (e.g. samples left in audio buffer),
     so it's best to stop audio playback. Even with this, some audio drivers will
     still mess up the savestating process, so it is advised to leave the audio
     muted when TASing
+
 1. **Check if saving/loading is possible**. For saving, it used to check for disk
     space, but it was causing several issues. First, the savestate size cannot
     be estimated beforehand, only an upper bound (which may be **much** higher).
     Also, VMs may grow the disk capacity on demand, so the check would fail to
     find enough space even if the procedure would work correctly.
-    
-    For loading, it checks for a perfect match between the actual set of threads
-    and the set that was present when saving was performed (stored in savestate
-    header). This is the main constraint on state loading, that should be fixable
-    with enough work.
+
 1. **Save original altstack state**. More on that later
+
 1. **Lock and sync X server connections**. We want to control as much as
     possible the interactions with the rest of the system, so we must empty what
     is pending between the game and the X server, and prevent more events to be
     generated. The connections themselves to the X server cannot be saved or
     restored, so we try to keep them at the same state everytime.
+
+1. **Update thread stack information**. Only when saving, we need the current
+    address and size of each thread stack, for stack padding (see below).
+
+1. **Terminate extra threads**. When loading a state and if a thread did not
+    exist when the state was made, it must be terminated. The first way is to
+    use `pthread_cancel()`. If it does not work, we signal the thread so that 
+    it calls `pthread_exit()`. The later solution is very unsafe, and can lead
+    to a crash! Also, we must be sure that the thread was indeed terminated,
+    because it may still be releasing resources, so we check the `tid` value in
+    the pthread struct (which is supposed to be opaque, but we search for this 
+    particular struct member during initialization).
+
 1. **Suspend threads**. A signal is sent to all the other threads to run a handler
     that will make them suspend. We try to use an uncommon signal that won't be used
-    by the game (currently `SIGXFSZ`). Inside the handler, each thread saves its
-    thread local storage data in memory, as well as its registers (using `getcontext()`).
-    They then signal the main thread that they are suspended, and wait for the
-    signal to be resumed.
+    by the game (currently `SIGXFSZ`).
+    
+    Inside the handler, each thread saves its thread local storage data in
+    memory, as well as its registers (using `getcontext()`) and stack pointer.
+    Then they allocate a big amount of memory (using `alloca()`) to reach the
+    bottom of their stack, while keeping the same amount of free space. This is
+    necessary because when the state will be loaded later, with possibly
+    a different stack size, we must be able to find at least the stack pointer
+    to load.
+    
+    Eventually, they indicate the main thread that they are suspended, and wait
+    on a mutex to be resumed.
+
 1. **Disable urandom handler**. Because we set up a signal handler to refill our
     replacement for `/dev/urandom`, that may trigger during the savestate process,
     we disable it
+
 1. **Handle opened files**. When saving, we must store offsets of opened file
     descriptors, because they are not part of the process memory, so they must
     be saved in memory. Also, pipe contents are not part of the process memory
@@ -464,6 +486,7 @@ saving and loading is mostly identical.
     
     When loading, we must close all files that were not opened when the savestate
     was performed.
+
 1. **Setup custom altstack**. During the savestate process, we need to dump all
     memory, including the stack. This is a problem because the stack is used to 
     run the savestate code. A solution is to use another location in memory for
@@ -473,6 +496,7 @@ saving and loading is mostly identical.
     one. This is used originally to be able to run code when a program has its
     stack corrupted or full. We use this at our advantage by setting the altstack
     to a memory region that will be skipped from saving.
+
 1. **Start the savestate process**
     The altstack feature being triggered by a signal, we registered at the game
     startup a handler for another signal (currently `SIGSYS`), and we call it
@@ -502,8 +526,14 @@ store them in metadata instead of blindly write to data.
 Note: a possible improvement involves getting access to the page frame number (PFN)
 (which requires `CAP_SYS_ADMIN`, basically root). With this information, we
 could look at flags from each PFN by looking into `/proc/kpageflags`. One flag
-is `ZERO_PAGE`, which immediatly tells us that the page contains zeros only.
- 
+is `ZERO_PAGE`, which immediately tells us that the page contains zeros only.
+
+At the end, we save the content of all savefiles, which are files opened and 
+modified by the game, where we want to save the exact content. To save some
+space, we open the original file (if it exists) and compare each memory page
+of the original file and the modified file. We only store modified pages in the
+state.
+
 We also save the `ucontext` passed into the signal handler, so that it can be
 restored after state loading for restoring registers.
 
@@ -542,11 +572,28 @@ saving.
 
 After state loading, these extra steps need to be performed:
 
+* If threads have been destroyed since the savestate was performed, they must 
+    be recreated. To do that, we use `clone()` to recreate each thread, and
+    they immediately suspend like they were when the savestate was performed.
+    They will be later resumed by the main thread like any other suspended
+    thread.
+    
+    One issue is that the obtained thread id (tid) is not the same as the
+    original tid. Thus we need to keep track of a translation table between the
+    original tid and the actual tid. One other solution is to write into
+    `/proc/sys/kernel/ns_last_pid` to set which next pid value will be used,
+    as used by [CRIU](https://criu.org/Pid_restore). However, this requires
+    `CAP_SYS_ADMIN` priviledge (which is basically root), or
+    `CONFIG_CHECKPOINT_RESTORE` starting from Linux 5.9. As another workaround,
+    we *could* spawn and kill threads until the pid value has looped around.
+    
 * When other threads are resumed, they need to recover their TLS and registers
     contained in the savestate (using `setcontext()`)
+
 * The game sends the current framecount and time to libTAS program, so that it
     can display immediately the updated information
-* The screen is redrawed to show the updated game screen after state loading
+
+* The screen is redrawn to show the updated game screen after state loading
 
 ### Features
 
