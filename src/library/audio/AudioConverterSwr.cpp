@@ -157,8 +157,15 @@ void AudioConverterSwr::init(AudioBuffer::SampleFormat inFormat, int inChannels,
     AVChannelLayout in_ch_layout;
     AVChannelLayout out_ch_layout;
 
-    av_channel_layout_default(&in_ch_layout, inChannels);
-    av_channel_layout_default(&out_ch_layout, outChannels);
+    in_ch_layout.order = AV_CHANNEL_ORDER_NATIVE;
+    in_ch_layout.nb_channels = inChannels;
+    in_ch_layout.u.mask = (inChannels == 1) ? AV_CH_LAYOUT_MONO : AV_CH_LAYOUT_STEREO;
+    in_ch_layout.opaque = NULL;
+
+    out_ch_layout.order = AV_CHANNEL_ORDER_NATIVE;
+    out_ch_layout.nb_channels = outChannels;
+    out_ch_layout.u.mask = (outChannels == 1) ? AV_CH_LAYOUT_MONO : AV_CH_LAYOUT_STEREO;
+    out_ch_layout.opaque = NULL;
 
     MYASSERT(0 == orig::swr_alloc_set_opts2(&swr, &out_ch_layout, outAVFormat, outFreq, &in_ch_layout, inAVFormat, inFreq, 0, nullptr));
 #else
