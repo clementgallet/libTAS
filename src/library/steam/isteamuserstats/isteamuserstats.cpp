@@ -19,6 +19,11 @@
 
 #include "isteamuserstats.h"
 #include "isteamuserstats_priv.h"
+#include "isteamuserstats005.h"
+#include "isteamuserstats006.h"
+#include "isteamuserstats007.h"
+#include "isteamuserstats008.h"
+#include "isteamuserstats010.h"
 #include "isteamuserstats011.h"
 #include "isteamuserstats012.h"
 #include "isteamuserstats013.h"
@@ -44,44 +49,52 @@ static const char *steamuserstats_version = NULL;
 
 struct ISteamUserStats *SteamUserStats_generic(const char *version)
 {
-	static const struct
-	{
-		const char *name;
-		struct ISteamUserStats *(*iface_getter)(void);
-	} ifaces[] = {
+    static const struct
+    {
+        const char *name;
+        struct ISteamUserStats *(*iface_getter)(void);
+    } ifaces[] = {
+        { STEAMUSERSTATS_INTERFACE_VERSION_003, SteamUserStats005 },
+        { STEAMUSERSTATS_INTERFACE_VERSION_004, SteamUserStats005 },
+        { STEAMUSERSTATS_INTERFACE_VERSION_005, SteamUserStats005 },
+        { STEAMUSERSTATS_INTERFACE_VERSION_006, SteamUserStats006 },
+        { STEAMUSERSTATS_INTERFACE_VERSION_007, SteamUserStats007 },
+        { STEAMUSERSTATS_INTERFACE_VERSION_008, SteamUserStats008 },
+        { STEAMUSERSTATS_INTERFACE_VERSION_009, SteamUserStats010 },
+        { STEAMUSERSTATS_INTERFACE_VERSION_010, SteamUserStats010 },
         { STEAMUSERSTATS_INTERFACE_VERSION_011, SteamUserStats011 },
         { STEAMUSERSTATS_INTERFACE_VERSION_012, SteamUserStats012 },
         { STEAMUSERSTATS_INTERFACE_VERSION_013, SteamUserStats013 },
-		{ NULL, NULL }
-	};
-	int i;
+        { NULL, NULL }
+    };
+    int i;
 
     LOG(LL_DEBUG, LCF_STEAM, "%s called with version %s", __func__, version);
 
-	i = 0;
-	while (ifaces[i].name)
-	{
-		if (strcmp(ifaces[i].name, version) == 0)
-		{
-			if (ifaces[i].iface_getter)
-				return ifaces[i].iface_getter();
+    i = 0;
+    while (ifaces[i].name)
+    {
+        if (strcmp(ifaces[i].name, version) == 0)
+        {
+            if (ifaces[i].iface_getter)
+                return ifaces[i].iface_getter();
 
-			break;
-		}
-		i++;
-	}
+            break;
+        }
+        i++;
+    }
 
     LOG(LL_WARN, LCF_STEAM, "Unable to find ISteamUserStats version %s", version);
 
-	return nullptr;
+    return nullptr;
 }
 
 void SteamUserStats_set_version(const char *version)
 {
     LOG(LL_DEBUG, LCF_STEAM, "%s called with version %s", __func__, version);
 
-	if (!steamuserstats_version)
-		steamuserstats_version = version;
+    if (!steamuserstats_version)
+        steamuserstats_version = version;
 }
 
 struct ISteamUserStats *SteamUserStats(void)
@@ -93,18 +106,18 @@ struct ISteamUserStats *SteamUserStats(void)
         return orig::SteamUserStats();
     }
 
-	static struct ISteamUserStats *cached_iface = nullptr;
+    static struct ISteamUserStats *cached_iface = nullptr;
 
-	if (!steamuserstats_version)
-	{
-		steamuserstats_version = STEAMUSERSTATS_INTERFACE_VERSION_013;
+    if (!steamuserstats_version)
+    {
+        steamuserstats_version = STEAMUSERSTATS_INTERFACE_VERSION_013;
         LOG(LL_WARN, LCF_STEAM, "ISteamUserStats: No version specified, defaulting to %s", steamuserstats_version);
-	}
+    }
 
-	if (!cached_iface)
-		cached_iface = SteamUserStats_generic(steamuserstats_version);
+    if (!cached_iface)
+        cached_iface = SteamUserStats_generic(steamuserstats_version);
 
-	return cached_iface;
+    return cached_iface;
 }
 
 bool ISteamUserStats_RequestCurrentStats()

@@ -17,13 +17,21 @@ namespace libtas {
 
 struct ISteamUserStats
 {
-	union
-	{
-		const void *ptr;
+    union
+    {
+        const void *ptr;
+        const struct ISteamUserStats003Vtbl *v003;
+        const struct ISteamUserStats004Vtbl *v004;
+        const struct ISteamUserStats005Vtbl *v005;
+        const struct ISteamUserStats006Vtbl *v006;
+        const struct ISteamUserStats007Vtbl *v007;
+        const struct ISteamUserStats008Vtbl *v008;
+        const struct ISteamUserStats009Vtbl *v009;
+        const struct ISteamUserStats010Vtbl *v010;
         const struct ISteamUserStats011Vtbl *v011;
         const struct ISteamUserStats012Vtbl *v012;
         const struct ISteamUserStats013Vtbl *v013;
-	} vtbl;
+    } vtbl;
 };
 
 ISteamUserStats *SteamUserStats_generic(const char *version);

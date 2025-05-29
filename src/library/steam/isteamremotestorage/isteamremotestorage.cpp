@@ -20,6 +20,10 @@
 #include "isteamremotestorage.h"
 #include "isteamremotestorage_priv.h"
 #include "isteamremotestorage001.h"
+#include "isteamremotestorage002.h"
+#include "isteamremotestorage003.h"
+#include "isteamremotestorage005.h"
+#include "isteamremotestorage007.h"
 #include "isteamremotestorage012.h"
 #include "isteamremotestorage013.h"
 #include "isteamremotestorage014.h"
@@ -52,46 +56,56 @@ void SteamSetRemoteStorageFolder(std::string path)
 
 struct ISteamRemoteStorage *SteamRemoteStorage_generic(const char *version)
 {
-	static const struct
-	{
-		const char *name;
-		struct ISteamRemoteStorage *(*iface_getter)(void);
-	} ifaces[] = {
-		{ STEAMREMOTESTORAGE_INTERFACE_VERSION_001, SteamRemoteStorage001 },
-		{ STEAMREMOTESTORAGE_INTERFACE_VERSION_012, SteamRemoteStorage012 },
-		{ STEAMREMOTESTORAGE_INTERFACE_VERSION_013, SteamRemoteStorage013 },
-		{ STEAMREMOTESTORAGE_INTERFACE_VERSION_014, SteamRemoteStorage014 },
+    static const struct
+    {
+        const char *name;
+        struct ISteamRemoteStorage *(*iface_getter)(void);
+    } ifaces[] = {
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_001, SteamRemoteStorage001 },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_002, SteamRemoteStorage002 },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_003, SteamRemoteStorage003 },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_004, SteamRemoteStorage005 },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_005, SteamRemoteStorage005 },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_006, SteamRemoteStorage007 },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_007, SteamRemoteStorage007 },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_008, SteamRemoteStorage012 },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_009, SteamRemoteStorage012 },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_010, SteamRemoteStorage012 },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_011, SteamRemoteStorage012 },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_012, SteamRemoteStorage012 },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_013, SteamRemoteStorage013 },
+        { STEAMREMOTESTORAGE_INTERFACE_VERSION_014, SteamRemoteStorage014 },
         { STEAMREMOTESTORAGE_INTERFACE_VERSION_016, SteamRemoteStorage016 },
-		{ NULL, NULL }
-	};
-	int i;
+        { NULL, NULL }
+    };
+    int i;
 
     LOG(LL_DEBUG, LCF_STEAM, "%s called with version %s", __func__, version);
 
-	i = 0;
-	while (ifaces[i].name)
-	{
-		if (strcmp(ifaces[i].name, version) == 0)
-		{
-			if (ifaces[i].iface_getter)
-				return ifaces[i].iface_getter();
+    i = 0;
+    while (ifaces[i].name)
+    {
+        if (strcmp(ifaces[i].name, version) == 0)
+        {
+            if (ifaces[i].iface_getter)
+                return ifaces[i].iface_getter();
 
-			break;
-		}
-		i++;
-	}
+            break;
+        }
+        i++;
+    }
 
     LOG(LL_WARN, LCF_STEAM, "Unable to find ISteamRemoteStorage version %s", version);
 
-	return nullptr;
+    return nullptr;
 }
 
 void SteamRemoteStorage_set_version(const char *version)
 {
     LOG(LL_DEBUG, LCF_STEAM, "%s called with version %s", __func__, version);
 
-	if (!steamremotestorage_version)
-		steamremotestorage_version = version;
+    if (!steamremotestorage_version)
+        steamremotestorage_version = version;
 }
 
 struct ISteamRemoteStorage *SteamRemoteStorage(void)
@@ -103,18 +117,18 @@ struct ISteamRemoteStorage *SteamRemoteStorage(void)
         return orig::SteamRemoteStorage();
     }
 
-	static struct ISteamRemoteStorage *cached_iface = nullptr;
+    static struct ISteamRemoteStorage *cached_iface = nullptr;
 
-	if (!steamremotestorage_version)
-	{
-		steamremotestorage_version = STEAMREMOTESTORAGE_INTERFACE_VERSION_016;
+    if (!steamremotestorage_version)
+    {
+        steamremotestorage_version = STEAMREMOTESTORAGE_INTERFACE_VERSION_016;
         LOG(LL_WARN, LCF_STEAM, "ISteamRemoteStorage: No version specified, defaulting to %s", steamremotestorage_version);
-	}
+    }
 
-	if (!cached_iface)
-		cached_iface = SteamRemoteStorage_generic(steamremotestorage_version);
+    if (!cached_iface)
+        cached_iface = SteamRemoteStorage_generic(steamremotestorage_version);
 
-	return cached_iface;
+    return cached_iface;
 }
 
 bool ISteamRemoteStorage_FileWrite( void* iface, const char *pchFile, const void *pvData, int cubData )
@@ -138,10 +152,10 @@ bool ISteamRemoteStorage_FileWrite( void* iface, const char *pchFile, const void
         return false;
     }
 
-	return true;
+    return true;
 }
 
-int	ISteamRemoteStorage_FileRead( void* iface, const char *pchFile, void *pvData, int cubDataToRead )
+int    ISteamRemoteStorage_FileRead( void* iface, const char *pchFile, void *pvData, int cubDataToRead )
 {
     LOGTRACE(LCF_STEAM);
 
@@ -158,14 +172,14 @@ int	ISteamRemoteStorage_FileRead( void* iface, const char *pchFile, void *pvData
         return 0;
     }
 
-	return ret;
+    return ret;
 }
 
 SteamAPICall_t ISteamRemoteStorage_FileWriteAsync( void* iface, const char *pchFile, const void *pvData, unsigned int cubData )
 {
     LOGTRACE(LCF_STEAM);
     /* Calling the sync version */
-	ISteamRemoteStorage_FileWrite(iface, pchFile, pvData, cubData);
+    ISteamRemoteStorage_FileWrite(iface, pchFile, pvData, cubData);
     
     SteamAPICall_t api_call = CCallbackManager::AwaitApiCallResultOutput();
 
@@ -190,13 +204,13 @@ SteamAPICall_t ISteamRemoteStorage_FileReadAsync( void* iface, const char *pchFi
 bool ISteamRemoteStorage_FileReadAsyncComplete( void* iface, SteamAPICall_t hReadCall, void *pvBuffer, unsigned int cubToRead )
 {
     LOGTRACE(LCF_STEAM | LCF_TODO);
-	return true;
+    return true;
 }
 
 bool ISteamRemoteStorage_FileForget( void* iface, const char *pchFile )
 {
     LOGTRACE(LCF_STEAM);
-	return true;
+    return true;
 }
 
 bool ISteamRemoteStorage_FileDelete( void* iface, const char *pchFile )
@@ -207,19 +221,19 @@ bool ISteamRemoteStorage_FileDelete( void* iface, const char *pchFile )
     path += "/";
     path += pchFile;
     unlink(path.c_str());
-	return true;
+    return true;
 }
 
 SteamAPICall_t ISteamRemoteStorage_FileShare( void* iface, const char *pchFile )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
 bool ISteamRemoteStorage_SetSyncPlatforms( void* iface, const char *pchFile, ERemoteStoragePlatform eRemoteStoragePlatform )
 {
     LOGTRACE(LCF_STEAM);
-	return true;
+    return true;
 }
 
 UGCFileWriteStreamHandle_t ISteamRemoteStorage_FileWriteStreamOpen( void* iface, const char *pchFile )
@@ -234,7 +248,7 @@ UGCFileWriteStreamHandle_t ISteamRemoteStorage_FileWriteStreamOpen( void* iface,
      * "prevent writing to disk" feature without extra work. */
     int fd = open(path.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 0666);
     
-	return fd;
+    return fd;
 }
 
 bool ISteamRemoteStorage_FileWriteStreamWriteChunk( void* iface, UGCFileWriteStreamHandle_t writeHandle, const void *pvData, int cubData )
@@ -243,7 +257,7 @@ bool ISteamRemoteStorage_FileWriteStreamWriteChunk( void* iface, UGCFileWriteStr
     
     ssize_t ret = write(writeHandle, pvData, cubData);
     
-	return ret == cubData;
+    return ret == cubData;
 }
 
 bool ISteamRemoteStorage_FileWriteStreamClose( void* iface, UGCFileWriteStreamHandle_t writeHandle )
@@ -252,7 +266,7 @@ bool ISteamRemoteStorage_FileWriteStreamClose( void* iface, UGCFileWriteStreamHa
 
     int ret = close(writeHandle);
 
-	return ret == 0;
+    return ret == 0;
 }
 
 bool ISteamRemoteStorage_FileWriteStreamCancel( void* iface, UGCFileWriteStreamHandle_t writeHandle )
@@ -262,7 +276,7 @@ bool ISteamRemoteStorage_FileWriteStreamCancel( void* iface, UGCFileWriteStreamH
     /* TODO: Not good, should not write or overwrite file */
     int ret = close(writeHandle);
 
-	return ret == 0;
+    return ret == 0;
 }
 
 bool ISteamRemoteStorage_FileExists( void* iface, const char *pchFile )
@@ -277,10 +291,10 @@ bool ISteamRemoteStorage_FileExists( void* iface, const char *pchFile )
 bool ISteamRemoteStorage_FilePersisted( void* iface, const char *pchFile )
 {
     LOGTRACE(LCF_STEAM);
-	return false;
+    return false;
 }
 
-int	ISteamRemoteStorage_GetFileSize( void* iface, const char *pchFile )
+int    ISteamRemoteStorage_GetFileSize( void* iface, const char *pchFile )
 {
     LOGTRACE(LCF_STEAM);
     std::string path = steamremotestorage;
@@ -299,19 +313,19 @@ int	ISteamRemoteStorage_GetFileSize( void* iface, const char *pchFile )
         return 0;
     }
 
-	return ret;
+    return ret;
 }
 
 int64_t ISteamRemoteStorage_GetFileTimestamp( void* iface, const char *pchFile )
 {
     LOGTRACE(LCF_STEAM | LCF_TODO);
-	return 0;
+    return 0;
 }
 
 ERemoteStoragePlatform ISteamRemoteStorage_GetSyncPlatforms( void* iface, const char *pchFile )
 {
     LOGTRACE(LCF_STEAM);
-	return 0;
+    return 0;
 }
 
 int ISteamRemoteStorage_GetFileCount(void* iface)
@@ -337,7 +351,7 @@ int ISteamRemoteStorage_GetFileCount(void* iface)
     closedir(d);
 
     LOG(LL_DEBUG, LCF_STEAM, "   return file count %d", filecount);
-	return filecount;
+    return filecount;
 }
 
 const char *ISteamRemoteStorage_GetFileNameAndSize( void* iface, int iFile, int *pnFileSizeInBytes )
@@ -381,19 +395,19 @@ const char *ISteamRemoteStorage_GetFileNameAndSize( void* iface, int iFile, int 
 bool ISteamRemoteStorage_GetQuota( void* iface, uint64_t *pnTotalBytes, uint64_t *puAvailableBytes )
 {
     LOGTRACE(LCF_STEAM);
-	return true;
+    return true;
 }
 
 bool ISteamRemoteStorage_IsCloudEnabledForAccount(void* iface)
 {
     LOGTRACE(LCF_STEAM);
-	return false;
+    return false;
 }
 
 bool ISteamRemoteStorage_IsCloudEnabledForApp(void* iface)
 {
     LOGTRACE(LCF_STEAM);
-	return false;
+    return false;
 }
 
 void ISteamRemoteStorage_SetCloudEnabledForApp( void* iface, bool bEnabled )
@@ -404,7 +418,7 @@ void ISteamRemoteStorage_SetCloudEnabledForApp( void* iface, bool bEnabled )
 SteamAPICall_t ISteamRemoteStorage_UGCDownload( void* iface, UGCHandle_t hContent, unsigned int unPriority )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
 // Gets the amount of data downloaded so far for a piece of content. pnBytesExpected can be 0 if function returns false
@@ -412,14 +426,14 @@ SteamAPICall_t ISteamRemoteStorage_UGCDownload( void* iface, UGCHandle_t hConten
 bool ISteamRemoteStorage_GetUGCDownloadProgress( void* iface, UGCHandle_t hContent, int *pnBytesDownloaded, int *pnBytesExpected )
 {
     LOGTRACE(LCF_STEAM);
-	return false;
+    return false;
 }
 
 // Gets metadata for a file after it has been downloaded. This is the same metadata given in the RemoteStorageDownloadUGCResult_t call result
 bool ISteamRemoteStorage_GetUGCDetails( void* iface, UGCHandle_t hContent, AppId_t *pnAppID, char **ppchName, int *pnFileSizeInBytes, CSteamID *pSteamIDOwner )
 {
     LOGTRACE(LCF_STEAM);
-	return false;
+    return false;
 }
 
 // After download, gets the content of the file.
@@ -428,203 +442,215 @@ bool ISteamRemoteStorage_GetUGCDetails( void* iface, UGCHandle_t hContent, AppId
 // enough memory for each chunk).  Once the last byte is read, the file is implicitly closed and further calls to UGCRead will fail
 // unless UGCDownload is called again.
 // For especially large files (anything over 100MB) it is a requirement that the file is read in chunks.
-int	ISteamRemoteStorage_UGCRead( void* iface, UGCHandle_t hContent, void *pvData, int cubDataToRead, unsigned int cOffset, EUGCReadAction eAction )
+int    ISteamRemoteStorage_UGCRead( void* iface, UGCHandle_t hContent, void *pvData, int cubDataToRead, unsigned int cOffset, EUGCReadAction eAction )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
 // Functions to iterate through UGC that has finished downloading but has not yet been read via UGCRead()
-int	ISteamRemoteStorage_GetCachedUGCCount(void* iface)
+int    ISteamRemoteStorage_GetCachedUGCCount(void* iface)
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
 UGCHandle_t ISteamRemoteStorage_GetCachedUGCHandle( void* iface, int iCachedContent )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
 // publishing UGC
-SteamAPICall_t	ISteamRemoteStorage_PublishWorkshopFile( void* iface, const char *pchFile, const char *pchPreviewFile, AppId_t nConsumerAppId, const char *pchTitle, const char *pchDescription, ERemoteStoragePublishedFileVisibility eVisibility, SteamParamStringArray_t *pTags, EWorkshopFileType eWorkshopFileType )
+SteamAPICall_t    ISteamRemoteStorage_PublishWorkshopFile( void* iface, const char *pchFile, const char *pchPreviewFile, AppId_t nConsumerAppId, const char *pchTitle, const char *pchDescription, ERemoteStoragePublishedFileVisibility eVisibility, SteamParamStringArray_t *pTags, EWorkshopFileType eWorkshopFileType )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
+}
+
+SteamAPICall_t    ISteamRemoteStorage_PublishFileOld( void* iface, const char *pchFile, const char *pchPreviewFile, AppId_t nConsumerAppId, const char *pchTitle, const char *pchDescription, ERemoteStoragePublishedFileVisibility eVisibility, SteamParamStringArray_t *pTags )
+{
+    LOGTRACE(LCF_STEAM);
+    return 1;
+}
+
+SteamAPICall_t    ISteamRemoteStorage_PublishWorkshopFileOld( void* iface, const char *pchFile, const char *pchPreviewFile, AppId_t nConsumerAppId, const char *pchTitle, const char *pchDescription, SteamParamStringArray_t *pTags )
+{
+    LOGTRACE(LCF_STEAM);
+    return 1;
 }
 
 PublishedFileUpdateHandle_t ISteamRemoteStorage_CreatePublishedFileUpdateRequest( void* iface, PublishedFileId_t unPublishedFileId )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
 bool ISteamRemoteStorage_UpdatePublishedFileFile( void* iface, PublishedFileUpdateHandle_t updateHandle, const char *pchFile )
 {
     LOGTRACE(LCF_STEAM);
-	return true;
+    return true;
 }
 
 bool ISteamRemoteStorage_UpdatePublishedFilePreviewFile( void* iface, PublishedFileUpdateHandle_t updateHandle, const char *pchPreviewFile )
 {
     LOGTRACE(LCF_STEAM);
-	return true;
+    return true;
 }
 
 bool ISteamRemoteStorage_UpdatePublishedFileTitle( void* iface, PublishedFileUpdateHandle_t updateHandle, const char *pchTitle )
 {
     LOGTRACE(LCF_STEAM);
-	return true;
+    return true;
 }
 
 bool ISteamRemoteStorage_UpdatePublishedFileDescription( void* iface, PublishedFileUpdateHandle_t updateHandle, const char *pchDescription )
 {
     LOGTRACE(LCF_STEAM);
-	return true;
+    return true;
 }
 
 bool ISteamRemoteStorage_UpdatePublishedFileVisibility( void* iface, PublishedFileUpdateHandle_t updateHandle, ERemoteStoragePublishedFileVisibility eVisibility )
 {
     LOGTRACE(LCF_STEAM);
-	return true;
+    return true;
 }
 
 bool ISteamRemoteStorage_UpdatePublishedFileTags( void* iface, PublishedFileUpdateHandle_t updateHandle, SteamParamStringArray_t *pTags )
 {
     LOGTRACE(LCF_STEAM);
-	return true;
+    return true;
 }
 
-SteamAPICall_t	ISteamRemoteStorage_CommitPublishedFileUpdate( void* iface, PublishedFileUpdateHandle_t updateHandle )
+SteamAPICall_t    ISteamRemoteStorage_CommitPublishedFileUpdate( void* iface, PublishedFileUpdateHandle_t updateHandle )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
 // Gets published file details for the given publishedfileid.  If unMaxSecondsOld is greater than 0,
 // cached data may be returned, depending on how long ago it was cached.  A value of 0 will force a refresh.
 // A value of k_WorkshopForceLoadPublishedFileDetailsFromCache will use cached data if it exists, no matter how old it is.
-SteamAPICall_t	ISteamRemoteStorage_GetPublishedFileDetails( void* iface, PublishedFileId_t unPublishedFileId, unsigned int unMaxSecondsOld )
+SteamAPICall_t    ISteamRemoteStorage_GetPublishedFileDetails( void* iface, PublishedFileId_t unPublishedFileId, unsigned int unMaxSecondsOld )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
-SteamAPICall_t	ISteamRemoteStorage_DeletePublishedFile( void* iface, PublishedFileId_t unPublishedFileId )
+SteamAPICall_t    ISteamRemoteStorage_DeletePublishedFile( void* iface, PublishedFileId_t unPublishedFileId )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
 // enumerate the files that the current user published with this app
-SteamAPICall_t	ISteamRemoteStorage_EnumerateUserPublishedFiles( void* iface, unsigned int unStartIndex )
+SteamAPICall_t    ISteamRemoteStorage_EnumerateUserPublishedFiles( void* iface, unsigned int unStartIndex )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
-SteamAPICall_t	ISteamRemoteStorage_SubscribePublishedFile( void* iface, PublishedFileId_t unPublishedFileId )
+SteamAPICall_t    ISteamRemoteStorage_SubscribePublishedFile( void* iface, PublishedFileId_t unPublishedFileId )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
-SteamAPICall_t	ISteamRemoteStorage_EnumerateUserSubscribedFiles( void* iface, unsigned int unStartIndex )
+SteamAPICall_t    ISteamRemoteStorage_EnumerateUserSubscribedFiles( void* iface, unsigned int unStartIndex )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
-SteamAPICall_t	ISteamRemoteStorage_UnsubscribePublishedFile( void* iface, PublishedFileId_t unPublishedFileId )
+SteamAPICall_t    ISteamRemoteStorage_UnsubscribePublishedFile( void* iface, PublishedFileId_t unPublishedFileId )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
 bool ISteamRemoteStorage_UpdatePublishedFileSetChangeDescription( void* iface, PublishedFileUpdateHandle_t updateHandle, const char *pchChangeDescription )
 {
     LOGTRACE(LCF_STEAM);
-	return true;
+    return true;
 }
 
-SteamAPICall_t	ISteamRemoteStorage_GetPublishedItemVoteDetails( void* iface, PublishedFileId_t unPublishedFileId )
+SteamAPICall_t    ISteamRemoteStorage_GetPublishedItemVoteDetails( void* iface, PublishedFileId_t unPublishedFileId )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
-SteamAPICall_t	ISteamRemoteStorage_UpdateUserPublishedItemVote( void* iface, PublishedFileId_t unPublishedFileId, bool bVoteUp )
+SteamAPICall_t    ISteamRemoteStorage_UpdateUserPublishedItemVote( void* iface, PublishedFileId_t unPublishedFileId, bool bVoteUp )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
-SteamAPICall_t	ISteamRemoteStorage_GetUserPublishedItemVoteDetails( void* iface, PublishedFileId_t unPublishedFileId )
+SteamAPICall_t    ISteamRemoteStorage_GetUserPublishedItemVoteDetails( void* iface, PublishedFileId_t unPublishedFileId )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
-SteamAPICall_t	ISteamRemoteStorage_EnumerateUserSharedWorkshopFiles( void* iface, CSteamID steamId, unsigned int unStartIndex, SteamParamStringArray_t *pRequiredTags, SteamParamStringArray_t *pExcludedTags )
+SteamAPICall_t    ISteamRemoteStorage_EnumerateUserSharedWorkshopFiles( void* iface, CSteamID steamId, unsigned int unStartIndex, SteamParamStringArray_t *pRequiredTags, SteamParamStringArray_t *pExcludedTags )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
-SteamAPICall_t	ISteamRemoteStorage_PublishVideo( void* iface, EWorkshopVideoProvider eVideoProvider, const char *pchVideoAccount, const char *pchVideoIdentifier, const char *pchPreviewFile, AppId_t nConsumerAppId, const char *pchTitle, const char *pchDescription, ERemoteStoragePublishedFileVisibility eVisibility, SteamParamStringArray_t *pTags )
+SteamAPICall_t    ISteamRemoteStorage_PublishVideo( void* iface, EWorkshopVideoProvider eVideoProvider, const char *pchVideoAccount, const char *pchVideoIdentifier, const char *pchPreviewFile, AppId_t nConsumerAppId, const char *pchTitle, const char *pchDescription, ERemoteStoragePublishedFileVisibility eVisibility, SteamParamStringArray_t *pTags )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
-SteamAPICall_t	ISteamRemoteStorage_SetUserPublishedFileAction( void* iface, PublishedFileId_t unPublishedFileId, EWorkshopFileAction eAction )
+SteamAPICall_t    ISteamRemoteStorage_SetUserPublishedFileAction( void* iface, PublishedFileId_t unPublishedFileId, EWorkshopFileAction eAction )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
-SteamAPICall_t	ISteamRemoteStorage_EnumeratePublishedFilesByUserAction( void* iface, EWorkshopFileAction eAction, unsigned int unStartIndex )
+SteamAPICall_t    ISteamRemoteStorage_EnumeratePublishedFilesByUserAction( void* iface, EWorkshopFileAction eAction, unsigned int unStartIndex )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
 // this method enumerates the public view of workshop files
-SteamAPICall_t	ISteamRemoteStorage_EnumeratePublishedWorkshopFiles( void* iface, EWorkshopEnumerationType eEnumerationType, unsigned int unStartIndex, unsigned int unCount, unsigned int unDays, SteamParamStringArray_t *pTags, SteamParamStringArray_t *pUserTags )
+SteamAPICall_t    ISteamRemoteStorage_EnumeratePublishedWorkshopFiles( void* iface, EWorkshopEnumerationType eEnumerationType, unsigned int unStartIndex, unsigned int unCount, unsigned int unDays, SteamParamStringArray_t *pTags, SteamParamStringArray_t *pUserTags )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
 SteamAPICall_t ISteamRemoteStorage_UGCDownloadToLocation( void* iface, UGCHandle_t hContent, const char *pchLocation, unsigned int unPriority )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
 int32_t ISteamRemoteStorage_GetLocalFileChangeCount()
 {
     LOGTRACE(LCF_STEAM);
-	return 0;
+    return 0;
 }
 
 const char *ISteamRemoteStorage_GetLocalFileChange( int iFile, ERemoteStorageLocalFileChange *pEChangeType, ERemoteStorageFilePathType *pEFilePathType )
 {
     LOGTRACE(LCF_STEAM);
-	return nullptr;
+    return nullptr;
 }
 
 bool ISteamRemoteStorage_BeginFileWriteBatch()
 {
     LOGTRACE(LCF_STEAM);
-	return false;
+    return false;
 }
 
 bool ISteamRemoteStorage_EndFileWriteBatch()
 {
     LOGTRACE(LCF_STEAM);
-	return false;
+    return false;
 }
 
 }

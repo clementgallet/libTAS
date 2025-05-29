@@ -4,31 +4,25 @@
 //
 //=============================================================================
 
-#ifndef LIBTAS_ISTEAMREMOTESTORAGE016_H_INCL
-#define LIBTAS_ISTEAMREMOTESTORAGE016_H_INCL
+#ifndef LIBTAS_ISTEAMREMOTESTORAGE007_H_INCL
+#define LIBTAS_ISTEAMREMOTESTORAGE007_H_INCL
 
 #include "isteamremotestorage.h"
 
 #include <stdint.h>
-#define STEAMREMOTESTORAGE_INTERFACE_VERSION_016 "STEAMREMOTESTORAGE_INTERFACE_VERSION016"
+#define STEAMREMOTESTORAGE_INTERFACE_VERSION_006 "STEAMREMOTESTORAGE_INTERFACE_VERSION006"
+#define STEAMREMOTESTORAGE_INTERFACE_VERSION_007 "STEAMREMOTESTORAGE_INTERFACE_VERSION007"
 
 namespace libtas {
 
-struct ISteamRemoteStorage016Vtbl
+struct ISteamRemoteStorage007Vtbl
 {
     bool (*FileWrite)( void* iface, const char *pchFile, const void *pvData, int cubData );
     int (*FileRead)( void* iface, const char *pchFile, void *pvData, int cubDataToRead );
-    SteamAPICall_t (*FileWriteAsync)( void* iface, const char *pchFile, const void *pvData, unsigned int cubData );
-    SteamAPICall_t (*FileReadAsync)( void* iface, const char *pchFile, unsigned int nOffset, unsigned int cubToRead );
-    bool (*FileReadAsyncComplete)( void* iface, SteamAPICall_t hReadCall, void *pvBuffer, unsigned int cubToRead );
     bool (*FileForget)( void* iface, const char *pchFile );
     bool (*FileDelete)( void* iface, const char *pchFile );
     SteamAPICall_t (*FileShare)( void* iface, const char *pchFile );
     bool (*SetSyncPlatforms)( void* iface, const char *pchFile, ERemoteStoragePlatform eRemoteStoragePlatform );
-    UGCFileWriteStreamHandle_t (*FileWriteStreamOpen)( void* iface, const char *pchFile );
-    bool (*FileWriteStreamWriteChunk)( void* iface, UGCFileWriteStreamHandle_t writeHandle, const void *pvData, int cubData );
-    bool (*FileWriteStreamClose)( void* iface, UGCFileWriteStreamHandle_t writeHandle );
-    bool (*FileWriteStreamCancel)( void* iface, UGCFileWriteStreamHandle_t writeHandle );
     bool (*FileExists)( void* iface, const char *pchFile );
     bool (*FilePersisted)( void* iface, const char *pchFile );
     int (*GetFileSize)( void* iface, const char *pchFile );
@@ -71,13 +65,9 @@ struct ISteamRemoteStorage016Vtbl
     SteamAPICall_t (*EnumeratePublishedFilesByUserAction)( void* iface, EWorkshopFileAction eAction, unsigned int unStartIndex );
     SteamAPICall_t (*EnumeratePublishedWorkshopFiles)( void* iface, EWorkshopEnumerationType eEnumerationType, unsigned int unStartIndex, unsigned int unCount, unsigned int unDays, SteamParamStringArray_t *pTags, SteamParamStringArray_t *pUserTags );
     SteamAPICall_t (*UGCDownloadToLocation)( void* iface, UGCHandle_t hContent, const char *pchLocation, unsigned int unPriority );
-    int32_t (*GetLocalFileChangeCount)();
-    const char *(*ISteamRemoteStorage_GetLocalFileChange)( int iFile, ERemoteStorageLocalFileChange *pEChangeType, ERemoteStorageFilePathType *pEFilePathType );
-    bool (*ISteamRemoteStorage_BeginFileWriteBatch)();
-    bool (*ISteamRemoteStorage_EndFileWriteBatch)();
 };
 
-struct ISteamRemoteStorage *SteamRemoteStorage016(void);
+struct ISteamRemoteStorage *SteamRemoteStorage007(void);
 
 }
 

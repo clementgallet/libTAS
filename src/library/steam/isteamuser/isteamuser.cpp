@@ -19,8 +19,6 @@
 
 #include "isteamuser.h"
 #include "isteamuser_priv.h"
-#include "isteamuser019.h"
-#include "isteamuser020.h"
 #include "isteamuser021.h"
 #include "isteamuser023.h"
 
@@ -56,8 +54,8 @@ struct ISteamUser *SteamUser_generic(const char *version)
 		const char *name;
 		struct ISteamUser *(*iface_getter)(void);
 	} ifaces[] = {
-		{ STEAMUSER_INTERFACE_VERSION_019, SteamUser019 },
-		{ STEAMUSER_INTERFACE_VERSION_020, SteamUser020 },
+		{ STEAMUSER_INTERFACE_VERSION_019, SteamUser021 },
+		{ STEAMUSER_INTERFACE_VERSION_020, SteamUser021 },
 		{ STEAMUSER_INTERFACE_VERSION_021, SteamUser021 },
         { STEAMUSER_INTERFACE_VERSION_023, SteamUser023 },
 		{ NULL, NULL }

@@ -4,12 +4,12 @@
 //
 //=============================================================================
 
-#include "isteamuserstats012.h"
+#include "isteamuserstats010.h"
 #include "isteamuserstats_priv.h"
 
 namespace libtas {
 
-static const struct ISteamUserStats012Vtbl ISteamUserStats012_vtbl = {
+static const struct ISteamUserStats010Vtbl ISteamUserStats010_vtbl = {
     
     ISteamUserStats_RequestCurrentStats,
     ISteamUserStats_GetStatInt32,
@@ -25,8 +25,6 @@ static const struct ISteamUserStats012Vtbl ISteamUserStats012_vtbl = {
     ISteamUserStats_GetAchievementIcon,
     ISteamUserStats_GetAchievementDisplayAttribute,
     ISteamUserStats_IndicateAchievementProgress,
-    ISteamUserStats_GetNumAchievements,
-    ISteamUserStats_GetAchievementName,
     ISteamUserStats_RequestUserStats,
     ISteamUserStats_GetUserStatInt32,
     ISteamUserStats_GetUserStatFloat,
@@ -54,15 +52,13 @@ static const struct ISteamUserStats012Vtbl ISteamUserStats012_vtbl = {
     ISteamUserStats_GetGlobalStatDouble,
     ISteamUserStats_GetGlobalStatHistoryInt64,
     ISteamUserStats_GetGlobalStatHistoryDouble,
-    ISteamUserStats_GetAchievementProgressLimitsInt32,
-    ISteamUserStats_GetAchievementProgressLimitsFloat,
 };
 
-struct ISteamUserStats *SteamUserStats012(void)
+struct ISteamUserStats *SteamUserStats010(void)
 {
     static struct ISteamUserStats impl;
 
-    impl.vtbl.v012 = &ISteamUserStats012_vtbl;
+    impl.vtbl.v010 = &ISteamUserStats010_vtbl;
 
     return &impl;
 }

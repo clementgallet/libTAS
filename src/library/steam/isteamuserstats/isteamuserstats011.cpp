@@ -58,11 +58,11 @@ static const struct ISteamUserStats011Vtbl ISteamUserStats011_vtbl = {
 
 struct ISteamUserStats *SteamUserStats011(void)
 {
-	static struct ISteamUserStats impl;
+    static struct ISteamUserStats impl;
 
-	impl.vtbl.v011 = &ISteamUserStats011_vtbl;
+    impl.vtbl.v011 = &ISteamUserStats011_vtbl;
 
-	return &impl;
+    return &impl;
 }
 
 }

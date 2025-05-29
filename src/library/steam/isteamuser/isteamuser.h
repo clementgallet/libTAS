@@ -22,8 +22,6 @@ struct ISteamUser
 	union
 	{
 		const void *ptr;
-		const struct ISteamUser019Vtbl *v019;
-		const struct ISteamUser020Vtbl *v020;
         const struct ISteamUser021Vtbl *v021;
         const struct ISteamUser023Vtbl *v023;
 	} vtbl;

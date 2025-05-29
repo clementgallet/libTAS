@@ -24,15 +24,19 @@ struct RemoteStorageFileWriteAsyncComplete_t
 
 struct ISteamRemoteStorage
 {
-	union
-	{
-		const void *ptr;
-		const struct ISteamRemoteStorage001Vtbl *v001;
-		const struct ISteamRemoteStorage012Vtbl *v012;
-		const struct ISteamRemoteStorage013Vtbl *v013;
+    union
+    {
+        const void *ptr;
+        const struct ISteamRemoteStorage001Vtbl *v001;
+        const struct ISteamRemoteStorage002Vtbl *v002;
+        const struct ISteamRemoteStorage003Vtbl *v003;
+        const struct ISteamRemoteStorage005Vtbl *v005;
+        const struct ISteamRemoteStorage007Vtbl *v007;
+        const struct ISteamRemoteStorage012Vtbl *v012;
+        const struct ISteamRemoteStorage013Vtbl *v013;
         const struct ISteamRemoteStorage014Vtbl *v014;
         const struct ISteamRemoteStorage016Vtbl *v016;
-	} vtbl;
+    } vtbl;
 };
 
 ISteamRemoteStorage *SteamRemoteStorage_generic(const char *version);

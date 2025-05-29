@@ -4,25 +4,18 @@
 //
 //=============================================================================
 
-#include "isteamremotestorage014.h"
+#include "isteamremotestorage005.h"
 #include "isteamremotestorage_priv.h"
 
 namespace libtas {
 
-static const struct ISteamRemoteStorage014Vtbl ISteamRemoteStorage014_vtbl = {
+static const struct ISteamRemoteStorage005Vtbl ISteamRemoteStorage005_vtbl = {
     ISteamRemoteStorage_FileWrite,
     ISteamRemoteStorage_FileRead,
-    ISteamRemoteStorage_FileWriteAsync,
-    ISteamRemoteStorage_FileReadAsync,
-    ISteamRemoteStorage_FileReadAsyncComplete,
     ISteamRemoteStorage_FileForget,
     ISteamRemoteStorage_FileDelete,
     ISteamRemoteStorage_FileShare,
     ISteamRemoteStorage_SetSyncPlatforms,
-    ISteamRemoteStorage_FileWriteStreamOpen,
-    ISteamRemoteStorage_FileWriteStreamWriteChunk,
-    ISteamRemoteStorage_FileWriteStreamClose,
-    ISteamRemoteStorage_FileWriteStreamCancel,
     ISteamRemoteStorage_FileExists,
     ISteamRemoteStorage_FilePersisted,
     ISteamRemoteStorage_GetFileSize,
@@ -35,19 +28,12 @@ static const struct ISteamRemoteStorage014Vtbl ISteamRemoteStorage014_vtbl = {
     ISteamRemoteStorage_IsCloudEnabledForApp,
     ISteamRemoteStorage_SetCloudEnabledForApp,
     ISteamRemoteStorage_UGCDownload,
-    ISteamRemoteStorage_GetUGCDownloadProgress,
     ISteamRemoteStorage_GetUGCDetails,
     ISteamRemoteStorage_UGCRead,
     ISteamRemoteStorage_GetCachedUGCCount,
     ISteamRemoteStorage_GetCachedUGCHandle,
-    ISteamRemoteStorage_PublishWorkshopFile,
-    ISteamRemoteStorage_CreatePublishedFileUpdateRequest,
-    ISteamRemoteStorage_UpdatePublishedFileFile,
-    ISteamRemoteStorage_UpdatePublishedFilePreviewFile,
-    ISteamRemoteStorage_UpdatePublishedFileTitle,
-    ISteamRemoteStorage_UpdatePublishedFileDescription,
-    ISteamRemoteStorage_UpdatePublishedFileVisibility,
-    ISteamRemoteStorage_UpdatePublishedFileTags,
+    ISteamRemoteStorage_PublishFileOld,
+    ISteamRemoteStorage_PublishWorkshopFileOld,
     ISteamRemoteStorage_CommitPublishedFileUpdate,
     ISteamRemoteStorage_GetPublishedFileDetails,
     ISteamRemoteStorage_DeletePublishedFile,
@@ -55,23 +41,13 @@ static const struct ISteamRemoteStorage014Vtbl ISteamRemoteStorage014_vtbl = {
     ISteamRemoteStorage_SubscribePublishedFile,
     ISteamRemoteStorage_EnumerateUserSubscribedFiles,
     ISteamRemoteStorage_UnsubscribePublishedFile,
-    ISteamRemoteStorage_UpdatePublishedFileSetChangeDescription,
-    ISteamRemoteStorage_GetPublishedItemVoteDetails,
-    ISteamRemoteStorage_UpdateUserPublishedItemVote,
-    ISteamRemoteStorage_GetUserPublishedItemVoteDetails,
-    ISteamRemoteStorage_EnumerateUserSharedWorkshopFiles,
-    ISteamRemoteStorage_PublishVideo,
-    ISteamRemoteStorage_SetUserPublishedFileAction,
-    ISteamRemoteStorage_EnumeratePublishedFilesByUserAction,
-    ISteamRemoteStorage_EnumeratePublishedWorkshopFiles,
-    ISteamRemoteStorage_UGCDownloadToLocation,
 };
 
-struct ISteamRemoteStorage *SteamRemoteStorage014(void)
+struct ISteamRemoteStorage *SteamRemoteStorage005(void)
 {
     static struct ISteamRemoteStorage impl;
 
-    impl.vtbl.v014 = &ISteamRemoteStorage014_vtbl;
+    impl.vtbl.v005 = &ISteamRemoteStorage005_vtbl;
 
     return &impl;
 }

@@ -4,25 +4,18 @@
 //
 //=============================================================================
 
-#include "isteamremotestorage014.h"
+#include "isteamremotestorage007.h"
 #include "isteamremotestorage_priv.h"
 
 namespace libtas {
 
-static const struct ISteamRemoteStorage014Vtbl ISteamRemoteStorage014_vtbl = {
+static const struct ISteamRemoteStorage007Vtbl ISteamRemoteStorage007_vtbl = {
     ISteamRemoteStorage_FileWrite,
     ISteamRemoteStorage_FileRead,
-    ISteamRemoteStorage_FileWriteAsync,
-    ISteamRemoteStorage_FileReadAsync,
-    ISteamRemoteStorage_FileReadAsyncComplete,
     ISteamRemoteStorage_FileForget,
     ISteamRemoteStorage_FileDelete,
     ISteamRemoteStorage_FileShare,
     ISteamRemoteStorage_SetSyncPlatforms,
-    ISteamRemoteStorage_FileWriteStreamOpen,
-    ISteamRemoteStorage_FileWriteStreamWriteChunk,
-    ISteamRemoteStorage_FileWriteStreamClose,
-    ISteamRemoteStorage_FileWriteStreamCancel,
     ISteamRemoteStorage_FileExists,
     ISteamRemoteStorage_FilePersisted,
     ISteamRemoteStorage_GetFileSize,
@@ -67,11 +60,11 @@ static const struct ISteamRemoteStorage014Vtbl ISteamRemoteStorage014_vtbl = {
     ISteamRemoteStorage_UGCDownloadToLocation,
 };
 
-struct ISteamRemoteStorage *SteamRemoteStorage014(void)
+struct ISteamRemoteStorage *SteamRemoteStorage007(void)
 {
     static struct ISteamRemoteStorage impl;
 
-    impl.vtbl.v014 = &ISteamRemoteStorage014_vtbl;
+    impl.vtbl.v007 = &ISteamRemoteStorage007_vtbl;
 
     return &impl;
 }

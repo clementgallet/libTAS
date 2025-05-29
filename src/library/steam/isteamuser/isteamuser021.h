@@ -10,6 +10,8 @@
 #include "isteamuser.h"
 
 #include <stdint.h>
+#define STEAMUSER_INTERFACE_VERSION_019 "SteamUser019"
+#define STEAMUSER_INTERFACE_VERSION_020 "SteamUser020"
 #define STEAMUSER_INTERFACE_VERSION_021 "SteamUser021"
 
 namespace libtas {

@@ -4,43 +4,39 @@
 //
 //=============================================================================
 
-#include "isteamremotestorage013.h"
+#include "isteamremotestorage003.h"
 #include "isteamremotestorage_priv.h"
 
 namespace libtas {
 
-static const struct ISteamRemoteStorage013Vtbl ISteamRemoteStorage013_vtbl = {
+static const struct ISteamRemoteStorage003Vtbl ISteamRemoteStorage003_vtbl = {
     ISteamRemoteStorage_FileWrite,
     ISteamRemoteStorage_FileRead,
-    ISteamRemoteStorage_FileWriteAsync,
-    ISteamRemoteStorage_FileReadAsync,
-    ISteamRemoteStorage_FileReadAsyncComplete,
     ISteamRemoteStorage_FileForget,
     ISteamRemoteStorage_FileDelete,
     ISteamRemoteStorage_FileShare,
-    ISteamRemoteStorage_SetSyncPlatforms,
-    ISteamRemoteStorage_FileWriteStreamOpen,
-    ISteamRemoteStorage_FileWriteStreamWriteChunk,
-    ISteamRemoteStorage_FileWriteStreamClose,
-    ISteamRemoteStorage_FileWriteStreamCancel,
     ISteamRemoteStorage_FileExists,
     ISteamRemoteStorage_FilePersisted,
     ISteamRemoteStorage_GetFileSize,
     ISteamRemoteStorage_GetFileTimestamp,
-    ISteamRemoteStorage_GetSyncPlatforms,
     ISteamRemoteStorage_GetFileCount,
     ISteamRemoteStorage_GetFileNameAndSize,
     ISteamRemoteStorage_GetQuota,
     ISteamRemoteStorage_IsCloudEnabledForAccount,
     ISteamRemoteStorage_IsCloudEnabledForApp,
     ISteamRemoteStorage_SetCloudEnabledForApp,
+    ISteamRemoteStorage_UGCDownload,
+    ISteamRemoteStorage_GetUGCDetails,
+    ISteamRemoteStorage_UGCRead,
+    ISteamRemoteStorage_GetCachedUGCCount,
+    ISteamRemoteStorage_GetCachedUGCHandle,
 };
 
-struct ISteamRemoteStorage *SteamRemoteStorage013(void)
+struct ISteamRemoteStorage *SteamRemoteStorage003(void)
 {
     static struct ISteamRemoteStorage impl;
 
-    impl.vtbl.v013 = &ISteamRemoteStorage013_vtbl;
+    impl.vtbl.v003 = &ISteamRemoteStorage003_vtbl;
 
     return &impl;
 }
