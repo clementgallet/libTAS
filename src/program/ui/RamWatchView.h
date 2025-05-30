@@ -33,6 +33,7 @@ class RamWatchView : public QTableView {
 public:
     RamWatchView(Context *c, QWidget *parent = Q_NULLPTR);
     void update();
+    void update_frozen();
 
     RamWatchEditWindow *editWindow;
     RamWatchModel *ramWatchModel;

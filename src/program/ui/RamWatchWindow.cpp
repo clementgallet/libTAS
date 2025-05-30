@@ -90,6 +90,11 @@ void RamWatchWindow::update()
     ramWatchView->update();
 }
 
+void RamWatchWindow::update_frozen()
+{
+    ramWatchView->update_frozen();
+}
+
 void RamWatchWindow::slotHexView()
 {
     const QModelIndex index = ramWatchView->selectionModel()->currentIndex();

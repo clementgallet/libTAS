@@ -30,19 +30,15 @@ class RamWatchDetailed {
 public:
     RamWatchDetailed(uintptr_t addr, int type) : value_type(type), address(addr) {};
 
-    /* Update the actual address to look at (in case of pointer chain) */
-    void update_addr();
-
-    /* Return the current value of the ram watch as a MemValueType */
-    MemValueType get_value();
-
     /* Return the current value of the ram watch as a string */
     const char* value_str();
 
     /* Poke a value (given as a string) into the ram watch address. Return
-     * the result of process_vm_writev call
-     */
+     * the result of process_vm_writev call */
     int poke_value(const char* str_value);
+
+    /* If value is frozen, poke the value into ram watch */
+    void keep_frozen();
 
     int value_type;
     uintptr_t address;
@@ -50,7 +46,7 @@ public:
     bool hex;
     int array_size;
 
-    bool isPointer;
+    bool is_pointer;
     std::vector<int> pointer_offsets;
     /* Intermediate addresses, only for indication */
     std::vector<uintptr_t> pointer_addresses;
@@ -58,7 +54,16 @@ public:
     off_t base_file_offset;
     std::string base_file;
 
-    static bool isValid;
+    bool is_frozen;
+    MemValueType frozen_value;
+
+private:
+    /* Return the current value of the ram watch as a MemValueType */
+    MemValueType get_value(bool& is_valid);
+
+    /* Poke a value (given as a MemValueType) into the ram watch address. Return
+     * the result of process_vm_writev call */
+    int poke_value(MemValueType value);
 
 };
 

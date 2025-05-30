@@ -55,13 +55,14 @@ private:
     QComboBox *displayBox;
 
     QCheckBox *pointerBox;
+    QCheckBox *freezeBox;
 
     const static int POINTER_CHAIN_SIZE = 8;
     QVBoxLayout *mainLayout;
     QGridLayout *pointerLayout;
     QDialogButtonBox *buttonOffsetBox;
     QLineEdit *baseAddressInput;
-
+    
 private slots:
     void slotSave();
     void slotPoke();

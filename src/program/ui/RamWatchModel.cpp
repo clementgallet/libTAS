@@ -22,6 +22,7 @@
 #include "ramsearch/RamWatchDetailed.h"
 
 #include <QtWidgets/QMessageBox>
+#include <QtGui/QGuiApplication>
 #include <stdint.h>
 
 RamWatchModel::RamWatchModel(QObject *parent) : QAbstractTableModel(parent) {}
@@ -55,11 +56,11 @@ QVariant RamWatchModel::headerData(int section, Qt::Orientation orientation, int
 
 QVariant RamWatchModel::data(const QModelIndex &index, int role) const
 {
+    const std::unique_ptr<RamWatchDetailed> &watch = ramwatches.at(index.row());
     if (role == Qt::DisplayRole) {
-        const std::unique_ptr<RamWatchDetailed> &watch = ramwatches.at(index.row());
         switch(index.column()) {
             case 0:
-                if (watch->isPointer)
+                if (watch->is_pointer)
                     return QString("P->%1").arg(watch->address, 0, 16);
                 else
                     return QString("%1").arg(watch->address, 0, 16);
@@ -70,6 +71,14 @@ QVariant RamWatchModel::data(const QModelIndex &index, int role) const
             default:
                 return QString();
         }
+    }
+    if (role == Qt::ForegroundRole) {
+        if (index.column() == 1) {
+            if (watch->is_frozen) {
+                return QBrush(QColorConstants::Red);
+            }
+        }
+        return QGuiApplication::palette().text();
     }
     return QVariant();
 }
@@ -98,8 +107,8 @@ void RamWatchModel::saveSettings(QSettings& watchSettings)
         watchSettings.setValue("label", w->label.c_str());
         watchSettings.setValue("type", w->value_type);
         watchSettings.setValue("hex", w->hex);
-        watchSettings.setValue("isPointer", w->isPointer);
-        if (w->isPointer) {
+        watchSettings.setValue("isPointer", w->is_pointer);
+        if (w->is_pointer) {
             watchSettings.setValue("base_file", w->base_file.c_str());
             watchSettings.setValue("base_file_offset", static_cast<long long>(w->base_file_offset));
             watchSettings.beginWriteArray("offsets");
@@ -132,8 +141,8 @@ void RamWatchModel::loadSettings(QSettings& watchSettings)
 
         ramwatch->label = watchSettings.value("label").toString().toStdString();
         ramwatch->hex = watchSettings.value("hex").toBool();
-        ramwatch->isPointer = watchSettings.value("isPointer").toBool();
-        if (ramwatch->isPointer) {
+        ramwatch->is_pointer = watchSettings.value("isPointer").toBool();
+        if (ramwatch->is_pointer) {
             ramwatch->base_address = 0;
             ramwatch->base_file = watchSettings.value("base_file").toString().toStdString();
             ramwatch->base_file_offset = watchSettings.value("base_file_offset").toLongLong();
@@ -143,7 +152,6 @@ void RamWatchModel::loadSettings(QSettings& watchSettings)
                 ramwatch->pointer_offsets.push_back(watchSettings.value("offset").toInt());
             }
             watchSettings.endArray();
-            ramwatch->update_addr();
         }
         ramwatches.push_back(std::move(ramwatch));
     }
@@ -152,8 +160,14 @@ void RamWatchModel::loadSettings(QSettings& watchSettings)
     endResetModel();
 }
 
-
 void RamWatchModel::update()
 {
     emit dataChanged(index(0,0), index(rowCount()-1,1), QVector<int>(Qt::DisplayRole));
+}
+
+void RamWatchModel::update_frozen()
+{
+    for (std::unique_ptr<RamWatchDetailed>& w : ramwatches) {
+        w->keep_frozen();
+    }
 }

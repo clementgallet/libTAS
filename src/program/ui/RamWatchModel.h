@@ -51,6 +51,7 @@ public:
     void loadSettings(QSettings& watchSettings);
 
     void update();
+    void update_frozen();
 };
 
 #endif

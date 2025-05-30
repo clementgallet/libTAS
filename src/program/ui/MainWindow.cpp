@@ -936,6 +936,9 @@ void MainWindow::updateUIFrame()
      * rewinding to a previous frame. */
     if (inputEditorWindow->isVisible() && !context->seek_frame)
         gameLoop->movie.applyAutoHoldFire();
+
+    /* Keep all ram watches frozen */
+    ramWatchWindow->update_frozen();
 }
 
 void MainWindow::updateMovieParams()

@@ -171,7 +171,7 @@ void PointerScanWindow::slotAdd()
             const std::pair<uintptr_t, std::vector<int>> &chain = pointerScanModel->pointer_chains.at(sourceIndex.row());
             std::unique_ptr<RamWatchDetailed> watch(new RamWatchDetailed(addr, type_index));
 
-            watch->isPointer = true;
+            watch->is_pointer = true;
             watch->base_address = chain.first;
             watch->base_file = BaseAddresses::getFileAndOffset(chain.first, watch->base_file_offset);
             watch->pointer_offsets = chain.second;

@@ -52,6 +52,11 @@ void RamWatchView::update()
     ramWatchModel->update();
 }
 
+void RamWatchView::update_frozen()
+{
+    ramWatchModel->update_frozen();
+}
+
 void RamWatchView::mouseDoubleClickEvent(QMouseEvent *event)
 {
     const QModelIndex index = indexAt(event->pos());

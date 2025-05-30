@@ -30,6 +30,7 @@
 * Add versions for SteamUserStats API
 * Add the setcap command in hook so that it is called on make install
 * Add support to .AppImage games
+* Ram watches can be frozen
 
 ### Changed
 

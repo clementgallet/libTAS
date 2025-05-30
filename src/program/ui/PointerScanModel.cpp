@@ -90,7 +90,7 @@ void PointerScanModel::locatePointers()
 
             for (unsigned int i = 0; i < chunk_data_size; i++, cur_size += game_addr_size) {
                 /* Check if the value could be a pointer */
-                bool isPointer = false;
+                bool is_pointer = false;
                 
                 uintptr_t value;
                 if (game_addr_size == 4)
@@ -109,12 +109,12 @@ void PointerScanModel::locatePointers()
                         break;
                     }
                     if (value < ms.endaddr) {
-                        isPointer = true;
+                        is_pointer = true;
                         break;
                     }
                 }
 
-                if (isPointer) {
+                if (is_pointer) {
                     uintptr_t stored_addr = addr + i*game_addr_size;
                     if (section.type & (MemSection::MemDataRW | MemSection::MemBSS | MemSection::MemStack)) {
                         static_pointer_map.insert(std::make_pair(value, stored_addr));

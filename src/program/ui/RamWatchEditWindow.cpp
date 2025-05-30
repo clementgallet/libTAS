@@ -49,6 +49,8 @@ RamWatchEditWindow::RamWatchEditWindow(QWidget *parent) : QDialog(parent)
     displayBox->addItem("Decimal");
     displayBox->addItem("Hexadecimal");
 
+    freezeBox = new QCheckBox("");
+
     pointerBox = new QCheckBox("");
     connect(pointerBox, &QAbstractButton::clicked, this, &RamWatchEditWindow::slotPointer);
 
@@ -84,6 +86,7 @@ RamWatchEditWindow::RamWatchEditWindow(QWidget *parent) : QDialog(parent)
     formLayout->addRow(new QLabel(tr("Type:")), typeBox);
     formLayout->addRow(new QLabel(tr("Display:")), displayBox);
     formLayout->addRow(new QLabel(tr("Pointer:")), pointerBox);
+    formLayout->addRow(new QLabel(tr("Frozen:")), freezeBox);
 
     /* Create the pointer layout */
     pointerLayout = new QGridLayout;
@@ -122,7 +125,7 @@ void RamWatchEditWindow::clear()
     labelInput->setText("");
     displayBox->setCurrentIndex(0);
     typeBox->setCurrentIndex(0);
-
+    freezeBox->setChecked(false);
     pointerBox->setChecked(false);
     baseAddressInput->setText("");
 
@@ -133,10 +136,13 @@ void RamWatchEditWindow::fill(std::unique_ptr<RamWatchDetailed> &watch)
 {
     /* Fill address */
     addressInput->setText(QString("%1").arg(watch->address, 0, 16));
-    addressInput->setEnabled(!watch->isPointer);
+    addressInput->setEnabled(!watch->is_pointer);
 
     /* Fill value */
-    valueInput->setText(watch->value_str());
+    if (watch->is_frozen)
+        valueInput->setText(MemValue::to_string(&watch->frozen_value, watch->value_type, watch->hex));
+    else
+        valueInput->setText(watch->value_str());
 
     /* Fill label */
     labelInput->setText(watch->label.c_str());
@@ -150,12 +156,15 @@ void RamWatchEditWindow::fill(std::unique_ptr<RamWatchDetailed> &watch)
     else
         displayBox->setCurrentIndex(0);
 
+    /* Fill frozen */
+    freezeBox->setChecked(watch->is_frozen);
+
     /* Fill pointer */
-    pointerBox->setChecked(watch->isPointer);
+    pointerBox->setChecked(watch->is_pointer);
 
-    slotPointer(watch->isPointer);
+    slotPointer(watch->is_pointer);
 
-    if (watch->isPointer) {
+    if (watch->is_pointer) {
 
         if (watch->base_file_offset >= 0)
             baseAddressInput->setText(QString("%1+0x%2").arg(watch->base_file.c_str()).arg(watch->base_file_offset, 0, 16));
@@ -298,8 +307,13 @@ void RamWatchEditWindow::slotSave()
 
     ramwatch->hex = (displayBox->currentIndex() == 1);
     ramwatch->label = labelInput->text().toStdString();
-    ramwatch->isPointer = pointerBox->isChecked();
-    if (ramwatch->isPointer) {
+    ramwatch->is_frozen = freezeBox->isChecked();
+    if (ramwatch->is_frozen) {
+        ramwatch->frozen_value = MemValue::from_string(valueInput->text().toLocal8Bit().constData(),
+                                    ramwatch->value_type, ramwatch->hex);
+    }
+    ramwatch->is_pointer = pointerBox->isChecked();
+    if (ramwatch->is_pointer) {
         std::string base = baseAddressInput->text().toStdString();
 
         /* Split the string with '+' or '-' sign */

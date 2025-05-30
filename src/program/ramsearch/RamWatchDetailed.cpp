@@ -29,12 +29,15 @@
 #include <fstream>
 #include <iostream>
 
-bool RamWatchDetailed::isValid;
-
-void RamWatchDetailed::update_addr()
+MemValueType RamWatchDetailed::get_value(bool& is_valid)
 {
-    isValid = true;
-    if (isPointer) {
+    MemValueType value;
+    value.v_uint64_t = 0;
+
+    is_valid = true;
+    
+    /* Update the actual address to look at (in case of pointer chain) */
+    if (is_pointer) {
         /* Update the base address from the file and file offset */
         if (!base_address) {
 
@@ -52,40 +55,30 @@ void RamWatchDetailed::update_addr()
         address = base_address;
         int i=0;
         for (auto offset : pointer_offsets) {
-            uintptr_t next_address = MemAccess::readAddr(reinterpret_cast<void*>(address), &isValid);
-            if (isValid)
+            uintptr_t next_address = MemAccess::readAddr(reinterpret_cast<void*>(address), &is_valid);
+            if (is_valid)
                 pointer_addresses[i++] = next_address;
             else
-                return;
+                return value;
 
             address = next_address + offset;
         }
     }
-}
-
-MemValueType RamWatchDetailed::get_value()
-{
-    update_addr();
-
-    MemValueType value;
-    value.v_uint64_t = 0;
-
-    if (!isValid)
-        return value;
-
+    
     if (value_type == RamType::RamArray) {
-        isValid = (MemAccess::read(&value, reinterpret_cast<void*>(address), array_size) == (size_t)array_size);
+        is_valid = (MemAccess::read(&value, reinterpret_cast<void*>(address), array_size) == (size_t)array_size);
         value.v_array[RAM_ARRAY_MAX_SIZE] = array_size;
     }
     else
-        isValid = (MemAccess::read(&value, reinterpret_cast<void*>(address), MemValue::type_size(value_type)) == (size_t)MemValue::type_size(value_type));
+        is_valid = (MemAccess::read(&value, reinterpret_cast<void*>(address), MemValue::type_size(value_type)) == (size_t)MemValue::type_size(value_type));
     return value;
 }
 
 const char* RamWatchDetailed::value_str()
 {
-    MemValueType value = get_value();
-    if (!isValid)
+    bool is_valid = true;
+    MemValueType value = get_value(is_valid);
+    if (!is_valid)
         return "??????";
 
     return MemValue::to_string(&value, value_type, hex);
@@ -94,10 +87,21 @@ const char* RamWatchDetailed::value_str()
 int RamWatchDetailed::poke_value(const char* str_value)
 {
     MemValueType value = MemValue::from_string(str_value, value_type, hex);
+    return poke_value(value);
+}
 
+int RamWatchDetailed::poke_value(MemValueType value)
+{
     /* Write value into the game process address */
     if (value_type == RamType::RamArray)
         return MemAccess::write(&value, reinterpret_cast<void*>(address), value.v_array[RAM_ARRAY_MAX_SIZE]);
     else
         return MemAccess::write(&value, reinterpret_cast<void*>(address), MemValue::type_size(value_type));
+}
+
+void RamWatchDetailed::keep_frozen()
+{
+    if (is_frozen) {
+        poke_value(frozen_value);
+    }
 }

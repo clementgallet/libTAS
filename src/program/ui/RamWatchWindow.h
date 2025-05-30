@@ -34,6 +34,7 @@ class RamWatchWindow : public QDialog {
 public:
     RamWatchWindow(Context *c, HexViewWindow* view, QWidget *parent = Q_NULLPTR);
     void update();
+    void update_frozen();
 
     PointerScanWindow *pointerScanWindow;
     RamWatchView *ramWatchView;
