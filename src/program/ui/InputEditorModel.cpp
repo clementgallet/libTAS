@@ -1109,11 +1109,11 @@ void InputEditorModel::endRemoveInputs(int minRow, int maxRow)
 
 void InputEditorModel::update()
 {
-    static uint64_t current_framecount = 0;
-    if (context->framecount != current_framecount) {
+    static uint64_t last_framecount = 0;
+    if (context->framecount != last_framecount) {
         emit dataChanged(index(context->framecount,0), index(context->framecount,columnCount()-1));
-        emit dataChanged(index(current_framecount,0), index(current_framecount,columnCount()-1));
-        current_framecount = context->framecount;
+        emit dataChanged(index(last_framecount,0), index(last_framecount,columnCount()-1));
+        last_framecount = context->framecount;
     }
 }
 

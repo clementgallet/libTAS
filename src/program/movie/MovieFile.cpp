@@ -264,4 +264,5 @@ void MovieFile::applyAutoHoldFire()
             inputs->paintInput(si, value, context->framecount, context->framecount);
         }
     }
+    inputs->processPendingActions();
 }

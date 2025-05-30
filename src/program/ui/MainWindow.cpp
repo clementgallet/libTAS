@@ -151,6 +151,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
      */
     gameLoop = new GameLoop(context);
     connect(gameLoop, &GameLoop::uiChanged, this, &MainWindow::updateUIFrequent);
+    connect(gameLoop, &GameLoop::newFrame, this, &MainWindow::updateUIFrame, Qt::DirectConnection);
     connect(gameLoop, &GameLoop::statusChanged, this, &MainWindow::updateStatus);
     connect(gameLoop, &GameLoop::configChanged, this, &MainWindow::updateUIFromConfig);
     connect(gameLoop, &GameLoop::alertToShow, this, &MainWindow::alertDialog);
@@ -924,6 +925,17 @@ void MainWindow::updateUIFrequent()
             launchGdbButton->setEnabled(true);
         }
     }
+}
+
+void MainWindow::updateUIFrame()
+{
+    /* Process everything that needs to be performed exactly once per frame */
+    
+    /* Autohold and autofire need to be applied at the beginning of each
+     * frame, only if the input editor is visible. It should not apply when
+     * rewinding to a previous frame. */
+    if (inputEditorWindow->isVisible() && !context->seek_frame)
+        gameLoop->movie.applyAutoHoldFire();
 }
 
 void MainWindow::updateMovieParams()

@@ -166,6 +166,10 @@ libtas_so_SOURCES = \
     steam/isteamnetworkingmessages.cpp \
     steam/isteamremotestorage/isteamremotestorage.cpp \
     steam/isteamremotestorage/isteamremotestorage001.cpp \
+    steam/isteamremotestorage/isteamremotestorage002.cpp \
+    steam/isteamremotestorage/isteamremotestorage003.cpp \
+    steam/isteamremotestorage/isteamremotestorage005.cpp \
+    steam/isteamremotestorage/isteamremotestorage007.cpp \
     steam/isteamremotestorage/isteamremotestorage012.cpp \
     steam/isteamremotestorage/isteamremotestorage013.cpp \
     steam/isteamremotestorage/isteamremotestorage014.cpp \
@@ -173,11 +177,14 @@ libtas_so_SOURCES = \
     steam/isteamscreenshots.cpp \
     steam/isteamugc.cpp \
     steam/isteamuser/isteamuser.cpp \
-    steam/isteamuser/isteamuser019.cpp \
-    steam/isteamuser/isteamuser020.cpp \
     steam/isteamuser/isteamuser021.cpp \
     steam/isteamuser/isteamuser023.cpp \
     steam/isteamuserstats/isteamuserstats.cpp \
+    steam/isteamuserstats/isteamuserstats005.cpp \
+    steam/isteamuserstats/isteamuserstats006.cpp \
+    steam/isteamuserstats/isteamuserstats007.cpp \
+    steam/isteamuserstats/isteamuserstats008.cpp \
+    steam/isteamuserstats/isteamuserstats010.cpp \
     steam/isteamuserstats/isteamuserstats011.cpp \
     steam/isteamuserstats/isteamuserstats012.cpp \
     steam/isteamuserstats/isteamuserstats013.cpp \

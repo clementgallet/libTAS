@@ -209,6 +209,9 @@ private slots:
     /* Update UI elements that are often modified, triggered by a timer */
     void updateUIFrequent();
 
+    /* Update UI elements that need to be updated exactly once per frame */
+    void updateUIFrame();
+
     /* Update UI elements when the shared config has changed (pause, fastforward,
      * encode, etc.
      */
