@@ -64,6 +64,7 @@ void HexViewWindow::start()
 void HexViewWindow::update()
 {
     view->viewport()->update();
+    positionChanged();
 }
 
 void HexViewWindow::update_layout()
