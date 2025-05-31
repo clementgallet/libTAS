@@ -28,6 +28,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <cstring>
 
 MemValueType RamWatchDetailed::get_value(bool& is_valid)
 {
@@ -66,8 +67,12 @@ MemValueType RamWatchDetailed::get_value(bool& is_valid)
     }
     
     if (value_type == RamType::RamArray) {
-        is_valid = (MemAccess::read(&value, reinterpret_cast<void*>(address), array_size) == (size_t)array_size);
+        is_valid = (MemAccess::read(value.v_array, reinterpret_cast<void*>(address), array_size) == (size_t)array_size);
         value.v_array[RAM_ARRAY_MAX_SIZE] = array_size;
+    }
+    else if (value_type == RamType::RamCString) {
+        is_valid = (MemAccess::read(value.v_cstr, reinterpret_cast<void*>(address), RAM_ARRAY_MAX_SIZE) > 0); 
+        value.v_cstr[RAM_ARRAY_MAX_SIZE] = 0;
     }
     else
         is_valid = (MemAccess::read(&value, reinterpret_cast<void*>(address), MemValue::type_size(value_type)) == (size_t)MemValue::type_size(value_type));
@@ -94,7 +99,9 @@ int RamWatchDetailed::poke_value(MemValueType value)
 {
     /* Write value into the game process address */
     if (value_type == RamType::RamArray)
-        return MemAccess::write(&value, reinterpret_cast<void*>(address), value.v_array[RAM_ARRAY_MAX_SIZE]);
+        return MemAccess::write(value.v_array, reinterpret_cast<void*>(address), value.v_array[RAM_ARRAY_MAX_SIZE]);
+    else if (value_type == RamType::RamCString)
+        return MemAccess::write(value.v_cstr, reinterpret_cast<void*>(address), strlen(value.v_cstr)+1);
     else
         return MemAccess::write(&value, reinterpret_cast<void*>(address), MemValue::type_size(value_type));
 }

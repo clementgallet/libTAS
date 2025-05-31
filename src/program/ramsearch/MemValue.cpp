@@ -44,6 +44,7 @@ int MemValue::type_size(int value_type)
         case RamDouble:
             return 8;
         case RamArray:
+        case RamCString:
             return 0;
     }
     return 0;
@@ -56,7 +57,7 @@ const char* MemValue::to_string(const void* value, int value_type, bool hex)
         int array_size = v->v_array[RAM_ARRAY_MAX_SIZE];
         return to_string(value, value_type, hex, array_size);
     }
-    return to_string(value, value_type, hex, 0);    
+    return to_string(value, value_type, hex, RAM_ARRAY_MAX_SIZE);
 }
 
 const char* MemValue::to_string(const void* value, int value_type, bool hex, int array_size)
@@ -122,6 +123,12 @@ const char* MemValue::to_string(const void* value, int value_type, bool hex, int
                 snprintf(str+size, 30-size, hex?"%02x ":"%03u ", v->v_array[i]);
                 size = strlen(str);
             }
+            return str;
+        }
+        case RamCString:
+        {
+            strncpy(str, v->v_cstr, array_size);
+            str[array_size] = 0;
             return str;
         }
     }
@@ -204,6 +211,12 @@ MemValueType MemValue::from_string(const char* str, int value_type, bool hex)
             }
             value.v_array[RAM_ARRAY_MAX_SIZE] = array_size;
             std::cout << "array_size " << array_size << std::endl;
+            return value;
+        }
+        case RamCString:
+        {
+            strncpy(value.v_cstr, str, RAM_ARRAY_MAX_SIZE);
+            value.v_cstr[RAM_ARRAY_MAX_SIZE] = 0;
             return value;
         }
     }

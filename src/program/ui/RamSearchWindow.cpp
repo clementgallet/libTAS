@@ -167,7 +167,7 @@ RamSearchWindow::RamSearchWindow(Context* c, HexViewWindow* view, RamWatchWindow
     QStringList typeList;
     typeList << "unsigned char" << "char" << "unsigned short" << "short";
     typeList << "unsigned int" << "int" << "unsigned int64" << "int64";
-    typeList << "float" << "double" << "byte array";
+    typeList << "float" << "double" << "byte array" << "string";
     typeBox->addItems(typeList);
     typeBox->setCurrentText("int");
     connect(typeBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &RamSearchWindow::slotTypeChanged);
@@ -470,7 +470,7 @@ void RamSearchWindow::slotStop()
 
 void RamSearchWindow::slotTypeChanged(int index)
 {
-    if (index == RamArray) {
+    if (index == RamArray || index == RamCString) {
         compareValueButton->setChecked(true);
         comparePreviousButton->setEnabled(false);
         operatorEqualButton->setChecked(true);

@@ -105,6 +105,11 @@ static bool check_equal_array(const MemValueType* value)
     return 0 == memcmp(value->v_array, compare_value.v_array, compare_value.v_array[RAM_ARRAY_MAX_SIZE]);
 }
 
+static bool check_equal_string(const MemValueType* value)
+{
+    return 0 == strncmp(value->v_cstr, compare_value.v_cstr, RAM_ARRAY_MAX_SIZE);
+}
+
 void CompareOperations::init(int vt, CompareOperator compare_operator, MemValueType compare_v, MemValueType different_v)
 {
     value_type = vt;
@@ -145,6 +150,9 @@ void CompareOperations::init(int vt, CompareOperator compare_operator, MemValueT
             break;
         case RamArray:
             compare_method = check_equal_array;
+            break;
+        case RamCString:
+            compare_method = check_equal_string;
             break;
     }
 }

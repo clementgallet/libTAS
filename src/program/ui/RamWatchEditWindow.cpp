@@ -42,7 +42,7 @@ RamWatchEditWindow::RamWatchEditWindow(QWidget *parent) : QDialog(parent)
     QStringList typeList;
     typeList << "unsigned char" << "char" << "unsigned short" << "short";
     typeList << "unsigned int" << "int" << "unsigned int64" << "int64";
-    typeList << "float" << "double";
+    typeList << "float" << "double" << "array" << "string";
     typeBox->addItems(typeList);
 
     displayBox = new QComboBox();

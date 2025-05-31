@@ -31,6 +31,7 @@
 * Add the setcap command in hook so that it is called on make install
 * Add support to .AppImage games
 * Ram watches can be frozen
+* Ram watch/search can handle string type
 
 ### Changed
 

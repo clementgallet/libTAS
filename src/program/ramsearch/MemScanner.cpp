@@ -54,6 +54,11 @@ int MemScanner::first_scan(int mem_flags, int type, int align, CompareType ct, C
         if (alignment == 0)
             alignment = 1;
     }
+    else if (type == RamCString) {
+        value_type_size = strlen(cv.v_cstr);
+        if (alignment == 0)
+            alignment = 1;
+    }
     else {
         value_type_size = MemValue::type_size(value_type);
         if (alignment == 0)

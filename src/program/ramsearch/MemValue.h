@@ -34,6 +34,7 @@ enum RamType {
     RamFloat,
     RamDouble,
     RamArray,
+    RamCString,
 };
 
 #define RAM_ARRAY_MAX_SIZE 15
@@ -50,6 +51,7 @@ typedef union {
     float v_float;
     double v_double;
     uint8_t v_array[RAM_ARRAY_MAX_SIZE+1];
+    char v_cstr[RAM_ARRAY_MAX_SIZE+1];
 } MemValueType;
 
 namespace MemValue {

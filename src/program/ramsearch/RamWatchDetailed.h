@@ -28,7 +28,7 @@
 
 class RamWatchDetailed {
 public:
-    RamWatchDetailed(uintptr_t addr, int type) : value_type(type), address(addr) {};
+    RamWatchDetailed(uintptr_t addr, int type) : value_type(type), address(addr) {is_frozen = false;};
 
     /* Return the current value of the ram watch as a string */
     const char* value_str();
