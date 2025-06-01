@@ -37,13 +37,14 @@ RamWatchView::RamWatchView(Context* c, QWidget *parent) : QTableView(parent), co
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     setShowGrid(false);
     setAlternatingRowColors(true);
-    horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    horizontalHeader()->setStretchLastSection(true);
     horizontalHeader()->setHighlightSections(false);
     verticalHeader()->hide();
 
     ramWatchModel = new RamWatchModel();
     setModel(ramWatchModel);
-    
+
     editWindow = new RamWatchEditWindow(this);
 }
 
@@ -63,6 +64,8 @@ void RamWatchView::mouseDoubleClickEvent(QMouseEvent *event)
     if (!index.isValid()) {
         return QTableView::mouseDoubleClickEvent(event);
     }
+    if (index.column() != 0)
+        return QTableView::mouseDoubleClickEvent(event);
 
     int row = index.row();
 

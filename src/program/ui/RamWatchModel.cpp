@@ -37,6 +37,15 @@ int RamWatchModel::columnCount(const QModelIndex & /*parent*/) const
     return 3;
 }
 
+Qt::ItemFlags RamWatchModel::flags(const QModelIndex &index) const
+{
+    /* Value and label are editable */
+    if (index.column() != 0)
+        return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
+
+    return QAbstractItemModel::flags(index);
+}
+
 QVariant RamWatchModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role == Qt::DisplayRole) {
@@ -57,7 +66,7 @@ QVariant RamWatchModel::headerData(int section, Qt::Orientation orientation, int
 QVariant RamWatchModel::data(const QModelIndex &index, int role) const
 {
     const std::unique_ptr<RamWatchDetailed> &watch = ramwatches.at(index.row());
-    if (role == Qt::DisplayRole) {
+    if (role == Qt::DisplayRole || role == Qt::EditRole) {
         switch(index.column()) {
             case 0:
                 if (watch->is_pointer)
@@ -81,6 +90,42 @@ QVariant RamWatchModel::data(const QModelIndex &index, int role) const
         return QGuiApplication::palette().text();
     }
     return QVariant();
+}
+
+bool RamWatchModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    std::unique_ptr<RamWatchDetailed> &watch = ramwatches.at(index.row());
+
+    switch(index.column()) {
+        case 0:
+            return false;
+        case 1:
+            {
+                int res = watch->poke_value(value.toString().toLocal8Bit().constData());
+                if (res < 0) {
+                    if (res == EFAULT) {
+                        QMessageBox::critical(nullptr, "Error", QString("Poking failed because address is outside the game's accessible address space."));
+                    }
+                    else if (res == EPERM) {
+                        QMessageBox::critical(nullptr, "Error", QString("Poking failed because we don't have permission to write at the game address."));
+                    }
+                    else if (res == ESRCH) {
+                        QMessageBox::critical(nullptr, "Error", QString("Poking failed because the game does not appear to be running."));
+                    }
+                    else {
+                        QMessageBox::critical(nullptr, "Error", QString("Poking failed."));
+                    }
+                    return false;
+                }
+            }
+            return true;
+        case 2:
+            watch->label = value.toString().toLocal8Bit().constData();
+            return true;
+        default:
+            return false;
+    }
+    return false;
 }
 
 void RamWatchModel::addWatch(std::unique_ptr<RamWatchDetailed> ramwatch)
