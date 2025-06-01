@@ -223,6 +223,12 @@ void InputEditorView::resizeAllColumns()
 
 void InputEditorView::update()
 {
+    static uint64_t last_framecount = -1;
+    if (last_framecount == context->framecount)
+        return;
+
+    last_framecount = context->framecount;
+
     inputEditorModel->update();
 
     if (!isVisible())
