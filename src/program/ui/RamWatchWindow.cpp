@@ -122,7 +122,7 @@ void RamWatchWindow::slotScanPointer()
     /* Fill and show the scan pointer window */
     pointerScanWindow->addressInput->setText(QString("%1").arg(ramWatchView->ramWatchModel->ramwatches.at(row)->address, 0, 16));
     pointerScanWindow->type_index = ramWatchView->ramWatchModel->ramwatches.at(row)->value_type;
-    pointerScanWindow->exec();
+    pointerScanWindow->show();
 }
 
 void RamWatchWindow::slotSave()

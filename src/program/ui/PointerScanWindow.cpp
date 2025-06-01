@@ -52,7 +52,7 @@ PointerScanWindow::PointerScanWindow(Context* c, QWidget *parent) : QDialog(pare
     pointerScanView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     pointerScanView->setShowGrid(false);
     pointerScanView->setAlternatingRowColors(true);
-    pointerScanView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    pointerScanView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     pointerScanView->horizontalHeader()->setHighlightSections(false);
     pointerScanView->verticalHeader()->hide();
     pointerScanView->setSortingEnabled(true);
@@ -62,6 +62,8 @@ PointerScanWindow::PointerScanWindow(Context* c, QWidget *parent) : QDialog(pare
     proxyModel = new QSortFilterProxyModel();
     proxyModel->setSourceModel(pointerScanModel);
     pointerScanView->setModel(proxyModel);
+
+    pointerScanView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
 
     /* Progress bar */
     searchProgress = new QProgressBar();
@@ -110,18 +112,18 @@ PointerScanWindow::PointerScanWindow(Context* c, QWidget *parent) : QDialog(pare
     buttonBox->addButton(saveButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(loadButton, QDialogButtonBox::ActionRole);
 
-    /* Create the options layout */
-    QVBoxLayout *optionLayout = new QVBoxLayout;
-    optionLayout->addLayout(formLayout);
-    optionLayout->addStretch(1);
-    optionLayout->addWidget(buttonBox);
+    /* Create the layouts */
 
     QHBoxLayout *mainLayout = new QHBoxLayout;
 
     mainLayout->addLayout(scanLayout, 1);
-    mainLayout->addLayout(optionLayout);
+    mainLayout->addLayout(formLayout);
+    
+    QVBoxLayout *optionLayout = new QVBoxLayout;
+    optionLayout->addLayout(mainLayout);
+    optionLayout->addWidget(buttonBox);
 
-    setLayout(mainLayout);
+    setLayout(optionLayout);
 }
 
 void PointerScanWindow::slotSearch()
