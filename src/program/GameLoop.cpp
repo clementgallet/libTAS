@@ -178,6 +178,7 @@ void GameLoop::init()
 {
     /* Unvalidate the game pid */
     context->game_pid = 0;
+    MemAccess::fini();
     
     /* Unvalidate the game window id */
     context->game_window = 0;

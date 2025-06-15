@@ -49,6 +49,16 @@ void MemAccess::init(pid_t pid, int addr_size)
     game_addr_size = addr_size;
 }
 
+void MemAccess::fini()
+{
+    game_pid = 0;
+}
+
+bool MemAccess::isInited()
+{
+    return game_pid != 0;
+}
+
 pid_t MemAccess::getPid()
 {
     return game_pid;

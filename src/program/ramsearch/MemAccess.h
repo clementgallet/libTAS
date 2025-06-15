@@ -27,7 +27,9 @@
 namespace MemAccess {
     
     void init(pid_t pid, int addr_size);
-    
+    void fini();
+    bool isInited();
+
     pid_t getPid();
     
     int getAddrSize();

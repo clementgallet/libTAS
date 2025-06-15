@@ -35,6 +35,11 @@ MemValueType RamWatchDetailed::get_value(bool& is_valid)
     MemValueType value;
     value.v_uint64_t = 0;
 
+    if (!MemAccess::isInited()) {
+        is_valid = false;
+        return value;
+    }
+
     is_valid = true;
     
     /* Update the actual address to look at (in case of pointer chain) */
@@ -81,6 +86,10 @@ MemValueType RamWatchDetailed::get_value(bool& is_valid)
 
 const char* RamWatchDetailed::value_str()
 {
+    if (!MemAccess::isInited()) {
+        return "";
+    }
+
     bool is_valid = true;
     MemValueType value = get_value(is_valid);
     if (!is_valid)
@@ -97,6 +106,10 @@ int RamWatchDetailed::poke_value(const char* str_value)
 
 int RamWatchDetailed::poke_value(MemValueType value)
 {
+    if (!MemAccess::isInited()) {
+        return 0;
+    }
+
     /* Write value into the game process address */
     if (value_type == RamType::RamArray)
         return MemAccess::write(value.v_array, reinterpret_cast<void*>(address), value.v_array[RAM_ARRAY_MAX_SIZE]);
