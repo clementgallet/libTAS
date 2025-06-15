@@ -55,6 +55,7 @@
 * Fix check in file being mmaped during state loading
 * Bugfix where marker would not appear on panel if last one
 * Fix autohold not applying consistently
+* Fix removing multiple ram watches
 
 ## [1.4.6] - 2024-07-05
 ### Added

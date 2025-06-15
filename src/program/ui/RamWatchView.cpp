@@ -135,11 +135,10 @@ void RamWatchView::slotRemove()
     QModelIndexList indexlist = selectionModel()->selectedRows();
     selectionModel()->clear();
 
-    /* If no watch was selected, return */
-    if (indexlist.isEmpty())
-        return;
-
-    for (const QModelIndex index : indexlist) {
-        ramWatchModel->removeWatch(index.row());
+    /* Remove by reverse order */
+    std::sort(indexlist.begin(), indexlist.end());
+    
+    for (auto it = indexlist.crbegin(); it != indexlist.crend(); it++) {
+        ramWatchModel->removeWatch(it->row());
     }
 }
