@@ -32,6 +32,7 @@ class AudioPane;
 class VideoPane;
 class DebugPane;
 class GameSpecificPane;
+class PathPane;
 
 class SettingsWindow : public QMainWindow {
     Q_OBJECT
@@ -52,6 +53,7 @@ public:
         VideoTab = 4,
         DebugTab = 5,
         GameSpecificTab = 6,
+        PathTab = 7,
     };
 
     void openRuntimeTab();
@@ -61,6 +63,7 @@ public:
     void openVideoTab();
     void openDebugTab();
     void openGameSpecificTab();
+    void openPathTab();
 
     void loadConfig();
 
@@ -73,6 +76,7 @@ private:
     VideoPane* vp;
     DebugPane* gp;
     GameSpecificPane* gsp;
+    PathPane* pp;
 
 private slots:
     void save();

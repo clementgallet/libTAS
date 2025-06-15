@@ -611,6 +611,7 @@ void MainWindow::createMenus()
     settingsMenu->addAction(tr("Video..."), settingsWindow, &SettingsWindow::openVideoTab);
     settingsMenu->addAction(tr("Debug..."), settingsWindow, &SettingsWindow::openDebugTab);
     settingsMenu->addAction(tr("Game Specific..."), settingsWindow, &SettingsWindow::openGameSpecificTab);
+    settingsMenu->addAction(tr("Paths..."), settingsWindow, &SettingsWindow::openPathTab);
 
     /* Movie Menu */
     QMenu *movieMenu = menuBar()->addMenu(tr("Movie"));

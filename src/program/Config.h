@@ -78,6 +78,9 @@ public:
     /* Directory holding our config files */
     std::string configdir;
 
+    /* Directory holding our data files */
+    std::string datadir;
+
     /* Path for the Steam user data folder */
     std::string steamuserdir;
 
@@ -175,6 +178,9 @@ public:
 
 private:
     QString iniPath(const std::string& gamepath) const;
+
+    /* Set default paths and optionally create directories */
+    void createDirectories();
 };
 
 #endif

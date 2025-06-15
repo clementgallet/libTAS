@@ -49,6 +49,7 @@ libTAS_QTSOURCES = \
     ui/settings/VideoPane.h \
     ui/settings/DebugPane.h \
     ui/settings/GameSpecificPane.h \
+    ui/settings/PathPane.h \
     ui/settings/SettingsWindow.h \
     ui/settings/tooltip/BalloonTip.h \
 	../external/qhexview/include/QHexView/model/buffer/qdevicebuffer.h \
@@ -150,6 +151,7 @@ libTAS_SOURCES = \
     ui/settings/VideoPane.cpp \
     ui/settings/DebugPane.cpp \
     ui/settings/GameSpecificPane.cpp \
+    ui/settings/PathPane.cpp \
     ui/settings/SettingsWindow.cpp \
     ui/settings/WrapInScrollArea.cpp \
     ui/settings/tooltip/BalloonTip.cpp \

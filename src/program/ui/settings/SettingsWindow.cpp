@@ -26,6 +26,7 @@
 #include "VideoPane.h"
 #include "DebugPane.h"
 #include "GameSpecificPane.h"
+#include "PathPane.h"
 
 #include "Context.h"
 
@@ -51,6 +52,7 @@ SettingsWindow::SettingsWindow(Context* c, QWidget *parent) : QMainWindow(parent
     vp = new VideoPane(c);
     gp = new DebugPane(c);
     gsp = new GameSpecificPane(c);
+    pp = new PathPane(c);
 
     tabWidget->addTab(GetWrappedWidget(rp, this, 125, 100), tr("Runtime"));
     tabWidget->addTab(GetWrappedWidget(mp, this, 125, 100), tr("Movie"));
@@ -59,6 +61,7 @@ SettingsWindow::SettingsWindow(Context* c, QWidget *parent) : QMainWindow(parent
     tabWidget->addTab(GetWrappedWidget(vp, this, 125, 100), tr("Video"));
     tabWidget->addTab(GetWrappedWidget(gp, this, 125, 100), tr("Debug"));
     tabWidget->addTab(GetWrappedWidget(gsp, this, 125, 100), tr("Game-specific"));
+    tabWidget->addTab(GetWrappedWidget(pp, this, 125, 100), tr("Paths"));
 
     // Dialog box buttons
     QDialogButtonBox* closeBox = new QDialogButtonBox(QDialogButtonBox::Close);
@@ -114,6 +117,12 @@ void SettingsWindow::openGameSpecificTab()
     show();
 }
 
+void SettingsWindow::openPathTab()
+{
+    tabWidget->setCurrentIndex(static_cast<int>(PathTab));
+    show();
+}
+
 void SettingsWindow::save()
 {
     context->config.save(context->gamepath);
@@ -129,6 +138,7 @@ void SettingsWindow::loadConfig()
     vp->loadConfig();
     gp->loadConfig();
     gsp->loadConfig();
+    pp->loadConfig();
 }
 
 void SettingsWindow::update(int status)
@@ -140,4 +150,5 @@ void SettingsWindow::update(int status)
     vp->update(status);
     gp->update(status);
     gsp->update(status);
+    pp->update(status);
 }

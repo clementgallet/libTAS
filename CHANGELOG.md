@@ -33,6 +33,8 @@
 * Ram watches can be frozen
 * Ram watch/search can handle string type
 * In Ram watch window, values and labels can be edited directly
+* Add paths to Settings
+
 ### Changed
 
 * Change ram search field from double to string that is then parsed

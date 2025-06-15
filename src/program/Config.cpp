@@ -24,6 +24,7 @@
 #include <QtCore/QSettings>
 #include <fcntl.h>
 #include <unistd.h> // access
+#include <iostream>
 
 QString Config::iniPath(const std::string& gamepath) const {
     /* Get the game executable name from path */
@@ -70,6 +71,14 @@ void Config::save(const std::string& gamepath) {
 
     general_settings.setValue("debugger", debugger);
     general_settings.setValue("allow_downloads", allow_downloads);
+
+    general_settings.setValue("datadir", datadir.c_str());
+    general_settings.setValue("steamuserdir", steamuserdir.c_str());
+    general_settings.setValue("tempmoviedir", tempmoviedir.c_str());
+    general_settings.setValue("savestatedir", savestatedir.c_str());
+    general_settings.setValue("ramsearchdir", ramsearchdir.c_str());
+    general_settings.setValue("extralib32dir", extralib32dir.c_str());
+    general_settings.setValue("extralib64dir", extralib64dir.c_str());
 
     /* Open the preferences for the game */
     QSettings settings(iniPath(gamepath), QSettings::IniFormat);
@@ -223,6 +232,44 @@ void Config::load(const std::string& gamepath) {
 
     ffmpegoptions = general_settings.value("ffmpegoptions", ffmpegoptions.c_str()).toString().toStdString();
 
+    char *path;
+    if (general_settings.contains("datadir")) {
+        datadir = general_settings.value("datadir").toString().toStdString();        
+    }
+    else {
+        path = getenv("XDG_DATA_HOME");
+        if (path) {
+            datadir = path;
+        }
+        else {
+            datadir = getenv("HOME");
+            datadir += "/.local/share";
+        }
+        datadir += "/libTAS";
+    }
+
+    std::string subpath;
+
+    subpath = datadir + "/steam";
+    steamuserdir = general_settings.value("steamuserdir", subpath.c_str()).toString().toStdString();
+
+    subpath = datadir + "/movie";
+    tempmoviedir = general_settings.value("tempmoviedir", subpath.c_str()).toString().toStdString();
+
+    subpath = datadir + "/states";
+    savestatedir = general_settings.value("savestatedir", subpath.c_str()).toString().toStdString();
+
+    subpath = datadir + "/ramsearch";
+    ramsearchdir = general_settings.value("ramsearchdir", subpath.c_str()).toString().toStdString();
+
+    subpath = datadir + "/lib_i386";
+    extralib32dir = general_settings.value("extralib32dir", subpath.c_str()).toString().toStdString();
+
+    subpath = datadir + "/lib_amd64";
+    extralib64dir = general_settings.value("extralib64dir", subpath.c_str()).toString().toStdString();
+
+    createDirectories();
+
     if (gamepath.empty())
         return;
 
@@ -349,4 +396,42 @@ void Config::load(const std::string& gamepath) {
     settings.endArray();
 
     settings.endGroup();
+}
+
+void Config::createDirectories()
+{
+    if (create_dir(datadir) < 0) {
+        std::cerr << "Cannot create dir " << datadir << std::endl;
+        return;
+    }
+
+    if (create_dir(steamuserdir) < 0) {
+        std::cerr << "Cannot create dir " << steamuserdir << std::endl;
+        return;
+    }
+
+    if (create_dir(tempmoviedir) < 0) {
+        std::cerr << "Cannot create dir " << tempmoviedir << std::endl;
+        return;
+    }
+
+    if (create_dir(savestatedir) < 0) {
+        std::cerr << "Cannot create dir " << savestatedir << std::endl;
+        return;
+    }
+
+    if (create_dir(ramsearchdir) < 0) {
+        std::cerr << "Cannot create dir " << ramsearchdir << std::endl;
+        return;
+    }
+
+    if (create_dir(extralib32dir) < 0) {
+        std::cerr << "Cannot create dir " << extralib32dir << std::endl;
+        return;
+    }
+
+    if (create_dir(extralib64dir) < 0) {
+        std::cerr << "Cannot create dir " << extralib64dir << std::endl;
+        return;
+    }
 }
