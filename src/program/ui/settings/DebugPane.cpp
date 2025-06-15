@@ -44,7 +44,7 @@ DebugPane::DebugPane(Context* c) : context(c)
 void DebugPane::initLayout()
 {
     generalBox = new QGroupBox(tr("General"));
-    QVBoxLayout* generalLayout = new QVBoxLayout;
+    QGridLayout* generalLayout = new QGridLayout;
     generalBox->setLayout(generalLayout);
 
     debugUncontrolledBox = new ToolTipCheckBox(tr("Uncontrolled time"));
@@ -54,12 +54,12 @@ void DebugPane::initLayout()
     debugInetBox = new ToolTipCheckBox(tr("Native internet"));
     debugSigIntBox = new QCheckBox(tr("Raise SIGINT upon game launch (if debugging)"));
 
-    generalLayout->addWidget(debugUncontrolledBox);
-    generalLayout->addWidget(debugEventsBox);
-    generalLayout->addWidget(debugMainBox);
-    generalLayout->addWidget(debugIOBox);
-    generalLayout->addWidget(debugInetBox);
-    generalLayout->addWidget(debugSigIntBox);
+    generalLayout->addWidget(debugUncontrolledBox, 0, 0);
+    generalLayout->addWidget(debugEventsBox, 1, 0);
+    generalLayout->addWidget(debugMainBox, 2, 0);
+    generalLayout->addWidget(debugIOBox, 0, 1);
+    generalLayout->addWidget(debugInetBox, 1, 1);
+    generalLayout->addWidget(debugSigIntBox, 2, 1);
 
     QGroupBox* logBox = new QGroupBox(tr("Logging"));
     QVBoxLayout* logLayout = new QVBoxLayout;
