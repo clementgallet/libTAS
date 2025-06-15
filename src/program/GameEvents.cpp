@@ -134,6 +134,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
         case HOTKEY_SAVESTATE7:
         case HOTKEY_SAVESTATE8:
         case HOTKEY_SAVESTATE9:
+        case HOTKEY_SAVESTATE10:
         {
             /* Perform a savestate:
              * - save the moviefile if we are recording
@@ -169,6 +170,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
         case HOTKEY_LOADSTATE7:
         case HOTKEY_LOADSTATE8:
         case HOTKEY_LOADSTATE9:
+        case HOTKEY_LOADSTATE10:
         case HOTKEY_LOADBRANCH1:
         case HOTKEY_LOADBRANCH2:
         case HOTKEY_LOADBRANCH3:
@@ -178,6 +180,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
         case HOTKEY_LOADBRANCH7:
         case HOTKEY_LOADBRANCH8:
         case HOTKEY_LOADBRANCH9:
+        case HOTKEY_LOADBRANCH10:
 
             /* Load a savestate:
              * - check for an existing savestate in the slot
@@ -199,7 +202,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
             }
 
             /* Loading branch? */
-            bool load_branch = (hk.type >= HOTKEY_LOADBRANCH1) && (hk.type <= HOTKEY_LOADBRANCH9);
+            bool load_branch = (hk.type >= HOTKEY_LOADBRANCH1) && (hk.type <= HOTKEY_LOADBRANCH10);
 
             /* Check if input editor is visible */
             bool inputEditor = false;

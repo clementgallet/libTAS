@@ -25,7 +25,7 @@
 
 #include <iostream>
 
-#define NB_STATES 10
+#define NB_STATES 11
 
 /* Array of savestates */
 static SaveState states[NB_STATES];
