@@ -318,9 +318,11 @@ void MovieFileInputs::updateLength()
         uint32_t new_framerate_num = framerate_num;
         uint32_t new_framerate_den = framerate_den;
 
-        if (ai.misc && (ai.misc->framerate_den || ai.misc->framerate_num)) {
-            new_framerate_num = ai.misc->framerate_num;
-            new_framerate_den = ai.misc->framerate_den;
+        if (ai.misc) {
+            if (ai.misc->framerate_den)
+                new_framerate_den = ai.misc->framerate_den;
+            if (ai.misc->framerate_num)
+                new_framerate_num = ai.misc->framerate_num;
         }
 
         /* Framerate was modified, update time increments */
