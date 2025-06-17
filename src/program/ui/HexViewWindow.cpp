@@ -18,6 +18,7 @@
  */
 
 #include "HexViewWindow.h"
+#include "HexDelegate.h"
 #include "../external/qhexview/include/QHexView/qhexview.h"
 #include "../external/qhexview/include/QHexView/model/qhexdocument.h"
 #include "../external/qhexview/include/QHexView/model/buffer/qdevicebuffer.h"
@@ -37,6 +38,10 @@ HexViewWindow::HexViewWindow(QWidget *parent) : QDialog(parent)
 
     view = new QHexView(this);
     view->setDocument(doc);
+
+    HexDelegate* del = new HexDelegate(this);
+    view->setDelegate(del);
+    
     connect(view, &QHexView::positionChanged, this, &HexViewWindow::positionChanged);
 
     selectionLabel = new QLabel();

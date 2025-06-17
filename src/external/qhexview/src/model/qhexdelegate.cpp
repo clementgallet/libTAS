@@ -42,7 +42,7 @@ void QHexDelegate::renderHeaderPart(const QString& s, QHexArea area,
 }
 
 bool QHexDelegate::render(quint64 offset, quint8 b, QTextCharFormat& outcf,
-                          const QHexView* hexview) const {
+                          const QHexView* hexview) {
     Q_UNUSED(offset);
     Q_UNUSED(b);
     Q_UNUSED(outcf);

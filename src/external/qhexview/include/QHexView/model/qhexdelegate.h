@@ -23,7 +23,7 @@ public:
                                   QTextCharFormat& cf,
                                   const QHexView* hexview) const;
     virtual bool render(quint64 offset, quint8 b, QTextCharFormat& outcf,
-                        const QHexView* hexview) const;
+                        const QHexView* hexview);
     virtual bool paintSeparator(QPainter* painter, QLineF line,
                                 const QHexView* hexview) const;
     virtual void paint(QPainter* painter, const QHexView* hexview) const;

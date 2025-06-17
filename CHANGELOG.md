@@ -34,6 +34,7 @@
 * Ram watch/search can handle string type
 * In Ram watch window, values and labels can be edited directly
 * Add paths to Settings
+* Highlight changes in the hex view
 
 ### Changed
 

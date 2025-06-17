@@ -16,6 +16,7 @@ libTAS_QTSOURCES = \
     ui/EncodeWindow.h \
     ui/ExecutableWindow.h \
     ui/GameInfoWindow.h \
+    ui/HexDelegate.h \
     ui/HexViewWindow.h \
     ui/InputChangeLogModel.h \
     ui/InputChangeLogWindow.h \
@@ -117,6 +118,7 @@ libTAS_SOURCES = \
     ui/ErrorChecking.cpp \
     ui/ExecutableWindow.cpp \
     ui/GameInfoWindow.cpp \
+    ui/HexDelegate.cpp \
     ui/HexViewWindow.cpp \
     ui/InputChangeLogModel.cpp \
     ui/InputChangeLogWindow.cpp \
