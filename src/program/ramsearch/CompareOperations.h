@@ -41,6 +41,7 @@ enum class CompareOperator {
 namespace CompareOperations {
 
     void init(int value_type, CompareOperator compare_operator, MemValueType compare_value_db, MemValueType different_value_db);
+    void init(CompareOperator compare_operator, MemValueType compare_value_db, MemValueType different_value_db);
 
     /* Compute the comparaison between the content of value and the stored contant value */
     bool check_value(const void* value);

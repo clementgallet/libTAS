@@ -25,6 +25,7 @@
 #include "ramsearch/MemValue.h"
 
 #include <QtCore/QAbstractTableModel>
+#include <QtGui/QBrush>
 #include <vector>
 #include <memory>
 #include <sys/types.h>
@@ -46,15 +47,15 @@ public:
     /* Memory scanner */
     MemScanner memscanner;
 
+    /* Type of the searched values */
+    int value_type;
+    
     /* Flag if we display values in hex or decimal */
     bool hex;
 
-    /* Comparison parameters so that we can display with addresses would be
+    /* Comparison parameters so that we can display witch addresses would be
      * removed by the search */
     CompareType compare_type;
-    CompareOperator compare_operator;
-    MemValueType compare_value;
-    MemValueType different_value;
 
     /* Perform a new search and returns the error code */
     int newWatches(int mem_flags, int type, int alignment, CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv, uintptr_t ba, uintptr_t ea);
@@ -74,6 +75,8 @@ public:
     /* Return the address of the given row, used to fill ramwatch */
     uintptr_t address(int row);
     
+    void updateParameters(CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv);
+    
     /* Clear all scan results */
     void clear();
 
@@ -82,6 +85,8 @@ public:
 
 private:
     Context *context;
+
+    QColor unmatchedColor;
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 

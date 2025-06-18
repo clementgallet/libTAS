@@ -131,6 +131,10 @@ RamSearchWindow::RamSearchWindow(Context* c, HexViewWindow* view, RamWatchWindow
     comparingValueBox = new QLineEdit();
     comparingValueBox->setFont(fixedFont);
 
+    connect(comparePreviousButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotCompareChanged);
+    connect(compareValueButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotCompareChanged);
+    connect(comparingValueBox, &QLineEdit::textChanged, this, &RamSearchWindow::slotCompareChanged);
+
     QGroupBox *compareGroupBox = new QGroupBox(tr("Compare To"));
     QVBoxLayout *compareLayout = new QVBoxLayout;
     compareLayout->addWidget(comparePreviousButton);
@@ -149,6 +153,15 @@ RamSearchWindow::RamSearchWindow(Context* c, HexViewWindow* view, RamWatchWindow
     operatorDifferenceButton = new QRadioButton("Different By");
     differenceValueBox = new QLineEdit();
     differenceValueBox->setFont(fixedFont);
+
+    connect(operatorEqualButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotCompareChanged);
+    connect(operatorNotEqualButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotCompareChanged);
+    connect(operatorLessButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotCompareChanged);
+    connect(operatorGreaterButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotCompareChanged);
+    connect(operatorLessEqualButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotCompareChanged);
+    connect(operatorGreaterEqualButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotCompareChanged);
+    connect(operatorDifferenceButton, &QAbstractButton::clicked, this, &RamSearchWindow::slotCompareChanged);
+    connect(differenceValueBox, &QLineEdit::textChanged, this, &RamSearchWindow::slotCompareChanged);
 
     QGroupBox *operatorGroupBox = new QGroupBox(tr("Comparison Operator"));
     QGridLayout *operatorLayout = new QGridLayout;
@@ -466,6 +479,16 @@ void RamSearchWindow::slotHex()
 void RamSearchWindow::slotStop()
 {
     ramSearchModel->stopSearch();
+}
+
+void RamSearchWindow::slotCompareChanged()
+{
+    CompareType compare_type;
+    CompareOperator compare_operator;
+    MemValueType compare_value;
+    MemValueType different_value;
+    getCompareParameters(compare_type, compare_operator, compare_value, different_value);
+    ramSearchModel->updateParameters(compare_type, compare_operator, compare_value, different_value);
 }
 
 void RamSearchWindow::slotTypeChanged(int index)

@@ -35,6 +35,7 @@
 * In Ram watch window, values and labels can be edited directly
 * Add paths to Settings
 * Highlight changes in the hex view
+* Ram Search: highlight results that would be removed by future search
 
 ### Changed
 

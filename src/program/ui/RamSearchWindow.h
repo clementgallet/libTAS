@@ -111,6 +111,7 @@ private slots:
     void slotAdd();
     void slotHex();
     void slotStop();
+    void slotCompareChanged();
     void slotTypeChanged(int index);
 
 };

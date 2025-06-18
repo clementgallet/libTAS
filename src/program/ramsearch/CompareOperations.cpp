@@ -157,6 +157,11 @@ void CompareOperations::init(int vt, CompareOperator compare_operator, MemValueT
     }
 }
 
+void CompareOperations::init(CompareOperator compare_operator, MemValueType compare_v, MemValueType different_v)
+{
+    init(value_type, compare_operator, compare_v, different_v);
+}
+
 bool CompareOperations::check_value(const void* value)
 {
     return compare_method(static_cast<const MemValueType*>(value));

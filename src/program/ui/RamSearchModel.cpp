@@ -20,13 +20,20 @@
 #include "RamSearchModel.h"
 
 #include "Context.h"
+#include "qtutils.h"
 #include "ramsearch/MemLayout.h"
 #include "ramsearch/MemSection.h"
 
 #include <QtWidgets/QMessageBox>
 #include <memory>
 
-RamSearchModel::RamSearchModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c) {}
+RamSearchModel::RamSearchModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c)
+{
+    if (isLightTheme())
+        unmatchedColor.setRgbF(1.0f, 0.8f, 0.8f, 1.0f);
+    else
+        unmatchedColor.setRgbF(0.0f, 0.2f, 0.2f, 1.0f);
+}
 
 int RamSearchModel::rowCount(const QModelIndex & /*parent*/) const
 {
@@ -57,16 +64,34 @@ QVariant RamSearchModel::headerData(int section, Qt::Orientation orientation, in
 
 QVariant RamSearchModel::data(const QModelIndex &index, int role) const
 {
+    MemValueType new_v;
+    const MemValueType* old_v;
+
     if (role == Qt::DisplayRole) {
         switch(index.column()) {
             case 0:
                 return QString("%1").arg(memscanner.get_address(index.row()), 0, 16);
             case 1:
-                return QString(memscanner.get_current_value(index.row(), hex));
+                new_v = memscanner.get_current_value(index.row());
+                return QString(MemValue::to_string(&new_v, value_type, hex));
             case 2:
-                return QString(memscanner.get_previous_value(index.row(), hex));
+                old_v = memscanner.get_previous_value(index.row());
+                return QString(MemValue::to_string(old_v, value_type, hex));
             default:
                 return QString();
+        }
+    }
+    if (role == Qt::BackgroundRole) {
+        if (compare_type == CompareType::Previous) {
+            new_v = memscanner.get_current_value(index.row());
+            old_v = memscanner.get_previous_value(index.row());
+            if (!CompareOperations::check_previous(&new_v, old_v))
+                return QBrush(unmatchedColor);
+        }
+        else {
+            new_v = memscanner.get_current_value(index.row());
+            if (!CompareOperations::check_value(&new_v))
+                return QBrush(unmatchedColor);
         }
     }
     return QVariant();
@@ -90,10 +115,8 @@ uint64_t RamSearchModel::scanSize()
 
 int RamSearchModel::newWatches(int mem_flags, int type, int alignment, CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv, uintptr_t ba, uintptr_t ea)
 {
+    value_type = type;
     compare_type = ct;
-    compare_operator = co;
-    compare_value = cv;
-    different_value = dv;
 
     beginResetModel();
 
@@ -124,6 +147,12 @@ void RamSearchModel::update()
 uintptr_t RamSearchModel::address(int row)
 {
     return memscanner.get_address(row);
+}
+
+void RamSearchModel::updateParameters(CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv)
+{
+    compare_type = ct;
+    CompareOperations::init(co, cv, dv);
 }
 
 void RamSearchModel::clear()

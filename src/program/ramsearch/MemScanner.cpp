@@ -333,23 +333,25 @@ uintptr_t MemScanner::get_address(int index) const
     return *reinterpret_cast<const uintptr_t*>(&addresses[index*sizeof(uintptr_t)]);
 }
 
-const char* MemScanner::get_previous_value(int index, bool hex) const
+const MemValueType* MemScanner::get_previous_value(int index) const
 {
-    if (old_values.empty())
-        return "";
+    if (old_values.empty()) {
+        static MemValueType zero_value = {};
+        return &zero_value;
+    }
     
-    return MemValue::to_string(&old_values[index*value_type_size], value_type, hex, value_type_size);
+    return reinterpret_cast<const MemValueType*>(&old_values[index*value_type_size]);
 }
 
-const char* MemScanner::get_current_value(int index, bool hex) const
+MemValueType MemScanner::get_current_value(int index) const
 {
     uintptr_t addr = get_address(index);
     MemValueType value;
     int readValues = MemAccess::read(&value, reinterpret_cast<void*>(addr), value_type_size);
     if (readValues != value_type_size)
-        return "";
+        value.v_uint64_t = 0;
 
-    return MemValue::to_string(&value, value_type, hex, value_type_size);
+    return value;
 }
 
 void MemScanner::clear()

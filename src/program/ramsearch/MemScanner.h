@@ -55,11 +55,11 @@ class MemScanner : public QObject {
         /* Get the address of the scan result with index */
         uintptr_t get_address(int index) const;
 
-        /* Get the previous value of the scan result with index as string */
-        const char* get_previous_value(int index, bool hex) const;
+        /* Get the previous value of the scan result with index */
+        const MemValueType* get_previous_value(int index) const;
 
-        /* Get the current value of the scan result with index as string */
-        const char* get_current_value(int index, bool hex) const;
+        /* Get the current value of the scan result with index */
+        MemValueType get_current_value(int index) const;
 
         /* Clear all results */
         void clear();
