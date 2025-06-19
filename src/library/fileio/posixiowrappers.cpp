@@ -474,14 +474,13 @@ int access(const char *name, int type) __THROW
 #endif
 
     /* Check for savefile. */
+    if (SaveFileList::isSaveFileRemoved(name)) {
+        errno = ENOENT;
+        return -1;
+    }
+
     if (SaveFileList::getSaveFileFd(name) != 0) {
-        if (SaveFileList::isSaveFileRemoved(name)) {
-            errno = ENOENT;
-            return -1;
-        }
-        else {
-            return 0;
-        }
+        return 0;
     }
 
     return orig::access(name, type);
@@ -505,16 +504,15 @@ static int stat_special(const char *path, struct stat *buf)
 #endif
 
     /* Check if savefile. */
+    if (SaveFileList::isSaveFileRemoved(path)) {
+        errno = ENOENT;
+        return -1;
+    }
+
     int fd = SaveFileList::getSaveFileFd(path);
     if (fd != 0) {
-        if (SaveFileList::isSaveFileRemoved(path)) {
-            errno = ENOENT;
-            return -1;
-        }
-        else {
-            NATIVECALL(fstat(fd, buf));
-            return 0;
-        }
+        NATIVECALL(fstat(fd, buf));
+        return 0;
     }
     
     return 1;
@@ -538,16 +536,15 @@ static int stat64_special(const char *path, struct stat64 *buf)
 #endif
 
     /* Check if savefile. */
+    if (SaveFileList::isSaveFileRemoved(path)) {
+        errno = ENOENT;
+        return -1;
+    }
+
     int fd = SaveFileList::getSaveFileFd(path);
     if (fd != 0) {
-        if (SaveFileList::isSaveFileRemoved(path)) {
-            errno = ENOENT;
-            return -1;
-        }
-        else {
-            NATIVECALL(fstat64(fd, buf));
-            return 0;
-        }
+        NATIVECALL(fstat64(fd, buf));
+        return 0;
     }
     
     return 1;

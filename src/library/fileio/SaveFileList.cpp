@@ -247,6 +247,12 @@ int renameSaveFile(const char *oldfile, const char *newfile)
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(oldfile)) {
             savefile->filename = newfilestr;
+            
+            /* Create a savefile for the old path with `removed` flag, so that
+             * future attempts at reading it will return a missing file, instead
+             * of using the original file. */
+            savefiles.emplace_front(new SaveFile(oldfile));
+            savefiles.front()->remove();
             return 0;
         }
     }
@@ -256,6 +262,10 @@ int renameSaveFile(const char *oldfile, const char *newfile)
         savefiles.emplace_front(new SaveFile(oldfile));
         savefiles.front()->open("rb");
         savefiles.front()->filename = newfilestr;
+
+        /* Create a dummy entry to mark the old file as removed */
+        savefiles.emplace_front(new SaveFile(oldfile));
+        savefiles.front()->remove();
 
         GlobalNative gn;
         return access(oldfile, W_OK);
@@ -303,7 +313,7 @@ bool isSaveFileRemoved(const char *file)
         }
     }
 
-    return true;
+    return false;
 }
 
 std::string getSaveFileInsideDir(std::string dir, int n)

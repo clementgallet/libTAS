@@ -60,6 +60,7 @@
 * Bugfix where marker would not appear on panel if last one
 * Fix autohold not applying consistently
 * Fix removing multiple ram watches
+* After a savefile is renamed, flag the old savefile as removed
 
 ## [1.4.6] - 2024-07-05
 ### Added
