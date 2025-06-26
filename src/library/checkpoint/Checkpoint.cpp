@@ -994,7 +994,7 @@ static void readASavefile(SaveStateLoading &saved_state)
     int rv = stat(saved_area.name, &filestat);
 
     if (rv < 0)
-        LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "     Cound not call stat() on original savefile");
+        LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "     No original savefile to use");
     else if (! S_ISREG(filestat.st_mode) || (filestat.st_size == 0))
         LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "    Original file is missing or not regular, skip it");
     else {
@@ -1551,6 +1551,10 @@ static size_t writeSaveFiles(SaveStateSaving &state)
     for (auto it = SaveFileList::begin(); it != SaveFileList::end(); it++) {
         const std::unique_ptr<SaveFile>& savefile = *it;
         /* Don't map if file was closed and removed (TODO: handle this!)*/
+        /* Also, skip if we are handling the savefile using our custom
+         * stream (SaveFileStream), which maps its content in memory. So, it
+         * is already saved through the memory dumping process. In this case,
+         * the fd is set to zero, so the condition below works. */
         if (savefile->fd == 0)
             continue;
             
@@ -1590,7 +1594,7 @@ static size_t writeSaveFiles(SaveStateSaving &state)
         rv = stat(savefile->filename.c_str(), &filestat);
 
         if (rv < 0)
-            LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "     Cound not call stat() on original savefile");
+            LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "     No original savefile to use");
         else if (! S_ISREG(filestat.st_mode) || (filestat.st_size == 0))
             LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "    Original file is missing or not regular, skip it");
         else {
