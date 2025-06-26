@@ -179,6 +179,7 @@ static bool SteamGetInterfaceVersion()
 
     if (ret == -1) {
         LOG(LL_WARN, LCF_STEAM, "Could not find Steam library path");
+        dlclose(h);
         return false;
     }
 
@@ -188,6 +189,7 @@ static bool SteamGetInterfaceVersion()
     void* f = dlsym(h, "SteamAPI_Init");
     if (!f) {
         LOG(LL_WARN, LCF_STEAM, "Could not find a symbol inside Steam library");
+        dlclose(h);
         return false;        
     }
     
@@ -196,11 +198,14 @@ static bool SteamGetInterfaceVersion()
 
     if (ret == 0) {
         LOG(LL_WARN, LCF_STEAM, "Could not find address of Steam symbol");
+        dlclose(h);
         return false;
     }
     
     const char* steam_path = dli.dli_fname;
 #endif
+
+    dlclose(h);
 
     /* Find Steam interface version from the library.
      * Taken from https://git.bitmycode.com/Booti386/DummySteamAPI */
@@ -268,6 +273,7 @@ static bool SteamGetInterfaceVersion()
         }
     }
 
+    fclose(fp);
     return true;
 }
 
