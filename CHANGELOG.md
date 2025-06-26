@@ -44,6 +44,7 @@
 * Allow setting a video encode framerate even without variable fps
 * Remove variable framerate setting
 * Raise threshold in deterministic timer to obtain constant running fps
+* Use tristate checkboxes for debug print categories
 
 ### Fixed
 

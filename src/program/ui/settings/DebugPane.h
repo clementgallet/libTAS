@@ -21,6 +21,7 @@
 #define LIBTAS_DEBUGPANE_H_INCLUDED
 
 #include <QtWidgets/QWidget>
+#include <vector>
 
 class Context;
 class QComboBox;
@@ -63,57 +64,7 @@ private:
     QCheckBox* logPrintNoneBox;
     QCheckBox* logPrintMainBox;
     QCheckBox* logPrintTODOBox;
-    QCheckBox* logPrintAVBox;
-    QCheckBox* logPrintCheckpointBox;
-    QCheckBox* logPrintEventsBox;
-    QCheckBox* logPrintIOBox;
-    QCheckBox* logPrintHookBox;
-    QCheckBox* logPrintJoystickBox;
-    QCheckBox* logPrintKeyboardBox;
-    QCheckBox* logPrintLocaleBox;
-    QCheckBox* logPrintMouseBox;
-    QCheckBox* logPrintGLBox;
-    QCheckBox* logPrintRandomBox;
-    QCheckBox* logPrintSDLBox;
-    QCheckBox* logPrintSignalsBox;
-    QCheckBox* logPrintSleepBox;
-    QCheckBox* logPrintSocketBox;
-    QCheckBox* logPrintSoundBox;
-    QCheckBox* logPrintSteamBox;
-    QCheckBox* logPrintSystemBox;
-    QCheckBox* logPrintTimeGetBox;
-    QCheckBox* logPrintTimeSetBox;
-    QCheckBox* logPrintTimersBox;
-    QCheckBox* logPrintThreadsBox;
-    QCheckBox* logPrintWaitBox;
-    QCheckBox* logPrintWindowsBox;
-    QCheckBox* logPrintWineBox;
-    
-    QCheckBox* logExcludeAVBox;
-    QCheckBox* logExcludeCheckpointBox;
-    QCheckBox* logExcludeEventsBox;
-    QCheckBox* logExcludeIOBox;
-    QCheckBox* logExcludeHookBox;
-    QCheckBox* logExcludeJoystickBox;
-    QCheckBox* logExcludeKeyboardBox;
-    QCheckBox* logExcludeLocaleBox;
-    QCheckBox* logExcludeMouseBox;
-    QCheckBox* logExcludeGLBox;
-    QCheckBox* logExcludeRandomBox;
-    QCheckBox* logExcludeSDLBox;
-    QCheckBox* logExcludeSignalsBox;
-    QCheckBox* logExcludeSleepBox;
-    QCheckBox* logExcludeSocketBox;
-    QCheckBox* logExcludeSoundBox;
-    QCheckBox* logExcludeSteamBox;
-    QCheckBox* logExcludeSystemBox;
-    QCheckBox* logExcludeTimeGetBox;
-    QCheckBox* logExcludeTimeSetBox;
-    QCheckBox* logExcludeTimersBox;
-    QCheckBox* logExcludeThreadsBox;
-    QCheckBox* logExcludeWaitBox;
-    QCheckBox* logExcludeWindowsBox;
-    QCheckBox* logExcludeWineBox;
+    std::vector<std::pair<QCheckBox*, unsigned int>> logPrintBoxes;
 
 public slots:
     void loadConfig();
