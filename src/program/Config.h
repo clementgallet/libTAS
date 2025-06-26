@@ -152,6 +152,9 @@ public:
     /* Proton absolute path */
     std::string proton_path;
 
+    /* Strace events, passed as [-e expr] */
+    std::string strace_events;
+
     /* Save the config into the config file */
     void save(const std::string& gamepath);
 
@@ -164,6 +167,7 @@ public:
     enum Debugger {
         DEBUGGER_GDB = 0,
         DEBUGGER_LLDB = 1,
+        DEBUGGER_STRACE = 2,
     };
 
 #ifdef __unix__

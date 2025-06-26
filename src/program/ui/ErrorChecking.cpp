@@ -198,6 +198,9 @@ bool ErrorChecking::checkArchType(Context* context)
         case Config::DEBUGGER_LLDB:
             cmd = "which lldb";
             break;
+        case Config::DEBUGGER_STRACE:
+            cmd = "which strace";
+            break;
         }
 
         std::string gdbpath = queryCmd(cmd);

@@ -27,11 +27,13 @@
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QFormLayout>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QSlider>
+#include <QtWidgets/QLineEdit>
 
 DebugPane::DebugPane(Context* c) : context(c)
 {
@@ -52,14 +54,24 @@ void DebugPane::initLayout()
     debugMainBox = new ToolTipCheckBox(tr("Keep main first thread"));
     debugIOBox = new ToolTipCheckBox(tr("Native file IO"));
     debugInetBox = new ToolTipCheckBox(tr("Native internet"));
-    debugSigIntBox = new QCheckBox(tr("Raise SIGINT upon game launch (if debugging)"));
 
     generalLayout->addWidget(debugUncontrolledBox, 0, 0);
     generalLayout->addWidget(debugEventsBox, 1, 0);
     generalLayout->addWidget(debugMainBox, 2, 0);
     generalLayout->addWidget(debugIOBox, 0, 1);
     generalLayout->addWidget(debugInetBox, 1, 1);
-    generalLayout->addWidget(debugSigIntBox, 2, 1);
+
+    QGroupBox* debuggerBox = new QGroupBox(tr("Debugger"));
+    QFormLayout* debuggerLayout = new QFormLayout;
+    debuggerLayout->setFormAlignment(Qt::AlignLeft | Qt::AlignTop);
+    debuggerLayout->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+    debuggerBox->setLayout(debuggerLayout);
+
+    debugSigIntBox = new QCheckBox();
+    debugStraceEvents = new QLineEdit();
+
+    debuggerLayout->addRow(new QLabel(tr("Raise SIGINT upon game launch:")), debugSigIntBox);
+    debuggerLayout->addRow(new QLabel(tr("Strace traced events (-e):")), debugStraceEvents);
 
     QGroupBox* logBox = new QGroupBox(tr("Logging"));
     QVBoxLayout* logLayout = new QVBoxLayout;
@@ -176,6 +188,7 @@ void DebugPane::initLayout()
 
     QVBoxLayout* const mainLayout = new QVBoxLayout;
     mainLayout->addWidget(generalBox);
+    mainLayout->addWidget(debuggerBox);
     mainLayout->addWidget(logBox);
 
     setLayout(mainLayout);
@@ -190,6 +203,8 @@ void DebugPane::initSignals()
     connect(debugIOBox, &QAbstractButton::clicked, this, &DebugPane::saveConfig);
     connect(debugInetBox, &QAbstractButton::clicked, this, &DebugPane::saveConfig);
     connect(debugSigIntBox, &QAbstractButton::clicked, this, &DebugPane::saveConfig);
+    connect(debugStraceEvents, &QLineEdit::textEdited, this, &DebugPane::saveConfig);
+    
     connect(logToChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &DebugPane::saveConfig);
     connect(logLevelSlider, &QAbstractSlider::valueChanged, this, &DebugPane::saveConfig);
 
@@ -235,7 +250,8 @@ void DebugPane::loadConfig()
     debugIOBox->setChecked(context->config.sc.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO);
     debugInetBox->setChecked(context->config.sc.debug_state & SharedConfig::DEBUG_NATIVE_INET);
     debugSigIntBox->setChecked(context->config.sc.sigint_upon_launch);
-    
+    debugStraceEvents->setText(context->config.strace_events.c_str());
+
     int index = logToChoice->findData(context->config.sc.logging_status);
     if (index >= 0)
         logToChoice->setCurrentIndex(index);
@@ -272,6 +288,7 @@ void DebugPane::saveConfig()
     if (debugInetBox->isChecked())
         context->config.sc.debug_state |= SharedConfig::DEBUG_NATIVE_INET;
     context->config.sc.sigint_upon_launch = debugSigIntBox->isChecked();
+    context->config.strace_events = debugStraceEvents->text().toStdString();
 
     context->config.sc.logging_status = logToChoice->currentData().toInt();
     

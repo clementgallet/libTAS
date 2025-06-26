@@ -184,10 +184,19 @@ std::list<std::string> GameThread::build_arg_list(Context *context, int gameArch
             case Config::DEBUGGER_LLDB:
                 cmd = "which lldb";
                 break;
+            case Config::DEBUGGER_STRACE:
+                cmd = "which strace";
+                break;
             }
 
             std::string dbgpath = queryCmd(cmd);
             arg_list.push_back(dbgpath);
+
+            std::string ldpreloadstr = context->libtaspath;
+            if (!context->old_ld_preload.empty()) {
+                ldpreloadstr += ":";
+                ldpreloadstr += context->old_ld_preload;
+            }
 
             /* Push debugger arguments */
             switch (context->config.debugger) {
@@ -197,12 +206,7 @@ std::list<std::string> GameThread::build_arg_list(Context *context, int gameArch
 
                 /* LD_PRELOAD must be set inside a gdb
                  * command to be effective */
-                std::string ldpreloadstr = "set exec-wrapper env 'LD_PRELOAD=";
-                ldpreloadstr += context->libtaspath;
-                if (!context->old_ld_preload.empty()) {
-                    ldpreloadstr += ":";
-                    ldpreloadstr += context->old_ld_preload;
-                }
+                ldpreloadstr.insert(0, "set exec-wrapper env 'LD_PRELOAD=");
                 ldpreloadstr += "'";
                 arg_list.push_back(ldpreloadstr);
 
@@ -223,15 +227,10 @@ std::list<std::string> GameThread::build_arg_list(Context *context, int gameArch
                 /* LD_PRELOAD/DYLD_INSERT_LIBRARIES must be set inside an lldb
                  * command to be effective */
 #ifdef __unix__
-                std::string ldpreloadstr = "set se target.env-vars 'LD_PRELOAD=";
+                ldpreloadstr.insert(0, "set se target.env-vars 'LD_PRELOAD=");
 #elif defined(__APPLE__) && defined(__MACH__)
-                std::string ldpreloadstr = "set se target.env-vars 'DYLD_INSERT_LIBRARIES=";
+                ldpreloadstr.insert(0, "set se target.env-vars 'DYLD_INSERT_LIBRARIES=");
 #endif
-                ldpreloadstr += context->libtaspath;
-                if (!context->old_ld_preload.empty()) {
-                    ldpreloadstr += ":";
-                    ldpreloadstr += context->old_ld_preload;
-                }
                 ldpreloadstr += "'";
                 arg_list.push_back(ldpreloadstr);
 
@@ -249,6 +248,20 @@ std::list<std::string> GameThread::build_arg_list(Context *context, int gameArch
 //                arg_list.push_back("process handle -n false -p false -s false SIGSYS SIGXFSZ SIGUSR1 SIGUSR2 SIGXCPU");
                 arg_list.push_back("--");
 
+                break;
+            }
+            case Config::DEBUGGER_STRACE: {
+                arg_list.push_back("-f"); // trace all threads
+
+                /* LD_PRELOAD must be set inside as strace argument */
+                arg_list.push_back("-E");
+                ldpreloadstr.insert(0, "LD_PRELOAD=");
+                arg_list.push_back(ldpreloadstr);
+
+                if (!context->config.strace_events.empty()) {
+                    arg_list.push_back("-e");
+                    arg_list.push_back(context->config.strace_events);
+                }
                 break;
             }
             }

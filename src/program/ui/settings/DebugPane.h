@@ -31,6 +31,7 @@ class QSpinBox;
 class ToolTipCheckBox;
 class QGroupBox;
 class QSlider;
+class QLineEdit;
 
 class DebugPane : public QWidget {
     Q_OBJECT
@@ -56,6 +57,7 @@ private:
     ToolTipCheckBox* debugIOBox;
     ToolTipCheckBox* debugInetBox;
     QCheckBox* debugSigIntBox;
+    QLineEdit* debugStraceEvents;
 
     QComboBox* logToChoice;
 

@@ -306,13 +306,16 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
     launchGdbAction = new QAction(tr("Launch with GDB"), this);
     launchLldbAction = new QAction(tr("Launch with LLDB"), this);
+    launchStraceAction = new QAction(tr("Launch with strace"), this);
     if (!isatty(STDIN_FILENO)) {
         launchGdbAction->setEnabled(false);
         launchLldbAction->setEnabled(false);
+        launchStraceAction->setEnabled(false);
     }
 
     connect(launchGdbAction, &QAction::triggered, this, &MainWindow::slotLaunchGdb);
     connect(launchLldbAction, &QAction::triggered, this, &MainWindow::slotLaunchLldb);
+    connect(launchStraceAction, &QAction::triggered, this, &MainWindow::slotLaunchStrace);
 
 #ifdef __unix__
     launchGdbButton->setPopupMode(QToolButton::MenuButtonPopup);
@@ -322,6 +325,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
     launchGdbButtonMenu->addAction(launchGdbAction);
     launchGdbButtonMenu->addAction(launchLldbAction);
+    launchGdbButtonMenu->addAction(launchStraceAction);
 #endif
 
     stopButton = new QPushButton(tr("Stop"));
@@ -732,6 +736,7 @@ void MainWindow::updateStatus(int status)
             launchGdbButton->setEnabled(true);
             launchGdbAction->setText(tr("Launch with GDB"));
             launchLldbAction->setText(tr("Launch with LLDB"));
+            launchStraceAction->setText(tr("Launch with strace"));
 
             if (context->config.sc.av_dumping) {
                 context->config.sc.av_dumping = false;
@@ -777,6 +782,7 @@ void MainWindow::updateStatus(int status)
                 launchGdbButton->setEnabled(true);
                 launchGdbAction->setText(tr("Attach with GDB"));
                 launchLldbAction->setText(tr("Attach with LLDB"));
+                launchStraceAction->setText(tr("Attach with strace"));
             }
             stopButton->setEnabled(true);
 
@@ -1040,6 +1046,9 @@ void MainWindow::updateUIFromConfig()
     case Config::DEBUGGER_LLDB:
         launchGdbButton->setDefaultAction(launchLldbAction);
         break;
+    case Config::DEBUGGER_STRACE:
+        launchGdbButton->setDefaultAction(launchStraceAction);
+        break;
     }
 
     updateStatusBar();
@@ -1077,6 +1086,13 @@ void MainWindow::slotLaunchGdb() {
 void MainWindow::slotLaunchLldb() {
     context->config.debugger = Config::DEBUGGER_LLDB;
     launchGdbButton->setDefaultAction(launchLldbAction);
+
+    slotLaunch(true);
+}
+
+void MainWindow::slotLaunchStrace() {
+    context->config.debugger = Config::DEBUGGER_STRACE;
+    launchGdbButton->setDefaultAction(launchStraceAction);
 
     slotLaunch(true);
 }

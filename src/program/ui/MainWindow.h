@@ -158,6 +158,7 @@ public:
     QToolButton *launchGdbButton;
     QAction *launchGdbAction;
     QAction *launchLldbAction;
+    QAction *launchStraceAction;
     QPushButton *stopButton;
 
     QGroupBox *movieBox;
@@ -231,6 +232,7 @@ private slots:
 
     void slotLaunchGdb();
     void slotLaunchLldb();
+    void slotLaunchStrace();
     void slotLaunch(bool attach_gdb);
     void slotStop();
     void slotBrowseGamePath();

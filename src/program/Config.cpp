@@ -70,6 +70,7 @@ void Config::save(const std::string& gamepath) {
     general_settings.endArray();
 
     general_settings.setValue("debugger", debugger);
+    general_settings.setValue("strace_events", strace_events.c_str());
     general_settings.setValue("allow_downloads", allow_downloads);
 
     general_settings.setValue("datadir", datadir.c_str());
@@ -228,6 +229,7 @@ void Config::load(const std::string& gamepath) {
 #elif defined(__APPLE__) && defined(__MACH__)
     debugger = DEBUGGER_LLDB;
 #endif
+    strace_events = general_settings.value("strace_events").toString().toStdString();
     allow_downloads = general_settings.value("allow_downloads", allow_downloads).toInt();
 
     ffmpegoptions = general_settings.value("ffmpegoptions", ffmpegoptions.c_str()).toString().toStdString();
