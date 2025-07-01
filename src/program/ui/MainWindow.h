@@ -121,6 +121,10 @@ public:
     QActionGroup *fastforwardGroup;
     QActionGroup *fastforwardRenderGroup;
 
+    QActionGroup *saveStateGroup;
+    QActionGroup *loadStateGroup;
+    QActionGroup *loadBranchGroup;
+
     QAction *mouseModeAction;
 
     QComboBox *gamePath;
@@ -243,6 +247,7 @@ private slots:
     void slotExportMovie();
     void slotPause(bool checked);
     void slotFastForward(bool checked);
+    void slotSaveState(QAction *action);
     void slotMovieEnable(bool checked);
     void slotMovieRecording();
     void slotToggleEncode();

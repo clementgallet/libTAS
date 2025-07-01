@@ -592,6 +592,23 @@ void MainWindow::createActions()
     addActionCheckable(fastforwardRenderGroup, tr("Skipping no rendering"), SharedConfig::FF_RENDER_ALL);
     addActionCheckable(fastforwardRenderGroup, tr("Skipping most rendering"), SharedConfig::FF_RENDER_SOME);
     addActionCheckable(fastforwardRenderGroup, tr("Skipping all rendering"), SharedConfig::FF_RENDER_NO);
+    
+    saveStateGroup = new QActionGroup(this);
+    loadStateGroup = new QActionGroup(this);
+    loadBranchGroup = new QActionGroup(this);
+    connect(saveStateGroup, &QActionGroup::triggered, this, &MainWindow::slotSaveState);
+    connect(loadStateGroup, &QActionGroup::triggered, this, &MainWindow::slotSaveState);
+    connect(loadBranchGroup, &QActionGroup::triggered, this, &MainWindow::slotSaveState);
+
+    QAction *action;
+    for (int s = 0; s < 10; s++) {
+        action = saveStateGroup->addAction(QString("Slot %1").arg(s+1));
+        action->setData(HOTKEY_SAVESTATE1 + s);
+        action = loadStateGroup->addAction(QString("Slot %1").arg(s+1));
+        action->setData(HOTKEY_LOADSTATE1 + s);
+        action = loadBranchGroup->addAction(QString("Slot %1").arg(s+1));
+        action->setData(HOTKEY_LOADBRANCH1 + s);
+    }
 }
 
 void MainWindow::createMenus()
@@ -665,6 +682,15 @@ void MainWindow::createMenus()
     fastforwardMenu->addActions(fastforwardGroup->actions());
     fastforwardMenu->addSeparator();
     fastforwardMenu->addActions(fastforwardRenderGroup->actions());
+
+    toolsMenu->addSeparator();
+
+    QMenu *saveStateMenu = toolsMenu->addMenu(tr("Save State"));
+    saveStateMenu->addActions(saveStateGroup->actions());
+    QMenu *loadStateMenu = toolsMenu->addMenu(tr("Load State"));
+    loadStateMenu->addActions(loadStateGroup->actions());
+    QMenu *loadBranchMenu = toolsMenu->addMenu(tr("Load Branch"));
+    loadBranchMenu->addActions(loadBranchGroup->actions());
 
     toolsMenu->addSeparator();
 
@@ -1313,6 +1339,12 @@ void MainWindow::slotFastForward(bool checked)
         /* Else, let the game thread set the value */
         context->hotkey_pressed_queue.push(HOTKEY_TOGGLE_FASTFORWARD);
     }
+}
+
+void MainWindow::slotSaveState(QAction *action)
+{
+    int hotkey_type = action->data().toInt();
+    context->hotkey_pressed_queue.push(hotkey_type);
 }
 
 void MainWindow::slotMovieEnable(bool checked)

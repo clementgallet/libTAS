@@ -37,6 +37,7 @@
 * Highlight changes in the hex view
 * Ram Search: highlight results that would be removed by future search
 * Add `strace` to the list of debugger programs
+* Add a menu entry for saving/loading states
 
 ### Changed
 
