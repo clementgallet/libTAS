@@ -28,14 +28,20 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <vector>
 
 namespace libtas {
 
+/* Our custom stream consists of a private mapping of the original file, so that
+ * we take advantage of copy-on-write feature, followed by anonymous memory, in
+ * case we write past the end of the file. */
 struct savefile_cookie_t
 {
-    char *addr;
-    size_t size;
+    char *file_addr;
+    size_t file_size;
     off64_t pos;
+    std::vector<char> extra_memory;
+    size_t size;
 };
 
 static ssize_t savefile_read (void *cookie, char *b, size_t s)
@@ -43,12 +49,24 @@ static ssize_t savefile_read (void *cookie, char *b, size_t s)
     savefile_cookie_t *c = static_cast<savefile_cookie_t*>(cookie);
     
     if (c->pos + s > c->size) {
-        LOG(LL_WARN, LCF_FILEIO, "Custom savefile stream read past the end, unsupported");
         s = c->size - c->pos;
     }
-    
-    memcpy (b, c->addr + c->pos, s);
 
+    size_t file_read = 0;
+    
+    /* Read the file part of the stream */
+    if (c->pos < (off64_t)c->file_size) {
+        file_read = s;
+        if (c->pos + s > c->file_size)
+            file_read = c->file_size - c->pos;
+        memcpy (b, c->file_addr + c->pos, file_read);
+    }
+    
+    /* Read the anonymous part of the stream */
+    if ((c->pos + s) > c->file_size) {
+        memcpy (b + file_read, c->extra_memory.data() + (c->pos - c->file_size + file_read), s - file_read);
+    }
+    
     c->pos += s;
     return s;
 }
@@ -57,18 +75,26 @@ static ssize_t savefile_read (void *cookie, char *b, size_t s)
 static ssize_t savefile_write (void *cookie, const char *b, size_t s)
 {
     savefile_cookie_t *c = static_cast<savefile_cookie_t*>(cookie);
-    LOG(LL_DEBUG, LCF_FILEIO, "savefile_write called with addr %p and size %zu", c->addr, s);
+    LOG(LL_DEBUG, LCF_FILEIO, "savefile_write called with addr %p and size %zu", c->file_addr, s);
 
-    if (c->pos + s > c->size) {
-        if (c->pos >= (off_t)c->size) {
-            LOG(LL_WARN, LCF_FILEIO, "Custom savefile stream written past the end, unsupported");
-            errno = ENOSPC;
-            return 0;
-        }
-        s = c->size - c->pos;
+    size_t file_write = 0;
+    
+    /* Write the file part of the stream */
+    if (c->pos < (off64_t)c->file_size) {
+        file_write = s;
+        if (c->pos + s > c->file_size)
+            file_write = c->file_size - c->pos;
+        memcpy (c->file_addr + c->pos, b, file_write);
     }
-
-    memcpy (c->addr + c->pos, b, s);
+    
+    /* Write the anonymous part of the stream */
+    if ((c->pos + s) > c->file_size) {
+        if ((c->pos + s) > c->size) {
+            c->size = c->pos + s;
+            c->extra_memory.resize(c->size - c->file_size);
+        }
+        memcpy (c->extra_memory.data() + (c->pos - c->file_size + file_write), b + file_write, s - file_write);
+    }
     c->pos += s;
 
     return s;
@@ -104,8 +130,8 @@ static int savefile_seek (void *cookie, off64_t *p, int w)
 static int savefile_close (void *cookie)
 {
     savefile_cookie_t *c = static_cast<savefile_cookie_t*>(cookie);
-    if (c->addr)
-        munmap(c->addr, c->size);
+    if (c->file_addr)
+        munmap(c->file_addr, c->file_size);
     delete c;
 
     return 0;
@@ -140,12 +166,13 @@ FILE *SaveFileStream::open (const char *path, const char *mode)
     /* Prepare the custom stream to operate on this memory mapping */
     savefile_cookie_t *c = new savefile_cookie_t;
 
-    c->addr = static_cast<char*>(addr);
-    c->size = filestat.st_size;
+    c->file_addr = static_cast<char*>(addr);
+    c->file_size = filestat.st_size;
     if (mode[0] == 'a')
         c->pos = c->size;
     else
         c->pos = 0;
+    c->size = c->file_size;
 
     cookie_io_functions_t iof;
     iof.read = savefile_read;
@@ -155,7 +182,7 @@ FILE *SaveFileStream::open (const char *path, const char *mode)
 
     FILE *result = fopencookie (c, mode, iof);
     if (result == nullptr) {
-        munmap(c->addr, c->size);
+        munmap(c->file_addr, c->file_size);
         delete c;
     }
 
