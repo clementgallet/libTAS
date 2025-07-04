@@ -45,6 +45,7 @@ libtas_so_SOURCES = \
     audio/sdl/sdlaudio.cpp \
     checkpoint/AltStack.cpp \
     checkpoint/Checkpoint.cpp \
+    checkpoint/FileDescriptorManip.cpp \
     checkpoint/MemArea.cpp \
     checkpoint/ProcSelfMaps.cpp \
     checkpoint/ReservedMemory.cpp \

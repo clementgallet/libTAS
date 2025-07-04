@@ -19,7 +19,6 @@
 
 #include "stdiowrappers.h"
 #include "SaveFileList.h"
-#include "FileHandleList.h"
 #ifdef __linux__
 #include "URandom.h"
 #endif
@@ -96,11 +95,6 @@ FILE *fopen (const char *filename, const char *modes)
         f = orig::fopen(filename, modes);
     }
 
-    /* Store the file descriptor */
-    if (f) {
-        FileHandleList::openFile(filename, f);
-    }
-
     return f;
 }
 
@@ -163,11 +157,6 @@ FILE *fopen64 (const char *filename, const char *modes)
         f = orig::fopen64(filename, modes);
     }
 
-    /* Store the file descriptor */
-    if (f) {
-        FileHandleList::openFile(filename, f);
-    }
-
     return f;
 }
 
@@ -190,18 +179,11 @@ int fclose (FILE *stream)
     }
 #endif
 
-    /* Check if we must actually close the file */
-    bool doClose = FileHandleList::closeFile(fileno(stream));
+    int ret = SaveFileList::closeSaveFile(stream);
+    if (ret != 1)
+        return ret;
 
-    if (doClose) {
-        int ret = SaveFileList::closeSaveFile(stream);
-        if (ret != 1)
-            return ret;
-
-        return orig::fclose(stream);
-    }
-
-    return 0;
+    return orig::fclose(stream);
 }
 
 // int fileno (FILE *stream) __THROW

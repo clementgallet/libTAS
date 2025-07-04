@@ -97,17 +97,8 @@ int SaveState::save(Context* context, const MovieFile& m)
     sendData(&id, sizeof(int));
 
     /* Send the savestate path */
-    if (! (context->config.sc.savestate_settings & SharedConfig::SS_RAM)) {
-        sendMessage(MSGN_SAVESTATE_PATH);
-        sendString(path);
-    }
-    else {
-        /* Create empty savestate files if stored in RAM */
-        std::ofstream opm(pagemap_path);
-        opm.close();
-        std::ofstream op(pages_path);
-        op.close();
-    }
+    sendMessage(MSGN_SAVESTATE_PATH);
+    sendString(path);
 
     sendMessage(MSGN_SAVESTATE);
 
@@ -156,10 +147,8 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
     sendData(&id, sizeof(int));
 
     /* Send savestate path */
-    if (! (context->config.sc.savestate_settings & SharedConfig::SS_RAM)) {
-        sendMessage(MSGN_SAVESTATE_PATH);
-        sendString(path);
-    }
+    sendMessage(MSGN_SAVESTATE_PATH);
+    sendString(path);
 
     /* Check if we need to load a prefix movie when:
      * - not loading a branch, and

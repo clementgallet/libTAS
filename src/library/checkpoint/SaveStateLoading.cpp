@@ -39,33 +39,20 @@
 
 namespace libtas {
 
-SaveStateLoading::SaveStateLoading(const char* pagemappath, const char* pagespath, int pagemapfd, int pagesfd)
+SaveStateLoading::SaveStateLoading(const char* pagemappath, const char* pagespath)
 {
     queued_size = 0;
 
-    if (Global::shared_config.savestate_settings & SharedConfig::SS_RAM) {
-        pmfd = pagemapfd;
-        pfd = pagesfd;
-        if (!pmfd) {
-            pmfd = -1;
-            return;
-        }
-
-        lseek(pmfd, 0, SEEK_SET);
-        lseek(pfd, 0, SEEK_SET);
+    if (pagemappath[0] == '\0') {
+        pmfd = -1;
+        return;
     }
-    else {
-        if (pagemappath[0] == '\0') {
-            pmfd = -1;
-            return;
-        }
 
-        NATIVECALL(pmfd = open(pagemappath, O_RDONLY));
-        MYASSERT(pmfd != -1)
+    NATIVECALL(pmfd = open(pagemappath, O_RDONLY));
+    MYASSERT(pmfd != -1)
 
-        NATIVECALL(pfd = open(pagespath, O_RDONLY));
-        MYASSERT(pfd != -1)
-    }
+    NATIVECALL(pfd = open(pagespath, O_RDONLY));
+    MYASSERT(pfd != -1)
 
     memset(&lz4s, 0, sizeof(LZ4_streamDecode_t));
     restart();
@@ -73,7 +60,7 @@ SaveStateLoading::SaveStateLoading(const char* pagemappath, const char* pagespat
 
 SaveStateLoading::~SaveStateLoading()
 {
-    if (!(Global::shared_config.savestate_settings & SharedConfig::SS_RAM) && (pmfd > 0)) {
+    if (pmfd > 0) {
         NATIVECALL(close(pmfd));
         NATIVECALL(close(pfd));
     }

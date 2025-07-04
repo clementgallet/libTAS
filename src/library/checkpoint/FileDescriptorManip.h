@@ -19,35 +19,26 @@
     Most of the code taken from DMTCP <http://dmtcp.sourceforge.net/>
 */
 
-#ifndef LIBTAS_RESERVEDMEMORY_H
-#define LIBTAS_RESERVEDMEMORY_H
-
-#include "StateHeader.h"
-
-#include <cstdint> // intptr_t
-#include <cstddef> // size_t
-
-#define ONE_MB 1024 * 1024
+#ifndef LIBTAS_FILEDESCRIPTORMANIP_H
+#define LIBTAS_FILEDESCRIPTORMANIP_H
 
 namespace libtas {
-namespace ReservedMemory {
-    enum Sizes {
-        COMPRESSED_SIZE = 4 * ONE_MB,
-        STACK_SIZE = 5 * ONE_MB,
-        SS_SLOTS_SIZE = 11*sizeof(bool),
-        SH_SIZE = sizeof(StateHeader),
-    };
-    enum Addresses {
-        COMPRESSED_ADDR = 0,
-        STACK_ADDR = COMPRESSED_ADDR + COMPRESSED_SIZE,
-        SS_SLOTS_ADDR = STACK_ADDR + STACK_SIZE,
-        SH_ADDR = SS_SLOTS_ADDR + SS_SLOTS_SIZE,
-        RESTORE_TOTAL_SIZE = SH_ADDR + SH_SIZE,
-    };
+namespace FileDescriptorManip
+{
+    /* Open as many fds as necessary until we get past `fd`, and
+     * returns which last fd was opened. */
+    int reserveUntil(int fd);
 
-    void init();
-    void* getAddr(intptr_t offset);
-    size_t getSize();
+    /* Close all opened fds */
+    void closeAll();
+
+    /* Open as many fds as necessay, so that the next opened fd will be `fd`.
+     * Returns which fd will be opened next. */
+    int enforceNext(int fd);
+    
+    /* In the case of savestating, use one specific value for reserving fds */
+    int reserveState();
+    int reserveUntilState();
 }
 }
 

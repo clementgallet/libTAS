@@ -64,6 +64,7 @@ int renameSaveFile(const char *oldfile, const char *newfile);
 
 /* Get the savefile object */
 const SaveFile* getSaveFile(const char *file);
+const SaveFile* getSaveFile(int fd);
 
 /* Get the file descriptor of a savefile, or 0 if not a savefile */
 int getSaveFileFd(const char *file);

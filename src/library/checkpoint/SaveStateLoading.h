@@ -32,7 +32,7 @@ struct StateHeader;
 class SaveStateLoading
 {
     public:
-        SaveStateLoading(const char* pagemappath, const char* pagespath, int pagemapfd, int pagesfd);
+        SaveStateLoading(const char* pagemappath, const char* pagespath);
         ~SaveStateLoading();
 
     // Also resets back to first area

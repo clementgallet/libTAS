@@ -19,7 +19,6 @@
 
 #include "posixiowrappers.h"
 #include "SaveFileList.h"
-#include "FileHandleList.h"
 #include "URandom.h"
 
 #include "logging.h"
@@ -144,9 +143,6 @@ int open (const char *file, int oflag, ...)
         fd = orig::open(file, oflag, mode);
     }
 
-    /* Store the file descriptor */
-    FileHandleList::openFile(file, fd);
-
     return fd;
 }
 
@@ -238,9 +234,6 @@ int open64 (const char *file, int oflag, ...)
         fd = orig::open64(file, oflag, mode);
     }
 
-    /* Store the file descriptor */
-    FileHandleList::openFile(file, fd);
-
     return fd;
 }
 
@@ -284,9 +277,6 @@ int openat (int dirfd, const char *file, int oflag, ...)
     else {
         fd = orig::openat(dirfd, file, oflag, mode);
     }
-
-    /* Store the file descriptor */
-    FileHandleList::openFile(file, fd);
 
     return fd;
 }
@@ -332,9 +322,6 @@ int openat64 (int dirfd, const char *file, int oflag, ...)
         fd = orig::openat64(dirfd, file, oflag, mode);
     }
 
-    /* Store the file descriptor */
-    FileHandleList::openFile(file, fd);
-
     return fd;
 }
 
@@ -370,9 +357,6 @@ int creat (const char *file, mode_t mode)
         fd = orig::creat(file, mode);
     }
 
-    /* Store the file descriptor */
-    FileHandleList::openFile(file, fd);
-
     return fd;
 }
 
@@ -404,9 +388,6 @@ int creat64 (const char *file, mode_t mode)
         fd = orig::creat64(file, mode);
     }
 
-    /* Store the file descriptor */
-    FileHandleList::openFile(file, fd);
-
     return fd;
 }
 
@@ -426,17 +407,12 @@ int close (int fd)
     }
 #endif
 
-    /* Check if we must actually close the file */
-    bool doClose = FileHandleList::closeFile(fd);
+    int ret = SaveFileList::closeSaveFile(fd);
 
-    if (doClose) {
-        int ret = SaveFileList::closeSaveFile(fd);
+    if (ret != 1)
+        return ret;
 
-        if (ret != 1)
-            return ret;
-
-        RETURN_NATIVE(close, (fd), nullptr);
-    }
+    RETURN_NATIVE(close, (fd), nullptr);
 
     return 0;
 }
@@ -709,16 +685,6 @@ int fstat64(int fd, struct stat64 *buf) __THROW
 
     LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
     RETURN_NATIVE(fstat64, (fd, buf), nullptr);    
-}
-
-int dup (int fd) __THROW
-{
-    LOG(LL_TRACE, LCF_FILEIO, "%s call on %d", __func__, fd);
-    LINK_NAMESPACE_GLOBAL(dup);
-
-    int newfd = orig::dup(fd);
-    LOG(LL_DEBUG, LCF_FILEIO, "   new fd: %d", newfd);
-    return newfd;
 }
 
 int dup2 (int fd, int fd2) __THROW

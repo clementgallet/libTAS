@@ -82,16 +82,14 @@ void RuntimePane::initLayout()
         stateIncrementalBox->setEnabled(false);
         context->config.sc.savestate_settings &= ~SharedConfig::SS_INCREMENTAL;
     }
-    stateRamBox = new ToolTipCheckBox(tr("Store savestates in RAM"));
     stateCompressedBox = new ToolTipCheckBox(tr("Compressed savestates"));
     stateUnmappedBox = new ToolTipCheckBox(tr("Skip unmapped pages"));
     stateForkBox = new ToolTipCheckBox(tr("Fork to save states"));
 
     savestateLayout->addWidget(stateIncrementalBox, 0, 0);
-    savestateLayout->addWidget(stateRamBox, 0, 1);
-    savestateLayout->addWidget(stateCompressedBox, 1, 0);
-    savestateLayout->addWidget(stateUnmappedBox, 2, 0);
-    savestateLayout->addWidget(stateForkBox, 2, 1);
+    savestateLayout->addWidget(stateCompressedBox, 0, 1);
+    savestateLayout->addWidget(stateUnmappedBox, 1, 0);
+    savestateLayout->addWidget(stateForkBox, 1, 1);
 
     timingBox = new QGroupBox(tr("Timing"));
     QVBoxLayout* timingMainLayout = new QVBoxLayout;
@@ -182,7 +180,6 @@ void RuntimePane::initSignals()
     connect(downloadsBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
 
     connect(stateIncrementalBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
-    connect(stateRamBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
     connect(stateCompressedBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
     connect(stateUnmappedBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
     connect(stateForkBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
@@ -232,11 +229,6 @@ void RuntimePane::initToolTips()
     "This requires running on a native Linux installation (won't work on WSL2).<br><br>"
     "This is useful on games that eat a lot of memory, but is still a bit "
     "experimental and won't work for everyone."
-    "<br><br><em>If unsure, leave this unchecked</em>");
-
-    stateRamBox->setDescription("Storing savestates in RAM can provide a speedup, "
-    "but libTAS does not check for available memory. If you have a SSD, this option "
-    "is likely to not provide any speedup."
     "<br><br><em>If unsure, leave this unchecked</em>");
 
     stateCompressedBox->setDescription("Compress savestates on-the-fly using a "
@@ -351,7 +343,6 @@ void RuntimePane::loadConfig()
     downloadsBox->setChecked(context->config.allow_downloads);
 
     stateIncrementalBox->setChecked(context->config.sc.savestate_settings & SharedConfig::SS_INCREMENTAL);
-    stateRamBox->setChecked(context->config.sc.savestate_settings & SharedConfig::SS_RAM);
     stateCompressedBox->setChecked(context->config.sc.savestate_settings & SharedConfig::SS_COMPRESSED);
     stateUnmappedBox->setChecked(context->config.sc.savestate_settings & SharedConfig::SS_PRESENT);
     stateForkBox->setChecked(context->config.sc.savestate_settings & SharedConfig::SS_FORK);
@@ -394,7 +385,6 @@ void RuntimePane::saveConfig()
 
     context->config.sc.savestate_settings = 0;
     context->config.sc.savestate_settings |= stateIncrementalBox->isChecked() ? SharedConfig::SS_INCREMENTAL : 0;
-    context->config.sc.savestate_settings |= stateRamBox->isChecked() ? SharedConfig::SS_RAM : 0;
     context->config.sc.savestate_settings |= stateCompressedBox->isChecked() ? SharedConfig::SS_COMPRESSED : 0;
     context->config.sc.savestate_settings |= stateUnmappedBox->isChecked() ? SharedConfig::SS_PRESENT : 0;
     context->config.sc.savestate_settings |= stateForkBox->isChecked() ? SharedConfig::SS_FORK : 0;

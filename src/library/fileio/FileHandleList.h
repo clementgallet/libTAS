@@ -25,11 +25,9 @@
 
 namespace libtas {
 
-namespace FileHandleList {
+class FileHandle;
 
-/* Register an opened file and file descriptor/stream */
-void openFile(const char* file, int fd);
-void openFile(const char* file, FILE* f);
+namespace FileHandleList {
 
 /* Open and register an unnamed pipe */
 std::pair<int, int> createPipe(int flags = 0);
@@ -37,8 +35,8 @@ std::pair<int, int> createPipe(int flags = 0);
 /* Return the file descriptor from a filename */
 int fdFromFile(const char* file);
 
-/* Register a file closing, and returns if we must actually close the file */
-bool closeFile(int fd);
+/* Return a registered file handle from a file descriptor */
+const FileHandle& fileHandleFromFd(int fd);
 
 /* Scan list of file descriptors using /proc/self/fd, and add file descriptors
  * that were not present. */
@@ -47,11 +45,10 @@ void scanFileDescriptors();
 /* Mark all files as tracked, and save their offset */
 void trackAllFiles();
 
+void trackFile(FileHandle &fh);
+
 /* Recover the offset of all tracked files */
 void recoverAllFiles();
-
-/* Close all untracked files before restoring a savestate */
-void closeUntrackedFiles();
 
 }
 

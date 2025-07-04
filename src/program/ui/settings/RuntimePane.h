@@ -57,7 +57,6 @@ private:
     ToolTipCheckBox* downloadsBox;
 
     ToolTipCheckBox* stateIncrementalBox;
-    ToolTipCheckBox* stateRamBox;
     ToolTipCheckBox* stateCompressedBox;
     ToolTipCheckBox* stateUnmappedBox;
     ToolTipCheckBox* stateForkBox;

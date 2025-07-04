@@ -378,13 +378,11 @@ void GameLoop::initProcessMessages()
         int index = 0;
         sendData(&index, sizeof(int));
 
-        if (!(context->config.sc.savestate_settings & SharedConfig::SS_RAM)) {
-            std::string basesavestatepath = context->config.savestatedir + '/';
-            basesavestatepath += context->gamename;
-            basesavestatepath += ".state0";
-            sendMessage(MSGN_BASE_SAVESTATE_PATH);
-            sendString(basesavestatepath);
-        }
+        std::string basesavestatepath = context->config.savestatedir + '/';
+        basesavestatepath += context->gamename;
+        basesavestatepath += ".state0";
+        sendMessage(MSGN_BASE_SAVESTATE_PATH);
+        sendString(basesavestatepath);
     }
 
     /* Send the Steam user data path and remote storage */

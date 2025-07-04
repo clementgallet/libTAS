@@ -28,23 +28,17 @@ namespace libtas {
 
 struct FileHandle {
     FileHandle(const char *file, int fd)
-        : fds{fd, -1}, stream(nullptr), fileNameOrPipeContents(::strdup(file)), fileOffset(-1),
-          size(-1), tracked(false), closed(false) {}
-    FileHandle(const char *file, FILE* f)
-        : fds{fileno(f), -1}, stream(f), fileNameOrPipeContents(::strdup(file)), fileOffset(-1),
-          size(-1), tracked(false), closed(false) {}
+        : fds{fd, -1}, fileNameOrPipeContents(::strdup(file)), fileOffset(-1),
+          size(-1) {}
     FileHandle(int fds[2])
-        : fds{fds[0], fds[1]}, stream(nullptr), fileNameOrPipeContents(nullptr), fileOffset(-1),
-          size(-1), tracked(false), closed(false) {}
+        : fds{fds[0], fds[1]}, fileNameOrPipeContents(nullptr), fileOffset(-1),
+          size(-1) {}
     ~FileHandle() { std::free(fileNameOrPipeContents); }
     bool isPipe() const { return fds[1] != -1; }
     const char *fileName() const { return isPipe() ? "pipe" : fileNameOrPipeContents; }
 
     /* File descriptor(s) */
     int fds[2];
-
-    /* File stream if one */
-    FILE* stream;
 
     /* Path of the file */
     /* or Saved contents of the pipe */
@@ -55,12 +49,6 @@ struct FileHandle {
 
     /* Saved size of the file or pipe */
     off_t size;
-
-    /* Are we tracking this file? */
-    bool tracked;
-
-    /* Was the file closed? */
-    bool closed;
 };
 
 }

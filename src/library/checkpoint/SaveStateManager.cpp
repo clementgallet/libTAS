@@ -273,15 +273,8 @@ int SaveStateManager::checkpoint(int slot)
     urandom_disable_handler();
 #endif
 
-    /* Scan list of file descriptors using /proc/self/fd, and add file descriptors
-     * that were not present. This can include some fds that couldn't be detected,
-     * such as memfd_create which comes from a syscall (not a function, cannot be
-     * hooked easily). This may be needed to recover some file mappings during 
-     * state loading when the file was deleted. */
-    FileHandleList::scanFileDescriptors();
-
-    /* We flag all opened files as tracked and store their offset. This must be
-     * done AFTER suspending threads.
+    /* Scan list of file descriptors using /proc/self/fd, and add all file
+     * descriptors. Also, store their offset. This must be done AFTER suspending threads.
      */
     FileHandleList::trackAllFiles();
 
@@ -313,7 +306,9 @@ int SaveStateManager::checkpoint(int slot)
     /* We recover the offset of all opened files. This must also be done BEFORE
      * resuming threads.
      */
-    FileHandleList::recoverAllFiles();
+    if (restoreInProgress) {
+        FileHandleList::recoverAllFiles();
+    }
 
 #ifdef __linux__
     /* Restore the signal that refills the fake urandom pipe */
@@ -419,10 +414,6 @@ int SaveStateManager::restore(int slot)
     /* Disable the signal that refills the fake urandom pipe. */
     urandom_disable_handler();
 #endif
-
-    /* We close all untracked files, because by definition they are closed when
-     * the savestate will be loaded. */
-    FileHandleList::closeUntrackedFiles();
 
     /* We set the alternate stack to our reserved memory. The game might
      * register its own alternate stack, so we set our own just before the

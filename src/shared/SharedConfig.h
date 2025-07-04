@@ -246,7 +246,6 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     enum SaveStateFlags
     {
         SS_INCREMENTAL = 0x01, /* Using incremental savestates */
-        SS_RAM = 0x02, /* Storing savestates in RAM */
         SS_COMPRESSED = 0x08, /* Compress savestates */
         SS_PRESENT = 0x10, /* Skip unmapped pages */
         SS_FORK = 0x20, /* Use a forked process to save the state */

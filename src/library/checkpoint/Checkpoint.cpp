@@ -33,12 +33,15 @@
 #include "ReservedMemory.h"
 #include "SaveStateSaving.h"
 #include "SaveStateLoading.h"
-#include "TimeHolder.h"
+#include "FileDescriptorManip.h"
 
+#include "TimeHolder.h"
 #include "logging.h"
 #include "global.h"
 #include "GlobalState.h"
 #include "Utils.h"
+#include "fileio/FileHandle.h"
+#include "fileio/FileHandleList.h"
 #include "fileio/SaveFile.h"
 #include "fileio/SaveFileList.h"
 #include "renderhud/RenderHUD.h"
@@ -106,6 +109,7 @@ static _xstate ss_fpregset;
 static void readAllAreas();
 static int reallocateArea(Area *saved_area, Area *current_area);
 static void readAnArea(SaveStateLoading &saved_area, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state);
+static void syncFileDescriptors();
 static void readASavefile(SaveStateLoading &saved_state);
 
 static void writeAllAreas(bool base);
@@ -156,36 +160,8 @@ static void resetParent()
     parent_ss_index = -1;
 }
 
-static int getPagemapFd(int index)
-{
-    if (index < 0) return 0;
-    int* pagemaps = static_cast<int*>(ReservedMemory::getAddr(ReservedMemory::PAGEMAPS_ADDR));
-    return pagemaps[index];
-}
-
-static int getPagesFd(int index)
-{
-    if (index < 0) return 0;
-    int* pages = static_cast<int*>(ReservedMemory::getAddr(ReservedMemory::PAGES_ADDR));
-    return pages[index];
-}
-
-static void setPagemapFd(int index, int fd)
-{
-    int* pagemaps = static_cast<int*>(ReservedMemory::getAddr(ReservedMemory::PAGEMAPS_ADDR));
-    pagemaps[index] = fd;
-}
-static void setPagesFd(int index, int fd)
-{
-    int* pages = static_cast<int*>(ReservedMemory::getAddr(ReservedMemory::PAGES_ADDR));
-    pages[index] = fd;
-}
-
 int Checkpoint::checkCheckpoint()
 {
-    if (Global::shared_config.savestate_settings & SharedConfig::SS_RAM)
-        return SaveStateManager::ESTATE_OK;
-
     /* TODO: Find another way to check for space, because mapped memory is
      * way bigger than final savestate size. */
     return SaveStateManager::ESTATE_OK;
@@ -231,42 +207,22 @@ int Checkpoint::checkCheckpoint()
 int Checkpoint::checkRestore()
 {
     /* Check that the savestate files exist */
-    if (Global::shared_config.savestate_settings & SharedConfig::SS_RAM) {
-        if (!getPagemapFd(ss_index)) {
-            return SaveStateManager::ESTATE_NOSTATE;
-        }
-
-        if (!getPagesFd(ss_index)) {
-            return SaveStateManager::ESTATE_NOSTATE;
-        }
+    struct stat sb;
+    if (stat(pagemappath, &sb) == -1) {
+        return SaveStateManager::ESTATE_NOSTATE;
     }
-    else {
-        struct stat sb;
-        if (stat(pagemappath, &sb) == -1) {
-            return SaveStateManager::ESTATE_NOSTATE;
-        }
-        if (stat(pagespath, &sb) == -1) {
-            return SaveStateManager::ESTATE_NOSTATE;
-        }
+    if (stat(pagespath, &sb) == -1) {
+        return SaveStateManager::ESTATE_NOSTATE;
     }
 
-    int pmfd;
-    if (Global::shared_config.savestate_settings & SharedConfig::SS_RAM) {
-        pmfd = getPagemapFd(ss_index);
-        lseek(pmfd, 0, SEEK_SET);
-    }
-    else {
-        pmfd = open(pagemappath, O_RDONLY);
-        if (pmfd == -1)
-            return SaveStateManager::ESTATE_NOSTATE;
-    }
+    int pmfd = open(pagemappath, O_RDONLY);
+    if (pmfd == -1)
+        return SaveStateManager::ESTATE_NOSTATE;
 
     /* Read the savestate header */
     StateHeader sh;
     Utils::readAll(pmfd, &sh, sizeof(sh));
-    if (!(Global::shared_config.savestate_settings & SharedConfig::SS_RAM)) {
-        close(pmfd);
-    }
+    close(pmfd);
 
     return SaveStateManager::ESTATE_OK;
 }
@@ -362,18 +318,10 @@ void Checkpoint::handler(int signum, siginfo_t *info, void *ucontext)
     else {
         /* Check that base savestate exists, otherwise save it */
         if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
-            if (Global::shared_config.savestate_settings & SharedConfig::SS_RAM) {
-                int fd = getPagemapFd(base_ss_index);
-                if (!fd) {
-                    writeAllAreas(true);
-                }
-            }
-            else {
-                struct stat sb;
-                if (stat(basepagemappath, &sb) == -1) {
-                    resetParent();
-                    writeAllAreas(true);
-                }
+            struct stat sb;
+            if (stat(basepagemappath, &sb) == -1) {
+                resetParent();
+                writeAllAreas(true);
             }
         }
         /* We must store the passed ucontext in the savestate */
@@ -398,13 +346,19 @@ void Checkpoint::getStateHeader(StateHeader* sh)
 {
     /* Thanks to checkRestore() being called before this, savestate is garanteed 
      * to be present */
-    SaveStateLoading saved_state(pagemappath, pagespath, getPagemapFd(ss_index), getPagesFd(ss_index));
+    SaveStateLoading saved_state(pagemappath, pagespath);
     saved_state.readHeader(sh);
 }
 
 static void readAllAreas()
 {
-    SaveStateLoading saved_state(pagemappath, pagespath, getPagemapFd(ss_index), getPagesFd(ss_index));
+    /* Before opening any file, we must manipulate returned file descriptors, so
+     * that they don't collide with the file descriptors that we may want to 
+     * recover after loading the state. After the following call, all returned
+     * file descriptors will be above a certain high value. */
+    FileDescriptorManip::reserveUntilState();
+    
+    SaveStateLoading saved_state(pagemappath, pagespath);
 
     int spmfd = open("/proc/self/pagemap", O_RDONLY);
     MYASSERT(spmfd != -1);
@@ -431,6 +385,16 @@ static void readAllAreas()
     MachVmMaps memMapLayout;
 #endif
 
+    /* Load base and parent savestates */
+    SaveStateLoading parent_state(parentpagemappath, parentpagespath);
+    SaveStateLoading base_state(basepagemappath, basepagespath);
+
+    /* Now that we have opened all files we need, and *before* doing the actual
+     * state loading, we can clear our file descriptor reserve. If doing this
+     * after state loading, the variables used for keeping track of fds would
+     * have been overwritten... */
+    FileDescriptorManip::closeAll();
+
     /* Read the first current area */
     bool not_eof = memMapLayout.getNextArea(&current_area);
 
@@ -453,23 +417,23 @@ static void readAllAreas()
             saved_area = saved_state.nextArea();
         }
     }
-
+    
     /* Now that the memory layout matches the savestate, we load savestate into memory */
     saved_state.restart();
     saved_area = saved_state.getArea();
     
-    /* Load base and parent savestates */
-    SaveStateLoading parent_state(parentpagemappath, parentpagespath, getPagemapFd(parent_ss_index), getPagesFd(parent_ss_index));
-    SaveStateLoading base_state(basepagemappath, basepagespath, getPagemapFd(base_ss_index), getPagesFd(base_ss_index));
-
     /* If the loading savestate and the parent savestate are the same, pass the
-     * same SaveStateLoading object to readAnArea because two SaveStateLoading objects
-     * handling the same file descriptor will mess up the file offset. */
+    * same SaveStateLoading object to readAnArea because two SaveStateLoading objects
+    * handling the same file descriptor will mess up the file offset. */
     bool same_state = (ss_index == parent_ss_index);
     while (saved_area.isStandard()) {
         readAnArea(saved_state, spmfd, same_state?saved_state:parent_state, base_state);
         saved_area = saved_state.nextArea();
     }
+    
+    /* Before restoring savefiles, we open and close file descriptors to be in 
+     * sync with when the savestate was made. */
+    syncFileDescriptors();
     
     /* The remaining areas are savefiles */
     while (saved_area) {
@@ -962,6 +926,111 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
         close(shared_fd);
 }
 
+/* Recreate and close all file descriptors, so that the current list match the
+ * list that was present when the state was saved. */
+static void syncFileDescriptors()
+{
+    /* Browse all possible values of fd. We don't go past our reserve value,
+     * which contains the fds for the state loading procedure */ 
+    for (int fd = 3; fd < FileDescriptorManip::reserveState(); fd++) {
+        /* Query for a registered file handle (excluding pipes) */
+        const FileHandle& fh = FileHandleList::fileHandleFromFd(fd);
+        bool fdRegistered = (fh.fds[0] == fd) && !fh.isPipe();
+
+        /* Look at existing file descriptor and get symlink */
+        char fd_str[25];
+        sprintf(fd_str, "/proc/self/fd/%d", fd);
+
+        char buf[1024] = {};
+        ssize_t buf_size = readlink(fd_str, buf, 1024);
+        bool fdOpened = false;
+
+        if (buf_size != -1) {
+            if (buf_size == 1024) {
+                /* Truncation occured */
+                buf[1023] = '\0';
+                LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "Symlink of file fd %d was truncated: %s", fd, buf);
+            }
+
+            /* Don't add special files, such as sockets or pipes */
+            if ((buf[0] == '/') && (0 != strncmp(buf, "/dev/", 5))) {
+                fdOpened = true;
+            }
+        }
+
+        /* Handle all cases of fd */
+        if (!fdRegistered && !fdOpened) {
+            continue;
+        }
+        if (fdRegistered && fdOpened) {
+            /* Check for matching path */
+            if (0 != strcmp(fh.fileName(), buf)) {
+                LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "File descriptor %d is currently linked to %s, but was linked to %s in savestate", fd, buf, fh.fileName());
+            }
+        }
+        if (!fdRegistered && fdOpened) {
+            /* The file descriptor must be closed, because it is not present in
+             * the savestate */
+            LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "File %s with fd %d should not be present after loading the state, so it is closed", buf, fd);
+            close(fd);
+        }
+        if (fdRegistered && !fdOpened) {
+            /* The file descriptor must be opened, because it is present in
+             * the savestate */
+            LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "File %s with fd %d should be opened", fh.fileName(), fd);
+
+            /* We must open the file with the same fd as the one saved in the state */
+            int next_fd = FileDescriptorManip::enforceNext(fd);
+            
+            if (next_fd == -1) {
+                LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "Could not recreate fd %d because fd manipulation failed", fd);
+                continue;
+            }
+
+            if (next_fd > fd) {
+                LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "Could not recreate fd %d because we went past it after calling dup(), which returned %d", fd, next_fd);
+                continue;
+            }
+
+            if (next_fd != fd) {
+                LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "Could not recreate fd %d because it is already opened", fd);
+                continue;
+            }
+
+            /* Recreate a memfd if savefile */
+            const SaveFile* sf = SaveFileList::getSaveFile(fd);
+            if (sf) {
+                int new_fd = syscall(SYS_memfd_create, sf->filename.c_str(), 0);
+                if (new_fd < 0) {
+                    LOG(LL_ERROR, LCF_CHECKPOINT | LCF_FILEIO, "Could not create memfd");
+                    continue;                    
+                }
+                if (new_fd != fd) {
+                    LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "Recreate fd was supposed to be %d but is instead %d...", fd, new_fd);
+                    close(new_fd);
+                    continue;
+                }
+            }
+            else {
+                /* TODO: We assume that the non-savefile file is read-only for now */
+                int new_fd = open(fh.fileName(), O_RDONLY);
+                if (new_fd < 0) {
+                    LOG(LL_ERROR, LCF_CHECKPOINT | LCF_FILEIO, "Could not open file %s", fh.fileName());
+                    continue;                    
+                }
+                if (new_fd != fd) {
+                    LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "Recreate fd was supposed to be %d but is instead %d...", fd, new_fd);
+                    close(new_fd);
+                    continue;
+                }
+            }
+        }
+    }
+
+    FileDescriptorManip::closeAll();
+}
+
+
 /* Write a memory area into the savestate. Returns the size of the area in bytes */
 static void readASavefile(SaveStateLoading &saved_state)
 {
@@ -984,7 +1053,7 @@ static void readASavefile(SaveStateLoading &saved_state)
         return;
     }
 
-    LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "Restore file %s with fd %d and size %zu", saved_area.name, saved_area.fd, saved_area.size);
+    LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "Restore savefile %s with fd %d and size %zu", saved_area.name, saved_area.fd, saved_area.size);
 
     /* Map the original file */
     int orig_fd = -1;
@@ -1065,9 +1134,6 @@ static void writeAllAreas(bool base)
 
     size_t savestate_size = 0;
 
-    /* Storing the savestate index in stack */
-    int current_ss_index = ss_index;
-
     /* Because we may overwrite our parent state, we must save on a temp file
      * and rename it at the end. Again, we must not allocate any memory, so
      * we store the strings on the stack.
@@ -1075,83 +1141,35 @@ static void writeAllAreas(bool base)
     char temppagemappath[1024];
     char temppagespath[1024];
 
-#ifdef __linux__
-    if (Global::shared_config.savestate_settings & SharedConfig::SS_RAM) {
-        if (!(Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL)) {
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in slot %d", ss_index);
+    if (!(Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL)) {
+        LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in %s and %s", pagemappath, pagespath);
 
-            pmfd = getPagemapFd(ss_index);
-            if (pmfd) {
-                ftruncate(pmfd, 0);
-                lseek(pmfd, 0, SEEK_SET);
-            }
-            else {
-                /* Create a new memfd */
-                pmfd = syscall(SYS_memfd_create, "pagemapstate", 0);
-                setPagemapFd(ss_index, pmfd);
-            }
+        unlink(pagemappath);
+        pmfd = creat(pagemappath, 0644);
 
-            pfd = getPagesFd(ss_index);
-            if (pfd) {
-                ftruncate(pfd, 0);
-                lseek(pfd, 0, SEEK_SET);
-            }
-            else {
-                /* Create a new memfd */
-                pfd = syscall(SYS_memfd_create, "pagesstate", 0);
-                setPagesFd(ss_index, pfd);
-            }
-        }
-        else if (base) {
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in slot %d", base_ss_index);
-
-            /* Create new memfds */
-            pmfd = syscall(SYS_memfd_create, "pagemapstate", 0);
-            setPagemapFd(base_ss_index, pmfd);
-
-            pfd = syscall(SYS_memfd_create, "pagesstate", 0);
-            setPagesFd(base_ss_index, pfd);
-        }
-        else {
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in slot %d", ss_index);
-            /* Creating new memfds for temp state */
-            pmfd = syscall(SYS_memfd_create, "pagemapstate", 0);
-            pfd = syscall(SYS_memfd_create, "pagesstate", 0);
-        }
+        unlink(pagespath);
+        pfd = creat(pagespath, 0644);
     }
-    else
-#endif
-    {
-        if (!(Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL)) {
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in %s and %s", pagemappath, pagespath);
+    else if (base) {
+        LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in %s", basepagespath);
 
-            unlink(pagemappath);
-            pmfd = creat(pagemappath, 0644);
+        pmfd = creat(basepagemappath, 0644);
+        pfd = creat(basepagespath, 0644);
+    }
+    else {
+        strcpy(temppagemappath, pagemappath);
+        strcpy(temppagespath, pagespath);
 
-            unlink(pagespath);
-            pfd = creat(pagespath, 0644);
-        }
-        else if (base) {
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in %s", basepagespath);
+        strncat(temppagemappath, ".temp", 1023 - strlen(temppagemappath));
+        strncat(temppagespath, ".temp", 1023 - strlen(temppagespath));
 
-            pmfd = creat(basepagemappath, 0644);
-            pfd = creat(basepagespath, 0644);
-        }
-        else {
-            strcpy(temppagemappath, pagemappath);
-            strcpy(temppagespath, pagespath);
+        LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in %s and %s", temppagemappath, temppagespath);
 
-            strncat(temppagemappath, ".temp", 1023 - strlen(temppagemappath));
-            strncat(temppagespath, ".temp", 1023 - strlen(temppagespath));
+        unlink(temppagemappath);
+        pmfd = creat(temppagemappath, 0644);
 
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "Performing checkpoint in %s and %s", temppagemappath, temppagespath);
-
-            unlink(temppagemappath);
-            pmfd = creat(temppagemappath, 0644);
-
-            unlink(temppagespath);
-            pfd = creat(temppagespath, 0644);
-        }
+        unlink(temppagespath);
+        pfd = creat(temppagespath, 0644);
     }
 
     MYASSERT(pmfd != -1)
@@ -1186,8 +1204,8 @@ static void writeAllAreas(bool base)
 
     /* Load the parent savestate if any. */
     SaveStateSaving state(pmfd, pfd, spmfd);
-    SaveStateLoading parent_state(parentpagemappath, parentpagespath, getPagemapFd(parent_ss_index), getPagesFd(parent_ss_index));
-    SaveStateLoading base_state(basepagemappath, basepagespath, getPagemapFd(base_ss_index), getPagesFd(base_ss_index));
+    SaveStateLoading parent_state(parentpagemappath, parentpagespath);
+    SaveStateLoading base_state(basepagemappath, basepagespath);
 
     /* Read the memory mapping */
 #ifdef __unix__
@@ -1239,26 +1257,13 @@ static void writeAllAreas(bool base)
     close(spmfd);
 
     /* Closing the savestate files */
-    if (!(Global::shared_config.savestate_settings & SharedConfig::SS_RAM)) {
-        close(pmfd);
-        close(pfd);
-    }
+    close(pmfd);
+    close(pfd);
 
     /* Rename the savestate files */
     if ((Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) && !base) {
-        if (Global::shared_config.savestate_settings & SharedConfig::SS_RAM) {
-            /* Closing the old savestate memfds and replace with the new one */
-            if (getPagemapFd(current_ss_index)) {
-                close(getPagemapFd(current_ss_index));
-                close(getPagesFd(current_ss_index));
-            }
-            setPagemapFd(current_ss_index, pmfd);
-            setPagesFd(current_ss_index, pfd);
-        }
-        else {
-            rename(temppagemappath, pagemappath);
-            rename(temppagespath, pagespath);
-        }
+        rename(temppagemappath, pagemappath);
+        rename(temppagespath, pagespath);
     }
 
     clock_gettime(CLOCK_MONOTONIC, &new_time);
@@ -1584,7 +1589,7 @@ static size_t writeSaveFiles(SaveStateSaving &state)
             continue;
         }
 
-        LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "Save file %s with fd %d and size %zu", savefile->filename.c_str(), savefile->fd, area.size);
+        LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "Save savefile %s with fd %d and size %zu", savefile->filename.c_str(), savefile->fd, area.size);
 
         /* Map the original file */
         int orig_fd = -1;

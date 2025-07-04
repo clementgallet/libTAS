@@ -288,6 +288,20 @@ const SaveFile* getSaveFile(const char *file)
     return nullptr;
 }
 
+const SaveFile* getSaveFile(int fd)
+{
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
+    auto& savefiles = getSaveFileList();
+    for (const auto& savefile : savefiles) {
+        if (savefile->fd == fd) {
+            return savefile.get();
+        }
+    }
+
+    return nullptr;
+}
+
 int getSaveFileFd(const char *file)
 {
     std::lock_guard<std::mutex> lock(getSaveFileListMutex());
