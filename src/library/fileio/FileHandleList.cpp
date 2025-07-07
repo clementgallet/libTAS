@@ -97,57 +97,11 @@ const FileHandle& fileHandleFromFd(int fd)
     return fh_zero;
 }
 
-void scanFileDescriptors()
-{
-    auto& filehandles = getFileList();
-    filehandles.clear();
-
-    struct dirent *dp;
-
-    DIR *dir = opendir("/proc/self/fd/");
-    int dir_fd = dirfd(dir);
-    
-    while ((dp = readdir(dir))) {
-        if (dp->d_type != DT_LNK)
-            continue;
-
-        int fd = std::atoi(dp->d_name);
-        
-        /* Skip own dir file descriptor */
-        if (fd == dir_fd)
-            continue;
-
-        /* Skip stdin/out/err */
-        if (fd < 3)
-            continue;
-
-        /* Get symlink */
-        char buf[1024] = {};
-        ssize_t buf_size = readlinkat(dir_fd, dp->d_name, buf, 1024);
-        if (buf_size == -1) {
-            LOG(LL_WARN, LCF_FILEIO, "Cound not get symlink to file fd %d", fd);
-        }
-        else if (buf_size == 1024) {
-            /* Truncation occured */
-            buf[1023] = '\0';
-            LOG(LL_WARN, LCF_FILEIO, "Adding file with fd %d to file handle list failed because symlink was truncated: %s", fd, buf);
-        }
-        else {
-            /* Don't add special files, such as sockets or pipes */
-            if ((buf[0] == '/') && (0 != strncmp(buf, "/dev/", 5))) {
-                LOG(LL_DEBUG, LCF_FILEIO, "Add file %s with fd %d to file handle list", buf, fd);
-                filehandles.emplace_front(buf, fd);
-            }
-        }
-    }
-    closedir(dir);
-}
-
-
 void trackAllFiles()
 {
     auto& filehandles = getFileList();
-    filehandles.clear();
+    /* Remove all entries that aren't pipes */
+    filehandles.remove_if([](FileHandle& fh) { return !fh.isPipe();});
 
     struct dirent *dp;
 

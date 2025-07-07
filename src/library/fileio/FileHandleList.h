@@ -38,13 +38,10 @@ int fdFromFile(const char* file);
 /* Return a registered file handle from a file descriptor */
 const FileHandle& fileHandleFromFd(int fd);
 
-/* Scan list of file descriptors using /proc/self/fd, and add file descriptors
- * that were not present. */
-void scanFileDescriptors();
-
-/* Mark all files as tracked, and save their offset */
+/* Scan list of file descriptors using /proc/self/fd, and add all file descriptors */
 void trackAllFiles();
 
+/* Save offset and size of file handle */
 void trackFile(FileHandle &fh);
 
 /* Recover the offset of all tracked files */
