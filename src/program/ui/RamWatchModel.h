@@ -24,6 +24,7 @@
 
 #include <QtCore/QAbstractTableModel>
 #include <QtCore/QSettings>
+#include <QtCore/QMimeData>
 #include <vector>
 #include <memory>
 
@@ -45,6 +46,15 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+    Qt::DropActions supportedDropActions() const override;
+    Qt::DropActions supportedDragActions() const override;
+
+    bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationChild) override;
+
+    QStringList mimeTypes() const override;
+    QMimeData *mimeData(const QModelIndexList &indexes) const override;
+    bool dropMimeData(const QMimeData *mimeData, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
 
     void addWatch(std::unique_ptr<RamWatchDetailed> ramwatch);
     void removeWatch(int row);

@@ -34,9 +34,17 @@ RamWatchView::RamWatchView(Context* c, QWidget *parent) : QTableView(parent), co
     setFont(fixedFont);
 
     setSelectionBehavior(QAbstractItemView::SelectRows);
-    setSelectionMode(QAbstractItemView::ExtendedSelection);
+    setSelectionMode(QAbstractItemView::ContiguousSelection);
     setShowGrid(false);
     setAlternatingRowColors(true);
+
+    setDragEnabled(true);
+    setAcceptDrops(true);
+    setDragDropMode(QAbstractItemView::InternalMove);
+    setDefaultDropAction(Qt::MoveAction);
+    setDragDropOverwriteMode(false);
+    setDropIndicatorShown(true);
+       
     horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     horizontalHeader()->setStretchLastSection(true);
     horizontalHeader()->setHighlightSections(false);

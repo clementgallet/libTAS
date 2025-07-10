@@ -25,6 +25,8 @@
 #include <QtGui/QGuiApplication>
 #include <stdint.h>
 
+static const char mimeType[] = "application/x-countrydata-rownumber";
+
 RamWatchModel::RamWatchModel(QObject *parent) : QAbstractTableModel(parent) {}
 
 int RamWatchModel::rowCount(const QModelIndex & /*parent*/) const
@@ -39,11 +41,17 @@ int RamWatchModel::columnCount(const QModelIndex & /*parent*/) const
 
 Qt::ItemFlags RamWatchModel::flags(const QModelIndex &index) const
 {
-    /* Value and label are editable */
-    if (index.column() != 0)
-        return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
+    Qt::ItemFlags flags = QAbstractItemModel::flags(index);
 
-    return QAbstractItemModel::flags(index);
+    if (!index.isValid())
+        flags |= Qt::ItemIsDropEnabled;
+    else {
+        flags |= Qt::ItemIsDragEnabled;
+        /* Value and label are editable */
+        if (index.column() != 0)
+            flags |= Qt::ItemIsEditable;
+    }
+    return flags;
 }
 
 QVariant RamWatchModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -128,6 +136,24 @@ bool RamWatchModel::setData(const QModelIndex &index, const QVariant &value, int
     return false;
 }
 
+bool RamWatchModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationChild)
+{
+    if (!beginMoveRows(sourceParent, sourceRow, sourceRow + count - 1, destinationParent, destinationChild))
+        return false;
+
+    for (int i = 0; i < count; ++i) {
+        int inserted_index = destinationChild + (destinationChild > sourceRow ? 0 : i);
+        int moved_index = sourceRow + (destinationChild > sourceRow ? 0 : i+1);
+        
+        ramwatches.insert(ramwatches.begin() + inserted_index, std::unique_ptr<RamWatchDetailed>(nullptr));
+        ramwatches.at(inserted_index).swap(ramwatches.at(moved_index));
+        ramwatches.erase(ramwatches.begin() + moved_index);
+    }
+
+    endMoveRows();
+    return true;
+}
+
 void RamWatchModel::addWatch(std::unique_ptr<RamWatchDetailed> ramwatch)
 {
     beginInsertRows(QModelIndex(), ramwatches.size(), ramwatches.size());
@@ -141,6 +167,76 @@ void RamWatchModel::removeWatch(int row)
     ramwatches.erase(ramwatches.begin() + row);
     endRemoveRows();
 }
+
+Qt::DropActions RamWatchModel::supportedDropActions() const
+{
+    return Qt::MoveAction;
+}
+
+Qt::DropActions RamWatchModel::supportedDragActions() const
+{
+    return Qt::MoveAction;
+}
+
+/* mime code taken from <https://www.kdab.com/modelview-drag-and-drop-part-1/>
+ * under MIT licence */
+QStringList RamWatchModel::mimeTypes() const
+{
+    return {QString::fromLatin1(mimeType)};
+}
+
+QMimeData *RamWatchModel::mimeData(const QModelIndexList &indexes) const
+{
+    QList<int> seenRows;
+    QByteArray encodedData;
+    QDataStream stream(&encodedData, QIODevice::WriteOnly);
+    int minRow = 1 << 30;
+    int maxRow = 0;
+    for (const QModelIndex &index : indexes) {
+        if (index.row() < minRow)
+            minRow = index.row();
+        if (index.row() > maxRow)
+            maxRow = index.row();
+    }
+    seenRows.append(minRow);
+    seenRows.append(maxRow - minRow + 1);
+    
+    stream << seenRows;
+
+    QMimeData *mimeData = new QMimeData;
+    mimeData->setData(mimeType, encodedData);
+    return mimeData;
+}
+
+bool RamWatchModel::dropMimeData(const QMimeData *mimeData, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+{
+    // check if the format is supported
+    if (!mimeData->hasFormat(mimeType))
+        return false;
+    // only drop between items (just to be safe, given that dropping onto items is forbidden by our flags() implementation)
+    if (parent.isValid() && row == -1)
+        return false;
+    // drop into empty area = append
+    if (row == -1)
+        row = rowCount(parent);
+
+    // decode data
+    const QByteArray encodedData = mimeData->data(mimeType);
+    QDataStream stream(encodedData);
+    if (stream.atEnd())
+        return false;
+
+    QList<int> rowsList;
+    stream >> rowsList;
+    if (rowsList.isEmpty())
+        return false;
+
+    moveRows(parent, rowsList[0], rowsList[1], parent, row);
+
+    return false; // we handled the move, not just the insertion, so don't let the caller do
+                  // the removal of the source rows
+}
+
 
 void RamWatchModel::saveSettings(QSettings& watchSettings)
 {
