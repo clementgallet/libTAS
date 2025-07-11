@@ -643,6 +643,9 @@ void InputEditorModel::buildInputSet()
 
 void InputEditorModel::startPaint(int col, int minRow, int maxRow, int value, int autofire)
 {
+    if (col < COLUMN_SPECIAL_SIZE)
+        return;
+        
     paintInput = movie->editor->input_set[col-COLUMN_SPECIAL_SIZE];
 
     /* Don't edit locked input */
@@ -706,11 +709,17 @@ void InputEditorModel::endPaint()
 
 std::string InputEditorModel::inputLabel(int column)
 {
+    if (column < COLUMN_SPECIAL_SIZE)
+        return "";
+
     return movie->editor->input_set[column-COLUMN_SPECIAL_SIZE].description;
 }
 
 void InputEditorModel::renameLabel(int column, std::string label)
 {
+    if (column < COLUMN_SPECIAL_SIZE)
+        return;
+
     /* Don't change label if it has only whitespaces */
     if (label.find_first_not_of(" \t\n\v\f\r") == std::string::npos)
         return;
@@ -722,6 +731,9 @@ void InputEditorModel::renameLabel(int column, std::string label)
 
 std::string InputEditorModel::inputDescription(int column)
 {
+    if (column < COLUMN_SPECIAL_SIZE)
+        return "";
+
     SingleInput si = movie->editor->input_set[column-COLUMN_SPECIAL_SIZE];
 
     /* Gather input description */
@@ -964,6 +976,9 @@ void InputEditorModel::addUniqueInputs(const std::vector<AllInputs>& new_inputs)
 
 void InputEditorModel::clearUniqueInput(int column)
 {
+    if (column < COLUMN_SPECIAL_SIZE)
+        return;
+
     SingleInput si = movie->editor->input_set[column-COLUMN_SPECIAL_SIZE];
 
     /* Don't clear locked input */
@@ -975,6 +990,9 @@ void InputEditorModel::clearUniqueInput(int column)
 
 bool InputEditorModel::removeUniqueInput(int column)
 {
+    if (column < COLUMN_SPECIAL_SIZE)
+        return false;
+
     SingleInput si = movie->editor->input_set[column-COLUMN_SPECIAL_SIZE];
 
     /* Check if the input is set in past frames */
@@ -1001,6 +1019,9 @@ bool InputEditorModel::removeUniqueInput(int column)
 
 void InputEditorModel::columnFactor(int column, double factor)
 {
+    if (column < COLUMN_SPECIAL_SIZE)
+        return;
+
     SingleInput si = movie->editor->input_set[column-COLUMN_SPECIAL_SIZE];
 
     std::vector<int> new_values;
@@ -1304,28 +1325,37 @@ void InputEditorModel::seekToFrame(unsigned long long frame)
     rewind(frame, true); // rewind and enforce seek to frame
 }
 
-void InputEditorModel::setAutoholdInput(int i, bool checked)
+void InputEditorModel::setAutoholdInput(int column, bool checked)
 {
-    movie->editor->setAutohold(i-COLUMN_SPECIAL_SIZE, checked);
+    if (column < COLUMN_SPECIAL_SIZE)
+        return;
 
-    emit dataChanged(index(0,i), index(rowCount(),i), QVector<int>(1, Qt::BackgroundRole));
-    emit headerDataChanged(Qt::Horizontal, i, i);
+    movie->editor->setAutohold(column-COLUMN_SPECIAL_SIZE, checked);
+
+    emit dataChanged(index(0,column), index(rowCount(),column), QVector<int>(1, Qt::BackgroundRole));
+    emit headerDataChanged(Qt::Horizontal, column, column);
 }
 
-bool InputEditorModel::isAutoholdInput(int i) const
+bool InputEditorModel::isAutoholdInput(int column) const
 {
-    return movie->editor->isAutohold(i-COLUMN_SPECIAL_SIZE);
+    if (column < COLUMN_SPECIAL_SIZE)
+        return false;
+
+    return movie->editor->isAutohold(column-COLUMN_SPECIAL_SIZE);
 }
 
-void InputEditorModel::setAutofireInput(int i, bool checked)
+void InputEditorModel::setAutofireInput(int column, bool checked)
 {
-    movie->editor->setAutofire(i-COLUMN_SPECIAL_SIZE, checked);
+    if (column < COLUMN_SPECIAL_SIZE)
+        return;
 
-    emit dataChanged(index(0,i), index(rowCount(),i), QVector<int>(1, Qt::BackgroundRole));
-    emit headerDataChanged(Qt::Horizontal, i, i);
+    movie->editor->setAutofire(column-COLUMN_SPECIAL_SIZE, checked);
+
+    emit dataChanged(index(0,column), index(rowCount(),column), QVector<int>(1, Qt::BackgroundRole));
+    emit headerDataChanged(Qt::Horizontal, column, column);
 }
 
-bool InputEditorModel::isAutofireInput(int i) const
+bool InputEditorModel::isAutofireInput(int column) const
 {
-    return movie->editor->isAutofire(i-COLUMN_SPECIAL_SIZE);
+    return movie->editor->isAutofire(column-COLUMN_SPECIAL_SIZE);
 }

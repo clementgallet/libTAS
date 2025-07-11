@@ -436,6 +436,11 @@ void InputEditorView::mouseMoveEvent(QMouseEvent *event)
         return QTableView::mouseMoveEvent(event);
     }
 
+    /* We are not interested in the first columns */
+    if (mouseColumn < InputEditorModel::COLUMN_SPECIAL_SIZE) {
+        return QTableView::mouseMoveEvent(event);
+    }
+
     if (!(event->buttons() & Qt::LeftButton)) {
         return QTableView::mouseMoveEvent(event);
     }
