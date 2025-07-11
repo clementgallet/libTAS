@@ -107,6 +107,26 @@ void LuaFunctionList::watchChanges()
                     lf.lua_state = Main::new_state();
                     Main::run(lf.lua_state, file);
                 }
+                else if (ev.mask == IN_IGNORED) {
+                    LuaFile& lf = fileList[i];
+
+                    const std::string& file = lf.file;
+
+                    /* File got potentially modified so check if it still exists 
+                     * Watch descriptor has been removed automatically so don't need to do that manually */
+                    lf.wd = inotify_add_watch(inotifyfd, file.c_str(), IN_MODIFY);
+                    if (lf.wd < 0) {
+                        return;
+                    }
+
+                    functions.remove_if([&file](const NamedLuaFunction& nlf){ return 0 == file.compare(nlf.file); });
+
+                    /* Create a new lua state */
+                    if (lf.lua_state)
+                        lua_close(lf.lua_state);
+                    lf.lua_state = Main::new_state();
+                    Main::run(lf.lua_state, file);
+                }
                 return;
             }
         }
