@@ -100,6 +100,7 @@ KeyMapping::KeyMapping(void* c)
     input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_BUTTON, SingleInput::POINTER_B3, "Mouse button 3"});
     input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_BUTTON, SingleInput::POINTER_B4, "Mouse button 4"});
     input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_BUTTON, SingleInput::POINTER_B5, "Mouse button 5"});
+    input_list[INPUTLIST_MOUSE].push_back({SingleInput::IT_POINTER_MODE, 1, "Mouse rel"});
 
     /* Add controller mapping */
     input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER1_BUTTON, SingleInput::BUTTON_A, "Joy1 A"});
@@ -166,51 +167,50 @@ KeyMapping::KeyMapping(void* c)
     input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_DPAD_LEFT, "Joy4 Left"});
     input_list[INPUTLIST_CONTROLLER].push_back({SingleInput::IT_CONTROLLER4_BUTTON, SingleInput::BUTTON_DPAD_RIGHT, "Joy4 Right"});
 
-    /* Hidden mapping. They cannot be remapped, but we need to define them
+    /* Analog mapping. They cannot be remapped, but we need to define them
      * to have a description for input editor */
      
     /* Mouse mapping */
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_POINTER_X, 1, "Mouse X coord"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_POINTER_Y, 1, "Mouse Y coord"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_POINTER_WHEEL, 1, "Mouse wheel"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_POINTER_MODE, 1, "Mouse rel"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_POINTER_X, 1, "Mouse X coord"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_POINTER_Y, 1, "Mouse Y coord"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_POINTER_WHEEL, 1, "Mouse wheel"});
 
     /* Framerate mapping */
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_FRAMERATE_NUM, 1, "Framerate num"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_FRAMERATE_DEN, 1, "Framerate den"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_FRAMERATE_NUM, 1, "Framerate num"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_FRAMERATE_DEN, 1, "Framerate den"});
     
     /* Realtime mapping */
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_REALTIME_SEC, 1, "Realtime sec"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_REALTIME_NSEC, 1, "Realtime nsec"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_REALTIME_SEC, 1, "Realtime sec"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_REALTIME_NSEC, 1, "Realtime nsec"});
     
     /* Add controller mapping */
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_LEFTX, "Joy1 LeftStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_LEFTY, "Joy1 LeftStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_RIGHTX, "Joy1 RightStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_RIGHTY, "Joy1 RightStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_TRIGGERLEFT, "Joy1 LeftTrigger"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_TRIGGERRIGHT, "Joy1 RightTrigger"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_LEFTX, "Joy1 LeftStickX"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_LEFTY, "Joy1 LeftStickY"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_RIGHTX, "Joy1 RightStickX"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_RIGHTY, "Joy1 RightStickY"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_TRIGGERLEFT, "Joy1 LeftTrigger"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER1_AXIS, SingleInput::AXIS_TRIGGERRIGHT, "Joy1 RightTrigger"});
 
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_LEFTX, "Joy2 LeftStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_LEFTY, "Joy2 LeftStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_RIGHTX, "Joy2 RightStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_RIGHTY, "Joy2 RightStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_TRIGGERLEFT, "Joy2 LeftTrigger"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_TRIGGERRIGHT, "Joy2 RightTrigger"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_LEFTX, "Joy2 LeftStickX"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_LEFTY, "Joy2 LeftStickY"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_RIGHTX, "Joy2 RightStickX"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_RIGHTY, "Joy2 RightStickY"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_TRIGGERLEFT, "Joy2 LeftTrigger"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER2_AXIS, SingleInput::AXIS_TRIGGERRIGHT, "Joy2 RightTrigger"});
 
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_LEFTX, "Joy3 LeftStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_LEFTY, "Joy3 LeftStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_RIGHTX, "Joy3 RightStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_RIGHTY, "Joy3 RightStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_TRIGGERLEFT, "Joy3 LeftTrigger"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_TRIGGERRIGHT, "Joy3 RightTrigger"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_LEFTX, "Joy3 LeftStickX"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_LEFTY, "Joy3 LeftStickY"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_RIGHTX, "Joy3 RightStickX"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_RIGHTY, "Joy3 RightStickY"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_TRIGGERLEFT, "Joy3 LeftTrigger"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER3_AXIS, SingleInput::AXIS_TRIGGERRIGHT, "Joy3 RightTrigger"});
 
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_LEFTX, "Joy4 LeftStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_LEFTY, "Joy4 LeftStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_RIGHTX, "Joy4 RightStickX"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_RIGHTY, "Joy4 RightStickY"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_TRIGGERLEFT, "Joy4 LeftTrigger"});
-    input_list[INPUTLIST_HIDDEN].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_TRIGGERRIGHT, "Joy4 RightTrigger"});    
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_LEFTX, "Joy4 LeftStickX"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_LEFTY, "Joy4 LeftStickY"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_RIGHTX, "Joy4 RightStickX"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_RIGHTY, "Joy4 RightStickY"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_TRIGGERLEFT, "Joy4 LeftTrigger"});
+    input_list[INPUTLIST_ANALOG].push_back({SingleInput::IT_CONTROLLER4_AXIS, SingleInput::AXIS_TRIGGERRIGHT, "Joy4 RightTrigger"});    
 }
 
 std::string KeyMapping::input_description(keysym_t ks)

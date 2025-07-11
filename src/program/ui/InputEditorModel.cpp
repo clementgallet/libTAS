@@ -71,42 +71,43 @@ int InputEditorModel::columnCount(const QModelIndex & /*parent*/) const
 Qt::ItemFlags InputEditorModel::flags(const QModelIndex &index) const
 {
     unsigned int row = index.row();
+    Qt::ItemFlags index_flags = QAbstractItemModel::flags(index) | Qt::ItemIsDropEnabled;
 
     if (!index.isValid())
-        return QAbstractItemModel::flags(index);
+        return index_flags;
 
     if (index.column() < COLUMN_SPECIAL_SIZE)
-        return QAbstractItemModel::flags(index);
+        return index_flags;
 
     /* Don't toggle past inputs before root savestate */
     uint64_t root_frame = SaveStateList::rootStateFramecount();
     if (!root_frame) {
         if (row < context->framecount)
-            return QAbstractItemModel::flags(index);
+            return index_flags;
     }
     else {
         if (row < root_frame)
-            return QAbstractItemModel::flags(index);
+            return index_flags;
     }
 
     if (row >= frameCount())
-        return QAbstractItemModel::flags(index);
+        return index_flags;
 
     const AllInputs& ai = movie->inputs->getInputs(row);
     const SingleInput si = movie->editor->input_set[index.column()-COLUMN_SPECIAL_SIZE];
 
     /* Don't edit locked input */
     if (movie->editor->locked_inputs.find(si) != movie->editor->locked_inputs.end())
-        return QAbstractItemModel::flags(index);
+        return index_flags;
 
     /* Don't edit inputs that have events */
     if (!ai.events.empty())
-        return QAbstractItemModel::flags(index);
+        return index_flags;
 
     if (si.isAnalog())
-        return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
+        return index_flags | Qt::ItemIsEditable;
 
-    return QAbstractItemModel::flags(index);
+    return index_flags;
 }
 
 QVariant InputEditorModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -574,6 +575,39 @@ bool InputEditorModel::setData(const QModelIndex &index, const QVariant &value, 
         movie->inputs->paintInput(si, value.toInt(), row, row);
         return true;
     }
+    return false;
+}
+
+Qt::DropActions InputEditorModel::supportedDropActions() const
+{
+    return Qt::CopyAction;
+}
+
+static const char mimeType[] = "application/x-libtas-analoginput";
+
+QStringList InputEditorModel::mimeTypes() const
+{
+    return {QString::fromLatin1(mimeType)};
+}
+
+bool InputEditorModel::dropMimeData(const QMimeData *mimeData, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+{
+    // check if the format is supported
+    if (!mimeData->hasFormat(mimeType))
+        return false;
+
+    const QByteArray encodedData = mimeData->data(mimeType);
+    QDataStream stream(encodedData);
+    if (stream.atEnd())
+        return false;
+
+    SingleInput si;
+
+    QString description;
+    stream >> si.type >> si.which >> description;
+    si.description = description.toStdString();
+    addUniqueInput(si);
+
     return false;
 }
 

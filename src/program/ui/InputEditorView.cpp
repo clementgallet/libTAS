@@ -53,6 +53,13 @@ InputEditorView::InputEditorView(Context* c, MovieFile *m, QWidget *parent) : QT
     connect(this, &InputEditorView::entered, inputEditorModel, &InputEditorModel::setHoveredCell);
     setMouseTracking(true);
 
+    /* Drag and Drop for analog inputs */
+    setAcceptDrops(true);
+    setDragDropMode(QAbstractItemView::DropOnly);
+    setDefaultDropAction(Qt::CopyAction);
+    setDragDropOverwriteMode(false);
+    setDropIndicatorShown(false);
+
     /* Horizontal header */
     horizontalHeader()->setMinimumSectionSize(20);
     horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
@@ -76,10 +83,8 @@ InputEditorView::InputEditorView(Context* c, MovieFile *m, QWidget *parent) : QT
     connect(horizontalHeader(), &QHeaderView::sectionMoved, this, &InputEditorView::moveAgainSection);
     connect(horizontalHeader(), &QHeaderView::sectionClicked, this, &InputEditorView::holdSection);
 
-    /* Horizontal menu */
     horMenu = new QMenu(this);
     horMenu->addAction(tr("Rename label"), this, &InputEditorView::renameLabel);
-    horMenu->addAction(tr("Add input column"), this, &InputEditorView::addInputColumn);
     horMenu->addAction(tr("Clear input column"), this, &InputEditorView::clearInputColumn);
     horMenu->addAction(tr("Remove input column"), this, &InputEditorView::removeInputColumn);
     factorAction = horMenu->addAction(tr("Multiple values by factor"), this, &InputEditorView::factorInputColumn);

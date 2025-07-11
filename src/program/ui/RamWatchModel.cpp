@@ -25,7 +25,7 @@
 #include <QtGui/QGuiApplication>
 #include <stdint.h>
 
-static const char mimeType[] = "application/x-countrydata-rownumber";
+static const char mimeType[] = "application/x-libtas-rownumber";
 
 RamWatchModel::RamWatchModel(QObject *parent) : QAbstractTableModel(parent) {}
 
@@ -187,7 +187,6 @@ QStringList RamWatchModel::mimeTypes() const
 
 QMimeData *RamWatchModel::mimeData(const QModelIndexList &indexes) const
 {
-    QList<int> seenRows;
     QByteArray encodedData;
     QDataStream stream(&encodedData, QIODevice::WriteOnly);
     int minRow = 1 << 30;
@@ -198,10 +197,8 @@ QMimeData *RamWatchModel::mimeData(const QModelIndexList &indexes) const
         if (index.row() > maxRow)
             maxRow = index.row();
     }
-    seenRows.append(minRow);
-    seenRows.append(maxRow - minRow + 1);
-    
-    stream << seenRows;
+    int count = maxRow - minRow + 1;
+    stream << minRow << count;
 
     QMimeData *mimeData = new QMimeData;
     mimeData->setData(mimeType, encodedData);
@@ -226,17 +223,15 @@ bool RamWatchModel::dropMimeData(const QMimeData *mimeData, Qt::DropAction actio
     if (stream.atEnd())
         return false;
 
-    QList<int> rowsList;
-    stream >> rowsList;
-    if (rowsList.isEmpty())
-        return false;
+    int minRow;
+    int count;
 
-    moveRows(parent, rowsList[0], rowsList[1], parent, row);
+    stream >> minRow >> count;
+    moveRows(parent, minRow, count, parent, row);
 
     return false; // we handled the move, not just the insertion, so don't let the caller do
                   // the removal of the source rows
 }
-
 
 void RamWatchModel::saveSettings(QSettings& watchSettings)
 {

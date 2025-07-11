@@ -138,7 +138,7 @@ class KeyMapping {
             INPUTLIST_FLAG,
             INPUTLIST_MOUSE,
             INPUTLIST_CONTROLLER,
-            INPUTLIST_HIDDEN,
+            INPUTLIST_ANALOG,
             INPUTLIST_SIZE,
         };
 

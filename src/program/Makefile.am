@@ -8,6 +8,8 @@ libTAS_QTSOURCES = \
     lua/Print.h \
     ramsearch/IOProcessDevice.h \
     ramsearch/MemScanner.h \
+    ui/AnalogInputsModel.h \
+    ui/AnalogInputsWindow.h \
     ui/AnnotationsWindow.h \
     ui/ComboBoxItemDelegate.h \
     ui/ControllerAxisWidget.h \
@@ -109,6 +111,8 @@ libTAS_SOURCES = \
     movie/MovieFileEditor.cpp \
     movie/MovieFileHeader.cpp \
     movie/MovieFileInputs.cpp \
+    ui/AnalogInputsModel.cpp \
+    ui/AnalogInputsWindow.cpp \
     ui/AnnotationsWindow.cpp \
     ui/ComboBoxItemDelegate.cpp \
     ui/ControllerAxisWidget.cpp \

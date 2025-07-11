@@ -40,6 +40,7 @@
 * Add a menu entry for saving/loading states
 * Cleanly restore file descriptors after loading a savestate
 * Ram watches can be reordered
+* Analog inputs can be added to input editor
 
 ### Changed
 

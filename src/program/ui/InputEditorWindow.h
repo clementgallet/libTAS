@@ -32,6 +32,7 @@ class MovieFile;
 class InputEditorView;
 class MarkerView;
 class InputChangeLogWindow;
+class AnalogInputsWindow;
 
 class InputEditorWindow : public QMainWindow {
     Q_OBJECT
@@ -48,6 +49,7 @@ public:
     InputEditorView *inputEditorView;
     MarkerView *markerView;
     InputChangeLogWindow* inputChangeLogWindow;
+    AnalogInputsWindow* analogInputsWindow;
 
 public slots:
     void isWindowVisible(bool &visible);

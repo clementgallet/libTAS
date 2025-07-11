@@ -24,6 +24,7 @@
 #include "MarkerModel.h"
 #include "InputChangeLogWindow.h"
 #include "MainWindow.h"
+#include "AnalogInputsWindow.h"
 
 #include "Context.h"
 
@@ -45,6 +46,7 @@ InputEditorWindow::InputEditorWindow(Context* c, MovieFile *movie, QWidget *pare
     /* Panels/Windows */
     markerView = new MarkerView(c, movie, this);
     inputChangeLogWindow = new InputChangeLogWindow(c, movie, this);
+    analogInputsWindow = new AnalogInputsWindow(c, this);
 
     /* Signals */
     connect(markerView, &MarkerView::seekSignal, inputEditorView->inputEditorModel, &InputEditorModel::seekToFrame);
@@ -64,6 +66,10 @@ InputEditorWindow::InputEditorWindow(Context* c, MovieFile *movie, QWidget *pare
     sideLayout->addWidget(markerBox);
 
     /* Main menu */
+    QMenu* inputMenu = menuBar()->addMenu(tr("Inputs"));
+    inputMenu->addAction(tr("Add boolean input column"), inputEditorView, &InputEditorView::addInputColumn);
+    inputMenu->addAction(tr("Add analog input column"), analogInputsWindow, &AnalogInputsWindow::show);
+
     QMenu* menu = menuBar()->addMenu(tr("Frames"));
     inputEditorView->fillMenu(menu);
 

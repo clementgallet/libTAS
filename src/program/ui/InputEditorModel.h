@@ -24,6 +24,7 @@
 
 #include <QtCore/QAbstractTableModel>
 #include <QtCore/QTimer>
+#include <QtCore/QMimeData>
 #include <vector>
 #include <sstream>
 #include <stdint.h>
@@ -62,6 +63,11 @@ public:
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+    Qt::DropActions supportedDropActions() const override;
+
+    QStringList mimeTypes() const override;
+    bool dropMimeData(const QMimeData *mimeData, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
 
     /* Not to mess with row count, which may be larger due to blank rows at the end */
     unsigned int frameCount() const;
