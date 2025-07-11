@@ -69,6 +69,7 @@
 * Fix removing multiple ram watches
 * After a savefile is renamed, flag the old savefile as removed
 * Support writes past the end of custom SaveFile streams
+* Only edit input editor analog values after double-click
 
 ## [1.4.6] - 2024-07-05
 ### Added

@@ -44,6 +44,7 @@ InputEditorView::InputEditorView(Context* c, MovieFile *m, QWidget *parent) : QT
     setShowGrid(true);
     setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
     setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
+    setEditTriggers(QAbstractItemView::DoubleClicked);
 
     inputEditorModel = new InputEditorModel(context, movie);
     setModel(inputEditorModel);
