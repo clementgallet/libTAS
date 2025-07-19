@@ -78,7 +78,7 @@ AudioConverterSwr::AudioConverterSwr(void)
     }
     else {
         LINK_NAMESPACE(swresample_version, "swresample");
-        swr_version = swresample_version();
+        swr_version = orig::swresample_version();
 
         /* We link to swr_free here, because linking during destructor can softlock */
         LINK_NAMESPACE(swr_free, "swresample");
