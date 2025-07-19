@@ -50,6 +50,10 @@ public:
 private:
     /* Context for resampling audio */
     struct SwrContext *swr;
+
+    /* Version of the linked library */
+    unsigned int swr_version;
+
 };
 }
 

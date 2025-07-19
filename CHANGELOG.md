@@ -42,6 +42,7 @@
 * Ram watches can be reordered
 * Analog inputs can be added to input editor
 * Lua file automated reload supports editors that replace the file
+* Try supporting swr_alloc_set_opts2 even when compiled with old library
 
 ### Changed
 

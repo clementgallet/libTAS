@@ -29,21 +29,32 @@ extern "C" {
 #include <stdlib.h>
 #include <stdint.h>
 
+#if LIBSWRESAMPLE_VERSION_INT < AV_VERSION_INT(4,7,100)
+#include "../external/channel_layout.h"
+int swr_alloc_set_opts2(struct SwrContext **ps,
+    const AVChannelLayout *out_ch_layout, enum AVSampleFormat out_sample_fmt, int out_sample_rate,
+    const AVChannelLayout *in_ch_layout, enum AVSampleFormat  in_sample_fmt, int  in_sample_rate,
+    int log_offset, void *log_ctx);
+#else
+struct SwrContext *swr_alloc_set_opts(struct SwrContext *s,
+    int64_t out_ch_layout, enum AVSampleFormat out_sample_fmt, int out_sample_rate,
+    int64_t  in_ch_layout, enum AVSampleFormat  in_sample_fmt, int  in_sample_rate,
+    int log_offset, void *log_ctx);
+#endif
+
 namespace libtas {
 
 /* Link dynamically to swresample functions, because there are different
  * library versions depending on your distro.
  */
 DEFINE_ORIG_POINTER(swr_alloc)
+DEFINE_ORIG_POINTER(swresample_version)
 DEFINE_ORIG_POINTER(swr_free)
 DEFINE_ORIG_POINTER(swr_is_initialized)
 DEFINE_ORIG_POINTER(swr_close)
 DEFINE_ORIG_POINTER(swr_init)
-#if LIBSWRESAMPLE_VERSION_INT >= AV_VERSION_INT(4,7,100)
 DEFINE_ORIG_POINTER(swr_alloc_set_opts2)
-#else
 DEFINE_ORIG_POINTER(swr_alloc_set_opts)
-#endif
 DEFINE_ORIG_POINTER(swr_convert)
 
 AudioConverterSwr::AudioConverterSwr(void)
@@ -66,6 +77,9 @@ AudioConverterSwr::AudioConverterSwr(void)
         swr = nullptr;
     }
     else {
+        LINK_NAMESPACE(swresample_version, "swresample");
+        swr_version = swresample_version();
+
         /* We link to swr_free here, because linking during destructor can softlock */
         LINK_NAMESPACE(swr_free, "swresample");
 
@@ -100,11 +114,10 @@ void AudioConverterSwr::init(AudioBuffer::SampleFormat inFormat, int inChannels,
         
     LINK_NAMESPACE(swr_init, "swresample");
     LINK_NAMESPACE(swr_convert, "swresample");
-#if LIBSWRESAMPLE_VERSION_INT >= AV_VERSION_INT(4,7,100)
-    LINK_NAMESPACE(swr_alloc_set_opts2, "swresample");
-#else
-    LINK_NAMESPACE(swr_alloc_set_opts, "swresample");
-#endif
+    if (swr_version >= AV_VERSION_INT(4,7,100))
+        LINK_NAMESPACE(swr_alloc_set_opts2, "swresample");
+    else
+        LINK_NAMESPACE(swr_alloc_set_opts, "swresample");
 
     AVSampleFormat inAVFormat = AV_SAMPLE_FMT_U8;
     switch (inFormat) {
@@ -152,43 +165,43 @@ void AudioConverterSwr::init(AudioBuffer::SampleFormat inFormat, int inChannels,
             break;
     }
 
-#if LIBSWRESAMPLE_VERSION_INT >= AV_VERSION_INT(4,7,100)
-    /* Get the channel layout */
-    AVChannelLayout in_ch_layout;
-    AVChannelLayout out_ch_layout;
+    if (swr_version >= AV_VERSION_INT(4,7,100)) {
+        /* Get the channel layout */
+        AVChannelLayout in_ch_layout;
+        AVChannelLayout out_ch_layout;
 
-    in_ch_layout.order = AV_CHANNEL_ORDER_NATIVE;
-    in_ch_layout.nb_channels = inChannels;
-    in_ch_layout.u.mask = (inChannels == 1) ? AV_CH_LAYOUT_MONO : AV_CH_LAYOUT_STEREO;
-    in_ch_layout.opaque = NULL;
+        in_ch_layout.order = AV_CHANNEL_ORDER_NATIVE;
+        in_ch_layout.nb_channels = inChannels;
+        in_ch_layout.u.mask = (inChannels == 1) ? AV_CH_LAYOUT_MONO : AV_CH_LAYOUT_STEREO;
+        in_ch_layout.opaque = NULL;
 
-    out_ch_layout.order = AV_CHANNEL_ORDER_NATIVE;
-    out_ch_layout.nb_channels = outChannels;
-    out_ch_layout.u.mask = (outChannels == 1) ? AV_CH_LAYOUT_MONO : AV_CH_LAYOUT_STEREO;
-    out_ch_layout.opaque = NULL;
+        out_ch_layout.order = AV_CHANNEL_ORDER_NATIVE;
+        out_ch_layout.nb_channels = outChannels;
+        out_ch_layout.u.mask = (outChannels == 1) ? AV_CH_LAYOUT_MONO : AV_CH_LAYOUT_STEREO;
+        out_ch_layout.opaque = NULL;
 
-    MYASSERT(0 == orig::swr_alloc_set_opts2(&swr, &out_ch_layout, outAVFormat, outFreq, &in_ch_layout, inAVFormat, inFreq, 0, nullptr));
-#else
-
-    /* Get the channel layout */
-    int64_t in_ch_layout = 0;
-    int64_t out_ch_layout = 0;
-
-    if (inChannels == 1) {
-        in_ch_layout = AV_CH_LAYOUT_MONO;
+        MYASSERT(0 == orig::swr_alloc_set_opts2(&swr, &out_ch_layout, outAVFormat, outFreq, &in_ch_layout, inAVFormat, inFreq, 0, nullptr));
     }
-    if (inChannels == 2) {
-        in_ch_layout = AV_CH_LAYOUT_STEREO;
-    }
-    if (outChannels == 1) {
-        out_ch_layout = AV_CH_LAYOUT_MONO;
-    }
-    if (outChannels == 2) {
-        out_ch_layout = AV_CH_LAYOUT_STEREO;
-    }
+    else {
+        /* Get the channel layout */
+        int64_t in_ch_layout = 0;
+        int64_t out_ch_layout = 0;
 
-    MYASSERT(nullptr != orig::swr_alloc_set_opts(swr, out_ch_layout, outAVFormat, outFreq, in_ch_layout, inAVFormat, inFreq, 0, nullptr));
-#endif
+        if (inChannels == 1) {
+            in_ch_layout = AV_CH_LAYOUT_MONO;
+        }
+        if (inChannels == 2) {
+            in_ch_layout = AV_CH_LAYOUT_STEREO;
+        }
+        if (outChannels == 1) {
+            out_ch_layout = AV_CH_LAYOUT_MONO;
+        }
+        if (outChannels == 2) {
+            out_ch_layout = AV_CH_LAYOUT_STEREO;
+        }
+
+        MYASSERT(nullptr != orig::swr_alloc_set_opts(swr, out_ch_layout, outAVFormat, outFreq, in_ch_layout, inAVFormat, inFreq, 0, nullptr));
+    }
 
     /* Open the context */
     if (orig::swr_init(swr) < 0) {
