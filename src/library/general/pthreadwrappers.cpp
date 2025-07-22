@@ -65,6 +65,13 @@ static void *pthread_start(void *arg)
 {
     ThreadInfo *thread = static_cast<ThreadInfo*>(arg);
 
+    /* Check if pthread_id is a duplicate of existing id, and return
+     * immediately if so. */
+    pthread_t tid = ThreadManager::getThreadId();
+    ThreadInfo* duplicate_thread = ThreadManager::getThread(tid);
+    if (duplicate_thread)
+        return nullptr;
+
     ThreadManager::initThreadFromChild(thread);
     ThreadManager::setGlobalState(thread);
     ThreadSync::decrementUninitializedThreadCount();
@@ -126,18 +133,45 @@ static void *pthread_native_start(void *arg)
     }
     thread->detached = (detachstate == PTHREAD_CREATE_DETACHED);
 
-    /* Call our wrapper function */
-    int ret = orig::pthread_create(tid_p, attr, pthread_start, thread);
+    /* After thread creation, we may end up with a pthread_id that is identical
+     * to an existing one. This is possible because we instantly detach threads
+     * after creation (see below). So if a game creates a thread that finishes
+     * quickly, then create another thread, the second one may have the same id.
+     * 
+     * To avoid all the nasty effects of this, we will continue creating threads
+     * until we get a unique id. The wrapper function called by the new thread
+     * will check for duplicate id and terminate immediately if so. */
 
-    if (ret != 0) {
-        /* Thread creation failed */
-        ThreadSync::decrementUninitializedThreadCount();
-        ThreadManager::threadIsDead(thread);
+    const ThreadInfo* duplicate_thread = nullptr;
+    pthread_t extraThreads[100];
+    int extraThreadsIndex = 0;
+    int ret;
+
+    /* We lock the thread list, so that we are sure to not detect as duplicate
+     * a thread that we just created */
+    ThreadManager::lockList();
+    do {
+        /* Call our wrapper function */
+        ret = orig::pthread_create(tid_p, attr, pthread_start, thread);
+        
+        if (ret != 0) {
+            /* Thread creation failed */
+            ThreadSync::decrementUninitializedThreadCount();
+            ThreadManager::threadIsDead(thread);
+        }
+
+        extraThreads[extraThreadsIndex++] = *tid_p;
+        duplicate_thread = ThreadManager::getThread(*tid_p);
+    } while (duplicate_thread);
+    
+    ThreadManager::unlockList();
+
+    /* Immediatly detach the thread (and extra threads). We don't want to deal
+     * with zombie threads, so we implement ourself the joinable state, and all
+     * threads are detached. */
+    for (int i = extraThreadsIndex - 1; i >= 0; i--) {
+        orig::pthread_detach(extraThreads[i]);
     }
-
-    /* Immediatly detach the thread. We don't want to deal with zombie threads,
-     * so we implement ourself the joinable state, and all threads are detached. */
-    orig::pthread_detach (*tid_p);
     return ret;
 }
 
@@ -159,22 +193,8 @@ static void *pthread_native_start(void *arg)
 
     LOG(LL_TRACE, LCF_THREAD, "Joining thread id %p tid %d", pthread_id, ThreadManager::getThreadTid(pthread_id));
 
-    const ThreadInfo* thread = nullptr;
+    const ThreadInfo* thread = ThreadManager::getThread(pthread_id);
     
-    /* We may get multiple threads having the same id, because pthread may reuse
-     * an id when one thread is terminated, and it is still in our list because
-     * it hasn't been joined yet. So we look first for a zombie thread */
-    const ThreadInfo* thread_list = ThreadManager::getThreadList();
-    for (const ThreadInfo* th = thread_list; th != nullptr; th = th->next) {
-        if (th->pthread_id == pthread_id) {
-            LOG(LL_DEBUG, LCF_THREAD, "Found thread id %p tid %d", th->pthread_id, th->real_tid);            
-            if (th->state == ThreadInfo::ST_ZOMBIE)
-                thread = th;
-            else if (!thread)
-                thread = th;
-        }
-    }
-
     if (!thread) {
         return ESRCH;
     }
@@ -182,7 +202,6 @@ static void *pthread_native_start(void *arg)
     if (thread->detached) {
         return EINVAL;
     }
-    LOG(LL_TRACE, LCF_THREAD, "Joining thread id %p tid %d", pthread_id, ThreadManager::getThreadTid(pthread_id));
 
     int ret = 0;
     /* Wait for the thread to become zombie */
