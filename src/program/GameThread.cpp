@@ -68,24 +68,16 @@ void GameThread::set_env_variables(Context *context, int gameArch)
 
     /* Set additional environment variables regarding Mesa and VDPAU configurations */
     if (context->config.sc.opengl_soft) {
+        setenv("__GLX_VENDOR_LIBRARY_NAME", "mesa", 1);
         setenv("LIBGL_ALWAYS_SOFTWARE", "1", 1);
         setenv("VK_DRIVER_FILES", "/usr/share/vulkan/icd.d/lvp_icd.i686.json:/usr/share/vulkan/icd.d/lvp_icd.x86_64.json", 1);
         setenv("VDPAU_DRIVER", "va_gl", 1);
         setenv("VDPAU_QUIRKS", "AvoidVA", 1);
     }
-    else {
-        unsetenv("LIBGL_ALWAYS_SOFTWARE");
-        unsetenv("VK_DRIVER_FILES");
-        unsetenv("VDPAU_DRIVER");
-        unsetenv("VDPAU_QUIRKS");
-    }
 
     /* If we prefer OpenAL Soft, we'll want to force it to use either SDL2 or ALSA internally */
     if (context->config.sc.openal_soft) {
         setenv("ALSOFT_DRIVERS", "sdl2,alsa", 1);
-    }
-    else {
-        unsetenv("ALSOFT_DRIVERS");
     }
 
     /* Disable Wayland support */
