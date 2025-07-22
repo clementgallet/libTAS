@@ -503,10 +503,10 @@ int ScreenCapture_Vulkan::copySurfaceToScreen()
 
     GlobalNative gn;
 
+    acquireImage();
+
     VkCommandBuffer cmdBuffer = vk::context.frames[vk::context.frameIndex].screenCommandBuffer;
     VkImage backbuffer = vk::context.frames[vk::context.frameIndex].backbuffer;
-
-    acquireImage();
 
     if (vk::context.swapchainRebuild) return -1;
 
@@ -617,9 +617,6 @@ void ScreenCapture_Vulkan::clearScreen()
 
     if (vk::context.swapchainRebuild) return;
     
-    VkCommandBuffer cmdBuffer = vk::context.frames[vk::context.frameIndex].clearCommandBuffer;
-    VkImage backbuffer = vk::context.frames[vk::context.frameIndex].backbuffer;
-
     /* A bit hackish code: we must only acquire a new image if redrawing. For 
      * the first draw of the current frame, we are clearing the current image,
      * because it hasn't yet been presented. I'm checking which case based on 
@@ -628,6 +625,9 @@ void ScreenCapture_Vulkan::clearScreen()
         acquireImage();
 
     if (vk::context.swapchainRebuild) return;
+
+    VkCommandBuffer cmdBuffer = vk::context.frames[vk::context.frameIndex].clearCommandBuffer;
+    VkImage backbuffer = vk::context.frames[vk::context.frameIndex].backbuffer;
 
     beginCommand(cmdBuffer);
 
