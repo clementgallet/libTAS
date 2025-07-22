@@ -52,6 +52,8 @@ static bool is_child_fork = false;
 
 void ThreadManager::init()
 {
+    GlobalNative gn;
+
     /* Create a ThreadInfo struct for this thread */
     ThreadInfo* thread = new ThreadInfo;
     thread->state = ThreadInfo::ST_RUNNING;
