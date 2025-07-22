@@ -91,13 +91,13 @@ uint32_t vk::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags propert
 namespace orig { \
     decltype(&myvkCreateDevice) vkCreateDevice; \
     decltype(&myvkDestroyDevice) vkDestroyDevice; \
-    decltype(&myvkGetDeviceProcAddr) vkGetDeviceProcAddr; \
 }
 
 DEFINE_ORIG_POINTER(vkCreateInstance)
 DEFINE_ORIG_POINTER(vkCreateSwapchainKHR)
 DEFINE_ORIG_POINTER(vkQueuePresentKHR)
 DEFINE_ORIG_POINTER(vkGetInstanceProcAddr)
+DEFINE_ORIG_POINTER(vkGetDeviceProcAddr)
 DEFINE_ORIG_POINTER(vkAcquireNextImageKHR)
 DEFINE_ORIG_POINTER(vkGetPhysicalDeviceMemoryProperties)
 DEFINE_ORIG_POINTER(vkCreateImage)
@@ -176,7 +176,7 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     STORE_SYMBOL(vkCreateFramebuffer)    
     STORE_RETURN_SYMBOL_CUSTOM(vkCreateDevice)
     STORE_RETURN_SYMBOL_CUSTOM(vkDestroyDevice)
-    STORE_RETURN_SYMBOL_CUSTOM(vkGetDeviceProcAddr)
+    STORE_RETURN_SYMBOL(vkGetDeviceProcAddr)
     STORE_SYMBOL(vkGetPhysicalDeviceMemoryProperties)
     STORE_SYMBOL(vkCreateImage)
     STORE_SYMBOL(vkGetImageMemoryRequirements)
@@ -259,7 +259,7 @@ PFN_vkVoidFunction vkGetInstanceProcAddr(VkInstance instance, const char* pName)
     return reinterpret_cast<void(*)()>(store_orig_and_return_my_symbol(pName, reinterpret_cast<void*>(orig::vkGetInstanceProcAddr(instance, pName))));
 }
 
-PFN_vkVoidFunction myvkGetDeviceProcAddr(VkDevice device, const char* pName)
+PFN_vkVoidFunction vkGetDeviceProcAddr(VkDevice device, const char* pName)
 {
     LOG(LL_TRACE, LCF_HOOK | LCF_VULKAN, "%s call with symbol %s", __func__, pName);
 
@@ -292,7 +292,12 @@ VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateI
     /* Get memory properties of physical device */
     orig::vkGetPhysicalDeviceMemoryProperties(physicalDevice, &vk::context.deviceMemoryProperties);
 
-    VkResult res = orig::vkCreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice);
+    VkResult res;
+    /* The device creation must be performed natively, so that it can import
+     * the correct vkGetDeviceProcAddr function with dlsym(), without being
+     * messed up by libtas.
+     */
+    NATIVECALL(res = orig::vkCreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice));
 
     if (res == VK_SUCCESS) {
         /* Store the device */
