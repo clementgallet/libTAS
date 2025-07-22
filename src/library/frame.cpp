@@ -497,12 +497,12 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
      */
     Global::skipping_draw = skipDraw(fps);
 
-    detTimer.exitFrameBoundary();
-
     if (!Global::skipping_draw)
         hud.newFrame();
 
     perfTimer.switchTimer(PerfTimer::GameTimer);
+
+    detTimer.exitFrameBoundary(); // Also releasing the lock on frame boundary
     
     // if ((framecount % 10000) == 9999)
     //     perfTimer.print();
