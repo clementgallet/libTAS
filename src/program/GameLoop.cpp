@@ -660,7 +660,7 @@ void GameLoop::sleepSendPreview()
     static AllInputs preview_ai, last_preview_ai;
     if (gameEvents->haveFocus()) {
         /* Format the keyboard and mouse state and save it in the AllInputs struct */
-        context->config.km->buildAllInputs(preview_ai, context->game_window, context->config.sc, false, context->mouse_wheel);
+        context->config.km->buildAllInputs(preview_ai, context->game_window, context->config.sc, false);
     }
 
     /* Fill controller inputs from the controller input window. */
@@ -696,10 +696,7 @@ void GameLoop::processInputs(AllInputs &ai)
             /* Get inputs if we have input focus */
             if (gameEvents->haveFocus()) {
                 /* Format the keyboard and mouse state and save it in the AllInputs struct */
-                context->config.km->buildAllInputs(ai, context->game_window, context->config.sc, context->config.mouse_warp, context->mouse_wheel);
-
-                /* Reset mouse wheel */
-                context->mouse_wheel = 0;
+                context->config.km->buildAllInputs(ai, context->game_window, context->config.sc, context->config.mouse_warp);
             }
             
             /* Scale mouse inputs in case the game window is detached */

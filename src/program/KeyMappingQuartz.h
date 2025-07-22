@@ -67,7 +67,7 @@ class KeyMappingQuartz : public KeyMapping {
          * - Get the mouse state
          * - Warp mouse pointer if needed
          */
-        void buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig& sc, bool mouse_warp, int mouse_wheel);
+        void buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig& sc, bool mouse_warp);
 
     private:
         /* Up-to-date keyboard state */

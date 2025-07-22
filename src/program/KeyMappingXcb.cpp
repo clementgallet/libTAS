@@ -264,7 +264,8 @@ void KeyMappingXcb::default_input(int tab, int input_index)
     }
 }
 
-void KeyMappingXcb::buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig& sc, bool mouse_warp, int mouse_wheel){
+void KeyMappingXcb::buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig& sc, bool mouse_warp)
+{
     int i,j;
     int keysym_i = 0;
 
@@ -425,8 +426,6 @@ void KeyMappingXcb::buildAllInputs(AllInputs& ai, uint32_t window, SharedConfig&
             ai.pointer->x = pointer_reply->win_x;
             ai.pointer->y = pointer_reply->win_y;
         }
-
-        ai.pointer->wheel = mouse_wheel;
 
         /* We only care about the five mouse buttons */
         if (pointer_reply->mask & XCB_BUTTON_MASK_1)

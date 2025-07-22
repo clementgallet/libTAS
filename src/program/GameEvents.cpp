@@ -56,14 +56,6 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
             sendMessage(MSGN_EXPOSE);
         return false;
 
-    case EVENT_TYPE_WHEEL_UP:
-        context->mouse_wheel -= 1;
-        return false;
-
-    case EVENT_TYPE_WHEEL_DOWN:
-        context->mouse_wheel += 1;
-        return false;
-
     case EVENT_TYPE_PRESS:
 
         switch(hk.type) {

@@ -72,8 +72,6 @@ protected:
         EVENT_TYPE_RELEASE,
         EVENT_TYPE_FOCUS_OUT,
         EVENT_TYPE_EXPOSE,
-        EVENT_TYPE_WHEEL_UP,
-        EVENT_TYPE_WHEEL_DOWN,
     };
 
     virtual EventType nextEvent(HotKey &hk) = 0;

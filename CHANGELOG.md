@@ -53,6 +53,8 @@
 * Remove variable framerate setting
 * Raise threshold in deterministic timer to obtain constant running fps
 * Use tristate checkboxes for debug print categories
+* Remove recording of the mouse wheel value. It must now be set through the
+  input editor only
 
 ### Fixed
 
