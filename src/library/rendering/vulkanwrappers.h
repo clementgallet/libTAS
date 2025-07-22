@@ -85,6 +85,8 @@ namespace vk {
     uint32_t getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags properties);    
 }
 
+OVERRIDE VkResult vkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance);
+
 OVERRIDE PFN_vkVoidFunction vkGetInstanceProcAddr(VkInstance instance, const char* pName);
 
 VkResult myvkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance);

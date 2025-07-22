@@ -46,7 +46,10 @@ RenderHUD_Vulkan::~RenderHUD_Vulkan() {
 
 void RenderHUD_Vulkan::init() {
     
-    ImGui_ImplVulkan_LoadFunctions([](const char* function_name, void*) { return orig::vkGetInstanceProcAddr(vk::context.instance, function_name); });
+    bool ret = ImGui_ImplVulkan_LoadFunctions([](const char* function_name, void*) { return orig::vkGetInstanceProcAddr(vk::context.instance, function_name); });
+    if (!ret) {
+        LOG(LL_ERROR, LCF_VULKAN, "ImGui_ImplVulkan_LoadFunctions failed");
+    }
     
     ImGui_ImplVulkan_InitInfo init_info = {};
     init_info.Instance = vk::context.instance;

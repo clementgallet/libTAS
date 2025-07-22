@@ -38,8 +38,14 @@
 
 #define STORE_RETURN_SYMBOL(str) \
     if (!strcmp(symbol, #str)) { \
-        orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
-        LOG(LL_DEBUG, LCF_HOOK | LCF_VULKAN,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(libtas::str), real_pointer); \
+        if (real_pointer == reinterpret_cast<void*>(libtas::str)) { \
+            LOG(LL_WARN, LCF_HOOK | LCF_VULKAN,"  Vulkan proc function failed at finding the real function %s, using the standard symbol loading method instead", symbol); \
+            LINK_NAMESPACE(str, "vulkan"); \
+        } \
+        else { \
+            orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
+        } \
+        LOG(LL_DEBUG, LCF_HOOK | LCF_VULKAN,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(libtas::str), orig::str); \
         return reinterpret_cast<void*>(libtas::str); \
     }
 
@@ -83,12 +89,12 @@ uint32_t vk::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags propert
  * This does not matter much, because linking is done with a specific ProcAddr function anyway.
  * So, I'm prefixing them with `my` */
 namespace orig { \
-    decltype(&myvkCreateInstance) vkCreateInstance; \
     decltype(&myvkCreateDevice) vkCreateDevice; \
     decltype(&myvkDestroyDevice) vkDestroyDevice; \
     decltype(&myvkGetDeviceProcAddr) vkGetDeviceProcAddr; \
 }
 
+DEFINE_ORIG_POINTER(vkCreateInstance)
 DEFINE_ORIG_POINTER(vkCreateSwapchainKHR)
 DEFINE_ORIG_POINTER(vkQueuePresentKHR)
 DEFINE_ORIG_POINTER(vkGetInstanceProcAddr)
@@ -161,7 +167,7 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     if (!real_pointer || !symbol)
         return real_pointer;
 
-    STORE_RETURN_SYMBOL_CUSTOM(vkCreateInstance)
+    STORE_RETURN_SYMBOL(vkCreateInstance)
     STORE_RETURN_SYMBOL(vkCreateSwapchainKHR)
     STORE_RETURN_SYMBOL(vkAcquireNextImageKHR)
     STORE_RETURN_SYMBOL(vkQueuePresentKHR)
@@ -218,7 +224,7 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
     return real_pointer;
 }
 
-VkResult myvkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance)
+VkResult vkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance)
 {
     LINK_NAMESPACE(vkCreateInstance, "vulkan");
 
@@ -263,7 +269,14 @@ PFN_vkVoidFunction myvkGetDeviceProcAddr(VkDevice device, const char* pName)
 }
 
 #define GETPROCADDR(symbol) \
-orig::symbol = reinterpret_cast<decltype(orig::symbol)>(orig::vkGetDeviceProcAddr(vk::context.device, #symbol));
+if (!orig::symbol) { \
+    if (orig::vkGetDeviceProcAddr) { \
+        orig::symbol = reinterpret_cast<decltype(orig::symbol)>(orig::vkGetDeviceProcAddr(vk::context.device, #symbol)); \
+    } \
+    else { \
+        orig::symbol = reinterpret_cast<decltype(orig::symbol)>(orig::vkGetInstanceProcAddr(vk::context.instance, #symbol)); \
+    } \
+}
 
 VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInfo* pCreateInfo,
                                 const VkAllocationCallbacks* pAllocator, VkDevice* pDevice)
