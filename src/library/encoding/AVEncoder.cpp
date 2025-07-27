@@ -32,6 +32,7 @@
 #include <unistd.h> // usleep
 #include <sstream>
 #include <iomanip>
+#include <sys/wait.h> // waitpid
 
 namespace libtas {
 
@@ -45,7 +46,7 @@ std::unique_ptr<AVEncoder> avencoder;
 
 AVEncoder::AVEncoder() {
     std::ostringstream commandline;
-    commandline << "ffmpeg -hide_banner -y -f nut -i - ";
+    commandline << "ffmpeg -xerror -hide_banner -y -f nut -i - ";
     commandline << ffmpeg_options;
     commandline << " \"";
     char* dumpfile_ext = strrchr(dumpfile, '.');
@@ -59,11 +60,20 @@ AVEncoder::AVEncoder() {
     commandline << dumpfile_ext;
     commandline << "\"";
 
-    NATIVECALL(ffmpeg_pipe = popen(commandline.str().c_str(), "w"));
+    {
+        GlobalNative gn;
+        
+        int pipefd[2];
+        pipe(pipefd);
+        ffmpeg_pid = fork();
+        if (ffmpeg_pid == 0) {
+            close(pipefd[1]);
+            dup2(pipefd[0], STDIN_FILENO);
+            execlp("sh", "sh", "-c", commandline.str().c_str(), nullptr);
+        }
 
-    if (! ffmpeg_pipe) {
-        LOG(LL_ERROR, LCF_DUMP, "Could not create a pipe to ffmpeg");
-        return;
+        close(pipefd[0]);
+        ffmpeg_pipe = fdopen(pipefd[1], "w");
     }
 
     if (ScreenCapture::isInited()) {
@@ -91,6 +101,17 @@ void AVEncoder::initMuxer() {
 }
 
 void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
+    if (!ffmpeg_pipe)
+        return;
+    
+    /* Check if ffmpeg did exit for some reason */
+    int ret_pid = waitpid(ffmpeg_pid, nullptr, WNOHANG);
+    if (ret_pid == ffmpeg_pid) {
+        LOG(LL_WARN, LCF_DUMP, "ffmpeg process exited, encoding stopped");
+        NATIVECALL(fclose(ffmpeg_pipe));
+        ffmpeg_pipe = nullptr;
+        return;
+    }
 
     /* If the muxer is not initialized, try to initialize it. Otherwise, store
      * that we skipped one frame and we need to encode it later.
@@ -154,10 +175,13 @@ AVEncoder::~AVEncoder() {
 
     if (ffmpeg_pipe) {
         int ret;
-        NATIVECALL(ret = pclose(ffmpeg_pipe));
+        NATIVECALL(ret = fclose(ffmpeg_pipe));
         if (ret < 0) {
             LOG(LL_ERROR, LCF_DUMP, "Could not close the pipe to ffmpeg");
         }
+        ffmpeg_pipe = nullptr;
+        
+        waitpid(ffmpeg_pid, nullptr, 0);
     }
 }
 
