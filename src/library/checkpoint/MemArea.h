@@ -52,6 +52,7 @@ struct Area {
         BASE_PAGE, /* Page was not modified from base savestate */
         COMPRESSED_PAGE, /* Full page but compressed */
         FILE_PAGE, /* Page is identical to the original mapped file */
+        GUARD_PAGE, /* A page causing a fatal signal on access, without a VMA backing it */
     };
 
     void* addr;
