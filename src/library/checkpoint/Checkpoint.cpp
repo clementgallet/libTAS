@@ -79,6 +79,13 @@
 
 #define ONE_MB 1024 * 1024
 
+#ifndef MADV_GUARD_INSTALL
+#define MADV_GUARD_INSTALL 102
+#endif
+#ifndef MADV_GUARD_REMOVE
+#define MADV_GUARD_REMOVE 103
+#endif
+
 namespace libtas {
 
 /* Savestate paths (for file storing)*/
