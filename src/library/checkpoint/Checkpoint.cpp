@@ -727,9 +727,14 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
         if (flag == Area::GUARD_PAGE) {
             pagecount_skip++;
             LOG(LL_DEBUG, LCF_CHECKPOINT, "    Skip reading guard page at %p(isGuardPage=%d)", curAddr);
+            if (!page_guard_region) {
+                LOG(LL_DEBUG, LCF_CHECKPOINT, "    Page was guard page in checkpoint but now isn't");
+                MYASSERT(madvise(curAddr, 4096, MADV_GUARD_INSTALL) == 0);
+            }
             continue;
         } else if (page_guard_region) {
             LOG(LL_DEBUG, LCF_CHECKPOINT, "    Page was not a guard page in checkpoint but now is %p", curAddr);
+            MYASSERT(madvise(curAddr, 4096, MADV_GUARD_REMOVE) == 0);
         }
 
         /* It seems that static memory is both zero and unmapped, so we still
