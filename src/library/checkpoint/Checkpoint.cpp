@@ -720,13 +720,16 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
         /* Gather the flag for the page map */
         uint64_t page = pagemaps[pagemap_i++];
         bool soft_dirty = page & (0x1ull << 55);
+        bool page_guard_region = page & (0x1ull << 58);
         bool page_file = page & (0x1ull << 61);
         bool page_present = page & (0x1ull << 63);
 
         if (flag == Area::GUARD_PAGE) {
             pagecount_skip++;
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "Skip reading guard page at %p", curAddr);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Skip reading guard page at %p(isGuardPage=%d)", curAddr);
             continue;
+        } else if (page_guard_region) {
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Page was not a guard page in checkpoint but now is %p", curAddr);
         }
 
         /* It seems that static memory is both zero and unmapped, so we still
@@ -1383,7 +1386,7 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
 
         if (page_guard_region) {
             state.savePageFlag(Area::GUARD_PAGE);
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "Skip saving guard page at %p", curAddr);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Skip saving guard page at %p", curAddr);
             continue;
         }
 
