@@ -96,6 +96,7 @@ AC_CHECK_HEADERS([SDL2/SDL.h], [], AC_MSG_ERROR(The SDL2 headers are required!))
 AC_CHECK_HEADERS([libudev.h], [], AC_MSG_ERROR(The udev headers are required!))
 
 AC_CHECK_HEADER([xcb/randr.h], [AC_DEFINE([LIBTAS_HAS_XCB_RANDR], [1], [Extension xcb randr is present])])
+AC_CHECK_HEADER([xcb/xinput.h], [AC_DEFINE([LIBTAS_HAS_XCB_XINPUT], [1], [Extension xcb xinput is present])])
 
 AC_CHECK_HEADERS([pthread.h], [], [AC_MSG_ERROR(The pthread header is required!)])
 AC_SEARCH_LIBS([pthread_join], [pthread], [], [AC_MSG_ERROR(The pthread library is required!)])
