@@ -367,5 +367,17 @@ void GameThread::attach(Context *context)
                    "-p", std::to_string(context->game_pid).c_str(), (char *) NULL);
             break;
         }
+        case Config::DEBUGGER_STRACE: {
+            if (!context->config.strace_events.empty()) {
+                execlp("strace", "strace",
+                       "-p", std::to_string(context->game_pid).c_str(),
+                       "-e", context->config.strace_events.c_str(), (char *) NULL);
+            }
+            else {
+                execlp("strace", "strace",
+                       "-p", std::to_string(context->game_pid).c_str(), (char *) NULL);
+            }
+            break;
+        }
     }
 }
