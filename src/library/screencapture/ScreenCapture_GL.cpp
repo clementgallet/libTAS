@@ -59,6 +59,7 @@ int ScreenCapture_GL::init()
 void ScreenCapture_GL::initScreenSurface()
 {
     /* Reset error flag */
+    LINK_GL_POINTER(GetError)
     glProcs.GetError();
 
     /* Generate FBO and RBO */
@@ -98,6 +99,10 @@ void ScreenCapture_GL::initScreenSurface()
 
 void ScreenCapture_GL::destroyScreenSurface()
 {
+    LINK_GL_POINTER(DeleteFramebuffers)
+    LINK_GL_POINTER(DeleteRenderbuffers)
+    LINK_GL_POINTER(DeleteTextures)
+
     /* Delete openGL framebuffers */
     if (screenFBO != 0) {
         glProcs.DeleteFramebuffers(1, &screenFBO);
@@ -128,6 +133,10 @@ int ScreenCapture_GL::copyScreenToSurface()
     GlobalNative gn;
 
     /* Disable the scissor test if needed */
+    LINK_GL_POINTER(IsEnabled)
+    LINK_GL_POINTER(Disable)
+    LINK_GL_POINTER(GetIntegerv)
+
     GLboolean scissor_test_active = glProcs.IsEnabled(GL_SCISSOR_TEST);
     if (scissor_test_active)
         glProcs.Disable(GL_SCISSOR_TEST);
