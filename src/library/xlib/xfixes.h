@@ -17,22 +17,19 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_XINPUT_H_INCL
-#define LIBTAS_XINPUT_H_INCL
+#ifndef LIBTAS_XFIXES_H_INCL
+#define LIBTAS_XFIXES_H_INCL
 
 #include "hook.h"
-#include "../external/X11/XInput2.h"
+#include <X11/X.h>
+#include <X11/Xlib.h>
+
+typedef XID PointerBarrier;
 
 namespace libtas {
 
-extern int xinput_opcode;
-
-OVERRIDE int XISelectEvents(Display* dpy, Window win, XIEventMask *masks, int num_masks);
-OVERRIDE XIEventMask *XIGetSelectedEvents( Display *display, Window win, int *num_masks_return);
-OVERRIDE XIDeviceInfo* XIQueryDevice(Display* dpy, int deviceid, int* ndevices_return);
-OVERRIDE void XIFreeDeviceInfo( XIDeviceInfo *info);
-OVERRIDE int XIGrabTouchBegin( Display *display, int deviceid, Window grab_window, Bool owner_events, XIEventMask *mask, int num_modifiers, XIGrabModifiers *modifiers_inout);
-OVERRIDE int XIUngrabTouchBegin( Display *display, int deviceid, Window grab_window, int num_modifiers, XIGrabModifiers *modifiers);
+OVERRIDE PointerBarrier XFixesCreatePointerBarrier(Display *dpy, Window w, int x1, int y1, int x2, int y2, int directions, int num_devices, int *devices);
+OVERRIDE void XFixesDestroyPointerBarrier(Display *dpy, PointerBarrier b);
 
 }
 

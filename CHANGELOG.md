@@ -45,6 +45,7 @@
 * Try supporting swr_alloc_set_opts2 even when compiled with old library
 * Enforce mesa software rendering even when nvidia driver is loaded
 * Catch when ffmpeg process exited
+* Add more hooks to prevent mouse capture
 
 ### Changed
 

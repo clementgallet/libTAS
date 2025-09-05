@@ -211,6 +211,7 @@ libtas_so_SOURCES = \
     xlib/xdisplay.cpp \
     xlib/xevents.cpp \
     xlib/xf86vidmode.cpp \
+    xlib/xfixes.cpp \
     xlib/xinerama.cpp \
     xlib/xrandr.cpp \
     xlib/xshm.cpp \

@@ -221,4 +221,16 @@ void XIFreeDeviceInfo( XIDeviceInfo *info)
     delete info;    
 }
 
+int XIGrabTouchBegin(Display *display, int deviceid, Window grab_window, Bool owner_events, XIEventMask *mask, int num_modifiers, XIGrabModifiers *modifiers_inout)
+{
+    LOGTRACE(LCF_MOUSE);
+    return 0;
+}
+
+int XIUngrabTouchBegin( Display *display, int deviceid, Window grab_window, int num_modifiers, XIGrabModifiers *modifiers)
+{
+    LOGTRACE(LCF_MOUSE);
+    return 0;
+}
+
 }
