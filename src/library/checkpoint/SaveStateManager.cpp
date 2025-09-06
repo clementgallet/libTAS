@@ -802,6 +802,7 @@ void SaveStateManager::createNewThreads()
                 cargs.stack_size = (reinterpret_cast<uintptr_t>(thread->saved_sp) - 128) - reinterpret_cast<uintptr_t>(thread->stack_addr);
                 cargs.set_tid = reinterpret_cast<uintptr_t>(&thread->translated_tid);
                 cargs.set_tid_size = 1;
+                cargs.exit_signal = 0;
                 
                 RUN_CLONE3_RESTORE_FN(returned_pid, cargs, sizeof(cargs), thread, startNewThread);
                 
