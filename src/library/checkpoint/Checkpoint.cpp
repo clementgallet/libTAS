@@ -47,7 +47,7 @@
 #include "renderhud/RenderHUD.h"
 #include "../shared/sockethelpers.h"
 #ifdef __unix__
-#include "../external/xcbint.h"
+#include "../external/xcb/xcbint.h"
 #include "xlib/xdisplay.h" // x11::gameDisplays
 #endif
 

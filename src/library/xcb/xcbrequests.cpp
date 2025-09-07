@@ -42,7 +42,7 @@
 #include "../external/X11/XInput2.h"
 #include "xlib/xdisplay.h" // x11::gameDisplays
 #include "xlib/XlibEventQueueList.h"
-#include <xcb/xinput.h>
+#include <../external/xcb/xinput.h>
 
 namespace libtas {
 
@@ -396,7 +396,6 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                 xi_major_opcode = reply ? reply->major_opcode : -1;
             }
 
-#ifdef LIBTAS_HAS_XCB_XINPUT
             if (major_opcode == xi_major_opcode)
             {
                 auto minor_opcode = static_cast<uint8_t*>(vector->iov_base)[1];
@@ -506,7 +505,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                     }
                 }
             }
-#endif
+
             send_request(vector);
             break;
         }
