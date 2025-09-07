@@ -81,17 +81,9 @@ static Bool isEventFiltered (XEvent *event) {
             return True;
         case ConfigureNotify:
             {
+                /* Replace the actual window position to the one stored */
                 XConfigureEvent* xce = reinterpret_cast<XConfigureEvent*>(event);
-                xce->x = 0;
-                xce->y = 0;
-            }
-            /* We need to filter this event on Unity. Without this, moving the
-             * game window makes inputs stop registering. We still need this
-             * on the first frame though.  */
-            if (UnityHacks::isUnity()) {
-                if (framecount == 0)
-                    return False;
-                return True;                
+                XlibGameWindow::getCoords(event->xany.window, &xce->x, &xce->y);
             }
             return False;
         case ClientMessage:

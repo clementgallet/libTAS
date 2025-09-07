@@ -20,7 +20,6 @@
 #ifndef LIBTAS_XLIBGAMEWINDOW_H_INCLUDED
 #define LIBTAS_XLIBGAMEWINDOW_H_INCLUDED
 
-#include <list>
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <xcb/xcb.h>
@@ -52,6 +51,10 @@ bool isRootWindow(xcb_connection_t *c, Window w);
 
 /* Returns if the window is a top-level window */
 bool isTopLevel(Display *display, Window w);
+
+/* Get and set coords of a window */
+void setCoords(Window w, int x, int y);
+void getCoords(Window w, int* x, int* y);
 
 };
 

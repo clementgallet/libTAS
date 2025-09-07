@@ -26,10 +26,17 @@
 #include "../shared/sockethelpers.h"
 #include "../shared/messages.h"
 
+#include <list>
+#include <map>
+#include <utility>
+
 namespace libtas {
 
 /* Window identifiers */
 std::list<Window> gameXWindows;
+
+/* Window coords */
+std::map<Window, std::pair<int, int>> gameXWindowCoords;
 
 void XlibGameWindow::push(Window w)
 {
@@ -119,5 +126,20 @@ bool XlibGameWindow::isTopLevel(Display *display, Window w)
     return isRootWindow(display, parent_return);
 }
 
+void XlibGameWindow::setCoords(Window w, int x, int y)
+{
+    gameXWindowCoords[w] = std::pair<int, int>(x, y);
+}
+
+void XlibGameWindow::getCoords(Window w, int* x, int* y)
+{
+    auto it = gameXWindowCoords.find(w);
+    if (it != gameXWindowCoords.end()) {
+        *x = it->second.first;
+        *y = it->second.second;
+    }
+    *x = 0;
+    *y = 0;
+}
 
 }

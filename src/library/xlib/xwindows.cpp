@@ -92,6 +92,7 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
     /* Only save the Window identifier for top-level windows */
     if (XlibGameWindow::isRootWindow(display, parent)) {
         XlibGameWindow::push(w);
+        XlibGameWindow::setCoords(w, x, y);
     }
 
     return w;
@@ -108,6 +109,7 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
     /* Only save the Window identifier for top-level windows */
     if (XlibGameWindow::isRootWindow(display, parent)) {
         XlibGameWindow::push(w);
+        XlibGameWindow::setCoords(w, x, y);
     }
 
     return w;
@@ -201,8 +203,10 @@ int XSelectInput(Display *display, Window w, long event_mask)
 int XMoveWindow(Display* display, Window w, int x, int y)
 {
     LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
-    /* Preventing the game to change top-level window position */
+    /* Save the new window coords, and
+     * prevent the game to change top-level window position */
     if (XlibGameWindow::isTopLevel(display, w)) {
+        XlibGameWindow::setCoords(w, x, y);
         return 0;
     }
 
@@ -230,6 +234,7 @@ int XMoveResizeWindow(Display* display, Window w, int x, int y, unsigned int wid
     
     /* Preventing the game to change top-level window position */
     if (XlibGameWindow::isTopLevel(display, w)) {
+        XlibGameWindow::setCoords(w, x, y);
         RETURN_NATIVE(XResizeWindow, (display, w, width, height), nullptr);
     }
     else {
@@ -249,8 +254,10 @@ int XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindo
     }
 
     /* Preventing the game to change top-level window position */
-    if (XlibGameWindow::isTopLevel(display, w))
+    if (XlibGameWindow::isTopLevel(display, w)) {
+        XlibGameWindow::setCoords(w, values->x, values->y);
         value_mask &= ~(CWX | CWY);
+    }
 
     int ret = orig::XConfigureWindow(display, w, value_mask, values);
 
@@ -368,8 +375,10 @@ Bool XTranslateCoordinates(Display* display, Window src_w, Window dest_w, int sr
     LOG(LL_TRACE, LCF_WINDOW, "%s called with src_w %d, dest_w %d, src_x %d, src_y %d", __func__, src_w, dest_w, src_x, src_y);
 
     if (dest_w == DefaultRootWindow(display)) {
-        *dest_x_return = src_x;
-        *dest_y_return = src_y;
+        int x, y;
+        XlibGameWindow::getCoords(src_w, &x, &y);
+        *dest_x_return = src_x + x;
+        *dest_y_return = src_y + y;
         if (child_return) *child_return = src_w;
         return True;
     }
@@ -385,9 +394,8 @@ Status XGetWindowAttributes(Display* display, Window w, XWindowAttributes* windo
     LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
     Status ret = orig::XGetWindowAttributes(display, w, window_attributes_return);
 
-    /* Change the window position to 0,0 */
-    window_attributes_return->x = 0;
-    window_attributes_return->y = 0;
+    /* Change the window position to stored coords */
+    XlibGameWindow::getCoords(w, &window_attributes_return->x, &window_attributes_return->y);
 
     return ret;
 }
