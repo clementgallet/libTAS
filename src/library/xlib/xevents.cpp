@@ -527,6 +527,23 @@ Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, X
                 return 0;
             }
         }
+        if ((event_send->xclient.message_type == x11_atom(_NET_WM_STATE)) &&
+            (event_send->xclient.data.l[0] == 0 /*_NET_WM_STATE_REMOVE*/ )) {
+
+            if (static_cast<Atom>(event_send->xclient.data.l[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
+                LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "   fullscreen is removed");
+                if (XlibGameWindow::get() && (event_send->xclient.window != XlibGameWindow::get())) {
+                    LOG(LL_WARN, LCF_EVENTS | LCF_WINDOW, "   fullscreen window is not game window!");
+                }
+
+                /* Unity expects that after removing fullscreen, the window size
+                 * or position will change. So we resize the window to some
+                 * arbitrary resolution, hoping that it is either on game
+                 * exit, or the game will set itself a new resolution. */
+                XResizeWindow(display, event_send->xclient.window, 720, 480);
+                return 0;
+            }
+        }
     }
 
     return orig::XSendEvent(display, w, propagate, event_mask, event_send);

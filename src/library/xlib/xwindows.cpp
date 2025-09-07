@@ -394,6 +394,9 @@ Status XGetWindowAttributes(Display* display, Window w, XWindowAttributes* windo
     LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
     Status ret = orig::XGetWindowAttributes(display, w, window_attributes_return);
 
+    /* Update the window size */
+    ScreenCapture::getDimensions(window_attributes_return->width, window_attributes_return->height);
+
     /* Change the window position to stored coords */
     XlibGameWindow::getCoords(w, &window_attributes_return->x, &window_attributes_return->y);
 
