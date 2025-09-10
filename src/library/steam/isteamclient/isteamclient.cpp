@@ -25,6 +25,7 @@
 #include "isteamclient016.h"
 #include "isteamclient017.h"
 #include "isteamclient020.h"
+#include "isteamclient021.h"
 
 #include "steam/isteamcontroller.h"
 #include "steam/steamapi.h"
@@ -42,47 +43,57 @@ static const char *steamclient_version = NULL;
 
 struct ISteamClient *SteamClient_generic(const char *version)
 {
-	static const struct
-	{
-		const char *name;
-		struct ISteamClient *(*iface_getter)(void);
-	} ifaces[] = {
+    static const struct
+    {
+        const char *name;
+        struct ISteamClient *(*iface_getter)(void);
+    } ifaces[] = {
         { STEAMCLIENT_INTERFACE_VERSION_006, SteamClient006 },
-		{ STEAMCLIENT_INTERFACE_VERSION_012, SteamClient012 },
-		{ STEAMCLIENT_INTERFACE_VERSION_014, SteamClient014 },
-		{ STEAMCLIENT_INTERFACE_VERSION_016, SteamClient016 },
-		{ STEAMCLIENT_INTERFACE_VERSION_017, SteamClient017 },
+        { STEAMCLIENT_INTERFACE_VERSION_007, SteamClient012 },
+        { STEAMCLIENT_INTERFACE_VERSION_008, SteamClient012 },
+        { STEAMCLIENT_INTERFACE_VERSION_009, SteamClient012 },
+        { STEAMCLIENT_INTERFACE_VERSION_010, SteamClient012 },
+        { STEAMCLIENT_INTERFACE_VERSION_011, SteamClient012 },
+        { STEAMCLIENT_INTERFACE_VERSION_012, SteamClient012 },
+        { STEAMCLIENT_INTERFACE_VERSION_013, SteamClient014 },
+        { STEAMCLIENT_INTERFACE_VERSION_014, SteamClient014 },
+        { STEAMCLIENT_INTERFACE_VERSION_015, SteamClient016 },
+        { STEAMCLIENT_INTERFACE_VERSION_016, SteamClient016 },
+        { STEAMCLIENT_INTERFACE_VERSION_017, SteamClient017 },
+        { STEAMCLIENT_INTERFACE_VERSION_018, SteamClient020 },
+        { STEAMCLIENT_INTERFACE_VERSION_019, SteamClient020 },
         { STEAMCLIENT_INTERFACE_VERSION_020, SteamClient020 },
-		{ NULL, NULL }
-	};
-	int i;
+        { STEAMCLIENT_INTERFACE_VERSION_021, SteamClient021 },
+        { NULL, NULL }
+    };
+    int i;
 
     LOG(LL_DEBUG, LCF_STEAM, "%s called with version %s", __func__, version);
 
-	i = 0;
-	while (ifaces[i].name)
-	{
-		if (strcmp(ifaces[i].name, version) == 0)
-		{
-			if (ifaces[i].iface_getter)
-				return ifaces[i].iface_getter();
+    i = 0;
+    while (ifaces[i].name)
+    {
+        if (strcmp(ifaces[i].name, version) == 0)
+        {
+            if (ifaces[i].iface_getter)
+                return ifaces[i].iface_getter();
 
-			break;
-		}
-		i++;
-	}
+            break;
+        }
+        i++;
+    }
 
     LOG(LL_WARN, LCF_STEAM, "Unable to find ISteamClient version %s", version);
 
-	return nullptr;
+    return nullptr;
 }
 
 void SteamClient_set_version(const char *version)
 {
     LOG(LL_DEBUG, LCF_STEAM, "%s called with version %s", __func__, version);
 
-	// if (!steamclient_version)
-		steamclient_version = version;
+    // if (!steamclient_version)
+        steamclient_version = version;
 }
 
 struct ISteamClient *SteamClient(void)
@@ -94,18 +105,18 @@ struct ISteamClient *SteamClient(void)
         return orig::SteamClient();
     }
 
-	static struct ISteamClient *cached_iface = nullptr;
+    static struct ISteamClient *cached_iface = nullptr;
 
-	if (!steamclient_version)
-	{
-		steamclient_version = STEAMCLIENT_INTERFACE_VERSION_017;
+    if (!steamclient_version)
+    {
+        steamclient_version = STEAMCLIENT_INTERFACE_VERSION_017;
         LOG(LL_WARN, LCF_STEAM, "ISteamClient: No version specified, defaulting to %s", steamclient_version);
-	}
+    }
 
-	if (!cached_iface)
-		cached_iface = SteamClient_generic(steamclient_version);
+    if (!cached_iface)
+        cached_iface = SteamClient_generic(steamclient_version);
 
-	return cached_iface;
+    return cached_iface;
 }
 
 HSteamPipe ISteamClient_CreateSteamPipe(void *iface)

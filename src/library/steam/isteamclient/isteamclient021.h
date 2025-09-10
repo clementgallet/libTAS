@@ -4,8 +4,8 @@
 //
 //=============================================================================
 
-#ifndef LIBTAS_ISTEAMCLIENT017_H_INCL
-#define LIBTAS_ISTEAMCLIENT017_H_INCL
+#ifndef LIBTAS_ISTEAMCLIENT021_H_INCL
+#define LIBTAS_ISTEAMCLIENT021_H_INCL
 
 #include "isteamclient.h"
 #include "steam/steamtypes.h"
@@ -22,9 +22,10 @@
 #include "steam/isteamhttp.h"
 #include "steam/isteamgameserver.h"
 #include "steam/isteamnetworking.h"
+#include "steam/isteaminput.h"
 
 #include <stdint.h>
-#define STEAMCLIENT_INTERFACE_VERSION_017 "SteamClient017"
+#define STEAMCLIENT_INTERFACE_VERSION_021 "SteamClient021"
 
 namespace libtas {
 
@@ -36,8 +37,11 @@ typedef void ISteamInventory;
 typedef void ISteamVideo;
 typedef void ISteamParentalSettings;
 typedef void ISteamGameServerStats;
+typedef void ISteamGameSearch;
+typedef void ISteamParties;
+typedef void ISteamRemotePlay;
 
-struct ISteamClient017Vtbl
+struct ISteamClient021Vtbl
 {
     HSteamPipe (*CreateSteamPipe)(void *iface);
     bool (*BReleaseSteamPipe)(void *iface, HSteamPipe steam_pipe);
@@ -58,15 +62,14 @@ struct ISteamClient017Vtbl
     ISteamNetworking *(*GetISteamNetworking)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
     ISteamRemoteStorage *(*GetISteamRemoteStorage)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
     ISteamScreenshots *(*GetISteamScreenshots)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
+    ISteamGameSearch *(*GetISteamGameSearch)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
     void (*RunFrame)(void *iface);
     unsigned int (*GetIPCCallCount)(void *iface);
     void (*SetWarningMessageHook)(void *iface, void *callback);
     bool (*BShutdownIfAllPipesClosed)(void *iface);
     ISteamHTTP *(*GetISteamHTTP)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
-    void *(*GetISteamUnifiedMessages)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
     ISteamController *(*GetISteamController)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
     ISteamUGC *(*GetISteamUGC)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
-    ISteamAppList *(*GetISteamAppList)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
     ISteamMusic *(*GetISteamMusic)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
     ISteamMusicRemote *(*GetISteamMusicRemote)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
     ISteamHTMLSurface *(*GetISteamHTMLSurface)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
@@ -76,9 +79,13 @@ struct ISteamClient017Vtbl
     ISteamInventory *(*GetISteamInventory)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
     ISteamVideo *(*GetISteamVideo)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
     ISteamParentalSettings *(*GetISteamParentalSettings)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
+    ISteamInput *(*GetISteamInput)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
+    ISteamParties *(*GetISteamParties)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
+    ISteamRemotePlay *(*GetISteamRemotePlay)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
+    void *DestroyAllInterfaces;
 };
 
-struct ISteamClient *SteamClient017(void);
+struct ISteamClient *SteamClient021(void);
 
 }
 

@@ -33,6 +33,7 @@
 #include "isteamclient/isteamclient016.h"
 #include "isteamclient/isteamclient017.h"
 #include "isteamclient/isteamclient020.h"
+#include "isteamclient/isteamclient021.h"
 #include "isteamuser/isteamuser021.h"
 #include "isteamuser/isteamuser023.h"
 #include "isteamuserstats/isteamuserstats005.h"
@@ -67,11 +68,21 @@ const steam_interface* SteamGetAllInterfaces() {
         // { STEAMAPPS_INTERFACE_VERSION_007, SteamApps_set_version },
         // { STEAMAPPS_INTERFACE_VERSION_008, SteamApps_set_version },
         { STEAMCLIENT_INTERFACE_VERSION_006, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
+        { STEAMCLIENT_INTERFACE_VERSION_007, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
+        { STEAMCLIENT_INTERFACE_VERSION_008, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
+        { STEAMCLIENT_INTERFACE_VERSION_009, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
+        { STEAMCLIENT_INTERFACE_VERSION_010, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
+        { STEAMCLIENT_INTERFACE_VERSION_011, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
         { STEAMCLIENT_INTERFACE_VERSION_012, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
+        { STEAMCLIENT_INTERFACE_VERSION_013, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
         { STEAMCLIENT_INTERFACE_VERSION_014, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
+        { STEAMCLIENT_INTERFACE_VERSION_015, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
         { STEAMCLIENT_INTERFACE_VERSION_016, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
         { STEAMCLIENT_INTERFACE_VERSION_017, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
+        { STEAMCLIENT_INTERFACE_VERSION_018, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
+        { STEAMCLIENT_INTERFACE_VERSION_019, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
         { STEAMCLIENT_INTERFACE_VERSION_020, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
+        { STEAMCLIENT_INTERFACE_VERSION_021, SteamClient_set_version, reinterpret_cast<void *(*)(const char*)>(SteamClient_generic) },
         // { STEAMCONTROLLER_INTERFACE_VERSION_001, SteamController_set_version },
         // { STEAMCONTROLLER_INTERFACE_VERSION_003, SteamController_set_version },
         // { STEAMCONTROLLER_INTERFACE_VERSION_005, SteamController_set_version },

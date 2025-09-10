@@ -30,27 +30,27 @@ namespace libtas {
 
 struct ISteamClient006Vtbl
 {
-	HSteamPipe (*CreateSteamPipe)(void *iface);
-	bool (*BReleaseSteamPipe)(void *iface, HSteamPipe steam_pipe);
+    HSteamPipe (*CreateSteamPipe)(void *iface);
+    bool (*BReleaseSteamPipe)(void *iface, HSteamPipe steam_pipe);
     void *CreateGlobalUser;
-	HSteamUser (*ConnectToGlobalUser)(void *iface, HSteamPipe steam_pipe);
-	HSteamUser (*CreateLocalUser)( void *iface, HSteamPipe *phSteamPipe, EAccountType eAccountType );
-	void (*ReleaseUser)(void *iface, HSteamPipe steam_pipe, HSteamUser steam_user);
-	ISteamUser *(*GetISteamUser)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
+    HSteamUser (*ConnectToGlobalUser)(void *iface, HSteamPipe steam_pipe);
+    HSteamUser (*CreateLocalUser)( void *iface, HSteamPipe *phSteamPipe, EAccountType eAccountType );
+    void (*ReleaseUser)(void *iface, HSteamPipe steam_pipe, HSteamUser steam_user);
+    ISteamUser *(*GetISteamUser)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
     void *GetIVAC;
-	ISteamGameServer *(*GetISteamGameServer)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
-	void *SetLocalIPBinding;
+    ISteamGameServer *(*GetISteamGameServer)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
+    void *SetLocalIPBinding;
     void *GetUniverseName;
-	ISteamFriends *(*GetISteamFriends)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
-	ISteamUtils *(*GetISteamUtils)(void *iface, HSteamPipe steam_pipe, const char *version);
+    ISteamFriends *(*GetISteamFriends)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
+    ISteamUtils *(*GetISteamUtils)(void *iface, HSteamPipe steam_pipe, const char *version);
     void *GetISteamBilling;
-	ISteamMatchmaking *(*GetISteamMatchmaking)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
+    ISteamMatchmaking *(*GetISteamMatchmaking)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
     ISteamApps *(*GetISteamApps)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
     void *GetISteamContentServer;
     void *GetISteamMasterServerUpdater;
-	ISteamMatchmakingServers *(*GetISteamMatchmakingServers)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
-	void (*RunFrame)(void *iface);
-	unsigned int (*GetIPCCallCount)(void *iface);
+    ISteamMatchmakingServers *(*GetISteamMatchmakingServers)(void *iface, HSteamUser steam_user, HSteamPipe steam_pipe, const char *version);
+    void (*RunFrame)(void *iface);
+    unsigned int (*GetIPCCallCount)(void *iface);
 };
 
 struct ISteamClient *SteamClient006(void);

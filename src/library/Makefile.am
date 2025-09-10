@@ -154,6 +154,7 @@ libtas_so_SOURCES = \
     steam/isteamclient/isteamclient016.cpp \
     steam/isteamclient/isteamclient017.cpp \
     steam/isteamclient/isteamclient020.cpp \
+    steam/isteamclient/isteamclient021.cpp \
     steam/isteamcontroller.cpp \
     steam/isteamfriends.cpp \
     steam/isteamgamecoordinator.cpp \

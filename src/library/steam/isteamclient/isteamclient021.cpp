@@ -4,12 +4,12 @@
 //
 //=============================================================================
 
-#include "isteamclient012.h"
+#include "isteamclient021.h"
 #include "isteamclient_priv.h"
 
 namespace libtas {
 
-static const struct ISteamClient012Vtbl ISteamClient012_vtbl = {
+static const struct ISteamClient021Vtbl ISteamClient021_vtbl = {
     ISteamClient_CreateSteamPipe,
     ISteamClient_BReleaseSteamPipe,
     ISteamClient_ConnectToGlobalUser,
@@ -29,21 +29,34 @@ static const struct ISteamClient012Vtbl ISteamClient012_vtbl = {
     ISteamClient_GetISteamNetworking,
     ISteamClient_GetISteamRemoteStorage,
     ISteamClient_GetISteamScreenshots,
+    ISteamClient_GetISteamGameSearch,
     ISteamClient_RunFrame,
     ISteamClient_GetIPCCallCount,
     ISteamClient_SetWarningMessageHook,
     ISteamClient_BShutdownIfAllPipesClosed,
     ISteamClient_GetISteamHTTP,
-    ISteamClient_GetISteamUnifiedMessages,
     ISteamClient_GetISteamController,
     ISteamClient_GetISteamUGC,
+    ISteamClient_GetISteamMusic,
+    ISteamClient_GetISteamMusicRemote,
+    ISteamClient_GetISteamHTMLSurface,
+    nullptr,
+    nullptr,
+    nullptr,
+    ISteamClient_GetISteamInventory,
+    ISteamClient_GetISteamVideo,
+    ISteamClient_GetISteamParentalSettings,
+    ISteamClient_GetISteamInput,
+    ISteamClient_GetISteamParties,
+    ISteamClient_GetISteamRemotePlay,
+    nullptr,
 };
 
-struct ISteamClient *SteamClient012(void)
+struct ISteamClient *SteamClient021(void)
 {
     static struct ISteamClient impl;
 
-    impl.vtbl.v012 = &ISteamClient012_vtbl;
+    impl.vtbl.v021 = &ISteamClient021_vtbl;
 
     return &impl;
 }
