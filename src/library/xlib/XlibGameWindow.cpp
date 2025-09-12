@@ -133,13 +133,13 @@ void XlibGameWindow::setCoords(Window w, int x, int y)
 
 void XlibGameWindow::getCoords(Window w, int* x, int* y)
 {
+    *x = 0;
+    *y = 0;
     auto it = gameXWindowCoords.find(w);
     if (it != gameXWindowCoords.end()) {
         *x = it->second.first;
         *y = it->second.second;
     }
-    *x = 0;
-    *y = 0;
 }
 
 }

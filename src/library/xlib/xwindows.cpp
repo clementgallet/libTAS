@@ -202,11 +202,11 @@ int XSelectInput(Display *display, Window w, long event_mask)
 
 int XMoveWindow(Display* display, Window w, int x, int y)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
+    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d to coords %d %d", __func__, w, x, y);
     /* Save the new window coords, and
      * prevent the game to change top-level window position */
+    XlibGameWindow::setCoords(w, x, y);
     if (XlibGameWindow::isTopLevel(display, w)) {
-        XlibGameWindow::setCoords(w, x, y);
         return 0;
     }
 
@@ -232,9 +232,10 @@ int XMoveResizeWindow(Display* display, Window w, int x, int y, unsigned int wid
         ScreenCapture::resize(width, height);
     }
     
+    XlibGameWindow::setCoords(w, x, y);
+
     /* Preventing the game to change top-level window position */
     if (XlibGameWindow::isTopLevel(display, w)) {
-        XlibGameWindow::setCoords(w, x, y);
         RETURN_NATIVE(XResizeWindow, (display, w, width, height), nullptr);
     }
     else {
@@ -253,9 +254,10 @@ int XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindo
         LOG(LL_DEBUG, LCF_WINDOW, "    New size: %d x %d", values->width, values->height);
     }
 
+    XlibGameWindow::setCoords(w, values->x, values->y);
+
     /* Preventing the game to change top-level window position */
     if (XlibGameWindow::isTopLevel(display, w)) {
-        XlibGameWindow::setCoords(w, values->x, values->y);
         value_mask &= ~(CWX | CWY);
     }
 
