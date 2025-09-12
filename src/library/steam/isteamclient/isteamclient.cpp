@@ -151,6 +151,7 @@ void ISteamClient_ReleaseUser( void *iface, HSteamPipe hSteamPipe, HSteamUser hU
 ISteamUser *ISteamClient_GetISteamUser( void *iface, HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
     LOGTRACE(LCF_STEAM);
+    SteamUser_set_version(pchVersion);
     return SteamUser();
 }
 
@@ -203,6 +204,7 @@ void *ISteamClient_GetISteamGenericInterface( void *iface, HSteamUser hSteamUser
 ISteamUserStats *ISteamClient_GetISteamUserStats( void *iface, HSteamUser hSteamUser, HSteamPipe hSteamPipe, const char *pchVersion )
 {
     LOGTRACE(LCF_STEAM);
+    SteamUserStats_set_version(pchVersion);
     return SteamUserStats();
 }
 
