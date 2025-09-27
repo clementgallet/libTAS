@@ -30,6 +30,7 @@
 #include <cerrno>
 #include <utility>
 #include <unistd.h> /* write */
+#include <fcntl.h>
 
 namespace libtas {
 
@@ -70,6 +71,11 @@ int open_evdev(const char* source, int flags)
         /* Register that we use EVDEV for joystick inputs */
         Global::game_info.joystick |= GameInfo::EVDEV;
         Global::game_info.tosend = true;
+
+        if (flags == O_RDWR) {
+            LOG(LL_DEBUG, LCF_JOYSTICK, "   evdev device was opened with read/write, but we only support read. Enforcing this may be an issue later");
+            flags = O_RDONLY;
+        }
 
         /* Create an unnamed pipe. */
         evdevfds[evnum].first = FileHandleList::createPipe(flags);

@@ -57,7 +57,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
     if (GlobalState::isNative())
         return orig::ioctl(fd, request, argp);
 
-    // debuglog(LCF_JOYSTICK, __func__, " call on device ", fd);
+    // LOG(LL_DEBUG, LCF_JOYSTICK, "%s call on device %d", __func__, fd);
 
     if (fd < 0) {
         errno = EBADF;
@@ -321,6 +321,14 @@ int ioctl(int fd, unsigned long request, ...) __THROW
                 /* Add the two hat axes because they are not considered as buttons */
                 CHECK_LEN_AND_SET_BIT(ABS_HAT0X, bits, len);
                 CHECK_LEN_AND_SET_BIT(ABS_HAT0Y, bits, len);
+                return 0;
+            }
+
+            if (_IOC_NR(request) == _IOC_NR(EVIOCGBIT(EV_FF,0))) {
+                LOG(LL_DEBUG, LCF_JOYSTICK, "ioctl access to EVIOCGBIT for event EV_FF on fd %d", fd);
+                if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
+                    return orig::ioctl(fd, request, argp);
+                }
                 return 0;
             }
 

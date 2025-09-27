@@ -46,7 +46,7 @@
 * Enforce mesa software rendering even when nvidia driver is loaded
 * Catch when ffmpeg process exited
 * Add more hooks to prevent mouse capture
-* Implement fake window position instead of 0,0. Also update window size
+* Implement fake window coords instead of (0,0)
 
 ### Changed
 
