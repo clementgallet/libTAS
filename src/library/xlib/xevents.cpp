@@ -768,6 +768,12 @@ static void debugEvent(XEvent *event)
         case ClientMessage:
             LOG(LL_DEBUG, LCF_EVENTS, "| | type: ClientMessage");
             break;
+        case MapNotify:
+            LOG(LL_DEBUG, LCF_EVENTS, "| | type: MapNotify");
+            break;
+        case UnmapNotify:
+            LOG(LL_DEBUG, LCF_EVENTS, "| | type: UnmapNotify");
+            break;
     }    
     LOG(LL_DEBUG, LCF_EVENTS, "|___");
 }

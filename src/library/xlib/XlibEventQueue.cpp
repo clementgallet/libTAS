@@ -30,9 +30,12 @@ XlibEventQueue::XlibEventQueue(Display* d) : display(d), emptied(false), grab_wi
 
 void XlibEventQueue::setMask(Window w, long event_mask)
 {
+    long old_event_mask = eventMasks[w];
+    eventMasks[w] = event_mask;
+
     /* If the game is interested in the EnterNotify event for the first time,
      * send one immediately */
-    if (event_mask & EnterWindowMask && (!(eventMasks[w] & EnterWindowMask))) {
+    if (event_mask & EnterWindowMask && (!(old_event_mask & EnterWindowMask))) {
         XEvent ev;
         ev.type = EnterNotify;
         ev.xcrossing.window = w;
@@ -53,7 +56,7 @@ void XlibEventQueue::setMask(Window w, long event_mask)
 
     /* If the game is interested in the FocusIn event for the first time,
      * send one immediately */
-    if (event_mask & FocusChangeMask && (!(eventMasks[w] & FocusChangeMask))) {
+    if (event_mask & FocusChangeMask && (!(old_event_mask & FocusChangeMask))) {
         XEvent ev;
         ev.type = FocusIn;
         ev.xfocus.window = w;
@@ -61,8 +64,6 @@ void XlibEventQueue::setMask(Window w, long event_mask)
         LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE | LCF_KEYBOARD, "   Inserting a FocusIn event");
         insert(&ev);
     }
-
-    eventMasks[w] = event_mask;
 }
 
 #define EVENTQUEUE_MAXLEN 1024
