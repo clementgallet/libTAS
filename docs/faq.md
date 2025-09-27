@@ -7,7 +7,7 @@ permalink: /faq/
 
 #### I have a Windows system, how can I run libTAS?
 
-If you have Windows 10, the easiest way is to use [WSL 2](../guides/wsl) (Windows Subsystem for Linux) to run libTAS. Otherwise, you can install a Linux distribution (e.g. Ubuntu) on a virtual machine (e.g. using VirtualBox).
+If you have Windows 10 or newer, the easiest way is to use [WSL 2](../guides/wsl) (Windows Subsystem for Linux) to run libTAS. Otherwise, you can install a Linux distribution (e.g. Ubuntu) on a virtual machine (e.g. using VirtualBox).
 
 #### Can I TAS Windows games with libTAS?
 
