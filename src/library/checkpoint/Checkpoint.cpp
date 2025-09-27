@@ -79,6 +79,13 @@
 
 #define ONE_MB 1024 * 1024
 
+#ifndef MADV_GUARD_INSTALL
+#define MADV_GUARD_INSTALL 102
+#endif
+#ifndef MADV_GUARD_REMOVE
+#define MADV_GUARD_REMOVE 103
+#endif
+
 namespace libtas {
 
 /* Savestate paths (for file storing)*/
@@ -636,13 +643,11 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
 
     saved_area.print("Restore");
 
-    /* Add read/write permission to the area.
-     * Because adding write permission increases the commit charge, it can fail
+    /* Because adding write permission increases the commit charge, it can fail
      * on very large uncommitted memory (Celeste64 -> 274GB memory segment).
+     * Also, lightweight guard pages (including in Linux 6.13) cannot have
+     * read protection.
      * So, I will call mprotect() on individual memory pages when needed */
-    if (!(saved_area.prot & PROT_READ)) {
-        MYASSERT(mprotect(saved_area.addr, saved_area.size, saved_area.prot | PROT_READ) == 0)
-    }
 
     MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(saved_area.addr) / (4096/8)), SEEK_SET));
 
@@ -720,8 +725,27 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
         /* Gather the flag for the page map */
         uint64_t page = pagemaps[pagemap_i++];
         bool soft_dirty = page & (0x1ull << 55);
+        bool page_guard_region = page & (0x1ull << 58);
         bool page_file = page & (0x1ull << 61);
         bool page_present = page & (0x1ull << 63);
+
+        if (flag == Area::GUARD_PAGE) {
+            pagecount_skip++;
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Skip reading guard page at %p(isGuardPage=%d)", curAddr);
+            if (!page_guard_region) {
+                LOG(LL_DEBUG, LCF_CHECKPOINT, "    Page was guard page in checkpoint but now isn't");
+                MYASSERT(madvise(curAddr, 4096, MADV_GUARD_INSTALL) == 0);
+            }
+            continue;
+        } else if (page_guard_region) {
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Page was not a guard page in checkpoint but now is %p", curAddr);
+            MYASSERT(madvise(curAddr, 4096, MADV_GUARD_REMOVE) == 0);
+        }
+
+        /* Page is not a lightweight guard page, we can turn on read protection */
+        if (!(saved_area.prot & PROT_READ)) {
+            MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_READ) == 0)
+        }
 
         /* It seems that static memory is both zero and unmapped, so we still
          * need to memset the region if it was mapped.
@@ -733,7 +757,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
             if (saved_area.flags & Area::AREA_PRIV) {
                 if (page_present && (!Utils::isZeroPage(static_cast<void*>(curAddr)))) {
                     if (!(saved_area.prot & PROT_WRITE)) {
-                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
+                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE) == 0)
                     }
                     memset(static_cast<void*>(curAddr), 0, 4096);
                     pagecount_zero_or_file++;
@@ -764,7 +788,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
                          * write mode. */
 
                         if (!(saved_area.prot & PROT_WRITE)) {
-                            MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
+                            MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE) == 0)
                         }
                         memset(static_cast<void*>(curAddr), 0, 4096);
                         pagecount_zero_or_file++;
@@ -795,7 +819,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
                 if (soft_dirty ||
                     parent_state.getPageFlag(curAddr) != Area::ZERO_PAGE) {
                     if (!(saved_area.prot & PROT_WRITE)) {
-                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
+                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE) == 0)
                     }
                     memset(static_cast<void*>(curAddr), 0, 4096);
                     pagecount_zero_or_file++;
@@ -814,7 +838,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
                  * allocation if the page was allocated but never used. */
                 if (!Utils::isZeroPage(static_cast<void*>(curAddr))) {
                     if (!(saved_area.prot & PROT_WRITE)) {
-                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
+                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE) == 0)
                     }
                     memset(static_cast<void*>(curAddr), 0, 4096);
                     pagecount_zero_or_file++;
@@ -841,7 +865,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
                 
                 if (orig_fd >= 0) {
                     if (!(saved_area.prot & PROT_WRITE)) {
-                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
+                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE) == 0)
                     }
                     
                     lseek(orig_fd, page_i*4096 + saved_area.offset, SEEK_SET);
@@ -857,7 +881,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
 
         /* From here, we are sure to write to the page */
         if (!(saved_area.prot & PROT_WRITE)) {
-            MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE | PROT_READ) == 0)
+            MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE) == 0)
         }
         
         if (flag == Area::BASE_PAGE) {
@@ -1282,18 +1306,10 @@ static void writeAllAreas(bool base)
 /* Write a memory area into the savestate. Returns the size of the area in bytes */
 static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state, bool base)
 {
-    if (!(area.prot & PROT_READ)) {
-        MYASSERT(mprotect(area.addr, area.size, (area.prot | PROT_READ)) == 0)
-    }
-
     state.processArea(&area);
     size_t area_size = sizeof(area);
 
     if (area.skip || area.uncommitted) {
-        if (!(area.prot & PROT_READ)) {
-            MYASSERT(mprotect(area.addr, area.size, area.prot) == 0)
-        }
-
         return area_size;
     }
 
@@ -1371,8 +1387,20 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
         /* Gather the flag for the current pagemap. */
         uint64_t page = pagemaps[pagemap_i++];
         bool soft_dirty = page & (0x1ull << 55);
+        bool page_guard_region = page & (0x1ull << 58);
         bool page_file = page & (0x1ull << 61);
         bool page_present = page & (0x1ull << 63);
+
+        if (page_guard_region) {
+            state.savePageFlag(Area::GUARD_PAGE);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "    Skip saving guard page at %p", curAddr);
+            continue;
+        }
+
+        /* Page is not a lightweight guard page, we can turn on read protection */
+        if (!(area.prot & PROT_READ)) {
+            MYASSERT(mprotect(curAddr, 4096, area.prot | PROT_READ) == 0)
+        }
 
         if (area.flags & Area::AREA_PRIV) {
             if (area.flags & Area::AREA_ANON) {
