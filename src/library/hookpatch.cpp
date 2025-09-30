@@ -38,171 +38,388 @@ static const unsigned char jmp_instr[] = {0xff, 0x25};
 static const unsigned char jmp_instr[] = {0xff, 0x25, 0x00, 0x00, 0x00, 0x00};
 # endif
 
+struct instr_info {
+    bool is_fpu;
+    bool operand_size_prefix; // 0x66 prefix
+    bool quad_prefix; // REX.W 0x48 prefix for 64-bit operand
+    bool multibyte_opcode; // either one-byte, two-byte (0F op) or three bytes (0F 38 op or 0F 3A op)
+    unsigned char multibyte_opcode_prefix; // either 0x0F for two-byte, 0x38 or 0x3A for three-byte opcodes
+    bool has_modRM;
+    unsigned char modRM;
+    bool has_sib;
+    unsigned char sib;
+    unsigned char opcode;
+};
+
 /* Computes the length of a single instruction.
  * Based on a snippet by Nicolas Capens (which he released to the public domain)
  * Taken from Hourglass <https://github.com/Hourglass-Resurrection/Hourglass-Resurrection>
  */
 //_declspec(noinline) inline
-static int instruction_length(const unsigned char *func)
+static int instruction_length(const unsigned char *func, instr_info *instr)
 {
 	const unsigned char *funcstart = func;
 
-    //if(*func != 0xCC)
+    // Create a struct if non passed
+    instr_info local_instr;
+    if (!instr) {
+        instr = &local_instr;
+    }
+
+    // Default values
+    instr->is_fpu = false;
+    instr->operand_size_prefix = false;
+    instr->quad_prefix = false;
+    instr->multibyte_opcode = false;
+
+    int operandSizeDouble = 4; // operand size for instructions that depend only on 16-bit prefix, and cannot be promoted by REX.W 64-bit
+    int operandSize = 4; // operand size for instructions that depend on both operand-size prefixes
+    
+    // Skip prefixes F0h, F2h, F3h, 66h, 67h, D8h-DFh, 2Eh, 36h, 3Eh, 26h, 64h and 65h
+    int FPU = 0;
+    while(*func == 0xF0 ||
+          *func == 0xF2 ||
+          *func == 0xF3 ||
+         (*func & 0xFC) == 0x64 ||
+         (*func & 0xF8) == 0xD8 ||
+         (*func & 0x7E) == 0x62)
     {
-        // Skip prefixes F0h, F2h, F3h, 66h, 67h, D8h-DFh, 2Eh, 36h, 3Eh, 26h, 64h and 65h
-        int operandSize = 4;
-        int FPU = 0;
-        while(*func == 0xF0 ||
-              *func == 0xF2 ||
-              *func == 0xF3 ||
-             (*func & 0xFC) == 0x64 ||
-             (*func & 0xF8) == 0xD8 ||
-             (*func & 0x7E) == 0x62)
+        if(*func == 0x66)
         {
-            if(*func == 0x66)
-            {
-                operandSize = 2;
-            }
-            else if((*func & 0xF8) == 0xD8)
-            {
-                FPU = *func++;
-                break;
-            }
-
-            func++;
+            instr->operand_size_prefix = true;
+            operandSize = 2;
+            operandSizeDouble = 2;
+        }
+        else if((*func & 0xF8) == 0xD8)
+        {
+            instr->is_fpu = true;
+            FPU = *func++;
+            break;
         }
 
-        /* Add x86_64 4xh prefixes */
+        func++;
+    }
+
+    /* Add x86_64 4xh prefixes */
 # ifdef __x86_64__
-        while((*func & 0xF0) == 0x40)
-        {
-            func++;
+    while((*func & 0xF0) == 0x40)
+    {
+        if (*func & 0b00001000) {
+            instr->quad_prefix = true;
+            operandSize = 8;
         }
+        func++;
+    }
 # endif
 
+    // Skip two-byte opcode byte
+    if(*func == 0x0F)
+    {
+        instr->multibyte_opcode = true;
+        instr->multibyte_opcode_prefix = 0x0F;
+        func++;
+    }
 
-        // Skip two-byte opcode byte
-        bool twoByte = false;
-        if(*func == 0x0F)
-        {
-            twoByte = true;
-            func++;
-        }
+    // Skip three-byte opcode byte
+    if (instr->multibyte_opcode && ((*func == 0x38) || (*func == 0x3A)))
+    {
+        instr->multibyte_opcode_prefix = *func;
+        func++;
+    }
 
-        // Skip opcode byte
-        unsigned char opcode = *func++;
+    // Skip opcode byte
+    instr->opcode = *func++;
 
-        // Skip mod R/M byte
-        unsigned char modRM = 0xFF;
-        if(FPU)
+    // Skip mod R/M byte
+    instr->has_modRM = false;
+    if (instr->is_fpu)
+    {
+        if((instr->opcode & 0xC0) != 0xC0)
         {
-            if((opcode & 0xC0) != 0xC0)
-            {
-                modRM = opcode;
-            }
+            instr->has_modRM = true;
+            instr->modRM = instr->opcode;
         }
-        else if(!twoByte)
-        {
-            if((opcode & 0xC4) == 0x00 ||
-               ((opcode & 0xF4) == 0x60 && ((opcode & 0x0A) == 0x02)) || (opcode & 0x09) == 0x9 ||
-               (opcode & 0xF0) == 0x80 ||
-               ((opcode & 0xF8) == 0xC0 && (opcode & 0x0E) != 0x02) ||
-               (opcode & 0xFC) == 0xD0 ||
-               (opcode & 0xF6) == 0xF6)
-            {
-                modRM = *func++;
-            }
+    }
+    else if(!instr->multibyte_opcode)
+    {
+        switch (instr->opcode) {
+            case 0x62:
+            case 0x63:
+            case 0x69:
+            case 0x6B:
+            case 0xC0:
+            case 0xC1:
+            case 0xC4:
+            case 0xC5:
+            case 0xC6:
+            case 0xC7:
+            case 0xF6:
+            case 0xF7:
+            case 0xFE:
+            case 0xFF:
+                instr->has_modRM = true;
+                instr->modRM = *func++;
+                break;
+            default:
+                // groups of opcodes for smaller code
+                if ((instr->opcode & 0xC4) == 0x00 ||
+                    (instr->opcode & 0xF0) == 0x80 ||
+                    (instr->opcode & 0xFC) == 0xD0 ||
+                    (instr->opcode & 0xF6) == 0xF6)
+                {
+                    instr->has_modRM = true;
+                    instr->modRM = *func++;
+                }
         }
-        else
-        {
-            if(((opcode & 0xF0) == 0x00 && (opcode & 0x0F) >= 0x04 && (opcode & 0x0D) != 0x0D) ||
-               (opcode & 0xF0) == 0x30 ||
-               opcode == 0x77 ||
-               (opcode & 0xF0) == 0x80 ||
-               ((opcode & 0xF0) == 0xA0 && (opcode & 0x07) <= 0x02) ||
-               (opcode & 0xF8) == 0xC8)
-            {
+    }
+    else if (instr->multibyte_opcode_prefix == 0x0F) // two-byte opcodes
+    {
+        switch (instr->opcode) {
+            case 0x06:
+            case 0x08:
+            case 0x09:
+            case 0x0B:
+            case 0x0D:
+            case 0x19:
+            case 0x1A:
+            case 0x1B:
+            case 0x1C:
+            case 0x1D:
+            case 0x1E:
+            case 0x30:
+            case 0x31:
+            case 0x32:
+            case 0x33:
+            case 0x34:
+            case 0x35:
+            case 0x37:
+            case 0xA0:
+            case 0xA1:
+            case 0xA2:
+            case 0xA8:
+            case 0xA9:
+            case 0xAA:
                 // No mod R/M byte
-            }
-            else
-            {
-                modRM = *func++;
-            }
-        }
+                break;
+            default:
+                if ((instr->opcode & 0xF8) == 0xC8)
+                    break; // No mod R/M byte
+                if ((instr->opcode & 0xF0) == 0x80)
+                    break; // No mod R/M byte
 
-        // Skip SIB
-        if((modRM & 0x07) == 0x04 &&
-           (modRM & 0xC0) != 0xC0)
-        {
-            func += 1;   // SIB
+                instr->has_modRM = true;
+                instr->modRM = *func++;
+                break;
         }
+    }
+    else { // three-byte opcodes
+        instr->has_modRM = true;
+        instr->modRM = *func++;
+    }
 
-        // Skip displacement
-        if((modRM & 0xC5) == 0x05) func += 4;   // Dword displacement, no base
-        if((modRM & 0xC0) == 0x40) func += 1;   // Byte displacement
-        if((modRM & 0xC0) == 0x80) func += 4;   // Dword displacement
-
-        // Skip immediate
-        if(FPU)
+    // Process modRM
+    if (instr->has_modRM) {
+        int modRM_mod = (instr->modRM & 0b11000000) >> 6;
+        int modRM_rm = instr->modRM & 0b00000111;
+        
+        // Process SIB
+        instr->has_sib = false;
+        if ((modRM_mod != 0b11) && (modRM_rm == 0b100))
         {
-            // Can't have immediate operand
+            instr->has_sib = true;
+            instr->sib = *func++;
+            int sib_base = instr->sib & 0b00000111;
+
+            // Skip displacement
+            if ((modRM_mod == 0b00) && (sib_base == 0b101)) func += 4;   // Dword displacement with SIB
         }
-        else if(!twoByte)
-        {
-            if((opcode & 0xC7) == 0x04 ||
-               (opcode & 0xFE) == 0x6A ||   // PUSH/POP/IMUL
-               (opcode & 0xF0) == 0x70 ||   // Jcc
-               opcode == 0x80 ||
-               opcode == 0x83 ||
-               (opcode & 0xFD) == 0xA0 ||   // MOV
-               opcode == 0xA8 ||            // TEST
-               (opcode & 0xF8) == 0xB0 ||   // MOV
-               (opcode & 0xFE) == 0xC0 ||   // RCL
-               opcode == 0xC6 ||            // MOV
-               opcode == 0xCD ||            // INT
-               (opcode & 0xFE) == 0xD4 ||   // AAD/AAM
-               (opcode & 0xF8) == 0xE0 ||   // LOOP/JCXZ
-               opcode == 0xEB ||
-               (opcode == 0xF6 && (modRM & 0x30) == 0x00))   // TEST
-            {
+        
+        if ((modRM_mod == 0b00) && (modRM_rm == 0b101)) func += 4;   // Dword displacement with base
+        if  (modRM_mod == 0b01) func += 1;   // Byte displacement
+        if  (modRM_mod == 0b10) func += 4;   // Dword displacement
+    }
+
+    // Skip immediate
+    if (instr->is_fpu)
+    {
+        // Can't have immediate operand
+    }
+    else if(!instr->multibyte_opcode)
+    {
+        switch (instr->opcode) {
+            // imm8
+            case 0x04: // ADD
+            case 0x0C: // OR
+            case 0x14: // ADC
+            case 0x1C: // SBB
+            case 0x24: // AND
+            case 0x2C: // SUB
+            case 0x34: // XOR
+            case 0x3C: // CMP
+            case 0x6A: // PUSH
+            case 0x6B: // IMUL
+            case 0x80:
+            case 0x82:
+            case 0x83:
+            case 0xA8: // TEST
+            case 0xB0: // MOV
+            case 0xB1: // MOV
+            case 0xB2: // MOV
+            case 0xB3: // MOV
+            case 0xB4: // MOV
+            case 0xB5: // MOV
+            case 0xB6: // MOV
+            case 0xB7: // MOV
+            case 0xC0: // 
+            case 0xC1: // 
+            case 0xC6: // MOV
+            case 0xCD: // INT
+            case 0xD4: // AMX
+            case 0xD5: // ADX
+            case 0xE4: // IN
+            case 0xE5: // IN
+            case 0xE6: // OUT
+            case 0xE7: // OUT
+            // rel8
+            case 0x70: // JO
+            case 0x71: // JNO
+            case 0x72: // JB
+            case 0x73: // JNB
+            case 0x74: // JZ
+            case 0x75: // JNZ
+            case 0x76: // JBE
+            case 0x77: // JNBE
+            case 0x78: // JS
+            case 0x79: // JNS
+            case 0x7A: // JP
+            case 0x7B: // JNP
+            case 0x7C: // JL
+            case 0x7D: // JNL
+            case 0x7E: // JLE
+            case 0x7F: // JNLE
+            case 0xE0: // LOOPNZ
+            case 0xE1: // LOOPZ
+            case 0xE2: // LOOP
+            case 0xE3: // JCXZ
+            case 0xEB: // JMP
+            // moffs8
+            case 0xA0: // MOV
+            case 0xA2: // MOV
                 func += 1;
-            }
-            else if((opcode & 0xF7) == 0xC2)
-            {
+                break;
+
+            case 0xF6:
+                if ((instr->modRM & 0x30) == 0x00) // TEST
+                    func += 1;
+                break;
+        
+            // imm16
+            case 0xC2: // RETN
+            case 0xCA: // RETF
                 func += 2;   // RET
-            }
-            else if((opcode & 0xFC) == 0x80 ||
-                    (opcode & 0xC7) == 0x05 ||
-                    (opcode & 0xF8) == 0xB8 ||
-                    (opcode & 0xFE) == 0xE8 ||      // CALL/Jcc
-                    (opcode & 0xFE) == 0x68 ||
-                    (opcode & 0xFC) == 0xA0 ||
-                    (opcode & 0xEE) == 0xA8 ||
-                    opcode == 0xC7 ||
-                    (opcode == 0xF7 && (modRM & 0x30) == 0x00))
-            {
+                break;
+                
+            // imm16/32
+            case 0x05: // ADD
+            case 0x0D: // OR
+            case 0x15: // ADC
+            case 0x1D: // SBB
+            case 0x25: // AND
+            case 0x2D: // SUB
+            case 0x35: // XOR
+            case 0x3D: // CMP
+            case 0x68: // PUSH
+            case 0x69: // IMUL
+            case 0x81:
+            case 0xA9: // TEST
+            case 0xC7: // MOV
+            // rel16/32
+            case 0xE8: // CALL
+            case 0xE9: // JMP
+                func += operandSizeDouble;
+                break;
+            
+            // imm16/32/64
+            case 0xB8: // MOV
+            case 0xB9: // MOV
+            case 0xBA: // MOV
+            case 0xBB: // MOV
+            case 0xBC: // MOV
+            case 0xBD: // MOV
+            case 0xBE: // MOV
+            case 0xBF: // MOV
+            // moffs16/32/64
+            case 0xA1: // MOV
+            case 0xA3: // MOV
                 func += operandSize;
-            }
+                break;
+            
+            case 0xF7:
+                if ((instr->modRM & 0x30) == 0x00) // TEST imm16/32
+                    func += operandSizeDouble;
+                break;
         }
-        else
-        {
-            if(opcode == 0xBA ||            // BT
-               opcode == 0x0F ||            // 3DNow!
-               (opcode & 0xFC) == 0x70 ||   // PSLLW
-               (opcode & 0xF7) == 0xA4 ||   // SHLD
-               opcode == 0xC2 ||
-               opcode == 0xC4 ||
-               opcode == 0xC5 ||
-               opcode == 0xC6)
-            {
+    }
+    else if (instr->multibyte_opcode_prefix == 0x0F) // two-byte opcodes
+    {
+        switch (instr->opcode) {
+            case 0x0F: // 3DNow!
+            case 0x70: // PS
+            case 0x71: // PS
+            case 0x72: // PS
+            case 0x73: // PS
+            case 0xA4: // SHLD
+            case 0xAC: // SHRD
+            case 0xBA: // BT
+            case 0xC2: // CMP
+            case 0xC4: // PINSRW
+            case 0xC5: // PEXTRW
+            case 0xC6: // SHUFP
                 func += 1;
-            }
-            else if((opcode & 0xF0) == 0x80)
-            {
-                func += operandSize;   // Jcc -i
-            }
+                break;
+            case 0x80: // JO
+            case 0x81: // JNO
+            case 0x82: // JB
+            case 0x83: // JNB
+            case 0x84: // JZ
+            case 0x85: // JNZ
+            case 0x86: // JBE
+            case 0x87: // JNBE
+            case 0x88: // JS
+            case 0x89: // JNS
+            case 0x8A: // JP
+            case 0x8B: // JNP
+            case 0x8C: // JL
+            case 0x8D: // JNL
+            case 0x8E: // JLE
+            case 0x8F: // JNLE
+                func += operandSizeDouble;
+                break;
         }
-	}
+    }
+    else if (instr->multibyte_opcode_prefix == 0x3A) {
+        switch (instr->opcode) {
+            case 0x08: // ROUNDPS
+            case 0x09: // ROUNDPD
+            case 0x0A: // ROUNDSS
+            case 0x0B: // ROUNDSD
+            case 0x0C: // BLENDPS
+            case 0x0D: // BLENDPD
+            case 0x0E: // PBLENDW
+            case 0x14: // PEXTRB
+            case 0x15: // PEXTRW
+            case 0x16: // PEXTRD
+            case 0x17: // EXTRACTPS
+            case 0x20: // PINSRB
+            case 0x21: // INSERTPS
+            case 0x22: // PINSRD
+            case 0x42: // MPSADBW
+            case 0x62: // PCMPISTRM
+            case 0x63: // PCMPISTRI
+                func += 1;
+                break;
+        }
+    }
 
 	return (int)(func - funcstart);
 }
@@ -236,7 +453,7 @@ static int compute_overwrite_offset(const unsigned char* pOrig)
     
     int old_offset = 0;
     while(offset < min_offset) {
-        offset += instruction_length(pOrig + offset);
+        offset += instruction_length(pOrig + offset, nullptr);
         
         std::ostringstream oss;
         for (int off = old_offset; off < offset; off++) {
@@ -303,49 +520,66 @@ static void write_tramp_function(const void *orig_fun, void **pTramp)
     
     int cur_offset = 0;    
     std::list<jmp_info> jmp_list;
+    instr_info instr;
     
     while (cur_offset < offset) {
-        int instr_len = instruction_length(pOrig + cur_offset);
+        int instr_len = instruction_length(pOrig + cur_offset, &instr);
         
         std::ostringstream oss;
         
         /* Transcribe each instruction, and update the occasionnal relative address */
         unsigned char opcode = *(pOrig+cur_offset);
         
-        switch (opcode) {
-            case 0xe8: // CALL
-            case 0x3b: // CMP
-            {
+        if (!instr.multibyte_opcode) {
+            
+            // Case where modRM with offset relative to the current instruction
+            // pointer value. We need to change the offset in place
+            bool relative_rip = instr.has_modRM &&
+                (instr.modRM & 0b11000000) == 0 &&
+                (instr.modRM & 0b00000111) == 0xb00000101;
                 
-                int off_to_rel = 0;
-                switch (opcode) {
-                    case 0xe8: // CALL
-                        off_to_rel = 1;
-                        break;
-                    case 0x3b: // CMP
-                        off_to_rel = 2;
-                        break;
-                }
-                
-                LOG(LL_DEBUG, LCF_HOOK, "  Found instruction with rel addr %p", (*reinterpret_cast<const int*>(pOrig+cur_offset+off_to_rel)));
+            // Case where instruction has a relative 32-bit operand
+            bool relative_op = (instr.opcode == 0xe8) || // CALL
+                (instr.opcode == 0xe9); // JMP
 
+            // Case where instruction has a relative 8-bit operand
+            bool relative_short = false;
+            if ((instr.opcode >= 0x70) && (instr.opcode <= 0x7f))
+                relative_short = true;
+            if ((instr.opcode >= 0xe0) && (instr.opcode <= 0xe3))
+                relative_short = true;
+            if (instr.opcode == 0xeb)
+                relative_short = true;
+
+            if (relative_rip || relative_op) {
+                // TODO: we do not support 16-bit operand!
+                if (instr.operand_size_prefix)
+                    LOG(LL_WARN, LCF_HOOK, "  Relative address is 16-bit, we do not support that!");
+
+                /* Compute where the relative adress is in the instruction. 
+                 * There is no instruction that has a relative 64-bit address,
+                 * whatever prefix is present, so we don't need to check for that. */
+                int off_to_rel = instr_len - 4;
+                
+                LOG(LL_DEBUG, LCF_HOOK, "  Found instruction with rel addr %#x", (*reinterpret_cast<const int*>(pOrig+cur_offset+off_to_rel)));
+                
                 /* Write the instruction and just change the offset to
-                 * the new offset between our function and the call target. */
+                * the new offset between our function and the call target. */
                 memcpy(currentTrampAddr, pOrig+cur_offset, off_to_rel);
                 currentTrampAddr += off_to_rel;
-
+                
                 const unsigned char* target_addr = pOrig + cur_offset + instr_len + (*reinterpret_cast<const int*>(pOrig+cur_offset+off_to_rel));
                 LOG(LL_DEBUG, LCF_HOOK, "  Absolute addr becomes %p", target_addr);
                 
                 ptrdiff_t new_offset = reinterpret_cast<ptrdiff_t>(target_addr) - reinterpret_cast<ptrdiff_t>(currentTrampAddr) - 4;
                 /* Check if it fits into signed 32-bit */
                 if (new_offset < INT32_MIN || new_offset > INT32_MAX) {
-                    LOG(LL_ERROR, LCF_HOOK, "  Could not modify CALL instruction, offset too large: %lld", new_offset);
+                    LOG(LL_ERROR, LCF_HOOK, "  Could not modify instruction, offset too large: %lld", new_offset);
                 }
                 int32_t new_offset_32 = static_cast<int32_t>(new_offset);
-
-                LOG(LL_DEBUG, LCF_HOOK, "  New relative addr becomes %x", new_offset_32);
-
+                
+                LOG(LL_DEBUG, LCF_HOOK, "  New relative addr becomes %#x", new_offset_32);
+                
                 memcpy(currentTrampAddr, &new_offset_32, 4);
                 currentTrampAddr += 4;
                 
@@ -356,46 +590,27 @@ static void write_tramp_function(const void *orig_fun, void **pTramp)
                     oss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(currentTrampAddr-4+i)) << " ";
                 }
                 LOG(LL_DEBUG, LCF_HOOK, "  Write modified instruction %s", oss.str().c_str());
-
-                break;
             }
-            
-            case 0x70:
-            case 0x71:
-            case 0x72:
-            case 0x73:
-            case 0x74:
-            case 0x75:
-            case 0x76:
-            case 0x77:
-            case 0x78:
-            case 0x79:
-            case 0x7a:
-            case 0x7b:
-            case 0x7c:
-            case 0x7d:
-            case 0x7e:
-            case 0x7f:
-            case 0xe3:
-            {
-                LOG(LL_DEBUG, LCF_HOOK, "  Found conditional jump instruction %p to rel addr %p", *(pOrig+cur_offset), (*(pOrig+cur_offset+1)));
+            else if (relative_short) {
+                LOG(LL_DEBUG, LCF_HOOK, "  Found conditional jump instruction %#hhx to rel addr %#hhx", *(pOrig+cur_offset), (*(pOrig+cur_offset+1)));
+                
+                /* Compute where the relative adress is in the instruction. */
+                int off_to_rel = instr_len - 1;
 
                 jmp_info info;
-                info.target_addr = pOrig + cur_offset + instr_len + (*reinterpret_cast<const int8_t*>(pOrig+cur_offset+1));
-                info.offset_addr = currentTrampAddr + 1;
+                info.target_addr = pOrig + cur_offset + instr_len + (*reinterpret_cast<const int8_t*>(pOrig+cur_offset+off_to_rel));
+                info.offset_addr = currentTrampAddr + off_to_rel;
                 jmp_list.push_back(info);
-
+                
                 LOG(LL_DEBUG, LCF_HOOK, "  Absolute addr becomes %p", info.target_addr);
-
+                
                 /* Write the same conditional jump, but later change the offset
-                 * so that it jumps to another jump
-                 * instruction where we can write a 64-bit address. */
-                memcpy(currentTrampAddr, pOrig+cur_offset, 2);
-                currentTrampAddr += 2;
-
-                break;
+                * so that it jumps to another jump
+                * instruction where we can write a 64-bit address. */
+                memcpy(currentTrampAddr, pOrig+cur_offset, instr_len);
+                currentTrampAddr += instr_len;
             }
-            default:
+            else {
                 memcpy(currentTrampAddr, pOrig + cur_offset, instr_len);
                 currentTrampAddr += instr_len;
                 
@@ -403,8 +618,7 @@ static void write_tramp_function(const void *orig_fun, void **pTramp)
                     oss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(pOrig+cur_offset+i)) << " ";
                 }
                 LOG(LL_DEBUG, LCF_HOOK, "  Write unmodified instruction %s", oss.str().c_str());
-
-                break;
+            }
         }
         cur_offset += instr_len;
     }
