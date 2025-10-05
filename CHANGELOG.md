@@ -79,6 +79,7 @@
 * Only edit input editor analog values after double-click
 * Fix Vulkan bug where vkCreateInstance would not be hooked
 * Avoid duplicate pthread ids
+* Fix and update hook patch method
 
 ## [1.4.6] - 2024-07-05
 ### Added

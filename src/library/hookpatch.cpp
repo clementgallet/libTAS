@@ -32,18 +32,29 @@
 
 namespace libtas {
 
+/* For jumping to any absolute address, we are using the following instruction: */
 # ifdef __i386__
-static const unsigned char jmp_instr[] = {0xff, 0x25};
+/*     ff 25               jmp r/m32
+ *     aa bb cc dd         32-bit address to address below
+ *     ee ff gg hh         32-bit target address
+ */
+static const unsigned char JMP_INSTR[] = {0xff, 0x25};
+#define JMP_INSTR_LEN 10
 # elif defined(__x86_64__)
-static const unsigned char jmp_instr[] = {0xff, 0x25, 0x00, 0x00, 0x00, 0x00};
+/*     ff 25 00 00 00 00         jmp *(%rip)
+ *     aa bb cc dd ee ff gg hh   64-bit target address
+ */
+
+// jmp *(%rip) 
+static const unsigned char JMP_INSTR[] = {0xff, 0x25, 0x00, 0x00, 0x00, 0x00};
+#define JMP_INSTR_LEN 14
 # endif
 
 struct instr_info {
     bool is_fpu;
     bool operand_size_prefix; // 0x66 prefix
     bool quad_prefix; // REX.W 0x48 prefix for 64-bit operand
-    bool multibyte_opcode; // either one-byte, two-byte (0F op) or three bytes (0F 38 op or 0F 3A op)
-    unsigned char multibyte_opcode_prefix; // either 0x0F for two-byte, 0x38 or 0x3A for three-byte opcodes
+    unsigned char multibyte_opcode; // either 0 for one-byte, 0x0F for two-byte, 0x38 or 0x3A for three-byte opcodes
     bool has_modRM;
     unsigned char modRM;
     bool has_sib;
@@ -70,7 +81,7 @@ static int instruction_length(const unsigned char *func, instr_info *instr)
     instr->is_fpu = false;
     instr->operand_size_prefix = false;
     instr->quad_prefix = false;
-    instr->multibyte_opcode = false;
+    instr->multibyte_opcode = 0;
 
     int operandSizeDouble = 4; // operand size for instructions that depend only on 16-bit prefix, and cannot be promoted by REX.W 64-bit
     int operandSize = 4; // operand size for instructions that depend on both operand-size prefixes
@@ -115,15 +126,14 @@ static int instruction_length(const unsigned char *func, instr_info *instr)
     // Skip two-byte opcode byte
     if(*func == 0x0F)
     {
-        instr->multibyte_opcode = true;
-        instr->multibyte_opcode_prefix = 0x0F;
+        instr->multibyte_opcode = 0x0F;
         func++;
     }
 
     // Skip three-byte opcode byte
     if (instr->multibyte_opcode && ((*func == 0x38) || (*func == 0x3A)))
     {
-        instr->multibyte_opcode_prefix = *func;
+        instr->multibyte_opcode = *func;
         func++;
     }
 
@@ -172,7 +182,7 @@ static int instruction_length(const unsigned char *func, instr_info *instr)
                 }
         }
     }
-    else if (instr->multibyte_opcode_prefix == 0x0F) // two-byte opcodes
+    else if (instr->multibyte_opcode == 0x0F) // two-byte opcodes
     {
         switch (instr->opcode) {
             case 0x06:
@@ -360,7 +370,7 @@ static int instruction_length(const unsigned char *func, instr_info *instr)
                 break;
         }
     }
-    else if (instr->multibyte_opcode_prefix == 0x0F) // two-byte opcodes
+    else if (instr->multibyte_opcode == 0x0F) // two-byte opcodes
     {
         switch (instr->opcode) {
             case 0x0F: // 3DNow!
@@ -397,7 +407,7 @@ static int instruction_length(const unsigned char *func, instr_info *instr)
                 break;
         }
     }
-    else if (instr->multibyte_opcode_prefix == 0x3A) {
+    else if (instr->multibyte_opcode == 0x3A) {
         switch (instr->opcode) {
             case 0x08: // ROUNDPS
             case 0x09: // ROUNDPD
@@ -425,46 +435,42 @@ static int instruction_length(const unsigned char *func, instr_info *instr)
 }
 
 /* To convert some instructions from the original function, we need to be at
- * 32-bit offset from the function location. */
-static void* allocate_nearby_segment()
+ * 32-bit offset from the function location.
+ * `current_tramp_segment` is the address of currently allocated segment, or null
+ * `orig_fun` is the original function where we want to be at 32-bit max distance 
+ */
+static void* allocate_nearby_segment(void* current_tramp_segment, const void *orig_fun)
 {
-    /* I'm lazy and assume the function is inside the first 32-bit memory, which
-     * is usually the case for main executable */
+    if (current_tramp_segment) {
+# ifdef __i386__
+    /* We will always be at 32-bit distance in 32-bit addressing */
+    return current_tramp_segment;
+# elif defined(__x86_64__)
+        ptrdiff_t offset = reinterpret_cast<ptrdiff_t>(orig_fun) - reinterpret_cast<ptrdiff_t>(current_tramp_segment);
+        /* Check if it fits into signed 32-bit */
+        if (offset >= INT32_MIN && offset <= INT32_MAX)
+            return current_tramp_segment;
+# endif
+    }
+
+    /* If we arrive here, we need to allocate a segment */
+    uintptr_t first_addr = (reinterpret_cast<uintptr_t>(orig_fun) - 0x7F000000) & 0xFFFFFFFFFFFFF000;
+    uintptr_t last_addr = reinterpret_cast<uintptr_t>(orig_fun) + 0x7F000000;
     
-    void* obtainedAddr = mmap(nullptr, 0x1000, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_32BIT, 0, 0);
+    /* Look for available segment by steps */
+    void* obtained_addr = MAP_FAILED;
+    for (uintptr_t addr = first_addr; addr < last_addr; addr += 0x00100000) {
+        LOG(LL_DEBUG, LCF_HOOK, "  Try allocating a memory segment in address %llx", addr);
+        obtained_addr = mmap(reinterpret_cast<void*>(addr), 0x1000, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE, 0, 0);
+        if (obtained_addr != MAP_FAILED) break;
+    }
     
-    if (obtainedAddr == MAP_FAILED) {
+    if (obtained_addr == MAP_FAILED) {
         LOG(LL_DEBUG, LCF_HOOK, "  Could not obtain a memory segment for hookpatch functions, error %d", errno);
         return nullptr;
     }
     
-    return obtainedAddr;
-}
-
-/* Compute how many instructions we need to overwrite in the original function */
-static int compute_overwrite_offset(const unsigned char* pOrig)
-{
-    int offset = 0;
-    # ifdef __i386__
-    int min_offset = 10;
-    # elif defined(__x86_64__)
-    int min_offset = 14;
-    # endif
-    
-    int old_offset = 0;
-    while(offset < min_offset) {
-        offset += instruction_length(pOrig + offset, nullptr);
-        
-        std::ostringstream oss;
-        for (int off = old_offset; off < offset; off++) {
-            oss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(pOrig + off)) << " ";
-        }
-        LOG(LL_DEBUG, LCF_HOOK, "  Found instruction %s", oss.str().c_str());
-        
-        old_offset = offset;
-    }
-    LOG(LL_DEBUG, LCF_HOOK, "  Saving instructions of length %d", offset);
-    return offset;
+    return obtained_addr;
 }
 
 struct jmp_info {
@@ -480,18 +486,15 @@ struct jmp_info {
 static void write_tramp_function(const void *orig_fun, void **pTramp)
 {
     static unsigned char* currentTrampAddr = nullptr;
-    if (!currentTrampAddr) {
-        currentTrampAddr = static_cast<unsigned char*>(allocate_nearby_segment());
-        
-        if (!currentTrampAddr) {
-            return;
-        }
-    }
+    
+    currentTrampAddr = static_cast<unsigned char*>(allocate_nearby_segment(currentTrampAddr, orig_fun));
+    
+    if (!currentTrampAddr)
+        return;
     
     *pTramp = currentTrampAddr;
     
     const unsigned char* pOrig = static_cast<const unsigned char*>(orig_fun);
-    int offset = compute_overwrite_offset(pOrig);
     
     /* Overwrite the trampoline function */
     LOG(LL_DEBUG, LCF_HOOK, "  Building our trampoline function in %p", currentTrampAddr);
@@ -522,116 +525,125 @@ static void write_tramp_function(const void *orig_fun, void **pTramp)
     std::list<jmp_info> jmp_list;
     instr_info instr;
     
-    while (cur_offset < offset) {
+    while (cur_offset < JMP_INSTR_LEN) {
+        /* Transcribe each instruction, and update the occasionnal relative address */
         int instr_len = instruction_length(pOrig + cur_offset, &instr);
         
-        std::ostringstream oss;
-        
-        /* Transcribe each instruction, and update the occasionnal relative address */
-        unsigned char opcode = *(pOrig+cur_offset);
-        
-        if (!instr.multibyte_opcode) {
-            
-            // Case where modRM with offset relative to the current instruction
-            // pointer value. We need to change the offset in place
-            bool relative_rip = instr.has_modRM &&
-                (instr.modRM & 0b11000000) == 0 &&
-                (instr.modRM & 0b00000111) == 0xb00000101;
-                
-            // Case where instruction has a relative 32-bit operand
-            bool relative_op = (instr.opcode == 0xe8) || // CALL
-                (instr.opcode == 0xe9); // JMP
+        /* Print instruction */
+        std::ostringstream oss_orig;
+        for (int off = cur_offset; off < cur_offset + instr_len; off++) {
+            oss_orig << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(pOrig + off)) << " ";
+        }
+        LOG(LL_DEBUG, LCF_HOOK, "  Found instruction %s", oss_orig.str().c_str());
 
-            // Case where instruction has a relative 8-bit operand
-            bool relative_short = false;
+        // Case where modRM with offset relative to the current instruction
+        // pointer value. We need to change the offset in place
+        bool relative_rip = instr.has_modRM &&
+            (instr.modRM & 0b11000000) == 0 &&
+            (instr.modRM & 0b00000111) == 0xb00000101;
+            
+        // Case where instruction has a relative 32-bit operand
+        bool relative_op =
+            (!instr.multibyte_opcode && (
+                (instr.opcode == 0xe8) || // CALL
+                (instr.opcode == 0xe9))) || // JMP
+            (instr.multibyte_opcode == 0x0F && (
+                ((instr.opcode & 0xF0) == 0x80))); // Jcc
+
+        // Case where instruction has a relative 8-bit operand
+        bool relative_short = false;
+        if (!instr.multibyte_opcode) {
             if ((instr.opcode >= 0x70) && (instr.opcode <= 0x7f))
                 relative_short = true;
             if ((instr.opcode >= 0xe0) && (instr.opcode <= 0xe3))
                 relative_short = true;
             if (instr.opcode == 0xeb)
                 relative_short = true;
+        }
 
-            if (relative_rip || relative_op) {
-                // TODO: we do not support 16-bit operand!
-                if (instr.operand_size_prefix)
-                    LOG(LL_WARN, LCF_HOOK, "  Relative address is 16-bit, we do not support that!");
+        /* The following conditionals assume that an instruction cannot use
+         * both an modRM relative operand and an opcode relative operand,
+         * which seems to be the case...?
+         */
 
-                /* Compute where the relative adress is in the instruction. 
-                 * There is no instruction that has a relative 64-bit address,
-                 * whatever prefix is present, so we don't need to check for that. */
-                int off_to_rel = instr_len - 4;
-                
-                LOG(LL_DEBUG, LCF_HOOK, "  Found instruction with rel addr %#x", (*reinterpret_cast<const int*>(pOrig+cur_offset+off_to_rel)));
-                
-                /* Write the instruction and just change the offset to
-                * the new offset between our function and the call target. */
-                memcpy(currentTrampAddr, pOrig+cur_offset, off_to_rel);
-                currentTrampAddr += off_to_rel;
-                
-                const unsigned char* target_addr = pOrig + cur_offset + instr_len + (*reinterpret_cast<const int*>(pOrig+cur_offset+off_to_rel));
-                LOG(LL_DEBUG, LCF_HOOK, "  Absolute addr becomes %p", target_addr);
-                
-                ptrdiff_t new_offset = reinterpret_cast<ptrdiff_t>(target_addr) - reinterpret_cast<ptrdiff_t>(currentTrampAddr) - 4;
-                /* Check if it fits into signed 32-bit */
-                if (new_offset < INT32_MIN || new_offset > INT32_MAX) {
-                    LOG(LL_ERROR, LCF_HOOK, "  Could not modify instruction, offset too large: %lld", new_offset);
-                }
-                int32_t new_offset_32 = static_cast<int32_t>(new_offset);
-                
-                LOG(LL_DEBUG, LCF_HOOK, "  New relative addr becomes %#x", new_offset_32);
-                
-                memcpy(currentTrampAddr, &new_offset_32, 4);
-                currentTrampAddr += 4;
-                
-                for (int i = 0; i < off_to_rel; i++) {
-                    oss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(pOrig+cur_offset+i)) << " ";
-                }                
-                for (int i = 0; i < 4; i++) {
-                    oss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(currentTrampAddr-4+i)) << " ";
-                }
-                LOG(LL_DEBUG, LCF_HOOK, "  Write modified instruction %s", oss.str().c_str());
-            }
-            else if (relative_short) {
-                LOG(LL_DEBUG, LCF_HOOK, "  Found conditional jump instruction %#hhx to rel addr %#hhx", *(pOrig+cur_offset), (*(pOrig+cur_offset+1)));
-                
-                /* Compute where the relative adress is in the instruction. */
-                int off_to_rel = instr_len - 1;
 
-                jmp_info info;
-                info.target_addr = pOrig + cur_offset + instr_len + (*reinterpret_cast<const int8_t*>(pOrig+cur_offset+off_to_rel));
-                info.offset_addr = currentTrampAddr + off_to_rel;
-                jmp_list.push_back(info);
-                
-                LOG(LL_DEBUG, LCF_HOOK, "  Absolute addr becomes %p", info.target_addr);
-                
-                /* Write the same conditional jump, but later change the offset
-                * so that it jumps to another jump
-                * instruction where we can write a 64-bit address. */
-                memcpy(currentTrampAddr, pOrig+cur_offset, instr_len);
-                currentTrampAddr += instr_len;
+        if (relative_rip || relative_op) {
+            // TODO: we do not support 16-bit operand!
+            if (instr.operand_size_prefix)
+                LOG(LL_WARN, LCF_HOOK, "  Relative address is 16-bit, we do not support that!");
+
+            /* Compute where the relative adress is in the instruction. 
+             * There is no instruction that has a relative 64-bit address,
+             * whatever prefix is present, so we don't need to check for that. */
+            int off_to_rel = instr_len - 4;
+            
+            LOG(LL_DEBUG, LCF_HOOK, "  Found instruction with rel addr %#x", (*reinterpret_cast<const int*>(pOrig+cur_offset+off_to_rel)));
+            
+            /* Write the instruction and just change the offset to
+            * the new offset between our function and the call target. */
+            memcpy(currentTrampAddr, pOrig+cur_offset, off_to_rel);
+            currentTrampAddr += off_to_rel;
+            
+            const unsigned char* target_addr = pOrig + cur_offset + instr_len + (*reinterpret_cast<const int*>(pOrig+cur_offset+off_to_rel));
+            LOG(LL_DEBUG, LCF_HOOK, "  Absolute addr becomes %p", target_addr);
+            
+            ptrdiff_t new_offset = reinterpret_cast<ptrdiff_t>(target_addr) - reinterpret_cast<ptrdiff_t>(currentTrampAddr) - 4;
+            /* Check if it fits into signed 32-bit */
+            if (new_offset < INT32_MIN || new_offset > INT32_MAX) {
+                LOG(LL_ERROR, LCF_HOOK, "  Could not modify instruction, offset too large: %lld", new_offset);
             }
-            else {
-                memcpy(currentTrampAddr, pOrig + cur_offset, instr_len);
-                currentTrampAddr += instr_len;
-                
-                for (int i = 0; i < instr_len; i++) {
-                    oss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(pOrig+cur_offset+i)) << " ";
-                }
-                LOG(LL_DEBUG, LCF_HOOK, "  Write unmodified instruction %s", oss.str().c_str());
+            int32_t new_offset_32 = static_cast<int32_t>(new_offset);
+            
+            LOG(LL_DEBUG, LCF_HOOK, "  New relative addr becomes %#x", new_offset_32);
+            
+            memcpy(currentTrampAddr, &new_offset_32, 4);
+            currentTrampAddr += 4;
+            
+            std::ostringstream oss_new;
+            for (int i = 0; i < off_to_rel; i++) {
+                oss_new << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(pOrig+cur_offset+i)) << " ";
+            }                
+            for (int i = 0; i < 4; i++) {
+                oss_new << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(*(currentTrampAddr-4+i)) << " ";
             }
+            LOG(LL_DEBUG, LCF_HOOK, "  Write modified instruction %s", oss_new.str().c_str());
+        }
+        else if (relative_short) {
+            LOG(LL_DEBUG, LCF_HOOK, "  Found conditional jump instruction %#hhx to rel addr %#hhx", *(pOrig+cur_offset), (*(pOrig+cur_offset+1)));
+            
+            /* Compute where the relative adress is in the instruction. */
+            int off_to_rel = instr_len - 1;
+
+            jmp_info info;
+            info.target_addr = pOrig + cur_offset + instr_len + (*reinterpret_cast<const int8_t*>(pOrig+cur_offset+off_to_rel));
+            info.offset_addr = currentTrampAddr + off_to_rel;
+            jmp_list.push_back(info);
+            
+            LOG(LL_DEBUG, LCF_HOOK, "  Absolute addr becomes %p", info.target_addr);
+            
+            /* Write the same conditional jump, but later change the offset
+            * so that it jumps to another jump
+            * instruction where we can write a 64-bit address. */
+            memcpy(currentTrampAddr, pOrig+cur_offset, instr_len);
+            currentTrampAddr += instr_len;
+        }
+        else {
+            /* Write unmodified instruction */
+            memcpy(currentTrampAddr, pOrig + cur_offset, instr_len);
+            currentTrampAddr += instr_len;
         }
         cur_offset += instr_len;
     }
     
     /* Write the jmp instruction to the orginal function */
-    memcpy(currentTrampAddr, jmp_instr, sizeof(jmp_instr));
-    currentTrampAddr += sizeof(jmp_instr);
+    memcpy(currentTrampAddr, JMP_INSTR, sizeof(JMP_INSTR));
+    currentTrampAddr += sizeof(JMP_INSTR);
 #ifdef __i386__
     uintptr_t indirAddr = reinterpret_cast<uintptr_t>(currentTrampAddr+4);
     memcpy(currentTrampAddr, &indirAddr, sizeof(uintptr_t));
     currentTrampAddr += sizeof(uintptr_t);
 #endif
-    uintptr_t targetAddr = reinterpret_cast<uintptr_t>(pOrig)+offset;
+    uintptr_t targetAddr = reinterpret_cast<uintptr_t>(pOrig)+cur_offset;
     memcpy(currentTrampAddr, &targetAddr, sizeof(uintptr_t));
     currentTrampAddr += sizeof(uintptr_t);
 
@@ -642,8 +654,8 @@ static void write_tramp_function(const void *orig_fun, void **pTramp)
         memcpy(info->offset_addr, &off, sizeof(int8_t));
         
         /* Write JMP instruction */
-        memcpy(currentTrampAddr, jmp_instr, sizeof(jmp_instr));
-        currentTrampAddr += sizeof(jmp_instr);
+        memcpy(currentTrampAddr, JMP_INSTR, sizeof(JMP_INSTR));
+        currentTrampAddr += sizeof(JMP_INSTR);
 #ifdef __i386__
         uintptr_t indirAddr = reinterpret_cast<uintptr_t>(currentTrampAddr+4);
         memcpy(currentTrampAddr, &indirAddr, sizeof(uintptr_t));
@@ -665,13 +677,13 @@ void overwrite_orig_function(void *orig_fun, void* my_function)
     char *pTarget = reinterpret_cast<char *>(orig_fun);
     uintptr_t addrTarget = reinterpret_cast<uintptr_t>(pTarget);
     uintptr_t alignedBeg = (addrTarget / 4096) * 4096;
-    uintptr_t alignedEnd = ((addrTarget+sizeof(jmp_instr)+sizeof(uintptr_t)) / 4096) * 4096;
+    uintptr_t alignedEnd = ((addrTarget+sizeof(JMP_INSTR)+sizeof(uintptr_t)) / 4096) * 4096;
     size_t alignedSize = alignedEnd - alignedBeg + 4096;
 
     MYASSERT(mprotect(reinterpret_cast<void*>(alignedBeg), alignedSize, PROT_EXEC | PROT_READ | PROT_WRITE) == 0)
 
-    memcpy(pTarget, jmp_instr, sizeof(jmp_instr));
-    pTarget += sizeof(jmp_instr);
+    memcpy(pTarget, JMP_INSTR, sizeof(JMP_INSTR));
+    pTarget += sizeof(JMP_INSTR);
 #ifdef __i386__
     uintptr_t indirAddr = reinterpret_cast<uintptr_t>(pTarget+4);
     memcpy(pTarget, &indirAddr, sizeof(uintptr_t));
