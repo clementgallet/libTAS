@@ -87,7 +87,6 @@ static int instruction_length(const unsigned char *func, instr_info *instr)
     int operandSize = 4; // operand size for instructions that depend on both operand-size prefixes
     
     // Skip prefixes F0h, F2h, F3h, 66h, 67h, D8h-DFh, 2Eh, 36h, 3Eh, 26h, 64h and 65h
-    int FPU = 0;
     while(*func == 0xF0 ||
           *func == 0xF2 ||
           *func == 0xF3 ||
@@ -104,7 +103,7 @@ static int instruction_length(const unsigned char *func, instr_info *instr)
         else if((*func & 0xF8) == 0xD8)
         {
             instr->is_fpu = true;
-            FPU = *func++;
+            func++;
             break;
         }
 
