@@ -382,11 +382,11 @@ enum {
      */
     MSGN_SDL_DYNAPI_ADDR,
 
-    /* Send the address of the UnityClassic::Baselib_SystemFutex_Wait() function
+    /* Send the address of a Unity function
      * within the UnityPlayer.so library file if present
-     * Argument: uint64_t addr
+     * Arguments: int, uint64_t addr
      */
-    MSGN_UNITY_WAIT_ADDR,
+    MSGN_UNITY_ADDR,
 };
 
 #endif

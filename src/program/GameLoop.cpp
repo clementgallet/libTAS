@@ -45,6 +45,7 @@
 #include "../shared/sockethelpers.h"
 #include "../shared/SharedConfig.h"
 #include "../shared/messages.h"
+#include "../shared/unity_funcs.h"
 #include "../shared/inputs/AllInputs.h"
 #include "../shared/inputs/ControllerInputs.h"
 
@@ -428,11 +429,15 @@ void GameLoop::initProcessMessages()
     if (access(debugfile.c_str(), F_OK) == 0) {
         
         uintptr_t base_unity = BaseAddresses::getBaseAddress("UnityPlayer.so");
-        uint64_t futexwait_addr = getSymbolAddress("_ZN12UnityClassic24Baselib_SystemFutex_WaitEPiij", debugfile.c_str());
-        if (futexwait_addr != 0) {
-            futexwait_addr += base_unity;
-            sendMessage(MSGN_UNITY_WAIT_ADDR);
-            sendData(&futexwait_addr, sizeof(uint64_t));
+        for (int i=0; i<UNITY_FUNCS_LEN; i++) {
+            uint64_t func_addr = getSymbolAddress(UNITY_SYMBOLS[i], debugfile.c_str());
+            if (func_addr != 0) {
+                func_addr += base_unity;
+                sendMessage(MSGN_UNITY_ADDR);
+                sendData(&i, sizeof(int));
+                sendData(&func_addr, sizeof(uint64_t));
+                std::cout << "Found symbol " << UNITY_SYMBOLS[i] << " in address " << func_addr << std::endl;
+            }
         }
         
         if (sdl_addr == 0) {

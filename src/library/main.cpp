@@ -178,10 +178,12 @@ void __attribute__((constructor)) init(void)
                 setDynapiAddr(addr);
                 break;
             }
-            case MSGN_UNITY_WAIT_ADDR: {
+            case MSGN_UNITY_ADDR: {
+                int func;
                 uint64_t addr;
+                receiveData(&func, sizeof(int));
                 receiveData(&addr, sizeof(uint64_t));
-                UnityHacks::patch(addr);
+                UnityHacks::patch(func, addr);
                 break;
             }
             default:

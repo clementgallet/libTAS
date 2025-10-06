@@ -50,7 +50,7 @@ typedef unsigned int LogCategoryFlag; enum
 
     /* Log category */
     LCF_HOOK     = 1 << 6, // hooking notifications
-    /* UNUSED   = 1 << 7, */
+    LCF_HACKS    = 1 << 7, // game specific hack logs
     LCF_TIMESET  = 1 << 8, // notifications of setting the internal time
     LCF_TIMEGET  = 1 << 9, // notifications of getting the internal time
     LCF_CHECKPOINT  = 1 << 10, // savestates

@@ -141,6 +141,7 @@ void DebugPane::initLayout()
     logPrintBoxes.emplace_back(new QCheckBox(tr("Checkpoint")), LCF_CHECKPOINT);
     logPrintBoxes.emplace_back(new QCheckBox(tr("Events")), LCF_EVENTS);
     logPrintBoxes.emplace_back(new QCheckBox(tr("File IO")), LCF_FILEIO);
+    logPrintBoxes.emplace_back(new QCheckBox(tr("Hacks")), LCF_HACKS);
     logPrintBoxes.emplace_back(new QCheckBox(tr("Hook")), LCF_HOOK);
     logPrintBoxes.emplace_back(new QCheckBox(tr("Joystick")), LCF_JOYSTICK);
     logPrintBoxes.emplace_back(new QCheckBox(tr("Keyboard")), LCF_KEYBOARD);
