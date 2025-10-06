@@ -59,6 +59,10 @@
 #undef explicit
 #endif
 
+#ifndef CAP_CHECKPOINT_RESTORE
+#define CAP_CHECKPOINT_RESTORE 40
+#endif
+
 Context context;
 
 static void print_usage(void)

@@ -16,23 +16,6 @@
  *           unsigned long tls);
  */
 
-/* Define the clone_args struct if not defined */
-#ifndef CLONE_ARGS_SIZE_VER0
-struct clone_args {
-    uint64_t flags;
-    uint64_t pidfd;
-    uint64_t child_tid;
-    uint64_t parent_tid;
-    uint64_t exit_signal;
-    uint64_t stack;
-    uint64_t stack_size;
-    uint64_t tls;
-    uint64_t set_tid;
-    uint64_t set_tid_size;
-    uint64_t cgroup;
-};
-#endif
-
 #ifdef __x86_64__
 
 /* clang-format off */
