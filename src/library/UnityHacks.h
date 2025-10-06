@@ -74,7 +74,7 @@ void waitFromName(pthread_t target_thread, const char *name);
 /* Patch Unity function given the function address */
 void patch(uint64_t addr);
 
-};
+}
 
 }
 
