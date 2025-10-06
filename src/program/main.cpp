@@ -63,6 +63,27 @@
 #define CAP_CHECKPOINT_RESTORE 40
 #endif
 
+#ifndef __NR_clone3
+#define __NR_clone3 435
+#endif
+
+/* Define the clone_args struct if not defined */
+#ifndef CLONE_ARGS_SIZE_VER0
+struct clone_args {
+    uint64_t flags;
+    uint64_t pidfd;
+    uint64_t child_tid;
+    uint64_t parent_tid;
+    uint64_t exit_signal;
+    uint64_t stack;
+    uint64_t stack_size;
+    uint64_t tls;
+    uint64_t set_tid;
+    uint64_t set_tid_size;
+    uint64_t cgroup;
+};
+#endif
+
 Context context;
 
 static void print_usage(void)
@@ -263,7 +284,7 @@ int main(int argc, char **argv)
      * On a system with clone3() and set_tid it will return
      * EINVAL.
      */
-    pid_t pid = syscall(SYS_clone3, &args, sizeof(args));
+    pid_t pid = syscall(__NR_clone3, &args, sizeof(args));
 
     if (pid != -1) {
         std::cerr << "Unexpected success: clone3() returned " << pid << std::endl;
