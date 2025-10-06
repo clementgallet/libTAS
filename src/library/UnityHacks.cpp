@@ -101,8 +101,10 @@ const UnityHacks::ScrollingBuffers& UnityHacks::getJobData()
 
 void UnityHacks::setUnity()
 {
-    LOG(LL_DEBUG, LCF_HOOK, "   detected Unity engine");
-    unity = true;
+    if (!unity) {
+        LOG(LL_DEBUG, LCF_HOOK, "   detected Unity engine");
+        unity = true;
+    }
 }
 
 bool UnityHacks::isUnity()
@@ -139,8 +141,8 @@ void UnityHacks::getExecutableMemory()
                 break;
         }
         
-        LOG(LL_WARN, LCF_WAIT, "Game executable has non-default mapping! We found this:");
-        LOG(LL_WARN, LCF_WAIT, "Region %p-%p (%s) with size %zu", area.addr, area.endAddr, area.name, area.size);
+        LOG(LL_DEBUG, LCF_WAIT, "Game executable has non-default mapping! We found this:");
+        LOG(LL_DEBUG, LCF_WAIT, "Region %p-%p (%s) with size %zu", area.addr, area.endAddr, area.name, area.size);
     }
 
     executableBase = reinterpret_cast<uintptr_t>(area.addr);
