@@ -1,3 +1,81 @@
+libtas (1.4.7) unstable; urgency=medium
+
+  * Add input events in movies
+  * Offer undo/redo in input editor
+  * Highlight undo/redo operations
+  * Audio gain setting
+  * Add alignment to ram search
+  * Add begin/end addresses in ram search
+  * Add byte array type in ram search
+  * Add minimal hooks for xkbcommon to fix ruffle keyboard layout
+  * Add a window to modify movie settings
+  * Add more extra rows in input editor
+  * Add hex viewer
+  * Open and seek hex viewer from ram watch
+  * Show converted values from hex view selection
+  * Implement `XRRGetCrtcTransform()`
+  * Use Mesa's lavapipe when "force software rendering" is checked
+  * Extend the rewind to all input operations
+  * Add stacktrace to logging and coloured log levels
+  * Jsdev protocol can send jostick hat inputs as buttons
+  * Option to multiple an entire input column by a factor
+  * Add hashes in savestates for debugging
+  * Map savefiles in memory so that they are saved in states
+  * Ram Watch can use pointers to the stack
+  * Attempt to set tid of recovered threads using clone3
+  * Track opened files that were deleted so we can map them in state loading
+  * Add versions for SteamUser API
+  * Add dummy hooks for pulseaudio
+  * Add versions for SteamUserStats API
+  * Add the setcap command in hook so that it is called on make install
+  * Add support to .AppImage games
+  * Ram watches can be frozen
+  * Ram watch/search can handle string type
+  * In Ram watch window, values and labels can be edited directly
+  * Add paths to Settings
+  * Highlight changes in the hex view
+  * Ram Search: highlight results that would be removed by future search
+  * Add `strace` to the list of debugger programs
+  * Add a menu entry for saving/loading states
+  * Cleanly restore file descriptors after loading a savestate
+  * Ram watches can be reordered
+  * Analog inputs can be added to input editor
+  * Lua file automated reload supports editors that replace the file
+  * Try supporting swr_alloc_set_opts2 even when compiled with old library
+  * Enforce mesa software rendering even when nvidia driver is loaded
+  * Catch when ffmpeg process exited
+  * Add more hooks to prevent mouse capture
+  * Implement fake window coords instead of (0,0)
+  * Change ram search field from double to string that is then parsed
+  * Use monospace font for ramwatch/search addresses and values
+  * Allow setting a video encode framerate even without variable fps
+  * Remove variable framerate setting
+  * Raise threshold in deterministic timer to obtain constant running fps
+  * Use tristate checkboxes for debug print categories
+  * Remove recording of the mouse wheel value. It must now be set through the
+    input editor only
+  * Games may try different OpenGL function loaders, so reload again all functions 
+    everytime
+  * Use GL_BACK_LEFT for glGetFramebufferAttachmentParameteriv in OpenGL
+  * Fix inode parsing when reading game memory layout
+  * Fix seeking to stream after savestating
+  * Add a steam callback for async filewrite
+  * Fix input editor crash when no movie loaded
+  * dlopen() supports passing a savefile
+  * Fix state loading ignoring the first memory segment
+  * Fix check in file being mmaped during state loading
+  * Bugfix where marker would not appear on panel if last one
+  * Fix autohold not applying consistently
+  * Fix removing multiple ram watches
+  * After a savefile is renamed, flag the old savefile as removed
+  * Support writes past the end of custom SaveFile streams
+  * Only edit input editor analog values after double-click
+  * Fix Vulkan bug where vkCreateInstance would not be hooked
+  * Avoid duplicate pthread ids
+  * Fix and update hook patch method
+
+-- clement <clement.gallet@ens-lyon.org>  Mon, 06 Oct 2025 13:52:42 +0200
+
 libtas (1.4.6) unstable; urgency=medium
 
   * Screenshot

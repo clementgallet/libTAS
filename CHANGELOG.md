@@ -1,5 +1,10 @@
 ## [Unreleased]
 ### Added
+### Changed
+### Fixed
+
+## [1.4.7] - 2025-10-06
+### Added
 
 * Add input events in movies
 * Offer undo/redo in input editor
