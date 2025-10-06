@@ -30,10 +30,12 @@ enum {
     UNITY6_JOB_COMPLETED, // job_completed(ujob_control_t*, ujob_lane_t*, ujob_job_t*, ujob_handle_t)
     UNITY6_UJOB_EXECUTE, // ujob_execute_job(ujob_control_t*, ujob_lane_t*, ujob_job_t*, ujob_handle_t, unsigned int)
     UNITY6_UJOB_ADD, // ujobs_add_to_lane_and_wake_one_thread(ujob_control_t*, ujob_job_t*, ujob_lane_t*)
+    UNITY6_UJOB_PARTICIPATE, // ujob_participate(ujob_control_t*, ujob_handle_t, ujob_job_t*&, unsigned int&, ujob_dependency_chain const*)
     UNITY6_JOB_REFLECTION, // JobsUtility_CUSTOM_CreateJobReflectionData(ScriptingBackendNativeObjectPtrOpaque*, ScriptingBackendNativeObjectPtrOpaque*, ScriptingBackendNativeObjectPtrOpaque*, ScriptingBackendNativeObjectPtrOpaque*, ScriptingBackendNativeObjectPtrOpaque*)
     UNITY6_JOB_SCHEDULE, // JobsUtility_CUSTOM_Schedule(JobScheduleParameters&, JobFence&)
     UNITY6_BATCH_JOB, // ScheduleBatchJob(void*, ujob_handle_t)
     UNITY6_JOBQUEUE_SCHEDULE_GROUPS, // JobQueue::ScheduleGroups(JobBatchHandles*, int)
+    UNITY6_WORKER_THREAD_ROUTINE, // worker_thread_routine(void*)
     UNITY_JOBQUEUE_SCHEDULE_JOB, // JobQueue::ScheduleJob(void (*)(void*), void*, JobGroupID, JobQueue::JobQueuePriority)
     UNITY_JOBQUEUE_COMPLETE_ALL_JOBS, // JobQueue::CompleteAllJobs()
     UNITY_JOBQUEUE_SCHEDULE_JOB_MULTIPLE, // JobQueue::ScheduleJobMultipleDependencies(void (*)(void*), void*, JobGroupID*, int, MemLabelId)
@@ -46,6 +48,7 @@ enum {
     UNITY_JOBQUEUE_PROCESS, // JobQueue::ProcessJobs(JobQueue::ThreadInfo*, void*)
     UNITY_JOBQUEUE_EXEC, // JobQueue::Exec(JobInfo*, long long, int, bool)
     UNITY_JOBQUEUE_EXECUTE_QUEUE, // JobQueue::ExecuteJobFromQueue(bool)
+    UNITY_JOBQUEUE_SCHEDULE_DEPENDENCIES, // JobQueue::ScheduleDependencies(JobGroupID&, JobInfo*, JobInfo*, bool)
     UNITY_BACKGROUND_JOBQUEUE_SCHEDULE, // BackgroundJobQueue::ScheduleJobInternal(void (*)(void*), void*, BackgroundJobQueue::JobFence const&, JobQueue::JobQueuePriority)
     UNITY_BACKGROUND_JOBQUEUE_SCHEDULE_MAIN, // BackgroundJobQueue::ScheduleMainThreadJobInternal(void (*)(void*), void*)
     UNITY_BACKGROUND_JOBQUEUE_EXECUTE, // BackgroundJobQueue::ExecuteMainThreadJobs()
@@ -61,10 +64,12 @@ const char* const UNITY_SYMBOLS[] = {
     "_ZL13job_completedP14ujob_control_tP11ujob_lane_tP10ujob_job_t13ujob_handle_t",
     "_ZL16ujob_execute_jobP14ujob_control_tP11ujob_lane_tP10ujob_job_t13ujob_handle_tj",
     "_ZL37ujobs_add_to_lane_and_wake_one_threadP14ujob_control_tP10ujob_job_tP11ujob_lane_t",
+    "_Z16ujob_participateP14ujob_control_t13ujob_handle_tRP10ujob_job_tRjPK21ujob_dependency_chain",
     "_Z42JobsUtility_CUSTOM_CreateJobReflectionDataP37ScriptingBackendNativeObjectPtrOpaqueS0_S0_S0_S0_",
     "_Z27JobsUtility_CUSTOM_ScheduleR21JobScheduleParametersR8JobFence",
     "_ZL16ScheduleBatchJobPv13ujob_handle_t",
     "_ZN8JobQueue14ScheduleGroupsEP15JobBatchHandlesi",
+    "_ZL21worker_thread_routinePv",
     "_ZN8JobQueue11ScheduleJobEPFvPvES0_10JobGroupIDNS_16JobQueuePriorityE",
     "_ZN8JobQueue15CompleteAllJobsEv",
     "_ZN8JobQueue31ScheduleJobMultipleDependenciesEPFvPvES0_P10JobGroupIDi10MemLabelId",
@@ -77,6 +82,7 @@ const char* const UNITY_SYMBOLS[] = {
     "_ZN8JobQueue11ProcessJobsEPNS_10ThreadInfoEPv",
     "_ZN8JobQueue4ExecEP7JobInfoxib",
     "_ZN8JobQueue19ExecuteJobFromQueueEb",
+    "_ZN8JobQueue20ScheduleDependenciesER10JobGroupIDP7JobInfoS3_b",
     "_ZN18BackgroundJobQueue19ScheduleJobInternalEPFvPvES0_RKNS_8JobFenceEN8JobQueue16JobQueuePriorityE",
     "_ZN18BackgroundJobQueue29ScheduleMainThreadJobInternalEPFvPvES0_",
     "_ZN18BackgroundJobQueue21ExecuteMainThreadJobsEv",

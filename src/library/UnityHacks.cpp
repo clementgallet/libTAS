@@ -86,7 +86,10 @@ void UnityHacks::ScrollingBuffers::AddPoint(float x, float y, int tid) {
     if (new_buffer) {
         for (ThreadInfo* th = ThreadManager::getThreadList(); th != nullptr; th = th->next) {
             if (th->translated_tid == tid) {
-                Buffers[tid].name = th->name;
+                if (th->state == ThreadInfo::ST_CKPNTHREAD)
+                    Buffers[tid].name = "Main";
+                else
+                    Buffers[tid].name = th->name;
                 break;
             }
         }
@@ -234,7 +237,7 @@ void UnityHacks::syncWait()
 
 void UnityHacks::syncWaitAll()
 {
-    GlobalNative gn;
+    // GlobalNative gn;
     
     /* We would normally use the same conditional variable to wait here that
      * all jobs have finished, but it can cause a softlock.
@@ -286,28 +289,28 @@ void UnityHacks::syncWaitAll()
      * ...
      */
     
-    unsigned int old_job_count = 0;
-    unity_mutex.lock();
-    int sleep_length = 200;
-    
-    if (unity_job_count > old_job_count)
-        LOG(LL_DEBUG, LCF_HACKS, "   Wait that all Unity jobs finish");
-
-    while (unity_job_count > old_job_count) {
-        old_job_count = unity_job_count;
-        unity_mutex.unlock();
-        
-        if (Global::is_exiting)
-            return;
-
-        NATIVECALL(usleep(sleep_length));
-        unity_mutex.lock();
-        while (unity_waiting_threads || (unity_running_threads > unity_nonterminating_threads)) {
-            unity_mutex.unlock();
-            NATIVECALL(usleep(100));
-            unity_mutex.lock();
-        }
-    }
+    // unsigned int old_job_count = 0;
+    // unity_mutex.lock();
+    // int sleep_length = 200;
+    // 
+    // if (unity_job_count > old_job_count)
+    //     LOG(LL_DEBUG, LCF_HACKS, "   Wait that all Unity jobs finish");
+    // 
+    // while (unity_job_count > old_job_count) {
+    //     old_job_count = unity_job_count;
+    //     unity_mutex.unlock();
+    // 
+    //     if (Global::is_exiting)
+    //         return;
+    // 
+    //     NATIVECALL(usleep(sleep_length));
+    //     unity_mutex.lock();
+    //     while (unity_waiting_threads || (unity_running_threads > unity_nonterminating_threads)) {
+    //         unity_mutex.unlock();
+    //         NATIVECALL(usleep(100));
+    //         unity_mutex.lock();
+    //     }
+    // }
 
     /* Register and reset counts */
     jobData.AddPoint(framecount, unity_job_count, 0);
@@ -320,28 +323,30 @@ void UnityHacks::syncWaitAll()
         }
     }
 
-    unity_mutex.unlock();
+    // unity_mutex.unlock();
 }
 
 void UnityHacks::waitFromName(pthread_t target_thread, const char *name)
 {
-    if ((strcmp(name, "Loading.Preload") == 0) ||
-        (strcmp(name, "Loading.AsyncRe") == 0) ||
-        (strcmp(name, "Background Job.") == 0) ||
-        (strncmp(name, "Job.Worker ", 11) == 0))
-    {
-        ThreadInfo* thread = ThreadManager::getThread(target_thread);
-        thread->unityThread = true;
-    }
+    // if ((strcmp(name, "Loading.Preload") == 0) ||
+    //     (strcmp(name, "Loading.AsyncRe") == 0) ||
+    //     (strcmp(name, "Background Job.") == 0) ||
+    //     (strncmp(name, "Job.Worker ", 11) == 0))
+    // {
+    //     ThreadInfo* thread = ThreadManager::getThread(target_thread);
+    //     thread->unityThread = true;
+    // }
 }
 
 typedef void ujob_control_t;
 typedef void ujob_lane_t;
 typedef void ujob_job_t;
 typedef long ujob_handle_t;
+typedef void ujob_dependency_chain;
 typedef void WorkStealingRange;
 typedef void JobsCallbackFunctions;
 typedef void ScriptingBackendNativeObjectPtrOpaque;
+
 // class JobsCallbackFunctions;
 // typedef void* JobsCallbackFunctions;
 class JobScheduleParameters;
@@ -369,11 +374,13 @@ namespace orig {
     unsigned long (*ujob_schedule_job_internal)(ujob_control_t* x, ujob_handle_t y, unsigned int z);
     long (*ujob_schedule_parallel_for_internal)(ujob_control_t* x, JobsCallbackFunctions* y, void* z, WorkStealingRange* a, unsigned int b, unsigned int c, ujob_handle_t const* d, int e, unsigned char f);
     void (*ujobs_add_to_lane_and_wake_one_thread)(ujob_control_t*, ujob_job_t*, ujob_lane_t*);
+    void (*ujob_participate)(ujob_control_t* x, ujob_handle_t y, ujob_job_t* z, int* a, ujob_dependency_chain const* b);
     int (*job_completed)(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z, ujob_handle_t a);
     int (*JobsUtility_CUSTOM_CreateJobReflectionData)(ScriptingBackendNativeObjectPtrOpaque* x, ScriptingBackendNativeObjectPtrOpaque* y, ScriptingBackendNativeObjectPtrOpaque* z, ScriptingBackendNativeObjectPtrOpaque* a, ScriptingBackendNativeObjectPtrOpaque* b);
     int (*JobsUtility_CUSTOM_Schedule)(JobScheduleParameters& x, JobFence& y);
     long (*ScheduleBatchJob)(void* x, ujob_handle_t y);
     void (*JobQueue6_ScheduleGroups)(JobQueue *t, JobBatchHandles* x, int y);
+    void (*worker_thread_routine)(void* x);
     void (*JobQueue_ScheduleJob)(JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int a, int b);
     void (*JobQueue_CompleteAllJobs)(JobQueue *t);
     long (*JobQueue_ScheduleJobMultipleDependencies)(JobQueue *t, void (*x)(void*), void* y, JobGroupID* z, int a, MemLabelId b);
@@ -386,6 +393,7 @@ namespace orig {
     long (*JobQueue_ProcessJobs)(JobQueue_ThreadInfo* x, void* y);
     long (*JobQueue_Exec)(JobQueue *t, JobInfo* x, long long y, int z, bool a);
     long (*JobQueue_ExecuteJobFromQueue)(JobQueue *t, bool x);
+    void (*JobQueue_ScheduleDependencies)(JobQueue *t, JobGroupID *x, JobInfo *y, JobInfo *z, bool a);
     void (*BackgroundJobQueue_ScheduleJobInternal)(BackgroundJobQueue *t, void (*x)(void*), void* y, BackgroundJobQueue_JobFence* z, JobQueue_JobQueuePriority a);
     void (*BackgroundJobQueue_ScheduleMainThreadJobInternal)(BackgroundJobQueue *t, void (*x)(void*), void* y);
     void (*BackgroundJobQueue_ExecuteMainThreadJobs)(BackgroundJobQueue *t);
@@ -465,27 +473,48 @@ static JobGroupID JobQueue_ScheduleGroupInternal(JobQueue *t, JobGroup *x, int y
 
     /* Return value is 16 bytes (accross registers RDX:RAX), so we need to use
      * a 16-byte struct to recover it. */
-    JobGroupID j = orig::JobQueue_ScheduleGroupInternal(t, x, y, z);
+    // JobGroupID j = orig::JobQueue_ScheduleGroupInternal(t, x, y, z);
+    JobGroupID j = orig::JobQueue_ScheduleGroupInternal(t, x, y, true);
     LOG(LL_DEBUG, LCF_HACKS, "    returns JobGroup %p and JobGroup tag %d", j.group, j.tag);
+
+    /* Immediatly wait for the job */
+    // JobQueue_WaitForJobGroupID(t, j.group, j.tag, true);
     return j;
+}
+
+static void JobQueue_ScheduleDependencies(JobQueue *t, JobGroupID *x, JobInfo *y, JobInfo *z, bool a)
+{
+    LOG(LL_TRACE, LCF_HACKS, "JobQueue_ScheduleDependencies called with sync %d", a);
+    // return orig::JobQueue_ScheduleDependencies(t, x, y, z, a);
+    return orig::JobQueue_ScheduleDependencies(t, x, y, z, true);
 }
 
 static long JobQueue_ProcessJobs(JobQueue_ThreadInfo* x, void* y)
 {
     LOGTRACE(LCF_HACKS);
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+    thread->unityThread = true;
+
     return orig::JobQueue_ProcessJobs(x, y);
 }
 
 static long JobQueue_Exec(JobQueue *t, JobInfo* x, long long y, int z, bool a)
 {
     LOG(LL_TRACE, LCF_HACKS, "JobQueue_Exec called with JobInfo %p and sync %d", x, a);
-    return orig::JobQueue_Exec(t, x, y, z, a);
+    long executed = orig::JobQueue_Exec(t, x, y, z, a);
+    if (executed) {
+        ++unity_job_count;
+        ThreadInfo* th = ThreadManager::getCurrentThread();
+        th->unityJobCount++;
+    }
+    return executed;
 }
 
 static long JobQueue_ExecuteJobFromQueue(JobQueue *t, bool x)
 {
     LOG(LL_TRACE, LCF_HACKS, "JobQueue_ExecuteJobFromQueue called with sync %d", x);
-    return orig::JobQueue_ExecuteJobFromQueue(t, x);
+    return 0;
+    // return orig::JobQueue_ExecuteJobFromQueue(t, x);
 }
 
 static void BackgroundJobQueue_ScheduleJobInternal(BackgroundJobQueue *t, void (*x)(void*), void* y, BackgroundJobQueue_JobFence* z, JobQueue_JobQueuePriority a)
@@ -511,6 +540,9 @@ static void BackgroundJobQueue_ExecuteMainThreadJobs(BackgroundJobQueue *t)
 static void ujob_execute_job(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z, ujob_handle_t a, unsigned int b)
 {
     LOGTRACE(LCF_HACKS);
+    ++unity_job_count;
+    ThreadInfo* th = ThreadManager::getCurrentThread();
+    th->unityJobCount++;
     return orig::ujob_execute_job(x, y, z, a, b);
 }
 
@@ -540,6 +572,12 @@ static void ujobs_add_to_lane_and_wake_one_thread(ujob_control_t* x, ujob_job_t*
     orig::ujobs_add_to_lane_and_wake_one_thread(x, y, z);
 
     // unity_job_condition.wait(lock, [current_running_jobs] {return (running_jobs == current_running_jobs);});
+}
+
+static void ujob_participate(ujob_control_t* x, ujob_handle_t y, ujob_job_t** z, int* a, ujob_dependency_chain const* b)
+{
+    LOGTRACE(LCF_HACKS);
+    orig::ujob_participate(x, y, z, a, b);
 }
 
 static int job_completed(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z, ujob_handle_t a)
@@ -576,6 +614,14 @@ static void JobQueue6_ScheduleGroups(JobQueue *t, JobBatchHandles* x, int y)
     return orig::JobQueue6_ScheduleGroups(t, x, y);
 }
 
+static void worker_thread_routine(void* x)
+{
+    LOGTRACE(LCF_HACKS);
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+    thread->unityThread = true;
+    return orig::worker_thread_routine(x);
+}
+
 #define FUNC_CASE(FUNC_ENUM, FUNC_SYMBOL) \
 case FUNC_ENUM: \
     hook_patch_addr(reinterpret_cast<void*>(address), reinterpret_cast<void**>(&orig::FUNC_SYMBOL), reinterpret_cast<void*>(FUNC_SYMBOL)); \
@@ -588,16 +634,18 @@ void UnityHacks::patch(int func, uint64_t addr)
     
     uintptr_t address = static_cast<uintptr_t>(addr);
     switch(func) {
-        FUNC_CASE(UNITY_FUTEX_WAIT, futexWait)
+        // FUNC_CASE(UNITY_FUTEX_WAIT, futexWait)
         FUNC_CASE(UNITY6_UJOB_EXECUTE, ujob_execute_job)
         FUNC_CASE(UNITY6_UJOB_SCHEDULE, ujob_schedule_job_internal)
         // FUNC_CASE(UNITY6_UJOB_SCHEDULE_PARALLEL, ujob_schedule_parallel_for_internal)
         FUNC_CASE(UNITY6_UJOB_ADD, ujobs_add_to_lane_and_wake_one_thread)
+        FUNC_CASE(UNITY6_UJOB_PARTICIPATE, ujob_participate)
         FUNC_CASE(UNITY6_JOB_COMPLETED, job_completed)
         FUNC_CASE(UNITY6_JOB_REFLECTION, JobsUtility_CUSTOM_CreateJobReflectionData)
         FUNC_CASE(UNITY6_JOB_SCHEDULE, JobsUtility_CUSTOM_Schedule)
         FUNC_CASE(UNITY6_BATCH_JOB, ScheduleBatchJob)
         FUNC_CASE(UNITY6_JOBQUEUE_SCHEDULE_GROUPS, JobQueue6_ScheduleGroups)
+        FUNC_CASE(UNITY6_WORKER_THREAD_ROUTINE, worker_thread_routine)
         FUNC_CASE(UNITY_JOBQUEUE_SCHEDULE_JOB, JobQueue_ScheduleJob)
         FUNC_CASE(UNITY_JOBQUEUE_COMPLETE_ALL_JOBS, JobQueue_CompleteAllJobs)
         FUNC_CASE(UNITY_JOBQUEUE_SCHEDULE_JOB_MULTIPLE, JobQueue_ScheduleJobMultipleDependencies)
@@ -610,6 +658,7 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY_JOBQUEUE_PROCESS, JobQueue_ProcessJobs)
         FUNC_CASE(UNITY_JOBQUEUE_EXEC, JobQueue_Exec)
         FUNC_CASE(UNITY_JOBQUEUE_EXECUTE_QUEUE, JobQueue_ExecuteJobFromQueue)
+        FUNC_CASE(UNITY_JOBQUEUE_SCHEDULE_DEPENDENCIES, JobQueue_ScheduleDependencies)
         FUNC_CASE(UNITY_BACKGROUND_JOBQUEUE_SCHEDULE, BackgroundJobQueue_ScheduleJobInternal)
         FUNC_CASE(UNITY_BACKGROUND_JOBQUEUE_SCHEDULE_MAIN, BackgroundJobQueue_ScheduleMainThreadJobInternal)
         FUNC_CASE(UNITY_BACKGROUND_JOBQUEUE_EXECUTE, BackgroundJobQueue_ExecuteMainThreadJobs)
