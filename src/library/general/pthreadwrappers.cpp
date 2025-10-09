@@ -30,7 +30,6 @@
 #include "global.h"
 #include "GameHacks.h"
 #include "GlobalState.h"
-#include "UnityHacks.h"
 
 #include <errno.h>
 #include <unistd.h>
@@ -535,19 +534,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (GlobalState::isNative())
         return orig::sem_wait(sem);
 
-    ThreadInfo* thread = ThreadManager::getCurrentThread();
-    bool isWaitThread = UnityHacks::isLoadingThread(reinterpret_cast<uintptr_t>(thread->start));
-
     LOG(LL_TRACE, LCF_WAIT, "sem_wait call with %p", sem);
-    if (isWaitThread) {
-        UnityHacks::syncNotify();
-
-        int ret = orig::sem_wait(sem);
-
-        UnityHacks::syncWait();
-        return ret;
-    }
-
     return orig::sem_wait(sem);
 }
 
@@ -685,10 +672,6 @@ int pthread_setname_np (const char *name)
             ThreadManager::setMainThread(target_thread);
         }
     }
-
-#ifdef __unix__
-    UnityHacks::waitFromName(target_thread, name);
-#endif
 
 #ifdef __unix__
     return orig::pthread_setname_np(target_thread, name);

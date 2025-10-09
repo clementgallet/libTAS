@@ -20,56 +20,19 @@
 #ifndef LIBTAS_UNITYHACKS_H_INCLUDED
 #define LIBTAS_UNITYHACKS_H_INCLUDED
 
-#include <sys/types.h>
 #include <cstddef>
 #include <cstdint>
-#include <vector>
-#include <map>
-#include <string>
 
 namespace libtas {
 
 namespace UnityHacks
 {
 
-// From ImPlot
-struct ScrollingBuffer {
-    size_t MaxSize;
-    int Offset;
-    std::vector<float> DataX;
-    std::vector<float> DataY;
-    std::string name;
-
-    ScrollingBuffer(int max_size);
-    void AddPoint(int x, int y);
-    void Erase();
-};
-
-struct ScrollingBuffers {
-    std::map<int, ScrollingBuffer> Buffers;
-    
-    ScrollingBuffers();
-    void AddPoint(float x, float y, int tid);
-};
-
-const ScrollingBuffers& getJobData();
-    
 void setUnity();
 
 bool isUnity();
         
-void getExecutableMemory();
-
-bool isLoadingThread(uintptr_t addr);
-
-/* Synchronize methods so that Unity jobs are running sequentially. It also
- * supports jobs that never finish by using a timeout */
-void syncNotify();
-void syncWait();
 void syncWaitAll();
-
-/* Determine if a given thread is a Unity loading thread from their thread name */
-void waitFromName(pthread_t target_thread, const char *name);
 
 /* Patch Unity function given the function address */
 void patch(int func, uint64_t addr);

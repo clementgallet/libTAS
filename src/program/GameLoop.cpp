@@ -402,52 +402,56 @@ void GameLoop::initProcessMessages()
     sendMessage(MSGN_ENCODING_SEGMENT);
     sendData(&encoding_segment, sizeof(int));
 
+    /* Find and send symbol addresses for main executable or `UnityPlayer_s.debug` */
+    std::string debugfile = dirFromPath(context->gameexecutable) + "/UnityPlayer_s.debug";
+    uintptr_t base_debugfile = 0;
+    bool is_pie = true;
+    
+    if (access(debugfile.c_str(), F_OK) == 0) {
+        base_debugfile = BaseAddresses::getBaseAddress("UnityPlayer.so");
+    }
+    else {
+        debugfile = context->gameexecutable;
+        base_debugfile = BaseAddresses::getBaseAddress(context->gamename.c_str());
+
+        /* If the executable is position-independent (pie), it will be mapped
+        * somewhere, and the symbol is only an offset, so we need the base 
+        * address of the executable and adds to it. We use `file` to determine
+        * if the executable is pie */
+        int gameArch = extractBinaryType(context->gameexecutable);
+        is_pie = gameArch & BT_PIEAPP;
+    }
+    
     /* Sometime games have trouble finding the address of the orginal function
      * `SDL_DYNAPI_entry()` that we hook, so we send right away the symbol
      * address if there is one */
-    uint64_t sdl_addr = getSymbolAddress("SDL_DYNAPI_entry", context->gameexecutable.c_str());
+    uint64_t sdl_addr = getSymbolAddress("SDL_DYNAPI_entry", debugfile.c_str());
     if (sdl_addr != 0) {
-        /* If the executable is position-independent (pie), it will be mapped
-         * somewhere, and the symbol is only an offset, so we need the base 
-         * address of the executable and adds to it. We use `file` to determine
-         * if the executable is pie */
-        int gameArch = extractBinaryType(context->gameexecutable);
-        if (gameArch & BT_PIEAPP) {
-            uintptr_t base_executable = BaseAddresses::getBaseAddress(context->gamename.c_str());
-            if (base_executable == 0) {
+        if (is_pie) {
+            if (base_debugfile == 0) {
                 std::cerr << "Could not find base address of " <<  context->gamename << std::endl;
             }
-            sdl_addr += base_executable;
+            sdl_addr += base_debugfile;
         }
 
         sendMessage(MSGN_SDL_DYNAPI_ADDR);
         sendData(&sdl_addr, sizeof(uint64_t));
     }
 
-    /* Check for `UnityPlayer_s.debug` presence and send symbol addresses */
-    std::string debugfile = dirFromPath(context->gameexecutable) + "/UnityPlayer_s.debug";
-    if (access(debugfile.c_str(), F_OK) == 0) {
-        
-        uintptr_t base_unity = BaseAddresses::getBaseAddress("UnityPlayer.so");
-        for (int i=0; i<UNITY_FUNCS_LEN; i++) {
-            uint64_t func_addr = getSymbolAddress(UNITY_SYMBOLS[i], debugfile.c_str());
-            if (func_addr != 0) {
-                func_addr += base_unity;
-                sendMessage(MSGN_UNITY_ADDR);
-                sendData(&i, sizeof(int));
-                sendData(&func_addr, sizeof(uint64_t));
-                std::cout << "Found symbol " << UNITY_SYMBOLS[i] << " in address " << func_addr << std::endl;
+    /* Send Unity function pointers */
+    for (int i=0; i<UNITY_FUNCS_LEN; i++) {
+        uint64_t func_addr = getSymbolAddress(UNITY_SYMBOLS[i], debugfile.c_str());
+        if (func_addr != 0) {
+            if (is_pie) {
+                if (base_debugfile == 0) {
+                    std::cerr << "Could not find base address of " <<  context->gamename << std::endl;
+                }
+                func_addr += base_debugfile;
             }
-        }
-        
-        if (sdl_addr == 0) {
-            /* Look again inside UnityPlayer.so */
-            uint64_t sdl_addr = getSymbolAddress("SDL_DYNAPI_entry", debugfile.c_str());
-            if (sdl_addr != 0) {
-                sdl_addr += base_unity;
-                sendMessage(MSGN_SDL_DYNAPI_ADDR);
-                sendData(&sdl_addr, sizeof(uint64_t));
-            }
+            sendMessage(MSGN_UNITY_ADDR);
+            sendData(&i, sizeof(int));
+            sendData(&func_addr, sizeof(uint64_t));
+            std::cout << "Found symbol " << UNITY_SYMBOLS[i] << " in address " << std::hex << func_addr << std::endl;
         }
     }
 

@@ -199,31 +199,34 @@ void AutoDetect::game_engine(Context *context)
     }
     
     /* Check for Unity:
-     * Unity executables end with `.x86` or `.x86_64`, and data directory is named
-     * after the executable with added `_Data` */
-    if (ext == ".x86" || ext == ".x86_64") {
-        std::string data = context->gameexecutable.substr(0, pos) + "_Data";
+     * Old Unity executables end with `.x86` or `.x86_64` or no extention, and
+     * data directory is named after the executable with added `_Data` */
 
-        if (stat(data.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)) {
-            std::cout << "Unity game detected" << std::endl;
-            std::ostringstream oss;
-            oss << "strings \"" << data;
-            oss << "/Resources/unity_builtin_extra\" | head -n 1";
+    std::string data;
+    if (ext == ".x86" || ext == ".x86_64")
+        data = context->gameexecutable.substr(0, pos) + "_Data";
+    else
+        data = context->gameexecutable + "_Data";
 
-            std::string version = queryCmd(oss.str());
-            if (!version.empty())
-                std::cout << "   Version " << version << std::endl;
-            else
-                std::cout << "   Could not detect version " << std::endl;
+    if (stat(data.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)) {
+        std::cout << "Unity game detected" << std::endl;
+        std::ostringstream oss;
+        oss << "strings \"" << data;
+        oss << "/Resources/unity_builtin_extra\" | head -n 1";
 
-            /* Check for -force-gfx-direct command-line option */
-            if (context->config.gameargs.find("-force-gfx-direct") == std::string::npos) {
-                std::cout << "   Adding -force-gfx-direct command-line option" << std::endl;
-                context->config.gameargs += " -force-gfx-direct";
-            }
-            
-            return;
+        std::string version = queryCmd(oss.str());
+        if (!version.empty())
+            std::cout << "   Version " << version << std::endl;
+        else
+            std::cout << "   Could not detect version " << std::endl;
+
+        /* Check for -force-gfx-direct command-line option */
+        if (context->config.gameargs.find("-force-gfx-direct") == std::string::npos) {
+            std::cout << "   Adding -force-gfx-direct command-line option" << std::endl;
+            context->config.gameargs += " -force-gfx-direct";
         }
+        
+        return;
     }
     
     /* Check for GM:S:
