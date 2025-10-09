@@ -63,6 +63,13 @@ enum {
     UNITY5_JOBQUEUE_MAIN_ENQUEUEALL, // JobQueue::MainEnqueueAll(JobGroup*, JobGroup*)
     UNITY5_BACKGROUND_JOBQUEUE_SCHEDULE_MAIN, // BackgroundJobQueue::ScheduleMainThreadJob(void (*)(void*), void*)
     UNITY5_JOBQUEUE_WAIT_JOB_GROUP, // JobQueue::WaitForJobGroup(JobGroupID, bool)
+    UNITY4_JOBSCHEDULER_FETCH, // JobScheduler::FetchNextJob(int&)
+    UNITY4_JOBSCHEDULER_PROCESS, // JobScheduler::ProcessJob(JobInfo&, int)
+    UNITY4_JOBSCHEDULER_FETCH_GROUP, // JobScheduler::FetchJobInGroup(int)
+    UNITY4_JOBSCHEDULER_WAIT, // JobScheduler::WaitForGroup(int)
+    UNITY4_JOBSCHEDULER_WORKLOOP, // JobScheduler::WorkLoop(void*)
+    UNITY4_JOBSCHEDULER_AWAKE, // JobScheduler::AwakeIdleWorkerThreads(int)
+    UNITY4_JOBSCHEDULER_SUBMIT, // JobScheduler::SubmitJob(int, void* (*)(void*), void*, void* volatile*)
     UNITY_FUNCS_LEN
 };
 
@@ -108,6 +115,13 @@ const char* const UNITY_SYMBOLS[] = {
     "_ZN8JobQueue14MainEnqueueAllEP8JobGroupS1_",
     "_ZN18BackgroundJobQueue21ScheduleMainThreadJobEPFvPvES0_",
     "_ZN8JobQueue15WaitForJobGroupE10JobGroupIDb",
+    "_ZN12JobScheduler12FetchNextJobERi",
+    "_ZN12JobScheduler10ProcessJobER7JobInfoi",
+    "_ZN12JobScheduler15FetchJobInGroupEi",
+    "_ZN12JobScheduler12WaitForGroupEi",
+    "_ZN12JobScheduler8WorkLoopEPv",
+    "_ZN12JobScheduler22AwakeIdleWorkerThreadsEi",
+    "_ZN12JobScheduler9SubmitJobEiPFPvS0_ES0_PVS0_",
  };
 
 

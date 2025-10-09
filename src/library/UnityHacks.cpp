@@ -82,6 +82,7 @@ typedef long BackgroundJobQueue_JobFence;
 typedef void JobInfo;
 typedef void JobBatchHandles;
 typedef void AtomicQueue;
+typedef void JobScheduler;
 
 struct JobGroupID {
     JobGroup* group;
@@ -128,6 +129,13 @@ namespace orig {
     long (*U5_JobQueue_MainEnqueueAll)(JobQueue* t, JobGroup* x, JobGroup* y) = nullptr;
     void (*U5_BackgroundJobQueue_ScheduleMainThreadJob)(BackgroundJobQueue* t, void (*x)(void*), void* y) = nullptr;
     void (*U5_JobQueue_WaitForJobGroup)(JobQueue* t, JobGroup* x, int y, bool z) = nullptr;
+    long (*U4_JobScheduler_FetchNextJob)(JobScheduler* t, int* x) = nullptr;
+    void (*U4_JobScheduler_ProcessJob)(JobScheduler* t, JobInfo* x, int y) = nullptr;
+    long (*U4_JobScheduler_FetchJobInGroup)(JobScheduler* t, int x) = nullptr;
+    void (*U4_JobScheduler_WaitForGroup)(JobScheduler* t, int x) = nullptr;
+    void (*U4_JobScheduler_WorkLoop)(JobScheduler* t, void* x) = nullptr;
+    void (*U4_JobScheduler_AwakeIdleWorkerThreads)(JobScheduler* t, int x) = nullptr;
+    int (*U4_JobScheduler_SubmitJob)(JobScheduler* t, int x, void* (*y)(void*), void* z, void* volatile* a) = nullptr;
 }
 
 #include <signal.h>
@@ -430,6 +438,73 @@ static void U5_JobQueue_WaitForJobGroup(JobQueue* t, JobGroup* x, int y, bool z)
     return orig::U5_JobQueue_WaitForJobGroup(t, x, y, z);
 }
 
+static long U4_JobScheduler_FetchNextJob(JobScheduler* t, int* x)
+{
+    LOGTRACE(LCF_HACKS);
+    /* Return 0 to prevent worker threads from executing a job */
+    return 0;
+    // return orig::U4_JobScheduler_FetchNextJob(t, x);
+}
+
+static void U4_JobScheduler_ProcessJob(JobScheduler* t, JobInfo* x, int y)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U4_JobScheduler_ProcessJob(t, x, y);
+}
+
+static long U4_JobScheduler_FetchJobInGroup(JobScheduler* t, int x)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U4_JobScheduler_FetchJobInGroup(t, x);
+}
+
+static void U4_JobScheduler_WaitForGroup(JobScheduler* t, int x)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U4_JobScheduler_WaitForGroup(t, x);
+}
+
+static void U4_JobScheduler_WorkLoop(JobScheduler* t, void* x)
+{
+    LOGTRACE(LCF_HACKS);
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+    thread->unityThread = true;
+    return orig::U4_JobScheduler_WorkLoop(t, x);
+}
+
+static void U4_JobScheduler_AwakeIdleWorkerThreads(JobScheduler* t, int x)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U4_JobScheduler_AwakeIdleWorkerThreads(t, x);
+}
+
+/* We need to wrap the job, to know when it is executed */
+struct U4_Job
+{
+    void* (*func)(void*);
+    void* arg;
+};
+
+static void* U4_ExecJob(void* arg)
+{
+    LOGTRACE(LCF_HACKS);
+    ThreadInfo* th = ThreadManager::getCurrentThread();
+    th->unityJobCount++;
+    
+    U4_Job* j = reinterpret_cast<U4_Job*>(arg);
+    void* ret = j->func(j->arg);
+    delete j;
+    return ret;
+}
+
+static int U4_JobScheduler_SubmitJob(JobScheduler* t, int x, void* (*y)(void*), void* z, void* volatile* a)
+{
+    LOGTRACE(LCF_HACKS);
+    U4_Job *j = new U4_Job;
+    j->func = y;
+    j->arg = z;
+    return orig::U4_JobScheduler_SubmitJob(t, x, &U4_ExecJob, reinterpret_cast<void*>(j), a);
+}
 
 #define FUNC_CASE(FUNC_ENUM, FUNC_SYMBOL) \
 case FUNC_ENUM: \
@@ -443,6 +518,14 @@ void UnityHacks::patch(int func, uint64_t addr)
     
     uintptr_t address = static_cast<uintptr_t>(addr);
     switch(func) {
+        FUNC_CASE(UNITY4_JOBSCHEDULER_FETCH, U4_JobScheduler_FetchNextJob)
+        FUNC_CASE(UNITY4_JOBSCHEDULER_PROCESS, U4_JobScheduler_ProcessJob)
+        FUNC_CASE(UNITY4_JOBSCHEDULER_FETCH_GROUP, U4_JobScheduler_FetchJobInGroup)
+        FUNC_CASE(UNITY4_JOBSCHEDULER_WAIT, U4_JobScheduler_WaitForGroup)
+        FUNC_CASE(UNITY4_JOBSCHEDULER_WORKLOOP, U4_JobScheduler_WorkLoop)
+        FUNC_CASE(UNITY4_JOBSCHEDULER_AWAKE, U4_JobScheduler_AwakeIdleWorkerThreads)
+        FUNC_CASE(UNITY4_JOBSCHEDULER_SUBMIT, U4_JobScheduler_SubmitJob)
+
         FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_JOB, U5_JobQueue_ScheduleJob)
         FUNC_CASE(UNITY5_JOBQUEUE_CREATE_JOB_BATCH, U5_JobQueue_CreateJobBatch)
         FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_GROUPS, U5_JobQueue_ScheduleGroups)
