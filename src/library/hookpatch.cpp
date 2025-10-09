@@ -454,7 +454,13 @@ static void* allocate_nearby_segment(void* current_tramp_segment, const void *or
     }
 
     /* If we arrive here, we need to allocate a segment */
-    uintptr_t first_addr = (reinterpret_cast<uintptr_t>(orig_fun) - 0x7F000000) & 0xFFFFFFFFFFFFF000;
+    
+    /* Usually the lowest mapped address is 4096, given by vm.mmap_min_addr.
+     * We use a much larger lowest value. */
+    uintptr_t first_addr = 0x00100000;
+    if (reinterpret_cast<uintptr_t>(orig_fun) > (0x7F000000 + first_addr))
+        first_addr = (reinterpret_cast<uintptr_t>(orig_fun) - 0x7F000000) & 0xFFFFFFFFFFFFF000;
+
     uintptr_t last_addr = reinterpret_cast<uintptr_t>(orig_fun) + 0x7F000000;
     
     /* Look for available segment by steps */
@@ -466,7 +472,7 @@ static void* allocate_nearby_segment(void* current_tramp_segment, const void *or
     }
     
     if (obtained_addr == MAP_FAILED) {
-        LOG(LL_DEBUG, LCF_HOOK, "  Could not obtain a memory segment for hookpatch functions, error %d", errno);
+        LOG(LL_WARN, LCF_HOOK, "  Could not obtain a memory segment for hookpatch functions, error %d", errno);
         return nullptr;
     }
     
