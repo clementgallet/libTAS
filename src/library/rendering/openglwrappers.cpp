@@ -226,4 +226,29 @@ void myglViewport(GLint x, GLint y, GLsizei width, GLsizei height)
     return glProcs.Viewport(x, y, width, height);
 }
 
+void glGetIntegerv(GLenum pname, GLint *data)
+{
+    LINK_GL_POINTER(GetIntegerv);
+    return myglGetIntegerv(pname, data);
+}
+
+void myglGetIntegerv(GLenum pname, GLint *data)
+{
+    if (GlobalState::isNative()) return glProcs.GetIntegerv(pname, data);
+    LOGTRACE(LCF_OGL);
+    if (Global::shared_config.opengl_soft)
+    {
+        // Unity 4.x uses GL_GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX to determine if there is enough memory for a texture
+        // However, llvmpipe is bugged and will return an uninitialized variable, i.e. non-deterministic
+        // See https://gitlab.freedesktop.org/mesa/mesa/-/issues/14064
+        if (pname == GL_GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX)
+        {
+            *data = 65536;
+            return;
+        }
+    }
+
+    return glProcs.GetIntegerv(pname, data);
+}
+
 }
