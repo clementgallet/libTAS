@@ -465,7 +465,7 @@ void GameLoop::initProcessMessages()
 uint64_t GameLoop::getSymbolAddress(const char* symbol, const char* file)
 {
     std::ostringstream cmd;
-    cmd << "readelf -Ws \"" << file << "\" | grep " << symbol << " | awk '{print $2}'";
+    cmd << "readelf -Ws \"" << file << "\" | grep -w -G " << symbol << " | awk '{print $2}'";
 
     uint64_t addr = std::strtoull(queryCmd(cmd.str()).c_str(), nullptr, 16);    
     return addr;
