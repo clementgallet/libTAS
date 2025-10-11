@@ -190,6 +190,14 @@ usymbol_t UNITY_SYMBOLS[] = {
         "JobQueue::ScheduleJob",
         "",
         "",
+        // Signature for Unity 2018
+        "55 44 89 CD 53 48 89 fb 48 83 ec 08 e8 ?? ?? ?? ?? 89 ea 48 89 df 48 89 c6 e8"
+    },
+    {
+        UNITY5_JOBQUEUE_SCHEDULE_JOB,
+        "JobQueue::ScheduleJob",
+        "",
+        "",
         // Signature for Unity 5
         "48 89 5C 24 D8 48 89 6C 24 E0 48 89 F5 4C 89 64 24 E8 4C 89 6C 24 F0 49 89 D4 4c 89 74 24 f8 48 83 EC 68 48 89 CA 44 89 44 24 18 48 89 4C 24 10 BE 01 00 00 00"
     },
@@ -253,9 +261,17 @@ usymbol_t UNITY_SYMBOLS[] = {
         "JobQueue::ExecuteOneJob",
         "_ZN8JobQueue13ExecuteOneJobEv",
         "",
+        // Signature for Unity 2020
         "55 41 56 53 48 89 FB 40 8A AF 5A 01 00 00 48 8B 3F"
     },
-        // Signature for Unity 2020
+    {
+        UNITY5_JOBQUEUE_EXECUTE,
+        "JobQueue::ExecuteOneJob",
+        "",
+        "",
+        // Signature for Unity 2018
+        "53 48 89 FB E8 ?? ?? ?? ?? 84 C0 74 ?? B8 01 00 00 00 5B C3 0F 1F 40 00 48 89 df 5B E9"
+    },
     {
         UNITY5_JOBQUEUE_EXECUTE,
         "JobQueue::ExecuteOneJob",
@@ -268,6 +284,14 @@ usymbol_t UNITY_SYMBOLS[] = {
         UNITY5_JOBQUEUE_SCHEDULE_GROUP,
         "JobQueue::ScheduleGroup",
         "_ZN8JobQueue13ScheduleGroupEP8JobGroupNS_16JobQueuePriorityE",
+        "",
+        // Signature for Unity 2018
+        "41 57 41 56 41 55 49 89 FD 48 89 f7 41 54 49 89 F4 55 89 D5 53 48 83 ec 58"
+    },
+    {
+        UNITY5_JOBQUEUE_SCHEDULE_GROUP,
+        "JobQueue::ScheduleGroup",
+        "",
         "",
         // Signature for Unity 5
         "41 56 41 55 41 89 D5 41 54 49 89 fc 48 89 f7 55 53 48 89 f3 48 83 c4 80"
@@ -303,6 +327,14 @@ usymbol_t UNITY_SYMBOLS[] = {
         "",
         // Signature for Unity 2020
         "55 41 57 41 56 53 48 83 EC 18 89 F5 49 89 FF 48 8B 7F 08"
+    },
+    {
+        UNITY2K_JOBQUEUE_EXECUTE_QUEUE,
+        "JobQueue::ExecuteJobFromQueue",
+        "",
+        "",
+        // Signature for Unity 2018
+        "41 55 49 89 FD 41 54 55 53 48 83 EC 18 48 8B 7F 08 E8 ?? ?? ?? ?? 49 89 C4"
     },
     {
         UNITY2K_JOBQUEUE_SCHEDULE_DEPENDENCIES,
@@ -352,6 +384,15 @@ usymbol_t UNITY_SYMBOLS[] = {
         "JobQueue::ProcessJobs",
         "_ZN8JobQueue11ProcessJobsEPv",
         "",
+        // Signature for Unity 2018
+        "41 57 41 56 41 55 41 54 55 53 48 89 FB 48 83 EC 48 48 8B 35 ?? ?? ?? ?? 48 8b 3d"
+    },
+    {
+        UNITY5_JOBQUEUE_PROCESS,
+        "JobQueue::ProcessJobs",
+        "",
+        "",
+        // Signature for Unity 5
         "41 55 41 54 55 48 8d 6f 74 53 48 89 fb 48 83 ec 28 f0 83 45 00 01 4c 8d 67 50"
     },
     {
@@ -359,6 +400,15 @@ usymbol_t UNITY_SYMBOLS[] = {
         "JobQueue::Exec",
         "_ZN8JobQueue4ExecEP7JobInfoxi",
         "",
+        // Signature for Unity 2018
+        "41 57 41 56 49 89 D6 41 55 41 54 41 89 CC 55 48 89 FD 53 48 89 F3 48 83 ec 18 f0 83 6f 68 01"
+    },
+    {
+        UNITY5_JOBQUEUE_EXEC,
+        "JobQueue::Exec",
+        "",
+        "",
+        // Signature for Unity 5
         "41 57 48 8D 47 70 41 56 41 89 CE 41 55 49 89 D5 41 54 55 48 89 F5 53"
     },
     {
