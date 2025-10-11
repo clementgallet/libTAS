@@ -142,6 +142,9 @@ struct Context {
     
     /* PID of the appimage process that mounts the appimage structure */
     pid_t appimage_pid = 0;
+    
+    /* Detected game engine */
+    int engine;
 };
 
 #endif

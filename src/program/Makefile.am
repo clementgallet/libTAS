@@ -89,6 +89,7 @@ libTAS_SOURCES = \
     main.cpp \
     SaveState.cpp \
     SaveStateList.cpp \
+    Signature.cpp \
     utils.cpp \
     lua/Callbacks.cpp \
     lua/Gui.cpp \

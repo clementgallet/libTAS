@@ -118,7 +118,6 @@ namespace orig {
     void (*U2K_BackgroundJobQueue_ScheduleJobInternal)(BackgroundJobQueue *t, void (*x)(void*), void* y, BackgroundJobQueue_JobFence* z, JobQueue_JobQueuePriority a) = nullptr;
     void (*U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal)(BackgroundJobQueue *t, void (*x)(void*), void* y) = nullptr;
     void (*U5_BackgroundJobQueue_ExecuteMainThreadJobs)(BackgroundJobQueue *t) = nullptr;
-    void (*U5_JobQueue_WorkLoop)(void* x) = nullptr;
     void (*U5_BackgroundJobQueue_ScheduleJob)(BackgroundJobQueue* t, void (*x)(void*), void* y) = nullptr;
     long (*U5_JobQueue_ExecuteJobFromQueue)(JobQueue* t) = nullptr;
     long (*U5_JobQueue_ProcessJobs)(JobQueue* x, void* y) = nullptr;
@@ -131,9 +130,7 @@ namespace orig {
     void (*U5_JobQueue_WaitForJobGroup)(JobQueue* t, JobGroup* x, int y, bool z) = nullptr;
     long (*U4_JobScheduler_FetchNextJob)(JobScheduler* t, int* x) = nullptr;
     void (*U4_JobScheduler_ProcessJob)(JobScheduler* t, JobInfo* x, int y) = nullptr;
-    long (*U4_JobScheduler_FetchJobInGroup)(JobScheduler* t, int x) = nullptr;
     void (*U4_JobScheduler_WaitForGroup)(JobScheduler* t, int x) = nullptr;
-    void (*U4_JobScheduler_WorkLoop)(JobScheduler* t, void* x) = nullptr;
     void (*U4_JobScheduler_AwakeIdleWorkerThreads)(JobScheduler* t, int x) = nullptr;
     int (*U4_JobScheduler_SubmitJob)(JobScheduler* t, int x, void* (*y)(void*), void* z, void* volatile* a) = nullptr;
 }
@@ -283,7 +280,9 @@ static unsigned long U6_ujob_schedule_job_internal(ujob_control_t* x, ujob_handl
     LOGTRACE(LCF_HACKS);
     unsigned long ret = orig::U6_ujob_schedule_job_internal(x, y, z);
     
-    U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(y), 0, true);
+    if (orig::U2K_JobQueue_WaitForJobGroupID)
+        orig::U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(y), 0, true);
+
     return ret;
 }
 
@@ -350,14 +349,6 @@ static void U6_worker_thread_routine(void* x)
     return orig::U6_worker_thread_routine(x);
 }
 
-static void U5_JobQueue_WorkLoop(void* x)
-{
-    LOGTRACE(LCF_HACKS);
-    ThreadInfo* thread = ThreadManager::getCurrentThread();
-    thread->unityThread = true;
-    return orig::U5_JobQueue_WorkLoop(x);
-}
-
 static void U5_BackgroundJobQueue_ScheduleJob(BackgroundJobQueue* t, void (*x)(void*), void* y)
 {
     LOGTRACE(LCF_HACKS);
@@ -375,6 +366,9 @@ static long U5_JobQueue_ProcessJobs(JobQueue* t, void* x)
 {
     LOGTRACE(LCF_HACKS);
     
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+    thread->unityThread = true;
+
     /* Calling U5_JobQueue_ProcessJobs() in worker threads may call
      * U5_JobQueue_Exec() directly without fetching a job queue with 
      * U5_JobQueue_ExecuteJobFromQueue(), so we wait indefinitively here.
@@ -441,6 +435,9 @@ static void U5_JobQueue_WaitForJobGroup(JobQueue* t, JobGroup* x, int y, bool z)
 static long U4_JobScheduler_FetchNextJob(JobScheduler* t, int* x)
 {
     LOGTRACE(LCF_HACKS);
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+    thread->unityThread = true;
+
     /* Return 0 to prevent worker threads from executing a job */
     return 0;
     // return orig::U4_JobScheduler_FetchNextJob(t, x);
@@ -452,24 +449,10 @@ static void U4_JobScheduler_ProcessJob(JobScheduler* t, JobInfo* x, int y)
     return orig::U4_JobScheduler_ProcessJob(t, x, y);
 }
 
-static long U4_JobScheduler_FetchJobInGroup(JobScheduler* t, int x)
-{
-    LOGTRACE(LCF_HACKS);
-    return orig::U4_JobScheduler_FetchJobInGroup(t, x);
-}
-
 static void U4_JobScheduler_WaitForGroup(JobScheduler* t, int x)
 {
     LOGTRACE(LCF_HACKS);
     return orig::U4_JobScheduler_WaitForGroup(t, x);
-}
-
-static void U4_JobScheduler_WorkLoop(JobScheduler* t, void* x)
-{
-    LOGTRACE(LCF_HACKS);
-    ThreadInfo* thread = ThreadManager::getCurrentThread();
-    thread->unityThread = true;
-    return orig::U4_JobScheduler_WorkLoop(t, x);
 }
 
 static void U4_JobScheduler_AwakeIdleWorkerThreads(JobScheduler* t, int x)
@@ -520,9 +503,7 @@ void UnityHacks::patch(int func, uint64_t addr)
     switch(func) {
         FUNC_CASE(UNITY4_JOBSCHEDULER_FETCH, U4_JobScheduler_FetchNextJob)
         FUNC_CASE(UNITY4_JOBSCHEDULER_PROCESS, U4_JobScheduler_ProcessJob)
-        FUNC_CASE(UNITY4_JOBSCHEDULER_FETCH_GROUP, U4_JobScheduler_FetchJobInGroup)
         FUNC_CASE(UNITY4_JOBSCHEDULER_WAIT, U4_JobScheduler_WaitForGroup)
-        FUNC_CASE(UNITY4_JOBSCHEDULER_WORKLOOP, U4_JobScheduler_WorkLoop)
         FUNC_CASE(UNITY4_JOBSCHEDULER_AWAKE, U4_JobScheduler_AwakeIdleWorkerThreads)
         FUNC_CASE(UNITY4_JOBSCHEDULER_SUBMIT, U4_JobScheduler_SubmitJob)
 
@@ -533,7 +514,6 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_GROUP, U5_JobQueue_ScheduleGroup)
         FUNC_CASE(UNITY5_BACKGROUND_JOBQUEUE_EXECUTE, U5_BackgroundJobQueue_ExecuteMainThreadJobs)
         
-        FUNC_CASE(UNITY5_WORKLOOP, U5_JobQueue_WorkLoop)
         FUNC_CASE(UNITY5_BACKGROUND_JOBQUEUE_SCHEDULE, U5_BackgroundJobQueue_ScheduleJob)
         FUNC_CASE(UNITY5_JOBQUEUE_EXECUTE_QUEUE, U5_JobQueue_ExecuteJobFromQueue)
         FUNC_CASE(UNITY5_JOBQUEUE_PROCESS, U5_JobQueue_ProcessJobs)

@@ -176,7 +176,7 @@ void AutoDetect::game_libraries(Context *context)
     }
 }
 
-void AutoDetect::game_engine(Context *context)
+int AutoDetect::game_engine(Context *context)
 {
     struct stat sb;
     
@@ -226,7 +226,7 @@ void AutoDetect::game_engine(Context *context)
             context->config.gameargs += " -force-gfx-direct";
         }
         
-        return;
+        return ENGINE_UNITY;
     }
     
     /* Check for GM:S:
@@ -242,7 +242,7 @@ void AutoDetect::game_engine(Context *context)
                 std::cout << "   Adding time-tracking clock_gettime() monotonic" << std::endl;                
                 context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_CLOCKGETTIME_MONOTONIC] = 100;
             }
-            return;
+            return ENGINE_GAMEMAKER;
         }
     }
 
@@ -261,5 +261,9 @@ void AutoDetect::game_engine(Context *context)
             std::cout << "   Adding --audio-driver ALSA command-line option" << std::endl;
             context->config.gameargs += " --audio-driver ALSA";
         }
+        
+        return ENGINE_GODOT;
     }
+    
+    return ENGINE_UNKNOWN;
 }
