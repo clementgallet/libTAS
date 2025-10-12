@@ -99,12 +99,6 @@ memory, so you can resume the game immediately.
 
 This option aims to prevent the game from saving its savefiles on disk. This is useful to keep the same state of the game whenever you load a savestate or you quit and restart the game. To enable that, libTAS detects if the game opens a regular file in write mode, and instead opens a virtual file in memory with a copy of the content of the actual file. The game does not notice it and uses regular file commands (e.g. read, write, seek) on it. Because this virtual file is in memory, it is saved inside savestates and is recovered when loading a savestate. Also, when the game is closed, all modifications to the virtual file are lost. This option may cause some games to crash, if they are doing uncommon operations with savefiles, or if the tool incorrectly detected savefiles.
 
-### Recycle threads
-
-One current limitation of the savestates implementation is that loading a savestate won't recreated threads that have exited since the savestate was done. It makes loading impossible in common cases like between levels, and the user will be forced to restart the entire movie because they cannot load any savestate. We can work around this limitation by recycling threads. When a game thread exits, it turns into a wait mode instead, and the next time the game creates a new thread, no thread is actually created and the thread function is passed to this waiting thread. Thanks to this, savestates are much more likely to be possible.
-
-However, some games will crash when this option is checked (e.g. recent Mono games) because thread-local storage is not completely supported.
-
 ### Virtual Steam client
 
 When enabled, it will simulate a dummy Steam client in case games want to connect to Steam. This is mandatory for games that require Steam to be opened, because libTAS does not work with Steam. The implementation of this dummy client is not complete, so it won't work with all games.
