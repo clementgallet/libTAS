@@ -81,10 +81,6 @@ The Incremental savestates option allows taking advantage of the recent soft-dir
 
 This option is good for users that don't have an SSD, but no check is performed if there is enough remaining memory when savestating.
 
-#### Backtrack savestate
-
-This option makes the game save a state each time savestates are invalidated by thread creation or destruction. This state can be loaded with F10 (by default). It allows users to get back to the earliest frame that is available.
-
 #### Compressed savestates
 
 Compressed savestates save time especially for slow hard-drive disks. This option is recommended.
