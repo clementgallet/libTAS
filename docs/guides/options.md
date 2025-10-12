@@ -150,7 +150,3 @@ not go past the game screen.
 
 If checked, libTAS will prevent games from warping the mouse cursor (but will still register
 the warp internally).
-
-### Recalibrate mouse position
-
-Some games move their cursor using the relative movement of the mouse, so there will be an offset between the system mouse cursor and the game cursor. To align both cursors, after choosing this option, click on the game cursor.
