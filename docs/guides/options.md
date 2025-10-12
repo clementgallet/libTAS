@@ -16,6 +16,13 @@ Some games are build with a constant framerate in mind, and setting another FPS 
 
 The System Time is the time that is accessed by the game. It can be set before starting the game to have different starting times. Because system time is often used as a seed to a random number generator, setting this value can affect the random behaviors in the game. This is why initial system time is stored in movie files. When the game has started, this value shows the current time that the game has access to.
 
+### Mouse relative mode
+
+Set the mouse position relative to the center of the screen. For exemple, if you move the cursor
+3 pixels to the right of the center of the screen, it will be sent to the game as if you moved
+your cursor 3 pixels to the right from the last frame. This is useful for first-person
+controls, together with the next feature.
+
 ## File
 
 ### Executable Options
@@ -133,13 +140,6 @@ A simple window to look at the ram watches. It is also possible to scan for poin
 The pointer scan feature will scan for pointer chains to a specific address. Selecting a ram watch and pressing the button will open a new window. You can then set the maximum number of pointers in the chain and the maximum value of offsets. The Search will take some time, but all the layout is stored so you can search again with different parameters or other addresses in a very short time, as long as you don't frame advance. Then, you can store results in the Ram Watch.
 
 ## Input
-
-### Mouse relative mode
-
-Set the mouse position relative to the center of the screen. For exemple, if you move the cursor
-3 pixels to the right of the center of the screen, it will be sent to the game as if you moved
-your cursor 3 pixels to the right from the last frame. This is useful for first-person
-controls, together with the next feature.
 
 ### Warp mouse to center each frame
 
