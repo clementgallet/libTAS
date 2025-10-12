@@ -77,10 +77,6 @@ Some games expect, at some point, the time to advance, and wait in a loop, query
 
 The Incremental savestates option allows taking advantage of the recent soft-dirty bit pushed by the CRIU project, which can track which memory pages have been written to. When the first savestate is triggered, a complete memory dump is performed (like a regular savestate), but the soft-dirty bit is cleared. If another savestate is performed, only the memory pages that were modified since are saved, leading to lightweight savestates. However, to be effective, this option requires the user to make the first savestate as late as possible. The tool detects at startup if this feature is available on the system, and disables the option if not.
 
-#### Store savestates in RAM
-
-This option is good for users that don't have an SSD, but no check is performed if there is enough remaining memory when savestating.
-
 #### Compressed savestates
 
 Compressed savestates save time especially for slow hard-drive disks. This option is recommended.
