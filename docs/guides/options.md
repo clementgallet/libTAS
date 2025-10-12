@@ -65,11 +65,6 @@ When software rendering is on, you can check this to skip some steps in the rend
 
 Displays some information on the game screen such as framecount, inputs, notifications and ram watches. The placement of these texts can be modified, and can be displayed in the encode video.
 
-### Variable framerate
-
-Allows the user to change the framerate during the execution of the game. This must be checked
-before starting the game.
-
 ## Runtime
 
 ### Time tracking
