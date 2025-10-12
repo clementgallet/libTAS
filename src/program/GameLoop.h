@@ -65,9 +65,6 @@ private:
 
     void sleepSendPreview();
 
-    /* Get the address of a symbol from a executable or library file */
-    uint64_t getSymbolAddress(const char* symbol, const char* file);
-
     void processInputs(AllInputs &ai);
 
     void endFrameMessages(AllInputs &ai);

@@ -24,7 +24,7 @@
 #include "GameThread.h"
 #include "GameEvents.h"
 #include "AutoDetect.h"
-#include "Signature.h"
+#include "UnityPatching.h"
 
 #ifdef __unix__
 #include "GameEventsXcb.h"
@@ -46,7 +46,6 @@
 #include "../shared/sockethelpers.h"
 #include "../shared/SharedConfig.h"
 #include "../shared/messages.h"
-#include "../shared/unity_funcs.h"
 #include "../shared/inputs/AllInputs.h"
 #include "../shared/inputs/ControllerInputs.h"
 
@@ -59,7 +58,6 @@
 #include <csignal> // kill
 #include <sys/stat.h> // stat
 #include <sys/wait.h> // waitpid
-#include <sys/mman.h> // mmap
 #include <stdint.h>
 #include <cstdlib>
 
@@ -405,120 +403,7 @@ void GameLoop::initProcessMessages()
     sendData(&encoding_segment, sizeof(int));
 
     if (context->engine == AutoDetect::ENGINE_UNITY) {
-        /* Find and send symbol addresses for main executable or `UnityPlayer_s.debug` */
-        std::string unityplayer = dirFromPath(context->gameexecutable) + "/UnityPlayer.so";
-        bool has_unityplayer = access(unityplayer.c_str(), F_OK) == 0;
-        
-        std::string debugfile = dirFromPath(context->gameexecutable) + "/UnityPlayer_s.debug";
-        bool has_unityplayer_debug = access(debugfile.c_str(), F_OK) == 0;
-        
-        std::pair<uintptr_t,uintptr_t> executablefile_segment;
-        int gameArch = extractBinaryType(context->gameexecutable);
-
-        /* If the executable is position-independent (pie), it will be mapped
-         * somewhere, and the symbol is only an offset, so we need the base 
-         * address of the executable and adds to it. We use `file` to determine
-         * if the executable is pie */
-        bool is_pie = gameArch & BT_PIEAPP;
-        bool is_64bit = gameArch & BT_ELF64;
-
-        if (has_unityplayer) {
-            executablefile_segment = BaseAddresses::getAddress("UnityPlayer.so");
-        }
-        else {
-            debugfile = context->gameexecutable;
-            executablefile_segment = BaseAddresses::getExecutableSection();
-        }
-        
-        /* Send Unity function pointers from symbol locations */
-        bool found_symbols = false;
-        if (has_unityplayer_debug || !has_unityplayer) {
-
-            /* Sometime games have trouble finding the address of the orginal function
-             * `SDL_DYNAPI_entry()` that we hook, so we send right away the symbol
-             * address if there is one */
-            uint64_t sdl_addr = getSymbolAddress("SDL_DYNAPI_entry", debugfile.c_str());
-            if (sdl_addr != 0) {
-                if (is_pie) {
-                    if (executablefile_segment.first == 0) {
-                        std::cerr << "Could not find base address of " <<  context->gamename << std::endl;
-                    }
-                    sdl_addr += executablefile_segment.first;
-                }
-                
-                sendMessage(MSGN_SDL_DYNAPI_ADDR);
-                sendData(&sdl_addr, sizeof(uint64_t));
-            }
-
-            for (int i=0; UNITY_SYMBOLS[i].id != UNITY_FUNCS_LEN; i++) {
-                if (strlen(UNITY_SYMBOLS[i].symbol) == 0)
-                    continue;
-
-                uint64_t func_addr = getSymbolAddress(UNITY_SYMBOLS[i].symbol, debugfile.c_str());
-                if (func_addr != 0) {
-                    found_symbols = true;
-                    if (is_pie) {
-                        if (executablefile_segment.first == 0) {
-                            std::cerr << "Could not find base address of " <<  context->gamename << std::endl;
-                        }
-                        func_addr += executablefile_segment.first;
-                    }
-                    sendMessage(MSGN_UNITY_ADDR);
-                    sendData(&UNITY_SYMBOLS[i].id, sizeof(int));
-                    sendData(&func_addr, sizeof(uint64_t));
-                    std::cout << "Found symbol for function " << UNITY_SYMBOLS[i].name << " in address " << std::hex << func_addr << std::endl;
-                }
-            }
-        }
-        
-        /* If no symbol present, try to find functions by signature */
-        if (!found_symbols) {
-            
-            /* We need to query the executable memory to make the search */
-            ptrdiff_t executable_size = executablefile_segment.second - executablefile_segment.first;
-            void* executable_local_addr = mmap(nullptr, executable_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-            
-            if (executable_local_addr == MAP_FAILED) {
-                std::cerr << "Could not map a segment of size " << executable_size << " to host the executable memory" << std::endl;
-            }
-            else {
-                int ret = MemAccess::read(executable_local_addr, reinterpret_cast<void*>(executablefile_segment.first), executable_size);
-                
-                if (ret == -1)
-                    std::cerr << "Could not read the executable segment memory" << std::endl;
-                
-                for (int i=0; UNITY_SYMBOLS[i].id != UNITY_FUNCS_LEN; i++) {
-                    const char* signature = is_64bit ? UNITY_SYMBOLS[i].signature64 : UNITY_SYMBOLS[i].signature32;
-                    if (strlen(signature) == 0)
-                        continue;
-                    
-                    Signature sig;
-                    sig.fromIdaString(signature);
-                    
-                    ptrdiff_t func_offset;
-                    uintptr_t func_addr;
-                    int match_count = SigSearch::Search(static_cast<uint8_t*>(executable_local_addr), executable_size, sig, &func_offset);
-                    
-                    switch (match_count) {
-                        case 0:
-                            // std::cout << "Found no occurrence of signature " << sig.toIdaString() << " associated with function symbol " << UNITY_SYMBOLS[i].symbol << std::endl;
-                            break;
-                        case 1:
-                            func_addr = executablefile_segment.first + func_offset;
-                            std::cout << "Found unique matching signature for function " << UNITY_SYMBOLS[i].name << " in address " << std::hex << (uintptr_t)func_addr << std::endl;
-                            sendMessage(MSGN_UNITY_ADDR);
-                            sendData(&UNITY_SYMBOLS[i].id, sizeof(int));
-                            sendData(&func_addr, sizeof(uintptr_t));
-                            break;
-                        default:
-                            std::cout << "Found " << match_count << " occurrences of signature " << signature << " associated with function " << UNITY_SYMBOLS[i].name << std::endl;
-                            break;
-                    }
-                }
-                
-                munmap(executable_local_addr, executable_size);
-            }
-        }
+        UnityPatching::sendAddresses(context);
     }
     else {
         /* Sometime games have trouble finding the address of the orginal function
@@ -546,15 +431,6 @@ void GameLoop::initProcessMessages()
     
     context->status = Context::ACTIVE;
     emit statusChanged(context->status);
-}
-
-uint64_t GameLoop::getSymbolAddress(const char* symbol, const char* file)
-{
-    std::ostringstream cmd;
-    cmd << "readelf -Ws \"" << file << "\" | grep -w -G " << symbol << " | awk '{print $2}'";
-
-    uint64_t addr = std::strtoull(queryCmd(cmd.str()).c_str(), nullptr, 16);    
-    return addr;
 }
 
 bool GameLoop::startFrameMessages()

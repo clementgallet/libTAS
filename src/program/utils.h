@@ -21,6 +21,7 @@
 #define LIBTAS_UTILS_H_INCLUDED
 
 #include <string>
+#include <cstdint>
 
 /* Forward declaration */
 struct Context;
@@ -68,5 +69,8 @@ std::string queryCmd(const std::string& cmd, int* status = nullptr);
 
 /* Get the result of a shell command and returns pid */
 std::string queryCmdPid(const char **command, pid_t* popen_pid);
+
+/* Get the address of a symbol from a executable or library file */
+uint64_t getSymbolAddress(const char* symbol, const char* file);
 
 #endif

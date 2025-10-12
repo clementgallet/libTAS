@@ -25,6 +25,7 @@
 #include <cstring> // strerror
 #include <iostream>
 #include <unistd.h> // unlink
+#include <sstream>
 
 std::string fileFromPath(const std::string& path)
 {
@@ -290,4 +291,13 @@ std::string queryCmdPid(const char **command, pid_t* popen_pid)
     fclose(output);
 
     return outputstr;
+}
+
+uint64_t getSymbolAddress(const char* symbol, const char* file)
+{
+    std::ostringstream cmd;
+    cmd << "readelf -Ws \"" << file << "\" | grep -w -G " << symbol << " | awk '{print $2}'";
+
+    uint64_t addr = std::strtoull(queryCmd(cmd.str()).c_str(), nullptr, 16);    
+    return addr;
 }
