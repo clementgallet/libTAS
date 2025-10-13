@@ -144,9 +144,17 @@ void InputEditorView::fillMenu(QMenu* frameMenu)
 
     insertsAct = menu->addAction(tr("Insert # frames"), this, &InputEditorView::insertInputs);
 
-    markAct = menu->addAction(tr("Add marker"), this, &InputEditorView::addMarker);
+    markAct = menu->addAction(tr("Add marker"), this, &InputEditorView::addMarker, QKeySequence(Qt::CTRL + Qt::Key_M));
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
+    markAct->setShortcutVisibleInContextMenu(true);
+#endif
+    this->addAction(markAct);
 
-    unmarkAct = menu->addAction(tr("Remove marker"), this, &InputEditorView::removeMarker);
+    unmarkAct = menu->addAction(tr("Remove marker"), this, &InputEditorView::removeMarker, QKeySequence(Qt::CTRL + Qt::Key_R));
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
+    unmarkAct->setShortcutVisibleInContextMenu(true);
+#endif
+    this->addAction(unmarkAct);
 
     duplicateAct = menu->addAction(tr("Duplicate"), this, &InputEditorView::duplicateInput, QKeySequence(Qt::CTRL + Qt::Key_D));
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
