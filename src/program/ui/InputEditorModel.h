@@ -29,6 +29,7 @@
 #include <sstream>
 #include <stdint.h>
 #include <chrono>
+#include <map>
 
 /* Forward declaration */
 struct Context;
@@ -202,6 +203,12 @@ public slots:
     /* Timer update function to highlight last undo/redo */
     void highlightUndo();
 
+    /* Shift markers after a given row by a specified number of rows */
+    void shiftMarkers(int startRow, int offset);
+
+    /* Remove markers within a specified range of rows */
+    void removeMarkersInRange(int startRow, int endRow);
+
 private:
     Context *context;
     MovieFile *movie;
@@ -236,6 +243,9 @@ private:
 
     /* Rewind without enforce seeking */
     bool rewind(uint64_t framecount);
+
+    /* Map to store markers with frame index as key and marker text as value */
+    std::map<int, std::string> markers;
 
 signals:
     void inputSetChanged();

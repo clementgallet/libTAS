@@ -1359,3 +1359,44 @@ bool InputEditorModel::isAutofireInput(int column) const
 {
     return movie->editor->isAutofire(column-COLUMN_SPECIAL_SIZE);
 }
+
+void InputEditorModel::shiftMarkers(int startRow, int offset) {
+    // Create a temporary map to store updated markers
+    std::map<int, std::string> updatedMarkers;
+
+    for (const auto& marker : movie->editor->markers) {
+        if (marker.first >= startRow) {
+            updatedMarkers[marker.first + offset] = marker.second;
+        } else {
+            updatedMarkers[marker.first] = marker.second;
+        }
+    }
+
+    // Replace the old markers with the updated ones
+    movie->editor->markers = std::move(updatedMarkers);
+}
+
+void InputEditorModel::removeMarkersInRange(int startRow, int endRow) {
+    // Remove markers within the specified range
+    auto it = movie->editor->markers.begin();
+    while (it != movie->editor->markers.end()) {
+        if (it->first >= startRow && it->first <= endRow) {
+            it = movie->editor->markers.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    // Shift markers after the deleted range
+    int offset = endRow - startRow + 1;
+    std::map<int, std::string> updatedMarkers;
+    for (const auto& marker : movie->editor->markers) {
+        if (marker.first > endRow) {
+            updatedMarkers[marker.first - offset] = marker.second;
+        } else {
+            updatedMarkers[marker.first] = marker.second;
+        }
+    }
+
+    movie->editor->markers = std::move(updatedMarkers);
+}
