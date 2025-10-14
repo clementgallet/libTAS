@@ -42,6 +42,7 @@
 #include "sdl/sdlwindows.h"
 #include "sdl/sdlevents.h"
 #include "sdl/SDLEventQueue.h"
+#include "renderhud/FileDebug.h"
 #include "renderhud/FrameWindow.h"
 #include "renderhud/LuaDraw.h"
 #include "renderhud/MessageWindow.h"
@@ -264,6 +265,9 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 
     /* Last message to send */
     sendMessage(MSGB_START_FRAMEBOUNDARY);
+
+    /* Update debug */
+    FileDebug::update(framecount);
 
     /* Reset ramwatches and lua drawings */
     WatchesWindow::reset();

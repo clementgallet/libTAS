@@ -1,5 +1,8 @@
 ## [Unreleased]
 ### Added
+
+* Debug window for file descriptors
+
 ### Changed
 ### Fixed
 

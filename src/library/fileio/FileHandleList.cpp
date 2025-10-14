@@ -49,7 +49,7 @@ namespace FileHandleList {
  * resulting in a crash. Also, we allocate it dynamically and never free it, so
  * that it has a chance to survive every other game code that may use it.
  */
-static std::forward_list<FileHandle>& getFileList() {
+std::forward_list<FileHandle>& getFileList() {
     static std::forward_list<FileHandle>* filehandles = new std::forward_list<FileHandle>;
     return *filehandles;
 }
@@ -97,7 +97,7 @@ const FileHandle& fileHandleFromFd(int fd)
     return fh_zero;
 }
 
-void trackAllFiles()
+void updateAllFiles()
 {
     auto& filehandles = getFileList();
     /* Remove all entries that aren't pipes */
@@ -137,11 +137,21 @@ void trackAllFiles()
             /* Don't add special files, such as sockets or pipes */
             if ((buf[0] == '/') && (0 != strncmp(buf, "/dev/", 5))) {
                 filehandles.emplace_front(buf, fd);
-                trackFile(filehandles.front());
             }
         }
     }
     closedir(dir);
+}
+
+void trackAllFiles()
+{
+    updateAllFiles();
+
+    auto& filehandles = getFileList();
+    
+    for (FileHandle &fh : filehandles) {
+        trackFile(fh);
+    }
 }
 
 void trackFile(FileHandle &fh)

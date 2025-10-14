@@ -19,6 +19,7 @@
 
 #include "RenderHUD.h"
 #include "Crosshair.h"
+#include "FileDebug.h"
 #include "FrameWindow.h"
 #include "InputsWindow.h"
 #include "LogWindow.h"
@@ -119,6 +120,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
     }
 
     static bool old_show_game_window = false;
+    static bool show_file = true;
     static bool show_framecount = true;
     static bool show_inputs = true;
     static bool show_messages = true;
@@ -202,6 +204,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
             if (ImGui::BeginMenu("Debug")) {
                 ImGui::MenuItem("Log", nullptr, &show_log);
                 ImGui::MenuItem("Audio", nullptr, &show_audio);
+                ImGui::MenuItem("File", nullptr, &show_file);
                 ImGui::MenuItem("Unity", nullptr, &show_unity, UnityHacks::isUnity());
                 ImGui::MenuItem("Demo", nullptr, &show_demo);
                 ImGui::EndMenu();
@@ -226,6 +229,9 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         }
     }
     old_show_game_window = show_game_window;
+    
+    if (show_file)
+        FileDebug::draw(framecount, &show_file);
     
     if (show_framecount)
         FrameWindow::draw(framecount, nondraw_framecount, &show_framecount);

@@ -22,12 +22,15 @@
 
 #include <utility>
 #include <cstdio>
+#include <forward_list>
 
 namespace libtas {
 
 class FileHandle;
 
 namespace FileHandleList {
+
+std::forward_list<FileHandle>& getFileList();
 
 /* Open and register an unnamed pipe */
 std::pair<int, int> createPipe(int flags = 0);
@@ -39,9 +42,10 @@ int fdFromFile(const char* file);
 const FileHandle& fileHandleFromFd(int fd);
 
 /* Scan list of file descriptors using /proc/self/fd, and add all file descriptors */
-void trackAllFiles();
+void updateAllFiles();
 
 /* Save offset and size of file handle */
+void trackAllFiles();
 void trackFile(FileHandle &fh);
 
 /* Recover the offset of all tracked files */

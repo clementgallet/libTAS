@@ -105,6 +105,7 @@ libtas_so_SOURCES = \
     inputs/xpointer.cpp \
     renderhud/AudioDebug.cpp \
     renderhud/Crosshair.cpp \
+    renderhud/FileDebug.cpp \
     renderhud/FrameWindow.cpp \
     renderhud/InputsWindow.cpp \
     renderhud/LogWindow.cpp \
