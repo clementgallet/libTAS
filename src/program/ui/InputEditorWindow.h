@@ -64,6 +64,7 @@ private:
     QAction* rewindAct;
     QAction* fastforwardAct;
     QAction* markerPauseAct;
+    QAction* moveMarkerAct;
     QLabel* statusFrame;
     QProgressBar* statusSeek;
 };

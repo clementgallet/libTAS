@@ -1361,6 +1361,9 @@ bool InputEditorModel::isAutofireInput(int column) const
 }
 
 void InputEditorModel::shiftMarkers(int startRow, int offset) {
+    if (!context->config.editor_move_marker)
+        return;
+
     // Create a temporary map to store updated markers
     std::map<int, std::string> updatedMarkers;
 
@@ -1377,6 +1380,9 @@ void InputEditorModel::shiftMarkers(int startRow, int offset) {
 }
 
 void InputEditorModel::removeMarkersInRange(int startRow, int endRow) {
+    if (!context->config.editor_move_marker)
+        return;
+
     // Remove markers within the specified range
     auto it = movie->editor->markers.begin();
     while (it != movie->editor->markers.end()) {
