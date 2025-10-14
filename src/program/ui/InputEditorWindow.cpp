@@ -103,6 +103,11 @@ InputEditorWindow::InputEditorWindow(Context* c, MovieFile *movie, QWidget *pare
 
     markerPauseAct->setCheckable(true);
 
+    moveMarkerAct = optionMenu->addAction(tr("Move markers on frame addition or removal"), this,
+        [=](bool checked){context->config.editor_move_marker = checked;});
+
+    moveMarkerAct->setCheckable(true);
+
     /* Status bar */
     statusFrame = new QLabel(tr("No frame selected"));
     statusBar()->addWidget(statusFrame);
