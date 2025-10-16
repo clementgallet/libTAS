@@ -989,7 +989,9 @@ static void syncFileDescriptors()
         if (fdRegistered && fdOpened) {
             /* Check for matching path */
             if (0 != strcmp(fh.fileName(), buf)) {
-                LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "File descriptor %d is currently linked to %s, but was linked to %s in savestate", fd, buf, fh.fileName());
+                LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "File descriptor %d is currently linked to %s, but was linked to %s in savestate", fd, buf, fh.fileName());
+                close(fd);
+                fdOpened = false;
             }
         }
         if (!fdRegistered && fdOpened) {

@@ -6,6 +6,8 @@
 ### Changed
 ### Fixed
 
+* Savestates now restore better file descriptors 
+
 ## [1.4.7] - 2025-10-06
 ### Added
 
