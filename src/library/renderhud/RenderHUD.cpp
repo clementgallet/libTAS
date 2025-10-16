@@ -120,7 +120,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
     }
 
     static bool old_show_game_window = false;
-    static bool show_file = true;
+    static bool show_file = false;
     static bool show_framecount = true;
     static bool show_inputs = true;
     static bool show_messages = true;

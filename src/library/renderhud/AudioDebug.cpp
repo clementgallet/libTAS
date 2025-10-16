@@ -84,6 +84,8 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
                     
                 for (size_t i = 0; i < source->buffer_queue.size(); i++) {
                     const auto& buffer = source->buffer_queue[i];
+                    if (!buffer->sampleSize)
+                        continue;
                     float bufferMS = 1000.0f * (float)buffer->sampleSize / (float)buffer->frequency;
                     minBufferMS = std::min(minBufferMS, bufferMS);
                 }
