@@ -9,8 +9,7 @@ permalink: /guides/lua/
 
 ### Gui functions
 
-Gui functions are only valid in callback `onPaint()`. **Beware**, option
-`Video > OSD > Lua` needs to be checked to show any lua draw function.
+Gui functions are only valid in callback `onPaint()`.
 In all gui functions, colors are coded in a single 32-bit unsigned integer as followed: `0xaarrggbb`.
 
 #### gui.resolution
