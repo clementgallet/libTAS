@@ -396,3 +396,15 @@ executed here if you want them to be executed on the current frame.
 Called at the end of the frame before the screen rendering is performed. All Gui
 functions must be executed inside this callback. To include Lua draws in encodes,
 `Video > OSD > OSD on video encode` can be checked.
+
+### Examples
+
+#### Hello world
+
+Display a simple text on top of the game:
+
+    function hello_world()
+       gui.text(100, 10, "Hello world")
+    end
+
+    callback.onPaint(hello_world)
