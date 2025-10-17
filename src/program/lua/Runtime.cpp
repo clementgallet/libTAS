@@ -38,6 +38,7 @@ static const luaL_Reg runtime_functions[] =
     { "isFastForward", Lua::Runtime::isFastForward},
     { "setFastForward", Lua::Runtime::setFastForward},
     { "sleepMS", Lua::Runtime::sleepMS},
+    { "playPause", Lua::Runtime::playPause},
     { NULL, NULL }
 };
 
@@ -82,5 +83,11 @@ int Lua::Runtime::sleepMS(lua_State *L)
     int length = static_cast<int>(lua_tointeger(L, 1));
     if (length >= 0)
         usleep(length);
+    return 0;
+}
+
+int Lua::Runtime::playPause(lua_State *L)
+{
+    context->hotkey_pressed_queue.push(HOTKEY_PLAYPAUSE);
     return 0;
 }

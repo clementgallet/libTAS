@@ -338,6 +338,12 @@ Set the fast-forward status.
 
 Sleep for `length` milliseconds.
 
+#### runtime.playPause
+
+    none runtime.playPause()
+
+Pause the game if playing, resume otherwise.
+
 ### Callbacks
 
 #### callback.onStartup

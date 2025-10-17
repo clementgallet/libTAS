@@ -48,6 +48,8 @@ namespace Runtime {
     /* Sleep the given number of milliseconds */
     int sleepMS(lua_State *L);
 
+    /* Pause or resume the movie */
+    int playPause(lua_State *L);
 }
 }
 
