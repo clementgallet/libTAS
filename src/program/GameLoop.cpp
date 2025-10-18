@@ -67,6 +67,7 @@ GameLoop::GameLoop(Context* c) : movie(MovieFile(c)), context(c)
 #elif defined(__APPLE__) && defined(__MACH__)
     gameEvents = new GameEventsQuartz(c, &movie);
 #endif
+    c->movie = &movie;
 }
 
 void GameLoop::start()
