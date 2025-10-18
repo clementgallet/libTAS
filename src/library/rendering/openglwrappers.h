@@ -94,6 +94,8 @@ OVERRIDE void glEnable(GLenum cap);
 void myglEnable(GLenum cap);
 OVERRIDE void glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
 void myglViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+OVERRIDE void glGetIntegerv(GLenum pname, GLint *data);
+void myglGetIntegerv(GLenum pname, GLint *data);
 
 // OVERRIDE void glDisable(GLenum cap);
 // void myglDisable(GLenum cap);
