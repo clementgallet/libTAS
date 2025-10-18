@@ -74,8 +74,8 @@ typedef void ujob_lane_t;
 typedef void ujob_job_t;
 typedef long ujob_handle_t;
 typedef void ujob_dependency_chain;
-typedef void WorkStealingRange;
-typedef void JobsCallbackFunctions;
+typedef int WorkStealingRange;
+typedef void* (*JobsCallbackFunctions)(void*, int);
 typedef void ScriptingBackendNativeObjectPtrOpaque;
 class JobScheduleParameters;
 class JobFence;
@@ -404,7 +404,7 @@ static void U2K_JobQueue_WaitForJobGroupID(JobQueue* /* or ujob_control_t* */ t 
 
 static int U6_job_completed(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z, ujob_handle_t a)
 {
-    LOGTRACE(LCF_HACKS);
+    LOG(LL_TRACE, LCF_HACKS, "U6_job_completed called with job %p and handle %p", z, a);
     int ret = orig::U6_job_completed(x, y, z, a);
     return ret;
 }
@@ -470,6 +470,18 @@ static unsigned long U6_ujob_schedule_job_internal(ujob_control_t* x, ujob_handl
     return ret;
 }
 
+struct callback_args_t {
+    JobsCallbackFunctions* func;
+    void* arg;
+    int loop_index;
+};
+
+static void* job_callback(void* arg, int)
+{
+    callback_args_t* args = reinterpret_cast<callback_args_t*>(arg);
+    return (*args->func)(args->arg, args->loop_index);
+}
+
 /* The function parameters from the symbol are *wrong*! 6th parameter must be 
  * 64-bit instead of 32-bit, and the last two parameters are not (int, uchar),
  * but a full long instead. Games crash instantly without this modification.
@@ -479,10 +491,45 @@ static unsigned long U6_ujob_schedule_job_internal(ujob_control_t* x, ujob_handl
  *     WorkStealingRange *param_4, uint param_5, uint param_6,
  *     ujob_handle_t *param_7, int param_8, uchar param_9)
  */ 
-static long U6_ujob_schedule_parallel_for_internal(ujob_control_t* x, JobsCallbackFunctions* y, void* z, WorkStealingRange* a, unsigned int b, unsigned long c, ujob_handle_t const* d, long e)
+static long U6_ujob_schedule_parallel_for_internal(ujob_control_t* x, JobsCallbackFunctions* y, void* job_callback_arg, WorkStealingRange* a, unsigned int count, unsigned long c, ujob_handle_t const* d, long e)
 {
-    LOGTRACE(LCF_HACKS);
-    return orig::U6_ujob_schedule_parallel_for_internal(x, y, z, a, b, c, d, e);
+    LOG(LL_TRACE, LCF_HACKS, "U6_ujob_schedule_parallel_for_internal called with callback %p, steal mode %d, unknown uint %d", *y, a?(*a):0, count);
+
+    long ret = 0;
+    static JobsCallbackFunctions loop_callback = &job_callback;
+
+    if (count == 1) {
+        ret = orig::U6_ujob_schedule_parallel_for_internal(x, y, job_callback_arg, a, count, c, d, e);
+        
+        if (orig::U2K_JobQueue_WaitForJobGroupID)
+            orig::U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(ret), 0, true);
+    }
+    else {
+        /* Instead of scheduling all the jobs in one call, we schedule each
+         * individual job and wait for the job to complete. The job may still
+         * run on a worker thread, but it should be fine for determinism.
+         * Normally, the job callback function is receiving the loop index as 
+         * second argument, so we pass our own callback function, which receives
+         * the original callback, the original callback argument, and the loop
+         * index.
+         */
+        for (int i=0; i < count; i++) {
+            callback_args_t* args = new callback_args_t;
+            args->func = y;
+            args->arg = job_callback_arg;
+            args->loop_index = i;
+            
+            ret = orig::U6_ujob_schedule_parallel_for_internal(x, &loop_callback, args, a, 1, c, d, e);
+            
+            if (orig::U2K_JobQueue_WaitForJobGroupID)
+                orig::U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(ret), 0, true);
+
+            /* It should be safe to delete our custom callback argument here */
+            delete args;
+        }
+    }
+
+    return ret;
 }
 
 static void U6_worker_thread_routine(void* x)
