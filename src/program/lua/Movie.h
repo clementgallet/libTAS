@@ -24,6 +24,8 @@ extern "C" {
 #include <lua.h>
 }
 
+#include <string>
+
 struct Context;
 
 namespace Lua {
@@ -51,6 +53,8 @@ namespace Movie {
     /* Returns if the current frame is a draw frame */
     int isDraw(lua_State *L);
 
+    /* Get marker at current frame if there is one */
+    int getMarker(lua_State *L);
 }
 }
 

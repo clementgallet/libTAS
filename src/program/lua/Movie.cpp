@@ -38,6 +38,7 @@ static const luaL_Reg movie_functions[] =
     { "time", Lua::Movie::time},
     { "rerecords", Lua::Movie::rerecords},
     { "isDraw", Lua::Movie::isDraw},
+    { "getMarker", Lua::Movie::getMarker},
     { NULL, NULL }
 };
 
@@ -88,5 +89,17 @@ int Lua::Movie::rerecords(lua_State *L)
 int Lua::Movie::isDraw(lua_State *L)
 {
     lua_pushinteger(L, static_cast<lua_Integer>(context->draw_frame));
+    return 1;
+}
+
+int Lua::Movie::getMarker(lua_State *L)
+{
+    std::string marker;
+    try {
+	marker = context->movie->editor->markers.at(context->framecount);
+    } catch (const std::out_of_range&) {
+	return 0;
+    }
+    lua_pushstring(L, marker.c_str());
     return 1;
 }

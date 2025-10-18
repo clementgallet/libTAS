@@ -299,6 +299,12 @@ Returns the current rerecord count of the movie, or -1 if no movie is loaded
 
 Returns 1 of the current frame is a draw frame, or 0 if not.
 
+#### movie.getMarker
+
+    String movie.getMarker()
+
+Returns the marker at current frame if there is one, none instead.
+
 ### Runtime functions
 
 Runtime functions must be performed in callback `onFrame()` to be effective on

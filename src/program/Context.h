@@ -23,6 +23,7 @@
 #include "Config.h"
 #include "ConcurrentQueue.h"
 #include "KeyMapping.h"
+#include "movie/MovieFile.h"
 
 #ifdef __unix__
 #include <xcb/xcb.h>
@@ -142,6 +143,9 @@ struct Context {
     
     /* PID of the appimage process that mounts the appimage structure */
     pid_t appimage_pid = 0;
+
+    /* Link to the movie */
+    MovieFile* movie;
 };
 
 #endif
