@@ -305,6 +305,12 @@ Returns 1 of the current frame is a draw frame, or 0 if not.
 
 Returns the marker at current frame if there is one, none instead.
 
+#### movie.setMarker
+
+    none movie.setMarker(String text)
+
+Edit marker at current frame with the text given as parameter.
+
 ### Runtime functions
 
 Runtime functions must be performed in callback `onFrame()` to be effective on

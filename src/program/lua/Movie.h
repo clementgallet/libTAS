@@ -55,6 +55,9 @@ namespace Movie {
 
     /* Get marker at current frame if there is one */
     int getMarker(lua_State *L);
+
+    /* Set marker at current frame */
+    int setMarker(lua_State *L);
 }
 }
 
