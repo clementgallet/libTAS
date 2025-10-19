@@ -134,6 +134,19 @@ uintptr_t BaseAddresses::getBaseAddress(std::string file)
     }
 }
 
+std::pair<uintptr_t,uintptr_t> BaseAddresses::getAddress(std::string file)
+{
+    if (library_addresses.empty())
+        load();
+
+    auto it = library_addresses.find(file);
+    if (it != library_addresses.end()) {
+        return it->second;
+    }
+
+    return findNewFile(file);
+}
+
 uintptr_t BaseAddresses::getAddress(std::string file, off_t offset)
 {
     std::pair<uintptr_t,uintptr_t> addresses;
@@ -155,12 +168,12 @@ uintptr_t BaseAddresses::getAddress(std::string file, off_t offset)
     return addresses.first + offset;
 }
 
-const MemSection* BaseAddresses::getExecutableSection()
+std::pair<uintptr_t,uintptr_t> BaseAddresses::getExecutableSection()
 {
     if (library_addresses.empty())
         load();
 
-    return &sectionExecutable;
+    return std::make_pair(sectionExecutable.addr, sectionExecutable.endaddr);
 }
 
 std::string BaseAddresses::getFileAndOffset(uintptr_t addr, off_t &offset)

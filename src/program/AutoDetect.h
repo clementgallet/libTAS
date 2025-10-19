@@ -26,6 +26,13 @@ struct Context;
 
 namespace AutoDetect {
     
+    enum Engine {
+        ENGINE_UNITY,
+        ENGINE_GAMEMAKER,
+        ENGINE_GODOT,
+        ENGINE_UNKNOWN,
+    };
+    
     /* Detect and returns the game executable arch */
     int arch(Context *context);
 
@@ -34,7 +41,7 @@ namespace AutoDetect {
     void game_libraries(Context *context);
 
     /* Auto-detect game engine and apply settings to common engines */
-    void game_engine(Context *context);
+    int game_engine(Context *context);
 
 }
 

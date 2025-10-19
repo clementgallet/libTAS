@@ -36,7 +36,6 @@
 #include "BusyLoopDetection.h"
 #include "FPSMonitor.h"
 #include "hook.h"
-#include "UnityHacks.h"
 #include "PerfTimer.h"
 #include "audio/AudioContext.h"
 #include "sdl/sdlwindows.h"
@@ -48,6 +47,7 @@
 #include "renderhud/MessageWindow.h"
 #include "renderhud/WatchesWindow.h"
 #include "renderhud/RenderHUD.h"
+#include "renderhud/UnityDebug.h"
 
 #ifdef __unix__
 #include "xlib/xevents.h"
@@ -182,13 +182,6 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         ThreadSync::detWait();
     }
     
-    perfTimer.switchTimer(PerfTimer::RenderTimer);
-
-    if (UnityHacks::isUnity()) {
-        UnityHacks::syncWaitAll();        
-    }
-    perfTimer.switchTimer(PerfTimer::FrameTimer);
-
     /* Update the deterministic timer, sleep if necessary */
     DeterministicTimer& detTimer = DeterministicTimer::get();
     TimeHolder timeIncrement = detTimer.enterFrameBoundary();
@@ -273,6 +266,9 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     WatchesWindow::reset();
     LuaDraw::reset();
 
+    /* Update Unity job counts */
+    UnityDebug::update(framecount);
+    
     /* Receive messages from the program */
     perfTimer.switchTimer(PerfTimer::WaitTimer);                
     int message = receiveMessage();

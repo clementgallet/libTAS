@@ -19,7 +19,7 @@
 
 #include "UnityDebug.h"
 
-#include "UnityHacks.h"
+#include "checkpoint/ThreadManager.h"
 #include "../external/imgui/imgui.h"
 #include "../external/imgui/implot.h"
 #include "global.h"
@@ -27,6 +27,72 @@
 #include <string>
 
 namespace libtas {
+
+UnityDebug::ScrollingBuffer::ScrollingBuffer(int max_size = 400) {
+    MaxSize = max_size;
+    Offset  = 0;
+    DataX.reserve(MaxSize);
+    DataY.reserve(MaxSize);
+}
+
+void UnityDebug::ScrollingBuffer::AddPoint(int x, int y) {
+    if (DataX.size() < MaxSize) {
+        DataX.push_back(x);
+        DataY.push_back(y);
+    }
+    else {
+        DataX[Offset] = x;
+        DataY[Offset] = y;
+        Offset =  (Offset + 1) % MaxSize;
+    }
+}
+void UnityDebug::ScrollingBuffer::Erase() {
+    if (DataX.size() > 0) {
+        DataX.clear();
+        DataY.clear();
+        Offset  = 0;
+    }
+}
+
+UnityDebug::ScrollingBuffers::ScrollingBuffers() {
+    /* Push back the total count */
+    Buffers[0] = ScrollingBuffer();
+    Buffers[0].name = "Total";
+}
+
+void UnityDebug::ScrollingBuffers::AddPoint(float x, float y, int tid) {
+    bool new_buffer = (Buffers.find(tid) == Buffers.end());
+    Buffers[tid].AddPoint(x, y);
+    if (new_buffer) {
+        for (ThreadInfo* th = ThreadManager::getThreadList(); th != nullptr; th = th->next) {
+            if (th->translated_tid == tid) {
+                if (th->state == ThreadInfo::ST_CKPNTHREAD)
+                    Buffers[tid].name = "Main";
+                else
+                    Buffers[tid].name = th->name;
+                break;
+            }
+        }
+    }
+}
+
+static UnityDebug::ScrollingBuffers jobData;
+
+void UnityDebug::update(uint64_t framecount)
+{
+    /* Register and reset counts */
+    unsigned int unity_job_count = 0;
+    for (ThreadInfo* th = ThreadManager::getThreadList(); th != nullptr; th = th->next) {
+        if (th->unityJobCount) {
+            jobData.AddPoint(framecount, th->unityJobCount, th->translated_tid);
+            unity_job_count += th->unityJobCount;
+            th->unityJobCount = 0;
+        }
+    }
+
+    jobData.AddPoint(framecount, unity_job_count, 0);
+}
+
 
 void UnityDebug::draw(uint64_t framecount, bool* p_open = nullptr)
 {
@@ -41,19 +107,17 @@ void UnityDebug::draw(uint64_t framecount, bool* p_open = nullptr)
             ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
             ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
             
-            const UnityHacks::ScrollingBuffers& unityJobData = UnityHacks::getJobData();
-
             /* Crop the plot to recent data, because some old threads may have
              * very old data left. */
             float min_x = framecount;
 
-            for (const auto& unityThreadData : unityJobData.Buffers)
+            for (const auto& unityThreadData : jobData.Buffers)
                 min_x = std::min(min_x, static_cast<float>(framecount - unityThreadData.second.DataX.size()));
 
             if (framecount != old_framecount)
                 ImPlot::SetupAxisLimits(ImAxis_X1, min_x, framecount, ImPlotCond_Always);
             
-            for (const auto& unityThreadData : unityJobData.Buffers) {
+            for (const auto& unityThreadData : jobData.Buffers) {
                 std::string label = unityThreadData.second.name;
                 if (unityThreadData.first == 0) {
                     ImPlot::PlotShaded(label.c_str(), unityThreadData.second.DataX.data(), unityThreadData.second.DataY.data(), unityThreadData.second.DataY.size(), 0, 0, unityThreadData.second.Offset);

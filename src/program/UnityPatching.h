@@ -17,44 +17,21 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_IMGUI_UNITYDEBUG_H_INCL
-#define LIBTAS_IMGUI_UNITYDEBUG_H_INCL
+#ifndef LIBTAS_UNITYPATCHING_H_INCLUDED
+#define LIBTAS_UNITYPATCHING_H_INCLUDED
 
-#include <sys/types.h>
-#include <cstdint>
-#include <vector>
-#include <map>
 #include <string>
+#include <vector>
+#include <stdint.h>
+#include <stddef.h>
 
-namespace libtas {
+/* Forward declaration */
+struct Context;
 
-namespace UnityDebug
-{
-    // From ImPlot
-    struct ScrollingBuffer {
-        size_t MaxSize;
-        int Offset;
-        std::vector<float> DataX;
-        std::vector<float> DataY;
-        std::string name;
-
-        ScrollingBuffer(int max_size);
-        void AddPoint(int x, int y);
-        void Erase();
-    };
-
-    struct ScrollingBuffers {
-        std::map<int, ScrollingBuffer> Buffers;
-        
-        ScrollingBuffers();
-        void AddPoint(float x, float y, int tid);
-    };
-
-    void update(uint64_t framecount);
-
-    void draw(uint64_t framecount, bool* p_open);
-}
-
-}
+namespace UnityPatching {
+    bool sendAddressesFromSymbols(std::string debugfile, uintptr_t base_address);
+    void sendAddressesFromSignatures(std::pair<uintptr_t,uintptr_t> executablefile_segment, bool is_64bit);
+    void sendAddresses(Context* context);
+};
 
 #endif

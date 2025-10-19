@@ -24,6 +24,7 @@
 #include "GameThread.h"
 #include "GameEvents.h"
 #include "AutoDetect.h"
+#include "UnityPatching.h"
 
 #ifdef __unix__
 #include "GameEventsXcb.h"
@@ -254,7 +255,7 @@ void GameLoop::init()
      * before forking, because it can modify settings used by both the game
      * process (env variables, commandline-options) and the libtas program
      * (shared config sent to the game on startup) */
-    AutoDetect::game_engine(context);
+    context->engine = AutoDetect::game_engine(context);
 
     /* We fork here so that the child process calls the game. This is done after,
      * loading the movie so that it benefits from the movie settings. */
@@ -401,48 +402,27 @@ void GameLoop::initProcessMessages()
     sendMessage(MSGN_ENCODING_SEGMENT);
     sendData(&encoding_segment, sizeof(int));
 
-    /* Sometime games have trouble finding the address of the orginal function
-     * `SDL_DYNAPI_entry()` that we hook, so we send right away the symbol
-     * address if there is one */
-    uint64_t sdl_addr = getSymbolAddress("SDL_DYNAPI_entry", context->gameexecutable.c_str());
-    if (sdl_addr != 0) {
-        /* If the executable is position-independent (pie), it will be mapped
-         * somewhere, and the symbol is only an offset, so we need the base 
-         * address of the executable and adds to it. We use `file` to determine
-         * if the executable is pie */
-        int gameArch = extractBinaryType(context->gameexecutable);
-        if (gameArch & BT_PIEAPP) {
-            uintptr_t base_executable = BaseAddresses::getBaseAddress(context->gamename.c_str());
-            if (base_executable == 0) {
-                std::cerr << "Could not find base address of " <<  context->gamename << std::endl;
-            }
-            sdl_addr += base_executable;
-        }
-
-        sendMessage(MSGN_SDL_DYNAPI_ADDR);
-        sendData(&sdl_addr, sizeof(uint64_t));
+    if (context->engine == AutoDetect::ENGINE_UNITY) {
+        UnityPatching::sendAddresses(context);
     }
+    else {
+        /* Sometime games have trouble finding the address of the orginal function
+         * `SDL_DYNAPI_entry()` that we hook, so we send right away the symbol
+         * address if there is one */
+        uint64_t sdl_addr = getSymbolAddress("SDL_DYNAPI_entry", context->gameexecutable.c_str());
+        if (sdl_addr != 0) {
+            int gameArch = extractBinaryType(context->gameexecutable);
 
-    /* Check for `UnityPlayer_s.debug` presence and send symbol addresses */
-    std::string debugfile = dirFromPath(context->gameexecutable) + "/UnityPlayer_s.debug";
-    if (access(debugfile.c_str(), F_OK) == 0) {
-        
-        uintptr_t base_unity = BaseAddresses::getBaseAddress("UnityPlayer.so");
-        uint64_t futexwait_addr = getSymbolAddress("_ZN12UnityClassic24Baselib_SystemFutex_WaitEPiij", debugfile.c_str());
-        if (futexwait_addr != 0) {
-            futexwait_addr += base_unity;
-            sendMessage(MSGN_UNITY_WAIT_ADDR);
-            sendData(&futexwait_addr, sizeof(uint64_t));
-        }
-        
-        if (sdl_addr == 0) {
-            /* Look again inside UnityPlayer.so */
-            uint64_t sdl_addr = getSymbolAddress("SDL_DYNAPI_entry", debugfile.c_str());
-            if (sdl_addr != 0) {
-                sdl_addr += base_unity;
-                sendMessage(MSGN_SDL_DYNAPI_ADDR);
-                sendData(&sdl_addr, sizeof(uint64_t));
+            if (gameArch & BT_PIEAPP) {
+                uintptr_t base_debugfile = BaseAddresses::getBaseAddress(context->gamename.c_str());
+                if (base_debugfile == 0) {
+                    std::cerr << "Could not find base address of " <<  context->gamename << std::endl;
+                }
+                sdl_addr += base_debugfile;
             }
+            
+            sendMessage(MSGN_SDL_DYNAPI_ADDR);
+            sendData(&sdl_addr, sizeof(uint64_t));
         }
     }
 
@@ -451,15 +431,6 @@ void GameLoop::initProcessMessages()
     
     context->status = Context::ACTIVE;
     emit statusChanged(context->status);
-}
-
-uint64_t GameLoop::getSymbolAddress(const char* symbol, const char* file)
-{
-    std::ostringstream cmd;
-    cmd << "readelf -Ws \"" << file << "\" | grep " << symbol << " | awk '{print $2}'";
-
-    uint64_t addr = std::strtoull(queryCmd(cmd.str()).c_str(), nullptr, 16);    
-    return addr;
 }
 
 bool GameLoop::startFrameMessages()

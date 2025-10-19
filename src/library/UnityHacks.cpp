@@ -31,10 +31,10 @@
 #include "checkpoint/MemArea.h"
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/ThreadInfo.h"
+#include "../shared/unity_funcs.h"
 
 #include <unistd.h>
 #include <memory>
-#include <mutex>
 #include <vector>
 #include <map>
 #include <condition_variable>
@@ -43,61 +43,6 @@
 namespace libtas {
 
 static bool unity = false;
-static uintptr_t executableBase = 0;
-static uintptr_t executableEnd = 0;
-static uintptr_t loadingThreadAddr = 0;
-
-UnityHacks::ScrollingBuffer::ScrollingBuffer(int max_size = 400) {
-    MaxSize = max_size;
-    Offset  = 0;
-    DataX.reserve(MaxSize);
-    DataY.reserve(MaxSize);
-}
-
-void UnityHacks::ScrollingBuffer::AddPoint(int x, int y) {
-    if (DataX.size() < MaxSize) {
-        DataX.push_back(x);
-        DataY.push_back(y);
-    }
-    else {
-        DataX[Offset] = x;
-        DataY[Offset] = y;
-        Offset =  (Offset + 1) % MaxSize;
-    }
-}
-void UnityHacks::ScrollingBuffer::Erase() {
-    if (DataX.size() > 0) {
-        DataX.clear();
-        DataY.clear();
-        Offset  = 0;
-    }
-}
-
-UnityHacks::ScrollingBuffers::ScrollingBuffers() {
-    /* Push back the total count */
-    Buffers[0] = ScrollingBuffer();
-    Buffers[0].name = "Total";
-}
-
-void UnityHacks::ScrollingBuffers::AddPoint(float x, float y, int tid) {
-    bool new_buffer = (Buffers.find(tid) == Buffers.end());
-    Buffers[tid].AddPoint(x, y);
-    if (new_buffer) {
-        for (ThreadInfo* th = ThreadManager::getThreadList(); th != nullptr; th = th->next) {
-            if (th->translated_tid == tid) {
-                Buffers[tid].name = th->name;
-                break;
-            }
-        }
-    }
-}
-
-static UnityHacks::ScrollingBuffers jobData;
-
-const UnityHacks::ScrollingBuffers& UnityHacks::getJobData()
-{
-    return jobData;
-}
 
 void UnityHacks::setUnity()
 {
@@ -112,251 +57,550 @@ bool UnityHacks::isUnity()
     return unity;
 }
 
-static std::mutex mutex;
 
-void UnityHacks::getExecutableMemory()
-{
-    /* This function might be called by multiple threads */
-    std::lock_guard<std::mutex> lock(mutex);
-    
-    if (executableBase != 0)
-        return;
-    
-#ifdef __unix__
-    ProcSelfMaps memMapLayout;
-#elif defined(__APPLE__) && defined(__MACH__)
-    MachVmMaps memMapLayout;
-#endif
-    Area area;
-    while (memMapLayout.getNextArea(&area)) {
-        if (area.addr == (void*)0x400000 || area.addr == (void*)0x8048000)
-            break;
-    }
-    
-    if (!area.addr) {
-        /* Try again */
-        memMapLayout.reset();
-        while (memMapLayout.getNextArea(&area)) {
-            if ((area.flags & Area::AREA_FILE) && (area.flags & Area::AREA_PRIV) && (area.prot == PROT_READ))
-                break;
-        }
-        
-        LOG(LL_DEBUG, LCF_WAIT, "Game executable has non-default mapping! We found this:");
-        LOG(LL_DEBUG, LCF_WAIT, "Region %p-%p (%s) with size %zu", area.addr, area.endAddr, area.name, area.size);
-    }
+class JobQueue;
+class BackgroundJobQueue;
+typedef int JobQueue_JobQueuePriority;
+typedef int MemLabelId;
+typedef void JobGroup;
+typedef void JobQueue_ThreadInfo;
+typedef long BackgroundJobQueue_JobFence;
+typedef void JobInfo;
+typedef void JobBatchHandles;
+typedef void AtomicQueue;
+typedef void JobScheduler;
+typedef void ujob_control_t;
+typedef void ujob_lane_t;
+typedef void ujob_job_t;
+typedef long ujob_handle_t;
+typedef void ujob_dependency_chain;
+typedef int WorkStealingRange;
+typedef void* (*JobsCallbackFunctions)(void*, int);
+typedef void ScriptingBackendNativeObjectPtrOpaque;
+class JobScheduleParameters;
+class JobFence;
 
-    executableBase = reinterpret_cast<uintptr_t>(area.addr);
-    executableEnd = reinterpret_cast<uintptr_t>(area.endAddr);
-}
-
-bool UnityHacks::isLoadingThread(uintptr_t addr)
-{
-    if (!unity) return false;
-    
-    if (loadingThreadAddr != 0)
-        return (loadingThreadAddr == addr);
-
-    /* The first Unity thread that executes a routine from its executable seems
-     * to always be a loading thread */
-    
-    getExecutableMemory();
-
-    if ((addr >= executableBase) && (addr < executableEnd)) {
-        loadingThreadAddr = addr;
-        return true;
-    }
-    
-    return false;
-}
-
-static std::mutex unity_mutex;
-static std::condition_variable unity_condition;
-static unsigned int unity_running_threads = 0;
-static unsigned int unity_nonterminating_threads = 0;
-static unsigned int unity_waiting_threads = 0;
-static unsigned int unity_job_count = 0;
-
-void UnityHacks::syncNotify()
-{
-    static thread_local bool first = true;
-    if (!first) {
-        GlobalNative gn;
-        std::lock_guard<decltype(unity_mutex)> lock(unity_mutex);
-        LOG(LL_DEBUG, LCF_WAIT, "   Notifty the end of Unity job");
-        --unity_running_threads;
-        /* TODO: a nonterminating thread that eventually finishes is not supported. */
-        unity_condition.notify_all();
-    }
-    else
-        first = false;
-}
-
-void UnityHacks::syncWait()
-{
-    GlobalNative gn;
-    std::unique_lock<decltype(unity_mutex)> lock(unity_mutex);
-    ++unity_waiting_threads;
-    ++unity_job_count;
-    ThreadInfo* th = ThreadManager::getCurrentThread();
-    th->unityJobCount++;
-    LOG(LL_DEBUG, LCF_WAIT, "   Wait before running a Unity job");
-    while (unity_running_threads > unity_nonterminating_threads) {
-        
-        if (Global::is_exiting)
-            return;
-        
-        /* Store the current nonterminating count, so that only one thread that
-         * timeouts can increase it */
-        unsigned int old_unity_nonterminating_threads = unity_nonterminating_threads;
-        
-        if (std::cv_status::timeout == unity_condition.wait_for(lock, std::chrono::milliseconds(2000))) {
-
-            /* The current running thread did not finish in time. We consider
-            * it as running a nonterminating job, and we increase its count
-            * so that one other thread can now run its job. We take extra
-            * precaution that exactly one thread will raise the count here
-            * by comparing with the old count, to see if another thread did
-            * increase it already.
-            * TODO: For now, the count can never decrease */
-
-            if ((unity_running_threads > unity_nonterminating_threads) &&
-                (unity_nonterminating_threads == old_unity_nonterminating_threads)) {                
-                LOG(LL_DEBUG, LCF_WAIT, "   Increase Unity nonterminating thread count");
-                unity_nonterminating_threads++;
-            }
-        }
-    }
-    LOG(LL_DEBUG, LCF_WAIT, "   Start running a Unity job");
-    --unity_waiting_threads;
-    ++unity_running_threads;
-}
-
-void UnityHacks::syncWaitAll()
-{
-    GlobalNative gn;
-    
-    /* We would normally use the same conditional variable to wait here that
-     * all jobs have finished, but it can cause a softlock.
-     * It seems the reason is that other threads can send a signal (SIGXCPU) to
-     * main thread to trigger a sigsuspend() while it is waiting on conditional
-     * variable, and the same thread is responsible for sending a SIGTSTP signal
-     * to resume execution. But this thread is waiting for another thread to
-     * finish its job, so it never resumes main thread. And the thread that
-     * currrently runs the job can never finish, because the conditional
-     * variable is locked. This leads to a deadlock.
-     
-     * Main Thread (that is interrupted from waiting on conditional variable)
-     * #0  0x00007ffff797c281 in __GI___sigsuspend (set=0x7fffffffc8f0) at ../sysdeps/unix/sysv/linux/sigsuspend.c:26
-     * #1  0x00007ffff7edaae2 in libtas::sigsuspend (set=0x7fffffffc8f0) at general/signalwrappers.cpp:182
-     * #2  0x00007fffed1acaf9 in ?? () from /home/clement/Games/Dandara/Dandara_Data/Mono/x86_64/libmono.so
-     * #3  <signal handler called> (SIGXCPU)
-     * #4  0x00007ffff79c5da4 in __futex_abstimed_wait_common64 (private=0, cancel=true, abstime=0x0, op=393, expected=0, futex_word=0x7ffff7fb12a8 <libtas::unity_condition+40>) at ./nptl/futex-internal.c:57
-     * #5  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x7ffff7fb12a8 <libtas::unity_condition+40>, expected=expected@entry=0, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0, cancel=cancel@entry=true) at ./nptl/futex-internal.c:87
-     * #6  0x00007ffff79c5e0b in __GI___futex_abstimed_wait_cancelable64 (futex_word=futex_word@entry=0x7ffff7fb12a8 <libtas::unity_condition+40>, expected=expected@entry=0, clockid=clockid@entry=0, abstime=abstime@entry=0x0, private=private@entry=0) at ./nptl/futex-internal.c:139
-     * #7  0x00007ffff79c8468 in __pthread_cond_wait_common (abstime=0x0, clockid=0, mutex=0x7ffff7fb12c0 <libtas::unity_mutex>, cond=0x7ffff7fb1280 <libtas::unity_condition>) at ./nptl/pthread_cond_wait.c:503
-     * #8  ___pthread_cond_wait (cond=0x7ffff7fb1280 <libtas::unity_condition>, mutex=0x7ffff7fb12c0 <libtas::unity_mutex>) at ./nptl/pthread_cond_wait.c:618
-     * #9  0x00007ffff7ea93ad in libtas::UnityHacks::syncWaitAll () at GameHacks.cpp:164
-     * #10 0x00007ffff7ea8230 in libtas::frameBoundary(std::function<void ()>, libtas::RenderHUD&) (draw=..., hud=...) at frame.cpp:265
-     * #11 0x00007ffff7f0f76d in libtas::SDL_GL_SwapWindow (window=<optimized out>) at sdl/sdlwindows.cpp:102
-     * ...
-     *
-     * Thread 2 (that sent the SIGXCPU signal and is waiting for another job to finish)
-     * #0  __futex_abstimed_wait_common64 (private=0, cancel=true, abstime=0x7fffecefce70, op=137, expected=0, futex_word=0x7ffff7fb12ac <libtas::unity_condition+44>) at ./nptl/futex-internal.c:57
-     * #1  __futex_abstimed_wait_common (futex_word=futex_word@entry=0x7ffff7fb12ac <libtas::unity_condition+44>, expected=expected@entry=0, clockid=clockid@entry=1, abstime=abstime@entry=0x7fffecefce70, private=private@entry=0, cancel=cancel@entry=true) at ./nptl/futex-internal.c:87
-     * #2  0x00007ffff79c5e0b in __GI___futex_abstimed_wait_cancelable64 (futex_word=futex_word@entry=0x7ffff7fb12ac <libtas::unity_condition+44>, expected=expected@entry=0, clockid=clockid@entry=1, abstime=abstime@entry=0x7fffecefce70, private=private@entry=0) at ./nptl/futex-internal.c:139
-     * #3  0x00007ffff79c8a3f in __pthread_cond_wait_common (abstime=<optimized out>, clockid=1, mutex=0x7ffff7fb12c0 <libtas::unity_mutex>, cond=0x7ffff7fb1280 <libtas::unity_condition>) at ./nptl/pthread_cond_wait.c:503
-     * #4  ___pthread_cond_clockwait64 (abstime=<optimized out>, clockid=1, mutex=0x7ffff7fb12c0 <libtas::unity_mutex>, cond=0x7ffff7fb1280 <libtas::unity_condition>) at ./nptl/pthread_cond_wait.c:682
-     * #5  ___pthread_cond_clockwait64 (cond=0x7ffff7fb1280 <libtas::unity_condition>, mutex=0x7ffff7fb12c0 <libtas::unity_mutex>, clockid=1, abstime=<optimized out>) at ./nptl/pthread_cond_wait.c:670
-     * #6  0x00007ffff7ea927c in std::__condvar::wait_until (__abs_time=..., __clock=1, __m=..., this=0x7ffff7fb1280 <libtas::unity_condition>) at /usr/include/c++/12/bits/std_mutex.h:169
-     * #7  std::condition_variable::__wait_until_impl<std::chrono::duration<long, std::ratio<1l, 1000000000l> > > (__lock=<synthetic pointer>..., __atime=..., this=0x7ffff7fb1280 <libtas::unity_condition>) at /usr/include/c++/12/condition_variable:200
-     * #8  std::condition_variable::wait_until<std::chrono::duration<long, std::ratio<1l, 1000000000l> > > (__atime=..., __lock=<synthetic pointer>..., this=0x7ffff7fb1280 <libtas::unity_condition>) at /usr/include/c++/12/condition_variable:110
-     * #9  std::condition_variable::wait_for<long, std::ratio<1l, 1000l> > (__rtime=..., __lock=<synthetic pointer>..., this=0x7ffff7fb1280 <libtas::unity_condition>) at /usr/include/c++/12/condition_variable:162
-     * #10 libtas::UnityHacks::syncWait () at GameHacks.cpp:136
-     * #11 0x00007ffff7ed9044 in libtas::sem_wait (sem=<optimized out>) at general/pthreadwrappers.cpp:652
-     * ...
-     *
-     * Thread 3 (that has finished its job and tries to signal the conditional variable)
-     * #0  futex_wait (private=0, expected=3, futex_word=0x7ffff7fb1290 <libtas::unity_condition+16>) at ../sysdeps/nptl/futex-internal.h:146
-     * #1  futex_wait_simple (private=0, expected=3, futex_word=0x7ffff7fb1290 <libtas::unity_condition+16>) at ../sysdeps/nptl/futex-internal.h:177
-     * #2  __condvar_quiesce_and_switch_g1 (private=0, g1index=<synthetic pointer>, wseq=<optimized out>, cond=0x7ffff7fb1280 <libtas::unity_condition>) at ./nptl/pthread_cond_common.c:276
-     * #3  ___pthread_cond_broadcast (cond=0x7ffff7fb1280 <libtas::unity_condition>) at ./nptl/pthread_cond_broadcast.c:72
-     * #4  0x00007ffff7ea9162 in libtas::UnityHacks::syncNotify () at GameHacks.cpp:118
-     * #5  0x00007ffff7ed9034 in libtas::sem_wait (sem=0x7ffff58f8c00) at general/pthreadwrappers.cpp:648
-     * ...
-     */
-    
-    LOG(LL_DEBUG, LCF_WAIT, "   Wait that all Unity jobs finish");
-    unsigned int old_job_count = 0;
-    unity_mutex.lock();
-    int sleep_length = 200;
-    while (unity_job_count > old_job_count) {
-        old_job_count = unity_job_count;
-        unity_mutex.unlock();
-        
-        if (Global::is_exiting)
-            return;
-
-        NATIVECALL(usleep(sleep_length));
-        unity_mutex.lock();
-        while (unity_waiting_threads || (unity_running_threads > unity_nonterminating_threads)) {
-            unity_mutex.unlock();
-            NATIVECALL(usleep(100));
-            unity_mutex.lock();
-        }
-    }
-
-    /* Register and reset counts */
-    jobData.AddPoint(framecount, unity_job_count, 0);
-    unity_job_count = 0;
-    
-    for (ThreadInfo* th = ThreadManager::getThreadList(); th != nullptr; th = th->next) {
-        if (th->unityJobCount) {
-            jobData.AddPoint(framecount, th->unityJobCount, th->translated_tid);
-            th->unityJobCount = 0;
-        }
-    }
-
-    unity_mutex.unlock();
-}
-
-void UnityHacks::waitFromName(pthread_t target_thread, const char *name)
-{
-    if ((strcmp(name, "Loading.Preload") == 0) ||
-        (strcmp(name, "Loading.AsyncRe") == 0) ||
-        (strcmp(name, "Background Job.") == 0) ||
-        (strncmp(name, "Job.Worker ", 11) == 0))
-    {
-        ThreadInfo* thread = ThreadManager::getThread(target_thread);
-        thread->unityThread = true;
-    }
-}
+struct JobGroupID {
+    JobGroup* group;
+    int tag;
+};
 
 namespace orig {
-unsigned int (*futexWait)(int* x, int y, unsigned int z);
+    void (*U4_JobScheduler_AwakeIdleWorkerThreads)(JobScheduler* t, int x) = nullptr;
+    long (*U4_JobScheduler_FetchNextJob)(JobScheduler* t, int* x) = nullptr;
+    void (*U4_JobScheduler_ProcessJob)(JobScheduler* t, JobInfo* x, int y) = nullptr;
+    int (*U4_JobScheduler_SubmitJob)(JobScheduler* t, int x, void* (*y)(void*), void* z, void* volatile* a) = nullptr;
+    void (*U4_JobScheduler_WaitForGroup)(JobScheduler* t, int x) = nullptr;
+
+    void (*U5_BackgroundJobQueue_ExecuteMainThreadJobs)(BackgroundJobQueue *t) = nullptr;
+    void (*U5_BackgroundJobQueue_ScheduleJob)(BackgroundJobQueue* t, void (*x)(void*), void* y) = nullptr;
+    void (*U5_BackgroundJobQueue_ScheduleMainThreadJob)(BackgroundJobQueue* t, void (*x)(void*), void* y) = nullptr;
+    JobGroup* (*U5_JobQueue_CreateJobBatch)(JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int id, JobGroup* a) = nullptr;
+    long (*U5_JobQueue_EnqueueAll)(JobQueue* t, JobGroup* x, JobGroup* y) = nullptr;
+    long (*U5_JobQueue_EnqueueAllInternal)(JobQueue* t, JobGroup* x, JobGroup* y, AtomicQueue* z, int* a) = nullptr;
+    long (*U5_JobQueue_Exec)(JobQueue* t, JobInfo* x, long long y, int z) = nullptr;
+    long (*U5_JobQueue_ExecuteJobFromQueue)(JobQueue* t) = nullptr;
+    bool (*U5_JobQueue_ExecuteOneJob)(JobQueue *t) = nullptr;
+    long (*U5_JobQueue_MainEnqueueAll)(JobQueue* t, JobGroup* x, JobGroup* y) = nullptr;
+    long (*U5_JobQueue_Pop)(JobQueue* t, JobGroupID x) = nullptr;
+    long (*U5_JobQueue_ProcessJobs)(JobQueue* x, void* y) = nullptr;
+    void (*U5_JobQueue_ScheduleJob)(JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int a, int b) = nullptr;
+    JobGroupID (*U5_JobQueue_ScheduleGroup)(JobQueue *t, JobGroup* x, int y) = nullptr;
+    void (*U5_JobQueue_ScheduleGroups)(JobQueue *t, JobGroup* x, JobGroup* y) = nullptr;
+    void (*U5_JobQueue_WaitForJobGroup)(JobQueue* t, JobGroup* x, int y, bool z) = nullptr;
+
+    void (*U2K_BackgroundJobQueue_ScheduleJobInternal)(BackgroundJobQueue *t, void (*x)(void*), void* y, BackgroundJobQueue_JobFence* z, JobQueue_JobQueuePriority a) = nullptr;
+    void (*U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal)(BackgroundJobQueue *t, void (*x)(void*), void* y) = nullptr;
+    void (*U2K_JobQueue_CompleteAllJobs)(JobQueue *t) = nullptr;
+    long (*U2K_JobQueue_Exec)(JobQueue *t, JobInfo* x, long long y, int z, bool a) = nullptr;
+    long (*U2K_JobQueue_ExecuteJobFromQueue)(JobQueue *t, bool x) = nullptr;
+    long (*U2K_JobQueue_ProcessJobs)(JobQueue_ThreadInfo* x, void* y) = nullptr;
+    void (*U2K_JobQueue_ScheduleDependencies)(JobQueue *t, JobGroupID *x, JobInfo *y, JobInfo *z, bool a) = nullptr;
+    long (*U2K_JobQueue_ScheduleJobMultipleDependencies)(JobQueue *t, void (*x)(void*), void* y, JobGroupID* z, int a, MemLabelId b) = nullptr;
+    JobGroupID (*U2K_JobQueue_ScheduleGroupInternal)(JobQueue *t, JobGroup* x, int y, bool z) = nullptr;
+    void (*U2K_JobQueue_WaitForJobGroupID)(JobQueue *t, JobGroup *x, int y, bool a) = nullptr;
+
+    int (*U6_job_completed)(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z, ujob_handle_t a) = nullptr;
+    int (*U6_JobsUtility_CUSTOM_CreateJobReflectionData)(ScriptingBackendNativeObjectPtrOpaque* x, ScriptingBackendNativeObjectPtrOpaque* y, ScriptingBackendNativeObjectPtrOpaque* z, ScriptingBackendNativeObjectPtrOpaque* a, ScriptingBackendNativeObjectPtrOpaque* b) = nullptr;
+    int (*U6_JobsUtility_CUSTOM_Schedule)(JobScheduleParameters* x, JobFence* y) = nullptr;
+    void (*U6_JobQueue_ScheduleGroups)(JobQueue *t, JobBatchHandles* x, int y) = nullptr;
+    bool (*U6_lane_guts)(ujob_control_t* x, ujob_lane_t* y, int z, int a, ujob_dependency_chain const* b) = nullptr;
+    long (*U6_ScheduleBatchJob)(void* x, ujob_handle_t y) = nullptr;
+    void (*U6_ujob_execute_job)(ujob_control_t*, ujob_lane_t*, ujob_job_t*, ujob_handle_t, unsigned int) = nullptr;
+    void (*U6_ujob_participate)(ujob_control_t* x, ujob_handle_t y, ujob_job_t* z, int* a, ujob_dependency_chain const* b) = nullptr;
+    unsigned long (*U6_ujob_schedule_job_internal)(ujob_control_t* x, ujob_handle_t y, unsigned int z) = nullptr;
+    long (*U6_ujob_schedule_parallel_for_internal)(ujob_control_t* x, JobsCallbackFunctions* y, void* z, WorkStealingRange* a, unsigned int b, unsigned long c, ujob_handle_t const* d, long e) = nullptr;
+    void (*U6_ujobs_add_to_lane_and_wake_one_thread)(ujob_control_t*, ujob_job_t*, ujob_lane_t*) = nullptr;
+    void (*U6_worker_thread_routine)(void* x) = nullptr;
 }
 
-static int futexWait(int* x, int y, unsigned int z)
+#include <signal.h>
+
+static long U4_JobScheduler_FetchNextJob(JobScheduler* t, int* x)
 {
+    LOGTRACE(LCF_HACKS);
     ThreadInfo* thread = ThreadManager::getCurrentThread();
-    LOGTRACE(LCF_WAIT);
-    if (thread->unityThread) {
-        UnityHacks::syncNotify();
+    thread->unityThread = true;
+    
+    /* Return 0 to prevent worker threads from executing a job */
+    return 0;
+    // return orig::U4_JobScheduler_FetchNextJob(t, x);
+}
 
-        int ret = orig::futexWait(x, y, z);
+static void U4_JobScheduler_ProcessJob(JobScheduler* t, JobInfo* x, int y)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U4_JobScheduler_ProcessJob(t, x, y);
+}
 
-        UnityHacks::syncWait();
-        return ret;
+static void U4_JobScheduler_WaitForGroup(JobScheduler* t, int x)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U4_JobScheduler_WaitForGroup(t, x);
+}
+
+static void U4_JobScheduler_AwakeIdleWorkerThreads(JobScheduler* t, int x)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U4_JobScheduler_AwakeIdleWorkerThreads(t, x);
+}
+
+/* We need to wrap the job, to know when it is executed */
+struct U4_Job
+{
+    void* (*func)(void*);
+    void* arg;
+};
+
+static void* U4_ExecJob(void* arg)
+{
+    LOGTRACE(LCF_HACKS);
+    ThreadInfo* th = ThreadManager::getCurrentThread();
+    th->unityJobCount++;
+    
+    U4_Job* j = reinterpret_cast<U4_Job*>(arg);
+    void* ret = j->func(j->arg);
+    delete j;
+    return ret;
+}
+
+static int U4_JobScheduler_SubmitJob(JobScheduler* t, int x, void* (*y)(void*), void* z, void* volatile* a)
+{
+    LOGTRACE(LCF_HACKS);
+    U4_Job *j = new U4_Job;
+    j->func = y;
+    j->arg = z;
+    return orig::U4_JobScheduler_SubmitJob(t, x, &U4_ExecJob, reinterpret_cast<void*>(j), a);
+}
+
+static void U5_BackgroundJobQueue_ExecuteMainThreadJobs(BackgroundJobQueue *t)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U5_BackgroundJobQueue_ExecuteMainThreadJobs(t);
+}
+
+static void U5_BackgroundJobQueue_ScheduleJob(BackgroundJobQueue* t, void (*x)(void*), void* y)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U5_BackgroundJobQueue_ScheduleJob(t, x, y);
+}
+
+static void U5_BackgroundJobQueue_ScheduleMainThreadJob(BackgroundJobQueue* t, void (*x)(void*), void* y)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U5_BackgroundJobQueue_ScheduleMainThreadJob(t, x, y);
+}
+
+static JobGroup* U5_JobQueue_CreateJobBatch(JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int id, JobGroup* a)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U5_JobQueue_CreateJobBatch(t, func, arg, z, id, a);
+}
+
+static long U5_JobQueue_EnqueueAll(JobQueue* t, JobGroup* x, JobGroup* y)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U5_JobQueue_EnqueueAll(t, x, y);
+}
+
+static long U5_JobQueue_EnqueueAllInternal(JobQueue* t, JobGroup* x, JobGroup* y, AtomicQueue* z, int* a)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U5_JobQueue_EnqueueAllInternal(t, x, y, z, a);
+}
+
+static long U5_JobQueue_Exec(JobQueue* t, JobInfo* x, long long y, int z)
+{
+    LOG(LL_TRACE, LCF_HACKS, "U5_JobQueue_Exec called with JobInfo %p", x);
+    long executed = orig::U5_JobQueue_Exec(t, x, y, z);
+    if (executed) {
+        ThreadInfo* th = ThreadManager::getCurrentThread();
+        th->unityJobCount++;
+    }
+    
+    return executed;
+}
+
+static long U5_JobQueue_ExecuteJobFromQueue(JobQueue* t)
+{
+    LOGTRACE(LCF_HACKS);
+    return 0;
+    // return orig::U5_JobQueue_ExecuteJobFromQueue(t);
+}
+
+static bool U5_JobQueue_ExecuteOneJob(JobQueue *t)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U5_JobQueue_ExecuteOneJob(t);
+}
+
+static long U5_JobQueue_MainEnqueueAll(JobQueue* t, JobGroup* x, JobGroup* y)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U5_JobQueue_MainEnqueueAll(t, x, y);
+}
+
+static long U5_JobQueue_Pop(JobQueue* t, JobGroupID x)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U5_JobQueue_Pop(t, x);
+}
+
+static long U5_JobQueue_ProcessJobs(JobQueue* t, void* x)
+{
+    LOGTRACE(LCF_HACKS);
+    
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+    thread->unityThread = true;
+
+    /* Calling U5_JobQueue_ProcessJobs() in worker threads may call
+     * U5_JobQueue_Exec() directly without fetching a job queue with 
+     * U5_JobQueue_ExecuteJobFromQueue(), so we wait indefinitively here.
+     * To call jobs pushed in this worker thread, we will use the WorkerSteal
+     * feature elsewhere.
+     */
+    if (!ThreadManager::isMainThread()) {
+        while (!Global::is_exiting) {
+            sleep(1);
+        }
     }
 
-    return orig::futexWait(x, y, z);
+    return orig::U5_JobQueue_ProcessJobs(t, x);
 }
 
-void UnityHacks::patch(uint64_t addr)
+static void U5_JobQueue_ScheduleJob(JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int a, int b)
+{
+    LOG(LL_TRACE, LCF_HACKS, "U5_JobQueue_ScheduleJob called with func %p, arg %p, JobGroup %p, JobGroup tag %d and priority %d", func, arg, z, a, b);
+    return orig::U5_JobQueue_ScheduleJob(t, func, arg, z, a, b);
+}
+
+static JobGroupID U5_JobQueue_ScheduleGroup(JobQueue *t, JobGroup* x, int y)
+{
+    LOG(LL_TRACE, LCF_HACKS, "U5_JobQueue_ScheduleGroup called with JobGroup %p and priority %d", x, y);
+
+    /* Return value is 16 bytes (accross registers RDX:RAX), so we need to use
+     * a 16-byte struct to recover it. */
+    JobGroupID j = orig::U5_JobQueue_ScheduleGroup(t, x, y);
+    LOG(LL_DEBUG, LCF_HACKS, "    returns JobGroup %p and JobGroup tag %d", j.group, j.tag);
+
+    /* Immediatly wait for the job */
+    if (orig::U5_JobQueue_WaitForJobGroup)
+        orig::U5_JobQueue_WaitForJobGroup(t, j.group, j.tag, true);
+
+    return j;
+    // return orig::U5_JobQueue_ScheduleGroup(t, x, y);
+}
+
+static void U5_JobQueue_ScheduleGroups(JobQueue *t, JobGroup* x, JobGroup* y)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U5_JobQueue_ScheduleGroups(t, x, y);
+}
+
+static void U5_JobQueue_WaitForJobGroup(JobQueue* t, JobGroup* x, int y, bool z)
+{
+    LOG(LL_TRACE, LCF_HACKS, "U5_JobQueue_WaitForJobGroup called with JobGroup %p, JobGroup tag %d and steal mode %d", x, y, z);
+    return orig::U5_JobQueue_WaitForJobGroup(t, x, y, z);
+}
+
+static void U2K_BackgroundJobQueue_ScheduleJobInternal(BackgroundJobQueue *t, void (*x)(void*), void* y, BackgroundJobQueue_JobFence* z, JobQueue_JobQueuePriority a)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U2K_BackgroundJobQueue_ScheduleJobInternal(t, x, y, z, a);
+}
+
+static void U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal(BackgroundJobQueue *t, void (*x)(void*), void* y)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal(t, x, y);
+}
+
+static void U2K_JobQueue_CompleteAllJobs(JobQueue *t)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U2K_JobQueue_CompleteAllJobs(t);
+}
+
+static long U2K_JobQueue_Exec(JobQueue *t, JobInfo* x, long long y, int z, bool a)
+{
+    LOG(LL_TRACE, LCF_HACKS, "U2K_JobQueue_Exec called with JobInfo %p and sync %d", x, a);
+    long executed = orig::U2K_JobQueue_Exec(t, x, y, z, a);
+    if (executed) {
+        ThreadInfo* th = ThreadManager::getCurrentThread();
+        th->unityJobCount++;
+    }
+    return executed;
+}
+
+static long U2K_JobQueue_ExecuteJobFromQueue(JobQueue *t, bool x)
+{
+    LOG(LL_TRACE, LCF_HACKS, "U2K_JobQueue_ExecuteJobFromQueue called with sync %d", x);
+    return 0;
+    // return orig::U2K_JobQueue_ExecuteJobFromQueue(t, x);
+}
+
+static long U2K_JobQueue_ProcessJobs(JobQueue_ThreadInfo* x, void* y)
+{
+    LOGTRACE(LCF_HACKS);
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+    thread->unityThread = true;
+
+    return orig::U2K_JobQueue_ProcessJobs(x, y);
+}
+
+static void U2K_JobQueue_ScheduleDependencies(JobQueue *t, JobGroupID *x, JobInfo *y, JobInfo *z, bool a)
+{
+    LOG(LL_TRACE, LCF_HACKS, "U2K_JobQueue_ScheduleDependencies called with sync %d", a);
+    // return orig::U2K_JobQueue_ScheduleDependencies(t, x, y, z, a);
+    return orig::U2K_JobQueue_ScheduleDependencies(t, x, y, z, true);
+}
+
+static long U2K_JobQueue_ScheduleJobMultipleDependencies(JobQueue *t, void (*x)(void*), void* y, JobGroupID* z, int a, MemLabelId b)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U2K_JobQueue_ScheduleJobMultipleDependencies(t, x, y, z, a, b);
+}
+
+static JobGroupID U2K_JobQueue_ScheduleGroupInternal(JobQueue *t, JobGroup *x, int y, bool z)
+{
+    LOG(LL_TRACE, LCF_HACKS, "U2K_JobQueue_ScheduleGroupInternal called with JobGroup %p, priority %d and sync %d", x, y, z);
+
+    /* Return value is 16 bytes (accross registers RDX:RAX), so we need to use
+     * a 16-byte struct to recover it. */
+    // JobGroupID j = orig::U2K_JobQueue_ScheduleGroupInternal(t, x, y, z);
+    JobGroupID j = orig::U2K_JobQueue_ScheduleGroupInternal(t, x, y, true);
+    LOG(LL_DEBUG, LCF_HACKS, "    returns JobGroup %p and JobGroup tag %d", j.group, j.tag);
+
+    /* Immediatly wait for the job */
+    // U2K_JobQueue_WaitForJobGroupID(t, j.group, j.tag, true);
+    return j;
+}
+
+static void U2K_JobQueue_WaitForJobGroupID(JobQueue* /* or ujob_control_t* */ t , JobGroup* /* or ujob_handle_t */ x, int y, bool z)
+{
+    LOG(LL_TRACE, LCF_HACKS, "U2K_JobQueue_WaitForJobGroupID called with JobGroup %p, JobGroup tag %d and steal mode %d", x, y, z);
+    return orig::U2K_JobQueue_WaitForJobGroupID(t, x, y, z);
+}
+
+static int U6_job_completed(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z, ujob_handle_t a)
+{
+    LOG(LL_TRACE, LCF_HACKS, "U6_job_completed called with job %p and handle %p", z, a);
+    int ret = orig::U6_job_completed(x, y, z, a);
+    return ret;
+}
+
+static void U6_JobQueue_ScheduleGroups(JobQueue *t, JobBatchHandles* x, int y)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_JobQueue_ScheduleGroups(t, x, y);
+}
+
+static int U6_JobsUtility_CUSTOM_CreateJobReflectionData(ScriptingBackendNativeObjectPtrOpaque* x, ScriptingBackendNativeObjectPtrOpaque* y, ScriptingBackendNativeObjectPtrOpaque* z, ScriptingBackendNativeObjectPtrOpaque* a, ScriptingBackendNativeObjectPtrOpaque* b)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_JobsUtility_CUSTOM_CreateJobReflectionData(x, y, z, a, b);
+}
+
+static int U6_JobsUtility_CUSTOM_Schedule(JobScheduleParameters* x, JobFence* y)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_JobsUtility_CUSTOM_Schedule(x, y);
+}
+
+static bool U6_lane_guts(ujob_control_t* x, ujob_lane_t* y, int z, int a, ujob_dependency_chain const* b)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_lane_guts(x, y, z, a, b);
+}
+
+static long U6_ScheduleBatchJob(void* x, ujob_handle_t y)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_ScheduleBatchJob(x, y);
+}
+
+static void U6_ujobs_add_to_lane_and_wake_one_thread(ujob_control_t* x, ujob_job_t* y, ujob_lane_t* z)
+{
+    LOGTRACE(LCF_HACKS);
+    orig::U6_ujobs_add_to_lane_and_wake_one_thread(x, y, z);
+}
+
+static void U6_ujob_execute_job(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z, ujob_handle_t a, unsigned int b)
+{
+    LOGTRACE(LCF_HACKS);
+    ThreadInfo* th = ThreadManager::getCurrentThread();
+    th->unityJobCount++;
+    return orig::U6_ujob_execute_job(x, y, z, a, b);
+}
+
+static void U6_ujob_participate(ujob_control_t* x, ujob_handle_t y, ujob_job_t** z, int* a, ujob_dependency_chain const* b)
+{
+    LOGTRACE(LCF_HACKS);
+    orig::U6_ujob_participate(x, y, z, a, b);
+}
+
+static unsigned long U6_ujob_schedule_job_internal(ujob_control_t* x, ujob_handle_t y, unsigned int z)
+{
+    LOGTRACE(LCF_HACKS);
+    unsigned long ret = orig::U6_ujob_schedule_job_internal(x, y, z);
+    
+    if (orig::U2K_JobQueue_WaitForJobGroupID)
+        orig::U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(y), 0, true);
+
+    return ret;
+}
+
+struct callback_args_t {
+    JobsCallbackFunctions* func;
+    void* arg;
+    int loop_index;
+};
+
+static void* job_callback(void* arg, int)
+{
+    callback_args_t* args = reinterpret_cast<callback_args_t*>(arg);
+    return (*args->func)(args->arg, args->loop_index);
+}
+
+/* The function parameters from the symbol are *wrong*! 6th parameter must be 
+ * 64-bit instead of 32-bit, and the last two parameters are not (int, uchar),
+ * but a full long instead. Games crash instantly without this modification.
+ * Original signature:
+ * long ujob_schedule_parallel_for_internal
+ *    (ujob_control_t *param_1, JobsCallbackFunctions *param_2, void *param_3,
+ *     WorkStealingRange *param_4, uint param_5, uint param_6,
+ *     ujob_handle_t *param_7, int param_8, uchar param_9)
+ */ 
+static long U6_ujob_schedule_parallel_for_internal(ujob_control_t* x, JobsCallbackFunctions* y, void* job_callback_arg, WorkStealingRange* a, unsigned int count, unsigned long c, ujob_handle_t const* d, long e)
+{
+    LOG(LL_TRACE, LCF_HACKS, "U6_ujob_schedule_parallel_for_internal called with callback %p, steal mode %d, unknown uint %d", *y, a?(*a):0, count);
+
+    long ret = 0;
+    static JobsCallbackFunctions loop_callback = &job_callback;
+
+    if (count == 1) {
+        ret = orig::U6_ujob_schedule_parallel_for_internal(x, y, job_callback_arg, a, count, c, d, e);
+        
+        if (orig::U2K_JobQueue_WaitForJobGroupID)
+            orig::U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(ret), 0, true);
+    }
+    else {
+        /* Instead of scheduling all the jobs in one call, we schedule each
+         * individual job and wait for the job to complete. The job may still
+         * run on a worker thread, but it should be fine for determinism.
+         * Normally, the job callback function is receiving the loop index as 
+         * second argument, so we pass our own callback function, which receives
+         * the original callback, the original callback argument, and the loop
+         * index.
+         */
+        for (int i=0; i < count; i++) {
+            callback_args_t* args = new callback_args_t;
+            args->func = y;
+            args->arg = job_callback_arg;
+            args->loop_index = i;
+            
+            ret = orig::U6_ujob_schedule_parallel_for_internal(x, &loop_callback, args, a, 1, c, d, e);
+            
+            if (orig::U2K_JobQueue_WaitForJobGroupID)
+                orig::U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(ret), 0, true);
+
+            /* It should be safe to delete our custom callback argument here */
+            delete args;
+        }
+    }
+
+    return ret;
+}
+
+static void U6_worker_thread_routine(void* x)
+{
+    LOGTRACE(LCF_HACKS);
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+    thread->unityThread = true;
+    return orig::U6_worker_thread_routine(x);
+}
+
+
+
+#define FUNC_CASE(FUNC_ENUM, FUNC_SYMBOL) \
+case FUNC_ENUM: \
+    hook_patch_addr(reinterpret_cast<void*>(address), reinterpret_cast<void**>(&orig::FUNC_SYMBOL), reinterpret_cast<void*>(FUNC_SYMBOL)); \
+    break;
+
+
+void UnityHacks::patch(int func, uint64_t addr)
 {
     setUnity();
     
     uintptr_t address = static_cast<uintptr_t>(addr);
-    hook_patch_addr(reinterpret_cast<void*>(address), reinterpret_cast<void**>(&orig::futexWait), reinterpret_cast<void*>(futexWait));
+    switch(func) {
+        FUNC_CASE(UNITY4_JOBSCHEDULER_AWAKE, U4_JobScheduler_AwakeIdleWorkerThreads)
+        FUNC_CASE(UNITY4_JOBSCHEDULER_FETCH, U4_JobScheduler_FetchNextJob)
+        FUNC_CASE(UNITY4_JOBSCHEDULER_PROCESS, U4_JobScheduler_ProcessJob)
+        FUNC_CASE(UNITY4_JOBSCHEDULER_SUBMIT, U4_JobScheduler_SubmitJob)
+        FUNC_CASE(UNITY4_JOBSCHEDULER_WAIT, U4_JobScheduler_WaitForGroup)
+
+        FUNC_CASE(UNITY5_BACKGROUND_JOBQUEUE_EXECUTE, U5_BackgroundJobQueue_ExecuteMainThreadJobs)
+        FUNC_CASE(UNITY5_BACKGROUND_JOBQUEUE_SCHEDULE, U5_BackgroundJobQueue_ScheduleJob)
+        FUNC_CASE(UNITY5_BACKGROUND_JOBQUEUE_SCHEDULE_MAIN, U5_BackgroundJobQueue_ScheduleMainThreadJob)
+        FUNC_CASE(UNITY5_JOBQUEUE_CREATE_JOB_BATCH, U5_JobQueue_CreateJobBatch)
+        FUNC_CASE(UNITY5_JOBQUEUE_ENQUEUEALL, U5_JobQueue_EnqueueAll)
+        FUNC_CASE(UNITY5_JOBQUEUE_ENQUEUEALL_INTERNAL, U5_JobQueue_EnqueueAllInternal)
+        FUNC_CASE(UNITY5_JOBQUEUE_EXEC, U5_JobQueue_Exec)
+        FUNC_CASE(UNITY5_JOBQUEUE_EXECUTE, U5_JobQueue_ExecuteOneJob)
+        FUNC_CASE(UNITY5_JOBQUEUE_EXECUTE_QUEUE, U5_JobQueue_ExecuteJobFromQueue)
+        FUNC_CASE(UNITY5_JOBQUEUE_MAIN_ENQUEUEALL, U5_JobQueue_MainEnqueueAll)
+        FUNC_CASE(UNITY5_JOBQUEUE_POP, U5_JobQueue_Pop)
+        FUNC_CASE(UNITY5_JOBQUEUE_PROCESS, U5_JobQueue_ProcessJobs)
+        FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_JOB, U5_JobQueue_ScheduleJob)
+        FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_GROUP, U5_JobQueue_ScheduleGroup)
+        FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_GROUPS, U5_JobQueue_ScheduleGroups)
+        FUNC_CASE(UNITY5_JOBQUEUE_WAIT_JOB_GROUP, U5_JobQueue_WaitForJobGroup)
+        
+        FUNC_CASE(UNITY2K_BACKGROUND_JOBQUEUE_SCHEDULE, U2K_BackgroundJobQueue_ScheduleJobInternal)
+        FUNC_CASE(UNITY2K_BACKGROUND_JOBQUEUE_SCHEDULE_MAIN, U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal)
+        FUNC_CASE(UNITY2K_JOBQUEUE_COMPLETE_ALL_JOBS, U2K_JobQueue_CompleteAllJobs)
+        FUNC_CASE(UNITY2K_JOBQUEUE_EXEC, U2K_JobQueue_Exec)
+        FUNC_CASE(UNITY2K_JOBQUEUE_EXECUTE_QUEUE, U2K_JobQueue_ExecuteJobFromQueue)
+        FUNC_CASE(UNITY2K_JOBQUEUE_PROCESS, U2K_JobQueue_ProcessJobs)
+        FUNC_CASE(UNITY2K_JOBQUEUE_SCHEDULE_DEPENDENCIES, U2K_JobQueue_ScheduleDependencies)
+        FUNC_CASE(UNITY2K_JOBQUEUE_SCHEDULE_JOB_MULTIPLE, U2K_JobQueue_ScheduleJobMultipleDependencies)
+        FUNC_CASE(UNITY2K_JOBQUEUE_SCHEDULE_GROUP_INTERNAL, U2K_JobQueue_ScheduleGroupInternal)
+        FUNC_CASE(UNITY2K_JOBQUEUE_WAIT_JOB_GROUP, U2K_JobQueue_WaitForJobGroupID)
+
+        FUNC_CASE(UNITY6_BATCH_JOB, U6_ScheduleBatchJob)
+        FUNC_CASE(UNITY6_JOB_COMPLETED, U6_job_completed)
+        FUNC_CASE(UNITY6_JOB_REFLECTION, U6_JobsUtility_CUSTOM_CreateJobReflectionData)
+        FUNC_CASE(UNITY6_JOB_SCHEDULE, U6_JobsUtility_CUSTOM_Schedule)
+        FUNC_CASE(UNITY6_JOBQUEUE_SCHEDULE_GROUPS, U6_JobQueue_ScheduleGroups)
+        FUNC_CASE(UNITY6_LANE_GUTS, U6_lane_guts)
+        FUNC_CASE(UNITY6_UJOB_ADD, U6_ujobs_add_to_lane_and_wake_one_thread)
+        FUNC_CASE(UNITY6_UJOB_EXECUTE, U6_ujob_execute_job)
+        FUNC_CASE(UNITY6_UJOB_PARTICIPATE, U6_ujob_participate)
+        FUNC_CASE(UNITY6_UJOB_SCHEDULE, U6_ujob_schedule_job_internal)
+        FUNC_CASE(UNITY6_UJOB_SCHEDULE_PARALLEL, U6_ujob_schedule_parallel_for_internal)
+        FUNC_CASE(UNITY6_WORKER_THREAD_ROUTINE, U6_worker_thread_routine)
+    }
 }
 
 }
