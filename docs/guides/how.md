@@ -134,7 +134,7 @@ length of a frame, we need to trigger the end of the current frame, so that
 we can keep up with the framecount. This is a special frame called a non-draw
 frame. These frames can be seen in the input editor in red. They are similar
 to lag frames known in consoles (where the computation of one frame takes more
-than one frame), but a still different in several ways:
+than one frame), but are still different in several ways:
 
 * non-draw frames can still read inputs
 * non-draw frames can be caused by a variety of reasons:
@@ -237,7 +237,7 @@ inputs must produce the same results each time. By nature, programs running on a
 non-deterministic due to various reasons (caching, multi-tasking, external factors, etc.).
 
 libTAS tries to mitigate most of the sources of non-determinism, but can't fix
-them, because it lets the game run in it's native environment, as opposed to 
+them, because it lets the game run in its native environment, as opposed to 
 emulators which build an isolated environment. 
 
 ### Uninitialized memory
@@ -275,7 +275,7 @@ available.
 ### Timer
 
 In an uncontrolled environment on a PC, operations take a variable amount of time,
-and games often query for the system time for various reasons. We need a manage
+and games often query for the system time for various reasons. We need to manage
 ourselves how time is advancing, and returns that time whenever the game queries
 for the current time. For this reason we need to manage a deterministic timer.
 
@@ -299,7 +299,7 @@ ended immediately, resulting in a non-draw frame (see Frames).
 
 #### Sleep
 
-Some games are not handling time that using the vsync feature, but through
+Some games are not handling time using the vsync feature, but through
 manually sleeping to pause the game. In that case, we must support sleep calls
 (e.g. `usleep()`, `nanosleep()`) and advance the deterministic timer by the
 amount. Otherwise, some games may softlock because they expect time to advance
@@ -404,7 +404,7 @@ them a file descriptor of a pipe where we push joystick events. We also need to
 hook `ioctl()` because this function is used by game to gather information about 
 the joystick devices.
 
-Some games use another method to discover input devices by directly call the `udev`
+Some games use another method to discover input devices by directly calling the `udev`
 API that populates the `/dev/` device files. So we hook all the `udev` functions
 to return the input devices information.
 
@@ -444,7 +444,7 @@ saving and loading is mostly identical.
 
 1. **Lock and sync X server connections**. We want to control as much as
     possible the interactions with the rest of the system, so we must empty what
-    is pending between the game and the X server, and prevent more events to be
+    is pending between the game and the X server, and prevent more events from being
     generated. The connections themselves to the X server cannot be saved or
     restored, so we try to keep them at the same state everytime.
 
@@ -494,7 +494,7 @@ saving and loading is mostly identical.
     This is existing feature called altstack: when a process is signaled and a
     handler is executed, it can run in a special stack instead of the original
     one. This is used originally to be able to run code when a program has its
-    stack corrupted or full. We use this at our advantage by setting the altstack
+    stack corrupted or full. We use this to our advantage by setting the altstack
     to a memory region that will be skipped from saving.
 
 1. **Start the savestate process**
@@ -515,7 +515,7 @@ segments, some of them are skipped:
 
 * Special segments (`[vsyscall]`, `[vectors]`, `[vvar]`, `[vdso]`)
 * Our reserved segment that is used for the altstack (as well as other stuff that
-    we want them to be unaffected by savestates)
+    we want to be unaffected by savestates)
 * Segments that can't be given read/write permission
 * File-segments that don't have write protection
 * Shared memory segments (this is definitively a TODO to handle this)
@@ -545,7 +545,7 @@ of the `request` and `last_request_read` parameters that are supposed to always
 increase. If we don't backup and restore those parameters, we would get a X server error.
 
 Before restoring the savestate memory, we must make the actual and saved memory
-layout to match. So we iteratively browse through each memory segment, and call
+layout match. So we iteratively browse through each memory segment, and call
 `munmap()`, `mremap()` or `mmap()` to reconstruct the saved memory layout.
 
 For file-mapped segments, we try to map again the file if it is still present.
