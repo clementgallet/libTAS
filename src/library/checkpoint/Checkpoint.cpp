@@ -33,7 +33,6 @@
 #include "ReservedMemory.h"
 #include "SaveStateSaving.h"
 #include "SaveStateLoading.h"
-#include "FileDescriptorManip.h"
 
 #include "TimeHolder.h"
 #include "logging.h"
@@ -42,6 +41,7 @@
 #include "Utils.h"
 #include "fileio/FileHandle.h"
 #include "fileio/FileHandleList.h"
+#include "fileio/FileDescriptorManip.h"
 #include "fileio/SaveFile.h"
 #include "fileio/SaveFileList.h"
 #include "renderhud/RenderHUD.h"
@@ -116,7 +116,6 @@ static _xstate ss_fpregset;
 static void readAllAreas();
 static int reallocateArea(Area *saved_area, Area *current_area);
 static void readAnArea(SaveStateLoading &saved_area, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state);
-static void syncFileDescriptors();
 static void readASavefile(SaveStateLoading &saved_state);
 
 static void writeAllAreas(bool base);
@@ -440,7 +439,7 @@ static void readAllAreas()
     
     /* Before restoring savefiles, we open and close file descriptors to be in 
      * sync with when the savestate was made. */
-    syncFileDescriptors();
+    FileHandleList::syncFileDescriptors();
     
     /* The remaining areas are savefiles */
     while (saved_area) {
@@ -949,113 +948,6 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
     if (shared_fd >= 0)
         close(shared_fd);
 }
-
-/* Recreate and close all file descriptors, so that the current list match the
- * list that was present when the state was saved. */
-static void syncFileDescriptors()
-{
-    /* Browse all possible values of fd. We don't go past our reserve value,
-     * which contains the fds for the state loading procedure */ 
-    for (int fd = 3; fd < FileDescriptorManip::reserveState(); fd++) {
-        /* Query for a registered file handle (excluding pipes) */
-        const FileHandle& fh = FileHandleList::fileHandleFromFd(fd);
-        bool fdRegistered = (fh.fds[0] == fd) && !fh.isPipe();
-
-        /* Look at existing file descriptor and get symlink */
-        char fd_str[25];
-        sprintf(fd_str, "/proc/self/fd/%d", fd);
-
-        char buf[1024] = {};
-        ssize_t buf_size = readlink(fd_str, buf, 1024);
-        bool fdOpened = false;
-
-        if (buf_size != -1) {
-            if (buf_size == 1024) {
-                /* Truncation occured */
-                buf[1023] = '\0';
-                LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "Symlink of file fd %d was truncated: %s", fd, buf);
-            }
-
-            /* Don't add special files, such as sockets or pipes */
-            if ((buf[0] == '/') && (0 != strncmp(buf, "/dev/", 5))) {
-                fdOpened = true;
-            }
-        }
-
-        /* Handle all cases of fd */
-        if (!fdRegistered && !fdOpened) {
-            continue;
-        }
-        if (fdRegistered && fdOpened) {
-            /* Check for matching path */
-            if (0 != strcmp(fh.fileName(), buf)) {
-                LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "File descriptor %d is currently linked to %s, but was linked to %s in savestate", fd, buf, fh.fileName());
-                close(fd);
-                fdOpened = false;
-            }
-        }
-        if (!fdRegistered && fdOpened) {
-            /* The file descriptor must be closed, because it is not present in
-             * the savestate */
-            LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "File %s with fd %d should not be present after loading the state, so it is closed", buf, fd);
-            close(fd);
-        }
-        if (fdRegistered && !fdOpened) {
-            /* The file descriptor must be opened, because it is present in
-             * the savestate */
-            LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "File %s with fd %d should be opened", fh.fileName(), fd);
-
-            /* We must open the file with the same fd as the one saved in the state */
-            int next_fd = FileDescriptorManip::enforceNext(fd);
-            
-            if (next_fd == -1) {
-                LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "Could not recreate fd %d because fd manipulation failed", fd);
-                continue;
-            }
-
-            if (next_fd > fd) {
-                LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "Could not recreate fd %d because we went past it after calling dup(), which returned %d", fd, next_fd);
-                continue;
-            }
-
-            if (next_fd != fd) {
-                LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "Could not recreate fd %d because it is already opened", fd);
-                continue;
-            }
-
-            /* Recreate a memfd if savefile */
-            const SaveFile* sf = SaveFileList::getSaveFile(fd);
-            if (sf) {
-                int new_fd = syscall(SYS_memfd_create, sf->filename.c_str(), 0);
-                if (new_fd < 0) {
-                    LOG(LL_ERROR, LCF_CHECKPOINT | LCF_FILEIO, "Could not create memfd");
-                    continue;                    
-                }
-                if (new_fd != fd) {
-                    LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "Recreate fd was supposed to be %d but is instead %d...", fd, new_fd);
-                    close(new_fd);
-                    continue;
-                }
-            }
-            else {
-                /* TODO: We assume that the non-savefile file is read-only for now */
-                int new_fd = open(fh.fileName(), O_RDONLY);
-                if (new_fd < 0) {
-                    LOG(LL_ERROR, LCF_CHECKPOINT | LCF_FILEIO, "Could not open file %s", fh.fileName());
-                    continue;                    
-                }
-                if (new_fd != fd) {
-                    LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "Recreate fd was supposed to be %d but is instead %d...", fd, new_fd);
-                    close(new_fd);
-                    continue;
-                }
-            }
-        }
-    }
-
-    FileDescriptorManip::closeAll();
-}
-
 
 /* Write a memory area into the savestate. Returns the size of the area in bytes */
 static void readASavefile(SaveStateLoading &saved_state)

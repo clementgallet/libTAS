@@ -45,7 +45,6 @@ libtas_so_SOURCES = \
     audio/sdl/sdlaudio.cpp \
     checkpoint/AltStack.cpp \
     checkpoint/Checkpoint.cpp \
-    checkpoint/FileDescriptorManip.cpp \
     checkpoint/MemArea.cpp \
     checkpoint/ProcSelfMaps.cpp \
     checkpoint/ReservedMemory.cpp \
@@ -59,6 +58,7 @@ libtas_so_SOURCES = \
     encoding/NutMuxer.cpp \
     encoding/Screenshot.cpp \
     fileio/dirwrappers.cpp \
+    fileio/FileDescriptorManip.cpp \
     fileio/FileHandleList.cpp \
     fileio/generaliowrappers.cpp \
     fileio/posixiowrappers.cpp \

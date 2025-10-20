@@ -49,7 +49,14 @@ void trackAllFiles();
 void trackFile(FileHandle &fh);
 
 /* Recover the offset of all tracked files */
-void recoverAllFiles();
+void recoverFileOffsets();
+
+/* Recover the content of all pipes */
+void recoverPipeContents();
+
+/* Recreate and close all file descriptors, so that the current list match the
+ * list that was present when the state was saved. */
+void syncFileDescriptors();
 
 }
 

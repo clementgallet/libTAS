@@ -324,8 +324,11 @@ int SaveStateManager::checkpoint(int slot)
      * resuming threads.
      */
     if (restoreInProgress) {
-        FileHandleList::recoverAllFiles();
+        FileHandleList::recoverFileOffsets();
     }
+
+    /* We fill the stored content of all pipes */
+    FileHandleList::recoverPipeContents();
 
 #ifdef __linux__
     /* Restore the signal that refills the fake urandom pipe */
