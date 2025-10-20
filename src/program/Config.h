@@ -149,6 +149,9 @@ public:
     /* Pause and stop fastforward when reaching an input editor marker */
     bool editor_marker_pause = false;
 
+    /* Move markers on frame addition or removal */
+    bool editor_move_marker = false;
+
     /* Proton absolute path */
     std::string proton_path;
 
