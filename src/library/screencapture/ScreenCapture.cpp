@@ -112,7 +112,7 @@ void ScreenCapture::getDimensions(int& w, int& h) {
     if (impl) {
         impl->getDimensions(w, h);
     }
-    else {
+    else if (width != 0 && height != 0) {
         w = width;
         h = height;
     }
