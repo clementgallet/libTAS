@@ -38,6 +38,7 @@ namespace libtas {
 
 struct fd_history_t {
     std::string file;
+    int type;
     uint64_t first_frame;
     uint64_t last_frame;
 };
@@ -51,38 +52,39 @@ void FileDebug::update(uint64_t framecount)
     const auto& filehandles = FileHandleList::getFileList();
 
     for (const FileHandle &fh : filehandles) {
-        if (fh.isPipe())
-            continue;
-            
-        int fd = fh.fds[0];
+        for (int i = 0; i < ((fh.type == FileHandle::FILE_PIPE)?2:1); i++) {
+            int fd = fh.fds[i];
 
-        if (fd >= FD_LIMIT) {
-            LOG(LL_WARN, LCF_FILEIO, "An opened file descriptor (%d) is high than our limit (%d)", fd, FD_LIMIT);
-            continue;
-        }
-        
-        if (fd_history[fd].empty()) {
-            fd_history_t new_fdh;
-            new_fdh.file = fh.fileName();
-            new_fdh.first_frame = framecount;
-            new_fdh.last_frame = framecount;
-            fd_history[fd].push_back(new_fdh);
-        }
-        else {
-            fd_history_t &fdh = fd_history[fd].back();
-            std::string fh_name = fh.fileName();
-            
-            /* Check if it is the same file */
-            if (fdh.last_frame == (framecount - 1) &&
-                fh_name == fdh.file) {
-                fdh.last_frame++;
+            if (fd >= FD_LIMIT) {
+                LOG(LL_WARN, LCF_FILEIO, "An opened file descriptor (%d) is high than our limit (%d) %s", fd, FD_LIMIT, fh.fileName);
+                continue;
             }
-            else {
+            
+            if (fd_history[fd].empty()) {
                 fd_history_t new_fdh;
-                new_fdh.file = fh.fileName();
+                new_fdh.file = fh.fileName;
+                new_fdh.type = fh.type;
                 new_fdh.first_frame = framecount;
                 new_fdh.last_frame = framecount;
                 fd_history[fd].push_back(new_fdh);
+            }
+            else {
+                fd_history_t &fdh = fd_history[fd].back();
+                std::string fh_name = fh.fileName;
+                
+                /* Check if it is the same file */
+                if (fdh.last_frame == (framecount - 1) &&
+                    fh_name == fdh.file) {
+                    fdh.last_frame++;
+                }
+                else {
+                    fd_history_t new_fdh;
+                    new_fdh.file = fh.fileName;
+                    new_fdh.type = fh.type;
+                    new_fdh.first_frame = framecount;
+                    new_fdh.last_frame = framecount;
+                    fd_history[fd].push_back(new_fdh);
+                }
             }
         }
     }
@@ -94,7 +96,7 @@ void FileDebug::draw(uint64_t framecount, bool* p_open = nullptr)
     
     if (ImGui::Begin("File Debug", p_open))
     {
-        if (ImPlot::BeginPlot("File Descriptors", ImVec2(-1,-1), ImPlotFlags_NoTitle | ImPlotFlags_NoLegend)) {
+        if (ImPlot::BeginPlot("File Descriptors", ImVec2(-1,-1), ImPlotFlags_NoTitle)) {
             /* Auto-resize when running, but allow zooming when paused */
             int flags = 0;
             int flagsY = (framecount != old_framecount) ? (ImPlotAxisFlags_AutoFit) : 0;
@@ -117,14 +119,7 @@ void FileDebug::draw(uint64_t framecount, bool* p_open = nullptr)
                     ys2[0] = fd + BAR_HEIGHT / 2;
                     ys2[1] = fd + BAR_HEIGHT / 2;
 
-                    size_t sep = fdh.file.find_last_of("/");
-                    std::string file;
-                    if (sep != std::string::npos)
-                        file = fdh.file.substr(sep + 1);
-                    else
-                        file = fdh.file;
-                    
-                    ImPlot::PlotShaded(file.c_str(), xs, ys1, ys2, 2);
+                    ImPlot::PlotShaded(FileHandle::typeStr(fdh.type), xs, ys1, ys2, 2);
                 }
             }
 

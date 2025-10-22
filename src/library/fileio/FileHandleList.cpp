@@ -70,7 +70,7 @@ std::pair<int, int> createPipe(int flags) {
         return std::make_pair(-1, -1);
 
     fcntl(fds[1], F_SETFL, O_NONBLOCK);
-    getFileList().emplace_front(fds);
+    getFileList().emplace_front("", fds);
     return std::make_pair(fds[0], fds[1]);
 }
 
@@ -79,9 +79,9 @@ int fdFromFile(const char* file)
     auto& filehandles = getFileList();
 
     for (const FileHandle &fh : filehandles) {
-        if (fh.isPipe())
+        if (fh.type == FileHandle::FILE_PIPE)
             continue;
-        if (0 == strcmp(fh.fileNameOrPipeContents, file)) {
+        if (0 == strcmp(fh.fileName, file)) {
             return fh.fds[0];
         }
     }
@@ -92,12 +92,12 @@ const FileHandle& fileHandleFromFd(int fd)
 {
     auto& filehandles = getFileList();
 
-    static FileHandle fh_zero("", 0);
+    static FileHandle fh_zero;
 
     for (const FileHandle &fh : filehandles) {
-        if (fh.isPipe())
-            continue;
         if (fh.fds[0] == fd)
+            return fh;
+        if ((fh.type == FileHandle::FILE_PIPE) && (fh.fds[1] == fd))
             return fh;
     }
     return fh_zero;
@@ -106,8 +106,7 @@ const FileHandle& fileHandleFromFd(int fd)
 void updateAllFiles()
 {
     auto& filehandles = getFileList();
-    /* Remove all entries that aren't pipes */
-    filehandles.remove_if([](FileHandle& fh) { return !fh.isPipe();});
+    filehandles.clear();
 
     struct dirent *dp;
 
@@ -124,10 +123,6 @@ void updateAllFiles()
         if (fd == dir_fd)
             continue;
 
-        /* Skip stdin/out/err */
-        if (fd < 3)
-            continue;
-
         /* Get symlink */
         char buf[1024] = {};
         ssize_t buf_size = readlinkat(dir_fd, dp->d_name, buf, 1024);
@@ -140,10 +135,26 @@ void updateAllFiles()
             LOG(LL_WARN, LCF_FILEIO, "Adding file with fd %d to file handle list failed because symlink was truncated: %s", fd, buf);
         }
         else {
-            /* Don't add special files, such as sockets or pipes */
-            if ((buf[0] == '/') && (0 != strncmp(buf, "/dev/", 5))) {
-                filehandles.emplace_front(buf, fd);
+            if (0 == strncmp(buf, "pipe:", 5)) {
+                /* We add both fds of the pipe. Doing it when we have the write-only end */
+                if (0 == faccessat(dir_fd, dp->d_name, W_OK, AT_SYMLINK_NOFOLLOW)) {
+                    /* Relying on pipes guaranteed to have consecutive fds...? */
+                    int fds[2] = {fd-1, fd};
+                    filehandles.emplace_front(buf, fds);
+                }
             }
+            else if (0 == strncmp(buf, "socket:", 7))
+                filehandles.emplace_front(buf, fd, FileHandle::FILE_SOCKET);
+            else if (0 == strncmp(buf, "/dev/", 5))
+                filehandles.emplace_front(buf, fd, FileHandle::FILE_DEVICE);
+            else if (0 == strncmp(buf, "/memfd:", 7))
+                filehandles.emplace_front(buf, fd, FileHandle::FILE_MEMFD);
+            else if (0 == strncmp(buf, "/dmabuf:", 8))
+                filehandles.emplace_front(buf, fd, FileHandle::FILE_SPECIAL);
+            else if (buf[0] == '/')
+                filehandles.emplace_front(buf, fd, FileHandle::FILE_REGULAR);
+            else
+                filehandles.emplace_front(buf, fd, FileHandle::FILE_SPECIAL);
         }
     }
     closedir(dir);
@@ -162,24 +173,27 @@ void trackAllFiles()
 
 void trackFile(FileHandle &fh)
 {
-    LOG(LL_DEBUG, LCF_FILEIO, "Track file %s (fd=%d,%d)", fh.fileName(), fh.fds[0], fh.fds[1]);
 
     /* Save the file offset */
-    if (fh.isPipe()) {
+    if (fh.type == FileHandle::FILE_PIPE) {
         /* By now all the threads are suspended, so we don't have to worry about
          * racing to empty the pipe and possibly blocking.
          */
+        LOG(LL_DEBUG, LCF_FILEIO, "Save pipe content (fd=%d,%d)", fh.fds[0], fh.fds[1]);
+
         int pipeSize;
         MYASSERT(ioctl(fh.fds[0], FIONREAD, &pipeSize) == 0);
         LOG(LL_DEBUG, LCF_FILEIO, "Save pipe size: %d", pipeSize);
         fh.size = pipeSize;
         if (fh.size > 0) {
-            std::free(fh.fileNameOrPipeContents);
-            fh.fileNameOrPipeContents = static_cast<char *>(std::malloc(fh.size));
-            Utils::readAll(fh.fds[0], fh.fileNameOrPipeContents, fh.size);
+            std::free(fh.pipeContents);
+            fh.pipeContents = static_cast<char *>(std::malloc(fh.size));
+            Utils::readAll(fh.fds[0], fh.pipeContents, fh.size);
         }
     }
-    else {
+    else if (fh.needsTracking()) {
+        LOG(LL_DEBUG, LCF_FILEIO, "Track file %s (fd=%d)", fh.fileName, fh.fds[0]);
+
         fdatasync(fh.fds[0]);
         fh.fileOffset = lseek(fh.fds[0], 0, SEEK_CUR);
         fh.size = lseek(fh.fds[0], 0, SEEK_END);
@@ -191,7 +205,8 @@ void trackFile(FileHandle &fh)
 void recoverFileOffsets()
 {
     for (FileHandle &fh : getFileList()) {
-        if (fh.isPipe())
+
+        if (!fh.needsTracking())
             continue;
 
         /* Only seek if we have a valid offset */
@@ -203,14 +218,14 @@ void recoverFileOffsets()
         ssize_t ret = lseek(fh.fds[0], fh.fileOffset, SEEK_SET);
 
         if (current_size != fh.size) {
-            LOG(LL_WARN, LCF_FILEIO, "File %s (fd=%d) changed size from %jd to %jd", fh.fileName(), fh.fds[0], fh.size, current_size);
+            LOG(LL_WARN, LCF_FILEIO, "File %s (fd=%d) changed size from %jd to %jd", fh.fileName, fh.fds[0], fh.size, current_size);
         }
 
         if (ret == -1) {
-            LOG(LL_ERROR, LCF_FILEIO, "Error seeking %jd bytes into file %s (fd=%d)", fh.fileOffset, fh.fileName(), fh.fds[0]);
+            LOG(LL_ERROR, LCF_FILEIO, "Error seeking %jd bytes into file %s (fd=%d)", fh.fileOffset, fh.fileName, fh.fds[0]);
         }
         else {
-            LOG(LL_DEBUG, LCF_FILEIO, "Restore file offset %s (fd=%d) to %jd", fh.fileName(), fh.fds[0], fh.fileOffset);
+            LOG(LL_DEBUG, LCF_FILEIO, "Restore file offset %s (fd=%d) to %jd", fh.fileName, fh.fds[0], fh.fileOffset);
         }
 
         fh.fileOffset = -1;
@@ -220,11 +235,11 @@ void recoverFileOffsets()
 void recoverPipeContents()
 {
     for (FileHandle &fh : getFileList()) {
-        if (!fh.isPipe())
+        if (!(fh.type == FileHandle::FILE_PIPE))
             continue;
 
         /* Only recover if we have valid contents */
-        if (!fh.fileNameOrPipeContents || fh.size < 0) {
+        if (!fh.pipeContents || fh.size < 0) {
             continue;
         }
 
@@ -237,17 +252,17 @@ void recoverPipeContents()
             std::free(tmp);
         }
 
-        ssize_t ret = Utils::writeAll(fh.fds[1], fh.fileNameOrPipeContents, fh.size);
+        ssize_t ret = Utils::writeAll(fh.fds[1], fh.pipeContents, fh.size);
 
         if (ret == -1) {
-            LOG(LL_ERROR, LCF_FILEIO, "Error recovering %jd bytes into file %s (fd=%d,%d)", fh.size, fh.fileName(), fh.fds[0], fh.fds[1]);
+            LOG(LL_ERROR, LCF_FILEIO, "Error recovering %jd bytes into pipe (fd=%d,%d)", fh.size, fh.fds[0], fh.fds[1]);
         }
         else {
-            LOG(LL_DEBUG, LCF_FILEIO, "Restore pipe %s (fd=%d,%d) size to %jd", fh.fileName(), fh.fds[0], fh.fds[1], fh.size);
+            LOG(LL_DEBUG, LCF_FILEIO, "Restore pipe (fd=%d,%d) size to %jd", fh.fds[0], fh.fds[1], fh.size);
         }
 
-        std::free(fh.fileNameOrPipeContents);
-        fh.fileNameOrPipeContents = nullptr;
+        std::free(fh.pipeContents);
+        fh.pipeContents = nullptr;
         fh.size = -1;
     }
 }
@@ -259,7 +274,7 @@ void syncFileDescriptors()
     for (int fd = 3; fd < FileDescriptorManip::reserveState(); fd++) {
         /* Query for a registered file handle (excluding pipes) */
         const FileHandle& fh = FileHandleList::fileHandleFromFd(fd);
-        bool fdRegistered = (fh.fds[0] == fd) && !fh.isPipe();
+        bool fdRegistered = (fh.fds[0] == fd) || (fh.fds[1] == fd);
 
         /* Look at existing file descriptor and get symlink */
         char fd_str[25];
@@ -276,10 +291,7 @@ void syncFileDescriptors()
                 LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "Symlink of file fd %d was truncated: %s", fd, buf);
             }
 
-            /* Don't add special files, such as sockets or pipes */
-            if ((buf[0] == '/') && (0 != strncmp(buf, "/dev/", 5))) {
-                fdOpened = true;
-            }
+            fdOpened = true;
         }
 
         /* Handle all cases of fd */
@@ -288,8 +300,8 @@ void syncFileDescriptors()
         }
         if (fdRegistered && fdOpened) {
             /* Check for matching path */
-            if (0 != strcmp(fh.fileName(), buf)) {
-                LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "File descriptor %d is currently linked to %s, but was linked to %s in savestate", fd, buf, fh.fileName());
+            if (0 != strcmp(fh.fileName, buf)) {
+                LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "File descriptor %d is currently linked to %s, but was linked to %s in savestate", fd, buf, fh.fileName);
                 close(fd);
                 fdOpened = false;
             }
@@ -303,7 +315,7 @@ void syncFileDescriptors()
         if (fdRegistered && !fdOpened) {
             /* The file descriptor must be opened, because it is present in
              * the savestate */
-            LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "File %s with fd %d should be opened", fh.fileName(), fd);
+            LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_FILEIO, "File %s with fd %d should be opened", fh.fileName, fd);
 
             /* We must open the file with the same fd as the one saved in the state */
             int next_fd = FileDescriptorManip::enforceNext(fd);
@@ -337,11 +349,11 @@ void syncFileDescriptors()
                     continue;
                 }
             }
-            else {
+            else if (fh.type == FileHandle::FILE_REGULAR) {
                 /* TODO: We assume that the non-savefile file is read-only for now */
-                int new_fd = open(fh.fileName(), O_RDONLY);
+                int new_fd = open(fh.fileName, O_RDONLY);
                 if (new_fd < 0) {
-                    LOG(LL_ERROR, LCF_CHECKPOINT | LCF_FILEIO, "Could not open file %s", fh.fileName());
+                    LOG(LL_ERROR, LCF_CHECKPOINT | LCF_FILEIO, "Could not open file %s", fh.fileName);
                     continue;                    
                 }
                 if (new_fd != fd) {
@@ -349,6 +361,9 @@ void syncFileDescriptors()
                     close(new_fd);
                     continue;
                 }
+            }
+            else {
+                LOG(LL_ERROR, LCF_CHECKPOINT | LCF_FILEIO, "Non-standard file %s is supposed to be opened after state loaded", fh.fileName);
             }
         }
     }

@@ -27,28 +27,63 @@
 namespace libtas {
 
 struct FileHandle {
-    FileHandle(const char *file, int fd)
-        : fds{fd, -1}, fileNameOrPipeContents(::strdup(file)), fileOffset(-1),
+    
+    enum {
+        FILE_REGULAR,
+        FILE_PIPE,
+        FILE_SOCKET,
+        FILE_MEMFD,
+        FILE_DEVICE,
+        FILE_SPECIAL,
+    };
+
+    FileHandle() : fds{-1, -1} {}
+    FileHandle(const char *file, int fd, int t)
+        : type(t), fds{fd, -1}, fileName(::strdup(file)), fileOffset(-1),
           size(-1) {}
-    FileHandle(int fds[2])
-        : fds{fds[0], fds[1]}, fileNameOrPipeContents(nullptr), fileOffset(-1),
+    FileHandle(const char *file, int fds[2])
+        : type(FileHandle::FILE_PIPE), fds{fds[0], fds[1]}, fileName(::strdup(file)), fileOffset(-1),
           size(-1) {}
-    ~FileHandle() { std::free(fileNameOrPipeContents); }
-    bool isPipe() const { return fds[1] != -1; }
-    const char *fileName() const { return isPipe() ? "pipe" : fileNameOrPipeContents; }
+    ~FileHandle() { std::free(fileName); std::free(pipeContents); }
+    bool needsTracking() const
+    {
+        return (type == FileHandle::FILE_REGULAR) || (type == FileHandle::FILE_MEMFD);
+    }
+    static const char* typeStr(int type) {
+        switch (type) {
+            case FILE_REGULAR:
+                return "Regular";
+            case FILE_PIPE:
+                return "Pipe";
+            case FILE_SOCKET:
+                return "Socket";
+            case FILE_MEMFD:
+                return "Savefile";
+            case FILE_DEVICE:
+                return "Device";
+            case FILE_SPECIAL:
+                return "Special";
+        }
+        return "";
+    }
+
+    /* File type */
+    int type;
 
     /* File descriptor(s) */
     int fds[2];
 
     /* Path of the file */
-    /* or Saved contents of the pipe */
-    char *fileNameOrPipeContents;
+    char *fileName;
 
     /* Saved offset in the file */
     off_t fileOffset;
 
     /* Saved size of the file or pipe */
     off_t size;
+
+    /* Saved contents of the pipe */
+    char *pipeContents;
 };
 
 }

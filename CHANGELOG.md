@@ -2,6 +2,7 @@
 ### Added
 
 * Debug window for file descriptors
+* File Debug OSD shows all files with types
 
 ### Changed
 ### Fixed
