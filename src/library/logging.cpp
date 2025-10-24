@@ -137,7 +137,7 @@ void debuglogfull(LogLevel ll, LogCategoryFlag lcf, const char* file, int line, 
     size = strlen(s);
 
     if (!(lcf & LCF_CHECKPOINT))
-        LogWindow::addLog(s + beg_size, s + size, true);
+        LogWindow::addLog(s + beg_size, s + size, false);
 
     if (isTerm) {
         /* Reset color change */

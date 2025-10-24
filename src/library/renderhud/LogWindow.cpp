@@ -42,8 +42,10 @@ void LogWindow::addLog(const char* beg, const char* end, bool newline)
 {
     /* Logs can be added from multiple threads */
     std::lock_guard<std::mutex> lock(mutex);
-    if (buffer.size() > 1000000)
+    if (buffer.size() > 1000000) {
         buffer.clear();
+        lineOffsets.clear();
+    }
     buffer.append(beg, end);
     /* We always push a string with at most one `\n` character at the end */
     if (newline)
@@ -79,6 +81,8 @@ void LogWindow::draw(bool* p_open = nullptr)
 
     if (ImGui::BeginChild("scrolling", ImVec2(0, 0), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar))
     {
+        std::lock_guard<std::mutex> lock(mutex);
+
         if (clearButton)
             clear();
         if (copyButton)
