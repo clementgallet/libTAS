@@ -261,6 +261,11 @@ const static usymbol_t UNITY_SYMBOLS[] = {
     },
     {
         UNITY6_UJOB_WAIT,
+        "ujob_wait_for",
+        "_Z13ujob_wait_forP14ujob_control_t13ujob_handle_ti",
+    },
+    {
+        UNITY6_UJOB_WAIT_ALL,
         "ujob_wait_all",
         "_Z13ujob_wait_allP14ujob_control_ti",
     },
@@ -268,6 +273,41 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         UNITY6_WORKER_THREAD_ROUTINE,
         "worker_thread_routine",
         "_ZL21worker_thread_routinePv",
+    },
+    {
+        UNITY6_PRELOADMANAGER_ADD,
+        "PreloadManager::AddToQueue",
+        "_ZN14PreloadManager10AddToQueueEP23PreloadManagerOperation",
+    },
+    {
+        UNITY6_PRELOADMANAGER_PREPARE,
+        "PreloadManager::PrepareProcessingPreloadOperation",
+        "_ZN14PreloadManager33PrepareProcessingPreloadOperationEv",
+    },
+    {
+        UNITY6_PRELOADMANAGER_PROCESS,
+        "PreloadManager::ProcessSingleOperation",
+        "_ZN14PreloadManager22ProcessSingleOperationEv",
+    },
+    {
+        UNITY6_PRELOADMANAGER_UPDATE,
+        "PreloadManager::UpdatePreloading",
+        "_ZN14PreloadManager16UpdatePreloadingEv",
+    },
+    {
+        UNITY6_PRELOADMANAGER_UPDATE_STEP,
+        "PreloadManager::UpdatePreloadingSingleStep",
+        "_ZN14PreloadManager26UpdatePreloadingSingleStepENS_21UpdatePreloadingFlagsEi",
+    },
+    {
+        UNITY6_PRELOADMANAGER_WAIT,
+        "PreloadManager::WaitForAllAsyncOperationsToComplete",
+        "_ZN14PreloadManager35WaitForAllAsyncOperationsToCompleteEv",
+    },
+    {
+        UNITY6_PRELOADMANAGER_RUN,
+        "PreloadManager::Run",
+        "_ZN14PreloadManager3RunEPv",
     },
     {
         UNITY_FUNCS_LEN,

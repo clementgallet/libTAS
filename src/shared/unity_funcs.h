@@ -61,12 +61,20 @@ enum {
     UNITY6_LANE_GUTS, // lane_guts(ujob_control_t*, ujob_lane_t*, int, int, ujob_dependency_chain const*)
     UNITY6_UJOB_SCHEDULE, // ujob_schedule_job_internal(ujob_control_t*, ujob_handle_t, unsigned int)
     UNITY6_UJOB_SCHEDULE_PARALLEL, // ujob_schedule_parallel_for_internal(ujob_control_t*, JobsCallbackFunctions&, void*, WorkStealingRange*, unsigned int, unsigned int, ujob_handle_t const*, int, unsigned char)
-    UNITY6_UJOB_WAIT, // ujob_wait_all(ujob_control_t*, int)
+    UNITY6_UJOB_WAIT, // ujob_wait_for(ujob_control_t*, ujob_handle_t, int)
+    UNITY6_UJOB_WAIT_ALL, // ujob_wait_all(ujob_control_t*, int)
     UNITY6_UJOB_KICK, // ujob_kick_jobs(ujob_control_t*)
     UNITY6_UJOB_EXECUTE, // ujob_execute_job(ujob_control_t*, ujob_lane_t*, ujob_job_t*, ujob_handle_t, unsigned int)
     UNITY6_UJOB_ADD, // ujobs_add_to_lane_and_wake_one_thread(ujob_control_t*, ujob_job_t*, ujob_lane_t*)
     UNITY6_UJOB_PARTICIPATE, // ujob_participate(ujob_control_t*, ujob_handle_t, ujob_job_t*&, unsigned int&, ujob_dependency_chain const*)
     UNITY6_WORKER_THREAD_ROUTINE, // worker_thread_routine(void*)
+    UNITY6_PRELOADMANAGER_ADD, // PreloadManager::AddToQueue(PreloadManagerOperation*)
+    UNITY6_PRELOADMANAGER_PREPARE, // PreloadManager::PrepareProcessingPreloadOperation()
+    UNITY6_PRELOADMANAGER_PROCESS, // PreloadManager::ProcessSingleOperation()
+    UNITY6_PRELOADMANAGER_UPDATE, // PreloadManager::UpdatePreloading
+    UNITY6_PRELOADMANAGER_UPDATE_STEP, // PreloadManager::UpdatePreloadingSingleStep(PreloadManager::UpdatePreloadingFlags, int)
+    UNITY6_PRELOADMANAGER_WAIT, // PreloadManager::WaitForAllAsyncOperationsToComplete()
+    UNITY6_PRELOADMANAGER_RUN, // PreloadManager::Run(void*)
     UNITY_FUNCS_LEN
 };
 

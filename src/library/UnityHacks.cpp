@@ -79,6 +79,9 @@ typedef void* (*JobsCallbackFunctions)(void*, int);
 typedef void ScriptingBackendNativeObjectPtrOpaque;
 class JobScheduleParameters;
 class JobFence;
+typedef void PreloadManager;
+typedef void PreloadManagerOperation;
+typedef long PreloadManager_UpdatePreloadingFlags;
 
 struct JobGroupID {
     JobGroup* group;
@@ -129,9 +132,18 @@ namespace orig {
     void (*U6_ujob_execute_job)(ujob_control_t*, ujob_lane_t*, ujob_job_t*, ujob_handle_t, unsigned int) = nullptr;
     void (*U6_ujob_participate)(ujob_control_t* x, ujob_handle_t y, ujob_job_t* z, int* a, ujob_dependency_chain const* b) = nullptr;
     unsigned long (*U6_ujob_schedule_job_internal)(ujob_control_t* x, ujob_handle_t y, unsigned int z) = nullptr;
-    long (*U6_ujob_schedule_parallel_for_internal)(ujob_control_t* x, JobsCallbackFunctions* y, void* z, WorkStealingRange* a, unsigned int b, unsigned long c, ujob_handle_t const* d, long e) = nullptr;
+    ujob_handle_t (*U6_ujob_schedule_parallel_for_internal)(ujob_control_t* x, JobsCallbackFunctions* y, void* z, WorkStealingRange* a, unsigned int b, unsigned long c, ujob_handle_t const* d, long e) = nullptr;
+    void (*U6_ujob_wait_for)(ujob_control_t *x, ujob_handle_t y, int z) = nullptr;
     void (*U6_ujobs_add_to_lane_and_wake_one_thread)(ujob_control_t*, ujob_job_t*, ujob_lane_t*) = nullptr;
     void (*U6_worker_thread_routine)(void* x) = nullptr;
+
+    void (*U6_PreloadManager_AddToQueue)(PreloadManager* m, PreloadManagerOperation* o) = nullptr;
+    void (*U6_PreloadManager_PrepareProcessingPreloadOperation)(PreloadManager* m) = nullptr;
+    void (*U6_PreloadManager_ProcessSingleOperation)(PreloadManager* m) = nullptr;
+    void (*U6_PreloadManager_UpdatePreloading)(PreloadManager* m) = nullptr;
+    long (*U6_PreloadManager_UpdatePreloadingSingleStep)(PreloadManager* m, PreloadManager_UpdatePreloadingFlags f, int i) = nullptr;
+    void (*U6_PreloadManager_WaitForAllAsyncOperationsToComplete)(PreloadManager* m) = nullptr;
+    long (*U6_PreloadManager_Run)(void* p) = nullptr;
 }
 
 #include <signal.h>
@@ -464,7 +476,11 @@ static unsigned long U6_ujob_schedule_job_internal(ujob_control_t* x, ujob_handl
     LOGTRACE(LCF_HACKS);
     unsigned long ret = orig::U6_ujob_schedule_job_internal(x, y, z);
     
-    if (orig::U2K_JobQueue_WaitForJobGroupID)
+    /* In newer Unity 6 versions, there is a dedicated internal function for
+     * waiting on a job */
+    if (orig::U6_ujob_wait_for)
+        orig::U6_ujob_wait_for(x, y, 1);
+    else if (orig::U2K_JobQueue_WaitForJobGroupID)
         orig::U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(y), 0, true);
 
     return ret;
@@ -491,17 +507,21 @@ static void* job_callback(void* arg, int)
  *     WorkStealingRange *param_4, uint param_5, uint param_6,
  *     ujob_handle_t *param_7, int param_8, uchar param_9)
  */ 
-static long U6_ujob_schedule_parallel_for_internal(ujob_control_t* x, JobsCallbackFunctions* y, void* job_callback_arg, WorkStealingRange* a, unsigned int count, unsigned long c, ujob_handle_t const* d, long e)
+static ujob_handle_t U6_ujob_schedule_parallel_for_internal(ujob_control_t* x, JobsCallbackFunctions* y, void* job_callback_arg, WorkStealingRange* a, unsigned int count, unsigned long c, ujob_handle_t const* d, long e)
 {
     LOG(LL_TRACE, LCF_HACKS, "U6_ujob_schedule_parallel_for_internal called with callback %p, steal mode %d, unknown uint %d", *y, a?(*a):0, count);
 
-    long ret = 0;
+    ujob_handle_t ret = 0;
     static JobsCallbackFunctions loop_callback = &job_callback;
 
     if (count == 1) {
         ret = orig::U6_ujob_schedule_parallel_for_internal(x, y, job_callback_arg, a, count, c, d, e);
         
-        if (orig::U2K_JobQueue_WaitForJobGroupID)
+        /* In newer Unity 6 versions, there is a dedicated internal function for
+         * waiting on a job */
+        if (orig::U6_ujob_wait_for)
+            orig::U6_ujob_wait_for(x, ret, 1);
+        else if (orig::U2K_JobQueue_WaitForJobGroupID)
             orig::U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(ret), 0, true);
     }
     else {
@@ -521,7 +541,9 @@ static long U6_ujob_schedule_parallel_for_internal(ujob_control_t* x, JobsCallba
             
             ret = orig::U6_ujob_schedule_parallel_for_internal(x, &loop_callback, args, a, 1, c, d, e);
             
-            if (orig::U2K_JobQueue_WaitForJobGroupID)
+            if (orig::U6_ujob_wait_for)
+                orig::U6_ujob_wait_for(x, ret, 1);
+            else if (orig::U2K_JobQueue_WaitForJobGroupID)
                 orig::U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(ret), 0, true);
 
             /* It should be safe to delete our custom callback argument here */
@@ -532,6 +554,12 @@ static long U6_ujob_schedule_parallel_for_internal(ujob_control_t* x, JobsCallba
     return ret;
 }
 
+static void U6_ujob_wait_for(ujob_control_t *x, ujob_handle_t y, int z)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_ujob_wait_for(x, y, z);
+}
+
 static void U6_worker_thread_routine(void* x)
 {
     LOGTRACE(LCF_HACKS);
@@ -540,6 +568,49 @@ static void U6_worker_thread_routine(void* x)
     return orig::U6_worker_thread_routine(x);
 }
 
+static void U6_PreloadManager_AddToQueue(PreloadManager* m, PreloadManagerOperation* o)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_PreloadManager_AddToQueue(m, o);
+}
+
+static void U6_PreloadManager_PrepareProcessingPreloadOperation(PreloadManager* m)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_PreloadManager_PrepareProcessingPreloadOperation(m);
+}
+
+static void U6_PreloadManager_ProcessSingleOperation(PreloadManager* m)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_PreloadManager_ProcessSingleOperation(m);
+}
+
+static void U6_PreloadManager_UpdatePreloading(PreloadManager* m)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_PreloadManager_UpdatePreloading(m);
+}
+
+static long U6_PreloadManager_UpdatePreloadingSingleStep(PreloadManager* m, PreloadManager_UpdatePreloadingFlags f, int i)
+{
+    LOG(LL_TRACE, LCF_HACKS, "U6_PreloadManager_UpdatePreloadingSingleStep called with flags %lx and int %d", f, i);
+    long ret = orig::U6_PreloadManager_UpdatePreloadingSingleStep(m, f, i);
+    LOG(LL_TRACE, LCF_HACKS, "    returns %ld", ret);
+    return ret;
+}
+
+static void U6_PreloadManager_WaitForAllAsyncOperationsToComplete(PreloadManager* m)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_PreloadManager_WaitForAllAsyncOperationsToComplete(m);
+}
+
+static long U6_PreloadManager_Run(void* p)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_PreloadManager_Run(p);
+}
 
 
 #define FUNC_CASE(FUNC_ENUM, FUNC_SYMBOL) \
@@ -599,7 +670,16 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY6_UJOB_PARTICIPATE, U6_ujob_participate)
         FUNC_CASE(UNITY6_UJOB_SCHEDULE, U6_ujob_schedule_job_internal)
         FUNC_CASE(UNITY6_UJOB_SCHEDULE_PARALLEL, U6_ujob_schedule_parallel_for_internal)
+        FUNC_CASE(UNITY6_UJOB_WAIT, U6_ujob_wait_for)
         FUNC_CASE(UNITY6_WORKER_THREAD_ROUTINE, U6_worker_thread_routine)
+
+        FUNC_CASE(UNITY6_PRELOADMANAGER_ADD, U6_PreloadManager_AddToQueue)
+        FUNC_CASE(UNITY6_PRELOADMANAGER_PREPARE, U6_PreloadManager_PrepareProcessingPreloadOperation)
+        FUNC_CASE(UNITY6_PRELOADMANAGER_PROCESS, U6_PreloadManager_ProcessSingleOperation)
+        FUNC_CASE(UNITY6_PRELOADMANAGER_UPDATE, U6_PreloadManager_UpdatePreloading)
+        FUNC_CASE(UNITY6_PRELOADMANAGER_UPDATE_STEP, U6_PreloadManager_UpdatePreloadingSingleStep)
+        FUNC_CASE(UNITY6_PRELOADMANAGER_WAIT, U6_PreloadManager_WaitForAllAsyncOperationsToComplete)
+        FUNC_CASE(UNITY6_PRELOADMANAGER_RUN, U6_PreloadManager_Run)
     }
 }
 
