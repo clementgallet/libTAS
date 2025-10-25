@@ -348,7 +348,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
      * We encode at the end so that we can encode with or without the OSD easily
      */    
     if (Global::shared_config.av_dumping) {
-        if (Global::shared_config.osd_encode) {
+        if (Global::shared_config.osd_encode || Global::shared_config.osd_lua) {
             /* We need to recapture the whole screen with OSD, so we redo the 
              * whole steps without the final `draw()` call */
             if (!Global::skipping_draw && draw) {

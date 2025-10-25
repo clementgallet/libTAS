@@ -281,6 +281,9 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Display OSD in the video encode */
     bool osd_encode = false;
 
+    /* Display lua text in the video encode */
+    bool osd_lua = false;
+
     /* Use a backup of savefiles in memory, which leaves the original
      * savefiles unmodified and save the content in savestates */
     bool prevent_savefiles = true;

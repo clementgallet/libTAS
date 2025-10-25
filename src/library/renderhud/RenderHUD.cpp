@@ -216,6 +216,12 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
             ImGui::EndMainMenuBar();
         }
 		ImGui::PopStyleColor(2);
+    } else if (Global::shared_config.av_dumping && Global::shared_config.osd_lua) {
+        show_lua = true;
+        show_framecount = false;
+        show_inputs = false;
+        show_messages = false;
+        show_watches = false;
     }
     
     if (supportsGameWindow() && !show_game_window && old_show_game_window) {
