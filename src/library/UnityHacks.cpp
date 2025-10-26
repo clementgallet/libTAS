@@ -80,12 +80,35 @@ typedef void ScriptingBackendNativeObjectPtrOpaque;
 class JobScheduleParameters;
 class JobFence;
 typedef void PreloadManager;
-typedef void PreloadManagerOperation;
 typedef long PreloadManager_UpdatePreloadingFlags;
 
 struct JobGroupID {
     JobGroup* group;
     int tag;
+};
+
+class PreloadManagerOperation
+{
+public:
+    virtual long ExceptionToPropagateToAwaiter();
+    virtual ~PreloadManagerOperation();
+    virtual bool IsDone(PreloadManagerOperation* po);
+    virtual float GetProgress(PreloadManagerOperation* po);
+    virtual long GetPriority(PreloadManagerOperation* po);
+    virtual void SetPriority(PreloadManagerOperation* po, int p);
+    virtual bool GetAllowSceneActivation(PreloadManagerOperation* po);
+    virtual void SetAllowSceneActivation(PreloadManagerOperation* po, bool sa);
+    virtual void InvokeCoroutine(PreloadManagerOperation* po);
+    virtual long Cancel(PreloadManagerOperation* po);
+    virtual void SetFinalTiming(PreloadManagerOperation* po, float a, float b, float c, float d);
+    virtual void Perform(PreloadManagerOperation* po);
+    virtual void IntegrateTimeSliced(PreloadManagerOperation* po, int i);
+    virtual void IntegrateMainThread(PreloadManagerOperation* po);
+    virtual bool MustCompleteNextFrame(PreloadManagerOperation* po);
+    virtual bool CanLoadObjects(PreloadManagerOperation* po);
+    virtual bool CanPerformWhileObjectsLoading(PreloadManagerOperation* po);
+    virtual bool GetAllowParallelExecution(PreloadManagerOperation* po);
+    virtual char* GetDebugName(PreloadManagerOperation* po);
 };
 
 namespace orig {
@@ -416,7 +439,7 @@ static void U2K_JobQueue_WaitForJobGroupID(JobQueue* /* or ujob_control_t* */ t 
 
 static int U6_job_completed(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z, ujob_handle_t a)
 {
-    LOG(LL_TRACE, LCF_HACKS, "U6_job_completed called with job %p and handle %p", z, a);
+    // LOG(LL_TRACE, LCF_HACKS, "U6_job_completed called with job %p and handle %p", z, a);
     int ret = orig::U6_job_completed(x, y, z, a);
     return ret;
 }
@@ -441,7 +464,7 @@ static int U6_JobsUtility_CUSTOM_Schedule(JobScheduleParameters* x, JobFence* y)
 
 static bool U6_lane_guts(ujob_control_t* x, ujob_lane_t* y, int z, int a, ujob_dependency_chain const* b)
 {
-    LOGTRACE(LCF_HACKS);
+    // LOGTRACE(LCF_HACKS);
     return orig::U6_lane_guts(x, y, z, a, b);
 }
 
@@ -453,7 +476,7 @@ static long U6_ScheduleBatchJob(void* x, ujob_handle_t y)
 
 static void U6_ujobs_add_to_lane_and_wake_one_thread(ujob_control_t* x, ujob_job_t* y, ujob_lane_t* z)
 {
-    LOGTRACE(LCF_HACKS);
+    // LOGTRACE(LCF_HACKS);
     orig::U6_ujobs_add_to_lane_and_wake_one_thread(x, y, z);
 }
 
@@ -467,7 +490,7 @@ static void U6_ujob_execute_job(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z
 
 static void U6_ujob_participate(ujob_control_t* x, ujob_handle_t y, ujob_job_t** z, int* a, ujob_dependency_chain const* b)
 {
-    LOGTRACE(LCF_HACKS);
+    // LOGTRACE(LCF_HACKS);
     orig::U6_ujob_participate(x, y, z, a, b);
 }
 
@@ -571,6 +594,8 @@ static void U6_worker_thread_routine(void* x)
 static void U6_PreloadManager_AddToQueue(PreloadManager* m, PreloadManagerOperation* o)
 {
     LOGTRACE(LCF_HACKS);
+    LOG(LL_TRACE, LCF_HACKS, "priority %d, MustCompleteNextFrame %d, CanLoadObjects %d, CanPerformWhileObjectsLoading %d, GetAllowParallelExecution %d",
+        o->GetPriority(o), o->MustCompleteNextFrame(o), o->CanLoadObjects(o), o->CanPerformWhileObjectsLoading(o), o->GetAllowParallelExecution(o));
     return orig::U6_PreloadManager_AddToQueue(m, o);
 }
 

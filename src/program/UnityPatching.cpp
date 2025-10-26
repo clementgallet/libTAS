@@ -505,6 +505,26 @@ const static usig_t UNITY_SIGNATURES_64[] = {
         "41 57 41 56 53 49 89 FE 48 8B 5F 08 48 63 07"
     },
     {
+        UNITY6_PRELOADMANAGER_ADD,
+        "41 57 41 56 41 55 41 54 53 48 83 EC 10 49 89 F7 48 89 FB 4C 8D B7 70 01 00 00",
+    },
+    {
+        UNITY6_PRELOADMANAGER_UPDATE,
+        "55 41 57 41 56 41 54 53 48 83 ec 20 49 89 ff 4c 8d b7 70 01 00 00 4c 89 f7",
+    },
+    {
+        UNITY6_PRELOADMANAGER_UPDATE_STEP,
+        "55 41 57 41 56 41 55 41 54 53 48 83 ec 48 89 d3 41 89 f7 49 89 fd 80 7f 38 00",
+    },
+    {
+        UNITY6_PRELOADMANAGER_WAIT,
+        "55 41 57 41 56 41 55 41 54 53 48 83 ec 38 49 89 fd 8b 47 3c 89 44 24 2c 83 f8 04",
+    },
+    {
+        UNITY6_PRELOADMANAGER_RUN,
+        "55 41 57 41 56 41 55 41 54 53 48 81 ec 98 00 00 00 49 89 ff 48 8b af 58 03 00 00",
+    },
+    {
         UNITY_FUNCS_LEN,
         ""
     },
