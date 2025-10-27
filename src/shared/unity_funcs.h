@@ -75,6 +75,19 @@ enum {
     UNITY6_PRELOADMANAGER_UPDATE_STEP, // PreloadManager::UpdatePreloadingSingleStep(PreloadManager::UpdatePreloadingFlags, int)
     UNITY6_PRELOADMANAGER_WAIT, // PreloadManager::WaitForAllAsyncOperationsToComplete()
     UNITY6_PRELOADMANAGER_RUN, // PreloadManager::Run(void*)
+    UNITY6_ASYNCREADMANAGER_REQUEST, // AsyncReadManagerThreaded::Request(AsyncReadCommand*)
+    UNITY6_ASYNCREADMANAGER_OPENCOMPLETE_CALLBACK, // AsyncReadManagerManaged::OpenCompleteCallback(AsyncReadCommand&, AsyncReadCommand::Status)
+    UNITY6_ASYNCREADMANAGER_READCOMPLETE_CALLBACK, // AsyncReadManagerManaged::ReadCompleteCallback(AsyncReadCommand&, AsyncReadCommand::Status)
+    UNITY6_ASYNCREADMANAGER_CLOSECOMPLETE_CALLBACK, // AsyncReadManagerManaged::CloseCompleteCallback(AsyncReadCommand&, AsyncReadCommand::Status)
+    UNITY6_ASYNCREADMANAGER_CLOSECACHEDCOMPLETE_CALLBACK, // AsyncReadManagerManaged::CloseCachedFileCompleteCallback(AsyncReadCommand&, AsyncReadCommand::Status)
+    UNITY6_ASYNCUPLOADMANAGER_ASYNC_READ_SUCCESS, // AsyncUploadManager::AsyncReadSuccess(AsyncCommand&)
+    UNITY6_ASYNCUPLOADMANAGER_QUEUE_UPLOAD, // AsyncUploadManager::QueueUploadAsset(char const*, VFS::FileSize, unsigned int, unsigned int, AsyncUploadHandler const&, AssetContext const&, unsigned char*, FileReadFlags)
+    UNITY6_ASYNCUPLOADMANAGER_ASYNC_RESOURCE_UPLOAD, // AsyncUploadManager::AsyncResourceUpload(GfxDevice&, int, AsyncUploadManagerSettings const&)
+    UNITY6_ASYNCUPLOADMANAGER_ASYNC_READ_CALLBACK, // AsyncUploadManager::AsyncReadCallbackStatic(AsyncReadCommand&, AsyncReadCommand::Status)
+    UNITY6_ASYNCUPLOADMANAGER_SCHEDULE, // AsyncUploadManager::ScheduleAsyncCommandsInternal()
+    UNITY6_ASYNCUPLOADMANAGER_CLOSE, // AsyncUploadManager::CloseFile(core::basic_string<char, core::StringStorageDefault<char> > const&)
+    UNITY6_SIGNAL_CALLBACK, // SignalCallback(AsyncReadCommand&, AsyncReadCommand::Status)
+    UNITY6_SYNC_READ, // SyncReadRequest(AsyncReadCommand*)
     UNITY_FUNCS_LEN
 };
 

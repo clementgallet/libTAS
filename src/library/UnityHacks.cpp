@@ -37,6 +37,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <mutex>
 #include <condition_variable>
 #include <sys/mman.h> // PROT_READ, PROT_WRITE, etc.
 
@@ -79,8 +80,24 @@ typedef void* (*JobsCallbackFunctions)(void*, int);
 typedef void ScriptingBackendNativeObjectPtrOpaque;
 class JobScheduleParameters;
 class JobFence;
-typedef void PreloadManager;
+typedef uint8_t PreloadManager;
 typedef long PreloadManager_UpdatePreloadingFlags;
+
+typedef void AsyncReadManagerThreaded;
+typedef uint8_t AsyncReadCommand;
+typedef int AsyncReadCommand_Status;
+typedef long VFS_FileSize;
+typedef void AsyncUploadManager;
+typedef int AsyncUploadHandler;
+typedef void AssetContext;
+typedef long FileReadFlags;
+typedef void GfxDevice;
+typedef void AsyncUploadManagerSettings;
+
+struct Int128 {
+    long a;
+    long b;
+};
 
 struct JobGroupID {
     JobGroup* group;
@@ -167,6 +184,20 @@ namespace orig {
     long (*U6_PreloadManager_UpdatePreloadingSingleStep)(PreloadManager* m, PreloadManager_UpdatePreloadingFlags f, int i) = nullptr;
     void (*U6_PreloadManager_WaitForAllAsyncOperationsToComplete)(PreloadManager* m) = nullptr;
     long (*U6_PreloadManager_Run)(void* p) = nullptr;
+    
+    void (*U6_AsyncReadManagerThreaded_Request)(AsyncReadManagerThreaded *t, AsyncReadCommand *c) = nullptr;
+    void (*U6_AsyncReadManagerManaged_OpenCompleteCallback)(AsyncReadCommand *c, AsyncReadCommand_Status s) = nullptr;
+    void (*U6_AsyncReadManagerManaged_ReadCompleteCallback)(AsyncReadCommand *c, AsyncReadCommand_Status s) = nullptr;
+    void (*U6_AsyncReadManagerManaged_CloseCompleteCallback)(AsyncReadCommand *c, AsyncReadCommand_Status s) = nullptr;
+    void (*U6_AsyncReadManagerManaged_CloseCachedFileCompleteCallback)(AsyncReadCommand *c, AsyncReadCommand_Status s) = nullptr;
+    void (*U6_AsyncUploadManager_AsyncReadSuccess)(AsyncUploadManager *t, AsyncReadCommand *c) = nullptr;
+    Int128 (*U6_AsyncUploadManager_QueueUploadAsset)(AsyncUploadManager *t, char const* x, VFS_FileSize y, unsigned int z, unsigned int a, AsyncUploadHandler* b, AssetContext *c, unsigned char* d, FileReadFlags e) = nullptr;
+    void (*U6_AsyncUploadManager_AsyncResourceUpload)(AsyncUploadManager *t, GfxDevice *x, int y, AsyncUploadManagerSettings *z) = nullptr;
+    void (*U6_AsyncUploadManager_AsyncReadCallbackStatic)(AsyncReadCommand *c, AsyncReadCommand_Status s) = nullptr;
+    void (*U6_AsyncUploadManager_ScheduleAsyncCommandsInternal)(AsyncUploadManager *t) = nullptr;
+    void (*U6_AsyncUploadManager_CloseFile)(AsyncUploadManager *t, char* s) = nullptr;
+    void (*U6_SignalCallback)(AsyncReadCommand *c, AsyncReadCommand_Status s) = nullptr;
+    void (*U6_SyncReadRequest)(AsyncReadCommand* c) = nullptr;
 }
 
 #include <signal.h>
@@ -591,12 +622,119 @@ static void U6_worker_thread_routine(void* x)
     return orig::U6_worker_thread_routine(x);
 }
 
+static void PreloadManager_Debug(PreloadManager* m)
+{
+    uintptr_t pending_queue = *(uintptr_t *)(m + 0x318);
+    long pending_queue_size = *(long *)(m + 0x328);
+
+    uintptr_t active_queue = *(uintptr_t *)(m + 0x338);
+    long active_queue_size = *(long *)(m + 0x348);
+
+    int some_active_size = *(int *)(m + 0x310);
+    int some_pending_size = *(int *)(m + 0x1b8);
+
+    int pending_size = *(int *)(m + 0xb0);
+    
+    LOG(LL_DEBUG, LCF_HACKS, "queue %p and queue_size %ld", pending_queue, pending_queue_size);
+    LOG(LL_DEBUG, LCF_HACKS, "active_queue %p and active_queue_size %ld", active_queue, active_queue_size);
+    LOG(LL_DEBUG, LCF_HACKS, "some_size %d and some_active_size %d", some_size, some_active_size);
+    LOG(LL_DEBUG, LCF_HACKS, "pending_size %d", pending_size);
+}
+
+/* This is what I understand from how operations are handled:
+ *
+ * PreloadManager::AddToQueue:
+ *   an operation is pushed inside a list of pending operations located in
+ *   the PreloadManager struct (located in pm+0x318).
+ *
+ * PreloadManager::Run:
+ *   Function ran by the Async.Preload thread. It is constantly choosing,
+ *   among the list of pending operations, the
+ *   operation with the highest priority (PreloadManagerOperation::GetPriority),
+ *   and then it pulls the operation from the list, and pushed it into a 
+ *   second list of active operations (pm+0x338).
+ *
+ *   Then it does some waiting, depending on some
+ *   function results (CanLoadObjects, CanPerformWhileObjectsLoading).
+ *
+ *   Then it calls PreloadManagerOperation::Perform to initiate the operation.
+ *
+ *   It waits even more if PreloadManagerOperation::GetAllowParallelExecution
+ *   returns true.
+ *
+ * PreloadManager::UpdatePreloadingSingleStep:
+ *   Called by either PreloadManager::UpdatePreloading or 
+ *   PreloadManager::WaitForAllAsyncOperationsToComplete.
+ *
+ *   Has a UpdatePreloadingFlags parameter which contains two flags:
+ *   - if bit 0 is set, the update will not wake (or even create) the 
+ *     Async.Preload thread. So no operation will be moved from pending to active
+ *   - if bit 1 is set, finished operations are processed. Otherwise they are
+ *     left in the active list.
+ *
+ *   It takes one of the active operation and calls PreloadManagerOperation::IntegrateTimeSliced.
+ *
+ *   If this function returns non-zero, I think it means that the operation
+ *   was completed. In that case, it finishes processing the
+ *   operation only under certain conditions: either 
+ *   PreloadManagerOperation::GetAllowSceneActivation returns true, or 
+ *   passed UpdatePreloadingFlags was non-zero.
+ *
+ *   In that case, it pulls the operation from the list of active operations,
+ *   it calls PreloadManagerOperation::IntegrateMainThread, and finally
+ *   PreloadManagerOperation::InvokeCoroutine.
+ *
+ *   It returns some value and bit 0 set (to guarantee a non-zero value).
+ *
+ * PreloadManager::UpdatePreloading:
+ *   Called once each frame.
+ *   Looks for all pending and active operations. If one returns true for
+ *   PreloadManagerOperation::MustCompleteNextFrame, then it calls 
+ *   PreloadManager::WaitForAllAsyncOperationsToComplete.
+ *
+ *   Otherwise, it calls UpdatePreloadingSingleStep in a loop until this 
+ *   function returns 0.
+ *
+ * PreloadManager::WaitForAllAsyncOperationsToComplete:
+ *   Calls PreloadManager::UpdatePreloadingSingleStep in a loop while this function
+ *   returns non-zero. If this function returns zero twice in a row, then it
+ *   goes into wait mode (baselib::UnityClassic::CappedSemaphore::TryTimedAcquire()).
+ * 
+ *   It stops when there is no operation in both the pending list and the active list.
+ */
+
 static void U6_PreloadManager_AddToQueue(PreloadManager* m, PreloadManagerOperation* o)
 {
     LOGTRACE(LCF_HACKS);
-    LOG(LL_TRACE, LCF_HACKS, "priority %d, MustCompleteNextFrame %d, CanLoadObjects %d, CanPerformWhileObjectsLoading %d, GetAllowParallelExecution %d",
+    LOG(LL_DEBUG, LCF_HACKS, "priority %d, MustCompleteNextFrame %d, CanLoadObjects %d, CanPerformWhileObjectsLoading %d, GetAllowParallelExecution %d",
         o->GetPriority(o), o->MustCompleteNextFrame(o), o->CanLoadObjects(o), o->CanPerformWhileObjectsLoading(o), o->GetAllowParallelExecution(o));
-    return orig::U6_PreloadManager_AddToQueue(m, o);
+    
+    PreloadManager_Debug(m);
+    orig::U6_PreloadManager_AddToQueue(m, o);
+    PreloadManager_Debug(m);
+    
+    /* We must make sure that each operation pushed to the queue is activated
+     * by the Async.Preload thread immediately. We we don't do that, the order of
+     * activated operations is not guaranteed. Indeed, the Async.Preload chooses
+     * the next operation to activate based on the PreloadManagerOperation::GetPriority()
+     * result. So, depending on which operations were pushed, the order of active
+     * operations may vary. */
+    
+    if (*(uintptr_t *)(m + 0x338) != 0) {
+        /* Using pending_size does not work if GetAllowParallelExecution() returns true.
+         * it softlocks waiting for this function to release the lock */
+        // int pending_size = *(int *)(m + 0xb0);
+        long queue_size = *(long *)(m + 0x328);
+
+        /* I'm using a timeout here, because sometimes the Loading.Preload thread
+         * cannot process the operation because the current thread holds the lock. */
+        for (int i=0; (i < 100) && (queue_size > 0); i++) {
+            NATIVECALL(usleep(100));
+            queue_size = *(long *)(m + 0x328);
+        }
+    }
+
+    PreloadManager_Debug(m);
 }
 
 static void U6_PreloadManager_PrepareProcessingPreloadOperation(PreloadManager* m)
@@ -620,7 +758,9 @@ static void U6_PreloadManager_UpdatePreloading(PreloadManager* m)
 static long U6_PreloadManager_UpdatePreloadingSingleStep(PreloadManager* m, PreloadManager_UpdatePreloadingFlags f, int i)
 {
     LOG(LL_TRACE, LCF_HACKS, "U6_PreloadManager_UpdatePreloadingSingleStep called with flags %lx and int %d", f, i);
+    PreloadManager_Debug(m);
     long ret = orig::U6_PreloadManager_UpdatePreloadingSingleStep(m, f, i);
+    PreloadManager_Debug(m);
     LOG(LL_TRACE, LCF_HACKS, "    returns %ld", ret);
     return ret;
 }
@@ -637,6 +777,147 @@ static long U6_PreloadManager_Run(void* p)
     return orig::U6_PreloadManager_Run(p);
 }
 
+static std::mutex async_read_mutex;
+static std::condition_variable async_read_condition;
+static bool async_read_complete = true;
+
+static void U6_AsyncReadManagerThreaded_Request(AsyncReadManagerThreaded *t, AsyncReadCommand *c)
+{
+    char* filepath = *(char**)c;
+    LOG(LL_TRACE, LCF_HACKS, "U6_AsyncReadManagerThreaded_Request called with file %s", filepath);
+
+    void* complete_callback = *((void**)(c + 0x38));
+    // void* complete_callback_arg = *((void**)(c + 0x40));
+
+    /* If possible, we can use this nice helper function that performs a sync
+     * read from a command. I didn't experienced any softlock for now. */
+    if (orig::U6_SyncReadRequest) {
+        return orig::U6_SyncReadRequest(c);
+    }
+
+    if (complete_callback != 0) {
+        /* We wait until the complete callback is called. */
+        std::unique_lock<std::mutex> lock(async_read_mutex);
+        async_read_complete = false;
+
+        orig::U6_AsyncReadManagerThreaded_Request(t, c);
+        
+        async_read_condition.wait(lock, [] { return async_read_complete; });
+    }
+    else {
+        orig::U6_AsyncReadManagerThreaded_Request(t, c);
+    }
+}
+
+/* These are all AsyncReadCommand complete callback used */
+
+static void U6_AsyncReadManagerManaged_OpenCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
+{
+    LOGTRACE(LCF_HACKS);
+    
+    orig::U6_AsyncReadManagerManaged_OpenCompleteCallback(c, s);
+    
+    std::unique_lock<std::mutex> lock(async_read_mutex);
+    async_read_complete = true;
+    async_read_condition.notify_all();
+}
+
+static void U6_AsyncReadManagerManaged_ReadCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
+{
+    LOGTRACE(LCF_HACKS);
+
+    orig::U6_AsyncReadManagerManaged_ReadCompleteCallback(c, s);
+
+    std::unique_lock<std::mutex> lock(async_read_mutex);
+    async_read_complete = true;
+    async_read_condition.notify_all();
+}
+
+static void U6_AsyncReadManagerManaged_CloseCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
+{
+    LOGTRACE(LCF_HACKS);
+
+    orig::U6_AsyncReadManagerManaged_CloseCompleteCallback(c, s);
+
+    std::unique_lock<std::mutex> lock(async_read_mutex);
+    async_read_complete = true;
+    async_read_condition.notify_all();
+}
+
+static void U6_AsyncReadManagerManaged_CloseCachedFileCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
+{
+    LOGTRACE(LCF_HACKS);
+
+    orig::U6_AsyncReadManagerManaged_CloseCachedFileCompleteCallback(c, s);
+
+    std::unique_lock<std::mutex> lock(async_read_mutex);
+    async_read_complete = true;
+    async_read_condition.notify_all();
+}
+
+static void U6_SignalCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
+{
+    LOGTRACE(LCF_HACKS);
+    
+    orig::U6_SignalCallback(c, s);
+
+    std::unique_lock<std::mutex> lock(async_read_mutex);
+    async_read_complete = true;
+    async_read_condition.notify_all();
+}
+
+static void U6_AsyncUploadManager_AsyncReadCallbackStatic(AsyncReadCommand *c, AsyncReadCommand_Status s)
+{
+    LOGTRACE(LCF_HACKS);
+
+    {
+        std::unique_lock<std::mutex> lock(async_read_mutex);
+        async_read_complete = true;
+        async_read_condition.notify_all();
+    }
+
+    orig::U6_AsyncUploadManager_AsyncReadCallbackStatic(c, s);
+}
+
+/* End of callbacks */
+
+static void U6_AsyncUploadManager_AsyncReadSuccess(AsyncUploadManager *t, AsyncReadCommand *c)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_AsyncUploadManager_AsyncReadSuccess(t, c);
+}
+
+static Int128 U6_AsyncUploadManager_QueueUploadAsset(AsyncUploadManager *t, char const* x, VFS_FileSize y, unsigned int z, unsigned int a, AsyncUploadHandler* b, AssetContext *c, unsigned char* d, FileReadFlags e)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_AsyncUploadManager_QueueUploadAsset(t, x, y, z, a, b, c, d, e);
+}
+
+static void U6_AsyncUploadManager_AsyncResourceUpload(AsyncUploadManager *t, GfxDevice *x, int y, AsyncUploadManagerSettings *z)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_AsyncUploadManager_AsyncResourceUpload(t, x, y, z);
+}
+
+static void U6_AsyncUploadManager_ScheduleAsyncCommandsInternal(AsyncUploadManager *t)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_AsyncUploadManager_ScheduleAsyncCommandsInternal(t);
+}
+
+static void U6_AsyncUploadManager_CloseFile(AsyncUploadManager *t, char* s)
+{
+    LOGTRACE(LCF_HACKS);
+    return orig::U6_AsyncUploadManager_CloseFile(t, s);
+}
+
+static void U6_SyncReadRequest(AsyncReadCommand* c)
+{
+    char* filepath = *(char**)c;
+    LOG(LL_TRACE, LCF_HACKS, "U6_SyncReadRequest called with file %s", filepath);
+    
+    return orig::U6_SyncReadRequest(c);
+}
 
 #define FUNC_CASE(FUNC_ENUM, FUNC_SYMBOL) \
 case FUNC_ENUM: \
@@ -705,6 +986,20 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY6_PRELOADMANAGER_UPDATE_STEP, U6_PreloadManager_UpdatePreloadingSingleStep)
         FUNC_CASE(UNITY6_PRELOADMANAGER_WAIT, U6_PreloadManager_WaitForAllAsyncOperationsToComplete)
         FUNC_CASE(UNITY6_PRELOADMANAGER_RUN, U6_PreloadManager_Run)
+
+        FUNC_CASE(UNITY6_ASYNCREADMANAGER_REQUEST, U6_AsyncReadManagerThreaded_Request)
+        FUNC_CASE(UNITY6_ASYNCREADMANAGER_OPENCOMPLETE_CALLBACK, U6_AsyncReadManagerManaged_OpenCompleteCallback)
+        FUNC_CASE(UNITY6_ASYNCREADMANAGER_READCOMPLETE_CALLBACK, U6_AsyncReadManagerManaged_ReadCompleteCallback)
+        FUNC_CASE(UNITY6_ASYNCREADMANAGER_CLOSECOMPLETE_CALLBACK, U6_AsyncReadManagerManaged_CloseCompleteCallback)
+        FUNC_CASE(UNITY6_ASYNCREADMANAGER_CLOSECACHEDCOMPLETE_CALLBACK, U6_AsyncReadManagerManaged_CloseCachedFileCompleteCallback)
+        FUNC_CASE(UNITY6_ASYNCUPLOADMANAGER_ASYNC_READ_SUCCESS, U6_AsyncUploadManager_AsyncReadSuccess)
+        FUNC_CASE(UNITY6_ASYNCUPLOADMANAGER_QUEUE_UPLOAD, U6_AsyncUploadManager_QueueUploadAsset)
+        FUNC_CASE(UNITY6_ASYNCUPLOADMANAGER_ASYNC_RESOURCE_UPLOAD, U6_AsyncUploadManager_AsyncResourceUpload)
+        FUNC_CASE(UNITY6_ASYNCUPLOADMANAGER_ASYNC_READ_CALLBACK, U6_AsyncUploadManager_AsyncReadCallbackStatic)
+        FUNC_CASE(UNITY6_ASYNCUPLOADMANAGER_SCHEDULE, U6_AsyncUploadManager_ScheduleAsyncCommandsInternal)
+        FUNC_CASE(UNITY6_ASYNCUPLOADMANAGER_CLOSE, U6_AsyncUploadManager_CloseFile)
+        FUNC_CASE(UNITY6_SIGNAL_CALLBACK, U6_SignalCallback)
+        FUNC_CASE(UNITY6_SYNC_READ, U6_SyncReadRequest)
     }
 }
 
