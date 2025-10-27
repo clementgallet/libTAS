@@ -9,8 +9,7 @@ permalink: /guides/lua/
 
 ### Gui functions
 
-Gui functions are only valid in callback `onPaint()`. **Beware**, option
-`Video > OSD > Lua` needs to be checked to show any lua draw function.
+Gui functions are only valid in callback `onPaint()`.
 In all gui functions, colors are coded in a single 32-bit unsigned integer as followed: `0xaarrggbb`.
 
 #### gui.resolution
@@ -338,6 +337,12 @@ Set the fast-forward status.
 
 Sleep for `length` milliseconds.
 
+#### runtime.playPause
+
+    none runtime.playPause()
+
+Pause the game if playing, resume otherwise.
+
 ### Callbacks
 
 #### callback.onStartup
@@ -396,3 +401,15 @@ executed here if you want them to be executed on the current frame.
 Called at the end of the frame before the screen rendering is performed. All Gui
 functions must be executed inside this callback. To include Lua draws in encodes,
 `Video > OSD > OSD on video encode` can be checked.
+
+### Examples
+
+#### Hello world
+
+Display a simple text on top of the game:
+
+    function hello_world()
+       gui.text(100, 10, "Hello world")
+    end
+
+    callback.onPaint(hello_world)

@@ -144,9 +144,17 @@ void InputEditorView::fillMenu(QMenu* frameMenu)
 
     insertsAct = menu->addAction(tr("Insert # frames"), this, &InputEditorView::insertInputs);
 
-    markAct = menu->addAction(tr("Add marker"), this, &InputEditorView::addMarker);
+    markAct = menu->addAction(tr("Add marker"), this, &InputEditorView::addMarker, QKeySequence(Qt::CTRL + Qt::Key_M));
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
+    markAct->setShortcutVisibleInContextMenu(true);
+#endif
+    this->addAction(markAct);
 
-    unmarkAct = menu->addAction(tr("Remove marker"), this, &InputEditorView::removeMarker);
+    unmarkAct = menu->addAction(tr("Remove marker"), this, &InputEditorView::removeMarker, QKeySequence(Qt::CTRL + Qt::Key_R));
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
+    unmarkAct->setShortcutVisibleInContextMenu(true);
+#endif
+    this->addAction(unmarkAct);
 
     duplicateAct = menu->addAction(tr("Duplicate"), this, &InputEditorView::duplicateInput, QKeySequence(Qt::CTRL + Qt::Key_D));
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
@@ -798,6 +806,7 @@ void InputEditorView::duplicateInput()
 
     /* FIXME: Discontinuous selection is not handled */
     inputEditorModel->insertRows(indexes[0].row(), indexes.count(), true);
+    inputEditorModel->shiftMarkers(indexes[0].row(), indexes.count());
 }
 
 void InputEditorView::insertInput()
@@ -809,6 +818,7 @@ void InputEditorView::insertInput()
         return;
 
     inputEditorModel->insertRows(indexes[0].row(), 1, false);
+    inputEditorModel->shiftMarkers(indexes[0].row(), 1);
 }
 
 void InputEditorView::insertInputs()
@@ -823,7 +833,9 @@ void InputEditorView::insertInputs()
     int nbFrames = QInputDialog::getInt(this, tr("Insert frames"), tr("Number of frames to insert: "), 1, 0, 100000, 1, &ok);
 
     if (ok) {
-        inputEditorModel->insertRows(indexes[0].row(), nbFrames, false);
+        int insertRow = indexes[0].row();
+        inputEditorModel->insertRows(insertRow, nbFrames, false);
+        inputEditorModel->shiftMarkers(insertRow, nbFrames);
     }
 }
 
@@ -903,8 +915,11 @@ void InputEditorView::deleteInput()
         return;
 
     /* Removing rows must be done in reversed order so that row indices are valid */
-    int min_row = applyToSelectedRangesReversed([this](int min, int max){inputEditorModel->removeRows(min, max-min+1);});
-    
+    int min_row = applyToSelectedRangesReversed([this](int min, int max){
+        inputEditorModel->removeMarkersInRange(min, max);
+        inputEditorModel->removeRows(min, max - min + 1);
+    });
+
     /* Select the next frame */
     QModelIndex newSel = inputEditorModel->index(min_row, 0);
     selectionModel()->clear();

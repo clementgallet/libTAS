@@ -86,7 +86,7 @@ The third file is the `annotations.txt` text file, containing movie annotations.
 
 ### Editor
 
-The last file is `editor.ini`, containing informations for the input editor. It consists of a list of key/value pairs. The first section `input_names` contains the order and name of single inputs in the editor. The second section `nondraw_frames` stores the list of non-draw frames, so that they are shown in the input editor. Here is an example of such a file:
+The last file is `editor.ini`, containing informations for the input editor. It consists of a list of key/value pairs. The first section `input_names` contains the order and name of single inputs in the editor. The second section `markers` stores markers and their position. The third section `nondraw_frames` stores the list of non-draw frames, so that they are shown in the input editor. Here is an example of such a file:
 
     [input_names]
     1\input=@Variant(\0\0\0\x7f\0\0\0\fSingleInput\0\0\0\0\0\0\0\xffQ)
@@ -102,6 +102,15 @@ The last file is `editor.ini`, containing informations for the input editor. It 
     6\input=@Variant(\0\0\0\x7f\0\0\0\fSingleInput\0\0\0\0\0\0\0\0z)
     6\name=z
     size=6
+
+    [markers]
+    1\frame=154
+    1\text=Beginning of level 1
+    2\frame=237
+    2\text=Reaching platform
+    3\frame=657
+    3\text=End of level 1
+    size=3
 
     [nondraw_frames]
     1\frame=1

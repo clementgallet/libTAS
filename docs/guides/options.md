@@ -16,6 +16,13 @@ Some games are build with a constant framerate in mind, and setting another FPS 
 
 The System Time is the time that is accessed by the game. It can be set before starting the game to have different starting times. Because system time is often used as a seed to a random number generator, setting this value can affect the random behaviors in the game. This is why initial system time is stored in movie files. When the game has started, this value shows the current time that the game has access to.
 
+### Mouse relative mode
+
+Set the mouse position relative to the center of the screen. For exemple, if you move the cursor
+3 pixels to the right of the center of the screen, it will be sent to the game as if you moved
+your cursor 3 pixels to the right from the last frame. This is useful for first-person
+controls, together with the next feature.
+
 ## File
 
 ### Executable Options
@@ -65,11 +72,6 @@ When software rendering is on, you can check this to skip some steps in the rend
 
 Displays some information on the game screen such as framecount, inputs, notifications and ram watches. The placement of these texts can be modified, and can be displayed in the encode video.
 
-### Variable framerate
-
-Allows the user to change the framerate during the execution of the game. This must be checked
-before starting the game.
-
 ## Runtime
 
 ### Time tracking
@@ -81,14 +83,6 @@ Some games expect, at some point, the time to advance, and wait in a loop, query
 #### Incremental savestates
 
 The Incremental savestates option allows taking advantage of the recent soft-dirty bit pushed by the CRIU project, which can track which memory pages have been written to. When the first savestate is triggered, a complete memory dump is performed (like a regular savestate), but the soft-dirty bit is cleared. If another savestate is performed, only the memory pages that were modified since are saved, leading to lightweight savestates. However, to be effective, this option requires the user to make the first savestate as late as possible. The tool detects at startup if this feature is available on the system, and disables the option if not.
-
-#### Store savestates in RAM
-
-This option is good for users that don't have an SSD, but no check is performed if there is enough remaining memory when savestating.
-
-#### Backtrack savestate
-
-This option makes the game save a state each time savestates are invalidated by thread creation or destruction. This state can be loaded with F10 (by default). It allows users to get back to the earliest frame that is available.
 
 #### Compressed savestates
 
@@ -107,12 +101,6 @@ memory, so you can resume the game immediately.
 ### Prevent writing to disk
 
 This option aims to prevent the game from saving its savefiles on disk. This is useful to keep the same state of the game whenever you load a savestate or you quit and restart the game. To enable that, libTAS detects if the game opens a regular file in write mode, and instead opens a virtual file in memory with a copy of the content of the actual file. The game does not notice it and uses regular file commands (e.g. read, write, seek) on it. Because this virtual file is in memory, it is saved inside savestates and is recovered when loading a savestate. Also, when the game is closed, all modifications to the virtual file are lost. This option may cause some games to crash, if they are doing uncommon operations with savefiles, or if the tool incorrectly detected savefiles.
-
-### Recycle threads
-
-One current limitation of the savestates implementation is that loading a savestate won't recreated threads that have exited since the savestate was done. It makes loading impossible in common cases like between levels, and the user will be forced to restart the entire movie because they cannot load any savestate. We can work around this limitation by recycling threads. When a game thread exits, it turns into a wait mode instead, and the next time the game creates a new thread, no thread is actually created and the thread function is passed to this waiting thread. Thanks to this, savestates are much more likely to be possible.
-
-However, some games will crash when this option is checked (e.g. recent Mono games) because thread-local storage is not completely supported.
 
 ### Virtual Steam client
 
@@ -153,13 +141,6 @@ The pointer scan feature will scan for pointer chains to a specific address. Sel
 
 ## Input
 
-### Mouse relative mode
-
-Set the mouse position relative to the center of the screen. For exemple, if you move the cursor
-3 pixels to the right of the center of the screen, it will be sent to the game as if you moved
-your cursor 3 pixels to the right from the last frame. This is useful for first-person
-controls, together with the next feature.
-
 ### Warp mouse to center each frame
 
 This feature mimics what is used by first-person games so that the pointer does
@@ -169,7 +150,3 @@ not go past the game screen.
 
 If checked, libTAS will prevent games from warping the mouse cursor (but will still register
 the warp internally).
-
-### Recalibrate mouse position
-
-Some games move their cursor using the relative movement of the mouse, so there will be an offset between the system mouse cursor and the game cursor. To align both cursors, after choosing this option, click on the game cursor.
