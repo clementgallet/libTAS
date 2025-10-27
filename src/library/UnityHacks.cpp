@@ -637,7 +637,7 @@ static void PreloadManager_Debug(PreloadManager* m)
     
     LOG(LL_DEBUG, LCF_HACKS, "queue %p and queue_size %ld", pending_queue, pending_queue_size);
     LOG(LL_DEBUG, LCF_HACKS, "active_queue %p and active_queue_size %ld", active_queue, active_queue_size);
-    LOG(LL_DEBUG, LCF_HACKS, "some_size %d and some_active_size %d", some_size, some_active_size);
+    LOG(LL_DEBUG, LCF_HACKS, "some_size %d and some_active_size %d", some_pending_size, some_active_size);
     LOG(LL_DEBUG, LCF_HACKS, "pending_size %d", pending_size);
 }
 
