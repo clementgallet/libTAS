@@ -37,13 +37,13 @@ struct FileHandle {
         FILE_SPECIAL,
     };
 
-    FileHandle() : fds{-1, -1} {}
+    FileHandle() : fds{-1, -1}, fileName(nullptr), pipeContents(nullptr) {}
     FileHandle(const char *file, int fd, int t)
         : type(t), fds{fd, -1}, fileName(::strdup(file)), fileOffset(-1),
-          size(-1) {}
+          size(-1), pipeContents(nullptr) {}
     FileHandle(const char *file, int fds[2])
         : type(FileHandle::FILE_PIPE), fds{fds[0], fds[1]}, fileName(::strdup(file)), fileOffset(-1),
-          size(-1) {}
+          size(-1), pipeContents(nullptr) {}
     ~FileHandle() { std::free(fileName); std::free(pipeContents); }
     bool needsTracking() const
     {
