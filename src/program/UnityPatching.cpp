@@ -375,6 +375,31 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_Z15SyncReadRequestP16AsyncReadCommand",
     },
     {
+        UNITY6_ARCHIVESTORAGECONVERTER_CONSTRUCTOR,
+        "ArchiveStorageConverter::ArchiveStorageConverter",
+        "_ZN23ArchiveStorageConverterC2EP32IArchiveStorageConverterListenerb",
+    },
+    {
+        UNITY6_ARCHIVESTORAGECONVERTER_PROCESS_ACCUMULATED,
+        "ArchiveStorageConverter::ProcessAccumulatedData",
+        "_ZN23ArchiveStorageConverter22ProcessAccumulatedDataEv",
+    },
+    {
+        UNITY6_ARCHIVESTORAGECONVERTER_PROCESS,
+        "ArchiveStorageConverter::ProcessData",
+        "_ZN23ArchiveStorageConverter11ProcessDataEPKvm",
+    },
+    {
+        UNITY6_ASSETBUNDLELOAD_FEEDSTREAM,
+        "AssetBundleLoadFromStreamAsyncOperation::FeedStream",
+        "_ZN39AssetBundleLoadFromStreamAsyncOperation10FeedStreamEPKvm",
+    },
+    {
+        UNITY6_LOAD_FMOD_SOUND,
+        "LoadFMODSound",
+        "_Z13LoadFMODSoundPPN11SoundHandle8InstanceEPKcjP10SampleClipjN3VFS8FileSizeEP22FMOD_CREATESOUNDEXINFO",
+    },
+    {
         UNITY_FUNCS_LEN,
         "",
         "",
@@ -640,6 +665,30 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     {
         UNITY6_SYNC_READ,
         "55 41 57 41 56 41 55 41 54 53 48 83 ec 28 49 89 fc 48 8b 2d ?? ?? ?? ?? 48 8d 9d e8 0a 00 00",
+    },
+    {
+        UNITY6_ARCHIVESTORAGECONVERTER_CONSTRUCTOR,
+        "55 41 57 41 56 41 54 53 48 83 ec 10 49 89 fe 48 89 37 0f 57 c0 0f 11 47 08",
+    },
+    {
+        UNITY6_ARCHIVESTORAGECONVERTER_CONSTRUCTOR,
+        "55 41 57 41 56 41 54 53 48 83 ec 10 49 89 d5 48 89 fb 48 89 37 0f 57 c0 0f 11 47 08",
+    },
+    {
+        UNITY6_ARCHIVESTORAGECONVERTER_PROCESS_ACCUMULATED,
+        "55 41 57 41 56 41 55 41 54 53 48 81 ec 38 0d 00 00 48 89 fb 80 7f 48 00 0f 84",
+    },
+    {
+        UNITY6_ARCHIVESTORAGECONVERTER_PROCESS,
+        "55 41 56 53 48 83 ec 10 48 89 d5 48 89 f1 48 89 fb 48 8b 7f 08 48 8b 43 10",
+    },
+    {
+        UNITY6_ASSETBUNDLELOAD_FEEDSTREAM,
+        "41 57 41 56 41 55 41 54 53 48 83 ec 10 83 bf c0 00 00 00 00 75 ?? 49 89 fd 48 83 bf 98 00 00 00 00",
+    },
+    {
+        UNITY6_LOAD_FMOD_SOUND,
+        "55 41 57 41 56 41 55 41 54 53 48 81 ec 78 02 00 00 89 54 24 18 48 85 ff 0f 84 ?? ?? ?? ?? 4c 89 cb",
     },
     {
         UNITY_FUNCS_LEN,

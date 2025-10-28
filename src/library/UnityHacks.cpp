@@ -31,6 +31,7 @@
 #include "checkpoint/MemArea.h"
 #include "checkpoint/ThreadManager.h"
 #include "checkpoint/ThreadInfo.h"
+#include "renderhud/UnityDebug.h"
 #include "../shared/unity_funcs.h"
 
 #include <unistd.h>
@@ -93,6 +94,14 @@ typedef void AssetContext;
 typedef long FileReadFlags;
 typedef void GfxDevice;
 typedef void AsyncUploadManagerSettings;
+
+typedef void ArchiveStorageConverter;
+typedef void IArchiveStorageConverterListener;
+typedef void AssetBundleLoadFromStreamAsyncOperation;
+
+typedef void SoundHandle_Instance;
+typedef void SampleClip;
+typedef void FMOD_CREATESOUNDEXINFO;
 
 struct Int128 {
     long a;
@@ -198,6 +207,11 @@ namespace orig {
     void (*U6_AsyncUploadManager_CloseFile)(AsyncUploadManager *t, char* s) = nullptr;
     void (*U6_SignalCallback)(AsyncReadCommand *c, AsyncReadCommand_Status s) = nullptr;
     void (*U6_SyncReadRequest)(AsyncReadCommand* c) = nullptr;
+    
+    void (*U6_ArchiveStorageConverter_ArchiveStorageConverter)(ArchiveStorageConverter* c, IArchiveStorageConverterListener* l, bool b) = nullptr;
+    int (*U6_ArchiveStorageConverter_ProcessAccumulatedData)(ArchiveStorageConverter* c) = nullptr;
+    int (*U6_AssetBundleLoadFromStreamAsyncOperation_FeedStream)(AssetBundleLoadFromStreamAsyncOperation *o, void const* x, unsigned long y) = nullptr;
+    int (*U6_LoadFMODSound)(SoundHandle_Instance** si, char const* s, unsigned int f, SampleClip* c, unsigned int i, VFS_FileSize fs, FMOD_CREATESOUNDEXINFO* in) = nullptr;
 }
 
 #include <signal.h>
@@ -622,25 +636,6 @@ static void U6_worker_thread_routine(void* x)
     return orig::U6_worker_thread_routine(x);
 }
 
-static void PreloadManager_Debug(PreloadManager* m)
-{
-    uintptr_t pending_queue = *(uintptr_t *)(m + 0x318);
-    long pending_queue_size = *(long *)(m + 0x328);
-
-    uintptr_t active_queue = *(uintptr_t *)(m + 0x338);
-    long active_queue_size = *(long *)(m + 0x348);
-
-    int some_active_size = *(int *)(m + 0x310);
-    int some_pending_size = *(int *)(m + 0x1b8);
-
-    int pending_size = *(int *)(m + 0xb0);
-    
-    LOG(LL_DEBUG, LCF_HACKS, "queue %p and queue_size %ld", pending_queue, pending_queue_size);
-    LOG(LL_DEBUG, LCF_HACKS, "active_queue %p and active_queue_size %ld", active_queue, active_queue_size);
-    LOG(LL_DEBUG, LCF_HACKS, "some_size %d and some_active_size %d", some_pending_size, some_active_size);
-    LOG(LL_DEBUG, LCF_HACKS, "pending_size %d", pending_size);
-}
-
 /* This is what I understand from how operations are handled:
  *
  * PreloadManager::AddToQueue:
@@ -648,7 +643,7 @@ static void PreloadManager_Debug(PreloadManager* m)
  *   the PreloadManager struct (located in pm+0x318).
  *
  * PreloadManager::Run:
- *   Function ran by the Async.Preload thread. It is constantly choosing,
+ *   Function ran by the Loading.Preload thread. It is constantly choosing,
  *   among the list of pending operations, the
  *   operation with the highest priority (PreloadManagerOperation::GetPriority),
  *   and then it pulls the operation from the list, and pushed it into a 
@@ -668,7 +663,7 @@ static void PreloadManager_Debug(PreloadManager* m)
  *
  *   Has a UpdatePreloadingFlags parameter which contains two flags:
  *   - if bit 0 is set, the update will not wake (or even create) the 
- *     Async.Preload thread. So no operation will be moved from pending to active
+ *     Loading.Preload thread. So no operation will be moved from pending to active
  *   - if bit 1 is set, finished operations are processed. Otherwise they are
  *     left in the active list.
  *
@@ -703,77 +698,129 @@ static void PreloadManager_Debug(PreloadManager* m)
  *   It stops when there is no operation in both the pending list and the active list.
  */
 
+static int added_count = 0;
+static int processed_count = 0;
+
 static void U6_PreloadManager_AddToQueue(PreloadManager* m, PreloadManagerOperation* o)
 {
-    LOGTRACE(LCF_HACKS);
-    LOG(LL_DEBUG, LCF_HACKS, "priority %d, MustCompleteNextFrame %d, CanLoadObjects %d, CanPerformWhileObjectsLoading %d, GetAllowParallelExecution %d",
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOG(LL_DEBUG, LCF_HACKS | LCF_FILEIO, "priority %d, MustCompleteNextFrame %d, CanLoadObjects %d, CanPerformWhileObjectsLoading %d, GetAllowParallelExecution %d",
         o->GetPriority(o), o->MustCompleteNextFrame(o), o->CanLoadObjects(o), o->CanPerformWhileObjectsLoading(o), o->GetAllowParallelExecution(o));
     
-    PreloadManager_Debug(m);
     orig::U6_PreloadManager_AddToQueue(m, o);
-    PreloadManager_Debug(m);
-    
+    added_count++;
+
     /* We must make sure that each operation pushed to the queue is activated
-     * by the Async.Preload thread immediately. We we don't do that, the order of
-     * activated operations is not guaranteed. Indeed, the Async.Preload chooses
+     * by the Loading.Preload thread immediately. If we don't do that, the order of
+     * activated operations is not guaranteed. Indeed, the Loading.Preload chooses
      * the next operation to activate based on the PreloadManagerOperation::GetPriority()
      * result. So, depending on which operations were pushed, the order of active
-     * operations may vary. */
+     * operations may vary.
+     *
+     * There is one extra difficulty: when an operation returns false for
+     * PreloadManagerOperation::GetAllowParallelExecution(), then it means that
+     * after the operation is activated by the Loading.Preload thread, it
+     * waits until the operation is handled by the main thread inside
+     * PreloadManager::UpdatePreloadingSingleStep. Until this function is called,
+     * any new operation will be queue and not activated.
+     *
+     * In this case, we cannot wait for all the operations to be activated. We
+     * must delay until after PreloadManager::UpdatePreloadingSingleStep call.
+     */
+    if (!o->GetAllowParallelExecution(o))
+        return;
     
-    if (*(uintptr_t *)(m + 0x338) != 0) {
-        /* Using pending_size does not work if GetAllowParallelExecution() returns true.
-         * it softlocks waiting for this function to release the lock */
-        // int pending_size = *(int *)(m + 0xb0);
-        long queue_size = *(long *)(m + 0x328);
+    /* Number of pending non-parallel operations (as negative number) */
+    int non_parallel_operation_count = *(int *)(m + 0x130);
+    // LOG(LL_DEBUG, LCF_HACKS | LCF_FILEIO, "    non_parallel_operation_count %d", non_parallel_operation_count);
+    if (non_parallel_operation_count != 0)
+        return;
 
-        /* I'm using a timeout here, because sometimes the Loading.Preload thread
-         * cannot process the operation because the current thread holds the lock. */
-        for (int i=0; (i < 100) && (queue_size > 0); i++) {
-            NATIVECALL(usleep(100));
-            queue_size = *(long *)(m + 0x328);
-        }
+    /* Special case for when the list of active operations was not initialized */
+    if ((*(uintptr_t *)(m + 0x338) == 0))
+        return;
+
+    /* Represents an equivalent of the size of the pending list, that is
+     * decremented at the very end of an operation activation. Starts at -1 */
+    int pending_size = *(int *)(m + 0xb0);
+    
+    int i;
+    for (i=0; (i < 1000) && (pending_size >= 0); i++) {
+        NATIVECALL(usleep(1000));
+        pending_size = *(long *)(m + 0xb0);
     }
-
-    PreloadManager_Debug(m);
+    if (i == 1000) {
+        LOG(LL_WARN, LCF_HACKS | LCF_FILEIO, "    timeout waiting for operation to be processed by Loading.Preload thread");
+    }
 }
 
 static void U6_PreloadManager_PrepareProcessingPreloadOperation(PreloadManager* m)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_PreloadManager_PrepareProcessingPreloadOperation(m);
 }
 
 static void U6_PreloadManager_ProcessSingleOperation(PreloadManager* m)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_PreloadManager_ProcessSingleOperation(m);
 }
 
 static void U6_PreloadManager_UpdatePreloading(PreloadManager* m)
 {
-    LOGTRACE(LCF_HACKS);
-    return orig::U6_PreloadManager_UpdatePreloading(m);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+
+    orig::U6_PreloadManager_UpdatePreloading(m);
+
+    UnityDebug::update_preload(added_count, processed_count);
+    added_count = 0;
+    processed_count = 0;
 }
 
 static long U6_PreloadManager_UpdatePreloadingSingleStep(PreloadManager* m, PreloadManager_UpdatePreloadingFlags f, int i)
 {
-    LOG(LL_TRACE, LCF_HACKS, "U6_PreloadManager_UpdatePreloadingSingleStep called with flags %lx and int %d", f, i);
-    PreloadManager_Debug(m);
+    LOG(LL_TRACE, LCF_HACKS | LCF_FILEIO, "U6_PreloadManager_UpdatePreloadingSingleStep called with flags %lx and int %d", f, i);
+
+    int non_parallel_operation_count_prev = *(int *)(m + 0x130);
+
     long ret = orig::U6_PreloadManager_UpdatePreloadingSingleStep(m, f, i);
-    PreloadManager_Debug(m);
-    LOG(LL_TRACE, LCF_HACKS, "    returns %ld", ret);
+    
+    if (ret)
+        processed_count++;
+    
+    int non_parallel_operation_count = *(int *)(m + 0x130);
+
+    if (non_parallel_operation_count == 0 && non_parallel_operation_count_prev != 0) {
+        /* We just executed a non-parallel operation, we must wait for all queued
+         * operations to be activated, or another non-parallel operation to be pushed. */
+        int pending_size = *(int *)(m + 0xb0);
+
+        int i;
+        for (i=0; (i < 1000) && (pending_size >= 0); i++) {
+            NATIVECALL(usleep(1000));
+            pending_size = *(long *)(m + 0xb0);
+            
+            non_parallel_operation_count = *(int *)(m + 0x130);
+            if (non_parallel_operation_count != 0)
+                break;
+        }
+        if (i == 1000) {
+            LOG(LL_WARN, LCF_HACKS | LCF_FILEIO, "    timeout waiting for queued operations to be processed by Loading.Preload thread");
+        }
+    }
+
     return ret;
 }
 
 static void U6_PreloadManager_WaitForAllAsyncOperationsToComplete(PreloadManager* m)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_PreloadManager_WaitForAllAsyncOperationsToComplete(m);
 }
 
 static long U6_PreloadManager_Run(void* p)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_PreloadManager_Run(p);
 }
 
@@ -784,7 +831,7 @@ static bool async_read_complete = true;
 static void U6_AsyncReadManagerThreaded_Request(AsyncReadManagerThreaded *t, AsyncReadCommand *c)
 {
     char* filepath = *(char**)c;
-    LOG(LL_TRACE, LCF_HACKS, "U6_AsyncReadManagerThreaded_Request called with file %s", filepath);
+    LOG(LL_TRACE, LCF_HACKS | LCF_FILEIO, "U6_AsyncReadManagerThreaded_Request called with file %s", filepath);
 
     void* complete_callback = *((void**)(c + 0x38));
     // void* complete_callback_arg = *((void**)(c + 0x40));
@@ -813,7 +860,7 @@ static void U6_AsyncReadManagerThreaded_Request(AsyncReadManagerThreaded *t, Asy
 
 static void U6_AsyncReadManagerManaged_OpenCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
     
     orig::U6_AsyncReadManagerManaged_OpenCompleteCallback(c, s);
     
@@ -824,7 +871,7 @@ static void U6_AsyncReadManagerManaged_OpenCompleteCallback(AsyncReadCommand *c,
 
 static void U6_AsyncReadManagerManaged_ReadCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
 
     orig::U6_AsyncReadManagerManaged_ReadCompleteCallback(c, s);
 
@@ -835,7 +882,7 @@ static void U6_AsyncReadManagerManaged_ReadCompleteCallback(AsyncReadCommand *c,
 
 static void U6_AsyncReadManagerManaged_CloseCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
 
     orig::U6_AsyncReadManagerManaged_CloseCompleteCallback(c, s);
 
@@ -846,7 +893,7 @@ static void U6_AsyncReadManagerManaged_CloseCompleteCallback(AsyncReadCommand *c
 
 static void U6_AsyncReadManagerManaged_CloseCachedFileCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
 
     orig::U6_AsyncReadManagerManaged_CloseCachedFileCompleteCallback(c, s);
 
@@ -857,7 +904,7 @@ static void U6_AsyncReadManagerManaged_CloseCachedFileCompleteCallback(AsyncRead
 
 static void U6_SignalCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
     
     orig::U6_SignalCallback(c, s);
 
@@ -868,7 +915,7 @@ static void U6_SignalCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
 
 static void U6_AsyncUploadManager_AsyncReadCallbackStatic(AsyncReadCommand *c, AsyncReadCommand_Status s)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
 
     {
         std::unique_lock<std::mutex> lock(async_read_mutex);
@@ -883,40 +930,64 @@ static void U6_AsyncUploadManager_AsyncReadCallbackStatic(AsyncReadCommand *c, A
 
 static void U6_AsyncUploadManager_AsyncReadSuccess(AsyncUploadManager *t, AsyncReadCommand *c)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_AsyncUploadManager_AsyncReadSuccess(t, c);
 }
 
 static Int128 U6_AsyncUploadManager_QueueUploadAsset(AsyncUploadManager *t, char const* x, VFS_FileSize y, unsigned int z, unsigned int a, AsyncUploadHandler* b, AssetContext *c, unsigned char* d, FileReadFlags e)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_AsyncUploadManager_QueueUploadAsset(t, x, y, z, a, b, c, d, e);
 }
 
 static void U6_AsyncUploadManager_AsyncResourceUpload(AsyncUploadManager *t, GfxDevice *x, int y, AsyncUploadManagerSettings *z)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_AsyncUploadManager_AsyncResourceUpload(t, x, y, z);
 }
 
 static void U6_AsyncUploadManager_ScheduleAsyncCommandsInternal(AsyncUploadManager *t)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_AsyncUploadManager_ScheduleAsyncCommandsInternal(t);
 }
 
 static void U6_AsyncUploadManager_CloseFile(AsyncUploadManager *t, char* s)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_AsyncUploadManager_CloseFile(t, s);
 }
 
 static void U6_SyncReadRequest(AsyncReadCommand* c)
 {
     char* filepath = *(char**)c;
-    LOG(LL_TRACE, LCF_HACKS, "U6_SyncReadRequest called with file %s", filepath);
+    LOG(LL_TRACE, LCF_HACKS | LCF_FILEIO, "U6_SyncReadRequest called with file %s", filepath);
     
     return orig::U6_SyncReadRequest(c);
+}
+
+static void U6_ArchiveStorageConverter_ArchiveStorageConverter(ArchiveStorageConverter* c, IArchiveStorageConverterListener* l, bool b)
+{
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    return orig::U6_ArchiveStorageConverter_ArchiveStorageConverter(c, l, b);
+}
+
+static int U6_ArchiveStorageConverter_ProcessAccumulatedData(ArchiveStorageConverter* c)
+{
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    return orig::U6_ArchiveStorageConverter_ProcessAccumulatedData(c);
+}
+
+static int U6_AssetBundleLoadFromStreamAsyncOperation_FeedStream(AssetBundleLoadFromStreamAsyncOperation *o, void const* x, unsigned long y)
+{
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    return orig::U6_AssetBundleLoadFromStreamAsyncOperation_FeedStream(o, x, y);
+}
+
+static int U6_LoadFMODSound(SoundHandle_Instance** si, char const* s, unsigned int f, SampleClip* c, unsigned int i, VFS_FileSize fs, FMOD_CREATESOUNDEXINFO* in)
+{
+    LOG(LL_TRACE, LCF_HACKS | LCF_SOUND, "U6_LoadFMODSound called with file %s and flags %x", s, f);
+    return orig::U6_LoadFMODSound(si, s, f, c, i, fs, in);
 }
 
 #define FUNC_CASE(FUNC_ENUM, FUNC_SYMBOL) \
@@ -1000,6 +1071,12 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY6_ASYNCUPLOADMANAGER_CLOSE, U6_AsyncUploadManager_CloseFile)
         FUNC_CASE(UNITY6_SIGNAL_CALLBACK, U6_SignalCallback)
         FUNC_CASE(UNITY6_SYNC_READ, U6_SyncReadRequest)
+
+        FUNC_CASE(UNITY6_ARCHIVESTORAGECONVERTER_CONSTRUCTOR, U6_ArchiveStorageConverter_ArchiveStorageConverter)
+        FUNC_CASE(UNITY6_ARCHIVESTORAGECONVERTER_PROCESS_ACCUMULATED, U6_ArchiveStorageConverter_ProcessAccumulatedData)
+        FUNC_CASE(UNITY6_ASSETBUNDLELOAD_FEEDSTREAM, U6_AssetBundleLoadFromStreamAsyncOperation_FeedStream)
+
+        FUNC_CASE(UNITY6_LOAD_FMOD_SOUND, U6_LoadFMODSound)
     }
 }
 

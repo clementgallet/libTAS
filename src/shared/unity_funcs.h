@@ -88,6 +88,11 @@ enum {
     UNITY6_ASYNCUPLOADMANAGER_CLOSE, // AsyncUploadManager::CloseFile(core::basic_string<char, core::StringStorageDefault<char> > const&)
     UNITY6_SIGNAL_CALLBACK, // SignalCallback(AsyncReadCommand&, AsyncReadCommand::Status)
     UNITY6_SYNC_READ, // SyncReadRequest(AsyncReadCommand*)
+    UNITY6_ARCHIVESTORAGECONVERTER_CONSTRUCTOR, // ArchiveStorageConverter::ArchiveStorageConverter(IArchiveStorageConverterListener*, bool)
+    UNITY6_ARCHIVESTORAGECONVERTER_PROCESS_ACCUMULATED, // ArchiveStorageConverter::ProcessAccumulatedData()
+    UNITY6_ARCHIVESTORAGECONVERTER_PROCESS, // ArchiveStorageConverter::ProcessData(void const*, unsigned long)
+    UNITY6_ASSETBUNDLELOAD_FEEDSTREAM, // AssetBundleLoadFromStreamAsyncOperation::FeedStream(void const*, unsigned long)
+    UNITY6_LOAD_FMOD_SOUND, // LoadFMODSound(SoundHandle::Instance**, char const*, unsigned int, SampleClip*, unsigned int, VFS::FileSize, FMOD_CREATESOUNDEXINFO*)
     UNITY_FUNCS_LEN
 };
 
