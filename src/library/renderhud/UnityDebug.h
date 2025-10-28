@@ -52,6 +52,8 @@ namespace UnityDebug
 
     void update(uint64_t framecount);
 
+    void update_preload(int added_count, int processed_count);
+
     void draw(uint64_t framecount, bool* p_open);
 }
 

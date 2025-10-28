@@ -25,6 +25,7 @@
 #include "global.h"
 
 #include <string>
+#include <vector>
 
 namespace libtas {
 
@@ -78,6 +79,20 @@ void UnityDebug::ScrollingBuffers::AddPoint(float x, float y, int tid) {
 
 static UnityDebug::ScrollingBuffers jobData;
 
+static std::vector<int> preloadPending;
+static std::vector<int> preloadProcessed;
+
+static std::vector<int> preloadAll;
+
+static int preload_pending_count;
+static int preload_processed_count;
+
+void UnityDebug::update_preload(int added_count, int processed_count)
+{
+    preload_pending_count += added_count - processed_count;
+    preload_processed_count = processed_count;
+}
+
 void UnityDebug::update(uint64_t framecount)
 {
     /* Register and reset counts */
@@ -91,47 +106,91 @@ void UnityDebug::update(uint64_t framecount)
     }
 
     jobData.AddPoint(framecount, unity_job_count, 0);
-}
 
+    /* Preload operations */
+    if (preloadPending.size() <= framecount)
+        preloadPending.resize(framecount+1);
+    if (preloadProcessed.size() <= framecount)
+        preloadProcessed.resize(framecount+1);
+    
+    preloadPending[framecount] += preload_pending_count;
+    preloadProcessed[framecount] += preload_processed_count;
+    
+    /* Build the array that will be used to plot */
+    preloadAll.clear();
+    int size = 400;
+    if (preloadPending.size() < size)
+        size = preloadPending.size();
+
+    preloadAll.insert(preloadAll.end(), preloadProcessed.end() - size, preloadProcessed.end());
+    preloadAll.insert(preloadAll.end(), preloadPending.end() - size, preloadPending.end());
+}
 
 void UnityDebug::draw(uint64_t framecount, bool* p_open = nullptr)
 {
     static uint64_t old_framecount = 0;
     
-    if (ImGui::Begin("Unity Debug", p_open))
-    {     
-        if (ImPlot::BeginPlot("Job Count", ImVec2(-1,-1), ImPlotFlags_NoTitle)) {
-            /* Auto-resize when running, but allow zooming when paused */
-            int flags = (framecount != old_framecount) ? (ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit) : 0;
-            ImPlot::SetupAxes("Frame","Job Count", 0, flags);
-            ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
-            ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
-            
-            /* Crop the plot to recent data, because some old threads may have
-             * very old data left. */
-            float min_x = framecount;
+    if (ImGui::Begin("Unity Debug", p_open)) {
+        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+        if (ImGui::BeginTabBar("TabBar", tab_bar_flags)) {
+            if (ImGui::BeginTabItem("Job Count")) {
+                if (ImPlot::BeginPlot("Job Count", ImVec2(-1,-1), ImPlotFlags_NoTitle)) {
+                    /* Auto-resize when running, but allow zooming when paused */
+                    int flags = (framecount != old_framecount) ? (ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit) : 0;
+                    ImPlot::SetupAxes("Frame","Job Count", 0, flags);
+                    ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
+                    ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
+                    
+                    /* Crop the plot to recent data, because some old threads may have
+                     * very old data left. */
+                    float min_x = framecount;
 
-            for (const auto& unityThreadData : jobData.Buffers)
-                min_x = std::min(min_x, static_cast<float>(framecount - unityThreadData.second.DataX.size()));
+                    for (const auto& unityThreadData : jobData.Buffers)
+                        min_x = std::min(min_x, static_cast<float>(framecount - unityThreadData.second.DataX.size()));
 
-            if (framecount != old_framecount)
-                ImPlot::SetupAxisLimits(ImAxis_X1, min_x, framecount, ImPlotCond_Always);
-            
-            for (const auto& unityThreadData : jobData.Buffers) {
-                std::string label = unityThreadData.second.name;
-                if (unityThreadData.first == 0) {
-                    ImPlot::PlotShaded(label.c_str(), unityThreadData.second.DataX.data(), unityThreadData.second.DataY.data(), unityThreadData.second.DataY.size(), 0, 0, unityThreadData.second.Offset);
+                    if (framecount != old_framecount)
+                        ImPlot::SetupAxisLimits(ImAxis_X1, min_x, framecount, ImPlotCond_Always);
+                    
+                    for (const auto& unityThreadData : jobData.Buffers) {
+                        std::string label = unityThreadData.second.name;
+                        if (unityThreadData.first == 0) {
+                            ImPlot::PlotShaded(label.c_str(), unityThreadData.second.DataX.data(), unityThreadData.second.DataY.data(), unityThreadData.second.DataY.size(), 0, 0, unityThreadData.second.Offset);
+                        }
+                        else {
+                            label += " (";
+                            label += std::to_string(unityThreadData.first);
+                            label += ")";                    
+                            ImPlot::PlotLine(label.c_str(), unityThreadData.second.DataX.data(), unityThreadData.second.DataY.data(), unityThreadData.second.DataY.size(), 0, unityThreadData.second.Offset);
+                        }
+                    }            
+
+                    ImPlot::PopStyleVar();    
+                    ImPlot::EndPlot();
                 }
-                else {
-                    label += " (";
-                    label += std::to_string(unityThreadData.first);
-                    label += ")";                    
-                    ImPlot::PlotLine(label.c_str(), unityThreadData.second.DataX.data(), unityThreadData.second.DataY.data(), unityThreadData.second.DataY.size(), 0, unityThreadData.second.Offset);
-                }
-            }            
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Preload")) {
+                static const char* labels[] = {"Processed","Pending"};
 
-            ImPlot::PopStyleVar();    
-            ImPlot::EndPlot();
+                if (ImPlot::BeginPlot("Preload", ImVec2(-1,-1), ImPlotFlags_NoTitle)) {
+                    // ImPlot::SetupLegend(ImPlotLocation_East, ImPlotLegendFlags_Outside);
+
+                    /* Auto-resize when running, but allow zooming when paused */
+                    int flags = (framecount != old_framecount) ? (ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit) : 0;
+
+                    ImPlot::SetupAxes("Frame","Operations", 0, flags);
+                    // ImPlot::SetupAxisTicks(ImAxis_X1,positions, groups, glabels);
+                    // ImPlot::SetupAxisTicks(ImAxis_X1, framecount - preloadAll.size() / 2, framecount, preloadAll.size() / 2, nullptr, true);
+
+                    if (framecount != old_framecount)
+                        ImPlot::SetupAxisLimits(ImAxis_X1, 1 + framecount - preloadAll.size() / 2, framecount, ImPlotCond_Always);
+
+                    ImPlot::PlotBarGroups(labels, preloadAll.data(), 2, preloadAll.size() / 2, 0.67, 1 + framecount - preloadAll.size() / 2, ImPlotBarGroupsFlags_Stacked);
+                    ImPlot::EndPlot();
+                }
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
         }
     }
     ImGui::End();
