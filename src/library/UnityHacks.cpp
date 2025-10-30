@@ -41,6 +41,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <sys/mman.h> // PROT_READ, PROT_WRITE, etc.
+#include <atomic>
 
 namespace libtas {
 
@@ -59,7 +60,7 @@ bool UnityHacks::isUnity()
     return unity;
 }
 
-
+typedef void UnityVersion;
 class JobQueue;
 class BackgroundJobQueue;
 typedef int JobQueue_JobQueuePriority;
@@ -113,11 +114,69 @@ struct JobGroupID {
     int tag;
 };
 
-class PreloadManagerOperation
+typedef uint8_t PreloadManagerOperation;
+
+class U4_PreloadManagerOperation
+{
+public:
+    virtual ~U4_PreloadManagerOperation();
+    virtual bool IsDone(PreloadManagerOperation* po);
+    virtual float GetProgress(PreloadManagerOperation* po);
+    virtual long GetPriority(PreloadManagerOperation* po);
+    virtual void SetPriority(PreloadManagerOperation* po, int p);
+    virtual bool GetAllowSceneActivation(PreloadManagerOperation* po);
+    virtual void SetAllowSceneActivation(PreloadManagerOperation* po, bool sa);
+    virtual void Perform(PreloadManagerOperation* po);
+    virtual void IntegrateMainThread(PreloadManagerOperation* po);
+    virtual void HasIntegrateMainThread(PreloadManagerOperation* po);
+    virtual bool MustCompleteNextFrame(PreloadManagerOperation* po);
+    virtual char* GetDebugName(PreloadManagerOperation* po);
+};
+
+class U5_PreloadManagerOperation
+{
+public:
+    virtual ~U5_PreloadManagerOperation();
+    virtual bool IsDone(PreloadManagerOperation* po);
+    virtual float GetProgress(PreloadManagerOperation* po);
+    virtual long GetPriority(PreloadManagerOperation* po);
+    virtual void SetPriority(PreloadManagerOperation* po, int p);
+    virtual bool GetAllowSceneActivation(PreloadManagerOperation* po);
+    virtual void SetAllowSceneActivation(PreloadManagerOperation* po, bool sa);
+    virtual void Release(PreloadManagerOperation* po);
+    virtual void Perform(PreloadManagerOperation* po);
+    virtual void IntegrateTimeSliced(PreloadManagerOperation* po, int i);
+    virtual void IntegrateMainThread(PreloadManagerOperation* po);
+    virtual bool MustCompleteNextFrame(PreloadManagerOperation* po);
+    virtual bool GetAllowParallelExecution(PreloadManagerOperation* po);
+    virtual char* GetDebugName(PreloadManagerOperation* po);
+};
+
+class U2018_PreloadManagerOperation
+{
+public:
+    virtual ~U2018_PreloadManagerOperation();
+    virtual bool IsDone(PreloadManagerOperation* po);
+    virtual float GetProgress(PreloadManagerOperation* po);
+    virtual long GetPriority(PreloadManagerOperation* po);
+    virtual void SetPriority(PreloadManagerOperation* po, int p);
+    virtual bool GetAllowSceneActivation(PreloadManagerOperation* po);
+    virtual void SetAllowSceneActivation(PreloadManagerOperation* po, bool sa);
+    virtual void InvokeCoroutine(PreloadManagerOperation* po);
+    virtual void SetFinalTiming(PreloadManagerOperation* po, float a, float b, float c, float d);
+    virtual void Perform(PreloadManagerOperation* po);
+    virtual void IntegrateTimeSliced(PreloadManagerOperation* po, int i);
+    virtual void IntegrateMainThread(PreloadManagerOperation* po);
+    virtual bool MustCompleteNextFrame(PreloadManagerOperation* po);
+    virtual bool GetAllowParallelExecution(PreloadManagerOperation* po);
+    virtual char* GetDebugName(PreloadManagerOperation* po);
+};
+
+class U6_PreloadManagerOperation
 {
 public:
     virtual long ExceptionToPropagateToAwaiter();
-    virtual ~PreloadManagerOperation();
+    virtual ~U6_PreloadManagerOperation();
     virtual bool IsDone(PreloadManagerOperation* po);
     virtual float GetProgress(PreloadManagerOperation* po);
     virtual long GetPriority(PreloadManagerOperation* po);
@@ -138,6 +197,8 @@ public:
 };
 
 namespace orig {
+    void (*UnityVersion_UnityVersion)(UnityVersion* u, const char* s) = nullptr;
+
     void (*U4_JobScheduler_AwakeIdleWorkerThreads)(JobScheduler* t, int x) = nullptr;
     long (*U4_JobScheduler_FetchNextJob)(JobScheduler* t, int* x) = nullptr;
     void (*U4_JobScheduler_ProcessJob)(JobScheduler* t, JobInfo* x, int y) = nullptr;
@@ -187,14 +248,19 @@ namespace orig {
     void (*U6_worker_thread_routine)(void* x) = nullptr;
 
     void (*U6_PreloadManager_AddToQueue)(PreloadManager* m, PreloadManagerOperation* o) = nullptr;
-    void (*U6_PreloadManager_PrepareProcessingPreloadOperation)(PreloadManager* m) = nullptr;
+    PreloadManagerOperation* (*U6_PreloadManager_PrepareProcessingPreloadOperation)(PreloadManager* m) = nullptr;
     void (*U6_PreloadManager_ProcessSingleOperation)(PreloadManager* m) = nullptr;
     void (*U6_PreloadManager_UpdatePreloading)(PreloadManager* m) = nullptr;
+    long (*U4_PreloadManager_UpdatePreloadingSingleStep)(PreloadManager* m, bool i) = nullptr;
     long (*U6_PreloadManager_UpdatePreloadingSingleStep)(PreloadManager* m, PreloadManager_UpdatePreloadingFlags f, int i) = nullptr;
     void (*U6_PreloadManager_WaitForAllAsyncOperationsToComplete)(PreloadManager* m) = nullptr;
     long (*U6_PreloadManager_Run)(void* p) = nullptr;
-    
+    PreloadManagerOperation* (*U2K_PreloadManager_PeekIntegrateQueue)(PreloadManager* m) = nullptr;
+    bool (*U2K_PreloadManager_IsLoadingOrQueued)(PreloadManager* m) = nullptr;
+
+    void (*U5_AsyncReadManagerThreaded_WaitDone)(AsyncReadManagerThreaded *t, AsyncReadCommand *c) = nullptr;
     void (*U6_AsyncReadManagerThreaded_Request)(AsyncReadManagerThreaded *t, AsyncReadCommand *c) = nullptr;
+    void (*U2K_AsyncReadManagerThreaded_SyncRequest)(AsyncReadManagerThreaded *t, AsyncReadCommand *c) = nullptr;
     void (*U6_AsyncReadManagerManaged_OpenCompleteCallback)(AsyncReadCommand *c, AsyncReadCommand_Status s) = nullptr;
     void (*U6_AsyncReadManagerManaged_ReadCompleteCallback)(AsyncReadCommand *c, AsyncReadCommand_Status s) = nullptr;
     void (*U6_AsyncReadManagerManaged_CloseCompleteCallback)(AsyncReadCommand *c, AsyncReadCommand_Status s) = nullptr;
@@ -215,6 +281,45 @@ namespace orig {
 }
 
 #include <signal.h>
+
+static char* unity_version;
+static int unity_version_int[3] = {0, 0, 0};
+
+static void UnityVersion_UnityVersion(UnityVersion* u, const char* s)
+{
+    LOG(LL_TRACE, LCF_HACKS, "UnityVersion_UnityVersion called with version %s", s);
+    if (unity_version_int[0] == 0) {
+        unity_version = strdup(s);
+        
+        char* t = strtok(unity_version, ".");
+        
+        for (int i=0; (i < 3) && (t != nullptr); i++) {
+            unity_version_int[i] = atoi(t);
+            LOG(LL_TRACE, LCF_HACKS, "Version %d", unity_version_int[i]);
+            t = strtok(nullptr, ".");
+        }
+    }
+
+    return orig::UnityVersion_UnityVersion(u, s);
+}
+
+static int GetUnityVersionMaj()
+{
+    if (unity_version_int[0] != 0)
+        return unity_version_int[0];
+    else {
+        /* Try to guess the version from the hooked functions */
+        if (orig::U4_JobScheduler_ProcessJob)
+            unity_version_int[0] = 4;
+        else if (orig::U5_JobQueue_Exec)
+            unity_version_int[0] = 5;
+        else if (orig::U6_ujob_execute_job)
+            unity_version_int[0] = 6000;
+        else
+            unity_version_int[0] = 2018; // TODO!
+    }
+    return unity_version_int[0];
+}
 
 static long U4_JobScheduler_FetchNextJob(JobScheduler* t, int* x)
 {
@@ -698,17 +803,102 @@ static void U6_worker_thread_routine(void* x)
  *   It stops when there is no operation in both the pending list and the active list.
  */
 
+/* For statistics */
 static int added_count = 0;
 static int processed_count = 0;
+
+static bool is_preload_thread_running = false;
+
+/* These two variables will keep track of the pending queue size and if the 
+ * last activate operation was a non-parallel. We avoid as much as possible 
+ * using struct internals, only relying on function calls */
+static std::atomic<int> pending_queue_size;
+static std::atomic<bool> is_current_pending_operation_non_parallel;
+
+static bool Helper_PreloadManager_GetAllowParallelExecution(PreloadManagerOperation* o)
+{
+    if (GetUnityVersionMaj() == 6000)
+        return (reinterpret_cast<U6_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
+    if ((GetUnityVersionMaj() >= 2018) && (GetUnityVersionMaj() <= 2020))
+        return (reinterpret_cast<U2018_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
+    if (GetUnityVersionMaj() == 5)
+        return (reinterpret_cast<U5_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
+    if (GetUnityVersionMaj() == 4)
+        return true;
+
+    LOG(LL_WARN, LCF_HACKS | LCF_FILEIO, "    PreloadManagerOperation struct for this Unity version is not known");
+    return true;
+}
+
+/* This helper function waits until the pending queue is empty (after the last
+ * operation was processed, this is important!), or if the Preload thread is
+ * currently waiting on a non-parallel operation */
+static void Helper_PreloadManager_WaitForQueueToProcess(PreloadManager* m, PreloadManagerOperation* o)
+{
+    /* Special case for when the preload thread is not running, hence it cannot
+     * process operations. */
+    if (!is_preload_thread_running)
+        return;
+
+    int i;
+    for (i=0; i < 4000; i++) {
+        /* If possible, we rely on these two functions to be hooked */
+        if (orig::U6_PreloadManager_PrepareProcessingPreloadOperation && orig::U6_PreloadManager_ProcessSingleOperation) {
+            if (pending_queue_size == 0)
+                break;
+
+            /* Check if the pending operation is non-parallel */
+            if (is_current_pending_operation_non_parallel)
+                break;
+        }
+        else {
+            /* This sucks, we must rely on internals to get what we want... */
+            if (GetUnityVersionMaj() == 6000) {
+                bool pending_queue_empty = false;
+                if (o) {
+                    /* Operation status goes from 0 (queued) -> 1 (active) -> 2 (done) */
+                    /* Check if the operation was pushed (status == 1) */
+                    pending_queue_empty = (1 == *(int *)(o + 0x40));
+                    // pending_queue_empty = (1 == *(int *)(o + 0x48));
+                }
+                else
+                    pending_queue_empty = (0 == *(int *)(m + 0x328));
+                if (pending_queue_empty)
+                    break;
+
+                /* Get the currently processed operation */
+                long active_list_size = *(long *)(m + 0x348);
+                if (active_list_size > 0) {
+                    PreloadManagerOperation* current_pending_operation = *(PreloadManagerOperation **) (*(long *)(m + 0x338) + (active_list_size - 1) * 8);
+                    
+                    if (current_pending_operation) {
+                        /* Check if the pending operation is non-parallel */
+                        if (!Helper_PreloadManager_GetAllowParallelExecution(current_pending_operation)) {
+                            LOG(LL_WARN, LCF_HACKS | LCF_FILEIO, "    exiting wait because of non-parallel");
+                            break;
+                        }
+                    }
+                }
+            }
+            else {
+                LOG(LL_WARN, LCF_HACKS | LCF_FILEIO, "    does not know how to wait for the queue to be processed");                
+            }
+        }
+        
+        NATIVECALL(usleep(1000));
+    }
+    if (i == 4000) {
+        LOG(LL_WARN, LCF_HACKS | LCF_FILEIO, "    timeout waiting for operation to be processed by Loading.Preload thread");
+    }
+}
 
 static void U6_PreloadManager_AddToQueue(PreloadManager* m, PreloadManagerOperation* o)
 {
     LOGTRACE(LCF_HACKS | LCF_FILEIO);
-    LOG(LL_DEBUG, LCF_HACKS | LCF_FILEIO, "priority %d, MustCompleteNextFrame %d, CanLoadObjects %d, CanPerformWhileObjectsLoading %d, GetAllowParallelExecution %d",
-        o->GetPriority(o), o->MustCompleteNextFrame(o), o->CanLoadObjects(o), o->CanPerformWhileObjectsLoading(o), o->GetAllowParallelExecution(o));
     
     orig::U6_PreloadManager_AddToQueue(m, o);
     added_count++;
+    pending_queue_size++;
 
     /* We must make sure that each operation pushed to the queue is activated
      * by the Loading.Preload thread immediately. If we don't do that, the order of
@@ -727,43 +917,30 @@ static void U6_PreloadManager_AddToQueue(PreloadManager* m, PreloadManagerOperat
      * In this case, we cannot wait for all the operations to be activated. We
      * must delay until after PreloadManager::UpdatePreloadingSingleStep call.
      */
-    if (!o->GetAllowParallelExecution(o))
-        return;
-    
-    /* Number of pending non-parallel operations (as negative number) */
-    int non_parallel_operation_count = *(int *)(m + 0x130);
-    // LOG(LL_DEBUG, LCF_HACKS | LCF_FILEIO, "    non_parallel_operation_count %d", non_parallel_operation_count);
-    if (non_parallel_operation_count != 0)
-        return;
 
-    /* Special case for when the list of active operations was not initialized */
-    if ((*(uintptr_t *)(m + 0x338) == 0))
-        return;
-
-    /* Represents an equivalent of the size of the pending list, that is
-     * decremented at the very end of an operation activation. Starts at -1 */
-    int pending_size = *(int *)(m + 0xb0);
-    
-    int i;
-    for (i=0; (i < 1000) && (pending_size >= 0); i++) {
-        NATIVECALL(usleep(1000));
-        pending_size = *(long *)(m + 0xb0);
-    }
-    if (i == 1000) {
-        LOG(LL_WARN, LCF_HACKS | LCF_FILEIO, "    timeout waiting for operation to be processed by Loading.Preload thread");
-    }
+    Helper_PreloadManager_WaitForQueueToProcess(m, o);
 }
 
-static void U6_PreloadManager_PrepareProcessingPreloadOperation(PreloadManager* m)
+static PreloadManagerOperation* U6_PreloadManager_PrepareProcessingPreloadOperation(PreloadManager* m)
 {
     LOGTRACE(LCF_HACKS | LCF_FILEIO);
-    return orig::U6_PreloadManager_PrepareProcessingPreloadOperation(m);
+    PreloadManagerOperation* current_pending_operation = orig::U6_PreloadManager_PrepareProcessingPreloadOperation(m);
+    
+    /* After the end of this function, we don't know for how long the 
+     * operation object will be alive. So we extract the information we want
+     * from the operation here */
+    if (current_pending_operation)
+        is_current_pending_operation_non_parallel = !Helper_PreloadManager_GetAllowParallelExecution(current_pending_operation);
+    else
+        is_current_pending_operation_non_parallel = false;
+    return current_pending_operation;
 }
 
 static void U6_PreloadManager_ProcessSingleOperation(PreloadManager* m)
 {
     LOGTRACE(LCF_HACKS | LCF_FILEIO);
-    return orig::U6_PreloadManager_ProcessSingleOperation(m);
+    orig::U6_PreloadManager_ProcessSingleOperation(m);
+    pending_queue_size--;
 }
 
 static void U6_PreloadManager_UpdatePreloading(PreloadManager* m)
@@ -777,37 +954,48 @@ static void U6_PreloadManager_UpdatePreloading(PreloadManager* m)
     processed_count = 0;
 }
 
+static long U4_PreloadManager_UpdatePreloadingSingleStep(PreloadManager* m, bool i)
+{
+    LOG(LL_TRACE, LCF_HACKS | LCF_FILEIO, "U4_PreloadManager_UpdatePreloadingSingleStep called with bool %d", i);
+
+    long ret = orig::U4_PreloadManager_UpdatePreloadingSingleStep(m, i);
+    
+    if (!ret) {
+        return ret;
+    }
+    
+    /* An operation was finished */
+    processed_count++;
+
+    /* In Unity 4, there is no non-parallel operations, so we don't have to 
+     * do anything here, all sync is done in U6_PreloadManager_AddToQueue */
+    return ret;
+}
+
 static long U6_PreloadManager_UpdatePreloadingSingleStep(PreloadManager* m, PreloadManager_UpdatePreloadingFlags f, int i)
 {
     LOG(LL_TRACE, LCF_HACKS | LCF_FILEIO, "U6_PreloadManager_UpdatePreloadingSingleStep called with flags %lx and int %d", f, i);
 
-    int non_parallel_operation_count_prev = *(int *)(m + 0x130);
+    bool was_pending_queue_size = pending_queue_size;
+    bool was_preload_thread_running = is_preload_thread_running;
 
     long ret = orig::U6_PreloadManager_UpdatePreloadingSingleStep(m, f, i);
     
-    if (ret)
-        processed_count++;
-    
-    int non_parallel_operation_count = *(int *)(m + 0x130);
-
-    if (non_parallel_operation_count == 0 && non_parallel_operation_count_prev != 0) {
-        /* We just executed a non-parallel operation, we must wait for all queued
-         * operations to be activated, or another non-parallel operation to be pushed. */
-        int pending_size = *(int *)(m + 0xb0);
-
-        int i;
-        for (i=0; (i < 1000) && (pending_size >= 0); i++) {
-            NATIVECALL(usleep(1000));
-            pending_size = *(long *)(m + 0xb0);
-            
-            non_parallel_operation_count = *(int *)(m + 0x130);
-            if (non_parallel_operation_count != 0)
-                break;
-        }
-        if (i == 1000) {
-            LOG(LL_WARN, LCF_HACKS | LCF_FILEIO, "    timeout waiting for queued operations to be processed by Loading.Preload thread");
-        }
+    /* If no operation was finished, we can return immediately, as there is no
+     * waiting to do. */
+    if (!ret) {
+        return ret;
     }
+    
+    /* An operation was finished */
+    processed_count++;
+    
+    /* If there are pending operations, it is likely that this call processed a
+     * non-parallel operation. Thus, we must wait for the Preload thread to 
+     * activate pending operations. We must also wait for the case of the very
+     * first call, as the Preload thread was not created yet. */
+    if ((was_pending_queue_size > 0) || !was_preload_thread_running)
+        Helper_PreloadManager_WaitForQueueToProcess(m, nullptr);
 
     return ret;
 }
@@ -821,12 +1009,31 @@ static void U6_PreloadManager_WaitForAllAsyncOperationsToComplete(PreloadManager
 static long U6_PreloadManager_Run(void* p)
 {
     LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    is_preload_thread_running = true;
     return orig::U6_PreloadManager_Run(p);
+}
+
+static PreloadManagerOperation* U2K_PreloadManager_PeekIntegrateQueue(PreloadManager* m)
+{
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    return orig::U2K_PreloadManager_PeekIntegrateQueue(m);
+}
+
+static bool U2K_PreloadManager_IsLoadingOrQueued(PreloadManager* m)
+{
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    return orig::U2K_PreloadManager_IsLoadingOrQueued(m);
 }
 
 static std::mutex async_read_mutex;
 static std::condition_variable async_read_condition;
 static bool async_read_complete = true;
+
+static void U5_AsyncReadManagerThreaded_WaitDone(AsyncReadManagerThreaded *t, AsyncReadCommand *c)
+{
+    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    return orig::U5_AsyncReadManagerThreaded_WaitDone(t, c);
+}
 
 static void U6_AsyncReadManagerThreaded_Request(AsyncReadManagerThreaded *t, AsyncReadCommand *c)
 {
@@ -842,6 +1049,18 @@ static void U6_AsyncReadManagerThreaded_Request(AsyncReadManagerThreaded *t, Asy
         return orig::U6_SyncReadRequest(c);
     }
 
+    if (orig::U2K_AsyncReadManagerThreaded_SyncRequest) {
+        return orig::U2K_AsyncReadManagerThreaded_SyncRequest(t, c);
+    }
+
+    /* This function is less preferable, because it still performs the read in
+     * another thread. */
+    if (orig::U5_AsyncReadManagerThreaded_WaitDone) {
+        orig::U6_AsyncReadManagerThreaded_Request(t, c);
+        orig::U5_AsyncReadManagerThreaded_WaitDone(t, c);
+        return;
+    }
+
     if (complete_callback != 0) {
         /* We wait until the complete callback is called. */
         std::unique_lock<std::mutex> lock(async_read_mutex);
@@ -854,6 +1073,14 @@ static void U6_AsyncReadManagerThreaded_Request(AsyncReadManagerThreaded *t, Asy
     else {
         orig::U6_AsyncReadManagerThreaded_Request(t, c);
     }
+}
+
+static void U2K_AsyncReadManagerThreaded_SyncRequest(AsyncReadManagerThreaded *t, AsyncReadCommand *c)
+{
+    char* filepath = *(char**)c;
+    LOG(LL_TRACE, LCF_HACKS | LCF_FILEIO, "U2K_AsyncReadManagerThreaded_SyncRequest called with file %s", filepath);
+    
+    return orig::U2K_AsyncReadManagerThreaded_SyncRequest(t, c);
 }
 
 /* These are all AsyncReadCommand complete callback used */
@@ -1002,6 +1229,8 @@ void UnityHacks::patch(int func, uint64_t addr)
     
     uintptr_t address = static_cast<uintptr_t>(addr);
     switch(func) {
+        FUNC_CASE(UNITY_VERSION, UnityVersion_UnityVersion)
+
         FUNC_CASE(UNITY4_JOBSCHEDULER_AWAKE, U4_JobScheduler_AwakeIdleWorkerThreads)
         FUNC_CASE(UNITY4_JOBSCHEDULER_FETCH, U4_JobScheduler_FetchNextJob)
         FUNC_CASE(UNITY4_JOBSCHEDULER_PROCESS, U4_JobScheduler_ProcessJob)
@@ -1054,11 +1283,16 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY6_PRELOADMANAGER_PREPARE, U6_PreloadManager_PrepareProcessingPreloadOperation)
         FUNC_CASE(UNITY6_PRELOADMANAGER_PROCESS, U6_PreloadManager_ProcessSingleOperation)
         FUNC_CASE(UNITY6_PRELOADMANAGER_UPDATE, U6_PreloadManager_UpdatePreloading)
+        FUNC_CASE(UNITY4_PRELOADMANAGER_UPDATE_STEP, U4_PreloadManager_UpdatePreloadingSingleStep)
         FUNC_CASE(UNITY6_PRELOADMANAGER_UPDATE_STEP, U6_PreloadManager_UpdatePreloadingSingleStep)
         FUNC_CASE(UNITY6_PRELOADMANAGER_WAIT, U6_PreloadManager_WaitForAllAsyncOperationsToComplete)
         FUNC_CASE(UNITY6_PRELOADMANAGER_RUN, U6_PreloadManager_Run)
+        FUNC_CASE(UNITY2K_PRELOADMANAGER_PEEK, U2K_PreloadManager_PeekIntegrateQueue)
+        FUNC_CASE(UNITY2K_PRELOADMANAGER_IS_LOADING, U2K_PreloadManager_IsLoadingOrQueued)
 
         FUNC_CASE(UNITY6_ASYNCREADMANAGER_REQUEST, U6_AsyncReadManagerThreaded_Request)
+        FUNC_CASE(UNITY5_ASYNCREADMANAGER_WAIT_DONE, U5_AsyncReadManagerThreaded_WaitDone)
+        FUNC_CASE(UNITY2K_ASYNCREADMANAGER_SYNC_REQUEST, U2K_AsyncReadManagerThreaded_SyncRequest)
         FUNC_CASE(UNITY6_ASYNCREADMANAGER_OPENCOMPLETE_CALLBACK, U6_AsyncReadManagerManaged_OpenCompleteCallback)
         FUNC_CASE(UNITY6_ASYNCREADMANAGER_READCOMPLETE_CALLBACK, U6_AsyncReadManagerManaged_ReadCompleteCallback)
         FUNC_CASE(UNITY6_ASYNCREADMANAGER_CLOSECOMPLETE_CALLBACK, U6_AsyncReadManagerManaged_CloseCompleteCallback)

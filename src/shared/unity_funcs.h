@@ -22,6 +22,7 @@
 
 /* List of message identification values that is sent from/to the game */
 enum {
+    UNITY_VERSION, // UnityVersion::UnityVersion(char const*)
     UNITY4_JOBSCHEDULER_AWAKE, // JobScheduler::AwakeIdleWorkerThreads(int)
     UNITY4_JOBSCHEDULER_FETCH, // JobScheduler::FetchNextJob(int&)
     UNITY4_JOBSCHEDULER_PROCESS, // JobScheduler::ProcessJob(JobInfo&, int)
@@ -72,10 +73,15 @@ enum {
     UNITY6_PRELOADMANAGER_PREPARE, // PreloadManager::PrepareProcessingPreloadOperation()
     UNITY6_PRELOADMANAGER_PROCESS, // PreloadManager::ProcessSingleOperation()
     UNITY6_PRELOADMANAGER_UPDATE, // PreloadManager::UpdatePreloading
+    UNITY4_PRELOADMANAGER_UPDATE_STEP, // PreloadManager::UpdatePreloadingSingleStep(bool)
     UNITY6_PRELOADMANAGER_UPDATE_STEP, // PreloadManager::UpdatePreloadingSingleStep(PreloadManager::UpdatePreloadingFlags, int)
     UNITY6_PRELOADMANAGER_WAIT, // PreloadManager::WaitForAllAsyncOperationsToComplete()
     UNITY6_PRELOADMANAGER_RUN, // PreloadManager::Run(void*)
+    UNITY2K_PRELOADMANAGER_PEEK, // PreloadManager::PeekIntegrateQueue()
+    UNITY2K_PRELOADMANAGER_IS_LOADING, // PreloadManager::IsLoadingOrQueued()
     UNITY6_ASYNCREADMANAGER_REQUEST, // AsyncReadManagerThreaded::Request(AsyncReadCommand*)
+    UNITY5_ASYNCREADMANAGER_WAIT_DONE, // AsyncReadManagerThreaded::WaitDone(AsyncReadCommand*)
+    UNITY2K_ASYNCREADMANAGER_SYNC_REQUEST, // AsyncReadManagerThreaded::SyncRequest(AsyncReadCommand*)
     UNITY6_ASYNCREADMANAGER_OPENCOMPLETE_CALLBACK, // AsyncReadManagerManaged::OpenCompleteCallback(AsyncReadCommand&, AsyncReadCommand::Status)
     UNITY6_ASYNCREADMANAGER_READCOMPLETE_CALLBACK, // AsyncReadManagerManaged::ReadCompleteCallback(AsyncReadCommand&, AsyncReadCommand::Status)
     UNITY6_ASYNCREADMANAGER_CLOSECOMPLETE_CALLBACK, // AsyncReadManagerManaged::CloseCompleteCallback(AsyncReadCommand&, AsyncReadCommand::Status)

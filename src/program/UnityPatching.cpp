@@ -45,6 +45,11 @@ struct usig_t {
 
 const static usymbol_t UNITY_SYMBOLS[] = {
     {
+        UNITY_VERSION,
+        "UnityVersion::UnityVersion",
+        "_ZN12UnityVersionC2EPKc",
+    },
+    {
         UNITY4_JOBSCHEDULER_AWAKE,
         "JobScheduler::AwakeIdleWorkerThreads",
         "_ZN12JobScheduler22AwakeIdleWorkerThreadsEi",
@@ -295,6 +300,11 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN14PreloadManager16UpdatePreloadingEv",
     },
     {
+        UNITY4_PRELOADMANAGER_UPDATE_STEP,
+        "PreloadManager::UpdatePreloadingSingleStep",
+        "_ZN14PreloadManager26UpdatePreloadingSingleStepEb.constprop.207",
+    },
+    {
         UNITY6_PRELOADMANAGER_UPDATE_STEP,
         "PreloadManager::UpdatePreloadingSingleStep",
         "_ZN14PreloadManager26UpdatePreloadingSingleStepENS_21UpdatePreloadingFlagsEi",
@@ -310,9 +320,29 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN14PreloadManager3RunEPv",
     },
     {
+        UNITY2K_PRELOADMANAGER_PEEK,
+        "PreloadManager::PeekIntegrateQueue",
+        "_ZN14PreloadManager18PeekIntegrateQueueEv",
+    },
+    {
+        UNITY2K_PRELOADMANAGER_IS_LOADING,
+        "PreloadManager::IsLoadingOrQueued",
+        "_ZN14PreloadManager17IsLoadingOrQueuedEv",
+    },
+    {
+        UNITY5_ASYNCREADMANAGER_WAIT_DONE,
+        "AsyncReadManagerThreaded::WaitDone",
+        "_ZN24AsyncReadManagerThreaded8WaitDoneEP16AsyncReadCommand",
+    },
+    {
         UNITY6_ASYNCREADMANAGER_REQUEST,
         "AsyncReadManagerThreaded::Request",
         "_ZN24AsyncReadManagerThreaded7RequestEP16AsyncReadCommand",
+    },
+    {
+        UNITY2K_ASYNCREADMANAGER_SYNC_REQUEST,
+        "AsyncReadManagerThreaded::SyncRequest",
+        "_ZN24AsyncReadManagerThreaded11SyncRequestEP16AsyncReadCommand",
     },
     {
         UNITY6_ASYNCREADMANAGER_OPENCOMPLETE_CALLBACK,
@@ -414,6 +444,14 @@ const static usig_t UNITY_SIGNATURES_32[] = {
 };
 
 const static usig_t UNITY_SIGNATURES_64[] = {
+    {
+        UNITY_VERSION,
+        "53 48 8d 57 14 48 83 ec 50 64 48 8b 04 25 28 00 00 00 48 89 44 24 48",
+    },
+    {
+        UNITY_VERSION,
+        "41 56 53 48 81 ec 98 00 00 00 0f 57 c0 0f 11 07",
+    },
     {
         UNITY4_JOBSCHEDULER_FETCH,
         "41 54 55 48 89 F5 53 48 89 FB 48 83 EC 30 48 63 06 8B 57 7C 39 D0"
