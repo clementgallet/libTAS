@@ -49,6 +49,9 @@ private:
     ToolTipCheckBox *timingArmaCwa;
     ToolTipCheckBox *syncCeleste;
     ToolTipCheckBox *syncWitness;
+    ToolTipCheckBox *syncUnityJobs;
+    ToolTipCheckBox *syncUnityLoads;
+    ToolTipCheckBox *syncUnityReads;
 
 public slots:
     void loadConfig();

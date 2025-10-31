@@ -49,11 +49,17 @@ void GameSpecificPane::initLayout()
     /* Sync settings */
     syncCeleste = new ToolTipCheckBox("Celeste");
     syncWitness = new ToolTipCheckBox("The Witness");
+    syncUnityJobs = new ToolTipCheckBox("Unity Jobs");
+    syncUnityLoads = new ToolTipCheckBox("Unity Loads");
+    syncUnityReads = new ToolTipCheckBox("Unity Reads");
 
     syncGroupBox = new QGroupBox(tr("Sync settings"));
     QVBoxLayout *syncLayout = new QVBoxLayout;
     syncLayout->addWidget(syncCeleste);
     syncLayout->addWidget(syncWitness);
+    syncLayout->addWidget(syncUnityJobs);
+    syncLayout->addWidget(syncUnityLoads);
+    syncLayout->addWidget(syncUnityReads);
     syncGroupBox->setLayout(syncLayout);
 
     /* Create the main layout */
@@ -72,6 +78,9 @@ void GameSpecificPane::initSignals()
     connect(timingArmaCwa, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
     connect(syncCeleste, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
     connect(syncWitness, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
+    connect(syncUnityJobs, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
+    connect(syncUnityLoads, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
+    connect(syncUnityReads, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
 }
 
 void GameSpecificPane::initToolTips()
@@ -92,6 +101,20 @@ void GameSpecificPane::initToolTips()
     syncWitness->setTitle("The Witness Sync");
     syncWitness->setDescription("Sync main thread with rendering thread, by hooking "
     "specific wined3d functions.");
+
+    syncUnityJobs->setTitle("Unity Jobs Sync");
+    syncUnityJobs->setDescription("When a job is scheduled, it waits for the job to "
+    "be finished. Also, when multiple jobs are scheduled at the same time (e.g. with "
+    "a parallel for), then it schedules and waits for each job one at a time.");
+
+    syncUnityLoads->setTitle("Unity Loads Sync");
+    syncUnityLoads->setDescription("When a preload operation is added to the queue "
+    "it waits for the operation to be processed by the Preload thread.");
+
+    syncUnityReads->setTitle("Unity Reads Sync");
+    syncUnityReads->setDescription("When an async read is performed, it tries to "
+    "perform the read synchronously. Either by doing the read itself, or by "
+    "scheduling and waiting for the read to be finished.");
 }
 
 void GameSpecificPane::showEvent(QShowEvent *event)
@@ -105,6 +128,9 @@ void GameSpecificPane::loadConfig()
     timingArmaCwa->setChecked(context->config.sc.game_specific_timing & SharedConfig::GC_TIMING_ARMA_CWA);
     syncCeleste->setChecked(context->config.sc.game_specific_sync & SharedConfig::GC_SYNC_CELESTE);
     syncWitness->setChecked(context->config.sc.game_specific_sync & SharedConfig::GC_SYNC_WITNESS);
+    syncUnityJobs->setChecked(context->config.sc.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS);
+    syncUnityLoads->setChecked(context->config.sc.game_specific_sync & SharedConfig::GC_SYNC_UNITY_LOADS);
+    syncUnityReads->setChecked(context->config.sc.game_specific_sync & SharedConfig::GC_SYNC_UNITY_READS);
 }
 
 void GameSpecificPane::saveConfig()
@@ -116,6 +142,9 @@ void GameSpecificPane::saveConfig()
     context->config.sc.game_specific_sync = 0;
     context->config.sc.game_specific_sync |= syncCeleste->isChecked()? SharedConfig::GC_SYNC_CELESTE : 0;
     context->config.sc.game_specific_sync |= syncWitness->isChecked()? SharedConfig::GC_SYNC_WITNESS : 0;
+    context->config.sc.game_specific_sync |= syncUnityJobs->isChecked()? SharedConfig::GC_SYNC_UNITY_JOBS : 0;
+    context->config.sc.game_specific_sync |= syncUnityLoads->isChecked()? SharedConfig::GC_SYNC_UNITY_LOADS : 0;
+    context->config.sc.game_specific_sync |= syncUnityReads->isChecked()? SharedConfig::GC_SYNC_UNITY_READS : 0;
 
     context->config.sc_modified = true;
 }

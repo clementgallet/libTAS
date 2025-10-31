@@ -237,6 +237,9 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     {
         GC_SYNC_CELESTE = 0x01,
         GC_SYNC_WITNESS = 0x02,
+        GC_SYNC_UNITY_JOBS = 0x04,
+        GC_SYNC_UNITY_LOADS = 0x08,
+        GC_SYNC_UNITY_READS = 0x10,
     };
 
     /* Game-specific timing settings */
