@@ -30,8 +30,8 @@ namespace libtas {
 
 Profiler::Database& Profiler::Database::get()
 {
-    static thread_local Profiler::Database tlDatabase;
-    return tlDatabase;
+    static thread_local Profiler::Database* tlDatabase = new Profiler::Database;
+    return *tlDatabase;
 }
 
 Profiler::ScopeInfo& Profiler::Database::initNode(const char* label)
