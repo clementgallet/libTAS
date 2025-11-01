@@ -60,3 +60,29 @@ bool MovieFileChangeLog::redo()
     emit updateChangeLog();
     return true;
 }
+
+void MovieFileChangeLog::push(IMovieAction* action)
+{
+    int actionCount = count();
+    int currentAction = index();
+    
+    int actionsToRemove = actionCount - currentAction - 1;
+    
+    /* If we reached the stack limit, the stack size won't change */
+    if (actionCount == undoLimit())
+        actionsToRemove = 0;
+    
+    if (actionsToRemove == -1)
+        emit historyToBeInserted(actionCount);
+    else if (actionsToRemove > 0)
+        emit historyToBeRemoved(currentAction+1, actionCount-1);
+
+    QUndoStack::push(action);
+
+    if (actionsToRemove == -1)
+        emit historyInserted();
+    else if (actionsToRemove > 0)
+        emit historyRemoved();
+    else
+        emit updateChangeLog();
+}

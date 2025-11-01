@@ -29,11 +29,13 @@
 
 InputChangeLogModel::InputChangeLogModel(Context* c, MovieFile* m, QObject *parent) : QAbstractItemModel(parent), context(c), movie(m) {
     // connect(movie->changelog, &MovieFileChangeLog::updateChangeLog, this, &InputChangeLogModel::updateChangeLog);
-    // connect(movie->changelog, &MovieFileChangeLog::beginAddHistory, this, &InputChangeLogModel::beginAddHistory);
-    // connect(movie->changelog, &MovieFileChangeLog::endAddHistory, this, &InputChangeLogModel::endAddHistory);
-    // connect(movie->changelog, &MovieFileChangeLog::beginRemoveHistory, this, &InputChangeLogModel::beginRemoveHistory);
-    // connect(movie->changelog, &MovieFileChangeLog::endRemoveHistory, this, &InputChangeLogModel::endRemoveHistory);
+    connect(movie->changelog, &MovieFileChangeLog::historyToBeInserted, this, &InputChangeLogModel::beginAddHistory);
+    connect(movie->changelog, &MovieFileChangeLog::historyInserted, this, &InputChangeLogModel::endAddHistory);
+    connect(movie->changelog, &MovieFileChangeLog::historyToBeRemoved, this, &InputChangeLogModel::beginRemoveHistory);
+    connect(movie->changelog, &MovieFileChangeLog::historyRemoved, this, &InputChangeLogModel::endRemoveHistory);
     // connect(movie->changelog, &MovieFileChangeLog::changeHistory, this, &InputChangeLogModel::changeHistory);
+    connect(movie->inputs, &MovieFileInputs::inputsToBeReset, this, &InputChangeLogModel::beginResetModel);
+    connect(movie->inputs, &MovieFileInputs::inputsReset, this, &InputChangeLogModel::endResetModel);
 }
 
 int InputChangeLogModel::rowCount(const QModelIndex & /*parent*/) const
@@ -129,7 +131,7 @@ QVariant InputChangeLogModel::data(const QModelIndex &index, int role) const
 
 void InputChangeLogModel::updateChangeLog()
 {
-    beginResetModel();
+    // beginResetModel();
     
     /* Disable all items that would need a rewind */
     int currentRow = movie->changelog->index();
@@ -151,28 +153,31 @@ void InputChangeLogModel::updateChangeLog()
         }
     }
     
-    endResetModel();
+    // endResetModel();
 }
 
-// void InputChangeLogModel::beginAddHistory(int frame)
-// {
-//     beginInsertRows(QModelIndex(), frame, frame);
-// }
-// 
-// void InputChangeLogModel::endAddHistory()
-// {
-//     endInsertRows();
-// }
-// 
-// void InputChangeLogModel::beginRemoveHistory(int first_frame, int last_frame)
-// {
-//     beginRemoveRows(QModelIndex(), first_frame, last_frame);
-// }
-// 
-// void InputChangeLogModel::endRemoveHistory()
-// {
-//     endRemoveRows();
-// }
+void InputChangeLogModel::beginAddHistory(int row)
+{
+    beginInsertRows(QModelIndex(), row, row);
+}
+
+void InputChangeLogModel::endAddHistory()
+{
+    endInsertRows();
+    updateChangeLog();
+}
+
+void InputChangeLogModel::beginRemoveHistory(int first_row, int last_row)
+{
+    beginRemoveRows(QModelIndex(), first_row, last_row);
+}
+
+void InputChangeLogModel::endRemoveHistory()
+{
+    endRemoveRows();
+    updateChangeLog();
+}
+
 // 
 // void InputChangeLogModel::changeHistory(int frame)
 // {

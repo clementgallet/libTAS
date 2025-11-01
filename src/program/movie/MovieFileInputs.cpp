@@ -70,8 +70,8 @@ void MovieFileInputs::clear()
     modifiedSinceLastStateLoad = false;
     emit inputsToBeReset();
     input_list.clear();
-    emit inputsReset();
     movie_changelog->clear();
+    emit inputsReset();
 }
 
 void MovieFileInputs::load()
@@ -237,8 +237,8 @@ void MovieFileInputs::copyFrom(const MovieFileInputs* movie_inputs)
     emit inputsToBeReset();
     input_list.resize(movie_inputs->input_list.size());
     std::copy(movie_inputs->input_list.begin(), movie_inputs->input_list.end(), input_list.begin());
-    emit inputsReset();
     movie_changelog->clear();
+    emit inputsReset();
 }
 
 void MovieFileInputs::close()

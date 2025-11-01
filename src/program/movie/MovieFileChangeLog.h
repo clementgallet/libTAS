@@ -40,12 +40,20 @@ public:
     MovieFileChangeLog(Context* c);
 
     bool undo();
-    bool redo();    
+    bool redo();
+
+    void push(IMovieAction* action);
+    
 private:
     Context* context;
 
 signals:
     void updateChangeLog();
+    void historyToBeRemoved(int first_row, int last_row);
+    void historyRemoved();
+    void historyToBeInserted(int row);
+    void historyInserted();
+
 };
 
 #endif

@@ -51,10 +51,10 @@ private:
 public slots:
     void updateChangeLog();
     // void endResetHistory();
-    // void beginAddHistory(int frame);
-    // void endAddHistory();
-    // void beginRemoveHistory(int first_frame, int last_frame);
-    // void endRemoveHistory();
+    void beginAddHistory(int row);
+    void endAddHistory();
+    void beginRemoveHistory(int first_row, int last_row);
+    void endRemoveHistory();
     // void changeHistory(int frame);
 };
 
