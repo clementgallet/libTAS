@@ -27,6 +27,7 @@
 #include "MachVmMaps.h"
 #endif
 
+#include "Profiler.h"
 #include "logging.h"
 #include "hook.h"
 #include "global.h"
@@ -58,6 +59,11 @@ void ThreadManager::init()
     ThreadInfo* thread = new ThreadInfo;
     thread->state = ThreadInfo::ST_RUNNING;
     thread->detached = false;
+    
+    /* Usually the main thread is not given a name, so we name it */
+    if (thread->name.empty())
+        thread->name = "Main";
+    
     initThreadFromChild(thread);
 
     setMainThread();
@@ -251,6 +257,9 @@ void ThreadManager::initThreadFromChild(ThreadInfo* thread)
     pthread_attr_t attrs;
     pthread_getattr_np(thread->pthread_id, &attrs);
     pthread_attr_getstack(&attrs, &thread->stack_addr, &thread->stack_size);
+
+    /* Attach thread_local profiler so that it is accessible by main thread */
+    thread->profilerDatabase = &Profiler::Database::get();
 
     addToList(thread);
 

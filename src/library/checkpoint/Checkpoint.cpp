@@ -277,11 +277,10 @@ void Checkpoint::handler(int signum, siginfo_t *info, void *ucontext)
         }
 #endif
 
-        TimeHolder old_time, new_time, delta_time;
-        clock_gettime(CLOCK_MONOTONIC, &old_time);
+        TimeHolder old_time = TimeHolder::now();
         readAllAreas();
-        clock_gettime(CLOCK_MONOTONIC, &new_time);
-        delta_time = new_time - old_time;
+        TimeHolder new_time = TimeHolder::now();
+        TimeHolder delta_time = new_time - old_time;
         LOG(LL_INFO, LCF_CHECKPOINT, "Loaded state %d in %f seconds", ss_index, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
 
         /* Loading state was overwritten, putting the right value again */
@@ -1045,8 +1044,8 @@ static void writeAllAreas(bool base)
         ThreadManager::restoreTid();
     }
 
-    TimeHolder old_time, new_time, delta_time;
-    clock_gettime(CLOCK_MONOTONIC, &old_time);
+    TimeHolder old_time = TimeHolder::now();
+    TimeHolder new_time, delta_time;
 
     int pmfd, pfd;
 
@@ -1184,7 +1183,7 @@ static void writeAllAreas(bool base)
         rename(temppagespath, pagespath);
     }
 
-    clock_gettime(CLOCK_MONOTONIC, &new_time);
+    new_time = TimeHolder::now();
     delta_time = new_time - old_time;
     LOG(LL_INFO, LCF_CHECKPOINT, "Saved state %d of size %zu in %f seconds", base?0:ss_index, savestate_size, delta_time.tv_sec + ((double)delta_time.tv_nsec) / 1000000000.0);
 

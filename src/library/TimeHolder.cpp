@@ -18,10 +18,19 @@
  */
 
 #include "TimeHolder.h"
+#include "GlobalState.h"
 
 #include <iostream>
+#include <time.h>
 
 namespace libtas {
+
+TimeHolder TimeHolder::now()
+{
+    TimeHolder t;
+    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &t));
+    return t;
+}
 
 void TimeHolder::shiftadd(TimeHolder& pow, int m)
 {
@@ -50,5 +59,11 @@ void TimeHolder::normalize()
         this->tv_sec += sec;
     }
 }
+
+float TimeHolder::toMs() const
+{
+    return this->tv_sec * 1000.0 + this->tv_nsec / 1000000.0;
+}
+
 
 }

@@ -154,6 +154,7 @@ static void sendFrameCountTime()
 void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 {
     perfTimer.switchTimer(PerfTimer::FrameTimer);
+    PROFILE_SCOPE("Frame");
 
     static float fps, lfps = 0;
 
@@ -583,6 +584,9 @@ static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllI
 
 static void receive_messages(std::function<void()> draw, RenderHUD& hud)
 {
+    PROFILE_SCOPE("Wait");
+    Profiler::PauseGuard pg;
+
     AllInputsFlat preview_ai;
     preview_ai.clear();
     std::string savestatepath;

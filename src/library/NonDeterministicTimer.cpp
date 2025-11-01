@@ -37,7 +37,7 @@ NonDeterministicTimer& NonDeterministicTimer::get() {
 
 void NonDeterministicTimer::initialize(int64_t initial_sec, int64_t initial_nsec)
 {
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lasttime));
+    lasttime = TimeHolder::now();
     ticks = {static_cast<time_t>(initial_sec), static_cast<time_t>(initial_nsec)};
     lastEnterTicks = ticks;
     inFB = false;
@@ -63,8 +63,7 @@ struct timespec NonDeterministicTimer::getTicks(void)
     std::lock_guard<std::mutex> lock(ticks_mutex);
 
     /* Get the real clock time */
-    TimeHolder realtime;
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &realtime));
+    TimeHolder realtime = TimeHolder::now();
 
     /* Compute the difference from the last call */
     TimeHolder delta = realtime - lasttime;
@@ -105,8 +104,7 @@ TimeHolder NonDeterministicTimer::enterFrameBoundary()
     getTicks();
     inFB = true;
 
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastEnterTime));
-
+    lastEnterTime = TimeHolder::now();
     lastEnterTicks = ticks;
 
     TimeHolder elapsedTicks = ticks - lastEnterTicks;
@@ -116,7 +114,7 @@ TimeHolder NonDeterministicTimer::enterFrameBoundary()
 void NonDeterministicTimer::exitFrameBoundary()
 {
     LOGTRACE(LCF_TIMEGET);
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastExitTime));
+    lastExitTime = TimeHolder::now();
     inFB = false;
     frame_mutex.unlock();
 }

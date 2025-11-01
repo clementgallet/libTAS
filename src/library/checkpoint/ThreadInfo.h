@@ -23,6 +23,7 @@
 #define LIBTAS_THREAD_INFO_H
 
 #include "ThreadLocalStorage.h"
+#include "Profiler.h"
 
 #include <atomic>
 #ifndef _XOPEN_SOURCE
@@ -79,6 +80,8 @@ struct ThreadInfo {
 
     bool unityThread = false; // is unity wait thread
     int unityJobCount = 0; // job count executed by this thread during the current frame
+
+    Profiler::Database* profilerDatabase;
 
     ThreadInfo *next = nullptr; // next thread info in the linked list
     ThreadInfo *prev = nullptr; // previous thread info in the linked list

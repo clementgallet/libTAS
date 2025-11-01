@@ -23,6 +23,7 @@
 #include "FrameWindow.h"
 #include "InputsWindow.h"
 #include "LogWindow.h"
+#include "ProfilerDebug.h"
 #include "LuaDraw.h"
 #include "MessageWindow.h"
 #include "WatchesWindow.h"
@@ -128,6 +129,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
     static bool show_lua = true;
     static bool show_crosshair = false;
     static bool show_log = false;
+    static bool show_profiler = false;
     static bool show_audio = false;
     static bool show_unity = false;
     static bool show_demo = false;
@@ -203,6 +205,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
             }
             if (ImGui::BeginMenu("Debug")) {
                 ImGui::MenuItem("Log", nullptr, &show_log);
+                ImGui::MenuItem("Profiler", nullptr, &show_profiler);
                 ImGui::MenuItem("Audio", nullptr, &show_audio);
                 ImGui::MenuItem("File", nullptr, &show_file);
                 ImGui::MenuItem("Unity", nullptr, &show_unity, UnityHacks::isUnity());
@@ -253,6 +256,9 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
     if (show_log)
         LogWindow::draw(&show_log);
 
+    if (show_profiler)
+        ProfilerDebug::draw(&show_profiler);
+
     if (show_audio)
         AudioDebug::draw(framecount, &show_audio);
 
@@ -281,13 +287,11 @@ bool RenderHUD::doRender()
     static TimeHolder lastTime{}; // -> member, update on render
     
     if (lastTime.tv_sec == 0) {
-        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastTime));
+        lastTime = TimeHolder::now();
         return true;
     }
 
-    TimeHolder currentTime;
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &currentTime));
-    
+    TimeHolder currentTime = TimeHolder::now();
     TimeHolder deltaTime = currentTime - lastTime;
     if (deltaTime > stepTime) {
         lastTime = currentTime;

@@ -36,8 +36,7 @@ static std::list<std::pair<std::string, TimeHolder>> messages;
 void MessageWindow::insert(const char* message)
 {
     /* Get current time */
-    TimeHolder current_time;
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &current_time));
+    TimeHolder current_time = TimeHolder::now();
 
     messages.push_back(std::make_pair(std::string(message), current_time));
 }
@@ -50,8 +49,7 @@ void MessageWindow::draw()
     message_timeout = {2, 0};
 
     /* Get current time */
-    TimeHolder current_time;
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &current_time));
+    TimeHolder current_time = TimeHolder::now();
 
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
     

@@ -62,7 +62,7 @@ void FPSMonitor::tickFrame(uint64_t framecount, float* fps, float* lfps)
 
         /* Update current time */
         TimeHolder lastTime = lastTimes[compute_counter];
-        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastTimes[compute_counter]));
+        lastTimes[compute_counter] = TimeHolder::now();
 
         /* Update current ticks */
         TimeHolder lastTick = lastTicks[compute_counter];
@@ -104,7 +104,7 @@ float FPSMonitor::tickRedraw()
 
     /* Update current time */
     const TimeHolder lastTime = lastTimes[compute_counter];
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastTimes[compute_counter]));
+    lastTimes[compute_counter] = TimeHolder::now();
     const TimeHolder currentTime = lastTimes[compute_counter];
 
     if (++compute_counter >= history_length) {

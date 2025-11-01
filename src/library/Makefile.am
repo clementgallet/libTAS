@@ -19,6 +19,7 @@ libtas_so_SOURCES = \
     main.cpp \
     NonDeterministicTimer.cpp \
     PerfTimer.cpp \
+    Profiler.cpp \
     Stack.cpp \
     TimeHolder.cpp \
     UnityHacks.cpp \
@@ -112,6 +113,7 @@ libtas_so_SOURCES = \
     renderhud/LuaDraw.cpp \
     renderhud/MessageWindow.cpp \
     renderhud/WatchesWindow.cpp \
+    renderhud/ProfilerDebug.cpp \
     renderhud/RenderHUD_GL.cpp \
     renderhud/RenderHUD_SDL2_renderer.cpp \
     renderhud/RenderHUD_Vulkan.cpp \

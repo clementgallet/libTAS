@@ -20,6 +20,7 @@
 #include "DeterministicTimer.h"
 #include "NonDeterministicTimer.h"
 #include "logging.h"
+#include "Profiler.h"
 #include "checkpoint/ThreadManager.h"
 #include "frame.h"
 #include "general/timewrappers.h" // clock_gettime
@@ -246,13 +247,14 @@ void DeterministicTimer::exitFrameBoundary()
     /* We sleep the right amount of time so that the game runs at normal speed */
 
     /* Get the current actual time */
-    TimeHolder currentTime;
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &currentTime));
+    TimeHolder currentTime = TimeHolder::now();
 
     /* If we are not fast forwarding, and not the first frame,
      * then we wait the delta amount of time.
      */
     if (Global::shared_config.running && !(Global::shared_config.fastforward && (Global::shared_config.fastforward_mode & SharedConfig::FF_SLEEP))) {
+        PROFILE_SCOPE("Sleep");
+
         TimeHolder desiredTime = lastEnterTime + baseTimeIncrement * Global::shared_config.speed_divisor;
 
         /* Call the real nanosleep function */
@@ -357,7 +359,7 @@ void DeterministicTimer::initialize(int64_t initial_sec, int64_t initial_nsec)
 
     setFramerate(Global::shared_config.initial_framerate_num, Global::shared_config.initial_framerate_den);
 
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &lastEnterTime));
+    lastEnterTime = TimeHolder::now();
 
     for (int i = 0; i < SharedConfig::TIMETYPE_NUMTRACKEDTYPES; i++) {
         main_gettimes[i] = 0;

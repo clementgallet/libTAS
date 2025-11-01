@@ -30,15 +30,12 @@ void PerfTimer::switchTimer(TimerType type)
 {
     /* Stop and increase old timer */
     if (current_type != NoTimer) {
-        TimeHolder end_time;
-        NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &end_time));
-        
-        elapsed[current_type] += (end_time - current_time[current_type]);
+        elapsed[current_type] += (TimeHolder::now() - current_time[current_type]);
     }
     
     /* Start new timer */
     current_type = type;
-    NATIVECALL(clock_gettime(CLOCK_MONOTONIC, &current_time[current_type]));
+    current_time[current_type] = TimeHolder::now();
 }
 
 PerfTimer::TimerType PerfTimer::currentTimer()
