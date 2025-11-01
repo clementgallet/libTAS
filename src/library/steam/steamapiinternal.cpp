@@ -40,7 +40,6 @@ DEFINE_ORIG_POINTER(SteamInternal_CreateInterface)
 DEFINE_ORIG_POINTER(SteamInternal_FindOrCreateUserInterface)
 DEFINE_ORIG_POINTER(SteamInternal_FindOrCreateGameServerInterface)
 DEFINE_ORIG_POINTER(SteamInternal_SteamAPI_Init)
-DEFINE_ORIG_POINTER(_ZN16CSteamAPIContext4InitEv)
 
 HSteamUser SteamAPI_GetHSteamUser()
 {
@@ -239,40 +238,6 @@ void * SteamInternal_FindOrCreateGameServerInterface(HSteamUser steam_user, cons
     if (func)
         return func();
     return nullptr;
-}
-
-bool _ZN16CSteamAPIContext4InitEv(CSteamAPIContext* context)
-{
-    LOGTRACE(LCF_STEAM);
-    if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(_ZN16CSteamAPIContext4InitEv, "steam_api");
-        return orig::_ZN16CSteamAPIContext4InitEv(context);
-    }
-
-    GlobalNoLog gnl;
-    context->m_pSteamClient = SteamClient();
-    context->m_pSteamUser = SteamUser();
-    context->m_pSteamUserStats = SteamUserStats();
-    context->m_pSteamUtils = SteamUtils();
-    context->m_pSteamRemoteStorage = SteamRemoteStorage();
-    context->m_pSteamApps = SteamApps();
-    context->m_pSteamFriends = SteamFriends();
-    context->m_pSteamScreenshots = SteamScreenshots();
-    context->m_pSteamUGC = SteamUGC();
-    context->m_pSteamMatchmaking = SteamMatchmaking();
-    context->m_pSteamMatchmakingServers = SteamMatchmakingServers();
-    context->m_pSteamHTTP = SteamHTTP();
-    context->m_pSteamNetworking = SteamNetworking();
-    context->m_pController = SteamController();
-    context->m_pSteamAppList = nullptr;
-    context->m_pSteamMusic = nullptr;
-    context->m_pSteamMusicRemote = nullptr;
-    context->m_pSteamHTMLSurface = nullptr;
-    context->m_pSteamInventory = nullptr;
-    context->m_pSteamVideo = nullptr;
-    context->m_pSteamParentalSettings = nullptr;
-
-    return true;
 }
 
 int SteamInternal_SteamAPI_Init( const char *pszVersion, char** error )
