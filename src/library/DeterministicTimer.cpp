@@ -253,7 +253,8 @@ void DeterministicTimer::exitFrameBoundary()
      * then we wait the delta amount of time.
      */
     if (Global::shared_config.running && !(Global::shared_config.fastforward && (Global::shared_config.fastforward_mode & SharedConfig::FF_SLEEP))) {
-        PROFILE_SCOPE("Sleep");
+        PROFILE_SCOPE("Sleep", PROFILER_INFO_FRAME);
+        PROFILE_PAUSE(PAUSE_ON_SLEEP);
 
         TimeHolder desiredTime = lastEnterTime + baseTimeIncrement * Global::shared_config.speed_divisor;
 

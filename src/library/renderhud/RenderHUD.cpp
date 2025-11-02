@@ -257,7 +257,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         LogWindow::draw(&show_log);
 
     if (show_profiler)
-        ProfilerDebug::draw(&show_profiler);
+        ProfilerDebug::draw(framecount, &show_profiler);
 
     if (show_audio)
         AudioDebug::draw(framecount, &show_audio);

@@ -154,7 +154,7 @@ static void sendFrameCountTime()
 void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 {
     perfTimer.switchTimer(PerfTimer::FrameTimer);
-    PROFILE_SCOPE("Frame");
+    PROFILE_SCOPE("Frame", PROFILER_INFO_FRAME);
 
     static float fps, lfps = 0;
 
@@ -190,6 +190,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     /* Mix audio, except if the game opened a loopback context */
     AudioContext& audiocontext = AudioContext::get();
     if (! audiocontext.isLoopback) {
+        PROFILE_SCOPE("Audio Mix", PROFILER_INFO_FRAME);
         audiocontext.mixAllSources(timeIncrement);
     }
 
@@ -310,6 +311,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 
     /* Copy the screen window */
     if (!Global::skipping_draw && draw) {
+        PROFILE_SCOPE("Copy Screen", PROFILER_INFO_FRAME);
         ScreenCapture::copyScreenToSurface();
     }
 
@@ -335,6 +337,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     if (!Global::skipping_draw && draw) {
         GlobalNoLog gnl;
         perfTimer.switchTimer(PerfTimer::RenderTimer);
+        PROFILE_SCOPE("Draw", PROFILER_INFO_FRAME);
         NATIVECALL(draw());
         perfTimer.switchTimer(PerfTimer::FrameTimer);
     }
@@ -505,6 +508,8 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 
     detTimer.exitFrameBoundary(); // Also releasing the lock on frame boundary
     
+    Profiler::newFrame();
+    
     // if ((framecount % 10000) == 9999)
     //     perfTimer.print();
 }
@@ -584,8 +589,8 @@ static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllI
 
 static void receive_messages(std::function<void()> draw, RenderHUD& hud)
 {
-    PROFILE_SCOPE("Wait");
-    Profiler::PauseGuard pg;
+    PROFILE_SCOPE("Wait", PROFILER_INFO_FRAME);
+    PROFILE_PAUSE(PAUSE_ON_IDLE);
 
     AllInputsFlat preview_ai;
     preview_ai.clear();

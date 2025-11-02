@@ -29,11 +29,12 @@ namespace libtas {
 
 namespace ProfilerDebug
 {
-    void nodeToPos(const Profiler::ScopeInfo& info, float& leftPos, float& lengthPos, float available_size);
+    void nodeToPos(const TimeHolder& startTime, const TimeHolder& lengthTime, float available_size, float& lengthTimeMs, float& leftPos, float& lengthPos);
     
+    void renderFrame(int f, const TimeHolder& frame_start, const TimeHolder& frame_end, float available_start, float available_size);
     void renderNode(int nodeId, const Profiler::Database* database, float available_start, float available_size);
 
-    void draw(bool* p_open);
+    void draw(uint64_t framecount, bool* p_open);
 }
 
 }

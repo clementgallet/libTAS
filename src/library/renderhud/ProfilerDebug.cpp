@@ -25,41 +25,76 @@
 #include "../external/imgui/imgui.h"
 #include "global.h"
 
+#include <limits>
+
 namespace libtas {
 
 static float timeWindowMs = 1000;
 static int timeWindowFrames = 1;
 static int windowUnitType = 0;
 static TimeHolder currentTime;
+static float firstColWidth = 0;
 
-void ProfilerDebug::nodeToPos(const Profiler::ScopeInfo& info, float& leftPos, float& lengthPos, float available_size)
+/* Lowest time that a node is registered, for setting the window scroll size */
+static TimeHolder minTime = nullTime;
+
+void ProfilerDebug::nodeToPos(const TimeHolder& startTime, const TimeHolder& lengthTime, float available_size, float& lengthTimeMs, float& leftPos, float& lengthPos)
 {
-    TimeHolder leftTime = currentTime - info.startTime;
+    TimeHolder leftTime = startTime - minTime;
+    leftPos = (leftTime.toMs() / timeWindowMs) * available_size;
 
-    leftPos = (1 - (leftTime.toMs() / timeWindowMs)) * available_size;
-    if (info.lengthTime != nullTime)
-        lengthPos = (info.lengthTime.toMs() / timeWindowMs) * available_size;
-    else
-        lengthPos = (leftTime.toMs() / timeWindowMs) * available_size;
-        
-    if (leftPos < 0) {
-        lengthPos += leftPos;
-        leftPos = 0;
+    TimeHolder newLengthTime = lengthTime;
+    if (!(newLengthTime != nullTime))
+        newLengthTime = currentTime - startTime;
+    lengthTimeMs = newLengthTime.toMs();
+
+    lengthPos = (lengthTimeMs / timeWindowMs) * available_size;
+}
+
+void ProfilerDebug::renderFrame(int f, const TimeHolder& frame_start, const TimeHolder& frame_end, float available_start, float available_size)
+{
+    TimeHolder frame_length = frame_end - frame_start;
+
+    float lengthTimeMs, leftPos, lengthPos;
+    nodeToPos(frame_start, frame_length, available_size, lengthTimeMs, leftPos, lengthPos);
+
+    /* Add left padding to button, to keep the frame end at the right position  */
+    leftPos += 4.0f;
+    lengthPos -= 4.0f;
+
+    /* Check if too small */
+    if (lengthPos < 1.0f)
+        return;
+
+    ImGui::SetCursorPosX(available_start + leftPos);
+
+    char buffer_name[16];
+    sprintf(buffer_name, "%d", f);
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.7f, 0.7f, 0.7f, 1.0f));
+
+    ImGui::Button(buffer_name, ImVec2(lengthPos, 0.0f));
+    if (ImGui::BeginItemTooltip())
+    {
+        ImGui::Text("Frame %d in %f ms", f, lengthTimeMs);
+        ImGui::EndTooltip();
     }
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
 }
 
 void ProfilerDebug::renderNode(int nodeId, const Profiler::Database* database, float available_start, float available_size)
 {
     const auto& info = database->nodes[nodeId];
 
-    float leftPos, lengthPos;
-    nodeToPos(info, leftPos, lengthPos, available_size);
+    float lengthTimeMs, leftPos, lengthPos;
+    nodeToPos(info.startTime, info.lengthTime, available_size, lengthTimeMs, leftPos, lengthPos);
 
-    /* Check if offscreen */
-    if (lengthPos < 0)
-        return;
-
-    if ((leftPos + lengthPos) < 0)
+    /* Check if too small or offscreen */
+    if (lengthPos < 1.0f)
         return;
 
     ImGui::SetCursorPosX(available_start + leftPos);
@@ -67,11 +102,31 @@ void ProfilerDebug::renderNode(int nodeId, const Profiler::Database* database, f
     char buffer_name[16];
     sprintf(buffer_name, "%d", nodeId);
 
-    ImGui::Button(buffer_name, ImVec2(lengthPos, 0.0f));
+    float hue = info.type * 0.13f;
+    float sat_delta = info.depth * -0.2f;
+    
+    float r, g, b;
+    ImGui::ColorConvertHSVtoRGB(hue, 0.6f + sat_delta, 0.6f, r, g, b);
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(r, g, b, 1.0f));
+    ImGui::ColorConvertHSVtoRGB(hue, 0.7f + sat_delta, 0.7f, r, g, b);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(r, g, b, 1.0f));
+    ImGui::ColorConvertHSVtoRGB(hue, 0.8f + sat_delta, 0.8f, r, g, b);
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(r, g, b, 1.0f));
+
+    ImGui::Button(info.label.c_str(), ImVec2(lengthPos, 0.0f));
+    if (ImGui::BeginItemTooltip())
+    {
+        ImGui::Text("%s in %f ms", info.label.c_str(), lengthTimeMs);
+        if (!info.description.empty())
+            ImGui::Text(info.description.c_str());
+        ImGui::EndTooltip();
+    }
+    ImGui::PopStyleColor(3);
+
     ImGui::SameLine();
 }
 
-void ProfilerDebug::draw(bool* p_open = nullptr)
+void ProfilerDebug::draw(uint64_t framecount, bool* p_open = nullptr)
 {
     if (!ImGui::Begin("Profiler Debug", p_open))
     {
@@ -79,84 +134,174 @@ void ProfilerDebug::draw(bool* p_open = nullptr)
         return;
     }
 
+    static uint64_t old_framecount = 0;
+    static bool will_update;
+    static uint64_t older_framecount = 0;
+
     currentTime = Profiler::currentTimeWithoutPause();
+    if (minTime == nullTime)
+        minTime = currentTime;
+
+    bool updateScroll = false;
 
     /* Options */
+    ImGui::SeparatorText("Options");
     ImGui::BeginChild("Profiler Options", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY, 0);
 
-    ImGui::RadioButton("Units in miliseconds", &windowUnitType, 0); ImGui::SameLine();
-    ImGui::RadioButton("Units in frames", &windowUnitType, 1); ImGui::SameLine();
+    int pauseFlags = Profiler::getPauseFlags();
+    if (ImGui::CheckboxFlags("Hide when Idle", &pauseFlags, Profiler::PAUSE_ON_IDLE))
+        Profiler::setPauseFlags(pauseFlags);
+    ImGui::SameLine();
+    if (ImGui::CheckboxFlags("Hide when Sleep", &pauseFlags, Profiler::PAUSE_ON_SLEEP))
+        Profiler::setPauseFlags(pauseFlags);
+    
+    updateScroll |= ImGui::RadioButton("Units in miliseconds", &windowUnitType, 0);
+    ImGui::SameLine();
+    updateScroll |= ImGui::RadioButton("Units in frames", &windowUnitType, 1);
+    ImGui::SameLine();
     if (windowUnitType == 0)
-        ImGui::SliderFloat("Window size", &timeWindowMs, 1.0f, 10000.0f, "%.1f ms", ImGuiSliderFlags_Logarithmic);
-    else
-        ImGui::SliderInt("Window size", &timeWindowFrames, 1, 100, "%d frames", ImGuiSliderFlags_Logarithmic);
+        updateScroll |= ImGui::SliderFloat("Window size", &timeWindowMs, 1.0f, 10000.0f, "%.1f ms", ImGuiSliderFlags_Logarithmic);
+    else {
+        updateScroll |= ImGui::SliderInt("Window size", &timeWindowFrames, 1, 100, "%d frames", ImGuiSliderFlags_Logarithmic);
+
+        /* Convert frames to length here */
+        const std::vector<TimeHolder>& frameTimings = Profiler::getFrameTimings();
+        if (frameTimings.size() < timeWindowFrames)
+            timeWindowFrames = frameTimings.size();
+        
+        if (timeWindowFrames > 0) {
+            TimeHolder firstSelectedFrame = *(frameTimings.end() - timeWindowFrames);
+            TimeHolder windowLength = currentTime - firstSelectedFrame;
+            timeWindowMs = windowLength.toMs();
+        }
+    }
 
     ImGui::EndChild();
 
-    ImGui::BeginChild("Profiler Tasks");
+    ImGui::SeparatorText("Tasks");
 
-    if (ImGui::BeginTable("Profiler Table", 2, ImGuiTableFlags_ScrollY)) {
+    /* We need to specify the size of the table, so that X scrolling will work.
+     * We don't know yet what is the size of the first column, so we use the size
+     * of the last draw */
+    float available_size = ImGui::GetWindowWidth() - firstColWidth;
+    TimeHolder fullTime = currentTime - minTime;
+    float fullTimeMs = fullTime.toMs();
+    float tableWidth = (fullTimeMs / timeWindowMs) * available_size;
+    if (fullTimeMs < timeWindowMs)
+        tableWidth = available_size;
+
+    if ((old_framecount != older_framecount))
+        ImGui::SetNextWindowScroll(ImVec2(tableWidth, -1.0f));
+    if (updateScroll) {
+        /* Trigger a future scroll update */
+        old_framecount = 0;
+        older_framecount = 0;
+    }
+
+    if (ImGui::BeginTable("Profiler Table", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH, ImVec2(0.0f, 0.0f))) {
 
         ImGui::TableSetupColumn("Thread", ImGuiTableColumnFlags_WidthFixed);
-        ImGui::TableSetupColumn("Tasks", ImGuiTableColumnFlags_WidthStretch);
-        
+        ImGui::TableSetupColumn("Tasks", ImGuiTableColumnFlags_WidthFixed, tableWidth);
+        ImGui::TableSetupScrollFreeze(1, 0);
+
+        /* We reset the min time to get the new value for the next iteration.
+         * we will always be one call behind, which should not matter. */
+        TimeHolder futureMinTime = {std::numeric_limits<time_t>::max(),  std::numeric_limits<long>::max()};
+
+        /* Print frames */
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+
+        ImGui::TreeNodeEx("Frame", ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+
+        ImGui::TableSetColumnIndex(1);
+
+        float available_start = ImGui::GetCursorPos().x;
+
+        /* Save the width of the first column for the next iteration */
+        firstColWidth = available_start;
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+
+        const std::vector<TimeHolder>& frameTimings = Profiler::getFrameTimings();
+        if (frameTimings.size() > 0) {
+            for (int f = 0; f < frameTimings.size() - 1; f++) {
+                /* Don't print frames that won't show up on screen */
+                if (frameTimings[f] < minTime)
+                    continue;
+
+                renderFrame(f+1, frameTimings[f], frameTimings[f+1], available_start, available_size);
+            }
+
+            /* Render the ongoing frame */
+            renderFrame(frameTimings.size(), frameTimings.back(), currentTime, available_start, available_size);
+        }
+
+        ImGui::PopStyleVar(1);
+
         ThreadManager::lockList();
 
         for (ThreadInfo *thread = ThreadManager::getThreadList(); thread != nullptr; thread = thread->next) {
             
-            std::vector<std::vector<int>> nodesByDepth;
-            
-            bool hasChildren = thread->profilerDatabase->populateNodes(nodesByDepth);
+            const std::vector<std::vector<int>>& nodesByDepth = thread->profilerDatabase->populateNodes(futureMinTime);
 
             if (nodesByDepth.empty() || nodesByDepth[0].empty())
                 continue;
 
-            ImGui::TableNextRow();
-
-            ImGuiTreeNodeFlags nodeFlags = 0;
-            if (!hasChildren) {
-                // Leaf nodes don't need a collapsing arrow and don't push to the ID stack
-                nodeFlags |= ImGuiTreeNodeFlags_Leaf;
-            }
-
-            ImGui::TableSetColumnIndex(0);
-            
-            ImGui::AlignTextToFramePadding();
-            // We use the pthread id as a unique identifier for ImGui
-            const bool isNodeOpen = ImGui::TreeNodeEx(reinterpret_cast<void*>(thread->pthread_id), nodeFlags, "%s", thread->name.c_str());
-            if (isNodeOpen) {
-                ImGui::TreePop();
-            }
 
             ImGui::TableSetColumnIndex(1);
 
-            float available_size = ImGui::GetContentRegionAvail().x;
-            float available_start = ImGui::GetCursorPos().x;
+
+            // LOG(LL_WARN, LCF_FILEIO, "available_size %f available_start %f", available_size, available_start);
 
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
 
+            bool firstRow = true;
             for (const auto& nodesOneDepth : nodesByDepth) {
+                ImGui::TableNextRow();
+                
+                bool isNodeOpen;
+                if (firstRow) {
+                    firstRow = false;
+                    
+                    ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_FramePadding;
+                    if (nodesByDepth.size() == 1) {
+                        // Leaf nodes don't need a collapsing arrow
+                        nodeFlags |= ImGuiTreeNodeFlags_Leaf;
+                    }
+
+                    ImGui::TableSetColumnIndex(0);
+                    
+                    // We use the pthread id as a unique identifier for ImGui
+                    isNodeOpen = ImGui::TreeNodeEx(reinterpret_cast<void*>(thread->pthread_id), nodeFlags, "%s", thread->name.c_str());
+                    if (isNodeOpen) {
+                        ImGui::TreePop();
+                    }
+                }
+                
+                ImGui::TableSetColumnIndex(1);
+                
                 for (int rootId : nodesOneDepth) {
                     renderNode(rootId, thread->profilerDatabase, available_start, available_size);
                 }
 
                 if (!isNodeOpen)
                     break;
-
-                ImGui::TableNextRow();
-                ImGui::TableSetColumnIndex(1);
             }
 
             ImGui::PopStyleVar(1);
-
         }
 
         ThreadManager::unlockList();
+        
+        minTime = futureMinTime;
+        
         ImGui::EndTable();
     }
 
-    ImGui::EndChild();
     ImGui::End();
+    
+    older_framecount = old_framecount;
+    old_framecount = framecount;
 }
 
 }

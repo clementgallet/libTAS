@@ -22,9 +22,8 @@
 #include "GlobalState.h"
 #include "TimeHolder.h"
 
-// #include "checkpoint/ThreadManager.h"
-// 
-// #include <time.h>
+#include <vector>
+#include <limits>
 
 namespace libtas {
 
@@ -34,12 +33,14 @@ Profiler::Database& Profiler::Database::get()
     return *tlDatabase;
 }
 
-Profiler::ScopeInfo& Profiler::Database::initNode(const char* label)
+Profiler::ScopeInfo& Profiler::Database::initNode(const char* label, int type, const char* desc)
 {
     int id = nextNodeId;
 
     nodes[id] = ScopeInfo{
         .label        = label,
+        .description  = desc?desc:"",
+        .type         = type,
         .nodeId       = id,
         .parentNodeId = -1,
         .depth        = currentDepth,
@@ -64,6 +65,7 @@ Profiler::ScopeGuard::ScopeGuard(ScopeInfo& info) :
     scopeInfo.parentNodeId = db.currentNodeId;
     db.currentNodeId       = scopeInfo.nodeId;
     db.currentDepth        = scopeInfo.depth + 1;
+    db.dirty = true;
 }
 
 Profiler::ScopeGuard::~ScopeGuard()
@@ -76,44 +78,46 @@ Profiler::ScopeGuard::~ScopeGuard()
     db.currentDepth  = scopeInfo.depth;
 }
 
-bool Profiler::Database::populateNodes(std::vector<std::vector<int>>& nodesByDepth)
+std::vector<std::vector<int>>& Profiler::Database::populateNodes(TimeHolder& combinedMinTime)
 {
-    bool hasChildren = false;
-    
-    for (auto& vec : nodesByDepth)
-        vec.clear();
-
-    for (int n = 0; n < maxNodeId; n++) {
-        const ScopeInfo& info = nodes[n];
+    if (dirty) {
+        minTime = {std::numeric_limits<time_t>::max(),  std::numeric_limits<long>::max()};
         
-        // if (info.startTime == nullTime)
-        //     continue;
-
-        if (info.depth >= nodesByDepth.size())
-            nodesByDepth.resize(info.depth+1);
-
-        if (info.depth > 0)
-            hasChildren = true;
-
-        // LOG(LL_DEBUG, LCF_WINDOW, "Push Profiler node %d", info.nodeId);
-
-        nodesByDepth[info.depth].push_back(info.nodeId);
+        for (auto& vec : nodesByDepth)
+        vec.clear();
+        
+        for (int n = 0; n < maxNodeId; n++) {
+            const ScopeInfo& info = nodes[n];
+            
+            if (info.depth >= nodesByDepth.size())
+                nodesByDepth.resize(info.depth+1);
+            
+            if (info.startTime < minTime)
+                minTime = info.startTime;
+            nodesByDepth[info.depth].push_back(info.nodeId);
+        }
     }
-    return hasChildren;
+    
+    if (minTime < combinedMinTime)
+        combinedMinTime = minTime;
+
+    dirty = false;
+
+    return nodesByDepth;
 }
 
 static TimeHolder pauseStartTime = nullTime;
 static TimeHolder pauseElapsedTime = {0, 0};
+static int pauseFlags = Profiler::PAUSE_ON_IDLE | Profiler::PAUSE_ON_SLEEP;
 
-void Profiler::startPause()
+void Profiler::setPauseFlags(int flags)
 {
-    pauseStartTime = TimeHolder::now();
+    pauseFlags = flags;
 }
 
-void Profiler::stopPause()
+int Profiler::getPauseFlags()
 {
-    pauseElapsedTime += TimeHolder::now() - pauseStartTime;
-    pauseStartTime = nullTime;
+    return pauseFlags;
 }
 
 TimeHolder Profiler::currentTimeWithoutPause()
@@ -124,14 +128,30 @@ TimeHolder Profiler::currentTimeWithoutPause()
     return TimeHolder::now() - pauseElapsedTime;
 }
 
-Profiler::PauseGuard::PauseGuard()
+Profiler::PauseGuard::PauseGuard(int flag)
 {
-    Profiler::startPause();
+    if (getPauseFlags() & flag)
+        pauseStartTime = TimeHolder::now();
 }
 
 Profiler::PauseGuard::~PauseGuard()
 {
-    Profiler::stopPause();
+    if (pauseStartTime != nullTime)
+        pauseElapsedTime += TimeHolder::now() - pauseStartTime;
+    pauseStartTime = nullTime;
+}
+
+static std::vector<TimeHolder> frameTimings;
+
+void Profiler::newFrame()
+{
+    TimeHolder newTime = currentTimeWithoutPause();
+    frameTimings.push_back(newTime);
+}
+
+const std::vector<TimeHolder>& Profiler::getFrameTimings()
+{
+    return frameTimings;
 }
 
 }

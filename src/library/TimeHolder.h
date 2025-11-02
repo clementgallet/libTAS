@@ -48,6 +48,11 @@ class TimeHolder : public timespec
             return this->tv_sec == 0 && this->tv_nsec == 0;
         }
 
+        bool operator==(const timespec& th) const
+        {
+            return ((this->tv_sec == th.tv_sec) && (this->tv_nsec == th.tv_nsec));
+        }
+
         bool operator!=(const timespec& th) const
         {
             return ((this->tv_sec != th.tv_sec) || (this->tv_nsec != th.tv_nsec));

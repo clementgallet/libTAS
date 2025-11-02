@@ -30,9 +30,17 @@ namespace libtas {
 
 namespace Profiler {
 
+enum {
+    PROFILER_INFO_RENDERING,
+    PROFILER_INFO_FRAME,
+    PROFILER_INFO_UNITY,
+};
+
 struct ScopeInfo
 {
     std::string label;
+    std::string description; // to show in the tooltip
+    int type; // for display
 
     TimeHolder startTime;
     TimeHolder lengthTime;
@@ -47,21 +55,28 @@ struct Database
     static const int maxNodes = 10000;
 
     ScopeInfo nodes[maxNodes] {};
+    std::vector<std::vector<int>> nodesByDepth;
+    TimeHolder minTime;
 
     int nextNodeId    = 0;
     int maxNodeId     = 0;
     int currentNodeId = -1;
     int currentDepth  = 0;
+    bool dirty        = true;
 
     static Database& get();
     
-    ScopeInfo& initNode(const char* label);
+    ScopeInfo& initNode(const char* label, int type, const char* desc = nullptr);
     
-    bool populateNodes(std::vector<std::vector<int>>& nodesByDepth);
+    std::vector<std::vector<int>>& populateNodes(TimeHolder& minTime);
 };
 
-#define PROFILE_SCOPE(label) \
-    auto& scopeInfo = Profiler::Database::get().initNode((label)); \
+#define PROFILE_SCOPE(label, type) \
+    auto& scopeInfo = Profiler::Database::get().initNode((label), (Profiler::type)); \
+    const Profiler::ScopeGuard scopeGuard(scopeInfo)
+
+#define PROFILE_SCOPE_DESC(label, type, desc) \
+    auto& scopeInfo = Profiler::Database::get().initNode((label), (Profiler::type), (desc)); \
     const Profiler::ScopeGuard scopeGuard(scopeInfo)
 
 struct ScopeGuard
@@ -73,16 +88,27 @@ struct ScopeGuard
     ~ScopeGuard();
 };
 
-void startPause();
-void stopPause();
+enum Pause {
+    PAUSE_ON_IDLE = 0x1, // skip from profiler timing when we idle for user interaction
+    PAUSE_ON_SLEEP = 0x2, // skip from profiler timing when we sleep to match the game fps
+};
+
+void setPauseFlags(int flags);
+int getPauseFlags();
+
+#define PROFILE_PAUSE(flag) \
+Profiler::PauseGuard pg(Profiler::flag)
 
 TimeHolder currentTimeWithoutPause();
 
 struct PauseGuard
 {
-    explicit PauseGuard();
+    explicit PauseGuard(int flags);
     ~PauseGuard();
 };
+
+void newFrame();
+const std::vector<TimeHolder>& getFrameTimings();
 
 }
 

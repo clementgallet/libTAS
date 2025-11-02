@@ -20,6 +20,7 @@
 #include "openglwrappers.h"
 #include "openglloader.h"
 
+#include "Profiler.h"
 #include "global.h"
 #include "GlobalState.h"
 #include "logging.h"
@@ -34,16 +35,20 @@ void gl##NAME DECL\
     LINK_GL_POINTER(NAME);\
     if (GlobalState::isNative()) return glProcs.NAME ARGS;\
     LOGTRACE(LCF_OGL);\
-    if (!Global::skipping_draw)\
+    if (!Global::skipping_draw) { \
+        PROFILE_SCOPE(#NAME, PROFILER_INFO_RENDERING); \
         return glProcs.NAME ARGS;\
+    }\
 }\
 \
 void my##gl##NAME DECL\
 {\
     if (GlobalState::isNative()) return glProcs.NAME ARGS;\
     LOGTRACE(LCF_OGL);\
-    if (!Global::skipping_draw)\
-        return glProcs.NAME ARGS ;\
+    if (!Global::skipping_draw) { \
+        PROFILE_SCOPE(#NAME, PROFILER_INFO_RENDERING); \
+        return glProcs.NAME ARGS;\
+    }\
 }
 
 GLFUNCSKIPDRAW(Clear, (GLbitfield mask), (mask))
