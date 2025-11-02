@@ -26,6 +26,7 @@
 #include <iostream>
 #include <unistd.h> // unlink
 #include <sstream>
+#include <map>
 
 std::string fileFromPath(const std::string& path)
 {
@@ -295,9 +296,34 @@ std::string queryCmdPid(const char **command, pid_t* popen_pid)
 
 uint64_t getSymbolAddress(const char* symbol, const char* file)
 {
-    std::ostringstream cmd;
-    cmd << "readelf -Ws \"" << file << "\" | grep -w -G " << symbol << " | awk '{print $2}'";
+    static std::string symbol_file;
+    static std::map<std::string, uint64_t> symbol_addresses;
+    
+    if (symbol_file.compare(file) != 0) {
+        symbol_file = file;
+        symbol_addresses.clear();
+        
+        std::ostringstream cmd;
+        cmd << "readelf -Ws \"" << file << "\" | awk '{print $2 " " $8}'";
 
-    uint64_t addr = std::strtoull(queryCmd(cmd.str()).c_str(), nullptr, 16);    
-    return addr;
+        std::string outputstr;
+        FILE *output = popen(cmd.str().c_str(), "r");
+        if (output != NULL) {
+            char buf[256];
+            while (fgets(buf, 256, output) != nullptr) {
+                std::istringstream iss(buf);
+                uint64_t addr;
+                std::string sym;
+                iss >> std::hex >> addr >> sym;
+                symbol_addresses[sym] = addr;
+            }
+            pclose(output);
+        }
+    }
+    
+    auto search = symbol_addresses.find(std::string(symbol));
+    if (search != symbol_addresses.end())
+        return search->second;
+
+    return 0;
 }
