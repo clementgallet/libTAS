@@ -198,11 +198,11 @@ void ProfilerDebug::draw(uint64_t framecount, bool* p_open = nullptr)
         older_framecount = 0;
     }
 
-    if (ImGui::BeginTable("Profiler Table", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH, ImVec2(0.0f, 0.0f))) {
+    if (ImGui::BeginTable("Profiler Table", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_ScrollX | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersInnerV, ImVec2(0.0f, 0.0f))) {
 
         ImGui::TableSetupColumn("Thread", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Tasks", ImGuiTableColumnFlags_WidthFixed, tableWidth);
-        ImGui::TableSetupScrollFreeze(1, 0);
+        ImGui::TableSetupScrollFreeze(1, 1);
 
         /* We reset the min time to get the new value for the next iteration.
          * we will always be one call behind, which should not matter. */

@@ -24,6 +24,7 @@
 #include "SaveFileList.h"
 
 #include "logging.h"
+#include "Profiler.h"
 #include "Utils.h"
 #include "GlobalState.h"
 #include "global.h"
@@ -105,6 +106,8 @@ const FileHandle& fileHandleFromFd(int fd)
 
 void updateAllFiles()
 {
+    PROFILE_SCOPE("File Handles", PROFILER_INFO_FRAME);
+
     auto& filehandles = getFileList();
     filehandles.clear();
 

@@ -367,6 +367,7 @@ static void* U4_ExecJob(void* arg)
     ThreadInfo* th = ThreadManager::getCurrentThread();
     th->unityJobCount++;
     
+    PROFILE_SCOPE("Job", PROFILER_INFO_UNITY);
     U4_Job* j = reinterpret_cast<U4_Job*>(arg);
     void* ret = j->func(j->arg);
     delete j;
@@ -421,6 +422,7 @@ static long U5_JobQueue_EnqueueAllInternal(JobQueue* t, JobGroup* x, JobGroup* y
 static long U5_JobQueue_Exec(JobQueue* t, JobInfo* x, long long y, int z)
 {
     LOG(LL_TRACE, LCF_HACKS, "U5_JobQueue_Exec called with JobInfo %p", x);
+    PROFILE_SCOPE("Job", PROFILER_INFO_UNITY);
     long executed = orig::U5_JobQueue_Exec(t, x, y, z);
     if (executed) {
         ThreadInfo* th = ThreadManager::getCurrentThread();
@@ -538,6 +540,7 @@ static void U2K_JobQueue_CompleteAllJobs(JobQueue *t)
 static long U2K_JobQueue_Exec(JobQueue *t, JobInfo* x, long long y, int z, bool a)
 {
     LOG(LL_TRACE, LCF_HACKS, "U2K_JobQueue_Exec called with JobInfo %p and sync %d", x, a);
+    PROFILE_SCOPE("Job", PROFILER_INFO_UNITY);
     long executed = orig::U2K_JobQueue_Exec(t, x, y, z, a);
     if (executed) {
         ThreadInfo* th = ThreadManager::getCurrentThread();
@@ -650,6 +653,7 @@ static void U6_ujob_execute_job(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z
     LOGTRACE(LCF_HACKS);
     ThreadInfo* th = ThreadManager::getCurrentThread();
     th->unityJobCount++;
+    PROFILE_SCOPE("Job", PROFILER_INFO_UNITY);
     return orig::U6_ujob_execute_job(x, y, z, a, b);
 }
 
@@ -842,7 +846,7 @@ static bool Helper_PreloadManager_GetAllowParallelExecution(PreloadManagerOperat
 {
     if (GetUnityVersionMaj() == 6000)
         return (reinterpret_cast<U6_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
-    if ((GetUnityVersionMaj() >= 2018) && (GetUnityVersionMaj() <= 2020))
+    if ((GetUnityVersionMaj() >= 2017) && (GetUnityVersionMaj() <= 2020))
         return (reinterpret_cast<U2018_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
     if (GetUnityVersionMaj() == 5)
         return (reinterpret_cast<U5_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
@@ -967,6 +971,7 @@ static PreloadManagerOperation* U6_PreloadManager_PrepareProcessingPreloadOperat
 static void U6_PreloadManager_ProcessSingleOperation(PreloadManager* m)
 {
     LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    PROFILE_SCOPE("Operation", PROFILER_INFO_UNITY);
     orig::U6_PreloadManager_ProcessSingleOperation(m);
     pending_queue_size--;
 }
