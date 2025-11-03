@@ -231,7 +231,7 @@ uint8_t* SigSearch::FindCommon(uint8_t* input, size_t inputLen, const Signature 
 int SigSearch::SearchCommon(uint8_t* input, size_t inputLen, const Signature &sig, ptrdiff_t* output_offset)
 {
     size_t sigSize = sig.bytes.size();
-    size_t len = inputLen;
+    size_t len = inputLen - sigSize;
     size_t count = 0;
     bool hasWildcards = sig.hasMask();
 
@@ -263,7 +263,7 @@ int SigSearch::SearchCommon(uint8_t* input, size_t inputLen, const Signature &si
 int SigSearch::SearchAVX2(uint8_t* input, size_t inputLen, const Signature &sig, ptrdiff_t* output_offset)
 {
     size_t sigSize = sig.bytes.size();
-    size_t len = inputLen;
+    size_t len = inputLen - sigSize;
     size_t count = 0;
     bool hasWildcards = sig.hasMask();
 
