@@ -261,8 +261,10 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     /* Last message to send */
     sendMessage(MSGB_START_FRAMEBOUNDARY);
 
-    /* Update debug */
-    FileDebug::update(framecount);
+    /* Update debug. This operation is a bit long to do, so we skip it when
+     * we skip drawing. */
+    if (!Global::skipping_draw)
+        FileDebug::update(framecount);
 
     /* Reset ramwatches and lua drawings */
     WatchesWindow::reset();

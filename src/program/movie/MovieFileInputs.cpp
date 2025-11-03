@@ -263,7 +263,11 @@ void MovieFileInputs::wasModified()
     modifiedSinceLastSave = true;
     modifiedSinceLastAutoSave = true;
     modifiedSinceLastStateLoad = true;
-    updateLength();
+
+    /* We don't need to update movie length and send it to the game when not recording.
+     * This can save a bit of time during fast-forward. */
+    if (context->config.sc.recording != SharedConfig::NO_RECORDING)
+        updateLength();
 }
 
 void MovieFileInputs::processPendingActions()

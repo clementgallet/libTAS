@@ -72,10 +72,10 @@ void FileDebug::update(uint64_t framecount)
                 fd_history_t &fdh = fd_history[fd].back();
                 std::string fh_name = fh.fileName;
                 
-                /* Check if it is the same file */
-                if (fdh.last_frame == (framecount - 1) &&
-                    fh_name == fdh.file) {
-                    fdh.last_frame++;
+                /* Check if it is the same file. We do not assume that this
+                 * update is called every frame. */
+                if (fh_name == fdh.file) {
+                    fdh.last_frame = framecount;
                 }
                 else {
                     fd_history_t new_fdh;
