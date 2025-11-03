@@ -108,6 +108,8 @@ void updateAllFiles()
 {
     PROFILE_SCOPE("File Handles", PROFILER_INFO_FRAME);
 
+    GlobalNative gn;
+
     auto& filehandles = getFileList();
     filehandles.clear();
 

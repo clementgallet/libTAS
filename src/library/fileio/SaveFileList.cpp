@@ -330,7 +330,7 @@ bool isSaveFileRemoved(const char *file)
     return false;
 }
 
-std::string getSaveFileInsideDir(std::string dir, int n)
+const SaveFile* getSaveFileInsideDir(std::string dir, int n)
 {
     std::lock_guard<std::mutex> lock(getSaveFileListMutex());
 
@@ -349,12 +349,12 @@ std::string getSaveFileInsideDir(std::string dir, int n)
 
         /* Skip based on index */
         if (index == n)
-            return relfile;
+            return savefile.get();
             
         index++;
     }
 
-    return "";
+    return nullptr;
 }
 
 }

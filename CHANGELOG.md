@@ -9,6 +9,7 @@
 
 * Savestates now restore better file descriptors
 * Fix SDL getting window dimensions of zero
+* Better handling of opendir/readdir and savefiles
 
 ## [1.4.7] - 2025-10-06
 ### Added

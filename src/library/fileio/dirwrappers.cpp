@@ -18,6 +18,7 @@
  */
 
 #include "dirwrappers.h"
+#include "SaveFile.h"
 #include "SaveFileList.h"
 
 #include "logging.h"
@@ -29,26 +30,25 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(__DARWIN_ALIAS_I_STR(opendir))
-DEFINE_ORIG_POINTER(__DARWIN_ALIAS_I_STR(fdopendir))
-DEFINE_ORIG_POINTER(__DARWIN_ALIAS_STR(closedir))
-DEFINE_ORIG_POINTER(__DARWIN_INODE64_STR(readdir))
-DEFINE_ORIG_POINTER(__DARWIN_INODE64_STR(readdir_r))
 #ifdef __unix__
+DEFINE_ORIG_POINTER(opendir)
+DEFINE_ORIG_POINTER(fdopendir)
+DEFINE_ORIG_POINTER(closedir)
+DEFINE_ORIG_POINTER(readdir)
+DEFINE_ORIG_POINTER(readdir_r)
 DEFINE_ORIG_POINTER(readdir64)
 DEFINE_ORIG_POINTER(readdir64_r)
-#endif
 
 #define DIROFF_SIZE 10
 static DIR *dird[DIROFF_SIZE];
 static int diri[DIROFF_SIZE];
 static std::string dirpath[DIROFF_SIZE];
 
-DIR *__DARWIN_ALIAS_I_STR(opendir) (const char *name)
+DIR *opendir (const char *name)
 {
-    LINK_NAMESPACE_GLOBAL(__DARWIN_ALIAS_I_STR(opendir));
+    LINK_NAMESPACE_GLOBAL(opendir);
 
-    DIR *d = orig::__DARWIN_ALIAS_I_STR(opendir)(name);
+    DIR *d = orig::opendir(name);
 
     if (GlobalState::isNative())
         return d;
@@ -68,6 +68,8 @@ DIR *__DARWIN_ALIAS_I_STR(opendir) (const char *name)
             dird[i] = d;
             diri[i] = 0;
             dirpath[i] = name;
+            if (dirpath[i].back() != '/')
+                dirpath[i].push_back('/');
             break;
         }
     }
@@ -78,11 +80,11 @@ DIR *__DARWIN_ALIAS_I_STR(opendir) (const char *name)
     return d;
 }
 
-DIR *__DARWIN_ALIAS_I_STR(fdopendir) (int fd)
+DIR *fdopendir (int fd)
 {
-    LINK_NAMESPACE_GLOBAL(__DARWIN_ALIAS_I_STR(fdopendir));
+    LINK_NAMESPACE_GLOBAL(fdopendir);
 
-    DIR *d = orig::__DARWIN_ALIAS_I_STR(fdopendir)(fd);
+    DIR *d = orig::fdopendir(fd);
 
     if (GlobalState::isNative())
         return d;
@@ -124,11 +126,11 @@ DIR *__DARWIN_ALIAS_I_STR(fdopendir) (int fd)
     return d;    
 }
 
-int __DARWIN_ALIAS_STR(closedir) (DIR *dirp)
+int closedir (DIR *dirp)
 {
-    LINK_NAMESPACE_GLOBAL(__DARWIN_ALIAS_STR(closedir));
+    LINK_NAMESPACE_GLOBAL(closedir);
 
-    int ret = orig::__DARWIN_ALIAS_STR(closedir)(dirp);
+    int ret = orig::closedir(dirp);
 
     if (GlobalState::isNative())
         return ret;
@@ -157,59 +159,81 @@ int __DARWIN_ALIAS_STR(closedir) (DIR *dirp)
     return ret;
 }
 
-struct dirent *__DARWIN_INODE64_STR(readdir) (DIR *dirp)
+struct dirent *readdir (DIR *dirp)
 {
     static struct dirent dir;
     
-    LINK_NAMESPACE_GLOBAL(__DARWIN_INODE64_STR(readdir));
+    LINK_NAMESPACE_GLOBAL(readdir);
 
     if (GlobalState::isNative())
-        return orig::__DARWIN_INODE64_STR(readdir)(dirp);
+        return orig::readdir(dirp);
 
     LOG(LL_TRACE, LCF_FILEIO, "%s call", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
-        return orig::__DARWIN_INODE64_STR(readdir)(dirp);
+        return orig::readdir(dirp);
 
     if (!Global::shared_config.prevent_savefiles)
-        return orig::__DARWIN_INODE64_STR(readdir)(dirp);
+        return orig::readdir(dirp);
 
-    /* First, list all savefiles from directory */
-    for (int i = 0; i < DIROFF_SIZE; i++) {
-        if (dird[i] == dirp) {
-
-            /* We already browse all savefiles from this directory */
-            if (diri[i] == -1)
-                break;
-
-            /* Get savefile inside dir */
-            std::string filename = SaveFileList::getSaveFileInsideDir(dirpath[i], diri[i]);
-
-            if (!filename.empty()) {
-                /* Get file or directory from relative path */
-                size_t sep = filename.find_first_of("/");
-                if (sep != std::string::npos) {
-                    filename = filename.substr(0, sep);
-                    dir.d_type = DT_DIR;
-                }
-                else {
-                    dir.d_type = DT_REG;                    
-                }
-
-                strncpy(dir.d_name, filename.c_str(), 255);
-                diri[i]++;
-                return &dir;
-            }
-            else {
-                /* Set an invalid index, so that future calls won't check for that */
-                diri[i] = -1;
-            }
+    /* Recover the informations from the opened dir */
+    int i;
+    for (i = 0; i < DIROFF_SIZE; i++) {
+        if (dird[i] == dirp)
             break;
-        }
     }
     
-    /* Then, list all actual files */
-    return orig::__DARWIN_INODE64_STR(readdir)(dirp);
+    /* First, list all savefiles from directory */
+
+    /* Check if we already browse all savefiles from this directory */
+    if (diri[i] != -1) {
+        /* Get savefile inside dir */
+        for (const SaveFile* savefile = SaveFileList::getSaveFileInsideDir(dirpath[i], diri[i]);
+        savefile != nullptr; savefile = SaveFileList::getSaveFileInsideDir(dirpath[i], diri[i])) {
+
+            diri[i]++;
+            
+            /* Don't show savefiles that were removed */
+            if (savefile->removed) {
+                LOG(LL_DEBUG, LCF_FILEIO, "   skip savefile %s that was removed", savefile->filename.c_str());
+                continue;
+            }
+            
+            /* Get file or directory from relative path */
+            std::string filename = savefile->filename.substr(dirpath[i].size());
+            
+            size_t sep = filename.find_first_of("/");
+            if (sep != std::string::npos) {
+                filename = filename.substr(0, sep);
+                dir.d_type = DT_DIR;
+            }
+            else {
+                dir.d_type = DT_REG;
+            }
+            
+            strncpy(dir.d_name, filename.c_str(), 255);
+            LOG(LL_DEBUG, LCF_FILEIO, "   return savefile %s", dir.d_name);
+            return &dir;
+        }
+    }
+
+    /* Set an invalid index, so that future calls won't check for that */
+    diri[i] = -1;
+    
+    /* Then, list all actual files, without savefiles */
+    for (struct dirent* d = orig::readdir(dirp); d; d = orig::readdir(dirp)) {
+        /* Build the full path and check if savefile */
+        std::string filepath = dirpath[i];
+        if (filepath.back() != '/')
+            filepath.push_back('/');
+        filepath += d->d_name;
+
+        if (!SaveFileList::getSaveFile(filepath.c_str()))
+            return d;
+        else
+            LOG(LL_DEBUG, LCF_FILEIO, "   skip savefile %s", d->d_name);
+    }
+    return nullptr;
 }
 
 #ifdef __unix__
@@ -230,101 +254,141 @@ struct dirent64 *readdir64 (DIR *dirp)
     if (!Global::shared_config.prevent_savefiles)
         return orig::readdir64(dirp); 
 
+    /* Recover the informations from the opened dir */
+    int i;
+    for (i = 0; i < DIROFF_SIZE; i++) {
+        if (dird[i] == dirp)
+            break;
+    }
+
     /* First, list all savefiles from directory */
-    for (int i = 0; i < DIROFF_SIZE; i++) {
-        if (dird[i] == dirp) {
 
-            /* We already browse all savefiles from this directory */
-            if (diri[i] == -1)
-                break;
+    /* Check if we already browse all savefiles from this directory */
+    if (diri[i] != -1) {
+        /* Get savefile inside dir */
+        for (const SaveFile* savefile = SaveFileList::getSaveFileInsideDir(dirpath[i], diri[i]);
+        savefile != nullptr; savefile = SaveFileList::getSaveFileInsideDir(dirpath[i], diri[i])) {
 
-            /* Get savefile inside dir */
-            std::string filename = SaveFileList::getSaveFileInsideDir(dirpath[i], diri[i]);
-
-            if (!filename.empty()) {
-                /* Get file or directory from relative path */
-                size_t sep = filename.find_first_of("/");
-                if (sep != std::string::npos) {
-                    filename = filename.substr(0, sep);
-                    dir.d_type = DT_DIR;
-                }
-                else {
-                    dir.d_type = DT_REG;                    
-                }
-
-                strncpy(dir.d_name, filename.c_str(), 255);
-                diri[i]++;
-                return &dir;
+            diri[i]++;
+            
+            /* Don't show savefiles that were removed */
+            if (savefile->removed) {
+                LOG(LL_DEBUG, LCF_FILEIO, "   skip savefile %s that was removed", savefile->filename.c_str());
+                continue;
+            }
+            
+            /* Get file or directory from relative path */
+            std::string filename = savefile->filename.substr(dirpath[i].size());
+            
+            size_t sep = filename.find_first_of("/");
+            if (sep != std::string::npos) {
+                filename = filename.substr(0, sep);
+                dir.d_type = DT_DIR;
             }
             else {
-                /* Set an invalid index, so that future calls won't check for that */
-                diri[i] = -1;
+                dir.d_type = DT_REG;
             }
-            break;
+            
+            strncpy(dir.d_name, filename.c_str(), 255);
+            LOG(LL_DEBUG, LCF_FILEIO, "   return savefile %s", dir.d_name);
+            return &dir;
         }
     }
+
+    /* Set an invalid index, so that future calls won't check for that */
+    diri[i] = -1;
     
-    /* Then, list all actual files */
-    return orig::readdir64(dirp);
+    /* Then, list all actual files, without savefiles */
+    for (struct dirent64* d = orig::readdir64(dirp); d; d = orig::readdir64(dirp)) {
+        /* Build the full path and check if savefile */
+        std::string filepath = dirpath[i];
+        if (filepath.back() != '/')
+            filepath.push_back('/');
+        filepath += d->d_name;
+
+        if (!SaveFileList::getSaveFile(filepath.c_str()))
+            return d;
+        else
+            LOG(LL_DEBUG, LCF_FILEIO, "   skip savefile %s", d->d_name);
+    }
+    return nullptr;
 }
 #endif
 
-int __DARWIN_INODE64_STR(readdir_r) (DIR *dirp, struct dirent *entry, struct dirent **result)
+int readdir_r (DIR *dirp, struct dirent *entry, struct dirent **result)
 {
-    LINK_NAMESPACE_GLOBAL(__DARWIN_INODE64_STR(readdir_r));
+    LINK_NAMESPACE_GLOBAL(readdir_r);
 
     if (GlobalState::isNative())
-        return orig::__DARWIN_INODE64_STR(readdir_r)(dirp, entry, result);
+        return orig::readdir_r(dirp, entry, result);
 
     LOG(LL_TRACE, LCF_FILEIO, "%s call", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
-        return orig::__DARWIN_INODE64_STR(readdir_r)(dirp, entry, result);
+        return orig::readdir_r(dirp, entry, result);
 
     if (!Global::shared_config.prevent_savefiles)
-        return orig::__DARWIN_INODE64_STR(readdir_r)(dirp, entry, result);
+        return orig::readdir_r(dirp, entry, result);
 
-    /* First, list all savefiles from directory */
-    for (int i = 0; i < DIROFF_SIZE; i++) {
-        if (dird[i] == dirp) {
-
-            /* We already browse all savefiles from this directory */
-            if (diri[i] == -1)
-                break;
-
-            /* Get savefile inside dir */
-            std::string filename = SaveFileList::getSaveFileInsideDir(dirpath[i], diri[i]);
-
-            if (!filename.empty()) {
-                /* Get file or directory from relative path */
-                size_t sep = filename.find_first_of("/");
-                if (sep != std::string::npos) {
-                    filename = filename.substr(0, sep);
-                    entry->d_type = DT_DIR;
-                }
-                else {
-                    entry->d_type = DT_REG;                    
-                }
-                
-                strncpy(entry->d_name, filename.c_str(), 255);
-                *result = entry;
-                diri[i]++;
-                LOG(LL_DEBUG, LCF_FILEIO, "   return savefile %s", entry->d_name);
-                return 0;
-            }
-            else {
-                /* Set an invalid index, so that future calls won't check for that */
-                diri[i] = -1;
-            }
+    int i;
+    for (i = 0; i < DIROFF_SIZE; i++) {
+        if (dird[i] == dirp)
             break;
-        }
     }
     
-    /* Then, list all actual files */
-    return orig::__DARWIN_INODE64_STR(readdir_r)(dirp, entry, result);
+    /* First, list all savefiles from directory */
+
+    /* Check if we already browse all savefiles from this directory */
+    if (diri[i] != -1) {
+        /* Get savefile inside dir */
+        for (const SaveFile* savefile = SaveFileList::getSaveFileInsideDir(dirpath[i], diri[i]);
+        savefile != nullptr; savefile = SaveFileList::getSaveFileInsideDir(dirpath[i], diri[i])) {
+            diri[i]++;
+
+            /* Don't show savefiles that were removed */
+            if (savefile->removed) {
+                LOG(LL_DEBUG, LCF_FILEIO, "   skip savefile %s that was removed", savefile->filename.c_str());
+                continue;
+            }
+            
+            /* Get file or directory from relative path */
+            LOG(LL_DEBUG, LCF_FILEIO, "   found savefile %s", savefile->filename.c_str());
+            std::string filename = savefile->filename.substr(dirpath[i].size());
+            LOG(LL_DEBUG, LCF_FILEIO, "   found savefile file %s", filename.c_str());
+            
+            size_t sep = filename.find_first_of("/");
+            if (sep != std::string::npos) {
+                filename = filename.substr(0, sep);
+                entry->d_type = DT_DIR;
+            }
+            else {
+                entry->d_type = DT_REG;                    
+            }
+            
+            strncpy(entry->d_name, filename.c_str(), 255);
+            *result = entry;
+            LOG(LL_DEBUG, LCF_FILEIO, "   return savefile %s", entry->d_name);
+            return 0;
+        }
+    }
+
+    /* Set an invalid index, so that future calls won't check for that */
+    diri[i] = -1;
+    
+    /* Then, list all actual files, without savefiles */
+    for (int res = orig::readdir_r(dirp, entry, result); (*result != nullptr); res = orig::readdir_r(dirp, entry, result)) {
+        /* Build the full path and check if savefile */
+        std::string filepath = dirpath[i];
+        filepath += entry->d_name;
+
+        if (!SaveFileList::getSaveFile(filepath.c_str()))
+            return res;
+        else
+            LOG(LL_DEBUG, LCF_FILEIO, "   skip savefile %s", entry->d_name);
+    }
+    return 0;
 }
 
-#ifdef __unix__
 int readdir64_r (DIR *dirp, struct dirent64 *entry, struct dirent64 **result)
 {
     LINK_NAMESPACE_GLOBAL(readdir64_r);
@@ -340,43 +404,64 @@ int readdir64_r (DIR *dirp, struct dirent64 *entry, struct dirent64 **result)
     if (!Global::shared_config.prevent_savefiles)
         return orig::readdir64_r(dirp, entry, result); 
 
+    /* Recover the informations from the opened dir */
+    int i;
+    for (i = 0; i < DIROFF_SIZE; i++) {
+        if (dird[i] == dirp)
+            break;
+    }
+
     /* First, list all savefiles from directory */
-    for (int i = 0; i < DIROFF_SIZE; i++) {
-        if (dird[i] == dirp) {
 
-            /* We already browse all savefiles from this directory */
-            if (diri[i] == -1)
-                break;
+    /* Check if we already browse all savefiles from this directory */
+    if (diri[i] != -1) {
+        /* Get savefile inside dir */
+        for (const SaveFile* savefile = SaveFileList::getSaveFileInsideDir(dirpath[i], diri[i]);
+        savefile != nullptr; savefile = SaveFileList::getSaveFileInsideDir(dirpath[i], diri[i])) {
+            diri[i]++;
 
-            /* Get savefile inside dir */
-            std::string filename = SaveFileList::getSaveFileInsideDir(dirpath[i], diri[i]);
-
-            if (!filename.empty()) {
-                /* Get file or directory from relative path */
-                size_t sep = filename.find_first_of("/");
-                if (sep != std::string::npos) {
-                    filename = filename.substr(0, sep);
-                    entry->d_type = DT_DIR;
-                }
-                else {
-                    entry->d_type = DT_REG;                    
-                }
-
-                strncpy(entry->d_name, filename.c_str(), 255);
-                *result = entry;
-                diri[i]++;
-                return 0;
+            /* Don't show savefiles that were removed */
+            if (savefile->removed) {
+                LOG(LL_DEBUG, LCF_FILEIO, "   skip savefile %s that was removed", savefile->filename.c_str());
+                continue;
+            }
+            
+            /* Get file or directory from relative path */
+            LOG(LL_DEBUG, LCF_FILEIO, "   found savefile %s", savefile->filename.c_str());
+            std::string filename = savefile->filename.substr(dirpath[i].size());
+            LOG(LL_DEBUG, LCF_FILEIO, "   found savefile file %s", filename.c_str());
+            
+            size_t sep = filename.find_first_of("/");
+            if (sep != std::string::npos) {
+                filename = filename.substr(0, sep);
+                entry->d_type = DT_DIR;
             }
             else {
-                /* Set an invalid index, so that future calls won't check for that */
-                diri[i] = -1;
+                entry->d_type = DT_REG;                    
             }
-            break;
+            
+            strncpy(entry->d_name, filename.c_str(), 255);
+            *result = entry;
+            LOG(LL_DEBUG, LCF_FILEIO, "   return savefile %s", entry->d_name);
+            return 0;
         }
     }
+
+    /* Set an invalid index, so that future calls won't check for that */
+    diri[i] = -1;
     
-    /* Then, list all actual files */
-    return orig::readdir64_r(dirp, entry, result);
+    /* Then, list all actual files, without savefiles */
+    for (int res = orig::readdir64_r(dirp, entry, result); (*result != nullptr); res = orig::readdir64_r(dirp, entry, result)) {
+        /* Build the full path and check if savefile */
+        std::string filepath = dirpath[i];
+        filepath += entry->d_name;
+
+        if (!SaveFileList::getSaveFile(filepath.c_str()))
+            return res;
+        else
+            LOG(LL_DEBUG, LCF_FILEIO, "   skip savefile %s", entry->d_name);
+    }
+    return 0;
 }
 #endif
 

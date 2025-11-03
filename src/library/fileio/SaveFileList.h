@@ -72,8 +72,8 @@ int getSaveFileFd(const char *file);
 /* Get if savefile was removed */
 bool isSaveFileRemoved(const char *file);
 
-/* Get the n-th save file inside directory `dir`. Returns empty string if not present */
-std::string getSaveFileInsideDir(std::string dir, int n);
+/* Get the n-th save file inside directory `dir`. Returns nullptr if not present */
+const SaveFile* getSaveFileInsideDir(std::string dir, int n);
 
 }
 
