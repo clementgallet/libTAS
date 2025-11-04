@@ -311,6 +311,18 @@ Returns the marker at current frame if there is one, none instead.
 
 Edit marker at current frame with the text given as parameter.
 
+#### movie.insertFrame
+
+    none movie.insertFrame()
+
+Insert frame at current position
+
+#### movie.insertFrames
+
+    none movie.insertFrames(Number nb_frames)
+
+Insert `nb_frame` frames at current position
+
 ### Runtime functions
 
 Runtime functions must be performed in callback `onFrame()` to be effective on

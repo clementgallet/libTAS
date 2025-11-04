@@ -63,6 +63,12 @@ namespace Movie {
 
     /* Set marker at current frame */
     int setMarker(lua_State *L);
+
+    /* Insert frame at current position */
+    int insertFrame(lua_State *L);
+
+    /* Insert n frames at current position */
+    int insertFrames(lua_State *L);
 }
 }
 

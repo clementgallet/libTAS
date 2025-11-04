@@ -21,6 +21,8 @@
 
 #include "Context.h"
 
+#include "../movie/MovieActionInsertFrames.h"
+
 #include <iostream>
 extern "C" {
 #include <lua.h>
@@ -41,6 +43,8 @@ static const luaL_Reg movie_functions[] =
     { "isDraw", Lua::Movie::isDraw},
     { "getMarker", Lua::Movie::getMarker},
     { "setMarker", Lua::Movie::setMarker},
+    { "insertFrame", Lua::Movie::insertFrame},
+    { "insertFrames", Lua::Movie::insertFrames},
     { NULL, NULL }
 };
 
@@ -115,5 +119,20 @@ int Lua::Movie::setMarker(lua_State *L)
 {
     const char* marker = lua_tostring(L, 1);
     movie->editor->markers[context->framecount] = marker;
+    return 0;
+}
+
+int Lua::Movie::insertFrame(lua_State *L)
+{
+    MovieActionInsertFrames action(context->framecount, 1, movie->inputs);
+    action.redo();
+    return 0;
+}
+
+int Lua::Movie::insertFrames(lua_State *L)
+{
+    unsigned int n = static_cast<unsigned int>(lua_tointeger(L, 1));
+    MovieActionInsertFrames action(context->framecount, n, movie->inputs);
+    action.redo();
     return 0;
 }
