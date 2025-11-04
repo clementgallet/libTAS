@@ -79,7 +79,14 @@ typedef void ujob_job_t;
 typedef long ujob_handle_t;
 typedef void ujob_dependency_chain;
 typedef int WorkStealingRange;
-typedef void* (*JobsCallbackFunctions)(void*, int);
+
+struct JobsCallbackFunctions {
+    void (*execute)(void*, int);
+    void (*completed)(void*);
+};
+
+// typedef void (*JobsCallbackFunctions)(void*);
+// typedef void (*JobsCallbackFunctionsParallel)(void*, int);
 typedef void ScriptingBackendNativeObjectPtrOpaque;
 class JobScheduleParameters;
 class JobFence;
@@ -681,15 +688,33 @@ static unsigned long U6_ujob_schedule_job_internal(ujob_control_t* x, ujob_handl
 }
 
 struct callback_args_t {
-    JobsCallbackFunctions* func;
+    int count;
+    JobsCallbackFunctions funcs;
     void* arg;
-    int loop_index;
+    // std::mutex mutex;
+    // std::condition_variable cv;
+    // bool completed;
 };
 
-static void* job_callback(void* arg, int)
+static void job_callback_execute(void* arg, int)
 {
     callback_args_t* args = reinterpret_cast<callback_args_t*>(arg);
-    return (*args->func)(args->arg, args->loop_index);
+
+    /* Perform all iterations of the loop inside this job */
+    for (int i = 0; i < args->count; i++)
+        args->funcs.execute(args->arg, i);
+}
+
+static void job_callback_completed(void* arg)
+{
+    callback_args_t* args = reinterpret_cast<callback_args_t*>(arg);
+    if (args->funcs.completed) {
+        args->funcs.completed(args->arg);
+    }
+
+    // std::unique_lock<std::mutex> lock(args->mutex);
+    // args->completed = true;
+    // args->cv.notify_all();
 }
 
 /* The function parameters from the symbol are *wrong*! 6th parameter must be 
@@ -703,50 +728,42 @@ static void* job_callback(void* arg, int)
  */ 
 static ujob_handle_t U6_ujob_schedule_parallel_for_internal(ujob_control_t* x, JobsCallbackFunctions* y, void* job_callback_arg, WorkStealingRange* a, unsigned int count, unsigned long c, ujob_handle_t const* d, long e)
 {
-    LOG(LL_TRACE, LCF_HACKS, "U6_ujob_schedule_parallel_for_internal called with callback %p, steal mode %d, unknown uint %d", *y, a?(*a):0, count);
+    LOG(LL_TRACE, LCF_HACKS, "U6_ujob_schedule_parallel_for_internal called with callback args %p , steal mode %d, count %d, ujob_handle_t %p", job_callback_arg, a?(*a):0, count, d);
 
     if (!(Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS))
         return orig::U6_ujob_schedule_parallel_for_internal(x, y, job_callback_arg, a, count, c, d, e);
 
     ujob_handle_t ret = 0;
-    static JobsCallbackFunctions loop_callback = &job_callback;
+    static JobsCallbackFunctions loop_callbacks = {&job_callback_execute, job_callback_completed};
+    /* Instead of scheduling all the jobs in one call, we schedule one
+     * individual job that will perform all the iterations in order. The job may still
+     * run on a worker thread, but it should be fine for determinism.
+     * Normally, the job callback function is receiving the loop index as 
+     * second argument, so we pass our own callback function, which receives
+     * the original callback, the original callback argument, and the iteration 
+     * count. */
+    callback_args_t* args = new callback_args_t;
+    args->count = count;
+    args->funcs.execute = y->execute;
+    args->funcs.completed = y->completed;
+    args->arg = job_callback_arg;
+    // args->completed = false;
+    
+    // std::unique_lock<std::mutex> lock(args->mutex);
+    
+    ret = orig::U6_ujob_schedule_parallel_for_internal(x, &loop_callbacks, args, a, 1, c, d, e);
 
-    if (count == 1) {
-        ret = orig::U6_ujob_schedule_parallel_for_internal(x, y, job_callback_arg, a, count, c, d, e);
-        
-        /* In newer Unity 6 versions, there is a dedicated internal function for
-         * waiting on a job */
-        if (orig::U6_ujob_wait_for)
-            orig::U6_ujob_wait_for(x, ret, 1);
-        else if (orig::U2K_JobQueue_WaitForJobGroupID)
-            orig::U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(ret), 0, true);
-    }
-    else {
-        /* Instead of scheduling all the jobs in one call, we schedule each
-         * individual job and wait for the job to complete. The job may still
-         * run on a worker thread, but it should be fine for determinism.
-         * Normally, the job callback function is receiving the loop index as 
-         * second argument, so we pass our own callback function, which receives
-         * the original callback, the original callback argument, and the loop
-         * index.
-         */
-        for (int i=0; i < count; i++) {
-            callback_args_t* args = new callback_args_t;
-            args->func = y;
-            args->arg = job_callback_arg;
-            args->loop_index = i;
-            
-            ret = orig::U6_ujob_schedule_parallel_for_internal(x, &loop_callback, args, a, 1, c, d, e);
-            
-            if (orig::U6_ujob_wait_for)
-                orig::U6_ujob_wait_for(x, ret, 1);
-            else if (orig::U2K_JobQueue_WaitForJobGroupID)
-                orig::U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(ret), 0, true);
+    /* Manually waiting on all jobs to execute */
+    // args->cv.wait(lock, [&args] { return args->completed; });
 
-            /* It should be safe to delete our custom callback argument here */
-            delete args;
-        }
-    }
+    if (orig::U6_ujob_wait_for)
+        orig::U6_ujob_wait_for(x, ret, 1);
+    else if (orig::U2K_JobQueue_WaitForJobGroupID)
+        orig::U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(ret), 0, true);
+
+    /* It should be safe to delete our custom callback argument here */
+    // delete args->loop_index;
+    delete args;
 
     return ret;
 }
