@@ -28,6 +28,7 @@ extern "C" {
 }
 
 static Context* context;
+static MovieFile* movie;
 
 /* List of functions to register */
 static const luaL_Reg movie_functions[] =
@@ -48,6 +49,11 @@ void Lua::Movie::registerFunctions(lua_State *L, Context* c)
     context = c;
     luaL_newlib(L, movie_functions);
     lua_setglobal(L, "movie");
+}
+
+void Lua::Movie::registerMovie(MovieFile* frame_movie)
+{
+    movie = frame_movie;
 }
 
 int Lua::Movie::currentFrame(lua_State *L)
@@ -97,7 +103,7 @@ int Lua::Movie::getMarker(lua_State *L)
 {
     std::string marker;
     try {
-	marker = context->movie->editor->markers.at(context->framecount);
+	marker = movie->editor->markers.at(context->framecount);
     } catch (const std::out_of_range&) {
 	return 0;
     }
@@ -108,6 +114,6 @@ int Lua::Movie::getMarker(lua_State *L)
 int Lua::Movie::setMarker(lua_State *L)
 {
     const char* marker = lua_tostring(L, 1);
-    context->movie->editor->markers[context->framecount] = marker;
+    movie->editor->markers[context->framecount] = marker;
     return 0;
 }

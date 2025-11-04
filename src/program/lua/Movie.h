@@ -28,12 +28,17 @@ extern "C" {
 
 struct Context;
 
+class MovieFile;
+
 namespace Lua {
 
 namespace Movie {
 
     /* Register all functions */
     void registerFunctions(lua_State *L, Context* c);
+
+    /* Pass the current MovieFile object to be used by lua functions */
+    void registerMovie(MovieFile* frame_movie);
 
     /* Get the current framecount */
     int currentFrame(lua_State *L);
