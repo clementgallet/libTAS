@@ -19,6 +19,7 @@
 
 
 #include "ui/MainWindow.h"
+#include "ui/InputEditorWindow.h"
 #include "Context.h"
 #include "utils.h" // create_dir
 #include "lua/Main.h"
@@ -97,6 +98,7 @@ static void print_usage(void)
     std::cout << "  -n, --non-interactive   Don't offer any interactive choice, so that it can run headless" << std::endl;
     std::cout << "      --libtas-so-path    Path to libtas.so (equivalent to setting LIBTAS_SO_PATH)" << std::endl;
     std::cout << "      --libtas32-so-path  Path to libtas32.so (equivalent to setting LIBTAS32_SO_PATH)" << std::endl;
+    std::cout << "  -i, --input-editor      Open Input Editor window at startup" << std::endl;
     std::cout << "  -h, --help              Show this message" << std::endl;
 }
 
@@ -133,12 +135,14 @@ int main(int argc, char **argv)
         {"libtas-so-path", required_argument, nullptr, 'p'},
         {"libtas32-so-path", required_argument, nullptr, 'P'},
         {"help", no_argument, nullptr, 'h'},
+        {"input-editor", no_argument, nullptr, 'i'},
         {nullptr, 0, nullptr, 0}
     };
     int option_index = 0;
+    bool openInputEditor = false;
 
     // std::string libname;
-    while ((c = getopt_long (argc, argv, "+r:w:d:l:nh", long_options, &option_index)) != -1) {
+    while ((c = getopt_long (argc, argv, "+r:w:d:l:nhi", long_options, &option_index)) != -1) {
         switch (c) {
             case 'r':
             case 'w':
@@ -184,6 +188,9 @@ int main(int argc, char **argv)
             case 'h':
                 print_usage();
                 return 0;
+            case 'i':
+                openInputEditor = true;
+                break;
             default:
                 return -1;
         }
@@ -452,6 +459,10 @@ int main(int argc, char **argv)
 
     MainWindow mainWin(&context);
     mainWin.show();
+
+    if (openInputEditor) {
+        mainWin.inputEditorWindow->show();
+    }
 
     app.exec();
 
