@@ -130,7 +130,7 @@ void FileDebug::draw(uint64_t framecount, bool* p_open = nullptr)
                     (mouse.y - hovered_fd) < (BAR_HEIGHT / 2) && 
                     (mouse.y - hovered_fd) > (-BAR_HEIGHT / 2)) {
 
-                    int frame = (int) std::roundf(mouse.x);
+                    uint64_t frame = (uint64_t) std::roundf(mouse.x);
 
                     for (fd_history_t fdh : fd_history[hovered_fd]) {
                         if ((frame >= fdh.first_frame) && (frame <= fdh.last_frame)) {

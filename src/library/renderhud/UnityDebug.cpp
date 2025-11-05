@@ -118,7 +118,7 @@ void UnityDebug::update(uint64_t framecount)
     
     /* Build the array that will be used to plot */
     preloadAll.clear();
-    int size = 400;
+    size_t size = 400;
     if (preloadPending.size() < size)
         size = preloadPending.size();
 

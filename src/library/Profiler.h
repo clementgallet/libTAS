@@ -47,7 +47,7 @@ struct ScopeInfo
 
     int nodeId;
     int parentNodeId;
-    int depth;
+    unsigned int depth;
 };
 
 struct Database
@@ -61,7 +61,7 @@ struct Database
     int nextNodeId    = 0;
     int maxNodeId     = 0;
     int currentNodeId = -1;
-    int currentDepth  = 0;
+    unsigned int currentDepth  = 0;
     bool dirty        = true;
 
     static Database& get();
