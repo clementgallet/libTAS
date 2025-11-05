@@ -12,3 +12,4 @@ get help from the [Discord server](https://discord.gg/3MBVAzU).
 * [Lua usage and functions](../guides/lua)
 * [Moviefile format](../guides/format)
 * [Tech details](../guides/how)
+* [Sources of randomness](../guides/rng)
