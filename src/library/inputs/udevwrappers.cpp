@@ -727,9 +727,8 @@ Device::Device() : parent(), valid() {
 
     for (int num = 0; num < Global::shared_config.nb_controllers; ++num) {
         int devNum = 2 + num;
-        char numStr[2], devStr[2];
-        std::snprintf(numStr, sizeof(numStr), "%d", num);
-        std::snprintf(devStr, sizeof(devStr), "%d", devNum);
+	std::string numStr = std::to_string(num);
+	std::string devStr = std::to_string(devNum);
 
         Device &controller = hub.newChild(String::concat("1-", devStr));
         controller.setUsb(1, devNum);
@@ -830,10 +829,9 @@ Device &Device::newBus(String &&name) {
 }
 
 void Device::setDev(dev_t devNum, String &&devnode) {
-    char majorStr[4], minorStr[4];
-    snprintf(majorStr, sizeof(majorStr), "%u", major(devNum));
+    std::string majorStr = std::to_string(major(devNum));
+    std::string minorStr = std::to_string(minor(devNum));
     propertiesMap.emplace("MAJOR", String::concat(majorStr));
-    snprintf(minorStr, sizeof(minorStr), "%u", minor(devNum));
     propertiesMap.emplace("MINOR", String::concat(minorStr));
     propertiesMap.emplace("DEVNAME", std::move(devnode));
     dev = devNum;
@@ -841,10 +839,12 @@ void Device::setDev(dev_t devNum, String &&devnode) {
 }
 
 void Device::setUsb(unsigned busNum, unsigned devNum) {
-    char busStr[4], devStr[4];
-    snprintf(busStr, sizeof(busStr), "%03u", busNum);
+    std::ostringstream busStream, devStream;
+    busStream << std::setw(3) << std::setfill('0') << busNum;
+    devStream << std::setw(3) << std::setfill('0') << devNum;
+    std::string busStr = busStream.str();
+    std::string devStr = devStream.str();
     propertiesMap.emplace("BUSNUM", String::concat(busStr));
-    snprintf(devStr, sizeof(devStr), "%03u", devNum);
     propertiesMap.emplace("DEVNUM", String::concat(devStr));
     propertiesMap.emplace("DEVTYPE", "usb_device");
     setDriver("usb");
