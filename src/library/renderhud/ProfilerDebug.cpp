@@ -135,7 +135,6 @@ void ProfilerDebug::draw(uint64_t framecount, bool* p_open = nullptr)
     }
 
     static uint64_t old_framecount = 0;
-    static bool will_update;
     static uint64_t older_framecount = 0;
 
     currentTime = Profiler::currentTimeWithoutPause();
