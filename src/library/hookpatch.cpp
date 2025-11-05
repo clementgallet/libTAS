@@ -82,6 +82,7 @@ static int instruction_length(const unsigned char *func, instr_info *instr)
     instr->operand_size_prefix = false;
     instr->quad_prefix = false;
     instr->multibyte_opcode = 0;
+    instr->modRM = 0;
 
     int operandSizeDouble = 4; // operand size for instructions that depend only on 16-bit prefix, and cannot be promoted by REX.W 64-bit
     int operandSize = 4; // operand size for instructions that depend on both operand-size prefixes
