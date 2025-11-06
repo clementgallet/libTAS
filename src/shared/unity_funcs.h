@@ -99,6 +99,7 @@ enum {
     UNITY6_ARCHIVESTORAGECONVERTER_PROCESS, // ArchiveStorageConverter::ProcessData(void const*, unsigned long)
     UNITY6_ASSETBUNDLELOAD_FEEDSTREAM, // AssetBundleLoadFromStreamAsyncOperation::FeedStream(void const*, unsigned long)
     UNITY6_LOAD_FMOD_SOUND, // LoadFMODSound(SoundHandle::Instance**, char const*, unsigned int, SampleClip*, unsigned int, VFS::FileSize, FMOD_CREATESOUNDEXINFO*)
+    UNITY5_ANALYTICS_UPDATE, // BaseUnityAnalytics::UpdateConfigFromServer()
     UNITY_FUNCS_LEN
 };
 

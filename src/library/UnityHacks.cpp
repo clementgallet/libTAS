@@ -286,6 +286,8 @@ namespace orig {
     int (*U6_ArchiveStorageConverter_ProcessAccumulatedData)(ArchiveStorageConverter* c) = nullptr;
     int (*U6_AssetBundleLoadFromStreamAsyncOperation_FeedStream)(AssetBundleLoadFromStreamAsyncOperation *o, void const* x, unsigned long y) = nullptr;
     int (*U6_LoadFMODSound)(SoundHandle_Instance** si, char const* s, unsigned int f, SampleClip* c, unsigned int i, VFS_FileSize fs, FMOD_CREATESOUNDEXINFO* in) = nullptr;
+
+    void (*U5_BaseUnityAnalytics_UpdateConfigFromServer)(void* a) = nullptr;
 }
 
 #include <signal.h>
@@ -1282,6 +1284,12 @@ static int U6_LoadFMODSound(SoundHandle_Instance** si, char const* s, unsigned i
     return orig::U6_LoadFMODSound(si, s, f, c, i, fs, in);
 }
 
+static void U5_BaseUnityAnalytics_UpdateConfigFromServer(void* a)
+{
+    LOGTRACE(LCF_HACKS);
+    // return orig::U5_BaseUnityAnalytics_UpdateConfigFromServer(a);
+}
+
 #define FUNC_CASE(FUNC_ENUM, FUNC_SYMBOL) \
 case FUNC_ENUM: \
     hook_patch_addr(reinterpret_cast<void*>(address), reinterpret_cast<void**>(&orig::FUNC_SYMBOL), reinterpret_cast<void*>(FUNC_SYMBOL)); \
@@ -1376,6 +1384,8 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY6_ASSETBUNDLELOAD_FEEDSTREAM, U6_AssetBundleLoadFromStreamAsyncOperation_FeedStream)
 
         FUNC_CASE(UNITY6_LOAD_FMOD_SOUND, U6_LoadFMODSound)
+        FUNC_CASE(UNITY5_ANALYTICS_UPDATE, U5_BaseUnityAnalytics_UpdateConfigFromServer)
+        
     }
 }
 

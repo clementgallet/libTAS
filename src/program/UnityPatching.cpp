@@ -430,6 +430,11 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_Z13LoadFMODSoundPPN11SoundHandle8InstanceEPKcjP10SampleClipjN3VFS8FileSizeEP22FMOD_CREATESOUNDEXINFO",
     },
     {
+        UNITY5_ANALYTICS_UPDATE,
+        "BaseUnityAnalytics::UpdateConfigFromServer",
+        "_ZN18BaseUnityAnalytics22UpdateConfigFromServerEv",
+    },
+    {
         UNITY_FUNCS_LEN,
         "",
         "",
