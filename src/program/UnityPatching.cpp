@@ -150,9 +150,24 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN8JobQueue11ScheduleJobEPFvPvES0_10JobGroupIDNS_16JobQueuePriorityE",
     },
     {
+        UNITY5_JOBQUEUE_SCHEDULE_JOB_MULTIPLE,
+        "JobQueue::ScheduleJobMultipleDependencies",
+        "_ZN8JobQueue31ScheduleJobMultipleDependenciesEPFvPvES0_P10JobGroupIDi",
+    },
+    {
         UNITY5_JOBQUEUE_WAIT_JOB_GROUP,
         "JobQueue::WaitForJobGroup",
         "_ZN8JobQueue15WaitForJobGroupE10JobGroupIDb",
+    },
+    {
+        UNITY5_JOBQUEUE_WAIT_JOB_GROUP_ID,
+        "JobQueue::WaitForJobGroupID",
+        "_ZN8JobQueue17WaitForJobGroupIDE10JobGroupID",
+    },
+    {
+        UNITY5_JOBQUEUE_HAS_JOB_COMPLETED,
+        "JobQueue::HasJobGroupIDCompleted",
+        "_ZN8JobQueue22HasJobGroupIDCompletedE10JobGroupID",
     },
     {
         UNITY2K_BACKGROUND_JOBQUEUE_SCHEDULE,

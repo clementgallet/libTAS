@@ -226,9 +226,13 @@ namespace orig {
     long (*U5_JobQueue_Pop)(JobQueue* t, JobGroupID x) = nullptr;
     long (*U5_JobQueue_ProcessJobs)(JobQueue* x, void* y) = nullptr;
     void (*U5_JobQueue_ScheduleJob)(JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int a, int b) = nullptr;
+    JobGroupID (*U5_JobQueue_ScheduleJobMultipleDependencies)(JobQueue *t, void* func, void* arg, JobGroupID* x, int y) = nullptr;
     JobGroupID (*U5_JobQueue_ScheduleGroup)(JobQueue *t, JobGroup* x, int y) = nullptr;
     void (*U5_JobQueue_ScheduleGroups)(JobQueue *t, JobGroup* x, JobGroup* y) = nullptr;
     void (*U5_JobQueue_WaitForJobGroup)(JobQueue* t, JobGroup* x, int y, bool z) = nullptr;
+    void (*U5_JobQueue_WaitForJobGroupID)(JobQueue* t, JobGroup* x, int y) = nullptr;
+    bool (*U5_JobQueue_HasJobGroupIDCompleted)(JobQueue* t, JobGroup* x, int y) = nullptr;
+
 
     void (*U2K_BackgroundJobQueue_ScheduleJobInternal)(BackgroundJobQueue *t, void (*x)(void*), void* y, BackgroundJobQueue_JobFence* z, JobQueue_JobQueuePriority a) = nullptr;
     void (*U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal)(BackgroundJobQueue *t, void (*x)(void*), void* y) = nullptr;
@@ -443,9 +447,9 @@ static long U5_JobQueue_Exec(JobQueue* t, JobInfo* x, long long y, int z)
 
 static long U5_JobQueue_ExecuteJobFromQueue(JobQueue* t)
 {
-    LOGTRACE(LCF_HACKS);
-    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS)
-        return 0;
+    // LOGTRACE(LCF_HACKS);
+    // if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS)
+    //     return 0;
     
     return orig::U5_JobQueue_ExecuteJobFromQueue(t);
 }
@@ -475,19 +479,19 @@ static long U5_JobQueue_ProcessJobs(JobQueue* t, void* x)
     ThreadInfo* thread = ThreadManager::getCurrentThread();
     thread->unityThread = true;
 
-    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS) {
-        /* Calling U5_JobQueue_ProcessJobs() in worker threads may call
-         * U5_JobQueue_Exec() directly without fetching a job queue with 
-         * U5_JobQueue_ExecuteJobFromQueue(), so we wait indefinitively here.
-         * To call jobs pushed in this worker thread, we will use the WorkerSteal
-         * feature elsewhere.
-         */
-        if (!ThreadManager::isMainThread()) {
-            while (!Global::is_exiting) {
-                NATIVECALL(sleep(1));
-            }
-        }
-    }
+    // if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS) {
+    //     /* Calling U5_JobQueue_ProcessJobs() in worker threads may call
+    //      * U5_JobQueue_Exec() directly without fetching a job queue with 
+    //      * U5_JobQueue_ExecuteJobFromQueue(), so we wait indefinitively here.
+    //      * To call jobs pushed in this worker thread, we will use the WorkerSteal
+    //      * feature elsewhere.
+    //      */
+    //     if (!ThreadManager::isMainThread()) {
+    //         while (!Global::is_exiting) {
+    //             NATIVECALL(sleep(1));
+    //         }
+    //     }
+    // }
 
     return orig::U5_JobQueue_ProcessJobs(t, x);
 }
@@ -508,9 +512,57 @@ static JobGroupID U5_JobQueue_ScheduleGroup(JobQueue *t, JobGroup* x, int y)
     LOG(LL_DEBUG, LCF_HACKS, "    returns JobGroup %p and JobGroup tag %d", j.group, j.tag);
 
     if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS) {
-        /* Immediatly wait for the job */
-        if (orig::U5_JobQueue_WaitForJobGroup)
-            orig::U5_JobQueue_WaitForJobGroup(t, j.group, j.tag, true);
+        /* Try waiting for the job */
+        if (orig::U5_JobQueue_HasJobGroupIDCompleted) {
+
+            bool has_completed = false;
+            for (int i = 0; i < 100; i++) {
+                if (orig::U5_JobQueue_HasJobGroupIDCompleted(t, j.group, j.tag)) {
+                    has_completed = true;
+                    break;
+                }
+                NATIVECALL(usleep(100));
+            }
+            if (!has_completed)
+                LOG(LL_WARN, LCF_HACKS, "    We could not wait for job group %p/%d to finish...", j.group, j.tag);
+        }
+        
+        // if (orig::U5_JobQueue_WaitForJobGroup)
+        //     orig::U5_JobQueue_WaitForJobGroup(t, j.group, j.tag, true);
+        // else if (orig::U5_JobQueue_WaitForJobGroupID)
+        //     orig::U5_JobQueue_WaitForJobGroupID(t, j.group, j.tag);
+    }
+
+    return j;
+}
+
+static JobGroupID U5_JobQueue_ScheduleJobMultipleDependencies(JobQueue *t, void* func, void* arg, JobGroupID* x, int y)
+{
+    LOGTRACE(LCF_HACKS);
+    /* Return value is 16 bytes (accross registers RDX:RAX), so we need to use
+     * a 16-byte struct to recover it. */
+    JobGroupID j = orig::U5_JobQueue_ScheduleJobMultipleDependencies(t, func, arg, x, y);
+
+    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS) {
+        /* Try waiting for the job */
+        if (orig::U5_JobQueue_HasJobGroupIDCompleted) {
+
+            bool has_completed = false;
+            for (int i = 0; i < 100; i++) {
+                if (orig::U5_JobQueue_HasJobGroupIDCompleted(t, j.group, j.tag)) {
+                    has_completed = true;
+                    break;
+                }
+                NATIVECALL(usleep(100));
+            }
+            if (!has_completed)
+                LOG(LL_WARN, LCF_HACKS, "    We could not wait for job group %p/%d to finish...", j.group, j.tag);
+        }
+        
+        // if (orig::U5_JobQueue_WaitForJobGroup)
+        //     orig::U5_JobQueue_WaitForJobGroup(t, j.group, j.tag, true);
+        // else if (orig::U5_JobQueue_WaitForJobGroupID)
+        //     orig::U5_JobQueue_WaitForJobGroupID(t, j.group, j.tag);
     }
 
     return j;
@@ -526,6 +578,18 @@ static void U5_JobQueue_WaitForJobGroup(JobQueue* t, JobGroup* x, int y, bool z)
 {
     LOG(LL_TRACE, LCF_HACKS, "U5_JobQueue_WaitForJobGroup called with JobGroup %p, JobGroup tag %d and steal mode %d", x, y, z);
     return orig::U5_JobQueue_WaitForJobGroup(t, x, y, z);
+}
+
+static void U5_JobQueue_WaitForJobGroupID(JobQueue* t, JobGroup* x, int y)
+{
+    LOG(LL_TRACE, LCF_HACKS, "U5_JobQueue_WaitForJobGroupID called with JobGroup %p, JobGroup tag %d", x, y);
+    return orig::U5_JobQueue_WaitForJobGroupID(t, x, y);
+}
+
+static bool U5_JobQueue_HasJobGroupIDCompleted(JobQueue* t, JobGroup* x, int y)
+{
+    LOG(LL_TRACE, LCF_HACKS, "U5_JobQueue_WaitForJobGroupID called with JobGroup %p, JobGroup tag %d", x, y);
+    return orig::U5_JobQueue_HasJobGroupIDCompleted(t, x, y);
 }
 
 static void U2K_BackgroundJobQueue_ScheduleJobInternal(BackgroundJobQueue *t, void (*x)(void*), void* y, BackgroundJobQueue_JobFence* z, JobQueue_JobQueuePriority a)
@@ -1323,9 +1387,12 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY5_JOBQUEUE_POP, U5_JobQueue_Pop)
         FUNC_CASE(UNITY5_JOBQUEUE_PROCESS, U5_JobQueue_ProcessJobs)
         FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_JOB, U5_JobQueue_ScheduleJob)
+        FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_JOB_MULTIPLE, U5_JobQueue_ScheduleJobMultipleDependencies)
         FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_GROUP, U5_JobQueue_ScheduleGroup)
         FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_GROUPS, U5_JobQueue_ScheduleGroups)
         FUNC_CASE(UNITY5_JOBQUEUE_WAIT_JOB_GROUP, U5_JobQueue_WaitForJobGroup)
+        FUNC_CASE(UNITY5_JOBQUEUE_WAIT_JOB_GROUP_ID, U5_JobQueue_WaitForJobGroupID)
+        FUNC_CASE(UNITY5_JOBQUEUE_HAS_JOB_COMPLETED, U5_JobQueue_HasJobGroupIDCompleted)
         
         FUNC_CASE(UNITY2K_BACKGROUND_JOBQUEUE_SCHEDULE, U2K_BackgroundJobQueue_ScheduleJobInternal)
         FUNC_CASE(UNITY2K_BACKGROUND_JOBQUEUE_SCHEDULE_MAIN, U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal)
