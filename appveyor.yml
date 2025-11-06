@@ -10,6 +10,7 @@ image: Ubuntu2204
 
 cache:
   - linuxdeploy-x86_64.AppImage
+  - linuxdeploy-plugin-qt-x86_64.AppImage
 
 install:
 - sh: >-
@@ -19,12 +20,8 @@ install:
 
     dpkg-checkbuilddeps 2>&1 | sed 's/dpkg-checkbuilddeps:\serror:\sUnmet build dependencies: //g' | sed 's/[\(][^)]*[\)] //g' | sed 's/|//g' | xargs -n 1 sudo apt install -y
 
-    sudo apt install --yes gcc-11 gcc-11-multilib g++-11 g++-11-multilib libc6-dev-i386 libx11-6:i386 libx11-dev:i386 libx11-xcb1:i386 libx11-xcb-dev:i386 libxcb-randr0-dev:i386 libasound2:i386 libasound2-dev:i386 libavutil56:i386 libavutil-dev:i386 libswresample3:i386 libswresample-dev:i386
+    sudo apt install --yes libc6-dev-i386 libx11-6:i386 libx11-dev:i386 libx11-xcb1:i386 libx11-xcb-dev:i386 libxcb-randr0-dev:i386 libasound2:i386 libasound2-dev:i386 libavutil56:i386 libavutil-dev:i386 libswresample3:i386 libswresample-dev:i386
 
-    sudo ln -f -s /usr/bin/gcc-11 /usr/bin/gcc
-
-    sudo ln -f -s /usr/bin/g++-11 /usr/bin/g++
-    
     wget -nc https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
     
     chmod +x linuxdeploy-x86_64.AppImage
