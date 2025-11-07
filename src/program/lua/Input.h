@@ -34,7 +34,7 @@ namespace Input {
     void registerFunctions(lua_State *L);
 
     /* Pass the current AllInputs object to be used by lua functions */
-    void registerInputs(AllInputs* ai);
+    void registerInputs(AllInputs* ai, bool* modified);
 
     /* Clear the input state */
     int clear(lua_State *L);
