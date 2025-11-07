@@ -382,26 +382,6 @@ executed inside this callback. To include Lua draws in encodes,
 The old callback method consists on defining functions with specific names above,
 which will be called at specific moments during the game execution.
 
-#### onStartup
-
-Called when the game has started, before the end of the first frame.
-
-#### onInput
-
-Called when input for the current frame is decided. Change the movie input if
-in recording mode. Not called when movie is in playback mode.
-
-#### onFrame
-
-Called just as the current frame has completed. All runtime functions must be
-executed here if you want them to be executed on the current frame.
-
-#### onPaint
-
-Called at the end of the frame before the screen rendering is performed. All Gui
-functions must be executed inside this callback. To include Lua draws in encodes,
-`Video > OSD > OSD on video encode` can be checked.
-
 ### Examples
 
 #### Hello world
