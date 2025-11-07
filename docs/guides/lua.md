@@ -388,8 +388,7 @@ Called when the game has started, before the end of the first frame.
 
 #### onInput
 
-Called when input for the current frame is decided. Change the movie input if
-in recording mode. Not called when movie is in playback mode.
+Called when input for the current frame is decided. Change the movie input.
 
 #### onFrame
 
