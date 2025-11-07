@@ -49,7 +49,10 @@ InputEditorView::InputEditorView(Context* c, MovieFile *m, QWidget *parent) : QT
     inputEditorModel = new InputEditorModel(context, movie);
     setModel(inputEditorModel);
 
-    connect(inputEditorModel, &InputEditorModel::inputSetChanged, this, &InputEditorView::resizeAllColumns);
+    connect(inputEditorModel, &InputEditorModel::inputSetChanged, this, [this]() {
+        QTimer::singleShot(0, this, &InputEditorView::resizeAllColumns);
+    });
+
     connect(this, &InputEditorView::entered, this, &InputEditorView::showMarkerToolTip);
     connect(this, &InputEditorView::entered, inputEditorModel, &InputEditorModel::setHoveredCell);
     setMouseTracking(true);
