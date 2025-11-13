@@ -96,7 +96,8 @@ void MemScannerThread::first_region_scan()
         for (uintptr_t ca = cur_beg_addr; ca < cur_end_addr; ca += 4096) {
             int readValues = MemAccess::read(chunk, reinterpret_cast<void*>(ca), 4096);
             if (readValues < 0) {
-                std::cerr << "Cound not read game process at address " << ca << std::endl;
+                std::cerr << "Cound not read game process at address " << std::hex << ca << std::endl;
+                ms.print();
             }
             vfs.write((char*)chunk, 4096);
             if (!vfs) {
@@ -277,12 +278,16 @@ void MemScannerThread::next_scan_from_region()
             int readValues = MemAccess::read(new_memory.data(), reinterpret_cast<void*>(cur_beg_addr), chunk_size_with_extra);
             if (readValues < 0) {
                 std::cerr << "Cound not read game process at address " << cur_beg_addr << std::endl;
+                ms.print();
+                cur_beg_addr += chunk_size;
+                continue;
             }
             if ((uint64_t)readValues < chunk_size_with_extra) {
-                std::cerr << "Did not read enough memory at address " << cur_beg_addr << std::endl;
+                std::cerr << "Could only read " << readValues << " bytes from address range " << std::hex << cur_beg_addr << " - " << std::hex << (cur_beg_addr+chunk_size_with_extra) << std::endl;
+                ms.print();
             }
             
-            for (unsigned int v = 0; v < chunk_size_with_extra-(memscanner.value_type_size-memscanner.alignment); v += memscanner.alignment) {
+            for (unsigned int v = 0; v < readValues-(memscanner.value_type_size-memscanner.alignment); v += memscanner.alignment) {
                 if (((memscanner.compare_type == CompareType::Previous) && 
                     CompareOperations::check_previous(&new_memory[v], &old_memory[v])) ||
                     ((memscanner.compare_type == CompareType::Value) && 
@@ -441,8 +446,10 @@ void MemScannerThread::next_scan_from_address()
                 uintptr_t last_addr = old_addresses[addr_cur_index-1];
                 readValues = MemAccess::read(new_memory.data(), reinterpret_cast<void*>(beg_addr), (last_addr-beg_addr)+memscanner.value_type_size);
             }
-            if (readValues < 0)
+            if (readValues < 0) {
+                addr_beg_index = addr_cur_index;
                 continue;
+            }
             
             for (int i = addr_beg_index; i < addr_cur_index; i++) {
                 uintptr_t addr = old_addresses[i];

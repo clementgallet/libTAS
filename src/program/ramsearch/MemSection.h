@@ -75,7 +75,10 @@ class MemSection {
         void readMap(std::string& line);
         
         /* Returns of the section follow the specified flags */
-        bool followFlags(int flags);
+        bool followFlags(int flags) const;
+        
+        /* Print the section parameters for debugging */
+        void print() const;
 };
 
 #endif
