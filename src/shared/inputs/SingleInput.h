@@ -126,6 +126,10 @@ public:
         return ((type < si.type) || ((type == si.type) && (which < si.which)));
     }
 
+    /* Returns if the input is valid. Useful when we import a SingleInput from
+     * an old moviefile */
+    bool isValid() const;
+
     /* Returns if the input is analog (non-boolean) */
     bool isAnalog() const;
 

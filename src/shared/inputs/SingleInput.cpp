@@ -29,6 +29,58 @@
 #include <xcb/xcb.h>
 #endif
 
+bool SingleInput::isValid() const
+{
+    switch (type) {
+        case IT_KEYBOARD:
+        case IT_POINTER_X:
+        case IT_POINTER_Y:
+        case IT_POINTER_WHEEL:
+        case IT_FRAMERATE_NUM:
+        case IT_FRAMERATE_DEN:
+        case IT_REALTIME_SEC:
+        case IT_REALTIME_NSEC:
+            return true;
+        case IT_POINTER_MODE:
+            return (which == POINTER_MODE_ABSOLUTE) || (which == POINTER_MODE_RELATIVE);
+        case IT_POINTER_BUTTON:
+            switch (which) {
+                case POINTER_B1:
+                case POINTER_B2:
+                case POINTER_B3:
+                case POINTER_B4:
+                case POINTER_B5:
+                    return true;
+                default:
+                    return false;
+            }
+        case IT_FLAG:
+            switch (which) {
+                case FLAG_RESTART:
+                case FLAG_CONTROLLER1_ADDED_REMOVED:
+                case FLAG_CONTROLLER2_ADDED_REMOVED:
+                case FLAG_CONTROLLER3_ADDED_REMOVED:
+                case FLAG_CONTROLLER4_ADDED_REMOVED:
+                case FLAG_FOCUS_UNFOCUS:
+                    return true;
+                default:
+                    return false;
+            }
+        case IT_CONTROLLER1_BUTTON:
+        case IT_CONTROLLER2_BUTTON:
+        case IT_CONTROLLER3_BUTTON:
+        case IT_CONTROLLER4_BUTTON:
+            return toSDL2Button(which) != SDL_CONTROLLER_BUTTON_INVALID;
+        case IT_CONTROLLER1_AXIS:
+        case IT_CONTROLLER2_AXIS:
+        case IT_CONTROLLER3_AXIS:
+        case IT_CONTROLLER4_AXIS:
+            return toSDL2Axis(which) != SDL_CONTROLLER_AXIS_INVALID;
+    }
+    return false;
+}
+
+
 bool SingleInput::isAnalog() const
 {
     if ((type == IT_POINTER_X) || (type == IT_POINTER_Y) || (type == IT_POINTER_WHEEL))

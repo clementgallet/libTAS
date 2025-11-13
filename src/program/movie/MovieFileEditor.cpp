@@ -55,6 +55,8 @@ void MovieFileEditor::load()
     for (int i = 0; i < size; ++i) {
         editor.setArrayIndex(i);
         SingleInput si = editor.value("input").value<SingleInput>();
+        if (!si.isValid())
+            continue;
         std::string name = editor.value("name").toString().toStdString();
         si.description = name;
         input_set.push_back(si);
