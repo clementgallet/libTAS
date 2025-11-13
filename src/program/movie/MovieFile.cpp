@@ -123,10 +123,15 @@ int MovieFile::loadMovie(const std::string& moviefile)
         return ret;
 
     /* Load the config file into the context struct */
+
+    /* Load editor before inputs, because `editor->load()` imports the input
+     * editor columns and inputs->load() imports actual inputs, then it adds
+     * more columns for inputs inside the movie that don't have a column yet.
+     * Then it resets the input editor view */
+    editor->load();
     header->load();
     inputs->load();
     annotations->load();
-    editor->load();
 
     /* Copy framerate values to inputs */
     inputs->setFramerate(header->framerate_num, header->framerate_den, header->variable_framerate);
