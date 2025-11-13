@@ -20,11 +20,11 @@ install:
 
     sudo apt install --yes $(dpkg-checkbuilddeps 2>&1 | sed -e 's/dpkg-checkbuilddeps:\serror:\sUnmet build dependencies: //g' -e 's/[\(][^)]*[\)] //g' -e 's/|//g')
 
-    sudo apt install --yes gcc-12 gcc-12-multilib g++-12 g++-12-multilib libc6-dev-i386 libx11-6:i386 libx11-dev:i386 libx11-xcb1:i386 libx11-xcb-dev:i386 libxcb-randr0-dev:i386 libasound2:i386 libasound2-dev:i386 libavutil56:i386 libavutil-dev:i386 libswresample3:i386 libswresample-dev:i386
+    sudo apt install --yes gcc-11 gcc-11-multilib g++-11 g++-11-multilib libc6-dev-i386 libx11-6:i386 libx11-dev:i386 libx11-xcb1:i386 libx11-xcb-dev:i386 libxcb-randr0-dev:i386 libasound2:i386 libasound2-dev:i386 libavutil56:i386 libavutil-dev:i386 libswresample3:i386 libswresample-dev:i386
 
-    sudo ln -f -s /usr/bin/gcc-12 /usr/bin/gcc
+    sudo ln -f -s /usr/bin/gcc-11 /usr/bin/gcc
 
-    sudo ln -f -s /usr/bin/g++-12 /usr/bin/g++
+    sudo ln -f -s /usr/bin/g++-11 /usr/bin/g++
 
     wget -nc https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
     
