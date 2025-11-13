@@ -135,7 +135,7 @@ void FileDebug::draw(uint64_t framecount, bool* p_open = nullptr)
 
                     for (fd_history_t fdh : fd_history[hovered_fd]) {
                         if ((frame >= fdh.first_frame) && (frame <= fdh.last_frame)) {
-                            ImGui::SetTooltip(fdh.file.c_str());
+                            ImGui::SetTooltip("%s", fdh.file.c_str());
                         }
                     }
                 }

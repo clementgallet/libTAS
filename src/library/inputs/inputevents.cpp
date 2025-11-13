@@ -754,6 +754,8 @@ static void generateMouseMotionEvents(void)
         dev->root_x = dev->event_x;
         dev->root_y = dev->event_y;
         dev->detail = 0;
+        dev->valuators.mask = reinterpret_cast<unsigned char *>(1); // Dangling but non-null pointer
+        dev->valuators.mask_len = 0;
         for (int d=0; d<GAMEDISPLAYNUM; d++) {
             if (x11::gameDisplays[d]) {
                 dev->root = DefaultRootWindow(x11::gameDisplays[d]);
