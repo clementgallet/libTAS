@@ -118,7 +118,7 @@ void ProfilerDebug::renderNode(int nodeId, const Profiler::Database* database, f
     {
         ImGui::Text("%s in %f ms", info.label.c_str(), lengthTimeMs);
         if (!info.description.empty())
-            ImGui::Text(info.description.c_str());
+            ImGui::Text("%s", info.description.c_str());
         ImGui::EndTooltip();
     }
     ImGui::PopStyleColor(3);
