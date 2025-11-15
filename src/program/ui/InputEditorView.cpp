@@ -127,7 +127,7 @@ void InputEditorView::fillMenu(QMenu* frameMenu)
 
     eventAct = menu->addAction(tr("Edit frame events"), this, &InputEditorView::editEvents);
 
-    insertAct = menu->addAction(tr("Insert"), this, &InputEditorView::insertInput, QKeySequence(Qt::CTRL + Qt::Key_Plus));
+    insertAct = menu->addAction(tr("Insert"), this, &InputEditorView::insertInput, QKeySequence(int(Qt::CTRL) | int(Qt::Key_Plus)));
 
     /* Shortcuts for context menus are special, they won't work by default
      * because the menu is hidden, so actions need to be added to the View as
@@ -144,25 +144,25 @@ void InputEditorView::fillMenu(QMenu* frameMenu)
 
     insertsAct = menu->addAction(tr("Insert # frames"), this, &InputEditorView::insertInputs);
 
-    markAct = menu->addAction(tr("Add marker"), this, &InputEditorView::addMarker, QKeySequence(Qt::CTRL + Qt::Key_M));
+    markAct = menu->addAction(tr("Add marker"), this, &InputEditorView::addMarker, QKeySequence("Ctrl+M"));
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     markAct->setShortcutVisibleInContextMenu(true);
 #endif
     this->addAction(markAct);
 
-    unmarkAct = menu->addAction(tr("Remove marker"), this, &InputEditorView::removeMarker, QKeySequence(Qt::CTRL + Qt::Key_R));
+    unmarkAct = menu->addAction(tr("Remove marker"), this, &InputEditorView::removeMarker, QKeySequence("Ctrl+R"));
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     unmarkAct->setShortcutVisibleInContextMenu(true);
 #endif
     this->addAction(unmarkAct);
 
-    duplicateAct = menu->addAction(tr("Duplicate"), this, &InputEditorView::duplicateInput, QKeySequence(Qt::CTRL + Qt::Key_D));
+    duplicateAct = menu->addAction(tr("Duplicate"), this, &InputEditorView::duplicateInput, QKeySequence("Ctrl+D"));
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     duplicateAct->setShortcutVisibleInContextMenu(true);
 #endif
     this->addAction(duplicateAct);
 
-    deleteAct = menu->addAction(tr("Delete"), this, &InputEditorView::deleteInput, QKeySequence(Qt::CTRL + Qt::Key_Minus));
+    deleteAct = menu->addAction(tr("Delete"), this, &InputEditorView::deleteInput, QKeySequence(int(Qt::CTRL) | int(Qt::Key_Minus)));
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     deleteAct->setShortcutVisibleInContextMenu(true);
 #endif
@@ -194,7 +194,7 @@ void InputEditorView::fillMenu(QMenu* frameMenu)
 #endif
     this->addAction(pasteAct);
 
-    pasteInsertAct = menu->addAction(tr("Paste Insert"), this, &InputEditorView::pasteInsertInputs, QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_V));
+    pasteInsertAct = menu->addAction(tr("Paste Insert"), this, &InputEditorView::pasteInsertInputs, QKeySequence("Ctrl+Shift+V"));
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
     pasteInsertAct->setShortcutVisibleInContextMenu(true);
 #endif

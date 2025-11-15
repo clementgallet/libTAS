@@ -46,24 +46,24 @@ QHexView::QHexView(QWidget* parent)
     p.setBrush(QPalette::Window, p.base());
 
     connect(this->verticalScrollBar(), &QScrollBar::valueChanged, this,
-            [=](int) { this->viewport()->update(); });
+            [=, this](int) { this->viewport()->update(); });
 
     m_hexmetadata = new QHexMetadata(&m_options, this);
     connect(m_hexmetadata, &QHexMetadata::changed, this,
-            [=]() { this->viewport()->update(); });
+            [=, this]() { this->viewport()->update(); });
 
     m_hexcursor = new QHexCursor(&m_options, this);
     this->setDocument(
         QHexDocument::fromMemory<QMemoryBuffer>(QByteArray(), this));
     this->checkState();
 
-    connect(m_hexcursor, &QHexCursor::positionChanged, this, [=]() {
+    connect(m_hexcursor, &QHexCursor::positionChanged, this, [=, this]() {
         m_writing = false;
         this->ensureVisible();
         Q_EMIT positionChanged();
     });
 
-    connect(m_hexcursor, &QHexCursor::modeChanged, this, [=]() {
+    connect(m_hexcursor, &QHexCursor::modeChanged, this, [=, this]() {
         m_writing = false;
         this->viewport()->update();
         Q_EMIT modeChanged();
@@ -149,7 +149,7 @@ void QHexView::setDocument(QHexDocument* doc) {
 
     m_hexdocument = doc;
 
-    connect(m_hexdocument, &QHexDocument::reset, this, [=]() {
+    connect(m_hexdocument, &QHexDocument::reset, this, [=, this]() {
         m_writing = false;
         m_hexcursor->move(0);
         this->checkAndUpdate(true);
@@ -159,7 +159,7 @@ void QHexView::setDocument(QHexDocument* doc) {
             &QHexView::dataChanged);
 
     connect(m_hexdocument, &QHexDocument::changed, this,
-            [=]() { this->checkAndUpdate(true); });
+            [=, this]() { this->checkAndUpdate(true); });
 
     this->checkAndUpdate(true);
 }

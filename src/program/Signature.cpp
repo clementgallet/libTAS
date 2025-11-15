@@ -211,7 +211,7 @@ uint8_t* SigSearch::FindCommon(uint8_t* input, size_t inputLen, const Signature 
                 const uint8_t *memPtr = ptr+1;
                 bool found = true;
 
-                for (int i = 0; (i < sigLen-2) && (memPtr < end); ++mskPtr, ++patPtr, ++memPtr, i++) {
+                for (size_t i = 0; (i < sigLen-2) && (memPtr < end); ++mskPtr, ++patPtr, ++memPtr, i++) {
                     if (!*mskPtr)
                         continue;
 

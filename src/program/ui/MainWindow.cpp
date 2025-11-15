@@ -115,17 +115,17 @@ do {\
     }\
 } while(false)
 
-#define LAMBDABOOLSLOT(parameter) [=](bool checked) {\
+#define LAMBDABOOLSLOT(parameter) [=, this](bool checked) {\
     parameter = checked;\
     context->config.sc_modified = true;\
 }\
 
-#define LAMBDACHECKBOXSLOT(group, parameter) [=](bool) {\
+#define LAMBDACHECKBOXSLOT(group, parameter) [=, this](bool) {\
     setMaskFromCheckboxes(group, parameter);\
     context->config.sc_modified = true;\
 }\
 
-#define LAMBDARADIOSLOT(group, parameter) [=]() {\
+#define LAMBDARADIOSLOT(group, parameter) [=, this]() {\
     setListFromRadio(group, parameter);\
     context->config.sc_modified = true;\
 }\
@@ -245,7 +245,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     fpsNumField = new QSpinBox();
     fpsNumField->setMaximum(std::numeric_limits<int>::max());
     fpsNumField->setMinimum(1);
-    connect(fpsNumField, QOverload<int>::of(&QSpinBox::valueChanged),[=](int i){
+    connect(fpsNumField, QOverload<int>::of(&QSpinBox::valueChanged),[=, this](int i){
         context->current_framerate_num = i;
         gameLoop->movie.inputs->variable_framerate = true;
     });
@@ -253,7 +253,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     fpsDenField = new QSpinBox();
     fpsDenField->setMaximum(std::numeric_limits<int>::max());
     fpsDenField->setMinimum(1);
-    connect(fpsDenField, QOverload<int>::of(&QSpinBox::valueChanged),[=](int i){
+    connect(fpsDenField, QOverload<int>::of(&QSpinBox::valueChanged),[=, this](int i){
         context->current_framerate_den = i;
         gameLoop->movie.inputs->variable_framerate = true;
     });
@@ -285,7 +285,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(realTimeNsec, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::slotRealTimeFormat);
 
     QPushButton* realTimeChange = new QPushButton("Set");
-    connect(realTimeChange, &QAbstractButton::clicked, [=](){
+    connect(realTimeChange, &QAbstractButton::clicked, [=, this](){
         context->new_realtime_sec = realTimeSec->value();
         context->new_realtime_nsec = realTimeNsec->value();
     });
@@ -646,7 +646,7 @@ void MainWindow::createMenus()
     exportMovieAction->setEnabled(false);
     settingsMovieAction = movieMenu->addAction(tr("Movie Settings..."), movieSettingsWindow, &MovieSettingsWindow::exec);
     settingsMovieAction->setEnabled(false);
-    action = movieMenu->addAction(tr("Don't enforce movie settings"), this, [=](bool checked){gameLoop->movie.header->skipLoadSettings = checked;});
+    action = movieMenu->addAction(tr("Don't enforce movie settings"), this, [=, this](bool checked){gameLoop->movie.header->skipLoadSettings = checked;});
     action->setCheckable(true);
     action->setToolTip("When checked, settings stored inside the movie metadata won't be enforced (e.g. initial time, mouse/controller support, framerate...). You can then save your movie with the new settings.");
 

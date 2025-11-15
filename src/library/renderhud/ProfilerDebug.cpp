@@ -135,7 +135,6 @@ void ProfilerDebug::draw(uint64_t framecount, bool* p_open = nullptr)
     }
 
     static uint64_t old_framecount = 0;
-    static bool will_update;
     static uint64_t older_framecount = 0;
 
     currentTime = Profiler::currentTimeWithoutPause();
@@ -166,7 +165,7 @@ void ProfilerDebug::draw(uint64_t framecount, bool* p_open = nullptr)
 
         /* Convert frames to length here */
         const std::vector<TimeHolder>& frameTimings = Profiler::getFrameTimings();
-        if (frameTimings.size() < timeWindowFrames)
+        if (frameTimings.size() < static_cast<unsigned int>(timeWindowFrames))
             timeWindowFrames = frameTimings.size();
         
         if (timeWindowFrames > 0) {
@@ -224,7 +223,7 @@ void ProfilerDebug::draw(uint64_t framecount, bool* p_open = nullptr)
 
         const std::vector<TimeHolder>& frameTimings = Profiler::getFrameTimings();
         if (frameTimings.size() > 0) {
-            for (int f = 0; f < frameTimings.size() - 1; f++) {
+            for (long unsigned int f = 0; f < frameTimings.size() - 1; f++) {
                 /* Don't print frames that won't show up on screen */
                 if (frameTimings[f] < minTime)
                     continue;

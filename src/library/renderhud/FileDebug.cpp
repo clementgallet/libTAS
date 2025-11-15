@@ -109,7 +109,6 @@ void FileDebug::draw(uint64_t framecount, bool* p_open = nullptr)
 
             /* Build the whole files as PlotShaded data */
             float xs[2], ys1[2], ys2[2];
-            char name[32];
             for (int fd = 0; fd < FD_LIMIT; fd++) {
                 for (fd_history_t fdh : fd_history[fd]) {
                     xs[0] = fdh.first_frame;
@@ -131,7 +130,7 @@ void FileDebug::draw(uint64_t framecount, bool* p_open = nullptr)
                     (mouse.y - hovered_fd) < (BAR_HEIGHT / 2) && 
                     (mouse.y - hovered_fd) > (-BAR_HEIGHT / 2)) {
 
-                    int frame = (int) std::roundf(mouse.x);
+                    uint64_t frame = (uint64_t) std::roundf(mouse.x);
 
                     for (fd_history_t fdh : fd_history[hovered_fd]) {
                         if ((frame >= fdh.first_frame) && (frame <= fdh.last_frame)) {

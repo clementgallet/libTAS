@@ -35,13 +35,17 @@ case $host in
     ;;
 esac
 
-dnl **** Check for c++11 ****
-
+dnl Prefer C++20, fall back to C++17, then 14
 AC_LANG_PUSH([C++])
-CXX="$CXX -Werror -std=c++11"
-AC_MSG_CHECKING([whether CXX supports -std=c++11])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], [AC_MSG_RESULT([yes]); CXXFLAGS="$CXXFLAGS -std=c++11"], [AC_MSG_RESULT([no])])
-CXX="$save_CXX"
+for flag in -std=c++20 -std=c++17 -std=c++14; do
+  AC_MSG_CHECKING([whether $CXX supports $flag])
+  save_CXXFLAGS="$CXXFLAGS"
+  CXXFLAGS="$CXXFLAGS $flag"
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])],
+    [AC_MSG_RESULT([yes]); CXX_STD="$flag"; break],
+    [AC_MSG_RESULT([no]); CXXFLAGS="$save_CXXFLAGS"])
+done
+CXXFLAGS="$CXXFLAGS $CXX_STD"
 AC_LANG_POP([C++])
 
 AM_CONDITIONAL([BUILD32LIB], [test "x$with_i386" = "xyes" || test "x$enable_i386_lib" = "xyes"])
