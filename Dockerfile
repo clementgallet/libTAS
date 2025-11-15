@@ -32,7 +32,7 @@ FROM debian:12
   # wine
     RUN apt-get -y install wine
 
-  # pcem
+  # pcem (for Windows games)
     # dependencies
       RUN apt-get -y install libwxbase3.2 libwxgtk3.2 wx-common libsdl2-dev libopenal-dev
 
@@ -42,6 +42,18 @@ FROM debian:12
       RUN cd /root/src/pcem && ./configure --enable-release-build
       RUN cd /root/src/pcem && autoreconf
       RUN cd /root/src/pcem && make
+
+  # Ruffle (for Flash games)
+    # dependencies
+    RUN apt-get update && apt-get install -y \
+        libasound2-dev \
+        libudev-dev \
+        default-jre-headless \
+        g++
+    RUN wget -qO- https://sh.rustup.rs | sh -s -- -y
+    RUN cd /root/src/ && git clone https://github.com/ruffle-rs/ruffle.git
+    ENV PATH="/root/.cargo/bin:${PATH}"
+    RUN cd /root/src/ruffle && cargo build --release --package=ruffle_desktop
 
 # run
   CMD bash
