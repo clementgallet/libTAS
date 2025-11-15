@@ -653,7 +653,7 @@ void GameLoop::sleepSendPreview()
 
 void GameLoop::processInputs(AllInputs &ai)
 {
-    bool modified = false;
+    bool modified_by_lua = false;
     ai.clear();
 
     /* Don't record inputs if we are quitting */
@@ -717,7 +717,7 @@ void GameLoop::processInputs(AllInputs &ai)
             }
 
             /* Call lua onInput() here so that a script can modify inputs */
-            Lua::Input::registerInputs(&ai, &modified);
+            Lua::Input::registerInputs(&ai, &modified_by_lua);
             Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackInput);
 
             if (context->config.sc.recording == SharedConfig::RECORDING_WRITE) {
@@ -735,15 +735,13 @@ void GameLoop::processInputs(AllInputs &ai)
                     movie.setLockedInputs(ai);
 
                 /* Save inputs to moviefile */
-                if (modified)
-                    movie.inputs->setInputs(ai, keep_inputs);
+                movie.inputs->setInputs(ai, keep_inputs);
 
                 AutoSave::update(context, movie);
             }
             else {
                 /* Just save the inputs into the backup movie */
-                if (modified)
-                    movie.inputs->setInputs(ai, false);
+                movie.inputs->setInputs(ai, false);
             }
             break;
 
@@ -770,11 +768,10 @@ void GameLoop::processInputs(AllInputs &ai)
                 ai = movie.inputs->getInputs();
 
                 /* Allow lua to modify movie inputs even in playback mode */
-                Lua::Input::registerInputs(&ai, &modified);
+                Lua::Input::registerInputs(&ai, &modified_by_lua);
                 Lua::Callbacks::call(Lua::NamedLuaFunction::CallbackInput);
-                if (modified) {
+                if (modified_by_lua) {
                     movie.inputs->setInputs(ai, true);
-                    movie.inputs->wasModified();
                 }
 
                 /* Update framerate */

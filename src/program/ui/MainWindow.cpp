@@ -1179,9 +1179,6 @@ void MainWindow::slotLaunch(bool attach_gdb)
     }
     cmdOptions->setEditText(context->config.gameargs.c_str());
 
-    /* Reset MovieFileInput parameters */
-    gameLoop->movie.inputs->clear();
-
     /* Check that there might be a thread from a previous game execution */
     if (game_thread.joinable())
         game_thread.join();
