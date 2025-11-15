@@ -11,4 +11,5 @@ get help from the [Discord server](https://discord.gg/3MBVAzU).
 * [Running libTAS using WSL 2](../guides/wsl)
 * [Lua usage and functions](../guides/lua)
 * [Moviefile format](../guides/format)
+* [Unity support](../guides/unity)
 * [Tech details](../guides/how)
