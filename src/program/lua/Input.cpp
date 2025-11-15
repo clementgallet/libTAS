@@ -29,6 +29,7 @@ extern "C" {
 }
 
 static AllInputs* ai;
+static bool* modified;
 
 /* List of functions to register */
 static const luaL_Reg input_functions[] =
@@ -59,14 +60,17 @@ void Lua::Input::registerFunctions(lua_State *L)
     lua_setglobal(L, "input");
 }
 
-void Lua::Input::registerInputs(AllInputs* frame_ai)
+void Lua::Input::registerInputs(AllInputs* frame_ai, bool* frame_modified)
 {
     ai = frame_ai;
+    modified = frame_modified;
+    *modified = false;
 }
 
 int Lua::Input::clear(lua_State *L)
 {
     ai->clear();
+    *modified = true;
     return 0;
 }
 
@@ -76,7 +80,10 @@ int Lua::Input::setKey(lua_State *L)
     int state = static_cast<int>(lua_tointeger(L, 2));
     
     SingleInput si = {SingleInput::IT_KEYBOARD, keysym, ""};
-    ai->setInput(si, state);
+    if (ai->getInput(si) != state) {
+        ai->setInput(si, state);
+        *modified = true;
+    }
     return 0;
 }
 
@@ -96,11 +103,20 @@ int Lua::Input::setMouseCoords(lua_State *L)
     int mode = static_cast<int>(lua_tointeger(L, 3));
     
     SingleInput si = {SingleInput::IT_POINTER_X, 0, ""};
-    ai->setInput(si, x);
+    if (ai->getInput(si) != x) {
+        ai->setInput(si, x);
+        *modified = true;
+    }
     si = {SingleInput::IT_POINTER_Y, 0, ""};
-    ai->setInput(si, y);
+    if (ai->getInput(si) != y) {
+        ai->setInput(si, y);
+        *modified = true;
+    }
     si = {SingleInput::IT_POINTER_MODE, 0, ""};
-    ai->setInput(si, mode);
+    if (ai->getInput(si) != mode) {
+        ai->setInput(si, mode);
+        *modified = true;
+    }
     return 0;
 }
 
@@ -121,7 +137,10 @@ int Lua::Input::setMouseButtons(lua_State *L)
     int state = static_cast<int>(lua_tointeger(L, 2));
     
     SingleInput si = {SingleInput::IT_POINTER_BUTTON, button, ""};
-    ai->setInput(si, state);
+    if (ai->getInput(si) != state) {
+        ai->setInput(si, state);
+        *modified = true;
+    }
     return 0;
 }
 
@@ -141,7 +160,10 @@ int Lua::Input::setControllerButton(lua_State *L)
     int state = static_cast<int>(lua_tointeger(L, 3));
     
     SingleInput si = {2*(controller-1)+SingleInput::IT_CONTROLLER1_BUTTON, button, ""};
-    ai->setInput(si, state);
+    if (ai->getInput(si) != state) {
+        ai->setInput(si, state);
+        *modified = true;
+    }
     return 0;
 }
 
@@ -162,7 +184,10 @@ int Lua::Input::setControllerAxis(lua_State *L)
     short value = static_cast<short>(lua_tointeger(L, 3));
     
     SingleInput si = {2*(controller-1)+SingleInput::IT_CONTROLLER1_AXIS, axis, ""};
-    ai->setInput(si, value);
+    if (ai->getInput(si) != value) {
+        ai->setInput(si, value);
+        *modified = true;
+    }
     return 0;
 }
 
@@ -182,7 +207,10 @@ int Lua::Input::setFlag(lua_State *L)
     int state = static_cast<int>(lua_tointeger(L, 2));
     
     SingleInput si = {SingleInput::IT_FLAG, flag, ""};
-    ai->setInput(si, state);
+    if (ai->getInput(si) != state) {
+        ai->setInput(si, state);
+        *modified = true;
+    }
     return 0;
 }
 
@@ -201,9 +229,15 @@ int Lua::Input::setFramerate(lua_State *L)
     int den = static_cast<int>(lua_tointeger(L, 2));
     
     SingleInput si = {SingleInput::IT_FRAMERATE_NUM, 0, ""};
-    ai->setInput(si, num);
+    if (ai->getInput(si) != num) {
+        ai->setInput(si, num);
+        *modified = true;
+    }
     si = {SingleInput::IT_FRAMERATE_DEN, 0, ""};
-    ai->setInput(si, den);
+    if (ai->getInput(si) != den) {
+        ai->setInput(si, den);
+        *modified = true;
+    }
     return 0;
 }
 
@@ -222,9 +256,15 @@ int Lua::Input::setRealtime(lua_State *L)
     int nsec = static_cast<int>(lua_tointeger(L, 2));
     
     SingleInput si = {SingleInput::IT_REALTIME_SEC, 0, ""};
-    ai->setInput(si, sec);
+    if (ai->getInput(si) != sec) {
+        ai->setInput(si, sec);
+        *modified = true;
+    }
     si = {SingleInput::IT_REALTIME_NSEC, 0, ""};
-    ai->setInput(si, nsec);
+    if (ai->getInput(si) != nsec) {
+        ai->setInput(si, nsec);
+        *modified = true;
+    }
     return 0;
 }
 

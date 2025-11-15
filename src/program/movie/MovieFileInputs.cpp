@@ -78,6 +78,10 @@ void MovieFileInputs::load()
 {
     emit inputsToBeReset();
 
+    modifiedSinceLastSave = false;
+    modifiedSinceLastAutoSave = false;
+    modifiedSinceLastStateLoad = false;
+
     /* Clear structures */
     input_list.clear();
     
