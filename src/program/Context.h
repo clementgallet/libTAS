@@ -23,6 +23,7 @@
 #include "Config.h"
 #include "ConcurrentQueue.h"
 #include "KeyMapping.h"
+#include "movie/MovieFile.h"
 
 #ifdef __unix__
 #include <xcb/xcb.h>
