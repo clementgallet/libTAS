@@ -343,6 +343,91 @@ Sleep for `length` milliseconds.
 
 Pause the game if playing, resume otherwise.
 
+### Ramsearch functions
+
+Ramsearch functions configure a ram search similar to the one of the Ramsearch window. The parameters correspond to what can be found there.
+
+| value_type     | Number |
+| -------------- | ------ |
+| unsigned char  | 0      |
+| char           | 1      |
+| unsigned short | 2      |
+| short          | 3      |
+| unsigned int   | 4      |
+| int            | 5      |
+| unsigned int64 | 6      |
+| int64          | 7      |
+| float          | 8      |
+| double         | 9      |
+| byte array     | 10     |
+| string         | 11     |
+
+| alignment      | Number |
+| -------------- | ------ |
+| default        | 0      |
+| 1              | 1      |
+| 2              | 2      |
+| 4              | 3      |
+
+| compare_type           | Number |
+| ---------------------- | ------ |
+| Unknown/Previous Value | 0      |
+| Specific Value         | 1      |
+
+In the `Specific Value` case, the value must be passed in the `compare_value` parameter.
+
+| compare_operator         | String |
+| ------------------------ | ------ |
+| Equal To                 | ==     |
+| Not Equal To             | !=     |
+| Less Than                | <      |
+| Greater Than             | >      |
+| Less Than Or Equal To    | <=     |
+| Greater Than Or Equal To | >=     |
+| Different By             | !      |
+
+In the `Different By` case, the value must be passed in the `different value` parameter.
+
+MemFlags uses three bitwise options with values 1, 2, and 4: Exclude special regions, Exclude read-only regions, Exclude executable regions.
+They combine by adding their values using a bitwise OR.
+No options = 0, and all three selected = 7 (default).
+
+#### ramsearch.newsearch
+
+    Number ramsearch.newsearch([Number value_type = 0], [Number alignment = 0], [Number compare_type = 0], [Number compare_value = 0], [String compare_operator = "=="], [Number different_value = 0], [Number memflags = 7], [String begin_address = "0000000000000000"], [String end_address = "00007fffffffffff"])
+
+Start a new ramsearch. Returns number of results.
+
+#### ramsearch.search
+
+    Number ramsearch.search([Number compare_type], [Number compare_value], [String compare_operator], [Number different_value])
+
+Perform a new step on previously started search. Parameters that are not passed will default to their previous value set up in former calls to newsearch() or search() or using the `ramsearch:set_*` functions. Returns number of results.
+
+#### ramsearch.get_current_value
+
+    Number ramsearch.get_current_value(Number index)
+
+Get current value of address at a given index of the search results.
+
+#### ramsearch.get_address
+
+    String ramsearch.get_address(Number index)
+
+Get address at a given index of the search results
+
+#### ramsearch.set_compare_operator
+
+    none ramsearch.set_compare_operator(String operator, [Number different_value])
+
+Set comparison operator for next search. It is only necessary to pass the different value in the `Different By` case.
+
+#### ramsearch.set_comparison_type
+
+    none ramsearch.set_comparison_type(Number type, [Number compare_value])
+
+Set comparison type for next search. It is only necessary to pass the compare_value in the `Specific Value` case.
+
 ### Callbacks
 
 #### callback.onStartup
@@ -393,3 +478,51 @@ Display a simple text on top of the game:
     end
 
     callback.onPaint(hello_world)
+
+#### Using Ramsearch to automate finding x;y position in memory
+
+    local memx = ""
+    local x_position_frame_10 = 580
+
+    function onFrame()
+       local f = movie.currentFrame()
+       if f == 10 then
+          -- look for doubles of value 580 on frame 10
+          local nb_results= ramsearch.newsearch(9, 0, 1, x_position_frame_10, "==")
+          print(string.format("number of results on newsearch: %d", nb_results))
+       end
+       if f == 11 then
+          -- filter out addresses that changed on frame 11 (we didn't move)
+          local nb_results = ramsearch.search()
+          print(string.format("number of results on frame 11: %d", nb_results))
+       end
+       if f == 12 then
+          -- filter out addresses that didn't change on frame 12 (after we moved)
+          local nb_results = ramsearch.search(0, 0, "!=")
+          print(string.format("number of results on frame 12: %d", nb_results))
+          if nb_results == 1 then
+             -- We found our value, let's store it to display it in the
+             -- onPaint() callback
+             memx = ramsearch.get_address(0)
+          else
+             print("Error: found too many values")
+             for i = 0,nb_results-1,1
+             do
+                local v = ramsearch.get_current_value(i)
+                local addr = ramsearch.get_address(i)
+                print(string.format("current value: %f @ %s", v, addr))
+             end
+          end
+       end
+    end
+
+    function onPaint()
+       if memx ~= "" then
+          local x_num = tonumber(memx, 16)
+          local x = memory.readd(x_num)
+          local y_num = x_num + 56
+          local y = memory.readd(y_num)
+          gui.ellipse(x, y, 10, 10)
+          gui.text(100, 100, string.format("%f ; %f", x, y))
+       end
+    end
