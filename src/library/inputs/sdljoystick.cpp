@@ -30,6 +30,32 @@
 
 namespace libtas {
 
+#define MAX_SDLJOYS 4
+static int joyids[MAX_SDLJOYS] = {-1, -1, -1, -1};
+static int refids[4] = {0, 0, 0, 0}; // joystick open/close is ref-counted
+static const char* joypaths[MAX_SDLJOYS] = {"/dev/input/js0", "/dev/input/js1", "/dev/input/js2", "/dev/input/js3"};
+
+/* Helper functions */
+static bool isIdValid(SDL_Joystick* joy)
+{
+    if (joy == NULL)
+        return false;
+    int *joyid = reinterpret_cast<int*>(joy);
+    if ((*joyid < 0) || (*joyid >= MAX_SDLJOYS) || (*joyid >= Global::shared_config.nb_controllers))
+        return false;
+    return true;
+}
+
+static bool isIdValidOpen(SDL_Joystick* joy)
+{
+    if (!isIdValid(joy))
+        return false;
+    int *joyid = reinterpret_cast<int*>(joy);
+    if (joyids[*joyid] == -1)
+        return false;
+    return true;
+}
+
 /* Override */ int SDL_NumJoysticks(void)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
@@ -57,29 +83,23 @@ const char* joyname = "Microsoft X-Box 360 pad";
     return joyname;
 }
 
-#define MAX_SDLJOYS 4
-static int joyids[MAX_SDLJOYS] = {-1, -1, -1, -1};
-static int refids[4] = {0, 0, 0, 0}; // joystick open/close is ref-counted
-
-/* Helper functions */
-static bool isIdValid(SDL_Joystick* joy)
+/* Override */ const char *SDL_JoystickPathForIndex(int device_index)
 {
-    if (joy == NULL)
-        return false;
-    int *joyid = reinterpret_cast<int*>(joy);
-    if ((*joyid < 0) || (*joyid >= MAX_SDLJOYS) || (*joyid >= Global::shared_config.nb_controllers))
-        return false;
-    return true;
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    if ((device_index < 0) || (device_index >= Global::shared_config.nb_controllers))
+        return nullptr;
+
+    return joypaths[device_index];
 }
 
-static bool isIdValidOpen(SDL_Joystick* joy)
+/* Override */ const char *SDL_JoystickPath(SDL_Joystick *joystick)
 {
-    if (!isIdValid(joy))
-        return false;
-    int *joyid = reinterpret_cast<int*>(joy);
-    if (joyids[*joyid] == -1)
-        return false;
-    return true;
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    if (!isIdValidOpen(joystick))
+        return nullptr;
+
+    int device_index = *reinterpret_cast<int*>(joystick);
+    return joypaths[device_index];
 }
 
 /* Override */ SDL_Joystick *SDL_JoystickOpen(int device_index)

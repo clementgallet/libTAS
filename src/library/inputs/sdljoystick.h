@@ -59,6 +59,36 @@ OVERRIDE int SDL_NumJoysticks(void);
 OVERRIDE const char *SDL_JoystickNameForIndex(int device_index);
 
 /**
+ * Get the implementation dependent path of a joystick.
+ *
+ * This can be called before any joysticks are opened.
+ *
+ * \param device_index the index of the joystick to query (the N'th joystick
+ *                     on the system).
+ * \returns the path of the selected joystick. If no path can be found, this
+ *          function returns NULL; call SDL_GetError() for more information.
+ *
+ * \since This function is available since SDL 2.24.0.
+ *
+ * \sa SDL_JoystickPath
+ * \sa SDL_JoystickOpen
+ */
+OVERRIDE const char *SDL_JoystickPathForIndex(int device_index);
+
+/**
+ * Get the implementation dependent path of a joystick.
+ *
+ * \param joystick the SDL_Joystick obtained from SDL_JoystickOpen().
+ * \returns the path of the selected joystick. If no path can be found, this
+ *          function returns NULL; call SDL_GetError() for more information.
+ *
+ * \since This function is available since SDL 2.24.0.
+ *
+ * \sa SDL_JoystickPathForIndex
+ */
+OVERRIDE const char *SDL_JoystickPath(SDL_Joystick *joystick);
+
+/**
  *  Open a joystick for use.
  *  The index passed as an argument refers to the N'th joystick on the system.
  *  This index is not the value which will identify this joystick in future
