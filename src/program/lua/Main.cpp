@@ -26,6 +26,7 @@
 #include "Print.h"
 #include "Runtime.h"
 #include "Callbacks.h"
+#include "Ramsearch.h"
 
 #include <iostream>
 extern "C" {
@@ -56,6 +57,7 @@ lua_State* Lua::Main::new_state()
     Lua::Callbacks::registerFunctions(lua_state);
     Lua::Print::init(lua_state);
     Lua::Runtime::registerFunctions(lua_state, context);
+    Lua::Ramsearch::registerFunctions(lua_state, context);
     
     return lua_state;
 }

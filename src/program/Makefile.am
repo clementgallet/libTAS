@@ -102,6 +102,7 @@ libTAS_SOURCES = \
     lua/Movie.cpp \
     lua/Print.cpp \
     lua/Runtime.cpp \
+    lua/Ramsearch.cpp \
     movie/InputSerialization.cpp \
     movie/MovieActionEditFrames.cpp \
     movie/MovieActionInsertFrames.cpp \
