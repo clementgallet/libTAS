@@ -298,6 +298,12 @@ Returns the current rerecord count of the movie, or -1 if no movie is loaded
 
 Returns 1 of the current frame is a draw frame, or 0 if not.
 
+#### movie.getMovieFileName
+
+    String movie.getMovieFileName()
+
+Returns the full name of the movie file (.ltm).
+
 ### Runtime functions
 
 Runtime functions must be performed in callback `onFrame()` to be effective on
