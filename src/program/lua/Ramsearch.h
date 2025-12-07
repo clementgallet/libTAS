@@ -35,10 +35,10 @@ namespace Ramsearch {
 
     /* Set comparison operator, and value in the "different" operator
      * case */
-    void _set_compareop(const char *op, int value);
+    void _set_compareop(const char *op, const char* value);
 
     /* Set "compare to" case, and value in the "specific value" case */
-    void _set_compare_to(int type, int value);
+    void _set_compare_to(int type, const char* value);
 
 }
 }

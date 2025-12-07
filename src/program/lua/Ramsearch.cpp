@@ -22,9 +22,9 @@ static int alignment = 0;
 static int compare_type_int = 0; // CompareType::Previous;
 static CompareType compare_type;
 static CompareOperator compare_operator = CompareOperator::Equal;
-static int compare_value_int = 0;
+static const char* compare_value_str = "";
 static MemValueType compare_value;
-static int different_value_int = 0;
+static const char* different_value_str = "";
 static MemValueType different_value;
 static const char* begin_address_default = "0000000000000000";
 static uintptr_t begin_address;
@@ -58,12 +58,12 @@ int Lua::Ramsearch::newsearch(lua_State *L)
     value_type = luaL_optinteger(L, 1, value_type);
     alignment = luaL_optinteger(L, 2, alignment);
     compare_type_int = luaL_optinteger(L, 3, compare_type_int);
-    compare_value_int = luaL_optinteger(L, 4, compare_value_int);
-    _set_compare_to(compare_type_int, compare_value_int);
+    compare_value_str = luaL_optstring(L, 4, compare_value_str);
+    _set_compare_to(compare_type_int, compare_value_str);
     const char* compare_operator_str = luaL_optstring(L, 5, nullptr);
     if (compare_operator_str != nullptr) {
-        different_value_int = luaL_optinteger(L, 6, different_value_int);
-        _set_compareop(compare_operator_str, different_value_int);
+        different_value_str = luaL_optstring(L, 6, different_value_str);
+        _set_compareop(compare_operator_str, different_value_str);
     }
     memflags = luaL_optinteger(L, 7, memflags);
     begin_address = std::strtoul(luaL_optstring(L, 8, begin_address_default), nullptr, 16);
@@ -105,11 +105,11 @@ int Lua::Ramsearch::search(lua_State *L)
     }
 
     compare_type_int = luaL_optinteger(L, 1, compare_type_int);
-    compare_value_int = luaL_optinteger(L, 2, compare_value_int);
-    _set_compare_to(compare_type_int, compare_value_int);
+    compare_value_str = luaL_optstring(L, 2, compare_value_str);
+    _set_compare_to(compare_type_int, compare_value_str);
     const char* compare_operator_str = luaL_optstring(L, 3, nullptr);
     if (compare_operator_str != nullptr) {
-        int value = luaL_optinteger(L, 4, different_value_int);
+        const char* value = luaL_optstring(L, 4, different_value_str);
         _set_compareop(compare_operator_str, value);
     }
 
@@ -196,7 +196,7 @@ int Lua::Ramsearch::get_current_value(lua_State *L)
     return 1;
 }
 
-void Lua::Ramsearch::_set_compareop(const char *op, int value)
+void Lua::Ramsearch::_set_compareop(const char *op, const char* value)
 {
     if (strcmp(op, "==") == 0)
         compare_operator = CompareOperator::Equal;
@@ -212,35 +212,33 @@ void Lua::Ramsearch::_set_compareop(const char *op, int value)
         compare_operator = CompareOperator::GreaterEqual;
     else if (strcmp(op, "!") == 0) {
         compare_operator = CompareOperator::Different;
-        // we convert the int to string, then to MemValueType to avoid
-        // having to implement the int->MemValueType converter
-        different_value = MemValue::from_string(std::to_string(value).c_str(), RamInt, false);
+        different_value = MemValue::from_string(value, value_type, false);
     }
 }
 
 int Lua::Ramsearch::set_compare_operator(lua_State *L)
 {
     const char* op = lua_tostring(L, 1);
-    different_value_int = static_cast<int>(luaL_optinteger(L, 2, different_value_int));
-    _set_compareop(op, different_value_int);
+    different_value_str = luaL_optstring(L, 2, different_value_str);
+    _set_compareop(op, different_value_str);
     return 0;
 }
 
-void Lua::Ramsearch::_set_compare_to(int type, int value)
+void Lua::Ramsearch::_set_compare_to(int type, const char* value)
 {
     if (type == 0) {
         compare_type = CompareType::Previous;
     } else if (type == 1) {
         compare_type = CompareType::Value;
-        compare_value = MemValue::from_string(std::to_string(value).c_str(), value_type, false);
+        compare_value = MemValue::from_string(value, value_type, false);
     }
 }
 
 int Lua::Ramsearch::set_comparison_type(lua_State *L)
 {
     compare_type_int = static_cast<int>(lua_tointeger(L, 1));
-    compare_value_int = luaL_optinteger(L, 2, compare_value_int);
-    _set_compare_to(compare_type_int, compare_value_int);
+    compare_value_str = luaL_optstring(L, 2, compare_value_str);
+    _set_compare_to(compare_type_int, compare_value_str);
     return 0;
 }
 
