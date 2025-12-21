@@ -34,6 +34,7 @@
 #include <QtWidgets/QMessageBox>
 #include <QtGui/QClipboard>
 #include <QtGui/QGuiApplication>
+#include <QShortcut>
 
 #include <stdint.h>
 
@@ -117,6 +118,9 @@ InputEditorView::InputEditorView(Context* c, MovieFile *m, QWidget *parent) : QT
     currentMarkerText = "";
 
     scrollBarWidth = verticalScrollBar()->sizeHint().width() + 20;
+
+    QShortcut* saveShortcut = new QShortcut(QKeySequence("Ctrl+S"), this);
+    connect(saveShortcut, &QShortcut::activated, this, &InputEditorView::saveMovieRequested);
 }
 
 void InputEditorView::fillMenu(QMenu* frameMenu)

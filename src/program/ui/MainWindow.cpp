@@ -642,6 +642,7 @@ void MainWindow::createMenus()
     disabledActionsOnStart.append(action);
     saveMovieAction = movieMenu->addAction(tr("Save Movie"), this, &MainWindow::slotSaveMovie, QKeySequence("Ctrl+S"));
     saveMovieAction->setEnabled(false);
+    connect(inputEditorWindow->inputEditorView, &InputEditorView::saveMovieRequested, this, &MainWindow::slotSaveMovie);
     exportMovieAction = movieMenu->addAction(tr("Export Movie..."), this, &MainWindow::slotExportMovie);
     exportMovieAction->setEnabled(false);
     settingsMovieAction = movieMenu->addAction(tr("Movie Settings..."), movieSettingsWindow, &MovieSettingsWindow::exec);
