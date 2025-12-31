@@ -93,7 +93,7 @@ void LuaDraw::LuaWindow::render(ImDrawList* draw_list, ImVec2 offset, float scal
 
 void LuaDraw::LuaPixel::render(ImDrawList* draw_list, ImVec2 offset, float scale)
 {
-    draw_list->AddLine(ImVec2(x, y)*scale + offset, ImVec2(x, y)*scale + offset, color);
+    draw_list->AddLine(ImVec2(x, y)*scale + offset, ImVec2(x, y)*scale + offset + ImVec2(1, 0), color);
 }
 
 bool LuaDraw::LuaPixel::isInbound()
