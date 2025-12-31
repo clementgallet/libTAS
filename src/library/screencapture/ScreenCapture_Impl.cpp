@@ -127,9 +127,9 @@ void ScreenCapture_Impl::resize(int w, int h)
 
     initScreenSurface();
 
-    /* We need to close the dumping if needed, and open a new one */
+    /* We need to close the dumping if needed. It will open a new one on next frame */
     if (Global::shared_config.av_dumping) {
-        avencoder.reset(new AVEncoder());
+        avencoder.reset(nullptr);
     }
 
     LOG(LL_DEBUG, LCF_WINDOW, "Resize Screen Capture with new dimensions (%d,%d) and size %d", width, height, size);
