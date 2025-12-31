@@ -106,6 +106,9 @@ void LuaFunctionList::watchChanges()
                         lua_close(lf.lua_state);
                     lf.lua_state = Main::new_state();
                     Main::run(lf.lua_state, file);
+                    
+                    /* Set again the active state */
+                    switchForFile(i, lf.enabled);
                 }
                 else if (ev.mask == IN_IGNORED) {
                     LuaFile& lf = fileList[i];
@@ -126,6 +129,9 @@ void LuaFunctionList::watchChanges()
                         lua_close(lf.lua_state);
                     lf.lua_state = Main::new_state();
                     Main::run(lf.lua_state, file);
+                    
+                    /* Set again the active state */
+                    switchForFile(i, lf.enabled);
                 }
                 return;
             }
