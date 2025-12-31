@@ -12,6 +12,7 @@
 * Better handling of opendir/readdir and savefiles
 * Fix the Unity job handling not calling the completed callback
 * Fix crash when using lua input function outside onInput callback (fix #697)
+* Fix a crash when pasting no input in the input editor (fix #696)
 
 ## [1.4.7] - 2025-10-06
 ### Added

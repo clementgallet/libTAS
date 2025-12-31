@@ -202,27 +202,32 @@ void MovieFileInputs::paintInput(SingleInput si, std::vector<int>& values, int m
 
 void MovieFileInputs::editInputs(const std::vector<AllInputs>& inputs, uint64_t pos)
 {
-    action_queue.push(new MovieActionEditFrames(pos, inputs, this));
+    if (!inputs.empty())
+        action_queue.push(new MovieActionEditFrames(pos, inputs, this));
 }
 
 void MovieFileInputs::editInputs(const std::vector<AllInputs>& inputs, uint64_t pos, int count)
 {
-    action_queue.push(new MovieActionEditFrames(pos, pos+count-1, inputs, this));
+    if ((count > 0) && (inputs.size() >= count))
+        action_queue.push(new MovieActionEditFrames(pos, pos+count-1, inputs, this));
 }
 
 void MovieFileInputs::insertInputsBefore(uint64_t pos, int count)
 {
-    action_queue.push(new MovieActionInsertFrames(pos, count, this));
+    if (count > 0)
+        action_queue.push(new MovieActionInsertFrames(pos, count, this));
 }
 
 void MovieFileInputs::insertInputsBefore(const std::vector<AllInputs>& inputs, uint64_t pos)
 {
-    action_queue.push(new MovieActionInsertFrames(pos, inputs, this));
+    if (!inputs.empty())
+        action_queue.push(new MovieActionInsertFrames(pos, inputs, this));
 }
 
 void MovieFileInputs::deleteInputs(uint64_t pos, int count)
 {
-    action_queue.push(new MovieActionRemoveFrames(pos, pos+count-1, this));
+    if (count > 0)
+        action_queue.push(new MovieActionRemoveFrames(pos, pos+count-1, this));
 }
 
 void MovieFileInputs::extractInputs(std::set<SingleInput> &set)

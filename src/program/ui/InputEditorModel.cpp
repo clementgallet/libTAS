@@ -868,6 +868,9 @@ void InputEditorModel::pasteInputsInRange(int row, int count)
     std::vector<AllInputs> paste_ais;
     InputSerialization::readInputs(inputString, paste_ais);
 
+    if (paste_ais.empty())
+        return;
+        
     /* Update the movie by ranges of pasted inputs */
     for (int i = 0; i < count; i+=paste_ais.size()) {
         size_t range_size = std::min(paste_ais.size(), (size_t)(count-i));
