@@ -359,8 +359,7 @@ SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
         return b;
     
     /* Using my default xbox360 mapping */
-    static const int bindB[11] = {0, 1, 2, 3, 6, 8, 7, 9, 10, 4, 5};
-    static const int bindH[4] = {1, 4, 8, 2};
+    static const int bindB[15] = {0, 1, 2, 3, 6, 8, 7, 9, 10, 4, 5, /* hats */ 1, 4, 8, 2};
 
     if (button < (SDL_GameControllerButton) SingleInput::BUTTON_DPAD_UP) {
         b.bindType = SDL_CONTROLLER_BINDTYPE_BUTTON;
@@ -369,7 +368,7 @@ SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
     else {
         b.bindType = SDL_CONTROLLER_BINDTYPE_HAT;
         b.value.hat.hat = 0;
-        b.value.hat.hat_mask = bindH[button-SingleInput::BUTTON_DPAD_UP];
+        b.value.hat.hat_mask = bindB[button];
     }
     return b;
 }
