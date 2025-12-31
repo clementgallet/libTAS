@@ -20,7 +20,6 @@ libtas_so_SOURCES = \
     NonDeterministicTimer.cpp \
     PerfTimer.cpp \
     Profiler.cpp \
-    Stack.cpp \
     TimeHolder.cpp \
     UnityHacks.cpp \
     Utils.cpp \

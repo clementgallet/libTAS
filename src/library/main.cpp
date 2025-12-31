@@ -23,7 +23,6 @@
 #include "NonDeterministicTimer.h"
 #include "DeterministicTimer.h"
 #include "frame.h" // framecount
-#include "Stack.h"
 #include "GlobalState.h"
 #include "UnityHacks.h"
 #include "audio/AudioContext.h"
@@ -90,7 +89,6 @@ void __attribute__((constructor)) init(void)
 
     ThreadManager::init();
     SaveStateManager::init();
-    Stack::grow();
 
     initSocketGame();
 
