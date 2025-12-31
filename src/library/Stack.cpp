@@ -44,54 +44,6 @@ void Stack::grow()
     } else {
       stackSize = rlim.rlim_cur;
     }
-
-#ifdef __unix__
-    /* Find the current stack area */
-    ProcSelfMaps procSelfMaps;
-    Area stackArea;
-    uintptr_t stackPointer = reinterpret_cast<uintptr_t>(&stackArea);
-    while (procSelfMaps.getNextArea(&stackArea)) {
-        if ((stackPointer >= reinterpret_cast<uintptr_t>(stackArea.addr)) && (stackPointer < reinterpret_cast<uintptr_t>(stackArea.endAddr))) {
-            break;
-        }
-    }
-
-    /* Check if we found the stack */
-    if (!stackArea.addr) {
-        LOG(LL_ERROR, LCF_CHECKPOINT, "Could not find the stack area");
-        return;
-    }
-
-    // LOG(LL_INFO, LCF_NONE, "Current stack size is %d", stackArea.size);
-
-    /* Check if we need to grow it */
-    if (stackSize <= stackArea.size)
-        return;
-
-    /* Grow the stack */
-    size_t allocSize = stackSize - stackArea.size - 4095;
-    void* tmpbuf = alloca(allocSize);
-    MYASSERT(tmpbuf != nullptr);
-    memset(tmpbuf, 0, allocSize);
-    LOG(LL_DEBUG, LCF_NONE, "Some value %d", static_cast<char*>(tmpbuf)[0]);
-
-    /* Look at the new stack area */
-    /* Apparently, if we don't use another local variable here, the compiler
-     * optimizes the alloca code above! */
-    ProcSelfMaps newProcSelfMaps;
-    while (newProcSelfMaps.getNextArea(&stackArea)) {
-        if ((stackPointer >= reinterpret_cast<uintptr_t>(stackArea.addr)) && (stackPointer < reinterpret_cast<uintptr_t>(stackArea.endAddr))) {
-            break;
-        }
-    }
-
-    /* Check if we found the stack */
-    if (stackArea.addr) {
-        // LOG(LL_INFO, LCF_NONE, "New stack size is %d", stackArea.size);
-        return;
-    }
-#endif
-
 }
 
 }

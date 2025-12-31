@@ -465,7 +465,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
         if ((strcmp(saved_area->name, current_area->name) != 0) ||
             (saved_area->flags != current_area->flags)) {
 
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %zd must be deallocated", current_area->addr, current_area->name, current_area->size);
             MYASSERT(munmap(current_area->addr, current_area->size) == 0)
             return 1;
         }
@@ -474,10 +474,16 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
         if (saved_area->size != current_area->size) {
 
-            /* Special case for stacks, always try to resize the Area */
+            /* Special case for stacks */
             if (saved_area->flags & Area::AREA_STACK) {
+                /* Stacks are supposed to grow downward, but here we have 
+                 * two stacks that don't end at the same address. Let's
+                 * still try to resize the Area */
+                LOG(LL_WARN, LCF_CHECKPOINT, "It appears the stack has changed its end address (%p) since the savestate (%p).", current_area->endAddr, saved_area->endAddr);
+                LOG(LL_WARN, LCF_CHECKPOINT, "This should not happen as stacks grow downward. Trying to recover from this.");
+
 #ifdef __linux__
-                LOG(LL_DEBUG, LCF_CHECKPOINT, "Changing stack size from %d to %d", current_area->size, saved_area->size);
+                LOG(LL_DEBUG, LCF_CHECKPOINT, "Changing stack size from %zd to %zd", current_area->size, saved_area->size);
                 void *newAddr = mremap(current_area->addr, current_area->size, saved_area->size, 0);
 
                 if (newAddr == MAP_FAILED) {
@@ -497,7 +503,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
             /* Special case for heap, use brk instead */
             if (saved_area->flags & Area::AREA_HEAP) {
-                LOG(LL_DEBUG, LCF_CHECKPOINT, "Changing heap size from %d to %d", current_area->size, saved_area->size);
+                LOG(LL_DEBUG, LCF_CHECKPOINT, "Changing heap size from %zd to %zd", current_area->size, saved_area->size);
 
 #ifdef __linux__
                 int ret = brk(saved_area->endAddr);
@@ -546,23 +552,92 @@ static int reallocateArea(Area *saved_area, Area *current_area)
 
     if ((!saved_area->isStandard()) || (saved_area->addr > current_area->addr)) {
         /* Our current area starts before the saved area */
-        LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
-        MYASSERT(munmap(current_area->addr, current_area->size) == 0)
+        
+        /* Special case for stacks */
+        if (current_area->flags & Area::AREA_STACK) {
 
-        return 1;
+            if (saved_area->flags & Area::AREA_STACK) {
+                /* In case both are stacks, it means it has grown since the savestate.
+                 * We can ignore the difference in size. */
+                return 0;
+            }
+            else {
+                /* At the current location of the stack, there was another memory segment.
+                 * But we made sure to call getrlimit() so that the stack
+                 * space is reserved... 
+                 * To try recovering from it, we resize the stack.
+                 */
+                LOG(LL_WARN, LCF_CHECKPOINT, "Region %p (%s) with size %zd must be recovered, but it is located inside the current stack. ", saved_area->addr, saved_area->name, saved_area->size);
+
+                ptrdiff_t newSize = reinterpret_cast<ptrdiff_t>(current_area->endAddr) - reinterpret_cast<ptrdiff_t>(saved_area->endAddr);
+
+                if (newSize < 0) {
+                    LOG(LL_ERROR, LCF_CHECKPOINT, "The stack segment was moved since the savestate was made!");
+                    return 0;
+                }
+                
+                LOG(LL_DEBUG, LCF_CHECKPOINT, "Changing stack size from %zd to %zd", current_area->size, newSize);
+                MYASSERT(munmap(current_area->addr, current_area->size - newSize) == 0)
+                
+                current_area->addr = saved_area->endAddr;
+                current_area->size = newSize;
+                /* Pass-through to allocate the saved memory segment */
+            }
+        }
+        else {
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %zd must be deallocated", current_area->addr, current_area->name, current_area->size);
+            MYASSERT(munmap(current_area->addr, current_area->size) == 0)
+            
+            return 1;
+        }
     }
 
     if ((current_area->addr == nullptr) || (saved_area->addr < current_area->addr)) {
 
         if ((current_area->addr != nullptr) && (saved_area->endAddr > current_area->addr)) {
-            /* Areas are overlapping, we unmap the current area until there is no more overlapping */
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %d must be deallocated", current_area->addr, current_area->name, current_area->size);
-            MYASSERT(munmap(current_area->addr, current_area->size) == 0)
-            return 1;
+            
+            /* Special case for stacks */
+            if (current_area->flags & Area::AREA_STACK) {
+                if (saved_area->flags & Area::AREA_STACK) {
+                    /* This means the stack has shrinked since the savestate,
+                     * which should not be possible! Let's write a byte to the
+                     * start of the saved stack, which should grow the current stack */
+                    LOG(LL_WARN, LCF_CHECKPOINT, "It appears the current stack has shrinked since the savestate. Growing the stack from %p to %p", current_area->addr, saved_area->addr);
+                    memset(saved_area->addr, 0, 1);
+                    return 0;
+                }
+                else {
+                    /* At the current location of the stack, there was another memory segment.
+                     * But we made sure to call getrlimit() so that the stack
+                     * space is reserved... 
+                     * To try recovering from it, we resize the stack. */
+                    LOG(LL_WARN, LCF_CHECKPOINT, "Region %p (%s) with size %zd must be recovered, but it is located inside the current stack. ", saved_area->addr, saved_area->name, saved_area->size);
+
+                    ptrdiff_t newSize = reinterpret_cast<ptrdiff_t>(current_area->endAddr) - reinterpret_cast<ptrdiff_t>(saved_area->endAddr);
+
+                    if (newSize < 0) {
+                        LOG(LL_ERROR, LCF_CHECKPOINT, "The stack segment was moved since the savestate was made!");
+                        return 0;
+                    }
+                    
+                    LOG(LL_DEBUG, LCF_CHECKPOINT, "Changing stack size from %zd to %zd", current_area->size, newSize);
+                    MYASSERT(munmap(current_area->addr, current_area->size - newSize) == 0)
+                    
+                    current_area->addr = saved_area->endAddr;
+                    current_area->size = newSize;
+                    /* Pass-through to allocate the saved memory segment */
+                }
+            }
+            else {
+                /* Areas are overlapping, we unmap the current area until there is no more overlapping */
+                LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %zd must be deallocated", current_area->addr, current_area->name, current_area->size);
+                MYASSERT(munmap(current_area->addr, current_area->size) == 0)
+                return 1;
+            }
         }
 
         /* This saved area must be allocated */
-        LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %d must be allocated", saved_area->addr, saved_area->name, saved_area->size);
+        LOG(LL_DEBUG, LCF_CHECKPOINT, "Region %p (%s) with size %zd must be allocated", saved_area->addr, saved_area->name, saved_area->size);
 
         /* For file mapping, we try to use an already existing file descriptor
          * of that file. This is even necessary when the file was deleted.
@@ -599,9 +674,9 @@ static int reallocateArea(Area *saved_area, Area *current_area)
         }
 
         if (saved_area->flags & Area::AREA_ANON) {
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "Restoring anonymous area, %d bytes at %p", saved_area->size, saved_area->addr);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "Restoring anonymous area, %zd bytes at %p", saved_area->size, saved_area->addr);
         } else {
-            LOG(LL_DEBUG, LCF_CHECKPOINT, "Restoring non-anonymous area, %d bytes at %p from %s + %d", saved_area->size, saved_area->addr, saved_area->name, saved_area->offset);
+            LOG(LL_DEBUG, LCF_CHECKPOINT, "Restoring non-anonymous area, %zd bytes at %p from %s + %d", saved_area->size, saved_area->addr, saved_area->name, saved_area->offset);
         }
 
         /* Create the memory area */
@@ -609,7 +684,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
                                saved_area->toMmapFlag(), imagefd, saved_area->offset);
 
         if (mmappedat == MAP_FAILED) {
-            LOG(LL_FATAL, LCF_CHECKPOINT, "Mapping %d bytes at %p failed: errno %d", saved_area->size, saved_area->addr, errno);
+            LOG(LL_FATAL, LCF_CHECKPOINT, "Mapping %zd bytes at %p failed: errno %d", saved_area->size, saved_area->addr, errno);
         }
 
         if (mmappedat != saved_area->addr) {

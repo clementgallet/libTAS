@@ -5,6 +5,10 @@
 * File Debug OSD shows all files with types
 
 ### Changed
+
+* Don't enforce memory commit of a 8MB stack, but support stack changing size
+  between savestates (#684)
+
 ### Fixed
 
 * Savestates now restore better file descriptors
