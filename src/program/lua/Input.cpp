@@ -29,7 +29,7 @@ extern "C" {
 }
 
 static AllInputs* ai;
-static bool* modified;
+static bool modified;
 
 /* List of functions to register */
 static const luaL_Reg input_functions[] =
@@ -60,35 +60,55 @@ void Lua::Input::registerFunctions(lua_State *L)
     lua_setglobal(L, "input");
 }
 
-void Lua::Input::registerInputs(AllInputs* frame_ai, bool* frame_modified)
+void Lua::Input::registerInputs(AllInputs* frame_ai)
 {
     ai = frame_ai;
-    modified = frame_modified;
-    *modified = false;
+    modified = false;
+}
+
+bool Lua::Input::clearInputs()
+{
+    ai = nullptr;
+    return modified;
 }
 
 int Lua::Input::clear(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        return 0;
+    }
     ai->clear();
-    *modified = true;
+    modified = true;
     return 0;
 }
 
 int Lua::Input::setKey(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        return 0;
+    }
+
     unsigned int keysym = static_cast<unsigned int>(lua_tointeger(L, 1));
     int state = static_cast<int>(lua_tointeger(L, 2));
     
     SingleInput si = {SingleInput::IT_KEYBOARD, keysym, ""};
     if (ai->getInput(si) != state) {
         ai->setInput(si, state);
-        *modified = true;
+        modified = true;
     }
     return 0;
 }
 
 int Lua::Input::getKey(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        lua_pushinteger(L, static_cast<lua_Integer>(0));
+        return 1;
+    }
+
     unsigned int keysym = static_cast<unsigned int>(lua_tointeger(L, 1));
 
     SingleInput si = {SingleInput::IT_KEYBOARD, keysym, ""};
@@ -98,6 +118,11 @@ int Lua::Input::getKey(lua_State *L)
 
 int Lua::Input::setMouseCoords(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        return 0;
+    }
+
     int x = static_cast<int>(lua_tointeger(L, 1));
     int y = static_cast<int>(lua_tointeger(L, 2));
     int mode = static_cast<int>(lua_tointeger(L, 3));
@@ -105,23 +130,31 @@ int Lua::Input::setMouseCoords(lua_State *L)
     SingleInput si = {SingleInput::IT_POINTER_X, 0, ""};
     if (ai->getInput(si) != x) {
         ai->setInput(si, x);
-        *modified = true;
+        modified = true;
     }
     si = {SingleInput::IT_POINTER_Y, 0, ""};
     if (ai->getInput(si) != y) {
         ai->setInput(si, y);
-        *modified = true;
+        modified = true;
     }
     si = {SingleInput::IT_POINTER_MODE, 0, ""};
     if (ai->getInput(si) != mode) {
         ai->setInput(si, mode);
-        *modified = true;
+        modified = true;
     }
     return 0;
 }
 
 int Lua::Input::getMouseCoords(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        lua_pushinteger(L, static_cast<lua_Integer>(0));
+        lua_pushinteger(L, static_cast<lua_Integer>(0));
+        lua_pushinteger(L, static_cast<lua_Integer>(0));
+        return 3;
+    }
+
     SingleInput si = {SingleInput::IT_POINTER_X, 0, ""};
     lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     si = {SingleInput::IT_POINTER_Y, 0, ""};
@@ -133,19 +166,30 @@ int Lua::Input::getMouseCoords(lua_State *L)
 
 int Lua::Input::setMouseButtons(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        return 0;
+    }
+
     unsigned int button = static_cast<unsigned int>(lua_tointeger(L, 1));
     int state = static_cast<int>(lua_tointeger(L, 2));
     
     SingleInput si = {SingleInput::IT_POINTER_BUTTON, button, ""};
     if (ai->getInput(si) != state) {
         ai->setInput(si, state);
-        *modified = true;
+        modified = true;
     }
     return 0;
 }
 
 int Lua::Input::getMouseButtons(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        lua_pushinteger(L, static_cast<lua_Integer>(0));
+        return 1;
+    }
+
     unsigned int button = static_cast<unsigned int>(lua_tointeger(L, 1));
 
     SingleInput si = {SingleInput::IT_POINTER_BUTTON, button, ""};
@@ -155,6 +199,11 @@ int Lua::Input::getMouseButtons(lua_State *L)
 
 int Lua::Input::setControllerButton(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        return 0;
+    }
+
     int controller = static_cast<int>(lua_tointeger(L, 1));
     unsigned int button = static_cast<unsigned int>(lua_tointeger(L, 2));
     int state = static_cast<int>(lua_tointeger(L, 3));
@@ -162,13 +211,19 @@ int Lua::Input::setControllerButton(lua_State *L)
     SingleInput si = {2*(controller-1)+SingleInput::IT_CONTROLLER1_BUTTON, button, ""};
     if (ai->getInput(si) != state) {
         ai->setInput(si, state);
-        *modified = true;
+        modified = true;
     }
     return 0;
 }
 
 int Lua::Input::getControllerButton(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        lua_pushinteger(L, static_cast<lua_Integer>(0));
+        return 1;
+    }
+
     int controller = static_cast<int>(lua_tointeger(L, 1));
     unsigned int button = static_cast<unsigned int>(lua_tointeger(L, 2));
     
@@ -179,6 +234,11 @@ int Lua::Input::getControllerButton(lua_State *L)
 
 int Lua::Input::setControllerAxis(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        return 0;
+    }
+
     int controller = static_cast<int>(lua_tointeger(L, 1));
     unsigned int axis = static_cast<unsigned int>(lua_tointeger(L, 2));
     short value = static_cast<short>(lua_tointeger(L, 3));
@@ -186,13 +246,19 @@ int Lua::Input::setControllerAxis(lua_State *L)
     SingleInput si = {2*(controller-1)+SingleInput::IT_CONTROLLER1_AXIS, axis, ""};
     if (ai->getInput(si) != value) {
         ai->setInput(si, value);
-        *modified = true;
+        modified = true;
     }
     return 0;
 }
 
 int Lua::Input::getControllerAxis(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        lua_pushinteger(L, static_cast<lua_Integer>(0));
+        return 1;
+    }
+
     int controller = static_cast<int>(lua_tointeger(L, 1));
     unsigned int axis = static_cast<unsigned int>(lua_tointeger(L, 2));
     
@@ -203,19 +269,30 @@ int Lua::Input::getControllerAxis(lua_State *L)
 
 int Lua::Input::setFlag(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        return 0;
+    }
+
     unsigned int flag = static_cast<unsigned int>(lua_tointeger(L, 1));
     int state = static_cast<int>(lua_tointeger(L, 2));
     
     SingleInput si = {SingleInput::IT_FLAG, flag, ""};
     if (ai->getInput(si) != state) {
         ai->setInput(si, state);
-        *modified = true;
+        modified = true;
     }
     return 0;
 }
 
 int Lua::Input::getFlag(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        lua_pushinteger(L, static_cast<lua_Integer>(0));
+        return 1;
+    }
+
     unsigned int flag = static_cast<unsigned int>(lua_tointeger(L, 1));
 
     SingleInput si = {SingleInput::IT_FLAG, flag, ""};
@@ -225,24 +302,36 @@ int Lua::Input::getFlag(lua_State *L)
 
 int Lua::Input::setFramerate(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        return 0;
+    }
+
     int num = static_cast<int>(lua_tointeger(L, 1));
     int den = static_cast<int>(lua_tointeger(L, 2));
     
     SingleInput si = {SingleInput::IT_FRAMERATE_NUM, 0, ""};
     if (ai->getInput(si) != num) {
         ai->setInput(si, num);
-        *modified = true;
+        modified = true;
     }
     si = {SingleInput::IT_FRAMERATE_DEN, 0, ""};
     if (ai->getInput(si) != den) {
         ai->setInput(si, den);
-        *modified = true;
+        modified = true;
     }
     return 0;
 }
 
 int Lua::Input::getFramerate(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        lua_pushinteger(L, static_cast<lua_Integer>(0));
+        lua_pushinteger(L, static_cast<lua_Integer>(0));
+        return 2;
+    }
+
     SingleInput si = {SingleInput::IT_FRAMERATE_NUM, 0, ""};
     lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     si = {SingleInput::IT_FRAMERATE_DEN, 0, ""};
@@ -252,24 +341,35 @@ int Lua::Input::getFramerate(lua_State *L)
 
 int Lua::Input::setRealtime(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        return 0;
+    }
+
     int sec = static_cast<int>(lua_tointeger(L, 1));
     int nsec = static_cast<int>(lua_tointeger(L, 2));
     
     SingleInput si = {SingleInput::IT_REALTIME_SEC, 0, ""};
     if (ai->getInput(si) != sec) {
         ai->setInput(si, sec);
-        *modified = true;
+        modified = true;
     }
     si = {SingleInput::IT_REALTIME_NSEC, 0, ""};
     if (ai->getInput(si) != nsec) {
         ai->setInput(si, nsec);
-        *modified = true;
+        modified = true;
     }
     return 0;
 }
 
 int Lua::Input::getRealtime(lua_State *L)
 {
+    if (!ai) {
+        std::cerr << "Lua input function was called outside onInput() callback!" << std::endl;
+        lua_pushinteger(L, static_cast<lua_Integer>(0));
+        return 2;
+    }
+
     SingleInput si = {SingleInput::IT_REALTIME_SEC, 0, ""};
     lua_pushinteger(L, static_cast<lua_Integer>(ai->getInput(si)));
     si = {SingleInput::IT_REALTIME_NSEC, 0, ""};

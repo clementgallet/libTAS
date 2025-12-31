@@ -11,6 +11,7 @@
 * Fix SDL getting window dimensions of zero
 * Better handling of opendir/readdir and savefiles
 * Fix the Unity job handling not calling the completed callback
+* Fix crash when using lua input function outside onInput callback (fix #697)
 
 ## [1.4.7] - 2025-10-06
 ### Added
