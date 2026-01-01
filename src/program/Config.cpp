@@ -162,6 +162,7 @@ void Config::save(const std::string& gamepath) {
     settings.setValue("screen_height", sc.screen_height);
     settings.setValue("osd", sc.osd);
     settings.setValue("osd_encode", sc.osd_encode);
+    settings.setValue("osd_lua", sc.osd_lua);
     settings.setValue("prevent_savefiles", sc.prevent_savefiles);
     settings.setValue("audio_bitdepth", sc.audio_bitdepth);
     settings.setValue("audio_channels", sc.audio_channels);
