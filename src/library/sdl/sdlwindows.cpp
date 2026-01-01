@@ -348,12 +348,17 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
     return 0; // success
 }
 
+/* Override */ void SDL_SetWindowResizable(SDL_Window * window, SDL_bool resizable)
+{
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with resizable %d", __func__, resizable);
+    /* Don't do anything */
+}
+
 /* Override */ void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with border %d", __func__, bordered);
     /* Don't do anything */
 }
-
 
 /* Override */ int SDL_CreateWindowAndRenderer(int width, int height,
         Uint32 window_flags, SDL_Window **window, SDL_Renderer **renderer)

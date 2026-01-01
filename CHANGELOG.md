@@ -3,6 +3,7 @@
 
 * Debug window for file descriptors
 * File Debug OSD shows all files with types
+* Hook SDL_SetWindowResizable to avoid a window resize call (fix #700)
 
 ### Changed
 

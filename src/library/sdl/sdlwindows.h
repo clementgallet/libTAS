@@ -111,6 +111,24 @@ OVERRIDE void SDL_WM_SetCaption(const char *title, const char *icon);
 OVERRIDE void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered);
 
 /**
+ * Set the user-resizable state of a window.
+ *
+ * This will add or remove the window's `SDL_WINDOW_RESIZABLE` flag and
+ * allow/disallow user resizing of the window. This is a no-op if the window's
+ * resizable state already matches the requested state.
+ *
+ * You can't change the resizable state of a fullscreen window.
+ *
+ * \param window the window of which to change the resizable state.
+ * \param resizable SDL_TRUE to allow resizing, SDL_FALSE to disallow.
+ *
+ * \since This function is available since SDL 2.0.5.
+ *
+ * \sa SDL_GetWindowFlags
+ */
+OVERRIDE void SDL_SetWindowResizable(SDL_Window * window, SDL_bool resizable);
+
+/**
  *  \brief Set a window's fullscreen state.
  *
  *  \return 0 on success, or -1 if setting the display mode failed.
