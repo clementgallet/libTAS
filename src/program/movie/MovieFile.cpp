@@ -24,6 +24,7 @@
 
 #include <sstream>
 #include <iostream>
+#include <filesystem>
 #include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT
 #include <errno.h>
 #include <unistd.h>
@@ -188,6 +189,13 @@ int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
     oss << "\" -C ";
     oss << context->config.tempmoviedir;
     oss << " inputs config.ini editor.ini annotations.txt";
+    // Add only savestate input files that exist
+    for (int i = 1; i <= 10; i++) {
+        std::filesystem::path p = std::filesystem::path(context->config.tempmoviedir) / ("inputs" + std::to_string(i));
+        if (std::filesystem::exists(p)) {
+            oss << " inputs" << i;
+        }
+    }
 
     /* Execute the tar command */
     // std::cout << oss.str() << std::endl;
