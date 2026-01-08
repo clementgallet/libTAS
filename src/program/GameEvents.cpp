@@ -211,6 +211,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
                  * Prompting a alert window must be done by the UI thread, so we are
                  * using std::future/std::promise mechanism.
                  */
+                int frame_to_seek;
                 std::promise<bool> answer;
                 std::future<bool> future = answer.get_future();
                 emit askToShow(QString("There is a savestate in that slot from a previous game iteration. Do you want to load the associated movie?"), &answer);
@@ -220,17 +221,24 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
                     return false;
                 }
 
-                /* Loading the movie */
-                movie->loadSavestateMovie(SaveStateList::get(statei).getMoviePath());
+                SaveState& s = SaveStateList::get(statei);
+                movie->inputs = s.movie->inputs;
 
-                /* Return if we already are on the correct frame */
-                if (context->framecount == movie->header->savestate_framecount)
-                    return false;
+                /* seek to either the current frame, or the max frame
+                 * of the saved inputs */
+                if (s.movie->inputs->nbFrames() < context->framecount) {
+                    frame_to_seek = context->framecount;
+                } else {
+                    frame_to_seek = s.movie->inputs->nbFrames();
+                }
+
+                /* Find where movies diverge, load state and seek back there */
+                // todo
 
                 /* Fast-forward to savestate frame */
                 context->config.sc.recording = SharedConfig::RECORDING_READ;
-                context->config.sc.movie_framecount = movie->inputs->nbFrames();
-                context->seek_frame = movie->header->savestate_framecount;
+                context->config.sc.movie_framecount = s.movie->inputs->nbFrames();
+                context->seek_frame = frame_to_seek;
                 context->config.sc.running = true;
                 context->config.sc_modified = true;
 

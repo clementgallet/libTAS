@@ -76,7 +76,7 @@ void MovieFileInputs::clear()
     emit inputsReset();
 }
 
-void MovieFileInputs::load()
+void MovieFileInputs::load(int savestate)
 {
     emit inputsToBeReset();
 
@@ -89,6 +89,9 @@ void MovieFileInputs::load()
     
     /* Open the input file and parse each line to fill our input list */
     std::string input_file = context->config.tempmoviedir + "/inputs";
+    if (savestate > 0) {
+        input_file += std::to_string(savestate);
+    }
     std::ifstream input_stream(input_file);
     
     InputSerialization::readInputs(input_stream, input_list);

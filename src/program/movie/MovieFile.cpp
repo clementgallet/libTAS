@@ -21,9 +21,13 @@
 
 #include "../shared/inputs/AllInputs.h"
 #include "Context.h"
+#include "SaveStateList.h"
+#include "SaveState.h"
 
 #include <sstream>
 #include <iostream>
+#include <filesystem>
+#include <fstream>
 #include <filesystem>
 #include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT
 #include <errno.h>
@@ -142,6 +146,20 @@ int MovieFile::loadMovie(const std::string& moviefile)
     if (context->config.sc.movie_framecount != inputs->nbFrames()) {
         std::cerr << "Warning: movie framecount and movie config mismatch!" << std::endl;
         context->config.sc.movie_framecount = inputs->nbFrames();
+    }
+
+    /* Load savestate inputs */
+    for (int i = 1; i <= 10; i++) {
+        std::filesystem::path p = std::filesystem::path(context->config.tempmoviedir) / ("inputs" + std::to_string(i));
+
+        if (std::filesystem::exists(p)) {
+            SaveState& s = SaveStateList::get(i);
+            if (!s.movie)
+                s.movie = std::make_unique<MovieFile>(context);
+
+            s.movie->inputs->load(i);
+            s.framecount = s.movie->inputs->nbFrames();
+        }
     }
 
     return 0;
