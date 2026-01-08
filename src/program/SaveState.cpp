@@ -125,7 +125,9 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
          * savestate movie frame.
          */
 
-        if (movie->inputs->nbFrames() > 0) {
+        /* Checking if our movie is a prefix of the savestate movie
+         * and if savestatefile input exists */
+        if (movie->inputs->nbFrames() > 0 && movie->inputs->isEqual(m.inputs, 0, context->framecount)) {
             return ENOSTATEMOVIEPREFIX;
         } else {
             sendMessage(MSGN_OSD_MSG);
