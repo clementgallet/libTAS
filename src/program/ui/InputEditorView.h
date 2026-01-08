@@ -101,6 +101,7 @@ private slots:
 signals:
     void addMarkerSignal(int frame, QString text);
     void removeMarkerSignal(int frame);
+    void saveMovieRequested();
 
 private:
     Context *context;
