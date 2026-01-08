@@ -41,6 +41,7 @@ public:
         ENOMOVIE = -3, // Could not moad movie
         EINPUTMISMATCH = -4, // Mistmatch inputs
         ENOLOAD = -5, // State loading failed
+        ESAVESTATEINPUTMISMATCH = -6, // Mismatch inputs with savestate file
     };
 
     /* Savestate number */

@@ -247,6 +247,12 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
                 return false;
             }
 
+            if (error == SaveState::ESAVESTATEINPUTMISMATCH) {
+                if (!(context->config.sc.osd))
+                    emit alertToShow(QString("Cannot load inputs from this savestate as earlier inputs mismatch. Please seek to an earlier state for this."));
+                return false;
+            }
+
             if (error == SaveState::ENOSTATE) {
                 if (!(context->config.sc.osd))
                     emit alertToShow(QString("There is no savestate to load in this slot"));
