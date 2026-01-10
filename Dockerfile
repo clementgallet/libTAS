@@ -13,7 +13,6 @@ FROM debian:12
       RUN apt-get -y install libfreetype6-dev libfontconfig1-dev
 
     # fonts
-      RUN apt-get -y install libfreetype6-dev libfontconfig1-dev
       RUN apt-get -y install fonts-liberation
 
     # i386
