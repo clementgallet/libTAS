@@ -142,7 +142,7 @@ Now if you've done everything correctly, the next time you open a terminal and
 run libTAS, it should pop up right away without having to run the export
 command first (make sure that your X-Server is running of course).
 
-# Step 5: Installing Steam (optional)
+# Step 4: Installing Steam (optional)
 
 If your game has a Linux version and exists on Steam, then the easiest way to
 get the files of the game you want to TAS would be to simply install Steam and download it.
