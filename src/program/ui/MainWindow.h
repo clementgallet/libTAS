@@ -146,9 +146,9 @@ public:
     QCheckBox *pauseCheck;
     QCheckBox *fastForwardCheck;
 
-    QSpinBox *frameCount;
-    QSpinBox *movieFrameCount;
-    QSpinBox *rerecordCount;
+    QLabel *frameCount;
+    QLabel *movieFrameCount;
+    QLabel *rerecordCount;
     QLabel *currentLength;
     QLabel *movieLength;
 
