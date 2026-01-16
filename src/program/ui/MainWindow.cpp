@@ -240,6 +240,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     fpsNumField = new QSpinBox();
     fpsNumField->setMaximum(std::numeric_limits<int>::max());
     fpsNumField->setMinimum(1);
+    fpsNumField->setEnabled(movieRecording->isChecked());
     disabledWidgetsOnStart.append(fpsNumField);
     connect(fpsNumField, QOverload<int>::of(&QSpinBox::valueChanged),[=, this](int i){
         context->current_framerate_num = i;
@@ -249,6 +250,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     fpsDenField = new QSpinBox();
     fpsDenField->setMaximum(std::numeric_limits<int>::max());
     fpsDenField->setMinimum(1);
+    fpsDenField->setEnabled(movieRecording->isChecked());
     disabledWidgetsOnStart.append(fpsDenField);
     connect(fpsDenField, QOverload<int>::of(&QSpinBox::valueChanged),[=, this](int i){
         context->current_framerate_den = i;
@@ -1367,10 +1369,14 @@ void MainWindow::slotMovieRecording()
         if (movieRecording->isChecked()) {
             context->config.sc.recording = SharedConfig::RECORDING_WRITE;
             authorField->setReadOnly(false);
+            fpsNumField->setEnabled(true);
+            fpsDenField->setEnabled(true);
         }
         else {
             context->config.sc.recording = SharedConfig::RECORDING_READ;
             authorField->setReadOnly(true);
+            fpsNumField->setEnabled(false);
+            fpsDenField->setEnabled(false);
         }
     }
     else {
