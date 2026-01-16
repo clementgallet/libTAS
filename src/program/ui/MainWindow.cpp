@@ -978,7 +978,6 @@ void MainWindow::updateMovieParams()
 {
     if ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&
         (gameLoop->movie.loadMovie() == 0)) {
-        authorField->setReadOnly(true);
 
         /* Format movie length */
         double msec = gameLoop->movie.header->length_sec + ((double)gameLoop->movie.header->length_nsec)/1000000000.0;
@@ -1008,7 +1007,6 @@ void MainWindow::updateMovieParams()
         context->config.sc.movie_framecount = 0;
         context->rerecord_count = 0;
         gameLoop->movie.header->authors = "";
-        authorField->setReadOnly(false);
         movieLength->setText("Movie length: -");
         movieRecording->setChecked(true);
         if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
@@ -1024,7 +1022,8 @@ void MainWindow::updateMovieParams()
     inputEditorWindow->resetInputs();
     movieFrameCount->setValue(context->config.sc.movie_framecount);
     rerecordCount->setValue(context->rerecord_count);
-    authorField->setText(gameLoop->movie.header->authors.c_str());
+    if (authorField->text().toStdString() == "")
+        authorField->setText(gameLoop->movie.header->authors.c_str());
     fpsNumField->setValue(context->config.sc.initial_framerate_num);
     fpsDenField->setValue(context->config.sc.initial_framerate_den);
     elapsedTimeSec->setValue(context->config.sc.initial_monotonic_time_sec);
@@ -1290,6 +1289,7 @@ void MainWindow::slotMoviePathChanged()
 void MainWindow::slotSaveMovie()
 {
     if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
+        gameLoop->movie.header->authors = authorField->text().toStdString();
         int ret = gameLoop->movie.saveMovie();
         if (ret < 0) {
             QMessageBox::warning(this, "Warning", gameLoop->movie.errorString(ret));
@@ -1374,11 +1374,9 @@ void MainWindow::slotMovieRecording()
     if (context->status == Context::INACTIVE) {
         if (movieRecording->isChecked()) {
             context->config.sc.recording = SharedConfig::RECORDING_WRITE;
-            authorField->setReadOnly(false);
         }
         else {
             context->config.sc.recording = SharedConfig::RECORDING_READ;
-            authorField->setReadOnly(true);
         }
     }
     else {
