@@ -240,6 +240,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     fpsNumField = new QSpinBox();
     fpsNumField->setMaximum(std::numeric_limits<int>::max());
     fpsNumField->setMinimum(1);
+    disabledWidgetsOnStart.append(fpsNumField);
     connect(fpsNumField, QOverload<int>::of(&QSpinBox::valueChanged),[=, this](int i){
         context->current_framerate_num = i;
         gameLoop->movie.inputs->variable_framerate = true;
@@ -248,6 +249,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     fpsDenField = new QSpinBox();
     fpsDenField->setMaximum(std::numeric_limits<int>::max());
     fpsDenField->setMinimum(1);
+    disabledWidgetsOnStart.append(fpsDenField);
     connect(fpsDenField, QOverload<int>::of(&QSpinBox::valueChanged),[=, this](int i){
         context->current_framerate_den = i;
         gameLoop->movie.inputs->variable_framerate = true;
@@ -262,17 +264,21 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     elapsedTimeSec = new QSpinBox();
     elapsedTimeSec->setMaximum(std::numeric_limits<int>::max());
     elapsedTimeSec->setMinimumWidth(50);
+    disabledWidgetsOnStart.append(elapsedTimeSec);
     elapsedTimeNsec = new QSpinBox();
     elapsedTimeNsec->setMaximum(std::numeric_limits<int>::max());
     elapsedTimeNsec->setMinimumWidth(50);
+    disabledWidgetsOnStart.append(elapsedTimeNsec);
 
     realTimeSec = new QSpinBox();
     realTimeSec->setMinimum(1);
     realTimeSec->setMaximum(std::numeric_limits<int>::max());
     realTimeSec->setMinimumWidth(50);
+    disabledWidgetsOnStart.append(realTimeSec);
     realTimeNsec = new QSpinBox();
     realTimeNsec->setMaximum(std::numeric_limits<int>::max());
     realTimeNsec->setMinimumWidth(50);
+    disabledWidgetsOnStart.append(realTimeNsec);
     realTimeFormat = new QLabel();
     connect(realTimeSec, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::slotRealTimeFormat);
     connect(realTimeNsec, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::slotRealTimeFormat);
@@ -743,10 +749,6 @@ void MainWindow::updateStatus(int status)
             movieBox->setCheckable(true);
             movieBox->setChecked(context->config.sc.recording != SharedConfig::NO_RECORDING);
 
-            fpsNumField->setReadOnly(false);
-            fpsDenField->setReadOnly(false);
-            elapsedTimeSec->setReadOnly(false);
-            elapsedTimeNsec->setReadOnly(false);
             elapsedTimeSec->setValue(context->config.sc.initial_monotonic_time_sec);
             elapsedTimeNsec->setValue(context->config.sc.initial_monotonic_time_nsec);
             realTimeSec->setValue(context->config.sc.initial_time_sec);
@@ -783,9 +785,6 @@ void MainWindow::updateStatus(int status)
             }
             for (QAction* a : disabledActionsOnStart)
                 a->setEnabled(false);
-
-            elapsedTimeSec->setReadOnly(true);
-            elapsedTimeNsec->setReadOnly(true);
 
             launchGdbButton->setEnabled(false);
 
