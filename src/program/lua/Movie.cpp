@@ -21,6 +21,8 @@
 
 #include "Context.h"
 
+#include "../movie/MovieActionInsertFrames.h"
+
 #include <iostream>
 extern "C" {
 #include <lua.h>
@@ -28,6 +30,7 @@ extern "C" {
 }
 
 static Context* context;
+static MovieFile* movie;
 
 /* List of functions to register */
 static const luaL_Reg movie_functions[] =
@@ -38,6 +41,10 @@ static const luaL_Reg movie_functions[] =
     { "time", Lua::Movie::time},
     { "rerecords", Lua::Movie::rerecords},
     { "isDraw", Lua::Movie::isDraw},
+    { "getMarker", Lua::Movie::getMarker},
+    { "setMarker", Lua::Movie::setMarker},
+    { "insertFrame", Lua::Movie::insertFrame},
+    { "insertFrames", Lua::Movie::insertFrames},
     { NULL, NULL }
 };
 
@@ -46,6 +53,11 @@ void Lua::Movie::registerFunctions(lua_State *L, Context* c)
     context = c;
     luaL_newlib(L, movie_functions);
     lua_setglobal(L, "movie");
+}
+
+void Lua::Movie::registerMovie(MovieFile* frame_movie)
+{
+    movie = frame_movie;
 }
 
 int Lua::Movie::currentFrame(lua_State *L)
@@ -89,4 +101,38 @@ int Lua::Movie::isDraw(lua_State *L)
 {
     lua_pushinteger(L, static_cast<lua_Integer>(context->draw_frame));
     return 1;
+}
+
+int Lua::Movie::getMarker(lua_State *L)
+{
+    std::string marker;
+    try {
+	marker = movie->editor->markers.at(context->framecount);
+    } catch (const std::out_of_range&) {
+	return 0;
+    }
+    lua_pushstring(L, marker.c_str());
+    return 1;
+}
+
+int Lua::Movie::setMarker(lua_State *L)
+{
+    const char* marker = lua_tostring(L, 1);
+    movie->editor->markers[context->framecount] = marker;
+    return 0;
+}
+
+int Lua::Movie::insertFrame(lua_State *L)
+{
+    MovieActionInsertFrames action(context->framecount, 1, movie->inputs);
+    action.redo();
+    return 0;
+}
+
+int Lua::Movie::insertFrames(lua_State *L)
+{
+    unsigned int n = static_cast<unsigned int>(lua_tointeger(L, 1));
+    MovieActionInsertFrames action(context->framecount, n, movie->inputs);
+    action.redo();
+    return 0;
 }

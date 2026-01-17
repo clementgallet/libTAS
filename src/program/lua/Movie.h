@@ -24,7 +24,11 @@ extern "C" {
 #include <lua.h>
 }
 
+#include <string>
+
 struct Context;
+
+class MovieFile;
 
 namespace Lua {
 
@@ -32,6 +36,9 @@ namespace Movie {
 
     /* Register all functions */
     void registerFunctions(lua_State *L, Context* c);
+
+    /* Pass the current MovieFile object to be used by lua functions */
+    void registerMovie(MovieFile* frame_movie);
 
     /* Get the current framecount */
     int currentFrame(lua_State *L);
@@ -51,6 +58,17 @@ namespace Movie {
     /* Returns if the current frame is a draw frame */
     int isDraw(lua_State *L);
 
+    /* Get marker at current frame if there is one */
+    int getMarker(lua_State *L);
+
+    /* Set marker at current frame */
+    int setMarker(lua_State *L);
+
+    /* Insert frame at current position */
+    int insertFrame(lua_State *L);
+
+    /* Insert n frames at current position */
+    int insertFrames(lua_State *L);
 }
 }
 
