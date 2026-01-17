@@ -223,6 +223,7 @@ bool GameEvents::processEvent(GameEvents::EventType type, const HotKey &hk)
 
                 SaveState& s = SaveStateList::get(statei);
                 movie->inputs = s.movie->inputs;
+                s.save(context, *movie);
 
                 /* seek to either the current frame, or the max frame
                  * of the saved inputs */
