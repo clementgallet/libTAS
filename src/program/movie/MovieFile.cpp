@@ -196,7 +196,8 @@ int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
     if (!WIFEXITED(ret) || (WEXITSTATUS(ret) != 0))
         return EBADARCHIVE;
 
-    std::cout << "Movie saved" << std::endl;
+    if (moviefile == context->config.moviefile)
+        std::cout << "Movie saved" << std::endl;
 
     return 0;
 }
