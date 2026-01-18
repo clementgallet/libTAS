@@ -120,26 +120,24 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
      * forked savestate of previous execution). */
     if ((access(pagemap_path.c_str(), F_OK) != 0) || (access(pages_path.c_str(), F_OK) != 0) ||
         (framecount == 0)) {
-        /* If there is no savestate but a movie file, offer to load
-         * the movie and fast-forward to the savestate movie frame.
+        /* If there is no savestate but inputs are saved in the save
+         * file, offer to load the movie and fast-forward to the
+         * savestate movie frame.
          */
 
-        if ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&
-            (access(movie_path.c_str(), F_OK) == 0)) {
-
-            /* Load the savestate movie from disk */
-            MovieFile savedmovie(context);
-            int ret = savedmovie.loadSavestateMovie(movie_path);
-
-            /* Checking if our movie is a prefix of the savestate movie */
-            if ((ret == 0) && savedmovie.inputs->isEqual(m.inputs, 0, context->framecount)) {
-                return ENOSTATEMOVIEPREFIX;
-            }
+        /* Checking if our movie is a prefix of the savestate movie
+         * and if savestatefile input exists */
+        if (movie->inputs->nbFrames() > 0 && movie->inputs->isEqual(m.inputs, 0, context->framecount)) {
+            return ENOSTATEMOVIEPREFIX;
+        } else if (movie->inputs->nbFrames() > 0) {
+            sendMessage(MSGN_OSD_MSG);
+            sendString(std::string("Cannot load inputs from this savestate as earlier inputs mismatch"));
+            return ESAVESTATEINPUTMISMATCH;
+        } else {
+            sendMessage(MSGN_OSD_MSG);
+            sendString(no_state_msg);
+            return ENOSTATE;
         }
-
-        sendMessage(MSGN_OSD_MSG);
-        sendString(no_state_msg);
-        return ENOSTATE;
     }
 
     /* Send the savestate index */

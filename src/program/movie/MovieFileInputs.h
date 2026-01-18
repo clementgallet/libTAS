@@ -73,7 +73,7 @@ public:
 
     /* Import the inputs into a list, and all the parameters.
      * Returns 0 if no error, or a negative value if an error occured */
-    void load();
+    void load(int savestate = 0);
 
     /* Write the inputs into a file and compress to the whole moviefile */
     void save();

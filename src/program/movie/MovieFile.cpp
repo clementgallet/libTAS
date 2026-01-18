@@ -21,9 +21,14 @@
 
 #include "../shared/inputs/AllInputs.h"
 #include "Context.h"
+#include "SaveStateList.h"
+#include "SaveState.h"
 
 #include <sstream>
 #include <iostream>
+#include <filesystem>
+#include <fstream>
+#include <filesystem>
 #include <fcntl.h> // O_RDONLY, O_WRONLY, O_CREAT
 #include <errno.h>
 #include <unistd.h>
@@ -84,6 +89,10 @@ int MovieFile::extractMovie(const std::string& moviefile)
     unlink(configfile.c_str());
     unlink(editorfile.c_str());
     unlink(inputfile.c_str());
+    for (int i = 1; i <= 10; i++) {
+        std::filesystem::path p = std::filesystem::path(context->config.tempmoviedir) / ("inputs" + std::to_string(i));
+        unlink(p.c_str());
+    }
     unlink(annotationsfile.c_str());
 
     /* Build the tar command */
@@ -143,6 +152,20 @@ int MovieFile::loadMovie(const std::string& moviefile)
         context->config.sc.movie_framecount = inputs->nbFrames();
     }
 
+    /* Load savestate inputs */
+    for (int i = 1; i <= 10; i++) {
+        std::filesystem::path p = std::filesystem::path(context->config.tempmoviedir) / ("inputs" + std::to_string(i));
+
+        if (std::filesystem::exists(p)) {
+            SaveState& s = SaveStateList::get(i);
+            if (!s.movie)
+                s.movie = std::make_unique<MovieFile>(context);
+
+            s.movie->inputs->load(i);
+            s.framecount = s.movie->inputs->nbFrames();
+        }
+    }
+
     return 0;
 }
 
@@ -188,6 +211,13 @@ int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
     oss << "\" -C ";
     oss << context->config.tempmoviedir;
     oss << " inputs config.ini editor.ini annotations.txt";
+    // Add only savestate input files that exist
+    for (int i = 1; i <= 10; i++) {
+        std::filesystem::path p = std::filesystem::path(context->config.tempmoviedir) / ("inputs" + std::to_string(i));
+        if (std::filesystem::exists(p)) {
+            oss << " inputs" << i;
+        }
+    }
 
     /* Execute the tar command */
     // std::cout << oss.str() << std::endl;

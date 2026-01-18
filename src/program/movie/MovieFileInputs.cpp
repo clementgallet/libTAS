@@ -25,6 +25,8 @@
 #include "MovieActionInsertFrames.h"
 #include "MovieActionPaint.h"
 #include "MovieActionRemoveFrames.h"
+#include "SaveStateList.h"
+#include "SaveState.h"
 
 #include "utils.h"
 #include "Context.h"
@@ -74,7 +76,7 @@ void MovieFileInputs::clear()
     emit inputsReset();
 }
 
-void MovieFileInputs::load()
+void MovieFileInputs::load(int savestate)
 {
     emit inputsToBeReset();
 
@@ -87,6 +89,9 @@ void MovieFileInputs::load()
     
     /* Open the input file and parse each line to fill our input list */
     std::string input_file = context->config.tempmoviedir + "/inputs";
+    if (savestate > 0) {
+        input_file += std::to_string(savestate);
+    }
     std::ifstream input_stream(input_file);
     
     InputSerialization::readInputs(input_stream, input_list);
@@ -105,8 +110,19 @@ void MovieFileInputs::save()
     std::ofstream input_stream(input_file, std::ofstream::trunc);
 
     InputSerialization::writeInputs(input_stream, input_list);
-
     input_stream.close();
+
+    // Save branches inputs
+    for (int i = 0; i <= 10; i++) {
+        SaveState& s = SaveStateList::get(i);
+        if (s.framecount != 0 && s.movie && s.movie->inputs) {
+            std::string branch_input_file = context->config.tempmoviedir + "/inputs" + std::to_string(i);
+            std::ofstream branch_stream(branch_input_file, std::ofstream::trunc);
+            InputSerialization::writeInputs(branch_stream, s.movie->inputs->input_list);
+            branch_stream.close();
+        }
+    }
+
 }
 
 uint64_t MovieFileInputs::nbFrames()
