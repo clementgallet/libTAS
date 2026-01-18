@@ -89,6 +89,10 @@ int MovieFile::extractMovie(const std::string& moviefile)
     unlink(configfile.c_str());
     unlink(editorfile.c_str());
     unlink(inputfile.c_str());
+    for (int i = 1; i <= 10; i++) {
+        std::filesystem::path p = std::filesystem::path(context->config.tempmoviedir) / ("inputs" + std::to_string(i));
+        unlink(p.c_str());
+    }
     unlink(annotationsfile.c_str());
 
     /* Build the tar command */
