@@ -653,7 +653,8 @@ void MainWindow::createMenus()
     movieMenu->addSeparator();
 
     annotateMovieAction = movieMenu->addAction(tr("Annotations..."), annotationsWindow, &AnnotationsWindow::show);
-    annotateMovieAction->setEnabled(false);
+    bool recording_inactive = ((context->config.sc.recording != SharedConfig::NO_RECORDING) && (gameLoop->movie.loadMovie() == 0));
+    annotateMovieAction->setEnabled(recording_inactive);
 
     movieMenu->addSeparator();
 
