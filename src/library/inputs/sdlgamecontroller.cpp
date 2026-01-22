@@ -132,7 +132,7 @@ void mySDL_GameControllerChangeAttached(int index)
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with id %d", __func__, joy);
     if (joy < 0 || joy >= Global::shared_config.nb_controllers)
         return NULL;
-    if (gcids[joy] != -1)
+    if (gcids[joy] == -1)
         return NULL;
     return reinterpret_cast<SDL_GameController*>(&gcids[joy]);
 }
