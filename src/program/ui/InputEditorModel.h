@@ -200,8 +200,8 @@ public slots:
     /* Seek to marker frame */
     void seekToFrame(unsigned long long frame);
 
-    /* Timer update function to highlight last undo/redo */
-    void highlightUndo();
+    /* Timer update function to highlight cells */
+    void highlightUpdate();
 
     /* Shift markers after a given row by a specified number of rows */
     void shiftMarkers(int startRow, int offset);
@@ -227,15 +227,17 @@ private:
     bool paintOngoing;
     unsigned int paintMinRow;
     unsigned int paintMaxRow;
+    unsigned int paintCol;
     int paintValue;
     unsigned int paintAutofire;
 
-    /* Parameters to highlight the undo/redo operation */
-    unsigned int undoMinRow, undoMaxRow, undoMinCol, undoMaxCol;
-    float undoTimeoutSec;
-    const float maxUndoTimeoutSec = 0.5f;
-    std::chrono::time_point<std::chrono::steady_clock> undoStart;
-    QTimer* undoTimer;
+    /* Parameters to highlight some operations */
+    unsigned int highlightMinRow, highlightMaxRow, highlightMinCol, highlightMaxCol;
+    float highlightTimeoutSec;
+    bool highlightValid; // to decide which color to use
+    const float maxHighlightTimeoutSec = 0.5f;
+    std::chrono::time_point<std::chrono::steady_clock> highlightStart;
+    QTimer* highlightTimer;
 
     /* Rewind to frame, specify if we should enforce seeking to that frame, or
      * follow the setting. Return if succeeded */
@@ -243,6 +245,9 @@ private:
 
     /* Rewind without enforce seeking */
     bool rewind(uint64_t framecount);
+
+    /* Highlight a change in the input editor */
+    void startHighlight(int minRow, int maxRow, int minCol, int maxCol, bool valid);
 
     /* Map to store markers with frame index as key and marker text as value */
     std::map<int, std::string> markers;
