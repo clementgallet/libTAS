@@ -35,6 +35,7 @@ static const luaL_Reg runtime_functions[] =
 {
     { "saveState", Lua::Runtime::saveState},
     { "loadState", Lua::Runtime::loadState},
+    { "loadBranch", Lua::Runtime::loadBranch},
     { "isFastForward", Lua::Runtime::isFastForward},
     { "setFastForward", Lua::Runtime::setFastForward},
     { "sleepMS", Lua::Runtime::sleepMS},
@@ -62,6 +63,14 @@ int Lua::Runtime::loadState(lua_State *L)
     int slot = static_cast<int>(lua_tointeger(L, 1));
     if (slot >= 1 && slot <= 10)
         context->hotkey_pressed_queue.push(HOTKEY_LOADSTATE1 + (slot-1));
+    return 0;
+}
+
+int Lua::Runtime::loadBranch(lua_State *L)
+{
+    int slot = static_cast<int>(lua_tointeger(L, 1));
+    if (slot >= 1 && slot <= 10)
+        context->hotkey_pressed_queue.push(HOTKEY_LOADBRANCH1 + (slot-1));
     return 0;
 }
 

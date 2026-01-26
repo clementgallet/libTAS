@@ -39,6 +39,9 @@ namespace Runtime {
     /* Load a savestate */
     int loadState(lua_State *L);
 
+    /* Load a branch */
+    int loadBranch(lua_State *L);
+
     /* Is fast-forward set */
     int isFastForward(lua_State *L);
 
