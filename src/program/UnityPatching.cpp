@@ -31,6 +31,7 @@
 #include <sys/mman.h> // mmap
 #include <iostream>
 #include <unistd.h> // access
+#include <filesystem>
 
 struct usymbol_t {
     int id;
@@ -850,11 +851,11 @@ void UnityPatching::sendAddressesFromSignatures(std::pair<uintptr_t,uintptr_t> e
 void UnityPatching::sendAddresses(Context* context)
 {
     /* Find and send symbol addresses for main executable or `UnityPlayer_s.debug` */
-    std::string unityplayer = dirFromPath(context->gameexecutable) + "/UnityPlayer.so";
-    bool has_unityplayer = access(unityplayer.c_str(), F_OK) == 0;
+    std::filesystem::path unityplayer = context->gameexecutable.parent_path() / "UnityPlayer.so";
+    bool has_unityplayer = std::filesystem::exists(unityplayer);
     
-    std::string debugfile = dirFromPath(context->gameexecutable) + "/UnityPlayer_s.debug";
-    bool has_unityplayer_debug = access(debugfile.c_str(), F_OK) == 0;
+    std::filesystem::path debugfile = context->gameexecutable.parent_path() / "UnityPlayer_s.debug";
+    bool has_unityplayer_debug = std::filesystem::exists(debugfile);
     
     std::pair<uintptr_t,uintptr_t> executablefile_segment;
     int gameArch = extractBinaryType(context->gameexecutable);

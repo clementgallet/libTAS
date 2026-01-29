@@ -28,6 +28,7 @@
 #include <iostream>
 #include <unistd.h> // chdir()
 #include <fcntl.h> // O_RDWR, O_CREAT
+#include <filesystem>
 
 void GameThread::set_env_variables(Context *context, int gameArch)
 {
@@ -38,9 +39,9 @@ void GameThread::set_env_variables(Context *context, int gameArch)
     /* Update the LD_LIBRARY_PATH environment variable */
     std::ostringstream oss_lib;
     if (gameArch == BT_ELF32)
-        oss_lib << context->config.extralib32dir;
+        oss_lib << context->config.extralib32dir.c_str();
     else if (gameArch == BT_ELF64)
-        oss_lib << context->config.extralib64dir;
+        oss_lib << context->config.extralib64dir.c_str();
     
     if (!context->config.libdir.empty())
         oss_lib << ":" << context->config.libdir;
@@ -53,14 +54,12 @@ void GameThread::set_env_variables(Context *context, int gameArch)
 #endif
 
     /* Change the working directory to the user-defined one or game directory */
-    std::string newdir = context->config.rundir;
+    std::filesystem::path newdir = context->config.rundir;
     if (newdir.empty())
-        newdir = dirFromPath(context->gameexecutable);
+        newdir = context->gameexecutable.parent_path();
 
-    if (0 != chdir(newdir.c_str())) {
-        std::cerr << "Could not change the working directory to " << newdir << std::endl;
-    }
-
+    std::filesystem::current_path(newdir);
+    
     /* Set PWD environment variable because games may use it and chdir
      * does not update it.
      */
@@ -96,25 +95,25 @@ void GameThread::set_env_variables(Context *context, int gameArch)
 
         /* Set specific env variables for Proton */
         if (context->config.use_proton && !context->config.proton_path.empty()) {
-            std::string winedllpath = context->config.proton_path;
-            winedllpath += "/dist/lib64/wine:";
+            std::filesystem::path winedllpath = context->config.proton_path;
+            winedllpath /= "dist/lib64/wine:";
             winedllpath += context->config.proton_path;
-            winedllpath += "/dist/lib/wine";
+            winedllpath /= "dist/lib/wine";
             setenv("WINEDLLPATH", winedllpath.c_str(), 1);
 
             char* oldlibpath = getenv("LD_LIBRARY_PATH");
-            std::string libpath = context->config.proton_path;
-            libpath += "/dist/lib64/:";
+            std::filesystem::path libpath = context->config.proton_path;
+            libpath /= "dist/lib64/:";
             libpath += context->config.proton_path;
-            libpath += "/dist/lib/";
+            libpath /= "dist/lib/";
             if (oldlibpath) {
-                libpath.append(":");
-                libpath.append(oldlibpath);
+                libpath += ":";
+                libpath += oldlibpath;
             }
             setenv("LD_LIBRARY_PATH", libpath.c_str(), 1);
 
-            std::string wineprefix = context->config.proton_path;
-            wineprefix += "/dist/share/default_pfx/";
+            std::filesystem::path wineprefix = context->config.proton_path;
+            wineprefix /= "dist/share/default_pfx/";
             setenv("WINEPREFIX", wineprefix.c_str(), 1);
         }
 
@@ -162,7 +161,7 @@ std::list<std::string> GameThread::build_arg_list(Context *context, int gameArch
 
         /* Push the game executable as the first command-line argument */
         /* Wine can fail if not specifying a Windows path */
-        context->gameexecutable.insert(0, "Z:");
+        context->gameexecutable = "Z:" / context->gameexecutable;
         arg_list.push_back(context->gameexecutable);
     }
     else {
@@ -286,7 +285,8 @@ void GameThread::launch(Context *context)
 
     /* Set where stderr of the game is redirected */
     int fd;
-    std::string logfile = context->gamepath + ".log";
+    std::filesystem::path logfile = context->gamepath;
+    logfile += ".log";
     switch(context->config.sc.logging_status) {
         case SharedConfig::NO_LOGGING:
             fd = open("/dev/null", O_RDWR, S_IRUSR | S_IWUSR);

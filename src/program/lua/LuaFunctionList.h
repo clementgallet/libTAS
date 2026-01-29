@@ -29,6 +29,7 @@ extern "C" {
 #include <vector>
 #include <set>
 #include <string>
+#include <filesystem>
 
 namespace Lua {
 
@@ -38,8 +39,8 @@ public:
     
     struct LuaFile {
         lua_State *lua_state;
-        std::string file;
-        std::string filename;
+        std::filesystem::path file;
+        std::filesystem::path filename;
         int wd;
         bool enabled;
     };
@@ -51,7 +52,7 @@ public:
     void add(lua_State *L, NamedLuaFunction::CallbackType t);
 
     /* Import a file */
-    void addFile(const std::string& file);
+    void addFile(const std::filesystem::path& file);
 
     /* Remove all callbacks from a file */
     void removeForFile(int row);
@@ -75,7 +76,7 @@ public:
     void clear();
 
     std::vector<LuaFile> fileList;
-    std::set<std::string> fileSet;
+    std::set<std::filesystem::path> fileSet;
     
 private:
     std::list<NamedLuaFunction> functions;

@@ -67,31 +67,31 @@ void MovieFile::clear()
     changelog->clear();
 }
 
-int MovieFile::extractMovie(const std::string& moviefile)
+int MovieFile::extractMovie(const std::filesystem::path& moviefile)
 {
     if (moviefile.empty())
         return ENOMOVIE;
 
     /* Check that the moviefile exists */
-    if (access(moviefile.c_str(), F_OK) != 0)
+    if (!std::filesystem::exists(moviefile))
         return ENOMOVIE;
 
     /* Empty the temp directory */
-    std::string configfile = context->config.tempmoviedir + "/config.ini";
-    std::string editorfile = context->config.tempmoviedir + "/editor.ini";
-    std::string inputfile = context->config.tempmoviedir + "/inputs";
-    std::string annotationsfile = context->config.tempmoviedir + "/annotations.txt";
-    unlink(configfile.c_str());
-    unlink(editorfile.c_str());
-    unlink(inputfile.c_str());
-    unlink(annotationsfile.c_str());
+    std::filesystem::path configfile = context->config.tempmoviedir / "config.ini";
+    std::filesystem::path editorfile = context->config.tempmoviedir / "editor.ini";
+    std::filesystem::path inputfile = context->config.tempmoviedir / "inputs";
+    std::filesystem::path annotationsfile = context->config.tempmoviedir / "annotations.txt";
+    std::filesystem::remove(configfile);
+    std::filesystem::remove(editorfile);
+    std::filesystem::remove(inputfile);
+    std::filesystem::remove(annotationsfile);
 
     /* Build the tar command */
     std::ostringstream oss;
     /* Piping gzip -> tar to avoid gzip warnings on old movie files */
-    oss << "gzip -dq < \"";
+    oss << "gzip -dq < ";
     oss << moviefile;
-    oss << "\" | tar -xUf - -C ";
+    oss << " | tar -xUf - -C ";
     oss << context->config.tempmoviedir;
 
     /* Execute the tar command */
@@ -102,9 +102,9 @@ int MovieFile::extractMovie(const std::string& moviefile)
         return EBADARCHIVE;
 
     /* Check the presence of the inputs and config files */
-    if (access(configfile.c_str(), F_OK) != 0)
+    if (!std::filesystem::exists(configfile))
         return ENOCONFIG;
-    if (access(inputfile.c_str(), F_OK) != 0)
+    if (!std::filesystem::exists(inputfile))
         return ENOINPUTS;
 
     return 0;
@@ -115,7 +115,7 @@ int MovieFile::extractMovie()
     return extractMovie(context->config.moviefile);
 }
 
-int MovieFile::loadMovie(const std::string& moviefile)
+int MovieFile::loadMovie(const std::filesystem::path& moviefile)
 {
     /* Extract the moviefile in the temp directory */
     int ret = extractMovie(moviefile);
@@ -151,7 +151,7 @@ int MovieFile::loadMovie()
     return loadMovie(context->config.moviefile);
 }
 
-int MovieFile::loadSavestateMovie(const std::string& moviefile)
+int MovieFile::loadSavestateMovie(const std::filesystem::path& moviefile)
 {
     /* Extract the moviefile in the temp directory */
     int ret = extractMovie(moviefile);
@@ -167,7 +167,7 @@ int MovieFile::loadSavestateMovie(const std::string& moviefile)
     return 0;
 }
 
-int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
+int MovieFile::saveMovie(const std::filesystem::path& moviefile, uint64_t nb_frames)
 {
     /* Skip empty moviefiles, if user tested the annotations without specifying a movie */
     if (moviefile.empty())
@@ -183,9 +183,9 @@ int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
 
     /* Build the tar command */
     std::ostringstream oss;
-    oss << "tar -czUf \"";
+    oss << "tar -czUf ";
     oss << moviefile;
-    oss << "\" -C ";
+    oss << " -C ";
     oss << context->config.tempmoviedir;
     oss << " inputs config.ini editor.ini annotations.txt";
 
@@ -199,7 +199,7 @@ int MovieFile::saveMovie(const std::string& moviefile, uint64_t nb_frames)
     return 0;
 }
 
-int MovieFile::saveMovie(const std::string& moviefile)
+int MovieFile::saveMovie(const std::filesystem::path& moviefile)
 {
     return saveMovie(moviefile, inputs->nbFrames());
 }
@@ -212,7 +212,7 @@ int MovieFile::saveMovie()
 
 int MovieFile::saveBackupMovie()
 {
-    std::string backupfile = context->config.tempmoviedir + "/backup.ltm";
+    std::filesystem::path backupfile = context->config.tempmoviedir / "backup.ltm";
     std::cout << "No movie recording was selected. A backup movie was saved to " << backupfile << std::endl;
     return saveMovie(backupfile);
 }

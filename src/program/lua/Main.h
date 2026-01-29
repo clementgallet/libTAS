@@ -23,6 +23,7 @@
 #include "Context.h"
 
 #include <string>
+#include <filesystem>
 
 struct lua_State;
 
@@ -40,10 +41,10 @@ namespace Main {
     void exit();
 
     /* Run a lua script */
-    int run(lua_State* lua_state, std::string filename);
+    int run(lua_State* lua_state, std::filesystem::path filename);
 
     /* Return the current executed filename */
-    const std::string& currentFile();
+    const std::filesystem::path& currentFile();
 }
 }
 

@@ -26,7 +26,7 @@
 #include <string>
 #include <memory>
 #include <list>
-
+#include <filesystem>
 
 /* Forward declaration */
 class KeyMapping;
@@ -52,10 +52,10 @@ public:
     std::string gameargs;
 
     /* Absolute path of the movie file */
-    std::string moviefile;
+    std::filesystem::path moviefile;
 
     /* Absolute path of the dump file */
-    std::string dumpfile;
+    std::filesystem::path dumpfile;
 
     /* ffmpeg options */
     std::string ffmpegoptions;
@@ -67,37 +67,37 @@ public:
     bool dumping;
 
     /* Absolute path of the screenshot file */
-    std::string screenshotfile;
+    std::filesystem::path screenshotfile;
 
     /* Path of the libraries used by the game */
-    std::string libdir;
+    std::filesystem::path libdir;
 
     /* Path where the game needs to run */
-    std::string rundir;
+    std::filesystem::path rundir;
 
     /* Directory holding our config files */
-    std::string configdir;
+    std::filesystem::path configdir;
 
     /* Directory holding our data files */
-    std::string datadir;
+    std::filesystem::path datadir;
 
     /* Path for the Steam user data folder */
-    std::string steamuserdir;
+    std::filesystem::path steamuserdir;
 
     /* Directory holding temporary files for building movies */
-    std::string tempmoviedir;
+    std::filesystem::path tempmoviedir;
 
     /* Directory holding savestates and savestate movies */
-    std::string savestatedir;
+    std::filesystem::path savestatedir;
 
     /* Directory holding files storing ram search results */
-    std::string ramsearchdir;
+    std::filesystem::path ramsearchdir;
 
     /* Directory holding extra i386 libs required by some games */
-    std::string extralib32dir;
+    std::filesystem::path extralib32dir;
 
     /* Directory holding extra amd64 libs required by some games */
-    std::string extralib64dir;
+    std::filesystem::path extralib64dir;
 
     /* Flags when end of movie */
     enum MovieEnd {
@@ -120,7 +120,7 @@ public:
     int autosave_count = 20;
 
     /* List of recent existing gamepaths */
-    std::list<std::string> recent_gamepaths;
+    std::list<std::filesystem::path> recent_gamepaths;
 
     /* List of recent command-line options */
     std::list<std::string> recent_args;
@@ -153,19 +153,19 @@ public:
     bool editor_move_marker = false;
 
     /* Proton absolute path */
-    std::string proton_path;
+    std::filesystem::path proton_path;
 
     /* Strace events, passed as [-e expr] */
     std::string strace_events;
 
     /* Save the config into the config file */
-    void save(const std::string& gamepath);
+    void save(const std::filesystem::path& gamepath);
 
     /* Load a game-specific config from the config file */
-    void load(const std::string& gamepath);
+    void load(const std::filesystem::path& gamepath);
 
     /* Save current ffmpeg options as default */
-    void saveDefaultFfmpeg(const std::string& gamepath);
+    void saveDefaultFfmpeg(const std::filesystem::path& gamepath);
 
     enum Debugger {
         DEBUGGER_GDB = 0,
@@ -184,7 +184,7 @@ public:
     int allow_downloads = -1;
 
 private:
-    QString iniPath(const std::string& gamepath) const;
+    QString iniPath(const std::filesystem::path& gamepath) const;
 
     /* Set default paths and optionally create directories */
     void createDirectories();

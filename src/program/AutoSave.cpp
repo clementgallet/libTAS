@@ -47,17 +47,12 @@ void AutoSave::update(Context* context, MovieFile& movie)
 		time(&last_time_saved);
 
 		/* Build the autosave filename */
-		std::string moviename = fileFromPath(context->config.moviefile);
-
-		/* Remove the extension if any */
-		if (moviename.compare(moviename.size() - 4, 4, ".ltm") == 0) {
-			moviename.resize(moviename.size() - 4);
-		}
+		std::filesystem::path moviename = context->config.moviefile.stem();
 
 		/* We remove old saves here while we have the correct movie name */
-		removeOldSaves(context, moviename.c_str());
+		removeOldSaves(context, moviename.string());
 
-		moviename = context->config.tempmoviedir + "/" + moviename;
+		moviename = context->config.tempmoviedir / moviename;
 
 		char buf[32];
 		strftime(buf, 32, "_%Y%m%d-%H%M%S.ltm", localtime(&last_time_saved));
@@ -73,42 +68,36 @@ void AutoSave::update(Context* context, MovieFile& movie)
 	}
 }
 
-void AutoSave::removeOldSaves(Context* context, const char* moviename)
+void AutoSave::removeOldSaves(Context* context, const std::string& moviename)
 {
-	struct dirent **savefiles;
-
 	/* Scanning the directory of savefiles. We can't pass a filter function as
 	 * lambda because only non-capturing lambdas can be converted to function
 	 * pointers. We must filter when iterating. */
-	int nfiles = scandir(context->config.tempmoviedir.c_str(), &savefiles, nullptr, alphasort);
+     
+    /* We use a set to order files alphabetically */
+    std::set<std::filesystem::path> sorted_files;
 
-	if (nfiles < 0) {
-		std::cerr << "Could not scan directory " << context->config.tempmoviedir << std::endl;
-		return;
-	}
+    for (auto &entry : std::filesystem::directory_iterator(context->config.tempmoviedir))
+        sorted_files.insert(entry.path());
 
-	int matches = 0;
-	for (int i = nfiles-1; i >= 0; i--)
-    {
-        struct dirent *file = savefiles[i];
-		if ((strlen(file->d_name) == (strlen(moviename) + 20)) &&
-			(strncmp(file->d_name, moviename, strlen(moviename)) == 0)) {
-			/* We found a matching autosave */
-			matches++;
-			if (matches > context->config.autosave_count) {
-				/* Removing the autosave */
-				std::string autosave = context->config.tempmoviedir;
-				autosave += "/";
-				autosave += file->d_name;
-				std::cout << "Remove autosave movie " << autosave << std::endl;
-				unlink(autosave.c_str());
-			}
-		}
-		else {
-			/* Little optimisation. If we already had a match, then we won't
-			 * have any more matches, so we can stop here */
-			if (matches > 0)
-				break;
-		}
+    int matches = 0;
+    for (auto filename_it = sorted_files.rbegin(); filename_it != sorted_files.rend(); filename_it++) {
+        std::string tempfilename = filename_it->filename().string();
+        if ((tempfilename.size() == (moviename.size() + 20)) &&
+            (0 == tempfilename.compare(0, moviename.size(), moviename))) {
+            /* We found a matching autosave */
+            matches++;
+            if (matches > context->config.autosave_count) {
+                /* Removing the autosave */
+                std::cout << "Remove autosave movie " << *filename_it << std::endl;
+                std::filesystem::remove(*filename_it);
+            }
+        }
+        else {
+            /* Little optimisation. If we already had a match, then we won't
+             * have any more matches, so we can stop here */
+            if (matches > 0)
+                break;
+        }
     }
 }

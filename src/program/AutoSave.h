@@ -29,7 +29,7 @@ struct Context;
 
 namespace AutoSave {
     void update(Context* context, MovieFile& movie);
-    void removeOldSaves(Context* context, const char* moviename);
+    void removeOldSaves(Context* context, const std::string& moviename);
 }
 
 #endif

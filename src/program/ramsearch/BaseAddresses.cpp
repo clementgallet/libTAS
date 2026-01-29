@@ -28,6 +28,7 @@
 #include <utility>
 #include <memory>
 #include <iostream>
+#include <filesystem>
 
 
 // #include <stdint.h>
@@ -56,7 +57,7 @@ void BaseAddresses::load()
     std::string previous_file = ""; // file of previous section
     bool previous_stored = false; // was the last section stored?
     while (memlayout->nextSection(MemSection::MemAll, 0, section)) {
-        std::string file = fileFromPath(section.filename);
+        std::string file = std::filesystem::path(section.filename).filename();
         if (section.type == MemSection::MemText) {
             sectionExecutable = section;
         }
@@ -98,7 +99,7 @@ std::pair<uintptr_t,uintptr_t> BaseAddresses::findNewFile(std::string file)
     MemSection section;
     bool file_found = false;
     while (memlayout->nextSection(MemSection::MemAll, 0, section)) {
-        std::string section_file = fileFromPath(section.filename);
+        std::string section_file = std::filesystem::path(section.filename).filename();
         
         /* Only add the requested file */
         if (section_file.compare(file) == 0) {

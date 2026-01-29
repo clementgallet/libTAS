@@ -28,6 +28,7 @@
 
 #include <string>
 #include <stdint.h>
+#include <filesystem>
 
 class AllInputs;
 struct Context;
@@ -61,24 +62,24 @@ public:
     /* Extract a moviefile into the temp directory
      * Returns 0 if no error, or a negative value if an error occured */
     int extractMovie();
-    int extractMovie(const std::string& moviefile);
+    int extractMovie(const std::filesystem::path& moviefile);
 
     /* Import the inputs into a list, and all the parameters.
      * Returns 0 if no error, or a negative value if an error occured */
     int loadMovie();
-    int loadMovie(const std::string& moviefile);
+    int loadMovie(const std::filesystem::path& moviefile);
 
     /* Import only relevant data used for savestate movies.
      * Returns 0 if no error, or a negative value if an error occured */
-    int loadSavestateMovie(const std::string& moviefile);
+    int loadSavestateMovie(const std::filesystem::path& moviefile);
 
     /* Write the inputs into a file and compress to the whole moviefile */
     int saveMovie();
     int saveBackupMovie();
-    int saveMovie(const std::string& moviefile);
+    int saveMovie(const std::filesystem::path& moviefile);
 
     /* Write only the n first frames of input into the movie file. Used for savestate movies */
-    int saveMovie(const std::string& moviefile, uint64_t frame_nb);
+    int saveMovie(const std::filesystem::path& moviefile, uint64_t frame_nb);
 
     /* Copy movie to another one */
     void copyFrom(const MovieFile& movie);

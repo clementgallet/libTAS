@@ -65,9 +65,9 @@ void Lua::Main::exit()
     Lua::Callbacks::clear();
 }
 
-std::string luaFile;
+std::filesystem::path luaFile;
 
-int Lua::Main::run(lua_State* lua_state, std::string filename)
+int Lua::Main::run(lua_State* lua_state, std::filesystem::path filename)
 {
     luaFile = filename;
     int status = luaL_dofile(lua_state, filename.c_str());
@@ -109,7 +109,7 @@ int Lua::Main::run(lua_State* lua_state, std::string filename)
     return 0;
 }
 
-const std::string& Lua::Main::currentFile()
+const std::filesystem::path& Lua::Main::currentFile()
 {
     return luaFile;
 }

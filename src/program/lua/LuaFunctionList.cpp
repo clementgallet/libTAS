@@ -44,7 +44,7 @@ void LuaFunctionList::add(lua_State *L, NamedLuaFunction::CallbackType t)
     functions.emplace_back(L, t);
 }
 
-void LuaFunctionList::addFile(const std::string& file)
+void LuaFunctionList::addFile(const std::filesystem::path& file)
 {
     if (fileSet.find(file) != fileSet.end())
         return;
@@ -62,7 +62,7 @@ void LuaFunctionList::addFile(const std::string& file)
     LuaFile f;
     f.lua_state = lua_state;
     f.file = file;
-    f.filename = fileFromPath(file);
+    f.filename = file.filename();
     /* Register inotify on file to look for changes */
     f.wd = inotify_add_watch(inotifyfd, file.c_str(), IN_MODIFY);
     f.enabled = true;
@@ -113,7 +113,7 @@ void LuaFunctionList::watchChanges()
                 else if (ev.mask == IN_IGNORED) {
                     LuaFile& lf = fileList[i];
 
-                    const std::string& file = lf.file;
+                    const std::filesystem::path& file = lf.file;
 
                     /* File got potentially modified so check if it still exists 
                      * Watch descriptor has been removed automatically so don't need to do that manually */
@@ -147,7 +147,7 @@ bool LuaFunctionList::activeState(int row) const
 void LuaFunctionList::switchForFile(int row, bool active)
 {
     fileList[row].enabled = active;
-    const std::string& file = fileList[row].file;
+    const std::filesystem::path& file = fileList[row].file;
     for (auto& nlf : functions) {
         if (0 == file.compare(nlf.file)) {
             nlf.active = active;
