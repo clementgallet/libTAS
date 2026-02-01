@@ -46,10 +46,10 @@ bool ErrorChecking::allChecks(Context* context)
     return true;
 }
 
-bool ErrorChecking::checkGameExists(std::string gamepath, bool interactive)
+bool ErrorChecking::checkGameExists(std::filesystem::path gamepath, bool interactive)
 {
     /* Checking that the game binary exists */
-    if (access(gamepath.c_str(), F_OK) != 0) {
+    if (!std::filesystem::exists(gamepath)) {
         critical(QString("Game path %1 was not found").arg(gamepath.c_str()), interactive);
         return false;
     }
@@ -57,10 +57,10 @@ bool ErrorChecking::checkGameExists(std::string gamepath, bool interactive)
     return true;
 }
 
-bool ErrorChecking::checkMovieExists(std::string moviepath, bool interactive)
+bool ErrorChecking::checkMovieExists(std::filesystem::path moviepath, bool interactive)
 {
     /* Checking that the movie file exists */
-    if (access(moviepath.c_str(), F_OK) != 0) {
+    if (!std::filesystem::exists(moviepath)) {
         critical(QString("Movie path %1 was not found").arg(moviepath.c_str()), interactive);
         return false;
     }
@@ -68,43 +68,29 @@ bool ErrorChecking::checkMovieExists(std::string moviepath, bool interactive)
     return true;
 }
 
-bool ErrorChecking::checkMovieWriteable(std::string moviepath, bool interactive)
+bool ErrorChecking::checkMovieWriteable(std::filesystem::path moviepath, bool interactive)
 {
     /* Extract the movie directory */
-    std::string moviedir = dirFromPath(moviepath);
+    std::filesystem::path moviedir = moviepath.parent_path();
     if (moviedir.empty()) {
         critical(QString("The movie path %1 is not an absolute path").arg(moviedir.c_str()), interactive);
         return false;
     }
 
     /* Check that the directory of the moviefile exists */
-    struct stat sb;
-    if (stat(moviedir.c_str(), &sb) == -1) {
-        if (errno == ENOENT) {
-            /* The directory does not exist */
-            critical(QString("The directory of the moviefile %1 does not exists").arg(moviedir.c_str()), interactive);
-            return false;
-        }
-        else {
-            /* Another error */
-            critical(QString("The directory of the moviefile %1 cannot be accessed").arg(moviedir.c_str()), interactive);
-            return false;
-        }
-    }
-    else if (!S_ISDIR(sb.st_mode))
-    {
-        critical(QString("The directory of the moviefile %1 is not a directory").arg(moviedir.c_str()), interactive);
+    if (!std::filesystem::exists(moviedir)) {
+        critical(QString("The directory of the moviefile %1 cannot be accessed").arg(moviedir.c_str()), interactive);
         return false;
     }
 
     /* Checking that the user can create a movie file */
-    if (access(moviedir.c_str(), W_OK) != 0) {
+    if (std::filesystem::perms::none == (std::filesystem::status(moviedir).permissions() & std::filesystem::perms::owner_write)) {
         critical(QString("You don't have permission to create moviefile %1").arg(moviepath.c_str()), interactive);
         return false;
     }
 
     /* Prompt a confirmation message if overwriting a movie file */
-    if (interactive && access(moviepath.c_str(), F_OK) == 0) {
+    if (interactive && std::filesystem::exists(moviepath)) {
         QMessageBox::StandardButton btn = QMessageBox::question(nullptr, "Movie overwrite", QString("The movie file %1 does exist. Do you want to overwrite it?").arg(moviepath.c_str()), QMessageBox::Ok | QMessageBox::Cancel);
         if (btn != QMessageBox::Ok)
             return false;
@@ -116,13 +102,13 @@ bool ErrorChecking::checkMovieWriteable(std::string moviepath, bool interactive)
 bool ErrorChecking::checkArchType(Context* context)
 {
     /* Checking that the game binary exists (again) */
-    if (access(context->gamepath.c_str(), F_OK) != 0) {
+    if (!std::filesystem::exists(context->gamepath)) {
         critical(QString("Game path %1 was not found").arg(context->gamepath.c_str()), context->interactive);
         return false;
     }
 
     /* Checking that the libtas.so library path is correct */
-    if (access(context->libtaspath.c_str(), F_OK) != 0) {
+    if (!std::filesystem::exists(context->libtaspath)) {
         critical(QString("libtas.so library at %1 was not found. Make sure that the libtas.so file is in the same directory as the libTAS executable").arg(context->libtaspath.c_str()), context->interactive);
         return false;
     }
@@ -150,9 +136,10 @@ bool ErrorChecking::checkArchType(Context* context)
      * This is not needed for wine games.
      * MacOS apps are directories, and thus executables */
     if (gameArch != BT_PE32 && gameArch != BT_PE32P && gameArch != BT_NE && access(context->gamepath.c_str(), X_OK) != 0) {
-        struct stat sb;
-        if ((stat(context->gamepath.c_str(), &sb) == -1) ||
-           (chmod(context->gamepath.c_str(), sb.st_mode | S_IXUSR) == -1)) {
+
+        std::filesystem::permissions(context->gamepath, std::filesystem::perms::owner_exec, std::filesystem::perm_options::add);
+
+        if (std::filesystem::perms::none == (std::filesystem::status(context->gamepath).permissions() & std::filesystem::perms::owner_exec)) {
            critical(QString("Game %1 is not executable by the user, could not add the executable flag").arg(context->gamepath.c_str()), context->interactive);
            return false;
         }
@@ -176,6 +163,7 @@ bool ErrorChecking::checkArchType(Context* context)
         std::string winename = "wine";
         if (gameArch == BT_PE32P)
             winename += "64";
+            
 
         std::string cmd = "which ";
         cmd += winename;

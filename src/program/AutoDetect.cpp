@@ -48,30 +48,32 @@ void AutoDetect::game_libraries(Context *context)
     /* Build a command to parse the first missing library from the game executable,
      * look at game directory and sub-directories for it */
     std::ostringstream oss_ml;
-    oss_ml << "ldd \"" << context->gameexecutable;
-    oss_ml << "\" | awk '/ => not found/ { print $1 }' | head -1";
+    oss_ml << "ldd " << context->gameexecutable;
+    oss_ml << " | awk '/ => not found/ { print $1 }' | head -1";
     
     std::string missing_lib = queryCmd(oss_ml.str());
     if (missing_lib.empty()) return;
     
     std::cout << "Try to find the location of " << missing_lib << " among game files."<< std::endl;
 
-    std::string gamedir = dirFromPath(context->gameexecutable);
+    std::filesystem::path gamedir = context->gameexecutable.parent_path();
     std::ostringstream oss_lp;
-    oss_lp << "find \"" << gamedir << "\" -name " << missing_lib << " -type f -print -quit";
+    oss_lp << "find " << gamedir << " -name " << missing_lib << " -type f -print -quit";
 
     std::string found_lib = queryCmd(oss_lp.str());
     if (!found_lib.empty()) {
         std::cout << "-> library was found at location " << found_lib << std::endl;
         
-        std::string found_lib_dir = dirFromPath(found_lib);
+        std::filesystem::path found_lib_path = std::filesystem::path(found_lib);
+        std::filesystem::path found_lib_dir = found_lib_path.parent_path();
 
         char* oldlibpath = getenv("LD_LIBRARY_PATH");
+        std::string newlibpath = found_lib_dir.native();
         if (oldlibpath) {
-            found_lib_dir.append(":");
-            found_lib_dir.append(oldlibpath);
+            newlibpath.append(":");
+            newlibpath.append(oldlibpath);
         }
-        setenv("LD_LIBRARY_PATH", found_lib_dir.c_str(), 1);
+        setenv("LD_LIBRARY_PATH", newlibpath.c_str(), 1);
     }
     else {
         std::cerr << "-> could not find the library among the game files" << std::endl;
@@ -129,7 +131,11 @@ void AutoDetect::game_libraries(Context *context)
 
         std::ostringstream oss_lib;
         oss_lib << "wget -nc -P ${TMPDIR:-/tmp} " << libUrl;
-        oss_lib << " && ar -x --output ${TMPDIR:-/tmp} ${TMPDIR:-/tmp}/" << fileFromPath(libUrl) << " data.tar.xz";
+        
+        size_t sep = libUrl.find_last_of("/");
+        libUrl = libUrl.substr(sep + 1);
+        
+        oss_lib << " && ar -x --output ${TMPDIR:-/tmp} ${TMPDIR:-/tmp}/" << libUrl << " data.tar.xz";
         
         std::string libFile = (gameArch == BT_ELF32) ? "./usr/lib/i386-linux-gnu/" : "./usr/lib/x86_64-linux-gnu/";
         
@@ -183,36 +189,31 @@ int AutoDetect::game_engine(Context *context)
     context->gameexecutable = context->gamepath;
     
     /* Get file extension */
-    size_t pos = context->gamepath.find_last_of(".");
-    std::string ext;
-    if (pos != std::string::npos)
-        ext = context->gamepath.substr(pos);
+    std::filesystem::path ext = context->gamepath.extension();
 
     /* Check for .AppImage format and mount image */
-    if (ext == ".AppImage") {
+    if (ext.compare(".AppImage") == 0) {
         const char *command[] = {context->gamepath.c_str(), "--appimage-mount", NULL};
-        std::string image_path = queryCmdPid(command, &context->appimage_pid);
+        std::filesystem::path image_path = queryCmdPid(command, &context->appimage_pid);
         std::cout << ".AppImage mounted to " << image_path << std::endl;
 
         /* Replace with new executable */
-        context->gameexecutable = image_path + "/AppRun";
+        context->gameexecutable = image_path / "AppRun";
     }
     
     /* Check for Unity:
      * Old Unity executables end with `.x86` or `.x86_64` or no extention, and
      * data directory is named after the executable with added `_Data` */
 
-    std::string data;
-    if (ext == ".x86" || ext == ".x86_64")
-        data = context->gameexecutable.substr(0, pos) + "_Data";
-    else
-        data = context->gameexecutable + "_Data";
+    std::filesystem::path data = context->gameexecutable.parent_path() / context->gameexecutable.stem();
+    data += "_Data";
 
-    if (stat(data.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)) {
+    if (std::filesystem::is_directory(data)) {
         std::cout << "Unity game detected" << std::endl;
+
+        std::filesystem::path data_unity = data / "Resources" / "unity_builtin_extra";
         std::ostringstream oss;
-        oss << "strings \"" << data;
-        oss << "/Resources/unity_builtin_extra\" | head -n 1";
+        oss << "strings " << data_unity << " | head -n 1";
 
         std::string version = queryCmd(oss.str());
         if (!version.empty())
@@ -231,10 +232,10 @@ int AutoDetect::game_engine(Context *context)
     
     /* Check for GM:S:
      * Games have an asset folder which contains the `game.unx` file */
-    std::string assets = dirFromPath(context->gameexecutable) + "/assets";
-    if (stat(assets.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)) {
-        std::string gameunx = assets + "/game.unx";
-        if (access(gameunx.c_str(), F_OK) == 0) {
+    std::filesystem::path assets = context->gameexecutable.parent_path() / "assets";
+    if (std::filesystem::is_directory(assets)) {
+        std::filesystem::path gameunx = assets / "game.unx";
+        if (std::filesystem::exists(gameunx)) {
             std::cout << "GameMaker Studio game detected" << std::endl;
 
             /* Check time-tracking clockgettime monotonic */
@@ -249,8 +250,7 @@ int AutoDetect::game_engine(Context *context)
     /* Check for Godot:
      * Look at symbols inside the game executable and count `godot_*` */
     std::ostringstream oss;
-    oss << "readelf -WsC \"" << context->gameexecutable;
-    oss << "\" | grep godot_ | wc -l ";
+    oss << "readelf -WsC " << context->gameexecutable << " | grep godot_ | wc -l ";
 
     std::string godotcount = queryCmd(oss.str());
     if (!godotcount.empty() && (std::strtoul(godotcount.c_str(), nullptr, 10) > 100)) {

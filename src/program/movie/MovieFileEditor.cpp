@@ -25,6 +25,7 @@
 #include <QtCore/QSettings>
 #include <QtCore/QString>
 #include <string>
+#include <filesystem>
 
 MovieFileEditor::MovieFileEditor(Context* c) : context(c) {
     clear();
@@ -45,10 +46,9 @@ void MovieFileEditor::load()
     clear();
     
     /* Load the editor file */
-    QString editorfile = context->config.tempmoviedir.c_str();
-    editorfile += "/editor.ini";
+    std::filesystem::path editorfile = context->config.tempmoviedir / "editor.ini";
 
-    QSettings editor(editorfile, QSettings::IniFormat);
+    QSettings editor(QString(editorfile.c_str()), QSettings::IniFormat);
     editor.setFallbacksEnabled(false);
     
     int size = editor.beginReadArray("input_names");
@@ -82,10 +82,9 @@ void MovieFileEditor::load()
     if (!input_set.empty())
         return;
 
-    QString configfile = context->config.tempmoviedir.c_str();
-    configfile += "/config.ini";
+    std::filesystem::path configfile = context->config.tempmoviedir / "config.ini";
 
-    QSettings config(configfile, QSettings::IniFormat);
+    QSettings config(QString(configfile.c_str()), QSettings::IniFormat);
     config.setFallbacksEnabled(false);
 
     size = config.beginReadArray("input_names");
@@ -102,10 +101,9 @@ void MovieFileEditor::load()
 void MovieFileEditor::save()
 {
     /* Save some parameters into the editor file */
-    QString editorfile = context->config.tempmoviedir.c_str();
-    editorfile += "/editor.ini";
+    std::filesystem::path editorfile = context->config.tempmoviedir / "editor.ini";
 
-    QSettings config(editorfile, QSettings::IniFormat);
+    QSettings config(QString(editorfile.c_str()), QSettings::IniFormat);
     config.setFallbacksEnabled(false);
 
     config.remove("input_names");

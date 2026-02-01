@@ -228,14 +228,9 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     moviePlayback = new QRadioButton("Playback");
     connect(moviePlayback, &QAbstractButton::clicked, this, &MainWindow::slotMovieRecording);
 
-    /* Frame count */
-    frameCount = new QSpinBox();
-    frameCount->setReadOnly(true);
-    frameCount->setMaximum(std::numeric_limits<int>::max());
+    frameCount = new QLabel("");
 
-    movieFrameCount = new QSpinBox();
-    movieFrameCount->setReadOnly(true);
-    movieFrameCount->setMaximum(std::numeric_limits<int>::max());
+    movieFrameCount = new QLabel("");
 
     /* Current/movie length */
     currentLength = new QLabel("Current time: -");
@@ -245,6 +240,8 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     fpsNumField = new QSpinBox();
     fpsNumField->setMaximum(std::numeric_limits<int>::max());
     fpsNumField->setMinimum(1);
+    fpsNumField->setEnabled(movieRecording->isChecked());
+    disabledWidgetsOnStart.append(fpsNumField);
     connect(fpsNumField, QOverload<int>::of(&QSpinBox::valueChanged),[=, this](int i){
         context->current_framerate_num = i;
         gameLoop->movie.inputs->variable_framerate = true;
@@ -253,6 +250,8 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     fpsDenField = new QSpinBox();
     fpsDenField->setMaximum(std::numeric_limits<int>::max());
     fpsDenField->setMinimum(1);
+    fpsDenField->setEnabled(movieRecording->isChecked());
+    disabledWidgetsOnStart.append(fpsDenField);
     connect(fpsDenField, QOverload<int>::of(&QSpinBox::valueChanged),[=, this](int i){
         context->current_framerate_den = i;
         gameLoop->movie.inputs->variable_framerate = true;
@@ -261,25 +260,27 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     fpsValues = new QLabel("Current FPS: - / -");
 
     /* Re-record count */
-    rerecordCount = new QSpinBox();
-    rerecordCount->setReadOnly(true);
-    rerecordCount->setMaximum(std::numeric_limits<int>::max());
+    rerecordCount = new QLabel();
 
     /* Elapsed and Real time */
     elapsedTimeSec = new QSpinBox();
     elapsedTimeSec->setMaximum(std::numeric_limits<int>::max());
     elapsedTimeSec->setMinimumWidth(50);
+    disabledWidgetsOnStart.append(elapsedTimeSec);
     elapsedTimeNsec = new QSpinBox();
     elapsedTimeNsec->setMaximum(std::numeric_limits<int>::max());
     elapsedTimeNsec->setMinimumWidth(50);
+    disabledWidgetsOnStart.append(elapsedTimeNsec);
 
     realTimeSec = new QSpinBox();
     realTimeSec->setMinimum(1);
     realTimeSec->setMaximum(std::numeric_limits<int>::max());
     realTimeSec->setMinimumWidth(50);
+
     realTimeNsec = new QSpinBox();
     realTimeNsec->setMaximum(std::numeric_limits<int>::max());
     realTimeNsec->setMinimumWidth(50);
+
     realTimeFormat = new QLabel();
     connect(realTimeSec, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::slotRealTimeFormat);
     connect(realTimeNsec, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::slotRealTimeFormat);
@@ -640,8 +641,9 @@ void MainWindow::createMenus()
 
     action = movieMenu->addAction(tr("Open Movie..."), this, &MainWindow::slotBrowseMoviePath);
     disabledActionsOnStart.append(action);
-    saveMovieAction = movieMenu->addAction(tr("Save Movie"), this, &MainWindow::slotSaveMovie);
+    saveMovieAction = movieMenu->addAction(tr("Save Movie"), this, &MainWindow::slotSaveMovie, QKeySequence("Ctrl+S"));
     saveMovieAction->setEnabled(false);
+    connect(inputEditorWindow->inputEditorView, &InputEditorView::saveMovieRequested, this, &MainWindow::slotSaveMovie);
     exportMovieAction = movieMenu->addAction(tr("Export Movie..."), this, &MainWindow::slotExportMovie);
     exportMovieAction->setEnabled(false);
     settingsMovieAction = movieMenu->addAction(tr("Movie Settings..."), movieSettingsWindow, &MovieSettingsWindow::exec);
@@ -750,10 +752,6 @@ void MainWindow::updateStatus(int status)
             movieBox->setCheckable(true);
             movieBox->setChecked(context->config.sc.recording != SharedConfig::NO_RECORDING);
 
-            fpsNumField->setReadOnly(false);
-            fpsDenField->setReadOnly(false);
-            elapsedTimeSec->setReadOnly(false);
-            elapsedTimeNsec->setReadOnly(false);
             elapsedTimeSec->setValue(context->config.sc.initial_monotonic_time_sec);
             elapsedTimeNsec->setValue(context->config.sc.initial_monotonic_time_nsec);
             realTimeSec->setValue(context->config.sc.initial_time_sec);
@@ -770,7 +768,7 @@ void MainWindow::updateStatus(int status)
                 toggleEncodeAction->setText("Start encode");
             }
 
-            frameCount->setValue(0);
+            frameCount->setText("0");
             currentLength->setText("Current Time: -");
             fpsValues->setText("Current FPS: - / -");
 
@@ -790,9 +788,6 @@ void MainWindow::updateStatus(int status)
             }
             for (QAction* a : disabledActionsOnStart)
                 a->setEnabled(false);
-
-            elapsedTimeSec->setReadOnly(true);
-            elapsedTimeNsec->setReadOnly(true);
 
             launchGdbButton->setEnabled(false);
 
@@ -851,11 +846,11 @@ void MainWindow::updateSharedConfigChanged()
     switch (context->config.sc.recording) {
         case SharedConfig::RECORDING_WRITE:
             movieRecording->setChecked(true);
-            movieFrameCount->setValue(context->config.sc.movie_framecount);
+            movieFrameCount->setText(QString::number(context->config.sc.movie_framecount));
             break;
         case SharedConfig::RECORDING_READ:
             moviePlayback->setChecked(true);
-            movieFrameCount->setValue(context->config.sc.movie_framecount);
+            movieFrameCount->setText(QString::number(context->config.sc.movie_framecount));
             break;
         default:
             break;
@@ -900,8 +895,8 @@ void MainWindow::updateUIFrequent()
     updateTimer->start();
 
     /* Update frame count */
-    frameCount->setValue(context->framecount);
-    movieFrameCount->setValue(context->config.sc.movie_framecount);
+    frameCount->setText(QString::number(context->framecount));
+    movieFrameCount->setText(QString::number(context->config.sc.movie_framecount));
 
     /* Update time */
     elapsedTimeSec->setValue(context->current_time_sec);
@@ -925,7 +920,7 @@ void MainWindow::updateUIFrequent()
     }
 
     /* Update rerecord count */
-    rerecordCount->setValue(context->rerecord_count);
+    rerecordCount->setText(QString::number(context->rerecord_count));
 
     /* Update fps values */
     if ((context->fps > 0) || (context->lfps > 0)) {
@@ -978,7 +973,6 @@ void MainWindow::updateMovieParams()
 {
     if ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&
         (gameLoop->movie.loadMovie() == 0)) {
-        authorField->setReadOnly(true);
 
         /* Format movie length */
         double msec = gameLoop->movie.header->length_sec + ((double)gameLoop->movie.header->length_nsec)/1000000000.0;
@@ -986,7 +980,7 @@ void MainWindow::updateMovieParams()
         double dmsec = msec - 60*immin;
         movieLength->setText(QString("Movie length: %1m %2s").arg(immin).arg(dmsec, 0, 'f', 2));
 
-        /* If move exists, default to read mode except in non-interactive mode */
+        /* If movie exists, default to read mode except in non-interactive mode */
         if (context->interactive) {
             moviePlayback->setChecked(true);
             context->config.sc.recording = SharedConfig::RECORDING_READ;
@@ -1008,7 +1002,6 @@ void MainWindow::updateMovieParams()
         context->config.sc.movie_framecount = 0;
         context->rerecord_count = 0;
         gameLoop->movie.header->authors = "";
-        authorField->setReadOnly(false);
         movieLength->setText("Movie length: -");
         movieRecording->setChecked(true);
         if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
@@ -1022,9 +1015,10 @@ void MainWindow::updateMovieParams()
         settingsMovieAction->setEnabled(false);
     }
     inputEditorWindow->resetInputs();
-    movieFrameCount->setValue(context->config.sc.movie_framecount);
-    rerecordCount->setValue(context->rerecord_count);
-    authorField->setText(gameLoop->movie.header->authors.c_str());
+    movieFrameCount->setText(QString::number(context->config.sc.movie_framecount));
+    rerecordCount->setText(QString::number(context->rerecord_count));
+    if (authorField->text().toStdString() == "")
+        authorField->setText(gameLoop->movie.header->authors.c_str());
     fpsNumField->setValue(context->config.sc.initial_framerate_num);
     fpsDenField->setValue(context->config.sc.initial_framerate_den);
     elapsedTimeSec->setValue(context->config.sc.initial_monotonic_time_sec);
@@ -1290,6 +1284,7 @@ void MainWindow::slotMoviePathChanged()
 void MainWindow::slotSaveMovie()
 {
     if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
+        gameLoop->movie.header->authors = authorField->text().toStdString();
         int ret = gameLoop->movie.saveMovie();
         if (ret < 0) {
             QMessageBox::warning(this, "Warning", gameLoop->movie.errorString(ret));
@@ -1374,11 +1369,13 @@ void MainWindow::slotMovieRecording()
     if (context->status == Context::INACTIVE) {
         if (movieRecording->isChecked()) {
             context->config.sc.recording = SharedConfig::RECORDING_WRITE;
-            authorField->setReadOnly(false);
+            fpsNumField->setEnabled(true);
+            fpsDenField->setEnabled(true);
         }
         else {
             context->config.sc.recording = SharedConfig::RECORDING_READ;
-            authorField->setReadOnly(true);
+            fpsNumField->setEnabled(false);
+            fpsDenField->setEnabled(false);
         }
     }
     else {

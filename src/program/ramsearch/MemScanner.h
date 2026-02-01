@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <filesystem>
 
 /* Store a section of the game memory */
 class MemScanner : public QObject {
@@ -34,7 +35,7 @@ class MemScanner : public QObject {
     
     public:
         /* Initialize the memory scanner with the memory scan path */
-        static void init(std::string path);
+        static void init(std::filesystem::path path);
 
         /* First memory scan. Returns 0 if no error, or error code */
         int first_scan(int mem_flags, int type, int align, CompareType ct, CompareOperator co, MemValueType cv, MemValueType dv, uintptr_t begin_address, uintptr_t end_address);
@@ -70,9 +71,9 @@ class MemScanner : public QObject {
         const int THREAD_COUNT = 4;
         const uint64_t DISPLAY_THRESHOLD = 10000; // don't display results when above threshold
         
-        static std::string memscan_path; // directory containing all scan files
-        static std::string addresses_path; // output file containing all scan addresses
-        static std::string values_path; // output file containing all scan values
+        static std::filesystem::path memscan_path; // directory containing all scan files
+        static std::filesystem::path addresses_path; // output file containing all scan addresses
+        static std::filesystem::path values_path; // output file containing all scan values
         
         int value_type;
         int value_type_size;

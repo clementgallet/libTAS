@@ -42,20 +42,24 @@ void SaveState::buildPaths(Context* context)
 {
     /* Build the savestate paths */
     if (path.empty()) {
-        path = context->config.savestatedir + '/';
-        path += context->gamename;
-        path += ".state" + std::to_string(id);        
+        path = context->config.savestatedir;
+        path /= context->gamename;
+        path += ".state" + std::to_string(id);
     }
     
-    if (pagemap_path.empty())
-        pagemap_path = path + ".pm";
-    if (pages_path.empty())
-        pages_path = path + ".p";
+    if (pagemap_path.empty()) {
+        pagemap_path = path;
+        pagemap_path += ".pm";
+    }
+    if (pages_path.empty()) {
+        pages_path = path;
+        pages_path += ".p";
+    }
 
     /* Build the movie path */
     if (movie_path.empty()) {
-        movie_path = context->config.savestatedir + '/';
-        movie_path += context->gamename;
+        movie_path = context->config.savestatedir;
+        movie_path /= context->gamename;
         movie_path += ".movie" + std::to_string(id) + ".ltm";
     }
 }
@@ -82,7 +86,7 @@ void SaveState::buildMessages()
     loaded_state_msg += " loaded";
 }
 
-const std::string& SaveState::getMoviePath() const
+const std::filesystem::path& SaveState::getMoviePath() const
 {
     return movie_path;
 }
@@ -118,14 +122,14 @@ int SaveState::load(Context* context, const MovieFile& m, bool branch, bool inpu
     /* Check that the savestate exists (check for both savestate files and 
      * framecount, because there can be leftover savestate files from
      * forked savestate of previous execution). */
-    if ((access(pagemap_path.c_str(), F_OK) != 0) || (access(pages_path.c_str(), F_OK) != 0) ||
+    if (!std::filesystem::exists(pagemap_path) || !std::filesystem::exists(pages_path) ||
         (framecount == 0)) {
         /* If there is no savestate but a movie file, offer to load
          * the movie and fast-forward to the savestate movie frame.
          */
 
         if ((context->config.sc.recording != SharedConfig::NO_RECORDING) &&
-            (access(movie_path.c_str(), F_OK) == 0)) {
+            std::filesystem::exists(movie_path)) {
 
             /* Load the savestate movie from disk */
             MovieFile savedmovie(context);

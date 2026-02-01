@@ -39,10 +39,9 @@ void MovieFileHeader::clear()
 void MovieFileHeader::load()
 {
     /* Load the config file into the context struct */
-    QString configfile = context->config.tempmoviedir.c_str();
-    configfile += "/config.ini";
+    std::filesystem::path configfile = context->config.tempmoviedir / "config.ini";
 
-    QSettings config(configfile, QSettings::IniFormat);
+    QSettings config(QString(configfile.c_str()), QSettings::IniFormat);
     config.setFallbacksEnabled(false);
 
     context->config.sc.movie_framecount = config.value("frame_count").toULongLong();
@@ -100,10 +99,9 @@ void MovieFileHeader::load()
 void MovieFileHeader::loadSavestate()
 {
     /* Load the config file into the context struct */
-    QString configfile = context->config.tempmoviedir.c_str();
-    configfile += "/config.ini";
+    std::filesystem::path configfile = context->config.tempmoviedir / "config.ini";
 
-    QSettings config(configfile, QSettings::IniFormat);
+    QSettings config(QString(configfile.c_str()), QSettings::IniFormat);
     config.setFallbacksEnabled(false);
 
     framerate_num = config.value("framerate_num").toUInt();
@@ -125,10 +123,9 @@ void MovieFileHeader::save(uint64_t tot_frames, uint64_t nb_frames)
     savestate_framecount = nb_frames;
     
     /* Save some parameters into the config file */
-    QString configfile = context->config.tempmoviedir.c_str();
-    configfile += "/config.ini";
+    std::filesystem::path configfile = context->config.tempmoviedir / "config.ini";
 
-    QSettings config(configfile, QSettings::IniFormat);
+    QSettings config(QString(configfile.c_str()), QSettings::IniFormat);
     config.setFallbacksEnabled(false);
 
     config.setValue("game_name", context->gamename.c_str());

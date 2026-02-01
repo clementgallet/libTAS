@@ -4,6 +4,7 @@
 * Debug window for file descriptors
 * File Debug OSD shows all files with types
 * Hook SDL_SetWindowResizable to avoid a window resize call (fix #700)
+* Input editor: highlight failed edit in red (#705)
 
 ### Changed
 
@@ -21,6 +22,7 @@
 * Fix lua script getting activated when modified (fix #692)
 * gui.pixel() now actually draws a pixel (fix #691)
 * Fix encoding softlock when resolution has changed (fix #689)
+* Fix Paths settings not saved
 
 ## [1.4.7] - 2025-10-06
 ### Added

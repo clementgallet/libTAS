@@ -27,133 +27,37 @@
 #include <unistd.h> // unlink
 #include <sstream>
 #include <map>
-
-std::string fileFromPath(const std::string& path)
-{
-    size_t sep = path.find_last_of("/");
-    if (sep != std::string::npos)
-        return path.substr(sep + 1);
-    else
-        return path;
-}
-
-std::string dirFromPath(const std::string& path)
-{
-    size_t sep = path.find_last_of("/");
-    if (sep != std::string::npos)
-        return path.substr(0, sep);
-    else
-        return "";
-}
-
-std::string realpath_nonexist(const std::string& path)
-{
-    std::string absstr;
-
-    char* abspath = realpath(path.c_str(), nullptr);
-    if (abspath) {
-        absstr = abspath;
-        free(abspath);
-        return absstr;
-    }
-
-    if (errno == ENOENT) {
-        /* If file does not exist, get the absolute path of the directory and
-         * append the file. */
-
-        std::string dir;
-        std::string file;
-
-        size_t sep = path.find_last_of("/");
-        if (sep != std::string::npos) {
-            dir = path.substr(0, sep);
-            file = path.substr(sep+1);
-        }
-        else {
-            dir = ".";
-            file = path;
-        }
-
-        abspath = realpath(dir.c_str(), nullptr);
-        if (abspath) {
-            absstr = abspath;
-            absstr += "/";
-            absstr += file;
-            free(abspath);
-            return absstr;
-        }
-    }
-
-    return absstr;
-}
-
-
-int create_dir(const std::string& path)
-{
-    int ret = mkdir(path.c_str(), S_IRWXU);
-    if (ret == 0)
-        return 0;
-
-    switch (errno) {
-    case ENOENT:
-        {
-            /* parent didn't exist, try to create it */
-            std::string dir = dirFromPath(path);
-            if (dir.empty())
-                return -1;
-            else if (create_dir(dir) == -1)
-                return -1;
-
-            return mkdir(path.c_str(), S_IRWXU);
-        }
-
-    case EEXIST:
-        {
-            struct stat sb;
-            stat(path.c_str(), &sb);
-            if (!S_ISDIR(sb.st_mode))
-            {
-                std::cerr << "Something has the same name as the directory to be created: " << path << std::endl;
-                return -1;
-            }
-            return 0;
-        }
-    default:
-        std::cerr << "The following directory could not be created: " << path << std::endl;
-        return -1;
-    }
-
-    return 0;
-}
+#include <filesystem>
 
 void remove_savestates(Context* context)
 {
-    std::string savestateprefix = context->config.savestatedir + '/';
-    savestateprefix += context->gamename;
+    std::filesystem::path savestateprefix = context->config.savestatedir / context->gamename;
     for (int i=0; i<=10; i++) {
-        std::string savestatepmpath = savestateprefix + ".state" + std::to_string(i) + ".pm";
-        unlink(savestatepmpath.c_str());
-        std::string savestatepspath = savestateprefix + ".state" + std::to_string(i) + ".p";
-        unlink(savestatepspath.c_str());
+        std::filesystem::path savestatepmpath = savestateprefix;
+        savestatepmpath += ".state" + std::to_string(i) + ".pm";
+        std::filesystem::remove(savestatepmpath);
+        std::filesystem::path savestatepspath = savestateprefix;
+        savestatepspath += ".state" + std::to_string(i) + ".p";
+        std::filesystem::remove(savestatepspath);
     }
 }
 
-int extractBinaryType(std::string path)
+int extractBinaryType(std::filesystem::path path)
 {
     int extra_flags = 0;
     
     /* Check for MacOS app file, and extract the actual executable if so. */
-    std::string executable_path = extractMacOSExecutable(path);
+    std::filesystem::path executable_path = extractMacOSExecutable(path);
     if (!executable_path.empty()) {
         path = executable_path;
         extra_flags = BT_MACOSAPP;
     }
     
-    std::string cmd = "file --brief --dereference \"";
-    cmd += path;
-    cmd += "\"";
+    std::ostringstream oss;
+    oss << "file --brief --dereference ";
+    oss << path;
 
-    std::string outputstr = queryCmd(cmd);
+    std::string outputstr = queryCmd(oss.str());
 
     if (outputstr.find("pie executable") != std::string::npos) {
         extra_flags |= BT_PIEAPP;
@@ -198,30 +102,27 @@ int extractBinaryType(std::string path)
     return BT_UNKNOWN | extra_flags;
 }
 
-std::string extractMacOSExecutable(std::string path)
+std::filesystem::path extractMacOSExecutable(std::filesystem::path path)
 {
-    struct stat sb;
-
-    if (stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)) {
+    if (std::filesystem::is_directory(path)) {
         /* Extract file name and check for '.app' extension */
-        std::string name = fileFromPath(path);
-        if (name.substr(name.find_last_of(".") + 1) != "app")
+        if (path.extension().compare("app") != 00)
             return "";
         
         /* Get executable name from Info.plist CFBundleExecutable field */
-        std::string plist_cmd = "defaults read \"";
-        plist_cmd += path;
-        plist_cmd += "/Contents/Info.plist\" CFBundleExecutable";
+        std::filesystem::path plist_path = path / "Contents" / "Info.plist";
+        std::ostringstream oss;
+        oss << "defaults read ";
+        oss << plist_path;
+        oss << " CFBundleExecutable";
         
-        std::string outputstr = queryCmd(plist_cmd);
+        std::string outputstr = queryCmd(oss.str());
 
         /* Build path to executable */
-        std::string executable_path = path;
-        executable_path += "/Contents/MacOS/";
-        executable_path += outputstr;
+        std::filesystem::path executable_path = path / "Contents" / "MacOS" / outputstr;
 
         /* Check that the file exists */
-        if (access(executable_path.c_str(), F_OK) != 0)
+        if (!std::filesystem::exists(executable_path))
             return "";
 
         return executable_path;

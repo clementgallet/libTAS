@@ -25,6 +25,7 @@
 #include <string>
 #include <memory>
 #include <stdint.h>
+#include <filesystem>
 
 /* Forward declaration */
 struct Context;
@@ -61,7 +62,7 @@ public:
     void init(Context* context, int i);
 
     /* Return the savestate movie path */
-    const std::string& getMoviePath() const;
+    const std::filesystem::path& getMoviePath() const;
 
     /* Save state. Return the received message */
     int save(Context* context, const MovieFile& movie);
@@ -77,16 +78,16 @@ public:
 
 private:
     /* Savestate path */
-    std::string path;
+    std::filesystem::path path;
 
     /* Savestate pagemap path */
-    std::string pagemap_path;
+    std::filesystem::path pagemap_path;
 
     /* Savestate pages path */
-    std::string pages_path;
+    std::filesystem::path pages_path;
 
     /* Savestate movie path */
-    std::string movie_path;
+    std::filesystem::path movie_path;
 
     /* Build all savestate paths */
     void buildPaths(Context* context);
