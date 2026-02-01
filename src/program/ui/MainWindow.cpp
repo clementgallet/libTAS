@@ -980,7 +980,7 @@ void MainWindow::updateMovieParams()
         double dmsec = msec - 60*immin;
         movieLength->setText(QString("Movie length: %1m %2s").arg(immin).arg(dmsec, 0, 'f', 2));
 
-        /* If move exists, default to read mode except in non-interactive mode */
+        /* If movie exists, default to read mode except in non-interactive mode */
         if (context->interactive) {
             moviePlayback->setChecked(true);
             context->config.sc.recording = SharedConfig::RECORDING_READ;
