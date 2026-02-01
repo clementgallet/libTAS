@@ -91,7 +91,7 @@ int Lua::Runtime::sleepMS(lua_State *L)
 {
     int length = static_cast<int>(lua_tointeger(L, 1));
     if (length >= 0)
-        usleep(length);
+        usleep(1000*length);
     return 0;
 }
 
