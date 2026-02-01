@@ -26,15 +26,14 @@
 #include <unistd.h> // access
 #include <iostream>
 
-QString Config::iniPath(const std::string& gamepath) const {
-    /* Get the game executable name from path */
-    std::string gamename = fileFromPath(gamepath);
-    return QString("%1/%2.ini").arg(configdir.c_str()).arg(gamename.c_str());
+QString Config::iniPath(const std::filesystem::path& gamepath) const {
+    std::filesystem::path iniFile = configdir / gamepath.filename() / ".ini";
+    return QString(iniFile.c_str());
 }
 
-void Config::save(const std::string& gamepath) {
+void Config::save(const std::filesystem::path& gamepath) {
     /* Save only if game file exists */
-    if (access(gamepath.c_str(), F_OK) != 0)
+    if (!std::filesystem::exists(gamepath))
         return;
 
     /* Save the gamepath in recent gamepaths */
@@ -56,7 +55,9 @@ void Config::save(const std::string& gamepath) {
     recent_args.push_front(gameargs);
 
     /* Open the general preferences */
-    QSettings general_settings(QString("%1/libTAS.ini").arg(configdir.c_str()), QSettings::IniFormat);
+    std::filesystem::path generalPath = configdir / "libTAS.ini";
+    
+    QSettings general_settings(QString(generalPath.c_str()), QSettings::IniFormat);
     general_settings.setFallbacksEnabled(false);
 
     general_settings.remove("recent_gamepaths");
@@ -197,22 +198,25 @@ void Config::save(const std::string& gamepath) {
     settings.endGroup();
 }
 
-void Config::saveDefaultFfmpeg(const std::string& gamepath) {
+void Config::saveDefaultFfmpeg(const std::filesystem::path& gamepath) {
     /* Save only if game file exists */
-    if (access(gamepath.c_str(), F_OK) != 0)
+    if (!std::filesystem::exists(gamepath))
         return;
 
     /* Open the general preferences */
-    QSettings general_settings(QString("%1/libTAS.ini").arg(configdir.c_str()), QSettings::IniFormat);
+    std::filesystem::path generalPath = configdir / "libTAS.ini";
+    QSettings general_settings(QString(generalPath.c_str()), QSettings::IniFormat);
+
     general_settings.setFallbacksEnabled(false);
 
     general_settings.setValue("ffmpegoptions", ffmpegoptions.c_str());
 }
 
-void Config::load(const std::string& gamepath) {
+void Config::load(const std::filesystem::path& gamepath) {
 
     /* Open the general preferences */
-    QSettings general_settings(QString("%1/libTAS.ini").arg(configdir.c_str()), QSettings::IniFormat);
+    std::filesystem::path generalPath = configdir / "libTAS.ini";
+    QSettings general_settings(QString(generalPath.c_str()), QSettings::IniFormat);
     general_settings.setFallbacksEnabled(false);
 
     int size = general_settings.beginReadArray("recent_gamepaths");
@@ -246,29 +250,30 @@ void Config::load(const std::string& gamepath) {
         }
         else {
             datadir = getenv("HOME");
-            datadir += "/.local/share";
+            datadir /= ".local";
+            datadir /= "share";
         }
-        datadir += "/libTAS";
+        datadir /= "libTAS";
     }
 
-    std::string subpath;
+    std::filesystem::path subpath;
 
-    subpath = datadir + "/steam";
+    subpath = datadir / "steam";
     steamuserdir = general_settings.value("steamuserdir", subpath.c_str()).toString().toStdString();
 
-    subpath = datadir + "/movie";
+    subpath = datadir / "movie";
     tempmoviedir = general_settings.value("tempmoviedir", subpath.c_str()).toString().toStdString();
 
-    subpath = datadir + "/states";
+    subpath = datadir / "states";
     savestatedir = general_settings.value("savestatedir", subpath.c_str()).toString().toStdString();
 
-    subpath = datadir + "/ramsearch";
+    subpath = datadir / "ramsearch";
     ramsearchdir = general_settings.value("ramsearchdir", subpath.c_str()).toString().toStdString();
 
-    subpath = datadir + "/lib_i386";
+    subpath = datadir / "lib_i386";
     extralib32dir = general_settings.value("extralib32dir", subpath.c_str()).toString().toStdString();
 
-    subpath = datadir + "/lib_amd64";
+    subpath = datadir / "lib_amd64";
     extralib64dir = general_settings.value("extralib64dir", subpath.c_str()).toString().toStdString();
 
     createDirectories();
@@ -291,13 +296,15 @@ void Config::load(const std::string& gamepath) {
 
     gameargs = settings.value("gameargs", "").toString().toStdString();
 
-    std::string default_moviefile = gamepath + ".ltm";
+    std::filesystem::path default_moviefile = gamepath;
+    default_moviefile += ".ltm";
     moviefile = settings.value("moviefile", default_moviefile.c_str()).toString().toStdString();
 
-    std::string default_dumpfile = gamepath + ".mkv";
+    std::filesystem::path default_dumpfile = gamepath;
+    default_dumpfile += ".mkv";
     dumpfile = settings.value("dumpfile", default_dumpfile.c_str()).toString().toStdString();
 
-    std::string default_screenshotfile = dirFromPath(gamepath) + "/screenshot.png";
+    std::filesystem::path default_screenshotfile = gamepath.parent_path() / "screenshot.png";
     screenshotfile = settings.value("screenshotfile", default_screenshotfile.c_str()).toString().toStdString();
 
     ffmpegoptions = settings.value("ffmpegoptions", ffmpegoptions.c_str()).toString().toStdString();
@@ -404,38 +411,66 @@ void Config::load(const std::string& gamepath) {
 
 void Config::createDirectories()
 {
-    if (create_dir(datadir) < 0) {
+    try {
+        std::filesystem::create_directory(datadir);
+    }
+    catch (std::filesystem::filesystem_error const& ex) {
         std::cerr << "Cannot create dir " << datadir << std::endl;
+        std::cerr << "what():  " << ex.what() << std::endl;
         return;
     }
 
-    if (create_dir(steamuserdir) < 0) {
+    try {
+        std::filesystem::create_directory(steamuserdir);
+    }
+    catch (std::filesystem::filesystem_error const& ex) {
         std::cerr << "Cannot create dir " << steamuserdir << std::endl;
+        std::cerr << "what():  " << ex.what() << std::endl;
         return;
     }
 
-    if (create_dir(tempmoviedir) < 0) {
+    try {
+        std::filesystem::create_directory(tempmoviedir);
+    }
+    catch (std::filesystem::filesystem_error const& ex) {
         std::cerr << "Cannot create dir " << tempmoviedir << std::endl;
+        std::cerr << "what():  " << ex.what() << std::endl;
         return;
     }
 
-    if (create_dir(savestatedir) < 0) {
+    try {
+        std::filesystem::create_directory(savestatedir);
+    }
+    catch (std::filesystem::filesystem_error const& ex) {
         std::cerr << "Cannot create dir " << savestatedir << std::endl;
+        std::cerr << "what():  " << ex.what() << std::endl;
         return;
     }
 
-    if (create_dir(ramsearchdir) < 0) {
+    try {
+        std::filesystem::create_directory(ramsearchdir);
+    }
+    catch (std::filesystem::filesystem_error const& ex) {
         std::cerr << "Cannot create dir " << ramsearchdir << std::endl;
+        std::cerr << "what():  " << ex.what() << std::endl;
         return;
     }
 
-    if (create_dir(extralib32dir) < 0) {
+    try {
+        std::filesystem::create_directory(extralib32dir);
+    }
+    catch (std::filesystem::filesystem_error const& ex) {
         std::cerr << "Cannot create dir " << extralib32dir << std::endl;
+        std::cerr << "what():  " << ex.what() << std::endl;
         return;
     }
 
-    if (create_dir(extralib64dir) < 0) {
+    try {
+        std::filesystem::create_directory(extralib64dir);
+    }
+    catch (std::filesystem::filesystem_error const& ex) {
         std::cerr << "Cannot create dir " << extralib64dir << std::endl;
+        std::cerr << "what():  " << ex.what() << std::endl;
         return;
     }
 }

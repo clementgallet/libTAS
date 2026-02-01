@@ -30,6 +30,7 @@
 #endif
 #include <string>
 #include <stdint.h>
+#include <filesystem>
 
 struct Context {
     /* Execution status */
@@ -86,17 +87,17 @@ struct Context {
     Config config;
 
     /* Absolute path of libtas.so */
-    std::string libtaspath;
+    std::filesystem::path libtaspath;
 
     /* Absolute path of libtas32.so */
-    std::string libtas32path;
+    std::filesystem::path libtas32path;
 
     /* Absolute path of the game executable */
-    std::string gamepath;
+    std::filesystem::path gamepath;
 
     /* Absolute path of the real game binary to execute (which is different
      * from gamepath for .AppImage) */
-    std::string gameexecutable;
+    std::filesystem::path gameexecutable;
 
     /* Name of the game executable */
     std::string gamename;

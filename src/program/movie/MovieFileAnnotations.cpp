@@ -22,6 +22,7 @@
 #include "Context.h"
 
 #include <fstream>
+#include <filesystem>
 
 MovieFileAnnotations::MovieFileAnnotations(Context* c) : context(c) {}
 
@@ -33,7 +34,7 @@ void MovieFileAnnotations::clear()
 void MovieFileAnnotations::load()
 {
     /* Load annotations if available */
-    std::string annotations_file = context->config.tempmoviedir + "/annotations.txt";
+    std::filesystem::path annotations_file = context->config.tempmoviedir / "annotations.txt";
     std::ifstream annotations_stream(annotations_file);
     if (annotations_stream) {
         text = std::string((std::istreambuf_iterator<char>(annotations_stream)),
@@ -47,7 +48,7 @@ void MovieFileAnnotations::load()
 void MovieFileAnnotations::save()
 {
     /* Save annotations */
-    std::string annotations_file = context->config.tempmoviedir + "/annotations.txt";
+    std::filesystem::path annotations_file = context->config.tempmoviedir / "annotations.txt";
     std::ofstream annotations_stream(annotations_file);
     annotations_stream << text;
     annotations_stream.close();

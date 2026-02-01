@@ -21,7 +21,6 @@
 #include "ui/MainWindow.h"
 #include "ui/InputEditorWindow.h"
 #include "Context.h"
-#include "utils.h" // create_dir
 #include "lua/Main.h"
 #include "lua/Callbacks.h"
 #include "KeyMapping.h"
@@ -48,6 +47,7 @@
 #include <sys/capability.h>
 #include <linux/sched.h>
 #include <sys/syscall.h>
+#include <filesystem>
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach-o/dyld.h> // _NSGetExecutablePath
@@ -118,11 +118,11 @@ int main(int argc, char **argv)
     /* Parsing arguments */
     int c;
     char buf[PATH_MAX];
-    std::string abspath;
+    std::filesystem::path abspath;
     std::ofstream o;
-    std::string moviefile;
-    std::string dumpfile;
-    std::string luafile;
+    std::filesystem::path moviefile;
+    std::filesystem::path dumpfile;
+    std::filesystem::path luafile;
     int recordingmode = SharedConfig::RECORDING_WRITE;
 
     static struct option long_options[] =
@@ -147,40 +147,25 @@ int main(int argc, char **argv)
             case 'r':
             case 'w':
                 /* Record/Playback movie file */
-                abspath = realpath_nonexist(optarg);
-                if (!abspath.empty()) {
-                    moviefile = abspath;
-                    recordingmode = (c == 'r')?SharedConfig::RECORDING_READ:SharedConfig::RECORDING_WRITE;
-                }
+                moviefile = std::filesystem::weakly_canonical(optarg);
+                recordingmode = (c == 'r')?SharedConfig::RECORDING_READ:SharedConfig::RECORDING_WRITE;
                 break;
             case 'd':
                 /* Dump video to file */
-                abspath = realpath_nonexist(optarg);
-                if (!abspath.empty()) {
-                    dumpfile = abspath;
-                }
+                dumpfile = std::filesystem::weakly_canonical(optarg);
                 break;
             case 'l':
                 /* Run lua file */
-                abspath = realpath_nonexist(optarg);
-                if (!abspath.empty()) {
-                    luafile = abspath;
-                }
+                luafile = std::filesystem::weakly_canonical(optarg);
                 break;
             case 'n':
                 context.interactive = false;
                 break;
             case 'p':
-                abspath = realpath_nonexist(optarg);
-                if (!abspath.empty()) {
-                    context.libtaspath = abspath;
-                }
+                context.libtaspath = std::filesystem::weakly_canonical(optarg);
                 break;
             case 'P':
-                abspath = realpath_nonexist(optarg);
-                if (!abspath.empty()) {
-                    context.libtas32path = abspath;
-                }
+                context.libtas32path = std::filesystem::weakly_canonical(optarg);
                 break;
             case '?':
                 std::cout << "Unknown option character" << std::endl;
@@ -198,10 +183,7 @@ int main(int argc, char **argv)
 
     /* Game path */
     if (argv[optind]) {
-        abspath = realpath_nonexist(argv[optind]);
-        if (!abspath.empty()) {
-            context.gamepath = abspath;
-        }
+        context.gamepath = std::filesystem::weakly_canonical(argv[optind]);
     }
 
     /* Game arguments */
@@ -340,28 +322,15 @@ int main(int argc, char **argv)
     if (context.libtaspath.empty()) {
         char *libtaspath_from_env = getenv("LIBTAS_SO_PATH");
         if (libtaspath_from_env) {
-            abspath = realpath_nonexist(libtaspath_from_env);
-            if (!abspath.empty()) {
-                context.libtaspath = abspath;
-            }
+            context.libtaspath = std::filesystem::weakly_canonical(libtaspath_from_env);
         }
     }
     if (context.libtaspath.empty()) {
+        std::filesystem::path binpath = std::filesystem::read_symlink("/proc/self/exe");
 #ifdef __unix__
-        ssize_t count = readlink( "/proc/self/exe", buf, PATH_MAX );
-        std::string binpath = std::string( buf, (count > 0) ? count : 0 );
-        char* binpathptr = const_cast<char*>(binpath.c_str());
-        context.libtaspath = dirname(binpathptr);
-        context.libtaspath += "/libtas.so";
+        context.libtaspath = binpath.parent_path() / "libtas.so";
 #elif defined(__APPLE__) && defined(__MACH__)
-        uint32_t size = 4096;
-        if (_NSGetExecutablePath(buf, &size) == 0)
-            context.libtaspath = dirname(buf);
-        else {
-            std::cerr << "Could not get path of libTAS executable" << std::endl;
-            exit(0);
-        }
-        context.libtaspath += "/libtas.dylib";
+        context.libtaspath = binpath.parent_path() / "libtas.dylib";
 #endif
     }
 
@@ -369,20 +338,15 @@ int main(int argc, char **argv)
     if (context.libtas32path.empty()) {
         char *libtas32path_from_env = getenv("LIBTAS32_SO_PATH");
         if (libtas32path_from_env) {
-            abspath = realpath_nonexist(libtas32path_from_env);
-            if (!abspath.empty()) {
-                context.libtas32path = abspath;
-            }
+            context.libtas32path = std::filesystem::weakly_canonical(libtas32path_from_env);
         }
     }
     if (context.libtas32path.empty()) {
-        std::string lib32path = context.libtaspath;
-        std::string libname("libtas.so");
-        size_t pos = context.libtaspath.find(libname);
-        if (pos != std::string::npos) {
-            lib32path.replace(pos, libname.length(), "libtas32.so");
-            context.libtas32path = lib32path;
-        }
+#ifdef __unix__
+        context.libtas32path = context.libtaspath.parent_path() / "libtas32.so";
+#elif defined(__APPLE__) && defined(__MACH__)
+        context.libtas32path = context.libtaspath.parent_path() / "libtas32.dylib";
+#endif
     }
 
     /* Create the working directories */
@@ -392,11 +356,16 @@ int main(int argc, char **argv)
     }
     else {
         context.config.configdir = getenv("HOME");
-        context.config.configdir += "/.config";
+        context.config.configdir /= ".config";
     }
-    context.config.configdir += "/libTAS";
-    if (create_dir(context.config.configdir) < 0) {
+    context.config.configdir /= "libTAS";
+    
+    try {
+        std::filesystem::create_directory(context.config.configdir);
+    }
+    catch (std::filesystem::filesystem_error const& ex) {
         std::cerr << "Cannot create dir " << context.config.configdir << std::endl;
+        std::cerr << "what():  " << ex.what() << std::endl;
         return -1;
     }
 

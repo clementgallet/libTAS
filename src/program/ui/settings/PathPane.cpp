@@ -81,6 +81,9 @@ void PathPane::initLayout()
 
 void PathPane::initSignals()
 {
+    connect(dataPath, &QLineEdit::textEdited, this, &PathPane::saveConfig);
+    connect(moviePath, &QLineEdit::textEdited, this, &PathPane::saveConfig);
+    connect(statePath, &QLineEdit::textEdited, this, &PathPane::saveConfig);
     connect(browseDataPath, &QAbstractButton::clicked, this, &PathPane::slotBrowseDataPath);
     connect(browseMoviePath, &QAbstractButton::clicked, this, &PathPane::slotBrowseMoviePath);
     connect(browseStatePath, &QAbstractButton::clicked, this, &PathPane::slotBrowseStatePath);
@@ -125,22 +128,28 @@ void PathPane::update(int status)
 void PathPane::slotBrowseDataPath()
 {
     QString filename = QFileDialog::getExistingDirectory(this, tr("Choose an data path"), dataPath->text());
-    if (!filename.isNull())
+    if (!filename.isNull()) {
         dataPath->setText(filename);
+        saveConfig();
+    }
 }
 
 void PathPane::slotBrowseMoviePath()
 {
     QString filename = QFileDialog::getExistingDirectory(this, tr("Choose an temporary movie path"), moviePath->text());
-    if (!filename.isNull())
+    if (!filename.isNull()) {
         moviePath->setText(filename);
+        saveConfig();
+    }
 }
 
 void PathPane::slotBrowseStatePath()
 {
     QString filename = QFileDialog::getExistingDirectory(this, tr("Choose an data path"), statePath->text());
-    if (!filename.isNull())
+    if (!filename.isNull()) {
         statePath->setText(filename);
+        saveConfig();
+    }
 }
 
 void PathPane::slotOpenDataPath()
