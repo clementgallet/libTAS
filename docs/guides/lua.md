@@ -298,6 +298,12 @@ Returns the current rerecord count of the movie, or -1 if no movie is loaded
 
 Returns 1 of the current frame is a draw frame, or 0 if not.
 
+#### movie.getMovieFileName
+
+    String movie.getMovieFileName()
+
+Returns the full name of the movie file (.ltm).
+
 ### Runtime functions
 
 Runtime functions must be performed in callback `onFrame()` to be effective on
@@ -316,6 +322,14 @@ this callback.
     none runtime.loadState(Number slot)
 
 Load a state in slot number `slot` (must be between 1 and 10). The loading behaviour
+depends on the status of the current movie. Beware, savestate operations are
+registered but not executed instantly, they will be performed after this callback.
+
+#### runtime.loadBranch
+
+    none runtime.loadBranch(Number slot)
+
+Load a branch in slot number `slot` (must be between 1 and 10). The loading behaviour
 depends on the status of the current movie. Beware, savestate operations are
 registered but not executed instantly, they will be performed after this callback.
 
