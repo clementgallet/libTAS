@@ -56,15 +56,15 @@ So, the procedure is the following:
   Unity engine. Alternatively, you can run this command: `strings /path/to/game/data/Resources/unity_builtin_extra | head -n 1`
 * Download the Linux runtime for this version. You can find those on the 
   following sources depending on the version:
-    - [versions 5.3.0+]: the [Official Unity archive](https://unity.com/fr/releases/editor/archive) 
+    - **versions 5.3.0+**: the [Official Unity archive](https://unity.com/fr/releases/editor/archive) 
       contains what you want. Download the file `̀Component installers` > 
       `macOS` > `Linux Build Support`, which can be extracted on Linux.
       For recent Unity version, you will need to pick the correct one between
       `Linux Build Support (IL2CPP)` and `Linux Build Support (Mono)`. You can 
       see easily if your game is compiled with IL2CPP, by looking if there is a
       `il2cpp` folder inside the game `Data` directory.
-    - [versions 5.1.0 - 2018]: This [source archive](https://discussions.unity.com/t/unity-on-linux-release-notes-and-known-issues/595006)
-    - [versions 4]: This [source archive](https://discussions.unity.com/t/early-unity-versions-downloads/927331)
+    - **versions 5.1.0 - 2018**: This [source archive](https://discussions.unity.com/t/unity-on-linux-release-notes-and-known-issues/595006)
+    - **versions 4**: This [source archive](https://discussions.unity.com/t/early-unity-versions-downloads/927331)
 * Extract the archive and grab the runtime, which should be located inside
   `Data/PlaybackEngines/linuxstandalonesupport/Variations/`. You will be interested in
   `linux[32|64]_[withgfx|player]_development_[mono|il2cpp]` directory.
@@ -123,3 +123,8 @@ exists in every version of Unity
 
 Jobs and preload operations can be seen from the OSD in `Debug` > `Unity`.
 They can be seen also in the profiler (in `Debug` > `Profiler`).
+
+### References
+
+* [Determinism in Unity's 2D physics](https://support.unity.com/hc/en-us/articles/360015178512-Determinism-with-2D-Physics)
+* [Determinism in PhysX engine](https://nvidia-omniverse.github.io/PhysX/physx/5.3.0/docs/BestPractices.html#determinism)

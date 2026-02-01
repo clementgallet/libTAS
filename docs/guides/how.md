@@ -667,3 +667,10 @@ TODO
 ## File IO
 
 TODO
+
+## References
+
+* Articles on checkpointing OpenGL applications:
+    - [Transparent Checkpoint-Restart for Hardware-Accelerated 3D Graphics](https://arxiv.org/abs/1312.6650v2)
+    - [Transparent Checkpointing for OpenGL Applications on GPUs](https://arxiv.org/abs/2103.04916)
+* [Examining Process Page Tables](https://docs.kernel.org/admin-guide/mm/pagemap.html)
