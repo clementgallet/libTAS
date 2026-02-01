@@ -325,6 +325,14 @@ Load a state in slot number `slot` (must be between 1 and 10). The loading behav
 depends on the status of the current movie. Beware, savestate operations are
 registered but not executed instantly, they will be performed after this callback.
 
+#### runtime.loadBranch
+
+    none runtime.loadBranch(Number slot)
+
+Load a branch in slot number `slot` (must be between 1 and 10). The loading behaviour
+depends on the status of the current movie. Beware, savestate operations are
+registered but not executed instantly, they will be performed after this callback.
+
 #### runtime.isFastForward
 
     Number runtime.isFastForward()
