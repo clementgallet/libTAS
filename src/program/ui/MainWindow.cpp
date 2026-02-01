@@ -276,11 +276,11 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     realTimeSec->setMinimum(1);
     realTimeSec->setMaximum(std::numeric_limits<int>::max());
     realTimeSec->setMinimumWidth(50);
-    disabledWidgetsOnStart.append(realTimeSec);
+
     realTimeNsec = new QSpinBox();
     realTimeNsec->setMaximum(std::numeric_limits<int>::max());
     realTimeNsec->setMinimumWidth(50);
-    disabledWidgetsOnStart.append(realTimeNsec);
+
     realTimeFormat = new QLabel();
     connect(realTimeSec, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::slotRealTimeFormat);
     connect(realTimeNsec, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::slotRealTimeFormat);
