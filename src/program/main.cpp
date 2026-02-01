@@ -94,7 +94,7 @@ static void print_usage(void)
     std::cout << "  -d, --dump FILE         Start a audio/video encode into the specified FILE" << std::endl;
     std::cout << "  -r, --read MOVIE        Play game inputs from MOVIE file" << std::endl;
     std::cout << "  -w, --write MOVIE       Record game inputs into the specified MOVIE file" << std::endl;
-    std::cout << "  -l, --lua FILE          Start the specified FILE lua script" << std::endl;
+    std::cout << "  -l, --lua FILE          Start the specified FILE lua scripts (comma-separated list). Can be used several times" << std::endl;
     std::cout << "  -n, --non-interactive   Don't offer any interactive choice, so that it can run headless" << std::endl;
     std::cout << "      --libtas-so-path    Path to libtas.so (equivalent to setting LIBTAS_SO_PATH)" << std::endl;
     std::cout << "      --libtas32-so-path  Path to libtas32.so (equivalent to setting LIBTAS32_SO_PATH)" << std::endl;
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
     std::ofstream o;
     std::filesystem::path moviefile;
     std::filesystem::path dumpfile;
-    std::filesystem::path luafile;
+    std::vector<std::filesystem::path> luafiles;
     int recordingmode = SharedConfig::RECORDING_WRITE;
 
     static struct option long_options[] =
@@ -154,10 +154,20 @@ int main(int argc, char **argv)
                 /* Dump video to file */
                 dumpfile = std::filesystem::weakly_canonical(optarg);
                 break;
-            case 'l':
-                /* Run lua file */
-                luafile = std::filesystem::weakly_canonical(optarg);
+            case 'l': {
+                /* Run lua files (comma-separated list of files) */
+                std::string arg = optarg;
+                std::stringstream ss(arg);
+                std::string luafile;
+
+                while (std::getline(ss, luafile, ',')) {
+                    if (luafile.empty())
+                        continue;
+
+                    luafiles.push_back(std::filesystem::weakly_canonical(luafile));
+                }
                 break;
+            }
             case 'n':
                 context.interactive = false;
                 break;
@@ -417,8 +427,10 @@ int main(int argc, char **argv)
     Lua::Main::init(&context);
 
     /* Start a lua script if specified */
-    if (!luafile.empty())
-        Lua::Callbacks::getList().addFile(luafile);
+    for (const auto& luafile : luafiles) {
+        if (!luafile.empty())
+            Lua::Callbacks::getList().addFile(luafile);
+    }
 
     /* Starts the user interface */
     QApplication app(argc, argv);
