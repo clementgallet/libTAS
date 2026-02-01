@@ -51,6 +51,9 @@ namespace Movie {
     /* Returns if the current frame is a draw frame */
     int isDraw(lua_State *L);
 
+    /* Get filename of the movie file (.ltm) */
+    int getMovieFileName(lua_State *L);
+
 }
 }
 
