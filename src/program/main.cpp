@@ -99,6 +99,11 @@ static void print_usage(void)
     std::cout << "      --libtas-so-path    Path to libtas.so (equivalent to setting LIBTAS_SO_PATH)" << std::endl;
     std::cout << "      --libtas32-so-path  Path to libtas32.so (equivalent to setting LIBTAS32_SO_PATH)" << std::endl;
     std::cout << "  -i, --input-editor      Open Input Editor window at startup" << std::endl;
+    std::cout << "  -L, --lua-console       Open Lua Console window at startup" << std::endl;
+    std::cout << "  -t, --system-time-sec   Set the system time option (sec)" << std::endl;
+    std::cout << "  -T, --system-time-nsec  Set the system time option (nsec)" << std::endl;
+    std::cout << "  -e, --elapsed-time-sec  Set the elapsed time option (sec)" << std::endl;
+    std::cout << "  -E, --elapsed-time-nsec Set the elapsed time option (nsec)" << std::endl;
     std::cout << "  -h, --help              Show this message" << std::endl;
 }
 
@@ -136,13 +141,17 @@ int main(int argc, char **argv)
         {"libtas32-so-path", required_argument, nullptr, 'P'},
         {"help", no_argument, nullptr, 'h'},
         {"input-editor", no_argument, nullptr, 'i'},
+        {"system-time-sec", required_argument, nullptr, 't'},
+        {"system-time-nsec", required_argument, nullptr, 'T'},
+        {"elapsed-time-sec", required_argument, nullptr, 'e'},
+        {"elapsed-time-nsec", required_argument, nullptr, 'E'},
         {nullptr, 0, nullptr, 0}
     };
     int option_index = 0;
     bool openInputEditor = false;
 
     // std::string libname;
-    while ((c = getopt_long (argc, argv, "+r:w:d:l:nhi", long_options, &option_index)) != -1) {
+    while ((c = getopt_long (argc, argv, "+r:w:d:l:nhit:T:e:E:", long_options, &option_index)) != -1) {
         switch (c) {
             case 'r':
             case 'w':
@@ -185,6 +194,22 @@ int main(int argc, char **argv)
                 return 0;
             case 'i':
                 openInputEditor = true;
+                break;
+            case 'e':
+                context.config.sc.initial_monotonic_time_sec = atoll(optarg);
+                context.config.sc.initial_monotonic_time_set_via_cli = true;
+                break;
+            case 'E':
+                context.config.sc.initial_monotonic_time_nsec = atoll(optarg);
+                context.config.sc.initial_monotonic_time_set_via_cli = true;
+                break;
+            case 't':
+                context.config.sc.initial_time_sec = atoll(optarg);
+                context.config.sc.initial_time_set_via_cli = true;
+                break;
+            case 'T':
+                context.config.sc.initial_time_nsec = atoll(optarg);
+                context.config.sc.initial_time_set_via_cli = true;
                 break;
             default:
                 return -1;
