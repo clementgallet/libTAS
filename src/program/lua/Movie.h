@@ -54,6 +54,8 @@ namespace Movie {
     /* Get filename of the movie file (.ltm) */
     int getMovieFileName(lua_State *L);
 
+    /* Get system time set at game start */
+    int getInitialSystemTime(lua_State *L);
 }
 }
 

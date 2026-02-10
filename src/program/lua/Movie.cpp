@@ -39,6 +39,7 @@ static const luaL_Reg movie_functions[] =
     { "rerecords", Lua::Movie::rerecords},
     { "isDraw", Lua::Movie::isDraw},
     { "getMovieFileName", Lua::Movie::getMovieFileName},
+    { "getInitialSystemTime", Lua::Movie::getInitialSystemTime},
     { NULL, NULL }
 };
 
@@ -96,4 +97,11 @@ int Lua::Movie::getMovieFileName(lua_State *L)
 {
     lua_pushstring(L, context->config.moviefile.c_str());
     return 1;
+}
+
+int Lua::Movie::getInitialSystemTime(lua_State *L)
+{
+    lua_pushinteger(L, context->config.sc.initial_time_sec);
+    lua_pushinteger(L, context->config.sc.initial_time_nsec);
+    return 2;
 }
