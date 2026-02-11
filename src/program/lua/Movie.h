@@ -56,6 +56,9 @@ namespace Movie {
 
     /* Get system time set at game start */
     int getInitialSystemTime(lua_State *L);
+
+    /* Get elapsed time set at game start */
+    int getInitialElapsedTime(lua_State *L);
 }
 }
 

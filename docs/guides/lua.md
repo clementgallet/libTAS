@@ -311,6 +311,13 @@ Returns the full name of the movie file (.ltm).
 Returns the system time set at game startup. `seconds` is in whole seconds
 and `nseconds` is the number of nanoseconds.
 
+#### movie.getInitialElapsedTime
+
+    (Number seconds, Number nseconds) movie.getInitialElapsedTime()
+
+Returns the elapsed time set at game startup. `seconds` is in whole seconds
+and `nseconds` is the number of nanoseconds.
+
 ### Runtime functions
 
 Runtime functions must be performed in callback `onFrame()` to be effective on
