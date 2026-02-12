@@ -86,9 +86,11 @@ void VideoPane::initLayout()
 
     osdMenuBox = new QCheckBox(tr("Main Menu"));
     osdEncodeBox = new QCheckBox(tr("OSD on video encode"));
+    osdLuaBox = new QCheckBox(tr("Lua on video encode"));
 
     osdLayout->addWidget(osdMenuBox);
     osdLayout->addWidget(osdEncodeBox);
+    osdLayout->addWidget(osdLuaBox);
     
     renderingBox = new QGroupBox(tr("Rendering"));
     QVBoxLayout* renderingLayout = new QVBoxLayout;
@@ -134,6 +136,7 @@ void VideoPane::initSignals()
     });
     connect(osdMenuBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
     connect(osdEncodeBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
+    connect(osdLuaBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
 
     connect(rendSoftBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
     connect(rendPerfBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
@@ -187,6 +190,7 @@ void VideoPane::loadConfig()
     
     osdMenuBox->setChecked(context->config.sc.osd);
     osdEncodeBox->setChecked(context->config.sc.osd_encode);
+    osdLuaBox->setChecked(context->config.sc.osd_lua);
 
     rendSoftBox->setChecked(context->config.sc.opengl_soft);
     rendPerfBox->setChecked(context->config.sc.opengl_performance);
@@ -210,6 +214,7 @@ void VideoPane::saveConfig()
     
     context->config.sc.osd = osdMenuBox->isChecked();
     context->config.sc.osd_encode = osdEncodeBox->isChecked();
+    context->config.sc.osd_lua = osdLuaBox->isChecked();
 
     context->config.sc.opengl_soft = rendSoftBox->isChecked();
     context->config.sc.opengl_performance = rendPerfBox->isChecked();
