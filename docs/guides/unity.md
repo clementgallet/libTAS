@@ -4,7 +4,7 @@ title: Unity games
 permalink: /guides/unity/
 ---
 
-With Unity being one of the most used game engine, and having Linux support,
+With Unity being one of the most used game engines, and having Linux support,
 a lot of work has been done to support Unity games in libTAS. Running 
 games in libTAS has been possible for a long time, but movies desynced very 
 easily.
