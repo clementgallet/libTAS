@@ -321,6 +321,11 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN14PreloadManager26UpdatePreloadingSingleStepEb.constprop.207",
     },
     {
+        UNITY4_PRELOADMANAGER_UPDATE_STEP,
+        "PreloadManager::UpdatePreloadingSingleStep",
+        "_ZN14PreloadManager26UpdatePreloadingSingleStepEb",
+    },
+    {
         UNITY6_PRELOADMANAGER_UPDATE_STEP,
         "PreloadManager::UpdatePreloadingSingleStep",
         "_ZN14PreloadManager26UpdatePreloadingSingleStepENS_21UpdatePreloadingFlagsEi",
@@ -478,12 +483,20 @@ const static usig_t UNITY_SIGNATURES_64[] = {
         "41 54 55 48 89 F5 53 48 89 FB 48 83 EC 30 48 63 06 8B 57 7C 39 D0"
     },
     {
+        UNITY4_JOBSCHEDULER_FETCH,
+        "41 55 41 54 49 89 f4 55 53 48 89 fb 48 83 ec 38 8b 06"
+    },
+    {
         UNITY4_JOBSCHEDULER_PROCESS,
         "48 89 5C 24 E8 48 89 F3 48 89 6C 24 F0 4C 89 64 24 F8 89 D5 48 83 EC 48"
     },
     {
         UNITY4_JOBSCHEDULER_SUBMIT,
         "48 83 EC 28 44 8b 4f 0c 45 85 c9 0f 8e ?? ?? ?? ?? 39 77 08"
+    },
+    {
+        UNITY4_JOBSCHEDULER_SUBMIT,
+        "48 83 EC 28 44 8b 57 0c 45 85 d2 0f 8e ?? ?? ?? ?? 89 F0"
     },
     {
         UNITY4_JOBSCHEDULER_WAIT,
@@ -658,8 +671,22 @@ const static usig_t UNITY_SIGNATURES_64[] = {
         "41 57 41 56 41 55 41 54 53 48 83 EC 10 49 89 F7 48 89 FB 4C 8D B7 70 01 00 00",
     },
     {
+        UNITY6_PRELOADMANAGER_ADD,
+        // Signature for Unity 4
+        "55 48 89 FD 53 48 8d 9f 88 00 00 00 48 83 ec 38 48 89 df",
+    },
+    {
         UNITY6_PRELOADMANAGER_UPDATE,
         "55 41 57 41 56 41 54 53 48 83 ec 20 49 89 ff 4c 8d b7 70 01 00 00 4c 89 f7",
+    },
+    {
+        UNITY6_PRELOADMANAGER_UPDATE,
+        // Signature for Unity 4
+        "41 55 45 31 ED 41 54 55 48 8d af 88 00 00 00 53",
+    },
+    {
+        UNITY4_PRELOADMANAGER_UPDATE_STEP,
+        "41 55 41 54 55 89 F5 53 48 89 fb 48 83 ec 38 0f b6 47 28 84 c0",
     },
     {
         UNITY6_PRELOADMANAGER_UPDATE_STEP,
@@ -668,6 +695,11 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     {
         UNITY6_PRELOADMANAGER_WAIT,
         "55 41 57 41 56 41 55 41 54 53 48 83 ec 38 49 89 fd 8b 47 3c 89 44 24 2c 83 f8 04",
+    },
+    {
+        UNITY6_PRELOADMANAGER_RUN,
+        // Signature for Unity 4
+        "41 57 41 56 41 55 41 54 55 53 48 89 fb 48 83 ec 58 e8 ?? ?? ?? ?? be 00 00 04 00 48 89 c7 e8",
     },
     {
         UNITY6_PRELOADMANAGER_RUN,
