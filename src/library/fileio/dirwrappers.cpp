@@ -39,7 +39,7 @@ DEFINE_ORIG_POINTER(readdir_r)
 DEFINE_ORIG_POINTER(readdir64)
 DEFINE_ORIG_POINTER(readdir64_r)
 
-#define DIROFF_SIZE 10
+#define DIROFF_SIZE 100
 static DIR *dird[DIROFF_SIZE];
 static int diri[DIROFF_SIZE];
 static std::string dirpath[DIROFF_SIZE];
