@@ -19,6 +19,7 @@
 
 #include "stdiowrappers.h"
 #include "SaveFileList.h"
+#include "SaveFile.h"
 #ifdef __linux__
 #include "URandom.h"
 #endif
@@ -34,7 +35,7 @@ namespace libtas {
 DEFINE_ORIG_POINTER(fopen)
 DEFINE_ORIG_POINTER(fopen64)
 DEFINE_ORIG_POINTER(fclose)
-// DEFINE_ORIG_POINTER(fileno)
+DEFINE_ORIG_POINTER(fileno)
 
 FILE *fopen (const char *filename, const char *modes)
 {
@@ -186,16 +187,24 @@ int fclose (FILE *stream)
     return orig::fclose(stream);
 }
 
-// int fileno (FILE *stream) __THROW
-// {
-//     LINK_NAMESPACE_GLOBAL(fileno);
-//
-//     if (GlobalState::isNative())
-//         return orig::fileno(stream);
-//
-//     LOGTRACE(LCF_FILEIO);
-//
-//     return orig::fileno(stream);
-// }
+int fileno (FILE *stream) __THROW
+{
+    LINK_NAMESPACE_GLOBAL(fileno);
+
+    if (GlobalState::isNative())
+        return orig::fileno(stream);
+
+    /* If the stream is a savefile, we need to look into the savefile to get the
+     * fd, because our custom SaveFileStream does not have a native associated fd */
+    const SaveFile* sf = SaveFileList::getSaveFile(stream);
+    if (sf) {
+        LOG(LL_WARN, LCF_FILEIO, "The game wants to access the file descriptor of our custom savefile stream (with fileno()) which does not have one. Depending on what it does with the file descriptor, it may fail.");
+        return sf->fd;
+    }
+
+    LOGTRACE(LCF_FILEIO);
+
+    return orig::fileno(stream);
+}
 
 }

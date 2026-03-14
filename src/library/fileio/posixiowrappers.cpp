@@ -19,6 +19,7 @@
 
 #include "posixiowrappers.h"
 #include "SaveFileList.h"
+#include "SaveFile.h"
 #include "URandom.h"
 
 #include "logging.h"
@@ -480,16 +481,9 @@ static int stat_special(const char *path, struct stat *buf)
 #endif
 
     /* Check if savefile. */
-    if (SaveFileList::isSaveFileRemoved(path)) {
-        errno = ENOENT;
-        return -1;
-    }
-
-    int fd = SaveFileList::getSaveFileFd(path);
-    if (fd != 0) {
-        NATIVECALL(fstat(fd, buf));
-        return 0;
-    }
+    const SaveFile* sf = SaveFileList::getSaveFile(path);
+    if (sf)
+        return sf->getStat(buf);
     
     return 1;
 }
@@ -512,17 +506,10 @@ static int stat64_special(const char *path, struct stat64 *buf)
 #endif
 
     /* Check if savefile. */
-    if (SaveFileList::isSaveFileRemoved(path)) {
-        errno = ENOENT;
-        return -1;
-    }
+    const SaveFile* sf = SaveFileList::getSaveFile(path);
+    if (sf)
+        return sf->getStat64(buf);
 
-    int fd = SaveFileList::getSaveFileFd(path);
-    if (fd != 0) {
-        NATIVECALL(fstat64(fd, buf));
-        return 0;
-    }
-    
     return 1;
 }
 
@@ -660,6 +647,12 @@ int __fxstat(int ver, int fd, struct stat *buf) __THROW
     RETURN_IF_NATIVE(__fxstat, (ver, fd, buf), nullptr);
 
     LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
+    
+    /* Check if savefile. */
+    const SaveFile* sf = SaveFileList::getSaveFile(fd);
+    if (sf)
+        return sf->getStat(buf);
+
     RETURN_NATIVE(__fxstat, (ver, fd, buf), nullptr);
 }
 
@@ -668,6 +661,12 @@ int __fxstat64(int ver, int fd, struct stat64 *buf) __THROW
     RETURN_IF_NATIVE(__fxstat64, (ver, fd, buf), nullptr);
 
     LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
+
+    /* Check if savefile. */
+    const SaveFile* sf = SaveFileList::getSaveFile(fd);
+    if (sf)
+        return sf->getStat64(buf);
+
     RETURN_NATIVE(__fxstat64, (ver, fd, buf), nullptr);
 }
 
@@ -676,6 +675,12 @@ int fstat(int fd, struct stat *buf) __THROW
     RETURN_IF_NATIVE(fstat, (fd, buf), nullptr);
 
     LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
+    
+    /* Check if savefile. */
+    const SaveFile* sf = SaveFileList::getSaveFile(fd);
+    if (sf)
+        return sf->getStat(buf);
+
     RETURN_NATIVE(fstat, (fd, buf), nullptr);
 }
 
@@ -684,6 +689,12 @@ int fstat64(int fd, struct stat64 *buf) __THROW
     RETURN_IF_NATIVE(fstat64, (fd, buf), nullptr);
 
     LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
+    
+    /* Check if savefile. */
+    const SaveFile* sf = SaveFileList::getSaveFile(fd);
+    if (sf)
+        return sf->getStat64(buf);
+
     RETURN_NATIVE(fstat64, (fd, buf), nullptr);    
 }
 

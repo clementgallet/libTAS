@@ -288,6 +288,20 @@ const SaveFile* getSaveFile(const char *file)
     return nullptr;
 }
 
+const SaveFile* getSaveFile(FILE* stream)
+{
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
+    auto& savefiles = getSaveFileList();
+    for (const auto& savefile : savefiles) {
+        if (savefile->stream == stream) {
+            return savefile.get();
+        }
+    }
+
+    return nullptr;
+}
+
 const SaveFile* getSaveFile(int fd)
 {
     std::lock_guard<std::mutex> lock(getSaveFileListMutex());

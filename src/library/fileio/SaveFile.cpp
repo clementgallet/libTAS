@@ -40,6 +40,8 @@
 
 namespace libtas {
 
+int SaveFile::last_stream_fd = FIRST_SAVEFILE_STREAM_FD;
+
 SaveFile::SaveFile(const char *file) {
     /* Storing the canonicalized path so that we can compare paths. Only works
      * if the file actually exists. */
@@ -214,6 +216,13 @@ FILE* SaveFile::open(const char *modes) {
         stream = SaveFileStream::open(filename.c_str(), modes);
         if (stream != nullptr) {
             setvbuf(stream, nullptr, _IONBF, 0);
+
+            /* When we are using our own memory stream, it is not associated with
+             * a real fd. So we define a dummy fd, in case games wants to access
+             * it using `fileno()`. We need to issue a warning in this case,
+             * because we won't be able to support most of the functions that 
+             * take a fd. */
+            fd = last_stream_fd++;
             return stream;
         }
 
@@ -410,8 +419,61 @@ int SaveFile::remove()
     return 0;
 }
 
+int SaveFile::getStat(struct stat *buf) const
+{
+    if (removed) {
+        errno = ENOENT;
+        return -1;
+    }
+    
+    if (fd >= FIRST_SAVEFILE_STREAM_FD) {
+        /* TODO: We only fill the mode and size for now */
+        buf->st_mode = S_IFREG;
+        int off = fseek(stream, 0, SEEK_CUR);
+        fseek(stream, 0, SEEK_END);
+        buf->st_size = ftell(stream);
+        fseek(stream, off, SEEK_SET);
+        return 0;
+    }
+    
+    if (fd != 0) {
+        NATIVECALL(fstat(fd, buf));
+        return 0;
+    }
+    
+    return -1;
+}
+
+int SaveFile::getStat64(struct stat64 *buf) const
+{
+    if (removed) {
+        errno = ENOENT;
+        return -1;
+    }
+    
+    if (fd >= FIRST_SAVEFILE_STREAM_FD) {
+        /* TODO: We only fill the mode and size for now */
+        buf->st_mode = S_IFREG;
+        int off = fseek(stream, 0, SEEK_CUR);
+        fseek(stream, 0, SEEK_END);
+        buf->st_size = ftell(stream);
+        fseek(stream, off, SEEK_SET);
+        return 0;
+    }
+    
+    if (fd != 0) {
+        NATIVECALL(fstat64(fd, buf));
+        return 0;
+    }
+
+    return -1;
+}
+
 bool SaveFile::saveOnDisk() const {
     if (fd == 0)
+        return true;
+        
+    if (fd >= FIRST_SAVEFILE_STREAM_FD)
         return true;
     
     LOG(LL_DEBUG, LCF_FILEIO, "Save back fd %d into file %s", fd, filename.c_str());
@@ -438,7 +500,10 @@ bool SaveFile::saveOnDisk() const {
 bool SaveFile::removeFromDisk() const {
     if (fd == 0)
         return true;
-    
+
+    if (fd >= FIRST_SAVEFILE_STREAM_FD)
+        return true;
+
     LOG(LL_DEBUG, LCF_FILEIO, "Remove file %s from disk", filename.c_str());
     GlobalNative gn;
     int ret = ::remove(filename.c_str());
