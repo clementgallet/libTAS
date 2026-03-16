@@ -216,7 +216,11 @@ xcb_send_event_checked (xcb_connection_t *c,
             (client_event->data.data32[0] == 1 /*_NET_WM_STATE_ADD*/ )) {
 
             /* Detect and disable fullscreen switching */
-            if (static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
+            if (static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN) || 
+                static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_MAXIMIZED_HORZ) || 
+                static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_MAXIMIZED_VERT)) {
+
+
                 LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
                 if (XlibGameWindow::get() && (client_event->window != XlibGameWindow::get())) {
                     LOG(LL_WARN, LCF_EVENTS | LCF_WINDOW, "   fullscreen window is not game window!");
@@ -283,7 +287,10 @@ xcb_send_event (xcb_connection_t *c,
             (client_event->data.data32[0] == 1 /*_NET_WM_STATE_ADD*/ )) {
 
             /* Detect and disable fullscreen switching */
-            if (static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
+            if (static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_FULLSCREEN) || 
+                static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_MAXIMIZED_HORZ) || 
+                static_cast<Atom>(client_event->data.data32[1]) == x11_atom(_NET_WM_STATE_MAXIMIZED_VERT)) {
+
                 LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
                 if (XlibGameWindow::get() && (client_event->window != XlibGameWindow::get())) {
                     LOG(LL_WARN, LCF_EVENTS | LCF_WINDOW, "   fullscreen window is not game window!");

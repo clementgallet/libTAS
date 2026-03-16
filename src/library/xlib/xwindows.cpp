@@ -285,7 +285,10 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
         const Atom* atoms = reinterpret_cast<const Atom*>(data);
         std::vector<Atom> newatoms;
         for (int i=0; i<nelements; i++) {
-            if (atoms[i] == x11_atom(_NET_WM_STATE_FULLSCREEN)) {
+            if (atoms[i] == x11_atom(_NET_WM_STATE_FULLSCREEN) ||
+                atoms[i] == x11_atom(_NET_WM_STATE_MAXIMIZED_HORZ) ||
+                atoms[i] == x11_atom(_NET_WM_STATE_MAXIMIZED_VERT)) {
+
                 LOG(LL_DEBUG, LCF_WINDOW, "   prevented fullscreen switching but resized the window");
                 if (XlibGameWindow::get() == w) {
                     LOG(LL_WARN, LCF_WINDOW, "   fullscreen window is not game window!");
