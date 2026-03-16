@@ -20,6 +20,7 @@
 
 #include "ui/MainWindow.h"
 #include "ui/InputEditorWindow.h"
+#include "ui/LuaConsoleWindow.h"
 #include "Context.h"
 #include "lua/Main.h"
 #include "lua/Callbacks.h"
@@ -99,6 +100,7 @@ static void print_usage(void)
     std::cout << "      --libtas-so-path    Path to libtas.so (equivalent to setting LIBTAS_SO_PATH)" << std::endl;
     std::cout << "      --libtas32-so-path  Path to libtas32.so (equivalent to setting LIBTAS32_SO_PATH)" << std::endl;
     std::cout << "  -i, --input-editor      Open Input Editor window at startup" << std::endl;
+    std::cout << "  -L, --lua-console       Open Lua Console window at startup" << std::endl;
     std::cout << "  -h, --help              Show this message" << std::endl;
 }
 
@@ -136,13 +138,15 @@ int main(int argc, char **argv)
         {"libtas32-so-path", required_argument, nullptr, 'P'},
         {"help", no_argument, nullptr, 'h'},
         {"input-editor", no_argument, nullptr, 'i'},
+        {"lua-console", no_argument, nullptr, 'L'},
         {nullptr, 0, nullptr, 0}
     };
     int option_index = 0;
     bool openInputEditor = false;
+    bool openLuaConsole = false;
 
     // std::string libname;
-    while ((c = getopt_long (argc, argv, "+r:w:d:l:nhi", long_options, &option_index)) != -1) {
+    while ((c = getopt_long (argc, argv, "+r:w:d:l:nhiL", long_options, &option_index)) != -1) {
         switch (c) {
             case 'r':
             case 'w':
@@ -185,6 +189,9 @@ int main(int argc, char **argv)
                 return 0;
             case 'i':
                 openInputEditor = true;
+                break;
+            case 'L':
+                openLuaConsole = true;
                 break;
             default:
                 return -1;
@@ -443,6 +450,10 @@ int main(int argc, char **argv)
 
     if (openInputEditor) {
         mainWin.inputEditorWindow->show();
+    }
+
+    if (openLuaConsole) {
+        mainWin.luaConsoleWindow->show();
     }
 
     app.exec();
