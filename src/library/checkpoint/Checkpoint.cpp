@@ -752,8 +752,13 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
     off_t shared_next_off_data = -1;
 
     if (saved_area.flags & Area::AREA_SHARED) {
-        /* Try first to open the file */
-        shared_fd = open(saved_area.name, O_RDONLY);
+        /* If the area mapped from a memfd, we use the underlying fd */
+        shared_fd = saved_area.fd;
+        
+        /* Then try first to open the file */
+        if (shared_fd == -1) {
+            shared_fd = open(saved_area.name, O_RDONLY);
+        }
 
         /* If no file, shared mappings always have an underlying file accessible
          * inside /proc/self/map_files/ */
@@ -1019,7 +1024,8 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
     if (orig_fd >= 0)
         close(orig_fd);
 
-    if (shared_fd >= 0)
+    /* Only close the shared area fd if we opened it */
+    if (shared_fd >= 0 && (shared_fd != saved_area.fd))
         close(shared_fd);
 }
 
@@ -1313,8 +1319,13 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
     off_t shared_next_off_data = -1;
 
     if (area.flags & Area::AREA_SHARED) {
-        /* Try first to open the file */
-        shared_fd = open(area.name, O_RDONLY);
+        /* If the file is a memfd, we should have detected the underlying fd
+         * already. */
+        shared_fd = area.fd;
+        
+        /* If not, try first to open the file */
+        if (shared_fd == -1)
+            shared_fd = open(area.name, O_RDONLY);
 
         /* If no file, shared mappings always have an underlying file accessible
          * inside /proc/self/map_files/ */
@@ -1444,7 +1455,7 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
                 }
             }
 
-            if (!page_present) {
+            if (!page_present && !(area.flags & Area::AREA_MEMFD)) {
                 state.savePageFlag(Area::FILE_PAGE);
                 pagecount_zero_or_file++;
                 continue;
@@ -1538,7 +1549,7 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
     if (orig_fd >= 0)
         close(orig_fd);
 
-    if (shared_fd >= 0)
+    if (shared_fd >= 0 && (shared_fd != area.fd))
         close(shared_fd);
 
     return area_size;
