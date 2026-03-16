@@ -655,6 +655,10 @@ VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64
             info.signalSemaphoreCount = 0;
         }
         orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &info, fence);
+        
+        /* Fill a meaningful value to the returned image index */
+        *pImageIndex = 0;
+        
         return VK_SUCCESS;
     }
 
