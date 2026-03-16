@@ -1147,10 +1147,14 @@ void MainWindow::slotLaunch(bool attach_gdb)
     /* Set a few parameters */
     context->config.sc.initial_framerate_num = fpsNumField->value();
     context->config.sc.initial_framerate_den = fpsDenField->value();
-    context->config.sc.initial_monotonic_time_sec = elapsedTimeSec->value();
-    context->config.sc.initial_monotonic_time_nsec = elapsedTimeNsec->value();
-    context->config.sc.initial_time_sec = realTimeSec->value();
-    context->config.sc.initial_time_nsec = realTimeNsec->value();
+    if (! context->config.sc.initial_monotonic_time_set_via_cli) {
+        context->config.sc.initial_monotonic_time_sec = elapsedTimeSec->value();
+        context->config.sc.initial_monotonic_time_nsec = elapsedTimeNsec->value();
+    }
+    if (! context->config.sc.initial_time_set_via_cli) {
+        context->config.sc.initial_time_sec = realTimeSec->value();
+        context->config.sc.initial_time_nsec = realTimeNsec->value();
+    }
 
     context->config.sc.sigint_upon_launch &= context->attach_gdb;
 
