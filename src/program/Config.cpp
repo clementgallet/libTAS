@@ -163,6 +163,7 @@ void Config::save(const std::filesystem::path& gamepath) {
     settings.setValue("screen_height", sc.screen_height);
     settings.setValue("osd", sc.osd);
     settings.setValue("osd_encode", sc.osd_encode);
+    settings.setValue("osd_lua", sc.osd_lua);
     settings.setValue("prevent_savefiles", sc.prevent_savefiles);
     settings.setValue("audio_bitdepth", sc.audio_bitdepth);
     settings.setValue("audio_channels", sc.audio_channels);
@@ -374,6 +375,7 @@ void Config::load(const std::filesystem::path& gamepath) {
     sc.screen_height = settings.value("screen_height", sc.screen_height).toInt();
     sc.osd = settings.value("osd", sc.osd).toBool();
     sc.osd_encode = settings.value("osd_encode", sc.osd_encode).toBool();
+    sc.osd_lua = settings.value("osd_lua", sc.osd_lua).toBool();
     sc.prevent_savefiles = settings.value("prevent_savefiles", sc.prevent_savefiles).toBool();
     sc.audio_bitdepth = settings.value("audio_bitdepth", sc.audio_bitdepth).toInt();
     sc.audio_channels = settings.value("audio_channels", sc.audio_channels).toInt();
