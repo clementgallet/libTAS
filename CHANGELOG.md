@@ -24,6 +24,7 @@
 * Fix encoding softlock when resolution has changed (fix #689)
 * Fix Paths settings not saved
 * Fix a crash when fastforwarding under Vulkan
+* Fix desync in GM:S startup due to missing event mask (#695)
 
 ## [1.4.7] - 2025-10-06
 ### Added

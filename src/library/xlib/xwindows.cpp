@@ -72,16 +72,14 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
     LOG(LL_TRACE, LCF_WINDOW, "%s call with dimensions %d x %d", __func__, width, height);
     LINK_NAMESPACE_GLOBAL(XCreateWindow);
 
-    long event_mask = 0;
-
     Window w = orig::XCreateWindow(display, parent, x, y, width, height, border_width, depth, klass, visual, valuemask, attributes);
     LOG(LL_DEBUG, LCF_WINDOW, "   window id is %d", w);
 
     /* Add the mask in our event queue */
     if (valuemask & CWEventMask) {
         std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
-        queue->setMask(w, event_mask);
-        LOG(LL_DEBUG, LCF_WINDOW, "   event mask is %d", event_mask);
+        queue->setMask(w, attributes->event_mask);
+        LOG(LL_DEBUG, LCF_WINDOW, "   event mask is %d", attributes->event_mask);
     }
 
     /* Don't save windows that has override-redirect (Wine invisible windows) */
@@ -191,6 +189,7 @@ void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
 
 int XSelectInput(Display *display, Window w, long event_mask)
 {
+    RETURN_IF_NATIVE(XSelectInput, (display, w, event_mask), nullptr);
     LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
 
     /* Add the mask in our event queue */
