@@ -285,7 +285,7 @@ static void *pthread_native_start(void *arg)
     WrapperLock wrapperLock;
     ThreadSync::waitForThreadsToFinishInitialization();
 
-    LOG(LL_TRACE, LCF_THREAD | LCF_TODO, "Try to join thread in %d.%010d sec", abstime->tv_sec, abstime->tv_nsec);
+    LOG(LL_TRACE, LCF_THREAD | LCF_TODO, "Try to join thread in %d.%09d sec", abstime->tv_sec, abstime->tv_nsec);
 
     if (abstime->tv_sec < 0 || abstime->tv_nsec >= 1000000000) {
         return EINVAL;
@@ -370,7 +370,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (GlobalState::isNative())
         return orig::pthread_cond_timedwait(cond, mutex, abstime);
 
-    LOG(LL_TRACE, LCF_WAIT | LCF_TODO, "%s call with cond %p and mutex %p and timeout %d.%010d sec", __func__, static_cast<void*>(cond), static_cast<void*>(mutex), abstime->tv_sec, abstime->tv_nsec);
+    LOG(LL_TRACE, LCF_WAIT | LCF_TODO, "%s call with cond %p and mutex %p and timeout %d.%09d sec", __func__, static_cast<void*>(cond), static_cast<void*>(mutex), abstime->tv_sec, abstime->tv_nsec);
 
     /* Convert the abstime variable because pthread_cond_timedwait() is using
      * the real system time. */
@@ -408,8 +408,8 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         TimeHolder new_rel_timeout = abs_timeout - fake_time;
         TimeHolder new_abs_timeout = real_time + new_rel_timeout;
         new_abstime = new_abs_timeout;
-        LOG(LL_DEBUG, LCF_WAIT, " Rel time was %d.%010d sec", new_rel_timeout.tv_sec, new_rel_timeout.tv_nsec);
-        LOG(LL_DEBUG, LCF_WAIT, " New abs time is %d.%010d sec", new_abstime.tv_sec, new_abstime.tv_nsec);
+        LOG(LL_DEBUG, LCF_WAIT, " Rel time was %d.%09d sec", new_rel_timeout.tv_sec, new_rel_timeout.tv_nsec);
+        LOG(LL_DEBUG, LCF_WAIT, " New abs time is %d.%09d sec", new_abstime.tv_sec, new_abstime.tv_nsec);
     }
 
     /* If not main thread, do not change the behavior */
@@ -542,7 +542,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 {
     RETURN_IF_NATIVE(sem_timedwait, (sem, abstime), "libpthread.so");
 
-    LOG(LL_TRACE, LCF_WAIT | LCF_TODO, "%s call with sem %p and timeout %d.%010d sec", __func__, static_cast<void*>(sem), abstime->tv_sec, abstime->tv_nsec);
+    LOG(LL_TRACE, LCF_WAIT | LCF_TODO, "%s call with sem %p and timeout %d.%09d sec", __func__, static_cast<void*>(sem), abstime->tv_sec, abstime->tv_nsec);
 
     /* Convert the abstime variable because sem_timedwait() is using
      * the real system time. */
@@ -560,8 +560,8 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         TimeHolder new_rel_timeout = abs_timeout - fake_time;
         TimeHolder new_abs_timeout = real_time + new_rel_timeout;
         new_abstime = new_abs_timeout;
-        LOG(LL_DEBUG, LCF_WAIT, " Rel time was %d.%010d sec", new_rel_timeout.tv_sec, new_rel_timeout.tv_nsec);
-        LOG(LL_DEBUG, LCF_WAIT, " New abs time is %d.%010d sec", new_abstime.tv_sec, new_abstime.tv_nsec);
+        LOG(LL_DEBUG, LCF_WAIT, " Rel time was %d.%09d sec", new_rel_timeout.tv_sec, new_rel_timeout.tv_nsec);
+        LOG(LL_DEBUG, LCF_WAIT, " New abs time is %d.%09d sec", new_abstime.tv_sec, new_abstime.tv_nsec);
     }
 
     RETURN_NATIVE(sem_timedwait, (sem, &new_abstime), "libpthread.so");
