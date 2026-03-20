@@ -19,12 +19,12 @@ void SteamSetUserDataFolder(std::string path);
 
 struct ISteamUser
 {
-	union
-	{
-		const void *ptr;
+    union
+    {
+        const void *ptr;
         const struct ISteamUser021Vtbl *v021;
         const struct ISteamUser023Vtbl *v023;
-	} vtbl;
+    } vtbl;
 };
 
 ISteamUser *SteamUser_generic(const char *version);

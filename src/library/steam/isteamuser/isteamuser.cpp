@@ -49,45 +49,48 @@ void SteamSetUserDataFolder(std::string path)
 
 struct ISteamUser *SteamUser_generic(const char *version)
 {
-	static const struct
-	{
-		const char *name;
-		struct ISteamUser *(*iface_getter)(void);
-	} ifaces[] = {
-		{ STEAMUSER_INTERFACE_VERSION_019, SteamUser021 },
-		{ STEAMUSER_INTERFACE_VERSION_020, SteamUser021 },
-		{ STEAMUSER_INTERFACE_VERSION_021, SteamUser021 },
+    static const struct
+    {
+        const char *name;
+        struct ISteamUser *(*iface_getter)(void);
+    } ifaces[] = {
+        { STEAMUSER_INTERFACE_VERSION_016, SteamUser021 },
+        { STEAMUSER_INTERFACE_VERSION_017, SteamUser021 },
+        { STEAMUSER_INTERFACE_VERSION_018, SteamUser021 },
+        { STEAMUSER_INTERFACE_VERSION_019, SteamUser021 },
+        { STEAMUSER_INTERFACE_VERSION_020, SteamUser021 },
+        { STEAMUSER_INTERFACE_VERSION_021, SteamUser021 },
         { STEAMUSER_INTERFACE_VERSION_023, SteamUser023 },
-		{ NULL, NULL }
-	};
-	int i;
+        { NULL, NULL }
+    };
+    int i;
 
     LOG(LL_DEBUG, LCF_STEAM, "%s called with version %s", __func__, version);
 
-	i = 0;
-	while (ifaces[i].name)
-	{
-		if (strcmp(ifaces[i].name, version) == 0)
-		{
-			if (ifaces[i].iface_getter)
-				return ifaces[i].iface_getter();
+    i = 0;
+    while (ifaces[i].name)
+    {
+        if (strcmp(ifaces[i].name, version) == 0)
+        {
+            if (ifaces[i].iface_getter)
+                return ifaces[i].iface_getter();
 
-			break;
-		}
-		i++;
-	}
+            break;
+        }
+        i++;
+    }
 
     LOG(LL_WARN, LCF_STEAM, "Unable to find ISteamUser version %s", version);
 
-	return nullptr;
+    return nullptr;
 }
 
 void SteamUser_set_version(const char *version)
 {
     LOG(LL_DEBUG, LCF_STEAM, "%s called with version %s", __func__, version);
 
-	if (!steamuser_version)
-		steamuser_version = version;
+    if (!steamuser_version)
+        steamuser_version = version;
 }
 
 struct ISteamUser *SteamUser(void)
@@ -99,24 +102,24 @@ struct ISteamUser *SteamUser(void)
         return orig::SteamUser();
     }
 
-	static struct ISteamUser *cached_iface = nullptr;
+    static struct ISteamUser *cached_iface = nullptr;
 
-	if (!steamuser_version)
-	{
-		steamuser_version = STEAMUSER_INTERFACE_VERSION_023;
+    if (!steamuser_version)
+    {
+        steamuser_version = STEAMUSER_INTERFACE_VERSION_023;
         LOG(LL_WARN, LCF_STEAM, "ISteamUser: No version specified, defaulting to %s", steamuser_version);
-	}
+    }
 
-	if (!cached_iface)
-		cached_iface = SteamUser_generic(steamuser_version);
+    if (!cached_iface)
+        cached_iface = SteamUser_generic(steamuser_version);
 
-	return cached_iface;
+    return cached_iface;
 }
 
 HSteamUser ISteamUser_GetHSteamUser()
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    return 1;
 }
 
 bool ISteamUser_BLoggedOn()
