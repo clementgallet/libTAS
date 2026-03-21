@@ -1055,7 +1055,7 @@ static void readASavefile(SaveStateLoading &saved_state)
 
     /* Map the original file */
     int orig_fd = -1;
-    void* orig_file_mapped_addr = nullptr;
+    void* orig_file_mapped_addr = MAP_FAILED;
     
     struct stat filestat;
     int rv = stat(saved_area.name, &filestat);
@@ -1562,12 +1562,14 @@ static size_t writeSaveFiles(SaveStateSaving &state)
     
     for (auto it = SaveFileList::begin(); it != SaveFileList::end(); it++) {
         const std::unique_ptr<SaveFile>& savefile = *it;
-        /* Don't map if file was closed and removed (TODO: handle this!)*/
+        /* Don't map if file was closed and removed (TODO: handle this!) */
+        if (savefile->fd == 0)
+            continue;
+            
         /* Also, skip if we are handling the savefile using our custom
          * stream (SaveFileStream), which maps its content in memory. So, it
-         * is already saved through the memory dumping process. In this case,
-         * the fd is set to zero, so the condition below works. */
-        if (savefile->fd == 0)
+         * is already saved through the memory dumping process. */
+        if (savefile->fd >= FIRST_SAVEFILE_STREAM_FD)
             continue;
             
         Area area;

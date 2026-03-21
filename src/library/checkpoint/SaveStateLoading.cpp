@@ -48,10 +48,10 @@ SaveStateLoading::SaveStateLoading(const char* pagemappath, const char* pagespat
         return;
     }
 
-    NATIVECALL(pmfd = open(pagemappath, O_RDONLY));
+    pmfd = open(pagemappath, O_RDONLY);
     MYASSERT(pmfd != -1)
 
-    NATIVECALL(pfd = open(pagespath, O_RDONLY));
+    pfd = open(pagespath, O_RDONLY);
     MYASSERT(pfd != -1)
 
     memset(&lz4s, 0, sizeof(LZ4_streamDecode_t));
@@ -61,8 +61,8 @@ SaveStateLoading::SaveStateLoading(const char* pagemappath, const char* pagespat
 SaveStateLoading::~SaveStateLoading()
 {
     if (pmfd > 0) {
-        NATIVECALL(close(pmfd));
-        NATIVECALL(close(pfd));
+        close(pmfd);
+        close(pfd);
     }
 }
 
