@@ -476,6 +476,11 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY_VERSION,
+        // Signature for Unity 2018
+        "53 48 8d 57 14 48 83 ec 40 64 48 8b 04 25 28 00 00 00 48 89 44 24 38",
+    },
+    {
+        UNITY_VERSION,
         "41 56 53 48 81 ec 98 00 00 00 0f 57 c0 0f 11 07",
     },
     {
@@ -581,8 +586,18 @@ const static usig_t UNITY_SIGNATURES_64[] = {
         "41 55 41 54 49 89 FC 55 53 31 DB 48 83 EC 28 48 85 F6 48 8B 7F 08 74 ?? 48 89 F1 EB ?? ?? ?? ?? 48 8b 41 30"
     },
     {
+        UNITY5_JOBQUEUE_SCHEDULE_JOB_MULTIPLE,
+        // Signature for Unity 2018
+        "41 57 49 89 ff 41 56 45 89 c6 41 55 41 54 55 53 48 83 ec 68 64 48 8b 04 25 28 00 00 00"
+    },
+    {
         UNITY5_JOBQUEUE_WAIT_JOB_GROUP,
         "41 57 41 89 cf 41 56 41 55 41 89 d5 41 54 55 48 89 f5 53 48 89 fb 48 83 ec 78 89 54 24 38"
+    },
+    {
+        UNITY5_JOBQUEUE_HAS_JOB_COMPLETED,
+        // Signature for Unity 2018
+        "48 85 f6 74 2b 53 48 89 f7 89 d3 e8"
     },
     {
         UNITY2K_JOBQUEUE_COMPLETE_ALL_JOBS,
@@ -600,7 +615,7 @@ const static usig_t UNITY_SIGNATURES_64[] = {
         "55 41 57 41 56 53 48 83 EC 18 89 F5 49 89 FF 48 8B 7F 08"
     },
     {
-        UNITY2K_JOBQUEUE_EXECUTE_QUEUE,
+        UNITY5_JOBQUEUE_EXECUTE_QUEUE,
         // Signature for Unity 2018
         "41 55 49 89 FD 41 54 55 53 48 83 EC 18 48 8B 7F 08 E8 ?? ?? ?? ?? 49 89 C4"
     },
@@ -672,12 +687,32 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY6_PRELOADMANAGER_ADD,
+        // Signature for Unity 2018
+        "41 56 4c 8d b7 c0 00 00 00 41 55 41 54 55 48 89 f5 53 48 89 fb",
+    },
+    {
+        UNITY6_PRELOADMANAGER_ADD,
         // Signature for Unity 4
         "55 48 89 FD 53 48 8d 9f 88 00 00 00 48 83 ec 38 48 89 df",
     },
     {
+        UNITY6_PRELOADMANAGER_PREPARE,
+        // Signature for Unity 2018
+        "41 56 4c 8d B7 c0 00 00 00 41 55 41 54 55 48 89 fd 4c 89 f7 53 31 db"        
+    },
+    {
+        UNITY6_PRELOADMANAGER_PROCESS,
+        // Signature for Unity 2018
+        "41 55 41 54 49 89 fc 55 53 48 83 ec 58 64 48 8b 04 25 28 00 00 00 48 89 44 24 48 31 c0 e8"        
+    },
+    {
         UNITY6_PRELOADMANAGER_UPDATE,
         "55 41 57 41 56 41 54 53 48 83 ec 20 49 89 ff 4c 8d b7 70 01 00 00 4c 89 f7",
+    },
+    {
+        UNITY6_PRELOADMANAGER_UPDATE,
+        // Signature for Unity 2018
+        "41 56 41 55 4c 8d af c0 00 00 00 41 54 55 53 48 89 fb 4c 89 ef 48 83 ec 10 e8",
     },
     {
         UNITY6_PRELOADMANAGER_UPDATE,
@@ -687,6 +722,11 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     {
         UNITY4_PRELOADMANAGER_UPDATE_STEP,
         "41 55 41 54 55 89 F5 53 48 89 fb 48 83 ec 38 0f b6 47 28 84 c0",
+    },
+    {
+        UNITY6_PRELOADMANAGER_UPDATE_STEP,
+        // Signature for Unity 2018
+        "41 57 41 56 41 55 41 89 d5 41 54 41 89 f4 83 e6 01 55 53",
     },
     {
         UNITY6_PRELOADMANAGER_UPDATE_STEP,
@@ -703,11 +743,31 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY6_PRELOADMANAGER_RUN,
+        // Signature for Unity 2018
+        "41 57 41 56 41 55 41 54 55 48 89 fd 53 48 8d 5d 78 48 81 ec e8 00 00 00",
+    },
+    {
+        UNITY6_PRELOADMANAGER_RUN,
         "55 41 57 41 56 41 55 41 54 53 48 81 ec 98 00 00 00 49 89 ff 48 8b af 58 03 00 00",
+    },
+    {
+        UNITY2K_PRELOADMANAGER_PEEK,
+        // Signature for Unity 2018
+        "55 48 8d af c0 00 00 00 53 48 89 fb 48 89 ef 48 83 ec 08 e8 ?? ?? ?? ?? 48 83 bb 50 01 00 00 00",
+    },
+    {
+        UNITY6_ASYNCREADMANAGER_REQUEST,
+        // Signature for Unity 2018
+        "41 56 51 55 49 89 f5 41 54 55 48 8d 6f 28 53 48 89 fb 48 89 ef 48 83 ec 50",
     },
     {
         UNITY6_ASYNCREADMANAGER_REQUEST,
         "41 57 41 56 41 55 41 54 53 48 83 ec 10 49 89 f7 49 89 fd c7 46 28 01 00 00 00",
+    },
+    {
+        UNITY2K_ASYNCREADMANAGER_SYNC_REQUEST,
+        // Signature for Unity 2018
+        "41 54 49 89 fc 55 48 8d af 50 0a 00 00 53 48 89 ef 48 89 f3 e8",
     },
     {
         UNITY6_ASYNCREADMANAGER_OPENCOMPLETE_CALLBACK,
