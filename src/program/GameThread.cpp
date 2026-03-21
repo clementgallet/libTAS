@@ -65,6 +65,9 @@ void GameThread::set_env_variables(Context *context, int gameArch)
      */
     setenv("PWD", newdir.c_str(), 1);
 
+    /* Turn off vsync so that we can get a more stable framerate */
+    setenv("vblank_mode", "0", 1);
+
     /* Set additional environment variables regarding Mesa and VDPAU configurations */
     if (context->config.sc.opengl_soft) {
         setenv("__GLX_VENDOR_LIBRARY_NAME", "mesa", 1);

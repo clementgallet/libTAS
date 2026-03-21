@@ -274,7 +274,7 @@ void DeterministicTimer::exitFrameBoundary()
          * took too long to process, we may compensate on future frames. This 
          * needs a threshold, otherwise we will constantly try to catch up, and
          * no sleep will happen */
-        TimeHolder thresholdTime = lastEnterTime + baseTimeIncrement * (Global::shared_config.speed_divisor * 3); // Arbitrary value
+        TimeHolder thresholdTime = lastEnterTime + baseTimeIncrement * (Global::shared_config.speed_divisor * 10); // Arbitrary value
 
         if (currentTime > thresholdTime) {
             lastEnterTime = currentTime;
@@ -321,7 +321,7 @@ TimeHolder DeterministicTimer::enterFrameBoundary()
     if (timeIncrement > addedDelay) {
         TimeHolder deltaTicks = timeIncrement - addedDelay;
         ticks += deltaTicks;
-        LOG(LL_DEBUG, LCF_TIMESET, "%s added %u.%010u", __func__, deltaTicks.tv_sec, deltaTicks.tv_nsec);
+        LOG(LL_DEBUG, LCF_TIMESET, "%s added %u.%09u", __func__, deltaTicks.tv_sec, deltaTicks.tv_nsec);
         addedDelay = {0, 0};
     }
     else {
