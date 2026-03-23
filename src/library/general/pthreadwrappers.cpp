@@ -405,10 +405,9 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if ((rel_timeout.tv_sec < -1) || (rel_timeout.tv_sec > 10)) {
         /* Change the reference time to real system time */
         TimeHolder fake_time = DeterministicTimer::get().getTicks(time_type);
-        TimeHolder new_rel_timeout = abs_timeout - fake_time;
-        TimeHolder new_abs_timeout = real_time + new_rel_timeout;
-        new_abstime = new_abs_timeout;
-        LOG(LL_DEBUG, LCF_WAIT, " Rel time was %d.%09d sec", new_rel_timeout.tv_sec, new_rel_timeout.tv_nsec);
+        rel_timeout = abs_timeout - fake_time;
+        new_abstime = real_time + rel_timeout;
+        LOG(LL_DEBUG, LCF_WAIT, " Rel time was %d.%09d sec", rel_timeout.tv_sec, rel_timeout.tv_nsec);
         LOG(LL_DEBUG, LCF_WAIT, " New abs time is %d.%09d sec", new_abstime.tv_sec, new_abstime.tv_nsec);
     }
 
@@ -416,6 +415,10 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (!ThreadManager::isMainThread()) {
         int ret = orig::pthread_cond_timedwait(cond, mutex, &new_abstime);
         LOG(LL_DEBUG, LCF_WAIT, "   ret is %d ", ret);
+        
+        if (ret == ETIMEDOUT)
+            DeterministicTimer::get().addThreadedDelay(rel_timeout);
+        
         return ret;
     }
 
