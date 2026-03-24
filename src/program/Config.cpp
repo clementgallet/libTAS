@@ -22,9 +22,11 @@
 #include "KeyMapping.h"
 
 #include <QtCore/QSettings>
+#include <algorithm>
 #include <fcntl.h>
 #include <unistd.h> // access
 #include <iostream>
+#include <filesystem>
 
 QString Config::iniPath(const std::filesystem::path& gamepath) const {
     std::filesystem::path iniFile = configdir / gamepath.filename() / ".ini";
@@ -37,20 +39,16 @@ void Config::save(const std::filesystem::path& gamepath) {
         return;
 
     /* Save the gamepath in recent gamepaths */
-    for (auto iter = recent_gamepaths.begin(); iter != recent_gamepaths.end(); iter++) {
-        if (iter->compare(gamepath) == 0) {
-            recent_gamepaths.erase(iter);
-            break;
-        }
+    auto it = std::find(recent_gamepaths.begin(), recent_gamepaths.end(), gamepath);
+    if (it != recent_gamepaths.end()) {
+        recent_gamepaths.erase(it);
     }
     recent_gamepaths.push_front(gamepath);
 
     /* Save the option in recent options */
-    for (auto iter = recent_args.begin(); iter != recent_args.end(); iter++) {
-        if (iter->compare(gameargs) == 0) {
-            recent_args.erase(iter);
-            break;
-        }
+    auto arg_it = std::find(recent_args.begin(), recent_args.end(), gameargs);
+    if (arg_it != recent_args.end()) {
+        recent_args.erase(arg_it);
     }
     recent_args.push_front(gameargs);
 
