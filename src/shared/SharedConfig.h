@@ -144,12 +144,14 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
      * depends on the arch.*/
     int64_t initial_time_sec = 1;
     int64_t initial_time_nsec = 0;
+    bool initial_time_set_via_cli = false;
 
     /* Initial monotonic time at game startup. */
     /* We don't use struct timespec because it contains longs so the size
      * depends on the arch.*/
     int64_t initial_monotonic_time_sec = 1;
     int64_t initial_monotonic_time_nsec = 0;
+    bool initial_monotonic_time_set_via_cli = false;
 
     /* Virtual monitor resolution */
     int screen_width = 0;
