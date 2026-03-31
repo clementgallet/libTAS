@@ -22,6 +22,7 @@
 
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QMenu>
+#include <QtWidgets/QPushButton>
 
 /* Forward declaration */
 struct Context;
@@ -91,6 +92,7 @@ protected:
     void timerEvent(QTimerEvent* event) override;
     void hideEvent(QHideEvent* event) override;
     void leaveEvent(QEvent *event) override;
+    void resizeEvent(QResizeEvent* event) override;
 
 private slots:
     void resizeAllColumns();
@@ -138,6 +140,8 @@ private:
     QAction *lockAction;
     QAction *autoholdAction;
     QAction *autofireAction;
+
+    QPushButton *addColumnBtn = nullptr;
 
     bool autoScroll = true;
     int markerTimerId = 0;

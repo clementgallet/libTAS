@@ -32,6 +32,7 @@
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QMessageBox>
+#include <QtWidgets/QPushButton>
 #include <QtGui/QClipboard>
 #include <QtGui/QGuiApplication>
 #include <QShortcut>
@@ -112,6 +113,12 @@ InputEditorView::InputEditorView(Context* c, MovieFile *m, QWidget *parent) : QT
 
     keyDialog = new KeyPressedDialog(c, this);
     keyDialog->withModifiers = false;
+
+    addColumnBtn = new QPushButton("+", horizontalHeader());
+    addColumnBtn->setFixedSize(20, horizontalHeader()->height());
+    addColumnBtn->move(horizontalHeader()->length(), 0);
+    addColumnBtn->show();
+    connect(addColumnBtn, &QPushButton::clicked, this, &InputEditorView::addInputColumn);
 
     inputEventWindow = new InputEventWindow(c, movie, this);
 
@@ -236,6 +243,14 @@ void InputEditorView::resizeAllColumns()
             int size = horizontalHeader()->sectionSize(c);
             horizontalHeader()->resizeSection(c, size + 2);
         }
+    }
+}
+
+void InputEditorView::resizeEvent(QResizeEvent* event)
+{
+    QTableView::resizeEvent(event);
+    if (addColumnBtn && horizontalHeader()) {
+        addColumnBtn->move(horizontalHeader()->length(), 0);
     }
 }
 
