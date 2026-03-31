@@ -178,7 +178,7 @@ int main(int argc, char **argv)
                 context.libtas32path = std::filesystem::weakly_canonical(optarg);
                 break;
             case '?':
-                std::cout << "Unknown option character" << std::endl;
+                std::cerr << "Unknown option character" << std::endl;
                 return -1;
             case 'h':
                 print_usage();
