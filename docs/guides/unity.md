@@ -14,7 +14,7 @@ Here is an overview of what is required to run Unity games in libTAS.
 ## Porting
 
 If the game does not have a Linux version, you may be able to port from a 
-Windows or (even better) Mac version. ikuyo has made a nice [documentation](https://apps.microsoft.com/detail/9pdxgncfsczv)
+Windows or (even better) Mac version. ikuyo has made a nice [documentation](https://tasvideos.org/HomePages/ikuyo/Unity)
 about it.
 
 There is also the [Unify](https://github.com/0xf4b1/unify) project to
