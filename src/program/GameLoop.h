@@ -75,7 +75,6 @@ signals:
     void uiChanged();
     void newFrame();
     void statusChanged(int status);
-    void configChanged();
     void alertToShow(QString str);
     void sharedConfigChanged();
     void askToShow(QString str, void* promise);

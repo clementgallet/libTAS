@@ -232,16 +232,6 @@ void GameLoop::init()
          * or prepare a movie if in write mode.
          */
         if (context->config.sc.recording == SharedConfig::RECORDING_READ) {
-            int ret = movie.loadMovie();
-            if (ret < 0) {
-                emit alertToShow(MovieFile::errorString(ret));
-                context->config.sc.recording = SharedConfig::NO_RECORDING;
-            }
-            else {
-                /* Update the UI accordingly */
-                emit configChanged();
-            }
-
             /* Check md5 match */
             if ((!movie.header->md5_movie.empty()) && (context->md5_game.compare(movie.header->md5_movie) != 0))
                 emit alertToShow(QString("Game executable hash does not match with the hash stored in the movie!"));

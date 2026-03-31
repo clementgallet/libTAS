@@ -153,7 +153,6 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     connect(gameLoop, &GameLoop::uiChanged, this, &MainWindow::updateUIFrequent);
     connect(gameLoop, &GameLoop::newFrame, this, &MainWindow::updateUIFrame, Qt::DirectConnection);
     connect(gameLoop, &GameLoop::statusChanged, this, &MainWindow::updateStatus);
-    connect(gameLoop, &GameLoop::configChanged, this, &MainWindow::updateUIFromConfig);
     connect(gameLoop, &GameLoop::alertToShow, this, &MainWindow::alertDialog);
     connect(gameLoop->gameEvents, &GameEvents::alertToShow, this, &MainWindow::alertDialog);
     connect(gameLoop, &GameLoop::sharedConfigChanged, this, &MainWindow::updateSharedConfigChanged);
@@ -1017,8 +1016,7 @@ void MainWindow::updateMovieParams()
     inputEditorWindow->resetInputs();
     movieFrameCount->setText(QString::number(context->config.sc.movie_framecount));
     rerecordCount->setText(QString::number(context->rerecord_count));
-    if (authorField->text().toStdString() == "")
-        authorField->setText(gameLoop->movie.header->authors.c_str());
+    authorField->setText(gameLoop->movie.header->authors.c_str());
     fpsNumField->setValue(context->config.sc.initial_framerate_num);
     fpsDenField->setValue(context->config.sc.initial_framerate_den);
     elapsedTimeSec->setValue(context->config.sc.initial_monotonic_time_sec);
