@@ -1248,7 +1248,7 @@ static void writeAllAreas(bool base)
         Utils::writeAll(crfd, "4\n", 2);
     }
 
-    if (crfd != 1) {
+    if (crfd != -1) {
         close(crfd);
     }
 

@@ -60,10 +60,19 @@ SaveStateLoading::SaveStateLoading(const char* pagemappath, const char* pagespat
 
 SaveStateLoading::~SaveStateLoading()
 {
-    if (pmfd > 0) {
+    if (pmfd >= 0)
         close(pmfd);
+    if (pfd >= 0)
         close(pfd);
+}
+
+bool SaveStateLoading::validateCompressedLength() const
+{
+    if (compressed_length <= 0 || compressed_length > LZ4_COMPRESSBOUND(4096)) {
+        LOG(LL_ERROR, LCF_CHECKPOINT, "Invalid compressed page length %d", compressed_length);
+        return false;
     }
+    return true;
 }
 
 void SaveStateLoading::readHeader(StateHeader* sh)
@@ -166,6 +175,10 @@ char SaveStateLoading::getPageFlag(char* addr)
         else if (flag == Area::COMPRESSED_PAGE) {
             lseek(pfd, next_pfd_offset, SEEK_SET);
             Utils::readAll(pfd, &compressed_length, sizeof(int));
+            if (!validateCompressedLength()) {
+                current_flag = Area::NONE;
+                return Area::NONE;
+            }
             next_pfd_offset += sizeof(int) + compressed_length;
         }
         current_addr += 4096;
@@ -185,6 +198,10 @@ char SaveStateLoading::getNextPageFlag()
     else if (flag == Area::COMPRESSED_PAGE) {
         lseek(pfd, next_pfd_offset, SEEK_SET);
         Utils::readAll(pfd, &compressed_length, sizeof(int));
+        if (!validateCompressedLength()) {
+            current_flag = Area::NONE;
+            return Area::NONE;
+        }
         next_pfd_offset += sizeof(int) + compressed_length;
     }
     current_addr += 4096;
@@ -221,14 +238,26 @@ void SaveStateLoading::queuePageLoad(char* addr)
     }
     else if (current_flag == Area::COMPRESSED_PAGE) {
         char compressed[LZ4_COMPRESSBOUND(4096)];
+        if (!validateCompressedLength()) {
+            memset(addr, 0, 4096);
+            return;
+        }
         Utils::readAll(pfd, compressed, compressed_length);
         
         if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
             /* For incremental savestates, block compression is independant */
-            LZ4_decompress_safe(compressed, addr, compressed_length, 4096);
+            int ret = LZ4_decompress_safe(compressed, addr, compressed_length, 4096);
+            if (ret != 4096) {
+                LOG(LL_ERROR, LCF_CHECKPOINT, "LZ4_decompress_safe failed with return code %d", ret);
+                memset(addr, 0, 4096);
+            }
         }
         else {
-            LZ4_decompress_safe_continue(&lz4s, compressed, addr, compressed_length, 4096);
+            int ret = LZ4_decompress_safe_continue(&lz4s, compressed, addr, compressed_length, 4096);
+            if (ret != 4096) {
+                LOG(LL_ERROR, LCF_CHECKPOINT, "LZ4_decompress_safe_continue failed with return code %d", ret);
+                memset(addr, 0, 4096);
+            }
         }
     }
 }
@@ -243,8 +272,17 @@ bool SaveStateLoading::debugIsMatchingPage(char* addr)
     }
     else if (current_flag == Area::COMPRESSED_PAGE) {
         char compressed[LZ4_COMPRESSBOUND(4096)];
+        if (!validateCompressedLength()) {
+            memset(current_page, 0, 4096);
+            return false;
+        }
         Utils::readAll(pfd, compressed, compressed_length);
-        LZ4_decompress_safe(compressed, current_page, compressed_length, 4096);
+        int ret = LZ4_decompress_safe(compressed, current_page, compressed_length, 4096);
+        if (ret != 4096) {
+            LOG(LL_ERROR, LCF_CHECKPOINT, "LZ4_decompress_safe failed with return code %d", ret);
+            memset(current_page, 0, 4096);
+            return false;
+        }
     }
     
     return 0 == memcmp(addr, current_page, 4096);

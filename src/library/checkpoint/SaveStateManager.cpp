@@ -175,7 +175,7 @@ int SaveStateManager::waitChild()
         return -1;
     }
     status = WEXITSTATUS(status);
-    if ((status < 0) && (status > 10)) {
+    if ((status < 0) || (status > 10)) {
         LOG(LL_ERROR, LCF_CHECKPOINT, "Got unknown status code %d from pid %d", status, pid);
         return -1;
     }
@@ -193,7 +193,7 @@ bool SaveStateManager::stateReady(int slot)
     if (!(Global::shared_config.savestate_settings & SharedConfig::SS_FORK))
         return true;
 
-    if ((slot < 0) && (slot > 10)) {
+    if ((slot < 0) || (slot > 10)) {
         LOG(LL_ERROR, LCF_CHECKPOINT, "Wrong slot number");
         return false;
     }
