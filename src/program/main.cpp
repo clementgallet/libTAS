@@ -117,7 +117,6 @@ int main(int argc, char **argv)
 
     /* Parsing arguments */
     int c;
-    char buf[PATH_MAX];
     std::filesystem::path abspath;
     std::ofstream o;
     std::filesystem::path moviefile;
@@ -442,7 +441,7 @@ int main(int argc, char **argv)
     mainWin.show();
 
     if (openInputEditor) {
-        mainWin.inputEditorWindow->show();
+        mainWin.getInputEditorWindow()->show();
     }
 
     app.exec();

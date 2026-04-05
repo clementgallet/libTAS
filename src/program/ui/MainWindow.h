@@ -64,6 +64,7 @@ class TimeTraceWindow;
 class LuaConsoleWindow;
 class MovieSettingsWindow;
 class HexViewWindow;
+class WindowManager;
 
 class MainWindow : public QMainWindow
 {
@@ -76,27 +77,12 @@ public:
     /* Capture the user closing the game and show a "save your work?" dialog */
     void closeEvent(QCloseEvent *event);
 
+    RamWatchWindow *getRamWatchWindow();
+    InputEditorWindow *getInputEditorWindow();
+
     std::thread game_thread;
     GameLoop *gameLoop;
     Context *context;
-
-    SettingsWindow* settingsWindow;
-    EncodeWindow* encodeWindow;
-    InputWindow* inputWindow;
-    ExecutableWindow* executableWindow;
-    ControllerTabWindow* controllerTabWindow;
-    GameInfoWindow* gameInfoWindow;
-    GameSpecificWindow* gameSpecificWindow;
-    RamSearchWindow* ramSearchWindow;
-    RamWatchWindow* ramWatchWindow;
-    InputEditorWindow* inputEditorWindow;
-    OsdWindow* osdWindow;
-    AnnotationsWindow* annotationsWindow;
-    AutoSaveWindow* autoSaveWindow;
-    TimeTraceWindow* timeTraceWindow;
-    LuaConsoleWindow* luaConsoleWindow;
-    MovieSettingsWindow* movieSettingsWindow;
-    HexViewWindow* hexViewWindow;
 
     QList<QWidget*> disabledWidgetsOnStart;
     QList<QAction*> disabledActionsOnStart;
@@ -176,6 +162,8 @@ public:
     bool eventFilter(QObject *obj, QEvent *event);
 
 private:
+    WindowManager *windowManager;
+
     /* Update the status bar */
     void updateStatusBar();
 
@@ -237,6 +225,12 @@ private slots:
     void slotLaunchGdb();
     void slotLaunchLldb();
     void slotLaunchStrace();
+    void slotSyncInputEditorVisible(bool &visible);
+    void slotFetchRamWatch(std::string &watch);
+    void slotFetchMarkerText(std::string &text);
+    void slotRegisterSavestate(int slot, unsigned long long frame);
+    void slotAddTimeTrace(int type, unsigned long long hash, std::string stacktrace);
+    void slotUpdateSettingsWindow(int status);
     void slotLaunch(bool attach_gdb);
     void slotStop();
     void slotBrowseGamePath();

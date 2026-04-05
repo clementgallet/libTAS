@@ -460,7 +460,7 @@ void RamSearchWindow::slotAdd()
     int row = index.row();
 
     /* Fill the watch edit window with parameters from the selected watch */
-    ramWatchWindow->ramWatchView->editWindow->fill(ramSearchModel->address(row), typeBox->currentIndex());
+    ramWatchWindow->ramWatchView->ensureEditWindow()->fill(ramSearchModel->address(row), typeBox->currentIndex());
     ramWatchWindow->ramWatchView->slotAdd();
 }
 

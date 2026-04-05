@@ -130,6 +130,237 @@ do {\
     context->config.sc_modified = true;\
 }\
 
+class WindowManager {
+public:
+    WindowManager(MainWindow *owner, Context *context, GameLoop *gameLoop)
+        : owner(owner), context(context), gameLoop(gameLoop)
+    {
+    }
+
+    SettingsWindow *settingsWindow()
+    {
+        if (!settingsWindow_) {
+            settingsWindow_ = new SettingsWindow(context, owner);
+            settingsWindow_->loadConfig();
+            settingsWindow_->update(context->status);
+        }
+
+        return settingsWindow_;
+    }
+
+    EncodeWindow *encodeWindow()
+    {
+        if (!encodeWindow_) {
+            encodeWindow_ = new EncodeWindow(context, owner);
+            encodeWindow_->update_config();
+        }
+
+        return encodeWindow_;
+    }
+
+    InputWindow *inputWindow()
+    {
+        if (!inputWindow_) {
+            inputWindow_ = new InputWindow(context, owner);
+            inputWindow_->update();
+        }
+
+        return inputWindow_;
+    }
+
+    ExecutableWindow *executableWindow()
+    {
+        if (!executableWindow_) {
+            executableWindow_ = new ExecutableWindow(context, owner);
+            executableWindow_->update_config();
+        }
+
+        return executableWindow_;
+    }
+
+    ControllerTabWindow *controllerTabWindow()
+    {
+        if (!controllerTabWindow_) {
+            controllerTabWindow_ = new ControllerTabWindow(context, owner);
+        }
+
+        return controllerTabWindow_;
+    }
+
+    GameInfoWindow *gameInfoWindow()
+    {
+        if (!gameInfoWindow_) {
+            gameInfoWindow_ = new GameInfoWindow(owner);
+        }
+
+        return gameInfoWindow_;
+    }
+
+    HexViewWindow *hexViewWindow()
+    {
+        if (!hexViewWindow_) {
+            hexViewWindow_ = new HexViewWindow(owner);
+            if (context->status != Context::INACTIVE) {
+                hexViewWindow_->start();
+            }
+        }
+
+        return hexViewWindow_;
+    }
+
+    RamWatchWindow *ramWatchWindow()
+    {
+        if (!ramWatchWindow_) {
+            ramWatchWindow_ = new RamWatchWindow(context, hexViewWindow(), owner);
+        }
+
+        return ramWatchWindow_;
+    }
+
+    RamSearchWindow *ramSearchWindow()
+    {
+        if (!ramSearchWindow_) {
+            ramSearchWindow_ = new RamSearchWindow(context, hexViewWindow(), ramWatchWindow(), owner);
+        }
+
+        return ramSearchWindow_;
+    }
+
+    InputEditorWindow *inputEditorWindow()
+    {
+        if (!inputEditorWindow_) {
+            inputEditorWindow_ = new InputEditorWindow(context, &gameLoop->movie, owner);
+            inputEditorWindow_->resetInputs();
+            inputEditorWindow_->update();
+        }
+
+        return inputEditorWindow_;
+    }
+
+    AnnotationsWindow *annotationsWindow()
+    {
+        if (!annotationsWindow_) {
+            annotationsWindow_ = new AnnotationsWindow(context, owner);
+            if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
+                annotationsWindow_->update();
+            }
+        }
+
+        return annotationsWindow_;
+    }
+
+    TimeTraceWindow *timeTraceWindow()
+    {
+        if (!timeTraceWindow_) {
+            timeTraceWindow_ = new TimeTraceWindow(context, owner);
+        }
+
+        return timeTraceWindow_;
+    }
+
+    LuaConsoleWindow *luaConsoleWindow()
+    {
+        if (!luaConsoleWindow_) {
+            luaConsoleWindow_ = new LuaConsoleWindow(context, owner);
+        }
+
+        return luaConsoleWindow_;
+    }
+
+    MovieSettingsWindow *movieSettingsWindow()
+    {
+        if (!movieSettingsWindow_) {
+            movieSettingsWindow_ = new MovieSettingsWindow(context, &gameLoop->movie, owner);
+            movieSettingsWindow_->loadConfig();
+        }
+
+        return movieSettingsWindow_;
+    }
+
+    SettingsWindow *existingSettingsWindow() const { return settingsWindow_; }
+    EncodeWindow *existingEncodeWindow() const { return encodeWindow_; }
+    InputWindow *existingInputWindow() const { return inputWindow_; }
+    ExecutableWindow *existingExecutableWindow() const { return executableWindow_; }
+    RamSearchWindow *existingRamSearchWindow() const { return ramSearchWindow_; }
+    RamWatchWindow *existingRamWatchWindow() const { return ramWatchWindow_; }
+    InputEditorWindow *existingInputEditorWindow() const { return inputEditorWindow_; }
+    AnnotationsWindow *existingAnnotationsWindow() const { return annotationsWindow_; }
+    HexViewWindow *existingHexViewWindow() const { return hexViewWindow_; }
+
+    void showWindow(QWidget *window)
+    {
+        window->show();
+        window->raise();
+        window->activateWindow();
+    }
+
+    bool isInputEditorVisible() const
+    {
+        return inputEditorWindow_ && inputEditorWindow_->isVisible();
+    }
+
+    void getRamWatch(std::string &watch) const
+    {
+        if (ramWatchWindow_) {
+            ramWatchWindow_->ramWatchView->slotGet(watch);
+        }
+        else {
+            watch.clear();
+        }
+    }
+
+    void getMarkerText(std::string &text) const
+    {
+        if (inputEditorWindow_) {
+            inputEditorWindow_->inputEditorView->getCurrentMarkerText(text);
+        }
+        else {
+            text.clear();
+        }
+    }
+
+    void registerSavestate(int slot, unsigned long long frame)
+    {
+        if (inputEditorWindow_) {
+            inputEditorWindow_->inputEditorView->inputEditorModel->registerSavestate(slot, frame);
+        }
+    }
+
+    void addTimeTrace(int type, unsigned long long hash, std::string stacktrace)
+    {
+        if (timeTraceWindow_) {
+            timeTraceWindow_->timeTraceModel->addCall(type, hash, stacktrace);
+        }
+    }
+
+    void updateSettingsWindow(int status)
+    {
+        if (settingsWindow_) {
+            settingsWindow_->update(status);
+        }
+    }
+
+private:
+    MainWindow *owner;
+    Context *context;
+    GameLoop *gameLoop;
+
+    SettingsWindow *settingsWindow_ = nullptr;
+    EncodeWindow *encodeWindow_ = nullptr;
+    InputWindow *inputWindow_ = nullptr;
+    ExecutableWindow *executableWindow_ = nullptr;
+    ControllerTabWindow *controllerTabWindow_ = nullptr;
+    GameInfoWindow *gameInfoWindow_ = nullptr;
+    RamSearchWindow *ramSearchWindow_ = nullptr;
+    RamWatchWindow *ramWatchWindow_ = nullptr;
+    InputEditorWindow *inputEditorWindow_ = nullptr;
+    AnnotationsWindow *annotationsWindow_ = nullptr;
+    TimeTraceWindow *timeTraceWindow_ = nullptr;
+    LuaConsoleWindow *luaConsoleWindow_ = nullptr;
+    MovieSettingsWindow *movieSettingsWindow_ = nullptr;
+    HexViewWindow *hexViewWindow_ = nullptr;
+};
+
 MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 {
     qRegisterMetaType<std::string>("std::string");
@@ -150,41 +381,25 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
      * and connect all the signals.
      */
     gameLoop = new GameLoop(context);
-    connect(gameLoop, &GameLoop::uiChanged, this, &MainWindow::updateUIFrequent);
-    connect(gameLoop, &GameLoop::newFrame, this, &MainWindow::updateUIFrame, Qt::DirectConnection);
-    connect(gameLoop, &GameLoop::statusChanged, this, &MainWindow::updateStatus);
-    connect(gameLoop, &GameLoop::configChanged, this, &MainWindow::updateUIFromConfig);
-    connect(gameLoop, &GameLoop::alertToShow, this, &MainWindow::alertDialog);
-    connect(gameLoop->gameEvents, &GameEvents::alertToShow, this, &MainWindow::alertDialog);
-    connect(gameLoop, &GameLoop::sharedConfigChanged, this, &MainWindow::updateSharedConfigChanged);
-    connect(gameLoop->gameEvents, &GameEvents::sharedConfigChanged, this, &MainWindow::updateSharedConfigChanged);
-    connect(gameLoop, &GameLoop::askToShow, this, &MainWindow::alertOffer);
-    connect(gameLoop->gameEvents, &GameEvents::askToShow, this, &MainWindow::alertOffer);
-    connect(gameLoop, &GameLoop::updateFramerate, this, &MainWindow::updateFramerate);
-
-    /* Create other windows */
-    settingsWindow = new SettingsWindow(c, this);
-    encodeWindow = new EncodeWindow(c, this);
-    inputWindow = new InputWindow(c, this);
-    executableWindow = new ExecutableWindow(c, this);
-    controllerTabWindow = new ControllerTabWindow(c, this);
-    gameInfoWindow = new GameInfoWindow(this);
-    hexViewWindow = new HexViewWindow(this);
-    ramWatchWindow = new RamWatchWindow(c, hexViewWindow, this);
-    ramSearchWindow = new RamSearchWindow(c, hexViewWindow, ramWatchWindow, this);
-    inputEditorWindow = new InputEditorWindow(c, &gameLoop->movie, this);
-    annotationsWindow = new AnnotationsWindow(c, this);
-    timeTraceWindow = new TimeTraceWindow(c, this);
-    luaConsoleWindow = new LuaConsoleWindow(c, this);
-    movieSettingsWindow = new MovieSettingsWindow(c, &gameLoop->movie, this);
-
-    connect(gameLoop, &GameLoop::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);
-    connect(gameLoop->gameEvents, &GameEvents::isInputEditorVisible, inputEditorWindow, &InputEditorWindow::isWindowVisible, Qt::DirectConnection);
-    connect(gameLoop, &GameLoop::getRamWatch, ramWatchWindow->ramWatchView, &RamWatchView::slotGet, Qt::DirectConnection);
-    connect(gameLoop, &GameLoop::getMarkerText, inputEditorWindow->inputEditorView, &InputEditorView::getCurrentMarkerText, Qt::DirectConnection);
-    connect(gameLoop->gameEvents, &GameEvents::savestatePerformed, inputEditorWindow->inputEditorView->inputEditorModel, &InputEditorModel::registerSavestate);
-    connect(gameLoop, &GameLoop::getTimeTrace, timeTraceWindow->timeTraceModel, &TimeTraceModel::addCall);
-    connect(gameLoop, &GameLoop::statusChanged, settingsWindow, &SettingsWindow::update);
+    windowManager = new WindowManager(this, context, gameLoop);
+    connect(gameLoop, &GameLoop::uiChanged, this, &MainWindow::updateUIFrequent, Qt::QueuedConnection);
+    connect(gameLoop, &GameLoop::newFrame, this, &MainWindow::updateUIFrame, Qt::QueuedConnection);
+    connect(gameLoop, &GameLoop::statusChanged, this, &MainWindow::updateStatus, Qt::QueuedConnection);
+    connect(gameLoop, &GameLoop::configChanged, this, &MainWindow::updateUIFromConfig, Qt::QueuedConnection);
+    connect(gameLoop, &GameLoop::alertToShow, this, &MainWindow::alertDialog, Qt::QueuedConnection);
+    connect(gameLoop->gameEvents, &GameEvents::alertToShow, this, &MainWindow::alertDialog, Qt::QueuedConnection);
+    connect(gameLoop, &GameLoop::sharedConfigChanged, this, &MainWindow::updateSharedConfigChanged, Qt::QueuedConnection);
+    connect(gameLoop->gameEvents, &GameEvents::sharedConfigChanged, this, &MainWindow::updateSharedConfigChanged, Qt::QueuedConnection);
+    connect(gameLoop, &GameLoop::askToShow, this, &MainWindow::alertOffer, Qt::QueuedConnection);
+    connect(gameLoop->gameEvents, &GameEvents::askToShow, this, &MainWindow::alertOffer, Qt::QueuedConnection);
+    connect(gameLoop, &GameLoop::updateFramerate, this, &MainWindow::updateFramerate, Qt::QueuedConnection);
+    connect(gameLoop, &GameLoop::isInputEditorVisible, this, &MainWindow::slotSyncInputEditorVisible, Qt::DirectConnection);
+    connect(gameLoop->gameEvents, &GameEvents::isInputEditorVisible, this, &MainWindow::slotSyncInputEditorVisible, Qt::DirectConnection);
+    connect(gameLoop, &GameLoop::getRamWatch, this, &MainWindow::slotFetchRamWatch, Qt::DirectConnection);
+    connect(gameLoop, &GameLoop::getMarkerText, this, &MainWindow::slotFetchMarkerText, Qt::DirectConnection);
+    connect(gameLoop->gameEvents, &GameEvents::savestatePerformed, this, &MainWindow::slotRegisterSavestate, Qt::QueuedConnection);
+    connect(gameLoop, &GameLoop::getTimeTrace, this, &MainWindow::slotAddTimeTrace, Qt::QueuedConnection);
+    connect(gameLoop, &GameLoop::statusChanged, this, &MainWindow::slotUpdateSettingsWindow, Qt::QueuedConnection);
 
     /* Menu */
     createActions();
@@ -492,6 +707,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 
 MainWindow::~MainWindow()
 {
+    delete windowManager;
     delete gameLoop;
 
     if (game_thread.joinable())
@@ -621,19 +837,19 @@ void MainWindow::createMenus()
 
     action = fileMenu->addAction(tr("Open Executable..."), this, &MainWindow::slotBrowseGamePath);
     disabledActionsOnStart.append(action);
-    action = fileMenu->addAction(tr("Executable Options..."), executableWindow, &ExecutableWindow::exec);
+    action = fileMenu->addAction(tr("Executable Options..."), this, [this] { windowManager->executableWindow()->exec(); });
     disabledActionsOnStart.append(action);
 
     /* Settings Menu */
     QMenu *settingsMenu = menuBar()->addMenu(tr("Settings"));
-    settingsMenu->addAction(tr("Runtime..."), settingsWindow, &SettingsWindow::openRuntimeTab);
-    settingsMenu->addAction(tr("Movie..."), settingsWindow, &SettingsWindow::openMovieTab);
-    settingsMenu->addAction(tr("Inputs..."), settingsWindow, &SettingsWindow::openInputTab);
-    settingsMenu->addAction(tr("Audio..."), settingsWindow, &SettingsWindow::openAudioTab);
-    settingsMenu->addAction(tr("Video..."), settingsWindow, &SettingsWindow::openVideoTab);
-    settingsMenu->addAction(tr("Debug..."), settingsWindow, &SettingsWindow::openDebugTab);
-    settingsMenu->addAction(tr("Game Specific..."), settingsWindow, &SettingsWindow::openGameSpecificTab);
-    settingsMenu->addAction(tr("Paths..."), settingsWindow, &SettingsWindow::openPathTab);
+    settingsMenu->addAction(tr("Runtime..."), this, [this] { windowManager->settingsWindow()->openRuntimeTab(); });
+    settingsMenu->addAction(tr("Movie..."), this, [this] { windowManager->settingsWindow()->openMovieTab(); });
+    settingsMenu->addAction(tr("Inputs..."), this, [this] { windowManager->settingsWindow()->openInputTab(); });
+    settingsMenu->addAction(tr("Audio..."), this, [this] { windowManager->settingsWindow()->openAudioTab(); });
+    settingsMenu->addAction(tr("Video..."), this, [this] { windowManager->settingsWindow()->openVideoTab(); });
+    settingsMenu->addAction(tr("Debug..."), this, [this] { windowManager->settingsWindow()->openDebugTab(); });
+    settingsMenu->addAction(tr("Game Specific..."), this, [this] { windowManager->settingsWindow()->openGameSpecificTab(); });
+    settingsMenu->addAction(tr("Paths..."), this, [this] { windowManager->settingsWindow()->openPathTab(); });
 
     /* Movie Menu */
     QMenu *movieMenu = menuBar()->addMenu(tr("Movie"));
@@ -643,10 +859,9 @@ void MainWindow::createMenus()
     disabledActionsOnStart.append(action);
     saveMovieAction = movieMenu->addAction(tr("Save Movie"), this, &MainWindow::slotSaveMovie, QKeySequence("Ctrl+S"));
     saveMovieAction->setEnabled(false);
-    connect(inputEditorWindow->inputEditorView, &InputEditorView::saveMovieRequested, this, &MainWindow::slotSaveMovie);
     exportMovieAction = movieMenu->addAction(tr("Export Movie..."), this, &MainWindow::slotExportMovie);
     exportMovieAction->setEnabled(false);
-    settingsMovieAction = movieMenu->addAction(tr("Movie Settings..."), movieSettingsWindow, &MovieSettingsWindow::exec);
+    settingsMovieAction = movieMenu->addAction(tr("Movie Settings..."), this, [this] { windowManager->movieSettingsWindow()->exec(); });
     settingsMovieAction->setEnabled(false);
     action = movieMenu->addAction(tr("Don't enforce movie settings"), this, [=, this](bool checked){gameLoop->movie.header->skipLoadSettings = checked;});
     action->setCheckable(true);
@@ -654,7 +869,7 @@ void MainWindow::createMenus()
 
     movieMenu->addSeparator();
 
-    annotateMovieAction = movieMenu->addAction(tr("Annotations..."), annotationsWindow, &AnnotationsWindow::show);
+    annotateMovieAction = movieMenu->addAction(tr("Annotations..."), this, [this] { windowManager->showWindow(windowManager->annotationsWindow()); });
     annotateMovieAction->setEnabled(false);
 
     movieMenu->addSeparator();
@@ -665,11 +880,15 @@ void MainWindow::createMenus()
     autoRestartAction->setToolTip("When checked, the game will automatically restart if closed, except when using the Stop button");
     disabledActionsOnStart.append(autoRestartAction);
 
-    movieMenu->addAction(tr("Input Editor..."), inputEditorWindow, &InputEditorWindow::show);
+    movieMenu->addAction(tr("Input Editor..."), this, [this] {
+        InputEditorWindow *window = windowManager->inputEditorWindow();
+        connect(window->inputEditorView, &InputEditorView::saveMovieRequested, this, &MainWindow::slotSaveMovie, Qt::UniqueConnection);
+        windowManager->showWindow(window);
+    });
 
     /* Tools Menu */
     QMenu *toolsMenu = menuBar()->addMenu(tr("Tools"));
-    configEncodeAction = toolsMenu->addAction(tr("Configure encode..."), encodeWindow, &EncodeWindow::exec);
+    configEncodeAction = toolsMenu->addAction(tr("Configure encode..."), this, [this] { windowManager->encodeWindow()->exec(); });
     toggleEncodeAction = toolsMenu->addAction(tr("Start encode"), this, &MainWindow::slotToggleEncode);
     screenshotAction = toolsMenu->addAction(tr("Screenshot..."), this, &MainWindow::slotScreenshot);
 
@@ -696,17 +915,17 @@ void MainWindow::createMenus()
 
     toolsMenu->addSeparator();
 
-    toolsMenu->addAction(tr("Game information..."), gameInfoWindow, &GameInfoWindow::exec);
+    toolsMenu->addAction(tr("Game information..."), this, [this] { windowManager->gameInfoWindow()->exec(); });
 
     toolsMenu->addSeparator();
 
-    toolsMenu->addAction(tr("Ram Search..."), ramSearchWindow, &RamSearchWindow::show);
-    toolsMenu->addAction(tr("Ram Watch..."), ramWatchWindow, &RamWatchWindow::show);
-    toolsMenu->addAction(tr("Hex Edit..."), hexViewWindow, &HexViewWindow::show);
+    toolsMenu->addAction(tr("Ram Search..."), this, [this] { windowManager->showWindow(windowManager->ramSearchWindow()); });
+    toolsMenu->addAction(tr("Ram Watch..."), this, [this] { windowManager->showWindow(windowManager->ramWatchWindow()); });
+    toolsMenu->addAction(tr("Hex Edit..."), this, [this] { windowManager->showWindow(windowManager->hexViewWindow()); });
 
     toolsMenu->addSeparator();
 
-    toolsMenu->addAction(tr("Lua Console..."), luaConsoleWindow, &LuaConsoleWindow::show);
+    toolsMenu->addAction(tr("Lua Console..."), this, [this] { windowManager->showWindow(windowManager->luaConsoleWindow()); });
 
     toolsMenu->addSeparator();
 
@@ -714,19 +933,61 @@ void MainWindow::createMenus()
     busyloopAction->setCheckable(true);
     disabledActionsOnStart.append(busyloopAction);
 
-    toolsMenu->addAction(tr("Time Trace..."), timeTraceWindow, &TimeTraceWindow::show);
+    toolsMenu->addAction(tr("Time Trace..."), this, [this] { windowManager->showWindow(windowManager->timeTraceWindow()); });
 
 
     /* Input Menu */
     QMenu *inputMenu = menuBar()->addMenu(tr("Input"));
     inputMenu->setToolTipsVisible(true);
 
-    inputMenu->addAction(tr("Configure mapping..."), inputWindow, &InputWindow::exec);
+    inputMenu->addAction(tr("Configure mapping..."), this, [this] { windowManager->inputWindow()->exec(); });
 
     mouseModeAction = inputMenu->addAction(tr("Mouse relative mode"), this, LAMBDABOOLSLOT(context->config.sc.mouse_mode_relative));
     mouseModeAction->setCheckable(true);
 
-    inputMenu->addAction(tr("Joystick inputs..."), controllerTabWindow, &ControllerTabWindow::show);
+    inputMenu->addAction(tr("Joystick inputs..."), this, [this] { windowManager->showWindow(windowManager->controllerTabWindow()); });
+}
+
+RamWatchWindow *MainWindow::getRamWatchWindow()
+{
+    return windowManager->ramWatchWindow();
+}
+
+InputEditorWindow *MainWindow::getInputEditorWindow()
+{
+    InputEditorWindow *window = windowManager->inputEditorWindow();
+    connect(window->inputEditorView, &InputEditorView::saveMovieRequested, this, &MainWindow::slotSaveMovie, Qt::UniqueConnection);
+    return window;
+}
+
+void MainWindow::slotSyncInputEditorVisible(bool &visible)
+{
+    visible = windowManager->isInputEditorVisible();
+}
+
+void MainWindow::slotFetchRamWatch(std::string &watch)
+{
+    windowManager->getRamWatch(watch);
+}
+
+void MainWindow::slotFetchMarkerText(std::string &text)
+{
+    windowManager->getMarkerText(text);
+}
+
+void MainWindow::slotRegisterSavestate(int slot, unsigned long long frame)
+{
+    windowManager->registerSavestate(slot, frame);
+}
+
+void MainWindow::slotAddTimeTrace(int type, unsigned long long hash, std::string stacktrace)
+{
+    windowManager->addTimeTrace(type, hash, stacktrace);
+}
+
+void MainWindow::slotUpdateSettingsWindow(int status)
+{
+    windowManager->updateSettingsWindow(status);
 }
 
 void MainWindow::updateStatus(int status)
@@ -811,7 +1072,9 @@ void MainWindow::updateStatus(int status)
                 saveMovieAction->setEnabled(true);
                 exportMovieAction->setEnabled(true);
             }
-            hexViewWindow->start();
+            if (windowManager->existingHexViewWindow()) {
+                windowManager->existingHexViewWindow()->start();
+            }
             break;
         case Context::QUITTING:
             launchGdbButton->setEnabled(false);
@@ -931,17 +1194,21 @@ void MainWindow::updateUIFrequent()
     }
 
     /* Update RAM watch/search */
-    if (ramSearchWindow->isVisible()) {
-        ramSearchWindow->update();
+    if (windowManager->existingRamSearchWindow() && windowManager->existingRamSearchWindow()->isVisible()) {
+        windowManager->existingRamSearchWindow()->update();
     }
-    ramWatchWindow->update();
+    if (windowManager->existingRamWatchWindow()) {
+        windowManager->existingRamWatchWindow()->update();
+    }
 
     /* Update input editor */
-    inputEditorWindow->update();
+    if (windowManager->existingInputEditorWindow()) {
+        windowManager->existingInputEditorWindow()->update();
+    }
 
     /* Update hex viewer */
-    if (hexViewWindow->isVisible()) {
-        hexViewWindow->update();
+    if (windowManager->existingHexViewWindow() && windowManager->existingHexViewWindow()->isVisible()) {
+        windowManager->existingHexViewWindow()->update();
     }
     
     /* Detect if the debugger was detached from the game and allow user to attach again */
@@ -962,11 +1229,13 @@ void MainWindow::updateUIFrame()
     /* Autohold and autofire need to be applied at the beginning of each
      * frame, only if the input editor is visible. It should not apply when
      * rewinding to a previous frame. */
-    if (inputEditorWindow->isVisible() && !context->seek_frame)
+    if (windowManager->isInputEditorVisible() && !context->seek_frame)
         gameLoop->movie.applyAutoHoldFire();
 
     /* Keep all ram watches frozen */
-    ramWatchWindow->update_frozen();
+    if (windowManager->existingRamWatchWindow()) {
+        windowManager->existingRamWatchWindow()->update_frozen();
+    }
 }
 
 void MainWindow::updateMovieParams()
@@ -993,7 +1262,9 @@ void MainWindow::updateMovieParams()
                 movieRecording->setChecked(true);
         }
 
-        annotationsWindow->update();
+        if (windowManager->existingAnnotationsWindow()) {
+            windowManager->existingAnnotationsWindow()->update();
+        }
         saveMovieAction->setEnabled(true);
         exportMovieAction->setEnabled(true);
         settingsMovieAction->setEnabled(true);
@@ -1008,13 +1279,17 @@ void MainWindow::updateMovieParams()
             context->config.sc.recording = SharedConfig::RECORDING_WRITE;
             context->config.sc_modified = true;
         }
-        annotationsWindow->clear();
+        if (windowManager->existingAnnotationsWindow()) {
+            windowManager->existingAnnotationsWindow()->clear();
+        }
         
         saveMovieAction->setEnabled(false);
         exportMovieAction->setEnabled(false);
         settingsMovieAction->setEnabled(false);
     }
-    inputEditorWindow->resetInputs();
+    if (windowManager->existingInputEditorWindow()) {
+        windowManager->existingInputEditorWindow()->resetInputs();
+    }
     movieFrameCount->setText(QString::number(context->config.sc.movie_framecount));
     rerecordCount->setText(QString::number(context->rerecord_count));
     if (authorField->text().toStdString() == "")
@@ -1180,7 +1455,7 @@ void MainWindow::slotLaunch(bool attach_gdb)
     /* Start game */
     context->status = Context::STARTING;
     updateStatus(Context::STARTING);
-    settingsWindow->update(Context::STARTING);
+    slotUpdateSettingsWindow(Context::STARTING);
     game_thread = std::thread{&GameLoop::start, gameLoop};
 }
 
@@ -1207,7 +1482,7 @@ void MainWindow::slotStop()
     if (context->status == Context::ACTIVE) {
         context->status = Context::QUITTING;
         updateStatus(Context::QUITTING);
-        settingsWindow->update(Context::QUITTING);
+        slotUpdateSettingsWindow(Context::QUITTING);
         game_thread.detach();
     }
 }
@@ -1256,11 +1531,21 @@ void MainWindow::slotGamePathChanged()
 
     /* Update the UI accordingly */
     updateUIFromConfig();
-    encodeWindow->update_config();
-    executableWindow->update_config();
-    inputWindow->update();
-    inputEditorWindow->update_config();
-    settingsWindow->loadConfig();
+    if (windowManager->existingEncodeWindow()) {
+        windowManager->existingEncodeWindow()->update_config();
+    }
+    if (windowManager->existingExecutableWindow()) {
+        windowManager->existingExecutableWindow()->update_config();
+    }
+    if (windowManager->existingInputWindow()) {
+        windowManager->existingInputWindow()->update();
+    }
+    if (windowManager->existingInputEditorWindow()) {
+        windowManager->existingInputEditorWindow()->update_config();
+    }
+    if (windowManager->existingSettingsWindow()) {
+        windowManager->existingSettingsWindow()->loadConfig();
+    }
 }
 
 void MainWindow::slotBrowseMoviePath()

@@ -41,6 +41,8 @@ public:
     InputEditorWindow(Context *c, MovieFile *movie, QWidget *parent = Q_NULLPTR);
     void resetInputs();
     QSize sizeHint() const override;
+    void showAnalogInputsWindow();
+    void showInputChangeLogWindow();
 
     /* Update UI elements when config has changed */
     void update();
@@ -48,8 +50,8 @@ public:
     
     InputEditorView *inputEditorView;
     MarkerView *markerView;
-    InputChangeLogWindow* inputChangeLogWindow;
-    AnalogInputsWindow* analogInputsWindow;
+    InputChangeLogWindow* inputChangeLogWindow = nullptr;
+    AnalogInputsWindow* analogInputsWindow = nullptr;
 
 public slots:
     void isWindowVisible(bool &visible);
@@ -58,6 +60,7 @@ public slots:
     
 private:
     Context *context;
+    MovieFile *movie;
     QGroupBox* markerBox;
     QAction* markerPanelAct;
     QAction* scrollingAct;
@@ -67,6 +70,9 @@ private:
     QAction* moveMarkerAct;
     QLabel* statusFrame;
     QProgressBar* statusSeek;
+
+    InputChangeLogWindow *ensureInputChangeLogWindow();
+    AnalogInputsWindow *ensureAnalogInputsWindow();
 };
 
 #endif

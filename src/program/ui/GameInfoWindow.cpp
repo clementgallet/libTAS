@@ -45,7 +45,7 @@ GameInfoWindow::GameInfoWindow(QWidget *parent) : QDialog(parent)
     /* We need connections to the game loop, so we access it through our parent */
     MainWindow *mw = qobject_cast<MainWindow*>(parent);
     if (mw) {
-        connect(mw->gameLoop, &GameLoop::gameInfoChanged, this, &GameInfoWindow::update);
+        connect(mw->gameLoop, &GameLoop::gameInfoChanged, this, &GameInfoWindow::update, Qt::QueuedConnection);
     }
 }
 

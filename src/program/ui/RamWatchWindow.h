@@ -36,13 +36,15 @@ public:
     void update();
     void update_frozen();
 
-    PointerScanWindow *pointerScanWindow;
     RamWatchView *ramWatchView;
 
 private:
     Context *context;
     QString defaultPath; // Latest saved/loaded watch file used at default
     HexViewWindow* hexViewWindow;
+    PointerScanWindow *pointerScanWindow = nullptr;
+
+    PointerScanWindow *ensurePointerScanWindow();
 
 public slots:
 

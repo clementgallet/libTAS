@@ -110,17 +110,31 @@ InputEditorView::InputEditorView(Context* c, MovieFile *m, QWidget *parent) : QT
     insertAct = nullptr;
     connect(selectionModel(), &QItemSelectionModel::selectionChanged, this, &InputEditorView::updateMenu);
 
-    keyDialog = new KeyPressedDialog(c, this);
-    keyDialog->withModifiers = false;
-
-    inputEventWindow = new InputEventWindow(c, movie, this);
-
     currentMarkerText = "";
 
     scrollBarWidth = verticalScrollBar()->sizeHint().width() + 20;
 
     QShortcut* saveShortcut = new QShortcut(QKeySequence("Ctrl+S"), this);
     connect(saveShortcut, &QShortcut::activated, this, &InputEditorView::saveMovieRequested);
+}
+
+KeyPressedDialog *InputEditorView::ensureKeyDialog()
+{
+    if (!keyDialog) {
+        keyDialog = new KeyPressedDialog(context, this);
+        keyDialog->withModifiers = false;
+    }
+
+    return keyDialog;
+}
+
+InputEventWindow *InputEditorView::ensureInputEventWindow()
+{
+    if (!inputEventWindow) {
+        inputEventWindow = new InputEventWindow(context, movie, this);
+    }
+
+    return inputEventWindow;
 }
 
 void InputEditorView::fillMenu(QMenu* frameMenu)
@@ -628,7 +642,7 @@ void InputEditorView::renameLabel()
 void InputEditorView::addInputColumn()
 {
     /* Get an input from the user */
-    keysym_t ks = keyDialog->exec();
+    keysym_t ks = ensureKeyDialog()->exec();
 
     /* Remove the custom modifiers that we added in that function */
     ks = ks & 0xffff;
@@ -796,8 +810,9 @@ void InputEditorView::editEvents()
     if (indexes.count() == 0)
         return;
 
-    inputEventWindow->setFrame(indexes[0].row());
-    inputEventWindow->exec();
+    InputEventWindow *window = ensureInputEventWindow();
+    window->setFrame(indexes[0].row());
+    window->exec();
 }
 
 void InputEditorView::duplicateInput()

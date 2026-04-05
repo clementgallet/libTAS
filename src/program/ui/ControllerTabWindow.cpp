@@ -60,7 +60,7 @@ ControllerTabWindow::ControllerTabWindow(Context* c, QWidget *parent) : QDialog(
         /* If the user press an input that is mapped to a controller button,
          * we must change the corresponding checkbox in this window.
          */
-        connect(mw->gameLoop->gameEvents, &GameEvents::controllerButtonToggled, this, &ControllerTabWindow::slotButtonToggle);
+        connect(mw->gameLoop->gameEvents, &GameEvents::controllerButtonToggled, this, &ControllerTabWindow::slotButtonToggle, Qt::QueuedConnection);
 
         /* When the game loop will send the inputs to the game, we must set
          * the controller inputs in the AllInputs object.
@@ -70,7 +70,7 @@ ControllerTabWindow::ControllerTabWindow(Context* c, QWidget *parent) : QDialog(
         /* When the game loop is playing back a movie and wants to display the
          * controller inputs in this window.
          */
-        connect(mw->gameLoop, &GameLoop::showControllerInputs, this, &ControllerTabWindow::slotGetInputs);
+        connect(mw->gameLoop, &GameLoop::showControllerInputs, this, &ControllerTabWindow::slotGetInputs, Qt::QueuedConnection);
     }
 }
 

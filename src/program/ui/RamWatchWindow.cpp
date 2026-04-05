@@ -81,8 +81,15 @@ RamWatchWindow::RamWatchWindow(Context* c, HexViewWindow* view, QWidget *parent)
     mainLayout->addWidget(buttonBox2);
 
     setLayout(mainLayout);
+}
 
-    pointerScanWindow = new PointerScanWindow(c, this);
+PointerScanWindow *RamWatchWindow::ensurePointerScanWindow()
+{
+    if (!pointerScanWindow) {
+        pointerScanWindow = new PointerScanWindow(context, this);
+    }
+
+    return pointerScanWindow;
 }
 
 void RamWatchWindow::update()
@@ -120,9 +127,12 @@ void RamWatchWindow::slotScanPointer()
     int row = index.row();
 
     /* Fill and show the scan pointer window */
-    pointerScanWindow->addressInput->setText(QString("%1").arg(ramWatchView->ramWatchModel->ramwatches.at(row)->address, 0, 16));
-    pointerScanWindow->type_index = ramWatchView->ramWatchModel->ramwatches.at(row)->value_type;
-    pointerScanWindow->show();
+    PointerScanWindow *window = ensurePointerScanWindow();
+    window->addressInput->setText(QString("%1").arg(ramWatchView->ramWatchModel->ramwatches.at(row)->address, 0, 16));
+    window->type_index = ramWatchView->ramWatchModel->ramwatches.at(row)->value_type;
+    window->show();
+    window->raise();
+    window->activateWindow();
 }
 
 void RamWatchWindow::slotSave()

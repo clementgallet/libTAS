@@ -166,6 +166,7 @@ void PointerScanWindow::slotAdd()
 
     MainWindow *mw = qobject_cast<MainWindow*>(parent()->parent());
     if (mw) {
+        RamWatchWindow *ramWatchWindow = mw->getRamWatchWindow();
         bool ok;
         uintptr_t addr = addressInput->text().toULong(&ok, 16);
         for (int i = 0; i < indexes.count(); i++) {
@@ -182,12 +183,12 @@ void PointerScanWindow::slotAdd()
             if (indexes.count() == 1) {
                 /* If only one selected pointer chain, fill the watch edit window with
                 * parameters from the selected result */
-                mw->ramWatchWindow->ramWatchView->editWindow->fill(watch);
-                mw->ramWatchWindow->ramWatchView->slotAdd();
+                ramWatchWindow->ramWatchView->ensureEditWindow()->fill(watch);
+                ramWatchWindow->ramWatchView->slotAdd();
             }
             else {
                 /* Fill the ram watch window without filling labels */
-                mw->ramWatchWindow->ramWatchView->ramWatchModel->addWatch(std::move(watch));                    
+                ramWatchWindow->ramWatchView->addWatch(std::move(watch));
             }            
         }
     }
