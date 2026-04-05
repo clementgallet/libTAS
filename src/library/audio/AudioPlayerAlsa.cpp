@@ -38,8 +38,12 @@ bool AudioPlayerAlsa::init(AudioContext& ac)
     snd_pcm_format_t format;
     if (ac.outBitDepth == 8)
         format = SND_PCM_FORMAT_U8;
-    if (ac.outBitDepth == 16)
+    else if (ac.outBitDepth == 16)
         format = SND_PCM_FORMAT_S16_LE;
+    else {
+        LOG(LL_ERROR, LCF_SOUND, "Unsupported ALSA output bit depth %d", ac.outBitDepth);
+        return false;
+    }
 
     /* Build a 50 ms silence buffer */
     int sil_bytes = static_cast<int>(0.05 * ac.outFrequency) * ac.outAlignSize;
@@ -47,7 +51,7 @@ bool AudioPlayerAlsa::init(AudioContext& ac)
     if (ac.outBitDepth == 8) {
         silence.assign(sil_bytes, -128);
     }
-    if (ac.outBitDepth == 16) {
+    else {
         silence.assign(sil_bytes, 0x00);
     }
 

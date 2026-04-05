@@ -1353,7 +1353,15 @@ snd_pcm_sframes_t snd_pcm_bytes_to_frames(snd_pcm_t *pcm, ssize_t bytes)
     LOG(LL_TRACE, LCF_SOUND, "%s called with bytes %d", __func__, bytes);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = AudioContext::get().getSource(sourceId);
+    if (!source || source->buffer_queue.empty()) {
+        LOG(LL_ERROR, LCF_SOUND, "Cannot convert bytes to frames without an initialized audio buffer");
+        return -1;
+    }
     auto buffer = source->buffer_queue[0];
+    if (buffer->alignSize <= 0) {
+        LOG(LL_ERROR, LCF_SOUND, "Cannot convert bytes to frames with invalid alignment %d", buffer->alignSize);
+        return -1;
+    }
     return bytes / buffer->alignSize;
 }
 
@@ -1364,7 +1372,15 @@ ssize_t snd_pcm_frames_to_bytes(snd_pcm_t *pcm, snd_pcm_sframes_t frames)
     LOG(LL_TRACE, LCF_SOUND, "%s called with frames %d", __func__, frames);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = AudioContext::get().getSource(sourceId);
+    if (!source || source->buffer_queue.empty()) {
+        LOG(LL_ERROR, LCF_SOUND, "Cannot convert frames to bytes without an initialized audio buffer");
+        return -1;
+    }
     auto buffer = source->buffer_queue[0];
+    if (buffer->alignSize <= 0) {
+        LOG(LL_ERROR, LCF_SOUND, "Cannot convert frames to bytes with invalid alignment %d", buffer->alignSize);
+        return -1;
+    }
     return buffer->alignSize * frames;
 }
 
