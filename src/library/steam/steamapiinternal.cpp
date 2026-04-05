@@ -56,11 +56,11 @@ HSteamPipe SteamAPI_GetHSteamPipe()
 {
     LOGTRACE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamAPI_GetHSteamUser, "steam_api");
-        return orig::SteamAPI_GetHSteamUser();
+        LINK_NAMESPACE(SteamAPI_GetHSteamPipe, "steam_api");
+        return orig::SteamAPI_GetHSteamPipe();
     }
     
-    return true;
+    return 2;
 }
 
 CSteamAPIContext* SteamInternal_ContextInit( CSteamAPIContextInitData *data )

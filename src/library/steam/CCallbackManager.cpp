@@ -4,6 +4,9 @@
 
 #include "logging.h"
 
+#include <climits>
+#include <cstdlib>
+#include <cstring>
 #include <inttypes.h>
 #include <stdint.h>
 #include <forward_list>
@@ -21,7 +24,7 @@ struct call_output
     bool io_failure : true;
     SteamAPICall_t api_call;
     void *data;
-    int data_size;
+    size_t data_size;
 };
 
 struct api_call_result
@@ -118,14 +121,23 @@ void DispatchCallbackOutput(enum steam_callback_type type, void *data, size_t da
     if (type >= STEAM_CALLBACK_TYPE_MAX)
         return;
 
+    if (data_size > INT_MAX) {
+        LOG(LL_ERROR, LCF_STEAM, "Callback %u payload too large: %zu bytes", type, data_size);
+        return;
+    }
+
     out.type = type;
     out.is_api_call = false;
     out.is_handled = false;
     out.io_failure = false;
     out.api_call = 0;
     out.data = nullptr;
-    if (data) {
+    if (data && data_size > 0) {
         out.data = malloc(data_size);
+        if (!out.data) {
+            LOG(LL_ERROR, LCF_STEAM, "Failed to allocate %zu bytes for callback %u", data_size, type);
+            return;
+        }
         memcpy(out.data, data, data_size);
     }
     out.data_size = data_size;
@@ -147,14 +159,23 @@ void DispatchApiCallResultOutput(SteamAPICall_t api_call, enum steam_callback_ty
     if (type >= STEAM_CALLBACK_TYPE_MAX)
         return;
 
+    if (data_size > INT_MAX) {
+        LOG(LL_ERROR, LCF_STEAM, "Call result #%" PRIu64 " payload too large: %zu bytes", api_call, data_size);
+        return;
+    }
+
     out.type = type;
     out.is_api_call = true;
     out.is_handled = false;
     out.io_failure = io_failure;
     out.api_call = api_call;
     out.data = nullptr;
-    if (data) {
+    if (data && data_size > 0) {
         out.data = malloc(data_size);
+        if (!out.data) {
+            LOG(LL_ERROR, LCF_STEAM, "Failed to allocate %zu bytes for call result #%" PRIu64, data_size, api_call);
+            return;
+        }
         memcpy(out.data, data, data_size);
     }
     out.data_size = data_size;
@@ -183,7 +204,7 @@ static bool ApiCallResultOutput(bool only_check, SteamAPICall_t api_call, void *
             continue;
             
         if (!only_check) {
-            if (it->data_size != data_size || it->type != type_expected)
+            if (data_size < 0 || it->data_size != static_cast<size_t>(data_size) || it->type != type_expected)
                 continue;
 
             if (data)
@@ -237,9 +258,9 @@ static bool HandleCallbackOutput(struct call_output *out)
     for (auto it = callbacks[out->type].begin(); it != callbacks[out->type].end(); it++) {
         CCallbackBase *callback = *it;
         int size = callback->GetCallbackSizeBytes();
-        if (size != out->data_size)
+        if (size < 0 || static_cast<size_t>(size) != out->data_size)
         {
-            LOG(LL_ERROR, LCF_STEAM, "Callback %d data size mismatch: expected %u != got %u", out->type, out->data_size, size);
+            LOG(LL_ERROR, LCF_STEAM, "Callback %d data size mismatch: expected %zu != got %d", out->type, out->data_size, size);
             continue;
         }
 
@@ -278,8 +299,8 @@ static bool HandleApiCallResultOutput(struct call_output *out)
             continue;
 
         int size = callback->GetCallbackSizeBytes();
-        if (size != out->data_size) {
-            LOG(LL_ERROR, LCF_STEAM, "   Call result #%" PRIu64 " %u data size mismatch: expected %u != got %u", out->api_call, out->type, out->data_size, size);
+        if (size < 0 || static_cast<size_t>(size) != out->data_size) {
+            LOG(LL_ERROR, LCF_STEAM, "   Call result #%" PRIu64 " %u data size mismatch: expected %zu != got %d", out->api_call, out->type, out->data_size, size);
             continue;
         }
 
@@ -309,18 +330,21 @@ void Run(void)
         if (it == call_outputs.end())
             break;        
 
-        struct call_output out = *it;
-
-        if (out.type >= STEAM_CALLBACK_TYPE_MAX)
+        if (it->type >= STEAM_CALLBACK_TYPE_MAX)
             continue;
 
-        if (out.is_api_call)
-            HandleApiCallResultOutput(&out);
+        if (it->is_api_call)
+            HandleApiCallResultOutput(&(*it));
         else
-            HandleCallbackOutput(&out);
+            HandleCallbackOutput(&(*it));
 
-        if (!out.is_handled)
+        if (!it->is_handled)
             continue;
+
+        if (it->data) {
+            free(it->data);
+            it->data = nullptr;
+        }
 
         call_outputs.erase_after(prev_it);
         it = prev_it;

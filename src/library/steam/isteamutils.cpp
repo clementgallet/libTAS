@@ -19,6 +19,7 @@
 
 #include "isteamutils.h"
 
+#include "CCallbackManager.h"
 #include "logging.h"
 
 namespace libtas {
@@ -92,7 +93,7 @@ void ISteamUtils::SetOverlayNotificationPosition( ENotificationPosition eNotific
 bool ISteamUtils::IsAPICallCompleted( SteamAPICall_t hSteamAPICall, bool *pbFailed )
 {
     LOGTRACE(LCF_STEAM);
-	return true;
+    return CCallbackManager::ApiCallResultIsOutputAvailable(hSteamAPICall, pbFailed);
 }
 
 ESteamAPICallFailure ISteamUtils::GetAPICallFailureReason( SteamAPICall_t hSteamAPICall )
@@ -104,7 +105,10 @@ ESteamAPICallFailure ISteamUtils::GetAPICallFailureReason( SteamAPICall_t hSteam
 bool ISteamUtils::GetAPICallResult( SteamAPICall_t hSteamAPICall, void *pCallback, int cubCallback, int iCallbackExpected, bool *pbFailed )
 {
     LOGTRACE(LCF_STEAM);
-	return true;
+    if (iCallbackExpected < 0 || iCallbackExpected >= STEAM_CALLBACK_TYPE_MAX)
+        return false;
+
+    return CCallbackManager::ApiCallResultGetOutput(hSteamAPICall, pCallback, cubCallback, static_cast<steam_callback_type>(iCallbackExpected), pbFailed);
 }
 
 void ISteamUtils::RunFrame()

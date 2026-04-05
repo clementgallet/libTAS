@@ -472,8 +472,15 @@ void SteamAPI_ManualDispatch_FreeLastCallback( HSteamPipe hSteamPipe )
 bool SteamAPI_ManualDispatch_GetAPICallResult( HSteamPipe hSteamPipe, SteamAPICall_t hSteamAPICall, void *pCallback, int cubCallback, int iCallbackExpected, bool *pbFailed )
 {
     LOGTRACE(LCF_STEAM);
-    if (Global::shared_config.virtual_steam)
-        return false;
+    if (pbFailed)
+        *pbFailed = false;
+
+    if (Global::shared_config.virtual_steam) {
+        if (iCallbackExpected < 0 || iCallbackExpected >= STEAM_CALLBACK_TYPE_MAX)
+            return false;
+
+        return CCallbackManager::ApiCallResultGetOutput(hSteamAPICall, pCallback, cubCallback, static_cast<steam_callback_type>(iCallbackExpected), pbFailed);
+    }
         
     LINK_NAMESPACE(SteamAPI_ManualDispatch_GetAPICallResult, "steam_api");
     return orig::SteamAPI_ManualDispatch_GetAPICallResult(hSteamPipe, hSteamAPICall, pCallback, cubCallback, iCallbackExpected, pbFailed);

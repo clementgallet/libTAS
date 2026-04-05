@@ -21,6 +21,8 @@
 
 #include "logging.h"
 
+#include <cstring>
+
 namespace libtas {
 
 bool ISteamApps::BIsSubscribed()
@@ -92,6 +94,15 @@ int ISteamApps::GetDLCCount()
 bool ISteamApps::BGetDLCDataByIndex( int iDLC, AppId_t *pAppID, bool *pbAvailable, char *pchName, int cchNameBufferSize )
 {
     LOGTRACE(LCF_STEAM);
+
+    if (pAppID)
+        *pAppID = 0;
+    if (pbAvailable)
+        *pbAvailable = false;
+    if (pchName && cchNameBufferSize > 0) {
+        pchName[0] = '\0';
+    }
+
 	return false;
 }
 
@@ -113,7 +124,11 @@ void ISteamApps::RequestAppProofOfPurchaseKey( AppId_t nAppID )
 bool ISteamApps::GetCurrentBetaName( char *pchName, int cchNameBufferSize )
 {
     LOGTRACE(LCF_STEAM);
+    if (pchName == nullptr || cchNameBufferSize <= 0)
+        return false;
+
     strncpy(pchName, "public", cchNameBufferSize);
+	 pchName[cchNameBufferSize-1] = '\0';
 	return true;
 }
 
@@ -126,12 +141,18 @@ bool ISteamApps::MarkContentCorrupt( bool bMissingFilesOnly )
 unsigned int ISteamApps::GetInstalledDepots( AppId_t appID, DepotId_t *pvecDepots, unsigned int cMaxDepots )
 {
     LOGTRACE(LCF_STEAM);
+    if (pvecDepots && cMaxDepots > 0) {
+        std::memset(pvecDepots, 0, sizeof(*pvecDepots) * cMaxDepots);
+    }
 	return 0;
 }
 
 unsigned int ISteamApps::GetAppInstallDir( AppId_t appID, char *pchFolder, unsigned int cchFolderBufferSize )
 {
     LOGTRACE(LCF_STEAM | LCF_TODO);
+    if (pchFolder && cchFolderBufferSize > 0) {
+        pchFolder[0] = '\0';
+    }
 	return 0;
 }
 
@@ -156,6 +177,11 @@ const char *ISteamApps::GetLaunchQueryParam( const char *pchKey )
 bool ISteamApps::GetDlcDownloadProgress( AppId_t nAppID, uint64_t *punBytesDownloaded, uint64_t *punBytesTotal )
 {
     LOGTRACE(LCF_STEAM);
+    if (punBytesDownloaded)
+        *punBytesDownloaded = 0;
+    if (punBytesTotal) {
+        *punBytesTotal = 0;
+    }
 	return true;
 }
 
