@@ -23,7 +23,6 @@
 #include "RamWatchView.h"
 #include "RamWatchModel.h"
 #include "RamWatchEditWindow.h"
-#include "MainWindow.h"
 
 #include "Context.h"
 #include "ramsearch/CompareOperations.h"
@@ -42,7 +41,7 @@
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
 
-PointerScanWindow::PointerScanWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
+PointerScanWindow::PointerScanWindow(Context* c, RamWatchWindow *ramWatchWindow, QWidget *parent) : QDialog(parent), context(c), ramWatchWindow(ramWatchWindow)
 {
     setWindowTitle("Pointer Scan");
 
@@ -164,32 +163,28 @@ void PointerScanWindow::slotAdd()
         return;
     }
 
-    MainWindow *mw = qobject_cast<MainWindow*>(parent()->parent());
-    if (mw) {
-        RamWatchWindow *ramWatchWindow = mw->getRamWatchWindow();
-        bool ok;
-        uintptr_t addr = addressInput->text().toULong(&ok, 16);
-        for (int i = 0; i < indexes.count(); i++) {
-            const QModelIndex sourceIndex = proxyModel->mapToSource(indexes[i]);
-            const std::pair<uintptr_t, std::vector<int>> &chain = pointerScanModel->pointer_chains.at(sourceIndex.row());
-            std::unique_ptr<RamWatchDetailed> watch(new RamWatchDetailed(addr, type_index));
+    bool ok;
+    uintptr_t addr = addressInput->text().toULong(&ok, 16);
+    for (int i = 0; i < indexes.count(); i++) {
+        const QModelIndex sourceIndex = proxyModel->mapToSource(indexes[i]);
+        const std::pair<uintptr_t, std::vector<int>> &chain = pointerScanModel->pointer_chains.at(sourceIndex.row());
+        std::unique_ptr<RamWatchDetailed> watch(new RamWatchDetailed(addr, type_index));
 
-            watch->is_pointer = true;
-            watch->base_address = chain.first;
-            watch->base_file = BaseAddresses::getFileAndOffset(chain.first, watch->base_file_offset);
-            watch->pointer_offsets = chain.second;
-            std::reverse(watch->pointer_offsets.begin(), watch->pointer_offsets.end());
-            
-            if (indexes.count() == 1) {
-                /* If only one selected pointer chain, fill the watch edit window with
-                * parameters from the selected result */
-                ramWatchWindow->ramWatchView->ensureEditWindow()->fill(watch);
-                ramWatchWindow->ramWatchView->slotAdd();
-            }
-            else {
-                /* Fill the ram watch window without filling labels */
-                ramWatchWindow->ramWatchView->addWatch(std::move(watch));
-            }            
+        watch->is_pointer = true;
+        watch->base_address = chain.first;
+        watch->base_file = BaseAddresses::getFileAndOffset(chain.first, watch->base_file_offset);
+        watch->pointer_offsets = chain.second;
+        std::reverse(watch->pointer_offsets.begin(), watch->pointer_offsets.end());
+
+        if (indexes.count() == 1) {
+            /* If only one selected pointer chain, fill the watch edit window with
+             * parameters from the selected result */
+            ramWatchWindow->ramWatchView->ensureEditWindow()->fill(watch);
+            ramWatchWindow->ramWatchView->slotAdd();
+        }
+        else {
+            /* Fill the ram watch window without filling labels */
+            ramWatchWindow->ramWatchView->addWatch(std::move(watch));
         }
     }
 }

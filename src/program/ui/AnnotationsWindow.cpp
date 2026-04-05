@@ -18,7 +18,6 @@
  */
 
 #include "AnnotationsWindow.h"
-#include "MainWindow.h"
 
 #include "Context.h"
 #include "movie/MovieFile.h"
@@ -26,7 +25,7 @@
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QVBoxLayout>
 
-AnnotationsWindow::AnnotationsWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
+AnnotationsWindow::AnnotationsWindow(Context* c, MovieFile *m, QWidget *parent) : QDialog(parent), context(c), movie(m)
 {
     setWindowTitle("Annotations");
 
@@ -44,14 +43,6 @@ AnnotationsWindow::AnnotationsWindow(Context* c, QWidget *parent) : QDialog(pare
     mainLayout->addWidget(buttonBox);
 
     setLayout(mainLayout);
-
-    /* Get movie object */
-    movie = nullptr;
-    MainWindow *mw = qobject_cast<MainWindow*>(parent);
-    if (mw) {
-        movie = &mw->gameLoop->movie;
-    }
-
     update();
 }
 

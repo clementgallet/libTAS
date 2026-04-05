@@ -18,7 +18,6 @@
  */
 
 #include "GameInfoWindow.h"
-#include "MainWindow.h"
 
 #include <QtWidgets/QFormLayout>
 
@@ -41,12 +40,6 @@ GameInfoWindow::GameInfoWindow(QWidget *parent) : QDialog(parent)
     setLayout(layout);
 
     qRegisterMetaType<GameInfo>("GameInfo");
-
-    /* We need connections to the game loop, so we access it through our parent */
-    MainWindow *mw = qobject_cast<MainWindow*>(parent);
-    if (mw) {
-        connect(mw->gameLoop, &GameLoop::gameInfoChanged, this, &GameInfoWindow::update, Qt::QueuedConnection);
-    }
 }
 
 void GameInfoWindow::update(GameInfo game_info)

@@ -70,6 +70,8 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+    friend class WindowManager;
+
 public:
     MainWindow(Context* c);
     ~MainWindow();

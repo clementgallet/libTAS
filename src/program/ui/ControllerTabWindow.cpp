@@ -20,12 +20,9 @@
 #include "ControllerTabWindow.h"
 #include "ControllerAxisWidget.h"
 #include "ControllerWidget.h"
-#include "MainWindow.h"
 #include "qtutils.h"
 
 #include "Context.h"
-#include "GameLoop.h"
-#include "GameEvents.h"
 #include "../shared/inputs/SingleInput.h"
 #include "../shared/inputs/AllInputs.h"
 #include "../shared/inputs/ControllerInputs.h"
@@ -35,6 +32,7 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QTabWidget>
 
 ControllerTabWindow::ControllerTabWindow(Context* c, QWidget *parent) : QDialog(parent), context(c)
 {
@@ -53,25 +51,6 @@ ControllerTabWindow::ControllerTabWindow(Context* c, QWidget *parent) : QDialog(
     setLayout(mainLayout);
 
     qRegisterMetaType<ControllerInputs>("ControllerInputs");
-
-    /* We need connections to the game loop, so we access it through our parent */
-    MainWindow *mw = qobject_cast<MainWindow*>(parent);
-    if (mw) {
-        /* If the user press an input that is mapped to a controller button,
-         * we must change the corresponding checkbox in this window.
-         */
-        connect(mw->gameLoop->gameEvents, &GameEvents::controllerButtonToggled, this, &ControllerTabWindow::slotButtonToggle, Qt::QueuedConnection);
-
-        /* When the game loop will send the inputs to the game, we must set
-         * the controller inputs in the AllInputs object.
-         */
-        connect(mw->gameLoop, &GameLoop::fillControllerInputs, this, &ControllerTabWindow::slotSetInputs, Qt::DirectConnection);
-
-        /* When the game loop is playing back a movie and wants to display the
-         * controller inputs in this window.
-         */
-        connect(mw->gameLoop, &GameLoop::showControllerInputs, this, &ControllerTabWindow::slotGetInputs, Qt::QueuedConnection);
-    }
 }
 
 void ControllerTabWindow::slotButtonToggle(int id, int button, bool pressed)

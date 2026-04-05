@@ -86,7 +86,7 @@ RamWatchWindow::RamWatchWindow(Context* c, HexViewWindow* view, QWidget *parent)
 PointerScanWindow *RamWatchWindow::ensurePointerScanWindow()
 {
     if (!pointerScanWindow) {
-        pointerScanWindow = new PointerScanWindow(context, this);
+        pointerScanWindow = new PointerScanWindow(context, this, this);
     }
 
     return pointerScanWindow;

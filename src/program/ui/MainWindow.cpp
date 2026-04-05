@@ -35,6 +35,7 @@
 #include "TimeTraceModel.h"
 #include "LuaConsoleWindow.h"
 #include "MovieSettingsWindow.h"
+#include "WindowManager.h"
 #include "ErrorChecking.h"
 #include "settings/SettingsWindow.h"
 
@@ -129,237 +130,6 @@ do {\
     setListFromRadio(group, parameter);\
     context->config.sc_modified = true;\
 }\
-
-class WindowManager {
-public:
-    WindowManager(MainWindow *owner, Context *context, GameLoop *gameLoop)
-        : owner(owner), context(context), gameLoop(gameLoop)
-    {
-    }
-
-    SettingsWindow *settingsWindow()
-    {
-        if (!settingsWindow_) {
-            settingsWindow_ = new SettingsWindow(context, owner);
-            settingsWindow_->loadConfig();
-            settingsWindow_->update(context->status);
-        }
-
-        return settingsWindow_;
-    }
-
-    EncodeWindow *encodeWindow()
-    {
-        if (!encodeWindow_) {
-            encodeWindow_ = new EncodeWindow(context, owner);
-            encodeWindow_->update_config();
-        }
-
-        return encodeWindow_;
-    }
-
-    InputWindow *inputWindow()
-    {
-        if (!inputWindow_) {
-            inputWindow_ = new InputWindow(context, owner);
-            inputWindow_->update();
-        }
-
-        return inputWindow_;
-    }
-
-    ExecutableWindow *executableWindow()
-    {
-        if (!executableWindow_) {
-            executableWindow_ = new ExecutableWindow(context, owner);
-            executableWindow_->update_config();
-        }
-
-        return executableWindow_;
-    }
-
-    ControllerTabWindow *controllerTabWindow()
-    {
-        if (!controllerTabWindow_) {
-            controllerTabWindow_ = new ControllerTabWindow(context, owner);
-        }
-
-        return controllerTabWindow_;
-    }
-
-    GameInfoWindow *gameInfoWindow()
-    {
-        if (!gameInfoWindow_) {
-            gameInfoWindow_ = new GameInfoWindow(owner);
-        }
-
-        return gameInfoWindow_;
-    }
-
-    HexViewWindow *hexViewWindow()
-    {
-        if (!hexViewWindow_) {
-            hexViewWindow_ = new HexViewWindow(owner);
-            if (context->status != Context::INACTIVE) {
-                hexViewWindow_->start();
-            }
-        }
-
-        return hexViewWindow_;
-    }
-
-    RamWatchWindow *ramWatchWindow()
-    {
-        if (!ramWatchWindow_) {
-            ramWatchWindow_ = new RamWatchWindow(context, hexViewWindow(), owner);
-        }
-
-        return ramWatchWindow_;
-    }
-
-    RamSearchWindow *ramSearchWindow()
-    {
-        if (!ramSearchWindow_) {
-            ramSearchWindow_ = new RamSearchWindow(context, hexViewWindow(), ramWatchWindow(), owner);
-        }
-
-        return ramSearchWindow_;
-    }
-
-    InputEditorWindow *inputEditorWindow()
-    {
-        if (!inputEditorWindow_) {
-            inputEditorWindow_ = new InputEditorWindow(context, &gameLoop->movie, owner);
-            inputEditorWindow_->resetInputs();
-            inputEditorWindow_->update();
-        }
-
-        return inputEditorWindow_;
-    }
-
-    AnnotationsWindow *annotationsWindow()
-    {
-        if (!annotationsWindow_) {
-            annotationsWindow_ = new AnnotationsWindow(context, owner);
-            if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
-                annotationsWindow_->update();
-            }
-        }
-
-        return annotationsWindow_;
-    }
-
-    TimeTraceWindow *timeTraceWindow()
-    {
-        if (!timeTraceWindow_) {
-            timeTraceWindow_ = new TimeTraceWindow(context, owner);
-        }
-
-        return timeTraceWindow_;
-    }
-
-    LuaConsoleWindow *luaConsoleWindow()
-    {
-        if (!luaConsoleWindow_) {
-            luaConsoleWindow_ = new LuaConsoleWindow(context, owner);
-        }
-
-        return luaConsoleWindow_;
-    }
-
-    MovieSettingsWindow *movieSettingsWindow()
-    {
-        if (!movieSettingsWindow_) {
-            movieSettingsWindow_ = new MovieSettingsWindow(context, &gameLoop->movie, owner);
-            movieSettingsWindow_->loadConfig();
-        }
-
-        return movieSettingsWindow_;
-    }
-
-    SettingsWindow *existingSettingsWindow() const { return settingsWindow_; }
-    EncodeWindow *existingEncodeWindow() const { return encodeWindow_; }
-    InputWindow *existingInputWindow() const { return inputWindow_; }
-    ExecutableWindow *existingExecutableWindow() const { return executableWindow_; }
-    RamSearchWindow *existingRamSearchWindow() const { return ramSearchWindow_; }
-    RamWatchWindow *existingRamWatchWindow() const { return ramWatchWindow_; }
-    InputEditorWindow *existingInputEditorWindow() const { return inputEditorWindow_; }
-    AnnotationsWindow *existingAnnotationsWindow() const { return annotationsWindow_; }
-    HexViewWindow *existingHexViewWindow() const { return hexViewWindow_; }
-
-    void showWindow(QWidget *window)
-    {
-        window->show();
-        window->raise();
-        window->activateWindow();
-    }
-
-    bool isInputEditorVisible() const
-    {
-        return inputEditorWindow_ && inputEditorWindow_->isVisible();
-    }
-
-    void getRamWatch(std::string &watch) const
-    {
-        if (ramWatchWindow_) {
-            ramWatchWindow_->ramWatchView->slotGet(watch);
-        }
-        else {
-            watch.clear();
-        }
-    }
-
-    void getMarkerText(std::string &text) const
-    {
-        if (inputEditorWindow_) {
-            inputEditorWindow_->inputEditorView->getCurrentMarkerText(text);
-        }
-        else {
-            text.clear();
-        }
-    }
-
-    void registerSavestate(int slot, unsigned long long frame)
-    {
-        if (inputEditorWindow_) {
-            inputEditorWindow_->inputEditorView->inputEditorModel->registerSavestate(slot, frame);
-        }
-    }
-
-    void addTimeTrace(int type, unsigned long long hash, std::string stacktrace)
-    {
-        if (timeTraceWindow_) {
-            timeTraceWindow_->timeTraceModel->addCall(type, hash, stacktrace);
-        }
-    }
-
-    void updateSettingsWindow(int status)
-    {
-        if (settingsWindow_) {
-            settingsWindow_->update(status);
-        }
-    }
-
-private:
-    MainWindow *owner;
-    Context *context;
-    GameLoop *gameLoop;
-
-    SettingsWindow *settingsWindow_ = nullptr;
-    EncodeWindow *encodeWindow_ = nullptr;
-    InputWindow *inputWindow_ = nullptr;
-    ExecutableWindow *executableWindow_ = nullptr;
-    ControllerTabWindow *controllerTabWindow_ = nullptr;
-    GameInfoWindow *gameInfoWindow_ = nullptr;
-    RamSearchWindow *ramSearchWindow_ = nullptr;
-    RamWatchWindow *ramWatchWindow_ = nullptr;
-    InputEditorWindow *inputEditorWindow_ = nullptr;
-    AnnotationsWindow *annotationsWindow_ = nullptr;
-    TimeTraceWindow *timeTraceWindow_ = nullptr;
-    LuaConsoleWindow *luaConsoleWindow_ = nullptr;
-    MovieSettingsWindow *movieSettingsWindow_ = nullptr;
-    HexViewWindow *hexViewWindow_ = nullptr;
-};
 
 MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 {
@@ -869,7 +639,7 @@ void MainWindow::createMenus()
 
     movieMenu->addSeparator();
 
-    annotateMovieAction = movieMenu->addAction(tr("Annotations..."), this, [this] { windowManager->showWindow(windowManager->annotationsWindow()); });
+    annotateMovieAction = movieMenu->addAction(tr("Annotations..."), this, [this] { windowManager->showAnnotationsWindow(); });
     annotateMovieAction->setEnabled(false);
 
     movieMenu->addSeparator();
@@ -880,11 +650,7 @@ void MainWindow::createMenus()
     autoRestartAction->setToolTip("When checked, the game will automatically restart if closed, except when using the Stop button");
     disabledActionsOnStart.append(autoRestartAction);
 
-    movieMenu->addAction(tr("Input Editor..."), this, [this] {
-        InputEditorWindow *window = windowManager->inputEditorWindow();
-        connect(window->inputEditorView, &InputEditorView::saveMovieRequested, this, &MainWindow::slotSaveMovie, Qt::UniqueConnection);
-        windowManager->showWindow(window);
-    });
+    movieMenu->addAction(tr("Input Editor..."), this, [this] { windowManager->showInputEditorWindow(); });
 
     /* Tools Menu */
     QMenu *toolsMenu = menuBar()->addMenu(tr("Tools"));
@@ -919,13 +685,13 @@ void MainWindow::createMenus()
 
     toolsMenu->addSeparator();
 
-    toolsMenu->addAction(tr("Ram Search..."), this, [this] { windowManager->showWindow(windowManager->ramSearchWindow()); });
-    toolsMenu->addAction(tr("Ram Watch..."), this, [this] { windowManager->showWindow(windowManager->ramWatchWindow()); });
-    toolsMenu->addAction(tr("Hex Edit..."), this, [this] { windowManager->showWindow(windowManager->hexViewWindow()); });
+    toolsMenu->addAction(tr("Ram Search..."), this, [this] { windowManager->showRamSearchWindow(); });
+    toolsMenu->addAction(tr("Ram Watch..."), this, [this] { windowManager->showRamWatchWindow(); });
+    toolsMenu->addAction(tr("Hex Edit..."), this, [this] { windowManager->showHexViewWindow(); });
 
     toolsMenu->addSeparator();
 
-    toolsMenu->addAction(tr("Lua Console..."), this, [this] { windowManager->showWindow(windowManager->luaConsoleWindow()); });
+    toolsMenu->addAction(tr("Lua Console..."), this, [this] { windowManager->showLuaConsoleWindow(); });
 
     toolsMenu->addSeparator();
 
@@ -933,7 +699,7 @@ void MainWindow::createMenus()
     busyloopAction->setCheckable(true);
     disabledActionsOnStart.append(busyloopAction);
 
-    toolsMenu->addAction(tr("Time Trace..."), this, [this] { windowManager->showWindow(windowManager->timeTraceWindow()); });
+    toolsMenu->addAction(tr("Time Trace..."), this, [this] { windowManager->showTimeTraceWindow(); });
 
 
     /* Input Menu */
@@ -945,7 +711,7 @@ void MainWindow::createMenus()
     mouseModeAction = inputMenu->addAction(tr("Mouse relative mode"), this, LAMBDABOOLSLOT(context->config.sc.mouse_mode_relative));
     mouseModeAction->setCheckable(true);
 
-    inputMenu->addAction(tr("Joystick inputs..."), this, [this] { windowManager->showWindow(windowManager->controllerTabWindow()); });
+    inputMenu->addAction(tr("Joystick inputs..."), this, [this] { windowManager->showControllerTabWindow(); });
 }
 
 RamWatchWindow *MainWindow::getRamWatchWindow()
@@ -955,9 +721,7 @@ RamWatchWindow *MainWindow::getRamWatchWindow()
 
 InputEditorWindow *MainWindow::getInputEditorWindow()
 {
-    InputEditorWindow *window = windowManager->inputEditorWindow();
-    connect(window->inputEditorView, &InputEditorView::saveMovieRequested, this, &MainWindow::slotSaveMovie, Qt::UniqueConnection);
-    return window;
+    return windowManager->inputEditorWindow();
 }
 
 void MainWindow::slotSyncInputEditorVisible(bool &visible)
