@@ -211,7 +211,8 @@ struct dirent *readdir (DIR *dirp)
                 dir.d_type = DT_REG;
             }
             
-            strncpy(dir.d_name, filename.c_str(), 255);
+            strncpy(dir.d_name, filename.c_str(), sizeof(dir.d_name)-1);
+            dir.d_name[sizeof(dir.d_name)-1] = '\0';
             LOG(LL_DEBUG, LCF_FILEIO, "   return savefile %s", dir.d_name);
             return &dir;
         }
@@ -289,7 +290,8 @@ struct dirent64 *readdir64 (DIR *dirp)
                 dir.d_type = DT_REG;
             }
             
-            strncpy(dir.d_name, filename.c_str(), 255);
+            strncpy(dir.d_name, filename.c_str(), sizeof(dir.d_name)-1);
+            dir.d_name[sizeof(dir.d_name)-1] = '\0';
             LOG(LL_DEBUG, LCF_FILEIO, "   return savefile %s", dir.d_name);
             return &dir;
         }
@@ -365,7 +367,8 @@ int readdir_r (DIR *dirp, struct dirent *entry, struct dirent **result)
                 entry->d_type = DT_REG;                    
             }
             
-            strncpy(entry->d_name, filename.c_str(), 255);
+            strncpy(entry->d_name, filename.c_str(), sizeof(entry->d_name)-1);
+            entry->d_name[sizeof(entry->d_name)-1] = '\0';
             *result = entry;
             LOG(LL_DEBUG, LCF_FILEIO, "   return savefile %s", entry->d_name);
             return 0;
@@ -440,7 +443,8 @@ int readdir64_r (DIR *dirp, struct dirent64 *entry, struct dirent64 **result)
                 entry->d_type = DT_REG;                    
             }
             
-            strncpy(entry->d_name, filename.c_str(), 255);
+            strncpy(entry->d_name, filename.c_str(), sizeof(entry->d_name)-1);
+            entry->d_name[sizeof(entry->d_name)-1] = '\0';
             *result = entry;
             LOG(LL_DEBUG, LCF_FILEIO, "   return savefile %s", entry->d_name);
             return 0;

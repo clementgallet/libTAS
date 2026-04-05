@@ -42,9 +42,10 @@ namespace libtas {
 SaveStateLoading::SaveStateLoading(const char* pagemappath, const char* pagespath)
 {
     queued_size = 0;
+    pmfd = -1;
+    pfd = -1;
 
     if (pagemappath[0] == '\0') {
-        pmfd = -1;
         return;
     }
 

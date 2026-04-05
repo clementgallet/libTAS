@@ -126,18 +126,22 @@ void Checkpoint::setSavestatePath(std::string path)
 {
     std::string pmpath = path + ".pm";
     strncpy(pagemappath, pmpath.c_str(), 1023);
+    pagemappath[1023] = '\0';
 
     std::string ppath = path + ".p";
     strncpy(pagespath, ppath.c_str(), 1023);
+    pagespath[1023] = '\0';
 }
 
 void Checkpoint::setBaseSavestatePath(std::string path)
 {
     std::string pmpath = path + ".pm";
     strncpy(basepagemappath, pmpath.c_str(), 1023);
+    basepagemappath[1023] = '\0';
 
     std::string ppath = path + ".p";
     strncpy(basepagespath, ppath.c_str(), 1023);
+    basepagespath[1023] = '\0';
 }
 
 void Checkpoint::setSavestateIndex(int index)
