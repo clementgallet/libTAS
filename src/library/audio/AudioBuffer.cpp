@@ -80,17 +80,29 @@ void AudioBuffer::update(void)
         case SAMPLE_FMT_S32:
         case SAMPLE_FMT_FLT:
         case SAMPLE_FMT_DBL:
-            sampleSize = size / alignSize;
+            if (alignSize <= 0) {
+                LOG(LL_ERROR, LCF_SOUND, "Invalid audio alignment for format %d, channels %d, bit depth %d", format, nbChannels, bitDepth);
+                sampleSize = 0;
+            }
+            else {
+                sampleSize = size / alignSize;
+            }
             break;
         case SAMPLE_FMT_MSADPCM:
 
             /* Number of bytes of a block */
             blockSize = nbChannels * (7 + (blockSamples - 2) / 2);
 
-            sampleSize = blockSamples * (size / blockSize);
-            if ((size % blockSize) >= (7 * nbChannels))
-                /* We have an incomplete block */
-                sampleSize += 2 + ((size % blockSize)/nbChannels - 7) * 2;
+            if (blockSize <= 0 || nbChannels <= 0) {
+                LOG(LL_ERROR, LCF_SOUND, "Invalid MSADPCM block geometry, channels %d, block samples %d", nbChannels, blockSamples);
+                sampleSize = 0;
+            }
+            else {
+                sampleSize = blockSamples * (size / blockSize);
+                if ((size % blockSize) >= (7 * nbChannels))
+                    /* We have an incomplete block */
+                    sampleSize += 2 + ((size % blockSize)/nbChannels - 7) * 2;
+            }
             break;
         default:
             break;
@@ -105,8 +117,12 @@ bool AudioBuffer::checkSize(void)
         case SAMPLE_FMT_S32:
         case SAMPLE_FMT_FLT:
         case SAMPLE_FMT_DBL:
+            if (alignSize <= 0)
+                return false;
             return (size % alignSize) == 0;
         case SAMPLE_FMT_MSADPCM:
+            if (nbChannels <= 0)
+                return false;
             return (size % nbChannels) == 0;
         default:
             break;

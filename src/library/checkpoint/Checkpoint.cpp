@@ -298,8 +298,8 @@ void Checkpoint::handler(int signum, siginfo_t *info, void *ucontext)
                 X_DPY_SET_LAST_REQUEST_READ(x11::gameDisplays[i], last_request_read[i]);
                 X_DPY_SET_REQUEST(x11::gameDisplays[i], request[i]);
 #else
-                gameDisplays[i]->last_request_read = static_cast<unsigned long>(last_request_read[i]);
-                gameDisplays[i]->request = static_cast<unsigned long>(request[i]);
+                x11::gameDisplays[i]->last_request_read = static_cast<unsigned long>(last_request_read[i]);
+                x11::gameDisplays[i]->request = static_cast<unsigned long>(request[i]);
 #endif
 
                 /* Restore the entire xcb connection struct */

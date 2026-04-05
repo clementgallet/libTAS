@@ -341,7 +341,7 @@ void syncFileDescriptors()
 
         /* Look at existing file descriptor and get symlink */
         char fd_str[25];
-        sprintf(fd_str, "/proc/self/fd/%d", fd);
+        snprintf(fd_str, sizeof(fd_str), "/proc/self/fd/%d", fd);
 
         char buf[1024] = {};
         ssize_t buf_size = readlink(fd_str, buf, 1024);
