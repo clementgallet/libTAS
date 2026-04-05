@@ -793,7 +793,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
     char* endAddr = static_cast<char*>(saved_area.endAddr);
     for (char* curAddr = static_cast<char*>(saved_area.addr);
     curAddr < endAddr;
-    curAddr += 4096, page_i++, pagemap_i++) {
+    curAddr += 4096, page_i++) {
 
         /* We read pagemap flags in chunks to avoid too many read syscalls. */
         if (pagemap_i >= 512) {
