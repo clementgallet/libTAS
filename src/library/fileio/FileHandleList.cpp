@@ -38,8 +38,10 @@
 #include <mutex>
 #include <unistd.h> // lseek
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <sys/sysmacros.h>
 #ifdef __linux__
 #include <sys/syscall.h>
 #endif
@@ -77,15 +79,36 @@ std::pair<int, int> createPipe(int flags) {
 
 int fdFromFile(const char* file)
 {
+    return fdFromFile(file, 0, 0);
+}
+
+int fdFromFile(const char* file, dev_t device, ino_t inode)
+{
     auto& filehandles = getFileList();
+
+    int fallback_fd = -1;
+    bool multiple_matches = false;
 
     for (const FileHandle &fh : filehandles) {
         if (fh.type == FileHandle::FILE_PIPE)
             continue;
         if (0 == strcmp(fh.fileName, file)) {
-            return fh.fds[0];
+            if (inode != 0 && fh.inode == inode && (device == 0 || fh.device == device)) {
+                return fh.fds[0];
+            }
+            if (fallback_fd == -1) {
+                fallback_fd = fh.fds[0];
+            }
+            else {
+                multiple_matches = true;
+            }
         }
     }
+
+    if (!multiple_matches) {
+        return fallback_fd;
+    }
+
     return -1;
 }
 
@@ -127,6 +150,12 @@ void updateAllFiles()
         /* Skip own dir file descriptor */
         if (fd == dir_fd)
             continue;
+
+        struct stat fd_stat;
+        bool has_identity = false;
+        if (fstat(fd, &fd_stat) == 0) {
+            has_identity = true;
+        }
 
         /* Get symlink */
         char buf[1024] = {};
@@ -184,6 +213,11 @@ void updateAllFiles()
                 filehandles.emplace_front(buf, fd, FileHandle::FILE_REGULAR);
             else
                 filehandles.emplace_front(buf, fd, FileHandle::FILE_SPECIAL);
+
+            if (!filehandles.empty() && has_identity) {
+                filehandles.front().device = fd_stat.st_dev;
+                filehandles.front().inode = fd_stat.st_ino;
+            }
         }
     }
     closedir(dir);
