@@ -441,7 +441,7 @@ int main(int argc, char **argv)
     mainWin.show();
 
     if (openInputEditor) {
-        mainWin.getInputEditorWindow()->show();
+        mainWin.showInputEditorWindow();
     }
 
     app.exec();

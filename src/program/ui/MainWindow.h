@@ -54,9 +54,6 @@ class ExecutableWindow;
 class ControllerTabWindow;
 class GameInfoWindow;
 class GameSpecificWindow;
-class RamSearchWindow;
-class RamWatchWindow;
-class InputEditorWindow;
 class OsdWindow;
 class AnnotationsWindow;
 class AutoSaveWindow;
@@ -79,8 +76,7 @@ public:
     /* Capture the user closing the game and show a "save your work?" dialog */
     void closeEvent(QCloseEvent *event);
 
-    RamWatchWindow *getRamWatchWindow();
-    InputEditorWindow *getInputEditorWindow();
+    void showInputEditorWindow();
 
     std::thread game_thread;
     GameLoop *gameLoop;
@@ -172,6 +168,16 @@ private:
     /* Update movie parameters from movie file */
     void updateMovieParams();
 
+    void updateFrequentRuntimeDisplay();
+    void updateMovieLoadedState(bool movieLoaded);
+    void reloadConfiguredWindows();
+    void updateRecentArgs();
+    bool updateGamePathAvailability();
+    void applyGamePathConfig();
+    void applyLaunchTimeSettings();
+    bool confirmDownloadsAllowed();
+    bool prepareLaunch(bool attach_gdb);
+
     /* Update the list of recent gamepaths */
     void updateRecentGamepaths();
 
@@ -190,6 +196,11 @@ private:
 
     /* Create the main window menus */
     void createMenus();
+    void createFileMenu();
+    void createSettingsMenu();
+    void createMovieMenu();
+    void createToolsMenu();
+    void createInputMenu();
 
     pid_t debugger_pid;
 
