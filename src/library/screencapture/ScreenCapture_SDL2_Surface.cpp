@@ -30,6 +30,7 @@
 
 namespace libtas {
 
+DECLARE_ORIG_POINTER(SDL_GetError)
 DECLARE_ORIG_POINTER(SDL_GetWindowPixelFormat)
 DECLARE_ORIG_POINTER(SDL_DestroyTexture)
 DECLARE_ORIG_POINTER(SDL_GetWindowSurface)
@@ -164,17 +165,18 @@ int ScreenCapture_SDL2_Surface::getPixelsFromSurface(uint8_t **pixels, bool draw
     LINK_NAMESPACE_SDL2(SDL_LockSurface);
     LINK_NAMESPACE_SDL2(SDL_UnlockSurface);
     /* We must lock the surface before accessing the raw pixels */
-    if (SDL_MUSTLOCK(screenSDL2Surf))
-        orig::SDL_LockSurface(screenSDL2Surf);
+    if (SDL_MUSTLOCK(screenSDL2Surf) && (orig::SDL_LockSurface(screenSDL2Surf) != 0)) {
+        LOG(LL_ERROR, LCF_DUMP | LCF_SDL, "Could not lock SDL surface: %s", orig::SDL_GetError());
+        return -1;
+    }
 
-    /* I know memcpy is not recommended for vectors... */
-    memcpy(winpixels.data(), screenSDL2Surf->pixels, size);
+    int ret = copyPixelRows(screenSDL2Surf->pixels, screenSDL2Surf->pitch);
 
     /* Unlock surface */
     if (SDL_MUSTLOCK(screenSDL2Surf))
         orig::SDL_UnlockSurface(screenSDL2Surf);
 
-    return size;
+    return ret;
 }
 
 int ScreenCapture_SDL2_Surface::copySurfaceToScreen()

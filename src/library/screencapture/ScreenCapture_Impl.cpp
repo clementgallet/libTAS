@@ -30,6 +30,7 @@
 #include "xlib/XlibGameWindow.h"
 
 #include <X11/Xlib.h>
+#include <cstring>
 // #include <SDL2/SDL.h>
 
 namespace libtas {
@@ -98,6 +99,28 @@ int ScreenCapture_Impl::postInit()
 
     LOG(LL_DEBUG, LCF_WINDOW, "Inited Screen Capture with dimensions (%d,%d)", width, height);
     return 0;    
+}
+
+int ScreenCapture_Impl::copyPixelRows(const void* sourcePixels, int sourcePitch)
+{
+    if (!sourcePixels) {
+        LOG(LL_ERROR, LCF_DUMP, "Cannot copy screen pixels from a null source buffer");
+        return -1;
+    }
+
+    if (sourcePitch < pitch) {
+        LOG(LL_ERROR, LCF_DUMP, "Invalid source pitch %d for screen copy (expected at least %d)", sourcePitch, pitch);
+        return -1;
+    }
+
+    const auto* source = static_cast<const uint8_t*>(sourcePixels);
+    auto* destination = winpixels.data();
+
+    for (int row = 0; row < height; row++) {
+        std::memcpy(destination + (row * pitch), source + (row * sourcePitch), pitch);
+    }
+
+    return size;
 }
 
 void ScreenCapture_Impl::fini()
