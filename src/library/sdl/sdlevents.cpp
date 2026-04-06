@@ -204,6 +204,8 @@ void pushNativeSDLEvents(void)
     switch (action) {
         case SDL_ADDEVENT:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "The game wants to add %d events", numevents);
+            if ((numevents > 0) && (events == nullptr))
+                return -1;
             for (int i=0; i<numevents; i++) {
                 if (SDLver == 1) {
                     if (! isBannedEvent(&events1[i])) {
@@ -391,6 +393,9 @@ void pushNativeSDLEvents(void)
 {
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
+    if (event == nullptr)
+        return -1;
+
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_PushEvent);
         return orig::SDL_PushEvent(event);
@@ -447,6 +452,11 @@ void pushNativeSDLEvents(void)
 /* Override */ SDL_bool SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata)
 {
     LOGTRACE(LCF_SDL | LCF_EVENTS);
+
+    if (filter)
+        *filter = nullptr;
+    if (userdata)
+        *userdata = nullptr;
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_SDLX(SDL_GetEventFilter);
@@ -516,10 +526,10 @@ void pushNativeSDLEvents(void)
     int previousState = sdlEventQueue.isEnabled(type) ? SDL_ENABLE : SDL_DISABLE;
     switch (state) {
         case SDL_ENABLE:
-            sdlEventQueue.enable(state);
+            sdlEventQueue.enable(type);
             return previousState;
         case SDL_DISABLE:
-            sdlEventQueue.disable(state);
+            sdlEventQueue.disable(type);
             return previousState;
         case SDL_QUERY:
             return previousState;

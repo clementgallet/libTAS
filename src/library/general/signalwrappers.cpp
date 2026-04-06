@@ -44,6 +44,18 @@ DEFINE_ORIG_POINTER(sigaltstack)
 
 static sigset_t origUsrSetProcess;
 static thread_local sigset_t origUsrSetThread;
+static struct sigaction savedSuspendAction = {};
+static struct sigaction savedCheckpointAction = {};
+static bool savedSuspendActionValid = false;
+static bool savedCheckpointActionValid = false;
+
+static int signalMaskBit(int sig)
+{
+    if (sig <= 0 || sig > static_cast<int>(sizeof(unsigned int) * 8))
+        return 0;
+
+    return static_cast<int>(1u << (sig - 1));
+}
 
 /* Override */ sighandler_t signal (int sig, sighandler_t handler) __THROW
 {
@@ -58,7 +70,26 @@ static thread_local sigset_t origUsrSetThread;
     LOG(LL_DEBUG, LCF_SIGNAL, "    Setting handler %p for signal %s", reinterpret_cast<void*>(handler), strsignal(sig));
 
     if ((sig == SaveStateManager::sigSuspend()) || (sig == SaveStateManager::sigCheckpoint())) {
-        return SIG_IGN;
+        sighandler_t previousHandler = SIG_DFL;
+        if (sig == SaveStateManager::sigSuspend()) {
+            if (savedSuspendActionValid) {
+                previousHandler = savedSuspendAction.sa_handler;
+            }
+            savedSuspendAction.sa_handler = handler;
+            savedSuspendAction.sa_flags = 0;
+            sigemptyset(&savedSuspendAction.sa_mask);
+            savedSuspendActionValid = true;
+        }
+        else {
+            if (savedCheckpointActionValid) {
+                previousHandler = savedCheckpointAction.sa_handler;
+            }
+            savedCheckpointAction.sa_handler = handler;
+            savedCheckpointAction.sa_flags = 0;
+            sigemptyset(&savedCheckpointAction.sa_mask);
+            savedCheckpointActionValid = true;
+        }
+        return previousHandler;
     }
 
     sighandler_t ret = orig::signal(sig, handler);
@@ -71,21 +102,21 @@ static thread_local sigset_t origUsrSetThread;
     LOGTRACE(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigblock);
 
-    static const int bannedMask = sigmask(SaveStateManager::sigSuspend()) | sigmask(SaveStateManager::sigCheckpoint());
+    static const int bannedMask = signalMaskBit(SaveStateManager::sigSuspend()) | signalMaskBit(SaveStateManager::sigCheckpoint());
 
     /* Remove our signals from the list of blocked signals */
     int oldmask = orig::sigblock(mask & ~bannedMask);
 
     /* Add which of our signals were blocked */
     if (sigismember(&origUsrSetProcess, SaveStateManager::sigSuspend()) == 1)
-        oldmask |= sigmask(SaveStateManager::sigSuspend());
+        oldmask |= signalMaskBit(SaveStateManager::sigSuspend());
     if (sigismember(&origUsrSetProcess, SaveStateManager::sigCheckpoint()) == 1)
-        oldmask |= sigmask(SaveStateManager::sigCheckpoint());
+        oldmask |= signalMaskBit(SaveStateManager::sigCheckpoint());
 
     /* Update which of our signals are blocked */
-    if (mask & sigmask(SaveStateManager::sigSuspend()))
+    if (mask & signalMaskBit(SaveStateManager::sigSuspend()))
         sigaddset(&origUsrSetProcess, SaveStateManager::sigSuspend());
-    if (mask & sigmask(SaveStateManager::sigCheckpoint()))
+    if (mask & signalMaskBit(SaveStateManager::sigCheckpoint()))
         sigaddset(&origUsrSetProcess, SaveStateManager::sigCheckpoint());
 
     return oldmask;
@@ -96,22 +127,22 @@ static thread_local sigset_t origUsrSetThread;
     LOGTRACE(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigsetmask);
 
-    static const int bannedMask = sigmask(SaveStateManager::sigSuspend()) | sigmask(SaveStateManager::sigCheckpoint());
+    static const int bannedMask = signalMaskBit(SaveStateManager::sigSuspend()) | signalMaskBit(SaveStateManager::sigCheckpoint());
 
     /* Remove our signals from the list of blocked signals */
     int oldmask = orig::sigsetmask(mask & ~bannedMask);
 
     /* Update which of our signals were blocked */
     if (sigismember(&origUsrSetProcess, SaveStateManager::sigSuspend()) == 1)
-        oldmask |= sigmask(SaveStateManager::sigSuspend());
+        oldmask |= signalMaskBit(SaveStateManager::sigSuspend());
     if (sigismember(&origUsrSetProcess, SaveStateManager::sigCheckpoint()) == 1)
-        oldmask |= sigmask(SaveStateManager::sigCheckpoint());
+        oldmask |= signalMaskBit(SaveStateManager::sigCheckpoint());
 
     /* Update which of our signals are blocked */
     sigemptyset(&origUsrSetProcess);
-    if (mask & sigmask(SaveStateManager::sigSuspend()))
+    if (mask & signalMaskBit(SaveStateManager::sigSuspend()))
         sigaddset(&origUsrSetProcess, SaveStateManager::sigSuspend());
-    if (mask & sigmask(SaveStateManager::sigCheckpoint()))
+    if (mask & signalMaskBit(SaveStateManager::sigCheckpoint()))
         sigaddset(&origUsrSetProcess, SaveStateManager::sigCheckpoint());
 
     return oldmask;
@@ -126,9 +157,9 @@ static thread_local sigset_t origUsrSetThread;
 
     /* Update which of our signals were blocked */
     if (sigismember(&origUsrSetProcess, SaveStateManager::sigSuspend()) == 1)
-        oldmask |= sigmask(SaveStateManager::sigSuspend());
+        oldmask |= signalMaskBit(SaveStateManager::sigSuspend());
     if (sigismember(&origUsrSetProcess, SaveStateManager::sigCheckpoint()) == 1)
-        oldmask |= sigmask(SaveStateManager::sigCheckpoint());
+        oldmask |= signalMaskBit(SaveStateManager::sigCheckpoint());
 
     return oldmask;
 }
@@ -216,18 +247,23 @@ static thread_local sigset_t origUsrSetThread;
     WrapperLock wrapperLock;
 
     /* Save the original handlers for signals that we will skip */
-    struct sigaction act_suspend, act_checkpoint;
-    act_suspend.sa_handler = SIG_DFL;
-    act_checkpoint.sa_handler = SIG_DFL;
-
     if (sig == SaveStateManager::sigSuspend()) {
         LOG(LL_DEBUG, LCF_SIGNAL, "    Skipping because libTAS uses that signal for suspend");
         
-        if (oact != nullptr)
-            *oact = act_suspend;
+        if (oact != nullptr) {
+            if (savedSuspendActionValid)
+                *oact = savedSuspendAction;
+            else {
+                oact->sa_handler = SIG_DFL;
+                oact->sa_flags = 0;
+                sigemptyset(&oact->sa_mask);
+            }
+        }
 
-        if (act != nullptr)
-            act_suspend = *act;
+        if (act != nullptr) {
+            savedSuspendAction = *act;
+            savedSuspendActionValid = true;
+        }
 
         return 0;
     }
@@ -235,11 +271,20 @@ static thread_local sigset_t origUsrSetThread;
     if (sig == SaveStateManager::sigCheckpoint()) {
         LOG(LL_DEBUG, LCF_SIGNAL, "    Skipping because libTAS uses that signal for checkpoint");
         
-        if (oact != nullptr)
-            *oact = act_checkpoint;
+        if (oact != nullptr) {
+            if (savedCheckpointActionValid)
+                *oact = savedCheckpointAction;
+            else {
+                oact->sa_handler = SIG_DFL;
+                oact->sa_flags = 0;
+                sigemptyset(&oact->sa_mask);
+            }
+        }
 
-        if (act != nullptr)
-            act_checkpoint = *act;
+        if (act != nullptr) {
+            savedCheckpointAction = *act;
+            savedCheckpointActionValid = true;
+        }
 
         return 0;
     }

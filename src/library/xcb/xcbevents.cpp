@@ -29,6 +29,8 @@
 #include "global.h"
 #include "GlobalState.h"
 
+#include <cstdlib>
+
 #ifdef LIBTAS_HAS_XCB_RANDR
 #include <xcb/randr.h>
 #endif
@@ -154,6 +156,12 @@ xcb_generic_event_t *xcb_wait_for_event(xcb_connection_t *c)
 
     xcb_generic_event_t* event = nullptr;
     std::shared_ptr<XcbEventQueue> queue = xcbEventQueueList.getQueue(c);
+    if (!queue) {
+        LOG(LL_WARN, LCF_EVENTS, "Missing XCB event queue for connection %p, falling back to native wait", c);
+        LINK_NAMESPACE_GLOBAL(xcb_wait_for_event);
+        return orig::xcb_wait_for_event(c);
+    }
+
     while (true) {
         event = queue->pop();
         if (event)
@@ -188,6 +196,12 @@ xcb_generic_event_t *xcb_poll_for_event(xcb_connection_t *c)
     }
 
     std::shared_ptr<XcbEventQueue> queue = xcbEventQueueList.getQueue(c);
+    if (!queue) {
+        LOG(LL_WARN, LCF_EVENTS, "Missing XCB event queue for connection %p, falling back to native poll", c);
+        LINK_NAMESPACE_GLOBAL(xcb_poll_for_event);
+        return orig::xcb_poll_for_event(c);
+    }
+
     return queue->pop();
 }
 
@@ -241,11 +255,22 @@ xcb_send_event_checked (xcb_connection_t *c,
                     xcb_screen_iterator_t iter = xcb_setup_roots_iterator (xcb_get_setup (c));
                     xcb_screen_t* screen = iter.data;
 
-                    xcb_randr_get_screen_info_cookie_t screen_info = orig::xcb_randr_get_screen_info_unchecked(c, screen->root);
-                    xcb_randr_get_screen_info_reply_t *reply = orig::xcb_randr_get_screen_info_reply(c, screen_info, nullptr);
-                    xcb_randr_screen_size_t *sizes = orig::xcb_randr_get_screen_info_sizes(reply);
-                    const static uint32_t values[] = { sizes[0].width, sizes[0].height };
-                    xcb_configure_window (c, client_event->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
+                    if (screen) {
+                        xcb_randr_get_screen_info_cookie_t screen_info = orig::xcb_randr_get_screen_info_unchecked(c, screen->root);
+                        xcb_randr_get_screen_info_reply_t *reply = orig::xcb_randr_get_screen_info_reply(c, screen_info, nullptr);
+                        if (reply && reply->nSizes > 0) {
+                            xcb_randr_screen_size_t *sizes = orig::xcb_randr_get_screen_info_sizes(reply);
+                            const uint32_t values[] = { sizes[0].width, sizes[0].height };
+                            xcb_configure_window (c, client_event->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
+                        }
+                        else {
+                            LOG(LL_WARN, LCF_EVENTS | LCF_WINDOW, "Could not query XCB RANDR screen size for fullscreen prevention");
+                        }
+                        std::free(reply);
+                    }
+                    else {
+                        LOG(LL_WARN, LCF_EVENTS | LCF_WINDOW, "Could not find an XCB screen for fullscreen prevention");
+                    }
 #endif
                 }
                 return cookie;
@@ -311,11 +336,22 @@ xcb_send_event (xcb_connection_t *c,
                     xcb_screen_iterator_t iter = xcb_setup_roots_iterator (xcb_get_setup (c));
                     xcb_screen_t* screen = iter.data;
 
-                    xcb_randr_get_screen_info_cookie_t screen_info = orig::xcb_randr_get_screen_info_unchecked(c, screen->root);
-                    xcb_randr_get_screen_info_reply_t *reply = orig::xcb_randr_get_screen_info_reply(c, screen_info, nullptr);
-                    xcb_randr_screen_size_t *sizes = orig::xcb_randr_get_screen_info_sizes(reply);
-                    const static uint32_t values[] = { sizes[0].width, sizes[0].height };
-                    xcb_configure_window (c, client_event->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
+                    if (screen) {
+                        xcb_randr_get_screen_info_cookie_t screen_info = orig::xcb_randr_get_screen_info_unchecked(c, screen->root);
+                        xcb_randr_get_screen_info_reply_t *reply = orig::xcb_randr_get_screen_info_reply(c, screen_info, nullptr);
+                        if (reply && reply->nSizes > 0) {
+                            xcb_randr_screen_size_t *sizes = orig::xcb_randr_get_screen_info_sizes(reply);
+                            const uint32_t values[] = { sizes[0].width, sizes[0].height };
+                            xcb_configure_window (c, client_event->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
+                        }
+                        else {
+                            LOG(LL_WARN, LCF_EVENTS | LCF_WINDOW, "Could not query XCB RANDR screen size for fullscreen prevention");
+                        }
+                        std::free(reply);
+                    }
+                    else {
+                        LOG(LL_WARN, LCF_EVENTS | LCF_WINDOW, "Could not find an XCB screen for fullscreen prevention");
+                    }
 #endif
                 }
                 return cookie;

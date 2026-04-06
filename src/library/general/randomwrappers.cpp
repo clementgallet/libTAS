@@ -23,6 +23,8 @@
 #include "hook.h"
 #include "fileio/URandom.h"
 
+#include <cerrno>
+
 namespace libtas {
 
 DEFINE_ORIG_POINTER(random)
@@ -31,6 +33,15 @@ DEFINE_ORIG_POINTER(rand)
 /* Override */ ssize_t getrandom (void *buffer, size_t length, unsigned int flags)
 {
     char* buf = static_cast<char*>(buffer);
+
+    if (length == 0)
+        return 0;
+
+    if (buf == nullptr) {
+        errno = EFAULT;
+        return -1;
+    }
+
     /* We use the same PRNG as in URandom, because it is supposed to get the same values */
     for (size_t l = 0; l < length; l += 8) {
         uint64_t r = urandom_rand();

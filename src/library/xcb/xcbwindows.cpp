@@ -98,7 +98,12 @@ xcb_create_window_checked (xcb_connection_t *c,
         }
 
         std::shared_ptr<XcbEventQueue> queue = xcbEventQueueList.getQueue(c);
-        queue->setMask(wid, event_mask);
+        if (queue) {
+            queue->setMask(wid, event_mask);
+        }
+        else {
+            LOG(LL_WARN, LCF_EVENTS, "Missing XCB event queue for connection %p while recording event mask", c);
+        }
     }
 
     /* Only save the Window identifier for top-level windows */
@@ -152,7 +157,12 @@ xcb_create_window (xcb_connection_t *c,
         }
 
         std::shared_ptr<XcbEventQueue> queue = xcbEventQueueList.getQueue(c);
-        queue->setMask(wid, event_mask);
+        if (queue) {
+            queue->setMask(wid, event_mask);
+        }
+        else {
+            LOG(LL_WARN, LCF_EVENTS, "Missing XCB event queue for connection %p while recording event mask", c);
+        }
     }
 
     /* Only save the Window identifier for top-level windows */

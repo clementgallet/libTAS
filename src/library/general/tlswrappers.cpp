@@ -43,13 +43,15 @@ void clear_pthread_keys()
     LINK_NAMESPACE(pthread_getspecific, "pthread");
     LINK_NAMESPACE(pthread_setspecific, "pthread");
 
-    std::map<pthread_key_t, void(*)(void*)> pthread_keys = getPthreadKeys();
+    std::map<pthread_key_t, void(*)(void*)>& pthread_keys = getPthreadKeys();
     for( const auto& pair : pthread_keys ) {
-        if (orig::pthread_getspecific(pair.first)) {
+        void* value = orig::pthread_getspecific(pair.first);
+        if (value) {
             LOG(LL_DEBUG, LCF_THREAD, "  removing value from key %d", pair.first);
             orig::pthread_setspecific(pair.first, nullptr);
-            if (orig::pthread_getspecific(pair.first)) {
+            if (pair.second) {
                 LOG(LL_DEBUG, LCF_THREAD, "  calling destructor for key %d", pair.first);
+                pair.second(value);
             }
         }
     }
@@ -65,10 +67,12 @@ int pthread_key_create (pthread_key_t *key, void (*destr_function) (void *)) __T
     LOGTRACE(LCF_THREAD);
     int ret = orig::pthread_key_create(key, destr_function);
 
-    LOG(LL_DEBUG, LCF_THREAD, "   returning %d", *key);
+    if (ret == 0) {
+        LOG(LL_DEBUG, LCF_THREAD, "   returning %d", *key);
 
-    std::map<pthread_key_t, void(*)(void*)> pthread_keys = getPthreadKeys();
-    pthread_keys.insert(std::pair<pthread_key_t, void(*)(void*)>(*key,destr_function));
+        std::map<pthread_key_t, void(*)(void*)>& pthread_keys = getPthreadKeys();
+        pthread_keys.insert(std::pair<pthread_key_t, void(*)(void*)>(*key, destr_function));
+    }
 
     return ret;
 }
@@ -83,10 +87,12 @@ int pthread_key_delete (pthread_key_t key) __THROW
     LOG(LL_TRACE, LCF_THREAD, "%s called on key %d", __func__, key);
     int ret = orig::pthread_key_delete(key);
 
-    std::map<pthread_key_t, void(*)(void*)> pthread_keys = getPthreadKeys();
-    auto it = pthread_keys.find(key);
-    if (it != pthread_keys.end()) {
-        pthread_keys.erase (it);
+    if (ret == 0) {
+        std::map<pthread_key_t, void(*)(void*)>& pthread_keys = getPthreadKeys();
+        auto it = pthread_keys.find(key);
+        if (it != pthread_keys.end()) {
+            pthread_keys.erase(it);
+        }
     }
 
     return ret;

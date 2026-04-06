@@ -49,8 +49,10 @@ namespace libtas {
     LOGTRACE(LCF_TIMEGET);
     struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_GETTIMEOFDAY);
     LOG(LL_DEBUG, LCF_TIMEGET, "  returning %d.%06d", ts.tv_sec, ts.tv_nsec/1000);
-    tv->tv_sec = ts.tv_sec;
-    tv->tv_usec = ts.tv_nsec / 1000;
+    if (tv) {
+        tv->tv_sec = ts.tv_sec;
+        tv->tv_usec = ts.tv_nsec / 1000;
+    }
     return 0;
 }
 

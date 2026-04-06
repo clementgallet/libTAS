@@ -128,7 +128,7 @@ static void *pthread_native_start(void *arg)
     if (attr) {
         pthread_attr_getdetachstate(attr, &detachstate);
         if (detachstate != PTHREAD_CREATE_JOINABLE)
-            LOG(LL_DEBUG, LCF_THREAD, "Detached state is ", detachstate);
+            LOG(LL_DEBUG, LCF_THREAD, "Detached state is %d", detachstate);
     }
     thread->detached = (detachstate == PTHREAD_CREATE_DETACHED);
 
@@ -157,6 +157,8 @@ static void *pthread_native_start(void *arg)
             /* Thread creation failed */
             ThreadSync::decrementUninitializedThreadCount();
             ThreadManager::threadIsDead(thread);
+            duplicate_thread = nullptr;
+            break;
         }
 
         extraThreads[extraThreadsIndex++] = *tid_p;
@@ -275,7 +277,7 @@ static void *pthread_native_start(void *arg)
         LOG(LL_DEBUG, LCF_THREAD, "Joining thread successfully.");
     else
         LOG(LL_DEBUG, LCF_THREAD, "Thread has not yet terminated.");
-    return EBUSY;
+    return ret;
 }
 
 /* Override */ int pthread_timedjoin_np(pthread_t pthread_id, void **retval, const struct timespec *abstime)
@@ -302,9 +304,8 @@ static void *pthread_native_start(void *arg)
     }
 
     int ret = 0;
-    
-    /* For now I'm lazy, so we just wait the amount of time and check joining */
-    NATIVECALL(nanosleep(abstime, NULL));
+
+    NATIVECALL(clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, abstime, NULL));
 
     if (thread->state == ThreadInfo::ST_ZOMBIE) {
         if (retval) {
@@ -321,7 +322,7 @@ static void *pthread_native_start(void *arg)
     else
         LOG(LL_DEBUG, LCF_THREAD, "Call timed out before thread terminated.");
 
-    return ETIMEDOUT;
+    return ret;
 }
 
 static std::map<pthread_cond_t*, clockid_t>& getCondClock() {

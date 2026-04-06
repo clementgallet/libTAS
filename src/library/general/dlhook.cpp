@@ -295,10 +295,14 @@ void *find_sym(const char *name, bool original) {
         int res = dladdr(addr, &info);
         if (res != 0) {
             std::string libpath = info.dli_fname;
-            std::string libtasstr;
-            NATIVECALL(libtasstr = getenv("LIBTAS_LIBRARY_PATH"));
-            bool fromLibtas = libpath.length() >= libtasstr.length() &&
-                libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0;
+            const char* libtaspath = nullptr;
+            NATIVECALL(libtaspath = getenv("LIBTAS_LIBRARY_PATH"));
+            bool fromLibtas = false;
+            if (libtaspath != nullptr) {
+                std::string libtasstr = libtaspath;
+                fromLibtas = libpath.length() >= libtasstr.length() &&
+                    libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0;
+            }
             if (original == fromLibtas) {
                 addr = nullptr;
             }

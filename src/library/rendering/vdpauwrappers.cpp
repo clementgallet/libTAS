@@ -118,8 +118,12 @@ VdpStatus VdpPresentationQueueDisplay(VdpPresentationQueue presentation_queue, V
     /* The surface can change size independently of the window size, so we
      * must check here everytime. */
     VdpRGBAFormat rgba_format;
-    unsigned int uw, uh;
-    orig::VdpOutputSurfaceGetParameters(surface, &rgba_format, &uw, &uh);
+    unsigned int uw = clip_width;
+    unsigned int uh = clip_height;
+    VdpStatus status = orig::VdpOutputSurfaceGetParameters(surface, &rgba_format, &uw, &uh);
+    if (status != VDP_STATUS_OK) {
+        LOG(LL_ERROR, LCF_WINDOW, "VdpOutputSurfaceGetParameters failed with status %d", status);
+    }
 
     /* Resize the screen capture. Only does something if size has changed */
     ScreenCapture::resize(uw, uh);

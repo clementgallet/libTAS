@@ -60,7 +60,7 @@ Bool XQueryExtension(Display* display, const char* name, int* major_opcode_retur
     Bool ret = orig::XQueryExtension(display, name, major_opcode_return, first_event_return, first_error_return);
 
     /* Gather Xi opcode */
-    if (ret && (0 == strcmp(name, "XInputExtension"))) {
+    if (ret && major_opcode_return && (0 == strcmp(name, "XInputExtension"))) {
         xinput_opcode = *major_opcode_return;
     }
 
@@ -78,8 +78,13 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
     /* Add the mask in our event queue */
     if (valuemask & CWEventMask) {
         std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
-        queue->setMask(w, attributes->event_mask);
-        LOG(LL_DEBUG, LCF_WINDOW, "   event mask is %d", attributes->event_mask);
+        if (queue) {
+            queue->setMask(w, attributes->event_mask);
+            LOG(LL_DEBUG, LCF_WINDOW, "   event mask is %d", attributes->event_mask);
+        }
+        else {
+            LOG(LL_WARN, LCF_EVENTS, "Missing Xlib event queue for display %p while recording event mask", display);
+        }
     }
 
     /* Don't save windows that has override-redirect (Wine invisible windows) */
@@ -176,9 +181,13 @@ void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
         WindowTitle::setOriginalTitle(reinterpret_cast<const char*>(const_cast<const unsigned char*>(text_prop->value)));
         WindowTitle::setUpdateFunc([display] (const char* t) {
             if (XlibGameWindow::get() != 0) {
-                XTextProperty prop;
-                XStringListToTextProperty(const_cast<char**>(&t), 1, &prop);
-                orig::XSetWMName(display, XlibGameWindow::get(), &prop);
+                XTextProperty prop = {};
+                if (XStringListToTextProperty(const_cast<char**>(&t), 1, &prop) != 0) {
+                    orig::XSetWMName(display, XlibGameWindow::get(), &prop);
+                    if (prop.value) {
+                        XFree(prop.value);
+                    }
+                }
             }
         });
         return;
@@ -194,7 +203,12 @@ int XSelectInput(Display *display, Window w, long event_mask)
 
     /* Add the mask in our event queue */
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
-    queue->setMask(w, event_mask);
+    if (queue) {
+        queue->setMask(w, event_mask);
+    }
+    else {
+        LOG(LL_WARN, LCF_EVENTS, "Missing Xlib event queue for display %p while recording input mask", display);
+    }
 
     RETURN_NATIVE(XSelectInput, (display, w, event_mask), nullptr);
 }
@@ -321,7 +335,7 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
             if (atoms[i] == x11_atom(WM_TAKE_FOCUS)) {
                 LOG(LL_DEBUG, LCF_WINDOW, "   removing WM_TAKE_FOCUS protocol");
                 std::vector<Atom> newatoms;
-                for (int j=0; j<nelements-1; j++) {
+                for (int j=0; j<nelements; j++) {
                     if (j!=i) {
                         newatoms.push_back(atoms[j]);
                     }

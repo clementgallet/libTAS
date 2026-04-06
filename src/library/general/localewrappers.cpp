@@ -24,6 +24,7 @@
 #include "global.h"
 #include "GlobalState.h"
 
+#include <array>
 #include <cstring>
 
 namespace libtas {
@@ -58,10 +59,18 @@ static const char* config_locale()
     }
 }
 
+static char* mutable_config_locale()
+{
+    static std::array<char, 16> localeBuffer = {};
+    std::strncpy(localeBuffer.data(), config_locale(), localeBuffer.size() - 1);
+    localeBuffer.back() = '\0';
+    return localeBuffer.data();
+}
+
 /* Override */ char *setlocale (int category, const char *locale) __THROW
 {
     LOG(LL_TRACE, LCF_LOCALE, "%s called with category %d and locale %s", __func__, category, locale?locale:"<NULL>");
-    char* mylocale = const_cast<char*>(config_locale());
+    char* mylocale = mutable_config_locale();
     if (mylocale[0] == '\0') {
         /* Return native locale */
         LINK_NAMESPACE_GLOBAL(setlocale);
@@ -76,7 +85,7 @@ char *getenv (const char *name) __THROW
 
     LOG(LL_TRACE, LCF_LOCALE, "%s called with name %s", __func__, name);
     if (0 == strncmp(name, "LANG", 4)) {
-        char* mylocale = const_cast<char*>(config_locale());
+        char* mylocale = mutable_config_locale();
         if (mylocale[0] != '\0') {
             return mylocale;
         }

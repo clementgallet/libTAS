@@ -399,7 +399,11 @@ void vkGetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queue
     /* Store the queue family */
     vk::context.queueFamily = queueFamilyIndex;
 
-    return orig::vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
+    orig::vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
+
+    if (pQueue) {
+        vk::context.graphicsQueue = *pQueue;
+    }
 }
 
 static void destroySwapchain()
@@ -435,6 +439,12 @@ static void destroySwapchain()
     }
     
     orig::vkDestroyRenderPass(vk::context.device, vk::context.renderPass, vk::context.allocator);
+    vk::context.renderPass = VK_NULL_HANDLE;
+    vk::context.imageCount = 0;
+    vk::context.frameIndex = 0;
+    vk::context.currentSemaphore = VK_NULL_HANDLE;
+    vk::context.frames.clear();
+    vk::context.frameSemaphores.clear();
 }
 
 VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain)
@@ -452,31 +462,51 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
     /* Save the color format */
     vk::context.colorFormat = pCreateInfo->imageFormat;
 
-    VkResult res = orig::vkCreateSwapchainKHR(device, &newCreateInfo, pAllocator, pSwapchain);    
+    VkResult res = orig::vkCreateSwapchainKHR(device, &newCreateInfo, pAllocator, pSwapchain);
+    if (res != VK_SUCCESS) {
+        VKCHECKERROR(res);
+        return res;
+    }
     
+    uint32_t imageCount = 0;
+    VkResult err = orig::vkGetSwapchainImagesKHR(device, *pSwapchain, &imageCount, nullptr);
+    if (err != VK_SUCCESS || imageCount == 0) {
+        if (err == VK_SUCCESS) {
+            err = VK_ERROR_INITIALIZATION_FAILED;
+        }
+        LOG(LL_ERROR, LCF_WINDOW | LCF_VULKAN, "Failed to query swapchain image count: %d", err);
+        orig::vkDestroySwapchainKHR(device, *pSwapchain, pAllocator);
+        *pSwapchain = VK_NULL_HANDLE;
+        return err;
+    }
+
+    std::vector<VkImage> swapchainImgs;
+    swapchainImgs.resize(imageCount);
+    err = orig::vkGetSwapchainImagesKHR(device, *pSwapchain, &imageCount, swapchainImgs.data());
+    if (err != VK_SUCCESS) {
+        LOG(LL_ERROR, LCF_WINDOW | LCF_VULKAN, "Failed to query swapchain images: %d", err);
+        orig::vkDestroySwapchainKHR(device, *pSwapchain, pAllocator);
+        *pSwapchain = VK_NULL_HANDLE;
+        return err;
+    }
+
     /* Destroy old swapchain elements */
     if (vk::context.swapchain) {
         destroySwapchain();
     }
-    
+
     vk::context.swapchain = *pSwapchain;
     vk::context.swapchainRebuild = false;
+    vk::context.frameIndex = 0;
+    vk::context.currentSemaphore = VK_NULL_HANDLE;
 
     /* Store the swapchain size */
     vk::context.width = newCreateInfo.imageExtent.width;
     vk::context.height = newCreateInfo.imageExtent.height;
-    
-    /* Get the currently acquired swapchain image */
-    orig::vkGetSwapchainImagesKHR(device, *pSwapchain, &vk::context.imageCount, nullptr);
-    
-    std::vector<VkImage> swapchainImgs;
-    swapchainImgs.resize(vk::context.imageCount);
-    orig::vkGetSwapchainImagesKHR(device, *pSwapchain, &vk::context.imageCount, swapchainImgs.data());
+    vk::context.imageCount = imageCount;
     
     vk::context.frames.resize(vk::context.imageCount);
     vk::context.frameSemaphores.resize(vk::context.imageCount);
-    
-    VkResult err;
 
     /* Create render pass */
     {
@@ -654,17 +684,36 @@ VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64
         else {
             info.signalSemaphoreCount = 0;
         }
-        orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &info, fence);
+        if (vk::context.graphicsQueue == VK_NULL_HANDLE) {
+            LOG(LL_ERROR, LCF_WINDOW | LCF_VULKAN, "Cannot signal skipped draw without a graphics queue");
+            return VK_ERROR_INITIALIZATION_FAILED;
+        }
+
+        VkResult submitRes = orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &info, fence);
+        if (submitRes != VK_SUCCESS) {
+            VKCHECKERROR(submitRes);
+            return submitRes;
+        }
         
         /* Fill a meaningful value to the returned image index */
-        *pImageIndex = 0;
+        if (pImageIndex) {
+            *pImageIndex = 0;
+        }
         
         return VK_SUCCESS;
     }
 
     VkResult res = orig::vkAcquireNextImageKHR(device, swapchain, timeout, semaphore, fence, pImageIndex);
+    if (res != VK_SUCCESS) {
+        return res;
+    }
     
     /* Store image index */
+    if (!pImageIndex) {
+        LOG(LL_ERROR, LCF_WINDOW | LCF_VULKAN, "vkAcquireNextImageKHR returned success with a null image index pointer");
+        return VK_ERROR_INITIALIZATION_FAILED;
+    }
+
     vk::context.frameIndex = *pImageIndex;
     return res;
 }
@@ -707,7 +756,11 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
         info.pWaitSemaphores = pPresentInfo->pWaitSemaphores;
         info.pWaitDstStageMask = &stageFlags;
         info.signalSemaphoreCount = 0;
-        orig::vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
+        VkResult submitRes = orig::vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
+        if (submitRes != VK_SUCCESS) {
+            VKCHECKERROR(submitRes);
+            return submitRes;
+        }
     }
 
     /* Start the frame boundary and pass the function to draw */
@@ -720,9 +773,12 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
         
         VkPresentInfoKHR pi = *pPresentInfo;
 
-        /* Wait on the last semaphore that was used by our code */
-        pi.waitSemaphoreCount = 1;
-        pi.pWaitSemaphores = &vk::context.currentSemaphore;
+        /* Wait on the last semaphore that was used by our code when there is exactly one.
+         * Otherwise preserve the original semaphore array instead of passing a null handle. */
+        if (vk::context.currentSemaphore != VK_NULL_HANDLE) {
+            pi.waitSemaphoreCount = 1;
+            pi.pWaitSemaphores = &vk::context.currentSemaphore;
+        }
 
         /* Present the queue with the stored image index, because we will 
          * acquire other images when presenting again. */
@@ -732,6 +788,7 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
         
         if (ret == VK_ERROR_OUT_OF_DATE_KHR || ret == VK_SUBOPTIMAL_KHR) {
             vk::context.swapchainRebuild = true;
+            vk::context.currentSemaphore = VK_NULL_HANDLE;
             return;
         }
         
