@@ -397,6 +397,8 @@ Status XGetWindowAttributes(Display* display, Window w, XWindowAttributes* windo
 
     LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
     Status ret = orig::XGetWindowAttributes(display, w, window_attributes_return);
+    if (ret == 0)
+        return ret;
 
     /* Update the window size */
     ScreenCapture::getDimensions(window_attributes_return->width, window_attributes_return->height);

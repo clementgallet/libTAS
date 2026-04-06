@@ -245,9 +245,23 @@ void get_monitor_resolution(int& width, int& height)
     for (int d=0; d<GAMEDISPLAYNUM; d++) {
         if (x11::gameDisplays[d]) {
             screen_resources = orig::XRRGetScreenResourcesCurrent(x11::gameDisplays[d], DefaultRootWindow(x11::gameDisplays[d]));
+            if (!screen_resources || screen_resources->ncrtc <= 0)
+                continue;
+
             crtc_info = orig::XRRGetCrtcInfo(x11::gameDisplays[d], screen_resources, screen_resources->crtcs[0]);
+            if (!crtc_info)
+                continue;
             break;
         }
+    }
+
+    if (!crtc_info) {
+        width = 0;
+        height = 0;
+
+        if (screen_resources)
+            orig::XRRFreeScreenResources(screen_resources);
+        return;
     }
     
     width = crtc_info->width;
