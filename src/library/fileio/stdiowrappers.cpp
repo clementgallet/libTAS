@@ -29,6 +29,8 @@
 #include "GlobalState.h"
 #include "global.h"
 
+#include <cerrno>
+
 
 namespace libtas {
 
@@ -44,10 +46,12 @@ FILE *fopen (const char *filename, const char *modes)
     if (GlobalState::isNative())
         return orig::fopen(filename, modes);
 
-    if (filename)
+    if (filename && modes)
         LOG(LL_TRACE, LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename, modes);
-    else
-        LOG(LL_TRACE, LCF_FILEIO, "%s call with null filename", __func__);
+    else {
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename?filename:"<NULL>", modes?modes:"<NULL>");
+        return orig::fopen(filename, modes);
+    }
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::fopen(filename, modes);
@@ -77,10 +81,17 @@ FILE *fopen (const char *filename, const char *modes)
             std::string s = datestr.str();
 
             LOG(LL_DEBUG, LCF_FILEIO, "Creating fake %s with %s", filename, s.c_str());
-            fwrite(s.c_str(), sizeof(char), s.size(), f);
-            fwrite(" ", sizeof(char), 1, f);
-            fwrite(s.c_str(), sizeof(char), s.size(), f);
-            fseek(f, 0, SEEK_SET);
+            if ((fwrite(s.c_str(), sizeof(char), s.size(), f) != s.size()) ||
+                (fwrite(" ", sizeof(char), 1, f) != 1) ||
+                (fwrite(s.c_str(), sizeof(char), s.size(), f) != s.size())) {
+                SaveFileList::closeSaveFile(f);
+                errno = EIO;
+                return nullptr;
+            }
+            if (fseek(f, 0, SEEK_SET) != 0) {
+                SaveFileList::closeSaveFile(f);
+                return nullptr;
+            }
         }
         else {
             f = SaveFileList::openSaveFile(filename, modes);
@@ -106,10 +117,12 @@ FILE *fopen64 (const char *filename, const char *modes)
     if (GlobalState::isNative())
         return orig::fopen64(filename, modes);
 
-    if (filename)
+    if (filename && modes)
         LOG(LL_TRACE, LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename, modes);
-    else
-        LOG(LL_TRACE, LCF_FILEIO, "%s call with null filename", __func__);
+    else {
+        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename?filename:"<NULL>", modes?modes:"<NULL>");
+        return orig::fopen64(filename, modes);
+    }
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::fopen64(filename, modes);
@@ -139,10 +152,17 @@ FILE *fopen64 (const char *filename, const char *modes)
             std::string s = datestr.str();
 
             LOG(LL_DEBUG, LCF_FILEIO, "Creating fake %s with %s", filename, s.c_str());
-            fwrite(s.c_str(), sizeof(char), s.size(), f);
-            fwrite(" ", sizeof(char), 1, f);
-            fwrite(s.c_str(), sizeof(char), s.size(), f);
-            fseek(f, 0, SEEK_SET);
+            if ((fwrite(s.c_str(), sizeof(char), s.size(), f) != s.size()) ||
+                (fwrite(" ", sizeof(char), 1, f) != 1) ||
+                (fwrite(s.c_str(), sizeof(char), s.size(), f) != s.size())) {
+                SaveFileList::closeSaveFile(f);
+                errno = EIO;
+                return nullptr;
+            }
+            if (fseek(f, 0, SEEK_SET) != 0) {
+                SaveFileList::closeSaveFile(f);
+                return nullptr;
+            }
         }
         else {
             f = SaveFileList::openSaveFile(filename, modes);

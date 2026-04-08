@@ -44,6 +44,16 @@ static DIR *dird[DIROFF_SIZE];
 static int diri[DIROFF_SIZE];
 static std::string dirpath[DIROFF_SIZE];
 
+static int findDirIndex(DIR *dirp)
+{
+    for (int i = 0; i < DIROFF_SIZE; i++) {
+        if (dird[i] == dirp)
+            return i;
+    }
+
+    return DIROFF_SIZE;
+}
+
 DIR *opendir (const char *name)
 {
     LINK_NAMESPACE_GLOBAL(opendir);
@@ -59,6 +69,9 @@ DIR *opendir (const char *name)
         return d;
 
     if (!Global::shared_config.prevent_savefiles)
+        return d;
+
+    if (d == nullptr)
         return d;
 
     /* Register internal offset of dir d */
@@ -97,6 +110,9 @@ DIR *fdopendir (int fd)
     if (!Global::shared_config.prevent_savefiles)
         return d;
 
+    if (d == nullptr)
+        return d;
+
     /* Register internal offset of dir d */
     int i;
     for (i = 0; i < DIROFF_SIZE; i++) {
@@ -108,8 +124,11 @@ DIR *fdopendir (int fd)
             std::string link = "/proc/self/fd/";
             link += std::to_string(fd);
             char buf[4096] = {0};
-            readlink(link.c_str(), buf, 4096);
-            if (buf[0] == '/') {
+            ssize_t len = readlink(link.c_str(), buf, sizeof(buf) - 1);
+            if (len >= 0) {
+                buf[len] = '\0';
+            }
+            if (len >= 0 && buf[0] == '/') {
                 dirpath[i] = buf;            
             }
             else {
@@ -144,15 +163,13 @@ int closedir (DIR *dirp)
         return ret;
 
     /* Unregister internal offset of dir d */
-    int i;
-    for (i = 0; i < DIROFF_SIZE; i++) {
-        if (dird[i] == dirp) {
-            dird[i] = 0;
-            diri[i] = 0;
-            break;
-        }
+    int i = findDirIndex(dirp);
+    if (i != DIROFF_SIZE) {
+        dird[i] = 0;
+        diri[i] = 0;
+        dirpath[i].clear();
     }
-    if (i == DIROFF_SIZE && ret == 0) {
+    else if (ret == 0) {
         LOG(LL_ERROR, LCF_FILEIO, "   could not unregister dir");
     }
     
@@ -177,11 +194,9 @@ struct dirent *readdir (DIR *dirp)
         return orig::readdir(dirp);
 
     /* Recover the informations from the opened dir */
-    int i;
-    for (i = 0; i < DIROFF_SIZE; i++) {
-        if (dird[i] == dirp)
-            break;
-    }
+    int i = findDirIndex(dirp);
+    if (i == DIROFF_SIZE)
+        return orig::readdir(dirp);
     
     /* First, list all savefiles from directory */
 
@@ -256,11 +271,9 @@ struct dirent64 *readdir64 (DIR *dirp)
         return orig::readdir64(dirp); 
 
     /* Recover the informations from the opened dir */
-    int i;
-    for (i = 0; i < DIROFF_SIZE; i++) {
-        if (dird[i] == dirp)
-            break;
-    }
+    int i = findDirIndex(dirp);
+    if (i == DIROFF_SIZE)
+        return orig::readdir64(dirp);
 
     /* First, list all savefiles from directory */
 
@@ -332,11 +345,9 @@ int readdir_r (DIR *dirp, struct dirent *entry, struct dirent **result)
     if (!Global::shared_config.prevent_savefiles)
         return orig::readdir_r(dirp, entry, result);
 
-    int i;
-    for (i = 0; i < DIROFF_SIZE; i++) {
-        if (dird[i] == dirp)
-            break;
-    }
+    int i = findDirIndex(dirp);
+    if (i == DIROFF_SIZE)
+        return orig::readdir_r(dirp, entry, result);
     
     /* First, list all savefiles from directory */
 
@@ -408,11 +419,9 @@ int readdir64_r (DIR *dirp, struct dirent64 *entry, struct dirent64 **result)
         return orig::readdir64_r(dirp, entry, result); 
 
     /* Recover the informations from the opened dir */
-    int i;
-    for (i = 0; i < DIROFF_SIZE; i++) {
-        if (dird[i] == dirp)
-            break;
-    }
+    int i = findDirIndex(dirp);
+    if (i == DIROFF_SIZE)
+        return orig::readdir64_r(dirp, entry, result);
 
     /* First, list all savefiles from directory */
 
