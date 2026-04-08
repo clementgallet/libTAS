@@ -139,11 +139,24 @@ static const KeySym Xlib_default_keymap_shifted[256] = {
 
 static const char* Xlib_default_char = "\0\0\0\0\0\0\0\0\0\0001234567890-=\010\tqwertyuiop[]\r\0asdfghjkl;'`\0\\zxcvbnm,./\0*\0 \0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0-\0\0\0+\0\0\0\0\0\0\0<\0\0\0\0\0\0\0\0\0\r\0/\0\0\n\0\0\0\0\0\0\0\0\0\177\0\0\0\0\0=+\0\0.";
 static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+\010\0QWERTYUIOP{}\0\0ASDFGHJKL:\"~\0|ZXCVBNM<>?\0*\0 \0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0-\0\0\0+\0\0\0\0\0\0\0>\0\0\0\0\0\0\0\0\0\r\0/\0\0\n\0\0\0\0\0\0\0\0\0\177\0\0\0\0\0=+\0\0.";
+
+static bool isValidKeycode(KeyCode keycode)
+{
+    return keycode < 256;
+}
+
+static KeySym keycodeToKeysym(KeyCode keycode, bool shifted)
+{
+    if (!isValidKeycode(keycode))
+        return NoSymbol;
+
+    return shifted ? Xlib_default_keymap_shifted[keycode] : Xlib_default_keymap[keycode];
+}
     
 /* Override */ KeySym XKeycodeToKeysym(Display* display, KeyCode keycode, int index)
 {
     LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, (int)keycode);
-    KeySym sym = (index == 1) ? Xlib_default_keymap_shifted[keycode] : Xlib_default_keymap[keycode];
+    KeySym sym = keycodeToKeysym(keycode, index == 1);
     LOG(LL_DEBUG, LCF_KEYBOARD, "   returning %d", sym);
     return sym;
 }
@@ -154,7 +167,7 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
     RETURN_IF_NATIVE(XkbKeycodeToKeysym, (dpy, kc, group, level), nullptr);
 
     LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, (int)kc);
-    KeySym sym = (level == 1) ? Xlib_default_keymap_shifted[kc] : Xlib_default_keymap[kc];
+    KeySym sym = keycodeToKeysym(kc, level == 1);
     LOG(LL_DEBUG, LCF_KEYBOARD, "   returning %d", sym);
     return sym;
 }
@@ -187,10 +200,7 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
 
     KeyCode keycode = event_struct->keycode;
     if (keysym_return) {
-        if (event_struct->state & ShiftMask)
-            *keysym_return = Xlib_default_keymap_shifted[keycode];
-        else
-            *keysym_return = Xlib_default_keymap[keycode];
+        *keysym_return = keycodeToKeysym(keycode, event_struct->state & ShiftMask);
     }
     if (buffer_return && (bytes_buffer > 0)) {
 
@@ -215,7 +225,7 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
 {
     LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
     KeyCode keycode = event->keycode;
-    KeySym keysym = (event->state & ShiftMask) ? Xlib_default_keymap_shifted[keycode] : Xlib_default_keymap[keycode];
+    KeySym keysym = keycodeToKeysym(keycode, event->state & ShiftMask);
 
     /* Return if no associated keysym */
     if (keysym == NoSymbol) {
@@ -252,7 +262,7 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
 {
     LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
     KeyCode keycode = event->keycode;
-    KeySym keysym = (event->state & ShiftMask) ? Xlib_default_keymap_shifted[keycode] : Xlib_default_keymap[keycode];
+    KeySym keysym = keycodeToKeysym(keycode, event->state & ShiftMask);
 
     /* Return if no associated keysym */
     if (keysym == NoSymbol) {
@@ -292,7 +302,7 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
 
     LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
     KeyCode keycode = event->keycode;
-    KeySym keysym = (event->state & ShiftMask) ? Xlib_default_keymap_shifted[keycode] : Xlib_default_keymap[keycode];
+    KeySym keysym = keycodeToKeysym(keycode, event->state & ShiftMask);
 
     /* Return if no associated keysym */
     if (keysym == NoSymbol) {
@@ -331,8 +341,9 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
     *keysyms_per_keycode_return = 2;
     KeySym *keysyms = static_cast<KeySym*>(malloc(keycode_count*(*keysyms_per_keycode_return)*sizeof(KeySym)));
     for (int c=0; c<keycode_count; c++) {
-        keysyms[2*c] = Xlib_default_keymap[c+first_keycode];
-        keysyms[2*c+1] = Xlib_default_keymap_shifted[c+first_keycode];
+        KeyCode keycode = c + first_keycode;
+        keysyms[2*c] = keycodeToKeysym(keycode, false);
+        keysyms[2*c+1] = keycodeToKeysym(keycode, true);
     }
     return keysyms;
 }

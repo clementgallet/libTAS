@@ -136,6 +136,9 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position, b
      * params), return immediatly. */
     if (size == 0)
         return 0;
+
+    if (nbSamples <= 0 || position < 0)
+        return 0;
         
     /* If the position is at the end of the buffer, return immediatly */
     if (position >= sampleSize)
@@ -149,6 +152,12 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position, b
         case SAMPLE_FMT_S32:
         case SAMPLE_FMT_FLT:
         case SAMPLE_FMT_DBL:
+            if (alignSize <= 0)
+                return 0;
+
+            if ((position > (size / alignSize)) || (position * alignSize > size))
+                return 0;
+
             /* Simple case, we just return a position in our sample buffer */
             outSamples = &samples[position*alignSize];
 
@@ -169,6 +178,9 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position, b
                 /* We reach the end of the buffer */
                 return (sampleSize - position);
         case SAMPLE_FMT_MSADPCM:
+
+            if (blockSamples <= 0 || blockSize <= 0 || nbChannels <= 0)
+                return 0;
 
             /*** 1. Compute which portion of our buffer we decompress ***/
 

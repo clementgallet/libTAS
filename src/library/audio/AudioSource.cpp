@@ -110,7 +110,8 @@ int AudioSource::queueSize()
 int AudioSource::getPosition()
 {
     int totalPos = 0;
-    for (int i=0; i<queue_index; i++) {
+    int processed = std::min(queue_index, static_cast<int>(buffer_queue.size()));
+    for (int i=0; i<processed; i++) {
         totalPos += buffer_queue[i]->sampleSize;
     }
     totalPos += position;
