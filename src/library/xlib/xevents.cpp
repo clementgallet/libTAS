@@ -151,31 +151,6 @@ void pushNativeXlibEvents(Display *display)
             /* Redirect events to ImGui, and notify if it was interested in the event */
             if (ImGui_ImplXlib_ProcessEvent(&event))
                 RenderHUD::userInputs();
-                
-            /* Detect window resizing by the user */
-            if (event.type == ConfigureNotify) {
-                XConfigureEvent xce = event.xconfigure;
-
-                int w = 0, h = 0;
-                ScreenCapture::getDimensions(w, h);
-
-                if (w != xce.width || h != xce.height) {
-                    /* Check the saved dimension to see if the event was generated
-                     * by window resizing or API call */
-                     
-                    /* Detach the game window */
-                    RenderHUD::detachGameWindow();
-
-                    /* Skip the event */
-                    NATIVECALL(n = XPending(display));
-                    continue;
-                }
-                
-                /* TODO: We need to do something to prevent games to know that
-                 * we resized the game window */
-                // xce.width = w;
-                // xce.height = h;
-            }
         }
 
         if (!isEventFiltered(&event)) {

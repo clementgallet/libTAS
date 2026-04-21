@@ -61,8 +61,6 @@ bool RenderHUD::init()
         if (!XlibGameWindow::get())
             return false;
         
-        setWindowResizable(supportsLargerViewport());
-
         /* TODO: select one display? */
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
             if (x11::gameDisplays[i]) {
@@ -221,13 +219,19 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
 		ImGui::PopStyleColor(2);
     }
     
-    if (supportsGameWindow() && !show_game_window && old_show_game_window) {
-        /* Resize game window to their native dimensions */
-        /* TODO: select one display? */
-        for (int i=0; i<GAMEDISPLAYNUM; i++) {
-            if (x11::gameDisplays[i]) {
-                NATIVECALL(XResizeWindow (x11::gameDisplays[i], XlibGameWindow::get(), w, h));
-                break;
+    if (supportsGameWindow()) {
+        if (show_game_window && !old_show_game_window) {
+            setWindowResizable(true);
+        }
+        if (!show_game_window && old_show_game_window) {
+            setWindowResizable(false);
+            /* Resize game window to their native dimensions */
+            /* TODO: select one display? */
+            for (int i=0; i<GAMEDISPLAYNUM; i++) {
+                if (x11::gameDisplays[i]) {
+                    NATIVECALL(XResizeWindow (x11::gameDisplays[i], XlibGameWindow::get(), w, h));
+                    break;
+                }
             }
         }
     }

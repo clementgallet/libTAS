@@ -303,7 +303,6 @@ void DeterministicTimer::exitFrameBoundary()
         TimeHolder thresholdTime = lastEnterTime + baseTimeIncrement * (Global::shared_config.speed_divisor * 10); // Arbitrary value
 
         if (currentTime > thresholdTime) {
-            LOG(LL_WARN, LCF_TIMESET, "reset time...");
             lastEnterTime = currentTime;
         }
         else {
