@@ -52,6 +52,7 @@ DEFINE_ORIG_POINTER(XResizeWindow)
 DEFINE_ORIG_POINTER(XConfigureWindow)
 DEFINE_ORIG_POINTER(XGetWindowAttributes)
 DEFINE_ORIG_POINTER(XQueryExtension)
+DEFINE_ORIG_POINTER(XGetWindowProperty)
 DEFINE_ORIG_POINTER(XChangeProperty)
 
 Bool XQueryExtension(Display* display, const char* name, int* major_opcode_return, int* first_event_return, int* first_error_return) {
@@ -282,6 +283,42 @@ int XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindo
             ScreenCapture::resize(values->width, values->height);
         }
     }
+    return ret;
+}
+
+int XGetWindowProperty(Display *display, Window w, Atom property, long long_offset, long long_length, Bool del, Atom req_type, Atom *actual_type_return, int *actual_format_return, unsigned long *nitems_return, unsigned long *bytes_after_return, unsigned char **prop_return)
+{
+    LINK_NAMESPACE_GLOBAL(XGetWindowProperty);
+    if (GlobalState::isNative())
+        return orig::XGetWindowProperty(display, w, property, long_offset, long_length, del, req_type, actual_type_return, actual_format_return, nitems_return, bytes_after_return, prop_return);
+
+    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
+
+    int ret = orig::XGetWindowProperty(display, w, property, long_offset, long_length, del, req_type, actual_type_return, actual_format_return, nitems_return, bytes_after_return, prop_return);
+    if (ret != Success) {
+        return ret;
+    }
+
+    if (Global::shared_config.screen_width) {
+        if (property == x11_atom(_NET_CURRENT_DESKTOP)) {
+            if (nitems_return && prop_return && *nitems_return > 0) {
+                // LOG(LL_DEBUG, LCF_WINDOW, "   current desktop was %d", (*prop_return)[0]);
+                (*prop_return)[0] = 0; // set the current desktop to 0, which is the one we use for fullscreen
+            }
+        }
+
+        if (property == x11_atom(_NET_WORKAREA)) {
+            if (nitems_return && prop_return) {
+                long *rect_data = (long *)*prop_return;
+                // LOG(LL_DEBUG, LCF_WINDOW, "   current desktop w/h %d %d", rect_data[2], rect_data[3]);
+                rect_data[0] = 0; // x
+                rect_data[1] = 0; // y
+                rect_data[2] = Global::shared_config.screen_width; // width
+                rect_data[3] = Global::shared_config.screen_height; // height
+            }
+        }
+    }
+
     return ret;
 }
 

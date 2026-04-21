@@ -43,6 +43,8 @@ static const char * const atom_names[NB_XATOMS] =
     "_NET_WM_STATE_MAXIMIZED_VERT",
     "_NET_WM_STATE_ABOVE",
     "_NET_WM_PING",
+    "_NET_CURRENT_DESKTOP",
+    "_NET_WORKAREA",
     "_MOTIF_WM_HINTS",
     "_NET_WM_NAME",
     "UTF8_STRING",
