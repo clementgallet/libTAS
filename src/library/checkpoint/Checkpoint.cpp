@@ -1371,7 +1371,8 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
             shared_next_off_hole = lseek(shared_fd, area.offset, SEEK_HOLE);
             if (shared_next_off_hole == -1) {
                 LOG(LL_DEBUG, LCF_CHECKPOINT, "     Could not seek into shared map file %s", area.map_file);
-                close(shared_fd);
+                if (shared_fd != area.fd)
+                    close(shared_fd);
                 shared_fd = -1;
             }
             else {
@@ -1379,6 +1380,13 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
                 if (shared_next_off_data == -1) shared_next_off_data = LONG_MAX; // No data, set to past end of file
                 shared_next_off_data = alignPageOffsetDown(shared_next_off_data);
                 shared_next_off_hole = alignPageOffsetUp(shared_next_off_hole);
+            }
+
+            /* In some cases where seeking is not possible (such as /dev/dri/card0), both values will be 0. */
+            if (shared_next_off_data == 0 && shared_next_off_hole == 0) {
+                if (shared_fd != area.fd)
+                    close(shared_fd);
+                shared_fd = -1;
             }
         }
         else {
@@ -1471,7 +1479,8 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
                     shared_next_off_hole = lseek(shared_fd, current_off, SEEK_HOLE);
                     if (shared_next_off_hole == -1) {
                         LOG(LL_DEBUG, LCF_CHECKPOINT, "     Could not seek into shared map file %s", area.map_file);
-                        close(shared_fd);
+                        if (shared_fd != area.fd)
+                            close(shared_fd);
                         shared_fd = -1;
                     }
                     else {
