@@ -96,6 +96,7 @@ static void print_usage(void)
     std::cout << "  -w, --write MOVIE       Record game inputs into the specified MOVIE file" << std::endl;
     std::cout << "  -l, --lua FILE          Start the specified FILE lua scripts (comma-separated list). Can be used several times" << std::endl;
     std::cout << "  -n, --non-interactive   Don't offer any interactive choice, so that it can run headless" << std::endl;
+    std::cout << "  -t, --test-mode         Enable test mode: disable 'prevent writing to disk' and enable non-interactive mode" << std::endl;
     std::cout << "      --libtas-so-path    Path to libtas.so (equivalent to setting LIBTAS_SO_PATH)" << std::endl;
     std::cout << "      --libtas32-so-path  Path to libtas32.so (equivalent to setting LIBTAS32_SO_PATH)" << std::endl;
     std::cout << "  -i, --input-editor      Open Input Editor window at startup" << std::endl;
@@ -122,6 +123,7 @@ int main(int argc, char **argv)
     std::filesystem::path moviefile;
     std::filesystem::path dumpfile;
     std::vector<std::filesystem::path> luafiles;
+    bool test_mode = false;
     int recordingmode = SharedConfig::RECORDING_WRITE;
 
     static struct option long_options[] =
@@ -131,6 +133,7 @@ int main(int argc, char **argv)
         {"dump", required_argument, nullptr, 'd'},
         {"lua", required_argument, nullptr, 'l'},
         {"non-interactive", no_argument, nullptr, 'n'},
+        {"test-mode", no_argument, nullptr, 't'},
         {"libtas-so-path", required_argument, nullptr, 'p'},
         {"libtas32-so-path", required_argument, nullptr, 'P'},
         {"help", no_argument, nullptr, 'h'},
@@ -141,7 +144,7 @@ int main(int argc, char **argv)
     bool openInputEditor = false;
 
     // std::string libname;
-    while ((c = getopt_long (argc, argv, "+r:w:d:l:nhi", long_options, &option_index)) != -1) {
+    while ((c = getopt_long (argc, argv, "+r:w:d:l:nthi", long_options, &option_index)) != -1) {
         switch (c) {
             case 'r':
             case 'w':
@@ -168,6 +171,12 @@ int main(int argc, char **argv)
                 break;
             }
             case 'n':
+                context.interactive = false;
+                break;
+            case 't':
+                /* Test mode: disable prevent_savefiles and enable non-interactive */
+                test_mode = true;
+                context.config.sc.prevent_savefiles = false;
                 context.interactive = false;
                 break;
             case 'p':
@@ -382,6 +391,12 @@ int main(int argc, char **argv)
     context.config.load(context.gamepath);
     if (! gameargsoverride.empty()) {
         context.config.gameargs = gameargsoverride;
+    }
+
+    /* Reapply test mode settings after config loading (to override config file settings) */
+    if (test_mode) {
+        context.config.sc.prevent_savefiles = false;
+        context.interactive = false;
     }
 
     /* Overwrite the movie path if specified in commandline */
