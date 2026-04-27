@@ -120,12 +120,13 @@ void pushNativeXlibEvents(Display *display)
         return;
     }
 
-    NATIVECALL(XLockDisplay(display));
-    int n;
-    NATIVECALL(n = XPending(display));
+    GlobalNative gn;
+
+    XLockDisplay(display);
+    int n = XPending(display);
     while (n > 0) {
         XEvent event;
-        NATIVECALL(XNextEvent(display, &event));
+        XNextEvent(display, &event);
 
         if (event.type == ClientMessage) {
             /* Catch the close event */
@@ -141,13 +142,12 @@ void pushNativeXlibEvents(Display *display)
                 LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "Answering a ping message");
                 XEvent reply = event;
                 reply.xclient.window = DefaultRootWindow(display);
-                NATIVECALL(XSendEvent(display, DefaultRootWindow(display), False,
-                    SubstructureNotifyMask | SubstructureRedirectMask, &reply));
+                XSendEvent(display, DefaultRootWindow(display), False,
+                    SubstructureNotifyMask | SubstructureRedirectMask, &reply);
             }
         }
         
         if (ImGui::GetCurrentContext()) {
-            GlobalNative gn;
             /* Redirect events to ImGui, and notify if it was interested in the event */
             if (ImGui_ImplXlib_ProcessEvent(&event))
                 RenderHUD::userInputs();
@@ -157,9 +157,9 @@ void pushNativeXlibEvents(Display *display)
             xlibEventQueueList.insert(display, &event);
         }
 
-        NATIVECALL(n = XPending(display));
+        n = XPending(display);
     }
-    NATIVECALL(XUnlockDisplay(display));
+    XUnlockDisplay(display);
 }
 
 int XNextEvent(Display *display, XEvent *event_return)

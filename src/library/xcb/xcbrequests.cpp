@@ -21,6 +21,7 @@
 #include "XcbEventQueueList.h"
 #include "XcbEventQueue.h"
 #include "inputs/inputs.h"
+#include "inputs/xinput.h"
 
 #include "hook.h"
 #include "GlobalState.h"
@@ -66,6 +67,32 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
     auto major_opcode = *static_cast<uint8_t*>(vector->iov_base);
     switch (major_opcode)
     {
+        case XCB_QUERY_EXTENSION:
+        {
+            const auto* req = static_cast<const xcb_query_extension_request_t*>(vector->iov_base);
+
+            constexpr size_t padding_len = -sizeof(xcb_query_extension_request_t) & 3;
+            const char* name = reinterpret_cast<const char*>(vector[1].iov_len == padding_len ? vector[2].iov_base : vector[1].iov_base);
+
+            LOG(LL_TRACE, LCF_WINDOW, "XCB_QUERY_EXTENSION raw request with name %.*s", req->name_len, name);
+
+            /* If the extension is XInputExtension, we need to gather its opcode */
+            if (0 == strncmp("XInputExtension", name, req->name_len)) {
+                send_request(vector);
+
+                /* We are supposed to gather the reply from xcb_wait_for_reply() I guess?
+                 * I'm lasy, and will be using xcb_get_extension_data() directly */
+                if (xinput_opcode == 0) {
+                    static xcb_extension_t xi_ext = { "XInputExtension", 0 };
+                    auto* reply = xcb_get_extension_data(c, &xi_ext);
+                    xinput_opcode = reply ? reply->major_opcode : -1;
+                }
+
+                /* The reply will be handled in xcb_wait_for_reply */
+                return;
+            }
+        }
+
         case XCB_CREATE_WINDOW:
         {
             const auto* req = static_cast<const xcb_create_window_request_t*>(vector->iov_base);
@@ -217,6 +244,98 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                 ScreenCapture::resize(new_width, new_height);
             }
 
+            break;
+        }
+
+        case XCB_CHANGE_PROPERTY:
+        {
+            const auto* req = static_cast<const xcb_change_property_request_t*>(vector->iov_base);
+            LOG(LL_TRACE, LCF_WINDOW, "XCB_CHANGE_PROPERTY raw request called with window %d", req->window);
+
+            constexpr size_t padding_len = -sizeof(xcb_change_property_request_t) & 3;
+            const Atom* value_list = reinterpret_cast<const Atom*>(vector[1].iov_len == padding_len ? vector[2].iov_base : vector[1].iov_base);
+
+            /* Disable window movement and get new size */
+
+            /* We need to create a new vector to store our new list */
+            uint8_t new_vector_buffer[sizeof(xcb_change_property_request_t) + padding_len + sizeof(Atom) * 16] {};
+
+            /* Dumb xcb detail, 2 dummy vectors need to be allocated before the actual vector */
+            struct iovec new_vector[5] {};
+            new_vector[2].iov_base = new_vector_buffer;
+            new_vector[2].iov_len = sizeof(xcb_change_property_request_t);
+            new_vector[3].iov_base = &new_vector_buffer[sizeof(xcb_change_property_request_t)];
+            new_vector[3].iov_len = padding_len;
+            new_vector[4].iov_base = &new_vector_buffer[sizeof(xcb_change_property_request_t) + padding_len];
+            new_vector[4].iov_len = 0;
+
+            auto* new_req = static_cast<xcb_change_property_request_t*>(new_vector[2].iov_base);
+            memcpy(new_req, req, sizeof(xcb_change_property_request_t));
+            new_req->length = (sizeof(new_vector_buffer) / sizeof(uint32_t)) - 16;
+
+            Atom* new_list = reinterpret_cast<Atom*>(new_vector[4].iov_base);
+
+            /* Detect and disable several window state changes */
+            if (req->property == x11_atom(_NET_WM_STATE)) {
+                int new_i = 0;
+                for (unsigned int i=0; i<req->data_len; i++) {
+                    if (value_list[i] == x11_atom(_NET_WM_STATE_FULLSCREEN) ||
+                        value_list[i] == x11_atom(_NET_WM_STATE_MAXIMIZED_HORZ) ||
+                        value_list[i] == x11_atom(_NET_WM_STATE_MAXIMIZED_VERT)) {
+
+                        LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "   prevented fullscreen switching but resized the window");
+                        if (XlibGameWindow::get() && (req->window != XlibGameWindow::get())) {
+                            LOG(LL_WARN, LCF_EVENTS | LCF_WINDOW, "   fullscreen window is not game window!");
+                        }
+
+                        /* Resize the window to the screen or fake resolution */
+                        if (Global::shared_config.screen_width) {
+                            const static uint32_t values[] = { static_cast<uint32_t>(Global::shared_config.screen_width), static_cast<uint32_t>(Global::shared_config.screen_height) };
+                            xcb_configure_window(c, req->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
+                        }
+                        else {
+#ifdef LIBTAS_HAS_XCB_RANDR
+                            /* Change the window size to monitor size */
+                            LINK_NAMESPACE(xcb_randr_get_screen_info_unchecked, "xcb-randr");
+                            LINK_NAMESPACE(xcb_randr_get_screen_info_reply, "xcb-randr");
+                            LINK_NAMESPACE(xcb_randr_get_screen_info_sizes, "xcb-randr");
+
+                            xcb_screen_iterator_t iter = xcb_setup_roots_iterator(xcb_get_setup(c));
+                            xcb_screen_t* screen = iter.data;
+
+                            if (screen) {
+                                xcb_randr_get_screen_info_cookie_t screen_info = orig::xcb_randr_get_screen_info_unchecked(c, screen->root);
+                                xcb_randr_get_screen_info_reply_t* reply = orig::xcb_randr_get_screen_info_reply(c, screen_info, nullptr);
+                                if (reply && reply->nSizes > 0) {
+                                    xcb_randr_screen_size_t* sizes = orig::xcb_randr_get_screen_info_sizes(reply);
+                                    const uint32_t values[] = { sizes[0].width, sizes[0].height };
+                                    xcb_configure_window(c, req->window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
+                                }
+                                else {
+                                    LOG(LL_WARN, LCF_EVENTS | LCF_WINDOW, "Could not query XCB RANDR screen size for fullscreen prevention");
+                                }
+                                std::free(reply);
+                            }
+                            else {
+                                LOG(LL_WARN, LCF_EVENTS | LCF_WINDOW, "Could not find an XCB screen for fullscreen prevention");
+                            }
+#endif
+                        }
+                    }
+                    else if (value_list[i] == x11_atom(_NET_WM_STATE_ABOVE)) {
+                        LOG(LL_DEBUG, LCF_WINDOW, "   prevented window always on top");
+                    }
+                    else {
+                        new_list[new_i++] = value_list[i];
+                    }
+                }
+                new_req->length += new_i;
+                new_vector[4].iov_len = new_i * sizeof(Atom);
+                new_req->data_len = new_i;
+                send_request(&new_vector[2]);
+            }
+
+            send_request(vector);
             break;
         }
 
@@ -409,14 +528,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
 
         default:
         {
-            static uint8_t xi_major_opcode = 0;
-            if (xi_major_opcode == 0) {
-                static xcb_extension_t xi_ext = { "XInputExtension", 0 };
-                auto* reply = xcb_get_extension_data(c, &xi_ext);
-                xi_major_opcode = reply ? reply->major_opcode : -1;
-            }
-
-            if (major_opcode == xi_major_opcode)
+            if (major_opcode == xinput_opcode)
             {
                 auto minor_opcode = static_cast<uint8_t*>(vector->iov_base)[1];
                 switch (minor_opcode)
@@ -462,7 +574,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                                 if (event_mask & XCB_INPUT_XI_EVENT_MASK_FOCUS_IN) {
                                     xcb_input_focus_in_event_t event{};
                                     event.response_type = XCB_GE_GENERIC;
-                                    event.extension = xi_major_opcode;
+                                    event.extension = xinput_opcode;
                                     event.length = (sizeof(xcb_input_focus_in_event_t) - sizeof(xcb_ge_generic_event_t)) / 4;
                                     event.event_type = XCB_INPUT_FOCUS_IN;
                                     event.sourceid = event.deviceid = 3; // "Virtual core keyboard"
@@ -484,7 +596,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                                         XEvent xev;
                                         auto* dev = static_cast<XIFocusInEvent*>(calloc(1, sizeof(XIFocusInEvent)));
                                         xev.xcookie.type = GenericEvent;
-                                        xev.xcookie.extension = xi_major_opcode;
+                                        xev.xcookie.extension = xinput_opcode;
                                         xev.xcookie.evtype = XI_FocusIn;
                                         xev.xcookie.data = dev;
                                         dev->evtype = XI_FocusIn;
