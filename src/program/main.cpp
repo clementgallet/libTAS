@@ -379,7 +379,7 @@ int main(int argc, char **argv)
     context.config.configdir /= "libTAS";
     
     try {
-        std::filesystem::create_directory(context.config.configdir);
+        std::filesystem::create_directories(context.config.configdir);
     }
     catch (std::filesystem::filesystem_error const& ex) {
         std::cerr << "Cannot create dir " << context.config.configdir << std::endl;

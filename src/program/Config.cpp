@@ -410,7 +410,7 @@ void Config::load(const std::filesystem::path& gamepath) {
 void Config::createDirectories()
 {
     try {
-        std::filesystem::create_directory(datadir);
+        std::filesystem::create_directories(datadir);
     }
     catch (std::filesystem::filesystem_error const& ex) {
         std::cerr << "Cannot create dir " << datadir << std::endl;
