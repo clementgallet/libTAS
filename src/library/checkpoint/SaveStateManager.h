@@ -86,7 +86,7 @@ void saveThreadList();
 void createNewThreads();
 
 /* Function passed to clone() for new threads */
-int startNewThread(void *arg);
+__attribute__ ((visibility ("default"))) int startNewThread(void *arg);
 
 void waitForAllRestored(ThreadInfo *thread);
 

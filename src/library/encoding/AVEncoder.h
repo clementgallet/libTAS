@@ -65,7 +65,7 @@ class AVEncoder {
         static int segment_number;
     private:
         FILE *ffmpeg_pipe = nullptr;
-        pid_t ffmpeg_pid;
+        pid_t ffmpeg_pid = -1;
         NutMuxer* nutMuxer = nullptr;
 
         uint8_t* pixels = nullptr;

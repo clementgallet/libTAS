@@ -95,7 +95,7 @@ DEFINE_ORIG_POINTER(epoll_wait)
     if (ret == 0 && timeout > 0) {
         struct timespec ts;
         ts.tv_sec = timeout / 1000;
-        ts.tv_nsec = timeout * 1000000;
+        ts.tv_nsec = (timeout % 1000) * 1000000;
 
         transfer_sleep(ts, NULL);        
     }
@@ -139,6 +139,10 @@ int ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, cons
         return orig::select(nfds, readfds, writefds, exceptfds, timeout);
     }
 
+    if (timeout == nullptr) {
+        return orig::select(nfds, readfds, writefds, exceptfds, timeout);
+    }
+
     if (GlobalState::isNative()) {
         return orig::select(nfds, readfds, writefds, exceptfds, timeout);
     }
@@ -164,6 +168,10 @@ int ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, cons
      */
     if ((nfds != 0) || (readfds != nullptr) || (writefds != nullptr) || (exceptfds != nullptr))
     {
+        return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
+    }
+
+    if (timeout == nullptr) {
         return orig::pselect(nfds, readfds, writefds, exceptfds, timeout, sigmask);
     }
 

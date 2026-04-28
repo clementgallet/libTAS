@@ -29,6 +29,7 @@
 #include "../shared/messages.h"
 
 #include <cstdint>
+#include <cstdlib>
 #include <unistd.h> // usleep
 #include <sstream>
 #include <iomanip>
@@ -63,17 +64,37 @@ AVEncoder::AVEncoder() {
     {
         GlobalNative gn;
         
-        int pipefd[2];
-        pipe(pipefd);
+        int pipefd[2] = {-1, -1};
+        if (pipe(pipefd) < 0) {
+            LOG(LL_ERROR, LCF_DUMP, "Could not create a pipe to ffmpeg");
+            return;
+        }
+
         ffmpeg_pid = fork();
+        if (ffmpeg_pid < 0) {
+            LOG(LL_ERROR, LCF_DUMP, "Could not fork the ffmpeg process");
+            close(pipefd[0]);
+            close(pipefd[1]);
+            return;
+        }
+
         if (ffmpeg_pid == 0) {
             close(pipefd[1]);
             dup2(pipefd[0], STDIN_FILENO);
+            close(pipefd[0]);
             execlp("sh", "sh", "-c", commandline.str().c_str(), nullptr);
+            _exit(127);
         }
 
         close(pipefd[0]);
         ffmpeg_pipe = fdopen(pipefd[1], "w");
+        if (!ffmpeg_pipe) {
+            LOG(LL_ERROR, LCF_DUMP, "Could not open the ffmpeg pipe stream");
+            close(pipefd[1]);
+            waitpid(ffmpeg_pid, nullptr, 0);
+            ffmpeg_pid = -1;
+            return;
+        }
     }
 
     if (ScreenCapture::isInited()) {
@@ -87,6 +108,12 @@ AVEncoder::AVEncoder() {
 }
 
 void AVEncoder::initMuxer() {
+    if (nutMuxer) {
+        nutMuxer->finish();
+        delete nutMuxer;
+        nutMuxer = nullptr;
+    }
+
     int width, height;
     ScreenCapture::getDimensions(width, height);
 
@@ -171,6 +198,8 @@ void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
 AVEncoder::~AVEncoder() {
     if (nutMuxer) {
         nutMuxer->finish();
+        delete nutMuxer;
+        nutMuxer = nullptr;
     }
 
     if (ffmpeg_pipe) {
@@ -180,8 +209,11 @@ AVEncoder::~AVEncoder() {
             LOG(LL_ERROR, LCF_DUMP, "Could not close the pipe to ffmpeg");
         }
         ffmpeg_pipe = nullptr;
-        
+    }
+
+    if (ffmpeg_pid > 0) {
         waitpid(ffmpeg_pid, nullptr, 0);
+        ffmpeg_pid = -1;
     }
 }
 

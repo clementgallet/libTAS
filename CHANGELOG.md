@@ -5,6 +5,7 @@
 * File Debug OSD shows all files with types
 * Hook SDL_SetWindowResizable to avoid a window resize call (fix #700)
 * Input editor: highlight failed edit in red (#705)
+* Improve realtime playback target fps
 
 ### Changed
 

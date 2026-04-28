@@ -410,7 +410,43 @@ to return the input devices information.
 
 ### Keyboard layout
 
-TODO
+Keyboard handling would be much easier if games always consumed raw keycodes,
+but many APIs expose a translated symbol or a printable character instead.
+This means libTAS must answer two different questions:
+
+* which physical key is pressed?
+* what symbol/character does this key produce?
+
+For xlib/xkb, libTAS currently answers those queries using an internal static
+keyboard layout table. It maps the first 256 x11 keycodes to:
+
+* an unshifted `KeySym`
+* a shifted `KeySym`
+* an unshifted printable character
+* a shifted printable character
+
+This is enough to implement the common functions such as `XKeycodeToKeysym()`,
+`XKeysymToKeycode()`, `XLookupString()`, `XmbLookupString()`,
+`XwcLookupString()` and `Xutf8LookupString()`.
+
+This approach has two major advantages:
+
+* it is deterministic, because it does not depend on the host keyboard layout
+* it avoids having to forward native layout changes into the game
+
+The drawback is that the returned layout is deliberately simplified. In practice,
+it behaves like a built-in US-like layout with a basic shift state. Advanced
+input methods are not represented accurately:
+
+* locale-specific layouts
+* dead keys and compose sequences
+* IME-based text input
+* runtime keyboard layout changes
+
+For TASing this trade-off is usually acceptable, because movies need a stable
+input interpretation. When text input is important, the recommended way is to
+use the explicit text-input APIs/events that libTAS also hooks, instead of
+relying on the platform keyboard layout logic.
 
 ## Savestates
 
@@ -650,23 +686,200 @@ a slight overhead of the memory pages being copied.
 
 ## Video
 
-TODO
+Video handling in libTAS has two different goals:
+
+* detect frame boundaries
+* capture the current image of the game window
+
+The first goal is achieved by hooking the presentation functions of the various
+graphics APIs. The exact entry point depends on the backend used by the game:
+
+* SDL renderer and surface APIs
+* OpenGL/GLX/EGL swap functions
+* Vulkan present functions
+* VDPAU presentation functions
+* X11 shared-memory blits for some software-rendered paths
+
+At the frame boundary, libTAS can then perform all per-frame operations
+(communication, timer update, input hand-off, encoding, HUD update, etc.).
+
+The second goal is implemented through the `ScreenCapture` abstraction. At
+runtime, libTAS selects one backend-specific implementation depending on the
+video API detected from the game. The capture backend is responsible for:
+
+* initializing the capture resources
+* tracking window size changes
+* copying the current frame into an internal surface
+* exposing the pixels for encoding and screenshots
+* restoring the previous frame after a state load when needed
+* optionally exposing a texture used by the detached game window in the HUD
+
+The actual copy method depends heavily on the backend. For example, OpenGL,
+SDL, Vulkan and XShm all need different paths and have different performance
+characteristics.
+
+There are also video-related performance features. For OpenGL in particular,
+libTAS can intercept many draw calls and texture-state changes to skip drawing
+or request lower-cost filtering modes. This is mainly useful for fast-forward,
+where visual fidelity is often less important than throughput.
+
+One important limitation is that libTAS is still bound to the host graphics
+stack. It can intercept presentation and many rendering calls, but it does not
+emulate a GPU. Driver-specific behaviour, supported extensions, and some API
+details still come from the host system and may influence determinism.
 
 ## Audio
 
-TODO
+Audio is handled in a way similar to video: libTAS intercepts the high-level
+audio APIs used by the game, but instead of letting them talk directly to the
+native backend, it routes the data through an internal representation.
+
+The central object is the audio context, which owns:
+
+* audio buffers containing decoded or raw samples
+* audio sources that queue buffers and maintain playback state
+* output parameters such as bit depth, frequency and channel count
+
+The game can feed audio through many different frontends (`SDL`, `OpenAL`,
+`ALSA`, `PulseAudio`, `FMOD`, `cubeb`, etc.), but internally libTAS converts
+everything to the same source/buffer model. This makes the rest of the pipeline
+independent from the original API.
+
+At frame boundaries, and also when an audio API explicitly requests it, libTAS
+mixes all active sources into the output format. Format conversion is handled by
+dedicated converters, and the output can either be:
+
+* played back by a native audio player when audio is enabled
+* kept entirely internal when muted
+* passed to the encoder when audio/video dumping is active
+
+Timing is important here. Audio playback state is advanced using the same
+deterministic time base as the rest of the program, so queued samples are
+consumed consistently during replay. This is also why audio playback is stopped
+during savestate preparation: native drivers may still have in-flight state that
+is outside of the game memory and therefore not recoverable.
+
+In practice, audio support is one of the most API-diverse parts of libTAS.
+Many games use only a small subset of the backend API, so libTAS often focuses
+on the calls that are necessary to keep the game logic satisfied and to obtain
+reproducible playback, rather than implementing every possible backend feature.
 
 ## Wine
 
-TODO
+Wine support is special because Wine does not rely on the normal Unix dynamic
+linking path for all of its Windows-facing code. In particular, many functions
+are resolved through Wine's own loader inside modules such as `ntdll`.
+
+This means `LD_PRELOAD` alone is not enough. To observe and redirect calls in a
+Wine process, libTAS also uses patching on selected Wine functions.
+
+One important hook point is Wine's `LdrGetProcedureAddress()`, which is the
+equivalent of dynamic symbol lookup for Windows modules. Intercepting it gives
+libTAS visibility over functions that the Windows application resolves at
+runtime.
+
+Once that mechanism is in place, libTAS can layer its normal features on top of
+Wine as well:
+
+* time wrappers
+* input and event interception
+* rendering interception
+* frame-boundary handling
+
+Wine also requires a few dedicated wrappers for Windows-oriented libraries such
+as `kernel32`, `user32` and `wined3d`. These are not reimplementations of the
+whole Windows API; they are targeted hooks used where libTAS needs control for
+TAS-related features.
+
+Because of this extra indirection, Wine support is generally more fragile than
+native Linux support. The exact internal behaviour depends on the Wine version,
+the Windows subsystem used by the game, and whether rendering eventually goes
+through OpenGL, Vulkan or another backend.
 
 ## Steam
 
-TODO
+Steam support mainly exists so that games using the Steamworks SDK can still run
+correctly when launched under libTAS, without requiring a fully operational
+Steam client integration at every call site.
+
+The Steamworks API is organized around versioned interfaces such as
+`SteamClient`, `SteamUser`, `SteamUserStats` or `SteamRemoteStorage`.
+libTAS maintains a list of supported interface version strings and provides
+implementations for the subset that matters in practice.
+
+At startup, libTAS locates the Steam library and scans it to determine which
+interface versions the game is likely to request. When the game asks for an
+interface, libTAS returns a matching object from its own implementation instead
+of forwarding blindly to the native library.
+
+This design serves several purposes:
+
+* decouple the game from the exact native Steam client state
+* keep behaviour deterministic
+* integrate Steam features with other libTAS subsystems
+
+Callbacks and asynchronous call results are also virtualized. Instead of being
+delivered at arbitrary times, they are queued in an internal callback manager
+and later dispatched in a controlled way.
+
+`SteamRemoteStorage` is especially important because it overlaps with the
+savefile-protection feature. Cloud-save related file operations must stay
+consistent with libTAS savefile interception, otherwise the game could observe
+two conflicting views of the same save data.
+
+Steam support in libTAS is intentionally partial. The goal is to support the
+interfaces and behaviours that real games use often enough to run and TAS them,
+not to provide a full reimplementation of the entire Steamworks SDK.
 
 ## File IO
 
-TODO
+File I/O serves several different purposes in libTAS.
+
+The first one is savefile protection. When the user enables savefile prevention,
+libTAS intercepts file-opening calls (`open()`, `fopen()`, etc.) and detects
+regular files that should be considered save data. Instead of letting the game
+modify the real file directly, libTAS creates an in-memory `SaveFile` object and
+routes all subsequent operations through it.
+
+This virtualized file layer supports the usual operations:
+
+* opening by file descriptor or `FILE*`
+* reading and writing
+* seeking
+* removing and renaming
+* listing savefiles inside directory reads
+
+Because the game still expects normal filesystem semantics, libTAS also wraps
+directory operations so that savefiles created only in memory still appear in
+directory listings when appropriate.
+
+The second purpose is to fake a few special files whose content must be made
+deterministic. Typical examples are:
+
+* `/proc/uptime`
+* `/dev/urandom`
+* joystick device nodes such as `/dev/input/js*` and `/dev/input/event*`
+
+In those cases, libTAS does not simply return the native file. It may instead
+return a pipe or an in-memory file filled with deterministic data, and then
+serve the expected reads and `ioctl()` calls through wrappers.
+
+The third purpose is savestate support. Open file descriptors, file offsets and
+pipe contents are not part of the normal process memory dump, so libTAS has to
+track them explicitly. During savestate preparation it records:
+
+* the set of open file descriptors
+* their associated files or special objects
+* current file offsets
+* pipe contents
+
+After loading a state, libTAS recreates the descriptor state as closely as
+possible, restores offsets, and pushes saved data back into pipes when needed.
+
+This area has several limitations. Shared-memory-backed files and some special
+kernel objects do not behave like normal regular files and are therefore much
+harder to restore perfectly. The code tries to preserve the common cases first:
+regular files, savefiles, deterministic fake files and simple pipes.
 
 ## References
 

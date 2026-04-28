@@ -73,13 +73,21 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
 
     }
     else {
+        if (!rect) {
+            return -1;
+        }
         rect->x = displayIndex*Global::shared_config.screen_width;
         rect->y = 0;
         rect->w = Global::shared_config.screen_width;
         rect->h = Global::shared_config.screen_height;
     }
 
-    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns rect (%d,%d,%d,%d)", rect->x, rect->y, rect->w, rect->h);
+    if (rect) {
+        LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns rect (%d,%d,%d,%d)", rect->x, rect->y, rect->w, rect->h);
+    }
+    else {
+        LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns null rect with status %d", ret);
+    }
 
     return ret;
 }
@@ -90,7 +98,7 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
     LINK_NAMESPACE_SDL2(SDL_GetDisplayDPI);
 
     int ret = orig::SDL_GetDisplayDPI(displayIndex, ddpi, hdpi, vdpi);
-    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns ddpi=%f, hdpi=%f, vdpi=", ddpi?*ddpi:0.0f, hdpi?*hdpi:0.0f, vdpi?*vdpi:0.0f);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns ddpi=%f, hdpi=%f, vdpi=%f", ddpi?*ddpi:0.0f, hdpi?*hdpi:0.0f, vdpi?*vdpi:0.0f);
 
     return ret;
 }
@@ -101,7 +109,12 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
     LINK_NAMESPACE_SDL2(SDL_GetDisplayUsableBounds);
 
     int ret = orig::SDL_GetDisplayUsableBounds(displayIndex, rect);
-    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns rect (%d,%d,%d,%d)", rect->x, rect->y, rect->w, rect->h);
+    if (rect) {
+        LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns rect (%d,%d,%d,%d)", rect->x, rect->y, rect->w, rect->h);
+    }
+    else {
+        LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns null rect with status %d", ret);
+    }
 
     return ret;
 }
@@ -209,7 +222,9 @@ DECLARE_ORIG_POINTER(SDL_GetWindowDisplayMode)
             dm = closest;
         }
     }
-    dm->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
+    if (dm) {
+        dm->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
+    }
 
     return dm;
 }

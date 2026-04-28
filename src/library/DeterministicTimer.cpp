@@ -87,13 +87,15 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
         return NonDeterministicTimer::get().getTicks(); // disable deterministic time
     }
 
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+
     if ((type == SharedConfig::TIMETYPE_UNTRACKED_MONOTONIC) || GlobalState::isOwnCode()) {
-        TimeHolder returnTicks = ticks + fakeExtraTicks;
+        TimeHolder returnTicks = ticks + fakeExtraTicks + thread->fakeExtraTicks;
         return returnTicks;
     }
 
     if ((type == SharedConfig::TIMETYPE_UNTRACKED_REALTIME)) {
-        TimeHolder returnTicks = ticks + fakeExtraTicks;
+        TimeHolder returnTicks = ticks + fakeExtraTicks + thread->fakeExtraTicks;
         returnTicks += realtime_delta;
         return returnTicks;
     }
@@ -157,7 +159,7 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
         addDelay(delay);
     }
 
-    TimeHolder returnTicks = ticks + fakeExtraTicks;
+    TimeHolder returnTicks = ticks + fakeExtraTicks + thread->fakeExtraTicks;
     if (!isTimeCallMonotonic(type))
         returnTicks += realtime_delta;
     return returnTicks;
@@ -226,6 +228,27 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
     }
 }
 
+void DeterministicTimer::addThreadedDelay(struct timespec delayTicks)
+{
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+    
+    if (isInsideFrameBoundary()) {
+        thread->addedDelay = {0, 0};
+        thread->fakeExtraTicks = {0, 0};
+        return;
+    }
+
+    thread->addedDelay += delayTicks;
+    
+    TimeHolder maxThreadedDelay = {2, 0};
+    
+    if (thread->addedDelay > maxThreadedDelay) {
+        LOG(LL_WARN, LCF_TIMESET, "We detected some softlocks, we fake advancing time for thread %d by %u.%09u seconds", thread->real_tid, delayTicks.tv_sec, delayTicks.tv_nsec);
+        thread->fakeExtraTicks += delayTicks;
+        thread->addedDelay = {0, 0};
+    }
+}
+
 void DeterministicTimer::flushDelay()
 {
     addedDelay = {0, 0};
@@ -258,6 +281,9 @@ void DeterministicTimer::exitFrameBoundary()
 
         TimeHolder desiredTime = lastEnterTime + baseTimeIncrement * Global::shared_config.speed_divisor;
 
+        TimeHolder sleepTimee = desiredTime - currentTime;
+        LOG(LL_DEBUG, LCF_TIMESET, "sleep for %u.%09u", sleepTimee.tv_sec, sleepTimee.tv_nsec);
+
         /* Call the real nanosleep function */
         perfTimer.switchTimer(PerfTimer::IdleTimer);
 #ifdef __unix__
@@ -274,7 +300,7 @@ void DeterministicTimer::exitFrameBoundary()
          * took too long to process, we may compensate on future frames. This 
          * needs a threshold, otherwise we will constantly try to catch up, and
          * no sleep will happen */
-        TimeHolder thresholdTime = lastEnterTime + baseTimeIncrement * (Global::shared_config.speed_divisor * 3); // Arbitrary value
+        TimeHolder thresholdTime = lastEnterTime + baseTimeIncrement * (Global::shared_config.speed_divisor * 10); // Arbitrary value
 
         if (currentTime > thresholdTime) {
             lastEnterTime = currentTime;
@@ -298,7 +324,7 @@ TimeHolder DeterministicTimer::enterFrameBoundary()
     LOGTRACE(LCF_TIMEGET);
 
     insideFrameBoundary = true;
-
+    fakeAdvanceTimer({0, 0});
 
     /*** First we update the state of the internal timer ***/
 
@@ -321,7 +347,7 @@ TimeHolder DeterministicTimer::enterFrameBoundary()
     if (timeIncrement > addedDelay) {
         TimeHolder deltaTicks = timeIncrement - addedDelay;
         ticks += deltaTicks;
-        LOG(LL_DEBUG, LCF_TIMESET, "%s added %u.%010u", __func__, deltaTicks.tv_sec, deltaTicks.tv_nsec);
+        LOG(LL_DEBUG, LCF_TIMESET, "%s added %u.%09u", __func__, deltaTicks.tv_sec, deltaTicks.tv_nsec);
         addedDelay = {0, 0};
     }
     else {

@@ -150,7 +150,8 @@ int SDLEventQueue::pop(SDL_Event* events, int num, Uint32 minType, Uint32 maxTyp
         if ((ev->type >= minType) && (ev->type <= maxType)) {
 
             /* Copy the event in the array */
-            memcpy(&events[evi], ev, sizeof(SDL_Event));
+            if (events != nullptr)
+                memcpy(&events[evi], ev, sizeof(SDL_Event));
             evi++;
 
             if (update) {
@@ -192,7 +193,8 @@ int SDLEventQueue::pop(SDL1::SDL_Event* events, int num, Uint32 mask, bool updat
         if (mask & SDL1_EVENTMASK(ev->type)) {
 
             /* Copy the event in the array */
-            memcpy(&events[evi], ev, sizeof(SDL1::SDL_Event));
+            if (events != nullptr)
+                memcpy(&events[evi], ev, sizeof(SDL1::SDL_Event));
             evi++;
 
             if (update) {
@@ -286,10 +288,18 @@ void SDLEventQueue::setFilter(SDL1::SDL_EventFilter filter)
 
 bool SDLEventQueue::getFilter(SDL_EventFilter* filter, void** userdata)
 {
+    if (filter != nullptr)
+        *filter = nullptr;
+    if (userdata != nullptr)
+        *userdata = nullptr;
+
     if (filterFunc == nullptr)
         return false;
-    *filter = filterFunc;
-    *userdata = filterData;
+
+    if (filter != nullptr)
+        *filter = filterFunc;
+    if (userdata != nullptr)
+        *userdata = filterData;
     return true;
 }
 

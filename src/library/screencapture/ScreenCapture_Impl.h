@@ -80,6 +80,8 @@ public:
     virtual uint64_t screenTexture() {return 0;}
 
 protected:
+    int copyPixelRows(const void* sourcePixels, int sourcePitch);
+
     
     /* Stored pixel array for use with the video encoder */
     std::vector<uint8_t> winpixels;

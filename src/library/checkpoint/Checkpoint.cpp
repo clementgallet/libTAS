@@ -86,6 +86,16 @@
 #define MADV_GUARD_REMOVE 103
 #endif
 
+static inline off_t alignPageOffsetDown(off_t offset)
+{
+    return offset & ~static_cast<off_t>(0xfff);
+}
+
+static inline off_t alignPageOffsetUp(off_t offset)
+{
+    return (offset + 0xfff) & ~static_cast<off_t>(0xfff);
+}
+
 namespace libtas {
 
 /* Savestate paths (for file storing)*/
@@ -126,18 +136,22 @@ void Checkpoint::setSavestatePath(std::string path)
 {
     std::string pmpath = path + ".pm";
     strncpy(pagemappath, pmpath.c_str(), 1023);
+    pagemappath[1023] = '\0';
 
     std::string ppath = path + ".p";
     strncpy(pagespath, ppath.c_str(), 1023);
+    pagespath[1023] = '\0';
 }
 
 void Checkpoint::setBaseSavestatePath(std::string path)
 {
     std::string pmpath = path + ".pm";
     strncpy(basepagemappath, pmpath.c_str(), 1023);
+    basepagemappath[1023] = '\0';
 
     std::string ppath = path + ".p";
     strncpy(basepagespath, ppath.c_str(), 1023);
+    basepagespath[1023] = '\0';
 }
 
 void Checkpoint::setSavestateIndex(int index)
@@ -294,8 +308,8 @@ void Checkpoint::handler(int signum, siginfo_t *info, void *ucontext)
                 X_DPY_SET_LAST_REQUEST_READ(x11::gameDisplays[i], last_request_read[i]);
                 X_DPY_SET_REQUEST(x11::gameDisplays[i], request[i]);
 #else
-                gameDisplays[i]->last_request_read = static_cast<unsigned long>(last_request_read[i]);
-                gameDisplays[i]->request = static_cast<unsigned long>(request[i]);
+                x11::gameDisplays[i]->last_request_read = static_cast<unsigned long>(last_request_read[i]);
+                x11::gameDisplays[i]->request = static_cast<unsigned long>(request[i]);
 #endif
 
                 /* Restore the entire xcb connection struct */
@@ -777,8 +791,8 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
             else {
                 shared_next_off_data = lseek(shared_fd, saved_area.offset, SEEK_DATA);
                 if (shared_next_off_data == -1) shared_next_off_data = LONG_MAX; // No data, set to past end of file
-                shared_next_off_data &= ~0xfffl; // truncate to page size, this may not be necessary
-                shared_next_off_hole &= ~0xfffl;
+                shared_next_off_data = alignPageOffsetDown(shared_next_off_data);
+                shared_next_off_hole = alignPageOffsetUp(shared_next_off_hole);
             }
         }
         else {
@@ -789,7 +803,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
     char* endAddr = static_cast<char*>(saved_area.endAddr);
     for (char* curAddr = static_cast<char*>(saved_area.addr);
     curAddr < endAddr;
-    curAddr += 4096, page_i++, pagemap_i++) {
+    curAddr += 4096, page_i++) {
 
         /* We read pagemap flags in chunks to avoid too many read syscalls. */
         if (pagemap_i >= 512) {
@@ -854,12 +868,22 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
                         /* data and hole offsets are obsolete, update both of them */
                         shared_next_off_data = lseek(shared_fd, current_off, SEEK_DATA);
                         if (shared_next_off_data == -1) shared_next_off_data = LONG_MAX; // No data, set to past end of file
-                        shared_next_off_data &= ~0xfffl;
                         shared_next_off_hole = lseek(shared_fd, current_off, SEEK_HOLE);
-                        shared_next_off_hole &= ~0xfffl;
+                        if (shared_next_off_hole == -1) {
+                            LOG(LL_DEBUG, LCF_CHECKPOINT, "     Could not seek into shared map file %s", saved_area.map_file);
+                            close(shared_fd);
+                            shared_fd = -1;
+                        }
+                        else {
+                            shared_next_off_data = alignPageOffsetDown(shared_next_off_data);
+                            shared_next_off_hole = alignPageOffsetUp(shared_next_off_hole);
+                        }
                     }
-                    
-                    if ((current_off == shared_next_off_data) || (current_off < shared_next_off_hole)) {
+
+                    if (shared_fd == -1) {
+                        LOG(LL_WARN, LCF_CHECKPOINT, "     Shared map file %s could not be queried for hole information during restore", saved_area.map_file);
+                    }
+                    else if ((current_off == shared_next_off_data) || (current_off < shared_next_off_hole)) {
                         /* Current page is data, but saved page is a hole, so
                          * we memset the page. TODO: use fallocate to recreate
                          * the hole, but that would need opening the file in 
@@ -1079,18 +1103,24 @@ static void readASavefile(SaveStateLoading &saved_state)
      * pages that are different */
     char* mapped_addr_begin = static_cast<char*>(saved_area_addr);
     char* mapped_addr_end = mapped_addr_begin + saved_area.size;
-    
-    char* orig_file_mapped_begin = static_cast<char*>(orig_file_mapped_addr);
+    bool has_orig_file_mapping = (orig_file_mapped_addr != MAP_FAILED);
+    char* orig_file_mapped_begin = has_orig_file_mapping ? static_cast<char*>(orig_file_mapped_addr) : nullptr;
+    char* orig_file_mapped_end = has_orig_file_mapping ? (orig_file_mapped_begin + filestat.st_size) : nullptr;
 
-    for (;mapped_addr_begin < mapped_addr_end; mapped_addr_begin += 4096, orig_file_mapped_begin += 4096) {
+    for (;mapped_addr_begin < mapped_addr_end; mapped_addr_begin += 4096) {
         size_t page_len = (mapped_addr_end - mapped_addr_begin) > 4096 ? 4096 : (mapped_addr_end - mapped_addr_begin);
 
         char flag = saved_state.getNextPageFlag();
 
         if (flag == Area::FILE_PAGE) {
             /* Copy the original file into this file */
-            if (orig_file_mapped_addr) {
-                memcpy(mapped_addr_begin, orig_file_mapped_begin, page_len);                
+            if (has_orig_file_mapping && orig_file_mapped_begin < orig_file_mapped_end) {
+                size_t orig_page_len = orig_file_mapped_end - orig_file_mapped_begin;
+                if (orig_page_len > page_len)
+                    orig_page_len = page_len;
+                memcpy(mapped_addr_begin, orig_file_mapped_begin, orig_page_len);
+                if (orig_page_len < page_len)
+                    memset(mapped_addr_begin + orig_page_len, 0, page_len - orig_page_len);
             }
             else {
                 LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "     Page %p is not stored but original file is missing!", mapped_addr_begin);
@@ -1099,6 +1129,9 @@ static void readASavefile(SaveStateLoading &saved_state)
         else {
             saved_state.queuePageLoad(mapped_addr_begin);
         }
+
+        if (has_orig_file_mapping)
+            orig_file_mapped_begin += 4096;
     }
     
     saved_state.finishLoad();
@@ -1248,7 +1281,7 @@ static void writeAllAreas(bool base)
         Utils::writeAll(crfd, "4\n", 2);
     }
 
-    if (crfd != 1) {
+    if (crfd != -1) {
         close(crfd);
     }
 
@@ -1338,14 +1371,22 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
             shared_next_off_hole = lseek(shared_fd, area.offset, SEEK_HOLE);
             if (shared_next_off_hole == -1) {
                 LOG(LL_DEBUG, LCF_CHECKPOINT, "     Could not seek into shared map file %s", area.map_file);
-                close(shared_fd);
+                if (shared_fd != area.fd)
+                    close(shared_fd);
                 shared_fd = -1;
             }
             else {
                 shared_next_off_data = lseek(shared_fd, area.offset, SEEK_DATA);
                 if (shared_next_off_data == -1) shared_next_off_data = LONG_MAX; // No data, set to past end of file
-                shared_next_off_data &= ~0xfffl;
-                shared_next_off_hole &= ~0xfffl;
+                shared_next_off_data = alignPageOffsetDown(shared_next_off_data);
+                shared_next_off_hole = alignPageOffsetUp(shared_next_off_hole);
+            }
+
+            /* In some cases where seeking is not possible (such as /dev/dri/card0), both values will be 0. */
+            if (shared_next_off_data == 0 && shared_next_off_hole == 0) {
+                if (shared_fd != area.fd)
+                    close(shared_fd);
+                shared_fd = -1;
             }
         }
         else {
@@ -1435,12 +1476,23 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
                     /* data and hole offsets are obsolete, update both of them */
                     shared_next_off_data = lseek(shared_fd, current_off, SEEK_DATA);
                     if (shared_next_off_data == -1) shared_next_off_data = LONG_MAX; // No data, set to past end of file
-                    shared_next_off_data &= ~0xfffl;
                     shared_next_off_hole = lseek(shared_fd, current_off, SEEK_HOLE);
-                    shared_next_off_hole &= ~0xfffl;
+                    if (shared_next_off_hole == -1) {
+                        LOG(LL_DEBUG, LCF_CHECKPOINT, "     Could not seek into shared map file %s", area.map_file);
+                        if (shared_fd != area.fd)
+                            close(shared_fd);
+                        shared_fd = -1;
+                    }
+                    else {
+                        shared_next_off_data = alignPageOffsetDown(shared_next_off_data);
+                        shared_next_off_hole = alignPageOffsetUp(shared_next_off_hole);
+                    }
                 }
 
-                if ((current_off == shared_next_off_data) || (current_off < shared_next_off_hole)) {
+                if (shared_fd == -1) {
+                    LOG(LL_WARN, LCF_CHECKPOINT, "     Shared map file %s could not be queried for hole information while saving", area.map_file);
+                }
+                else if ((current_off == shared_next_off_data) || (current_off < shared_next_off_hole)) {
                     /* Current page is data */
                 }
                 else if ((current_off == shared_next_off_hole) || (current_off < shared_next_off_data)) {
@@ -1603,7 +1655,7 @@ static size_t writeSaveFiles(SaveStateSaving &state)
         /* Map the original file */
         int orig_fd = -1;
         size_t orig_file_mapped_size = 0;
-        void* orig_file_mapped_addr = nullptr;
+        void* orig_file_mapped_addr = MAP_FAILED;
         
         rv = stat(savefile->filename.c_str(), &filestat);
 
@@ -1619,6 +1671,8 @@ static size_t writeSaveFiles(SaveStateSaving &state)
             else {
                 orig_file_mapped_size = filestat.st_size;
                 orig_file_mapped_addr = mmap(nullptr, filestat.st_size, PROT_READ | PROT_EXEC, MAP_PRIVATE | MAP_FILE, orig_fd, 0);
+                if (orig_file_mapped_addr == MAP_FAILED)
+                    orig_file_mapped_size = 0;
                 close(orig_fd);
             }
         }
@@ -1627,9 +1681,9 @@ static size_t writeSaveFiles(SaveStateSaving &state)
          * pages that are different */
         char* mapped_addr_begin = static_cast<char*>(area.addr);
         char* mapped_addr_end = mapped_addr_begin + area.size;
-        
-        char* orig_file_mapped_begin = static_cast<char*>(orig_file_mapped_addr);
-        char* orig_file_mapped_end = orig_file_mapped_begin + orig_file_mapped_size;
+        bool has_orig_file_mapping = (orig_file_mapped_addr != MAP_FAILED);
+        char* orig_file_mapped_begin = has_orig_file_mapping ? static_cast<char*>(orig_file_mapped_addr) : nullptr;
+        char* orig_file_mapped_end = has_orig_file_mapping ? (orig_file_mapped_begin + orig_file_mapped_size) : nullptr;
 
         /* Stats to print */
         int pagecount_full = 0;
@@ -1638,19 +1692,31 @@ static size_t writeSaveFiles(SaveStateSaving &state)
         state.processArea(&area);
         size_t area_size = sizeof(area);
 
-        for (;mapped_addr_begin < mapped_addr_end; mapped_addr_begin += 4096, orig_file_mapped_begin += 4096) {
+        for (;mapped_addr_begin < mapped_addr_end; mapped_addr_begin += 4096) {
             size_t page_len = (mapped_addr_end - mapped_addr_begin) > 4096 ? 4096 : (mapped_addr_end - mapped_addr_begin);
 
             /* Check difference with original file */
-            if (orig_file_mapped_addr) {
+            if (has_orig_file_mapping) {
                 
                 /* If we reached the end of the original file, save all remaining pages */
-                if (orig_file_mapped_begin > orig_file_mapped_end) {
+                if (orig_file_mapped_begin >= orig_file_mapped_end) {
                     area_size += state.queuePageSave(mapped_addr_begin);
                     pagecount_full++;
                 }
                 else {
-                    int diff = memcmp(mapped_addr_begin, orig_file_mapped_begin, page_len);
+                    size_t orig_page_len = orig_file_mapped_end - orig_file_mapped_begin;
+                    if (orig_page_len > page_len)
+                        orig_page_len = page_len;
+
+                    int diff = memcmp(mapped_addr_begin, orig_file_mapped_begin, orig_page_len);
+                    if ((diff == 0) && (orig_page_len < page_len)) {
+                        for (size_t i = orig_page_len; i < page_len; i++) {
+                            if (mapped_addr_begin[i] != 0) {
+                                diff = 1;
+                                break;
+                            }
+                        }
+                    }
                     if (diff == 0) {
                         state.savePageFlag(Area::FILE_PAGE);
                         pagecount_file++;
@@ -1665,6 +1731,9 @@ static size_t writeSaveFiles(SaveStateSaving &state)
                 area_size += state.queuePageSave(mapped_addr_begin);
                 pagecount_full++;
             }
+
+            if (has_orig_file_mapping)
+                orig_file_mapped_begin += 4096;
         }
         
         area_size += state.finishSave();

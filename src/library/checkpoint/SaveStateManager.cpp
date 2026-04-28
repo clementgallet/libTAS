@@ -89,6 +89,40 @@ static int sig_suspend_threads = SIGXFSZ;
 static int sig_checkpoint = SIGSYS;
 static bool* state_dirty;
 
+#ifdef __unix__
+static void lockGameDisplays()
+{
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (x11::gameDisplays[i])
+            XLockDisplay(x11::gameDisplays[i]);
+    }
+}
+
+static void syncGameDisplays()
+{
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (x11::gameDisplays[i])
+            XSync(x11::gameDisplays[i], false);
+    }
+}
+
+static void unlockGameDisplays()
+{
+    for (int i=0; i<GAMEDISPLAYNUM; i++) {
+        if (x11::gameDisplays[i])
+            XUnlockDisplay(x11::gameDisplays[i]);
+    }
+}
+
+static void syncGameConnectionsAfterRestore()
+{
+    for (int i=0; i<GAMECONNECTIONNUM; i++) {
+        if (x11::gameConnections[i])
+            free(xcb_get_input_focus_reply(x11::gameConnections[i], xcb_get_input_focus(x11::gameConnections[i]), nullptr));
+    }
+}
+#endif
+
 /* From DMTCP */
 static void save_sp(void **sp)
 {
@@ -175,7 +209,7 @@ int SaveStateManager::waitChild()
         return -1;
     }
     status = WEXITSTATUS(status);
-    if ((status < 0) && (status > 10)) {
+    if ((status < 0) || (status > 10)) {
         LOG(LL_ERROR, LCF_CHECKPOINT, "Got unknown status code %d from pid %d", status, pid);
         return -1;
     }
@@ -193,7 +227,7 @@ bool SaveStateManager::stateReady(int slot)
     if (!(Global::shared_config.savestate_settings & SharedConfig::SS_FORK))
         return true;
 
-    if ((slot < 0) && (slot > 10)) {
+    if ((slot < 0) || (slot > 10)) {
         LOG(LL_ERROR, LCF_CHECKPOINT, "Wrong slot number");
         return false;
     }
@@ -241,10 +275,7 @@ int SaveStateManager::checkpoint(int slot)
 
 #ifdef __unix__
     /* Lock the display so we can empty events */
-    for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (x11::gameDisplays[i])
-            XLockDisplay(x11::gameDisplays[i]);
-    }
+    lockGameDisplays();
 #endif
 
     /* Sync all X server connections. Must be done before suspending threads,
@@ -270,10 +301,7 @@ int SaveStateManager::checkpoint(int slot)
      *     XSync () at /usr/lib/x86_64-linux-gnu/libX11.so.6
      */
 #ifdef __unix__
-    for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (x11::gameDisplays[i])
-            XSync(x11::gameDisplays[i], false);
-    }
+    syncGameDisplays();
 #endif
 
     /* Update thread stack address and size for stack padding.
@@ -282,6 +310,11 @@ int SaveStateManager::checkpoint(int slot)
 
     /* Sending a suspend signal to all threads */
     suspendThreads();
+
+#ifdef __unix__
+    /* Do not carry Xlib locks across checkpoint/restore memory changes. */
+    unlockGameDisplays();
+#endif
 
 #ifdef __linux__
     /* Disable the signal that refills the fake urandom pipe. Must be done
@@ -340,23 +373,14 @@ int SaveStateManager::checkpoint(int slot)
         createNewThreads();
     }
 
-    resumeThreads();
-
 #ifdef __unix__
     /* After restore, we need to sync xcb connections to avoid potential deadlocks */
     if (restoreInProgress) {
-        for (int i=0; i<GAMECONNECTIONNUM; i++) {
-            if (x11::gameConnections[i])
-                free(xcb_get_input_focus_reply(x11::gameConnections[i], xcb_get_input_focus(x11::gameConnections[i]), nullptr));
-        }
-    }
-
-    /* Unlock the display */
-    for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (x11::gameDisplays[i])
-            XUnlockDisplay(x11::gameDisplays[i]);
+        syncGameConnectionsAfterRestore();
     }
 #endif
+
+    resumeThreads();
 
     /* Wait for all other threads to finish being restored before resuming */
     LOG(LL_DEBUG, LCF_CHECKPOINT, "Waiting for other threads to resume");
@@ -408,22 +432,21 @@ int SaveStateManager::restore(int slot)
 
 #ifdef __unix__
     /* Lock the display so we can empty events */
-    for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (x11::gameDisplays[i])
-            XLockDisplay(x11::gameDisplays[i]);
-    }
+    lockGameDisplays();
 
     /* Sync all X server connections. */
-    for (int i=0; i<GAMEDISPLAYNUM; i++) {
-        if (x11::gameDisplays[i])
-            XSync(x11::gameDisplays[i], false);
-    }
+    syncGameDisplays();
 #endif
 
     /* Stop threads that will not be present after state loading */
     terminateThreads();
     
     suspendThreads();
+
+#ifdef __unix__
+    /* Release Xlib locks before loading the restored process image. */
+    unlockGameDisplays();
+#endif
 
     /* Save thread list in reserved memory */
     saveThreadList();
@@ -463,15 +486,14 @@ int SaveStateManager::restore(int slot)
      urandom_enable_handler();
 #endif
 
-     resumeThreads();
-
 #ifdef __unix__
-     /* Unlock the display */
-     for (int i=0; i<GAMEDISPLAYNUM; i++) {
-         if (x11::gameDisplays[i])
-             XUnlockDisplay(x11::gameDisplays[i]);
-     }
+    /* Re-prime xcb state before other threads resume. */
+    if (restoreInProgress) {
+        syncGameConnectionsAfterRestore();
+    }
 #endif
+
+     resumeThreads();
 
      waitForAllRestored(current_thread);
 

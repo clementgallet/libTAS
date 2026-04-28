@@ -38,8 +38,10 @@
 #include <mutex>
 #include <unistd.h> // lseek
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <sys/sysmacros.h>
 #ifdef __linux__
 #include <sys/syscall.h>
 #endif
@@ -77,15 +79,36 @@ std::pair<int, int> createPipe(int flags) {
 
 int fdFromFile(const char* file)
 {
+    return fdFromFile(file, 0, 0);
+}
+
+int fdFromFile(const char* file, dev_t device, ino_t inode)
+{
     auto& filehandles = getFileList();
+
+    int fallback_fd = -1;
+    bool multiple_matches = false;
 
     for (const FileHandle &fh : filehandles) {
         if (fh.type == FileHandle::FILE_PIPE)
             continue;
         if (0 == strcmp(fh.fileName, file)) {
-            return fh.fds[0];
+            if (inode != 0 && fh.inode == inode && (device == 0 || fh.device == device)) {
+                return fh.fds[0];
+            }
+            if (fallback_fd == -1) {
+                fallback_fd = fh.fds[0];
+            }
+            else {
+                multiple_matches = true;
+            }
         }
     }
+
+    if (!multiple_matches) {
+        return fallback_fd;
+    }
+
     return -1;
 }
 
@@ -116,6 +139,11 @@ void updateAllFiles()
     struct dirent *dp;
 
     DIR *dir = opendir("/proc/self/fd/");
+    if (dir == nullptr) {
+        LOG(LL_ERROR, LCF_FILEIO, "Could not open /proc/self/fd/ to enumerate file descriptors");
+        return;
+    }
+
     int dir_fd = dirfd(dir);
     
     while ((dp = readdir(dir))) {
@@ -127,6 +155,12 @@ void updateAllFiles()
         /* Skip own dir file descriptor */
         if (fd == dir_fd)
             continue;
+
+        struct stat fd_stat;
+        bool has_identity = false;
+        if (fstat(fd, &fd_stat) == 0) {
+            has_identity = true;
+        }
 
         /* Get symlink */
         char buf[1024] = {};
@@ -184,6 +218,11 @@ void updateAllFiles()
                 filehandles.emplace_front(buf, fd, FileHandle::FILE_REGULAR);
             else
                 filehandles.emplace_front(buf, fd, FileHandle::FILE_SPECIAL);
+
+            if (!filehandles.empty() && has_identity) {
+                filehandles.front().device = fd_stat.st_dev;
+                filehandles.front().inode = fd_stat.st_ino;
+            }
         }
     }
     closedir(dir);
@@ -210,6 +249,12 @@ void trackFile(FileHandle &fh)
          */
         LOG(LL_DEBUG, LCF_FILEIO, "Save pipe content (fd=%d,%d)", fh.fds[0], fh.fds[1]);
 
+        if (fh.fds[0] < 0 || fh.fds[1] < 0) {
+            LOG(LL_WARN, LCF_FILEIO, "Skip saving incomplete pipe (fd=%d,%d)", fh.fds[0], fh.fds[1]);
+            fh.size = -1;
+            return;
+        }
+
         int pipeSize;
         MYASSERT(ioctl(fh.fds[0], FIONREAD, &pipeSize) == 0);
         LOG(LL_DEBUG, LCF_FILEIO, "Save pipe size: %d", pipeSize);
@@ -217,16 +262,45 @@ void trackFile(FileHandle &fh)
         if (fh.size > 0) {
             std::free(fh.pipeContents);
             fh.pipeContents = static_cast<char *>(std::malloc(fh.size));
-            Utils::readAll(fh.fds[0], fh.pipeContents, fh.size);
+            ssize_t bytes_read = Utils::readAll(fh.fds[0], fh.pipeContents, fh.size);
+            if (bytes_read < 0) {
+                LOG(LL_ERROR, LCF_FILEIO, "Could not save pipe content from pipe (fd=%d,%d)", fh.fds[0], fh.fds[1]);
+                std::free(fh.pipeContents);
+                fh.pipeContents = nullptr;
+                fh.size = -1;
+            }
+            else if (bytes_read != fh.size) {
+                LOG(LL_WARN, LCF_FILEIO, "Saved only %zd/%jd bytes from pipe (fd=%d,%d)", bytes_read, fh.size, fh.fds[0], fh.fds[1]);
+                fh.size = bytes_read;
+            }
         }
     }
     else if (fh.needsTracking()) {
         LOG(LL_DEBUG, LCF_FILEIO, "Track file %s (fd=%d)", fh.fileName, fh.fds[0]);
 
-        fdatasync(fh.fds[0]);
-        fh.fileOffset = lseek(fh.fds[0], 0, SEEK_CUR);
+        if (fdatasync(fh.fds[0]) != 0) {
+            LOG(LL_WARN, LCF_FILEIO, "Could not synchronize file %s (fd=%d) before tracking", fh.fileName, fh.fds[0]);
+        }
+
+        off_t currentOffset = lseek(fh.fds[0], 0, SEEK_CUR);
+        if (currentOffset == -1) {
+            LOG(LL_ERROR, LCF_FILEIO, "Could not get current offset for file %s (fd=%d)", fh.fileName, fh.fds[0]);
+            fh.fileOffset = -1;
+            fh.size = -1;
+            return;
+        }
+
+        fh.fileOffset = currentOffset;
         fh.size = lseek(fh.fds[0], 0, SEEK_END);
-        lseek(fh.fds[0], fh.fileOffset, SEEK_SET);
+
+        if (fh.size == -1) {
+            LOG(LL_ERROR, LCF_FILEIO, "Could not get size for file %s (fd=%d)", fh.fileName, fh.fds[0]);
+        }
+        else if (lseek(fh.fds[0], fh.fileOffset, SEEK_SET) == -1) {
+            LOG(LL_ERROR, LCF_FILEIO, "Could not restore offset for file %s (fd=%d)", fh.fileName, fh.fds[0]);
+            fh.fileOffset = -1;
+        }
+
         LOG(LL_DEBUG, LCF_FILEIO, "Save file offset %jd and size %jd", fh.fileOffset, fh.size);
     }
 }
@@ -244,9 +318,12 @@ void recoverFileOffsets()
         }
 
         off_t current_size = lseek(fh.fds[0], 0, SEEK_END);
+        if (current_size == -1) {
+            LOG(LL_ERROR, LCF_FILEIO, "Error getting size of file %s (fd=%d)", fh.fileName, fh.fds[0]);
+        }
         ssize_t ret = lseek(fh.fds[0], fh.fileOffset, SEEK_SET);
 
-        if (current_size != fh.size) {
+        if (current_size != -1 && current_size != fh.size) {
             LOG(LL_WARN, LCF_FILEIO, "File %s (fd=%d) changed size from %jd to %jd", fh.fileName, fh.fds[0], fh.size, current_size);
         }
 
@@ -272,19 +349,35 @@ void recoverPipeContents()
             continue;
         }
 
+        if (fh.fds[0] < 0 || fh.fds[1] < 0) {
+            LOG(LL_WARN, LCF_FILEIO, "Skip restoring incomplete pipe (fd=%d,%d)", fh.fds[0], fh.fds[1]);
+            std::free(fh.pipeContents);
+            fh.pipeContents = nullptr;
+            fh.size = -1;
+            continue;
+        }
+
         /* Empty the pipe */
         int pipesize;
         MYASSERT(ioctl(fh.fds[0], FIONREAD, &pipesize) == 0);
         if (pipesize != 0) {
             char* tmp = static_cast<char *>(std::malloc(pipesize));
-            Utils::readAll(fh.fds[0], tmp, pipesize);
+            ssize_t drained = Utils::readAll(fh.fds[0], tmp, pipesize);
+            if (drained != pipesize) {
+                LOG(LL_ERROR, LCF_FILEIO, "Could not fully drain pipe before restore (fd=%d,%d): %zd/%d bytes", fh.fds[0], fh.fds[1], drained, pipesize);
+                std::free(tmp);
+                std::free(fh.pipeContents);
+                fh.pipeContents = nullptr;
+                fh.size = -1;
+                continue;
+            }
             std::free(tmp);
         }
 
         ssize_t ret = Utils::writeAll(fh.fds[1], fh.pipeContents, fh.size);
 
-        if (ret == -1) {
-            LOG(LL_ERROR, LCF_FILEIO, "Error recovering %jd bytes into pipe (fd=%d,%d)", fh.size, fh.fds[0], fh.fds[1]);
+        if (ret != fh.size) {
+            LOG(LL_ERROR, LCF_FILEIO, "Error recovering %jd bytes into pipe (fd=%d,%d): restored %zd bytes", fh.size, fh.fds[0], fh.fds[1], ret);
         }
         else {
             LOG(LL_DEBUG, LCF_FILEIO, "Restore pipe (fd=%d,%d) size to %jd", fh.fds[0], fh.fds[1], fh.size);
@@ -307,7 +400,7 @@ void syncFileDescriptors()
 
         /* Look at existing file descriptor and get symlink */
         char fd_str[25];
-        sprintf(fd_str, "/proc/self/fd/%d", fd);
+        snprintf(fd_str, sizeof(fd_str), "/proc/self/fd/%d", fd);
 
         char buf[1024] = {};
         ssize_t buf_size = readlink(fd_str, buf, 1024);

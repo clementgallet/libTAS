@@ -80,17 +80,29 @@ void AudioBuffer::update(void)
         case SAMPLE_FMT_S32:
         case SAMPLE_FMT_FLT:
         case SAMPLE_FMT_DBL:
-            sampleSize = size / alignSize;
+            if (alignSize <= 0) {
+                LOG(LL_ERROR, LCF_SOUND, "Invalid audio alignment for format %d, channels %d, bit depth %d", format, nbChannels, bitDepth);
+                sampleSize = 0;
+            }
+            else {
+                sampleSize = size / alignSize;
+            }
             break;
         case SAMPLE_FMT_MSADPCM:
 
             /* Number of bytes of a block */
             blockSize = nbChannels * (7 + (blockSamples - 2) / 2);
 
-            sampleSize = blockSamples * (size / blockSize);
-            if ((size % blockSize) >= (7 * nbChannels))
-                /* We have an incomplete block */
-                sampleSize += 2 + ((size % blockSize)/nbChannels - 7) * 2;
+            if (blockSize <= 0 || nbChannels <= 0) {
+                LOG(LL_ERROR, LCF_SOUND, "Invalid MSADPCM block geometry, channels %d, block samples %d", nbChannels, blockSamples);
+                sampleSize = 0;
+            }
+            else {
+                sampleSize = blockSamples * (size / blockSize);
+                if ((size % blockSize) >= (7 * nbChannels))
+                    /* We have an incomplete block */
+                    sampleSize += 2 + ((size % blockSize)/nbChannels - 7) * 2;
+            }
             break;
         default:
             break;
@@ -105,8 +117,12 @@ bool AudioBuffer::checkSize(void)
         case SAMPLE_FMT_S32:
         case SAMPLE_FMT_FLT:
         case SAMPLE_FMT_DBL:
+            if (alignSize <= 0)
+                return false;
             return (size % alignSize) == 0;
         case SAMPLE_FMT_MSADPCM:
+            if (nbChannels <= 0)
+                return false;
             return (size % nbChannels) == 0;
         default:
             break;
@@ -119,6 +135,9 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position, b
     /* If the buffer is empty (e.g. for ALSA we push an empty buffer to save
      * params), return immediatly. */
     if (size == 0)
+        return 0;
+
+    if (nbSamples <= 0 || position < 0)
         return 0;
         
     /* If the position is at the end of the buffer, return immediatly */
@@ -133,6 +152,12 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position, b
         case SAMPLE_FMT_S32:
         case SAMPLE_FMT_FLT:
         case SAMPLE_FMT_DBL:
+            if (alignSize <= 0)
+                return 0;
+
+            if ((position > (size / alignSize)) || (position * alignSize > size))
+                return 0;
+
             /* Simple case, we just return a position in our sample buffer */
             outSamples = &samples[position*alignSize];
 
@@ -153,6 +178,9 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position, b
                 /* We reach the end of the buffer */
                 return (sampleSize - position);
         case SAMPLE_FMT_MSADPCM:
+
+            if (blockSamples <= 0 || blockSize <= 0 || nbChannels <= 0)
+                return 0;
 
             /*** 1. Compute which portion of our buffer we decompress ***/
 

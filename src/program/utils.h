@@ -21,6 +21,7 @@
 #define LIBTAS_UTILS_H_INCLUDED
 
 #include <string>
+#include <string_view>
 #include <cstdint>
 #include <filesystem>
 
@@ -54,7 +55,7 @@ int extractBinaryType(std::filesystem::path path);
 std::filesystem::path extractMacOSExecutable(std::filesystem::path path);
 
 /* Get the result of a shell command */
-std::string queryCmd(const std::string& cmd, int* status = nullptr);
+std::string queryCmd(std::string_view cmd, int* status = nullptr);
 
 /* Get the result of a shell command and returns pid */
 std::string queryCmdPid(const char **command, pid_t* popen_pid);

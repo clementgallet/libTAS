@@ -57,8 +57,16 @@ DEFINE_ORIG_POINTER(XSync)
 DEFINE_ORIG_POINTER(XGetEventData)
 DEFINE_ORIG_POINTER(XFreeEventData)
 
+[[maybe_unused]] static void debugEvent(XEvent *event);
 
-static void debugEvent(XEvent *event);
+static std::shared_ptr<XlibEventQueue> getEventQueue(Display* display, const char* func)
+{
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    if (!queue) {
+        LOG(LL_WARN, LCF_EVENTS, "Missing Xlib event queue in %s for display %p, falling back to native events", func, display);
+    }
+    return queue;
+}
 
 /* Function to indicate if an event is filtered */
 static Bool isEventFiltered (XEvent *event) {
@@ -112,12 +120,13 @@ void pushNativeXlibEvents(Display *display)
         return;
     }
 
-    NATIVECALL(XLockDisplay(display));
-    int n;
-    NATIVECALL(n = XPending(display));
+    GlobalNative gn;
+
+    XLockDisplay(display);
+    int n = XPending(display);
     while (n > 0) {
         XEvent event;
-        NATIVECALL(XNextEvent(display, &event));
+        XNextEvent(display, &event);
 
         if (event.type == ClientMessage) {
             /* Catch the close event */
@@ -133,50 +142,24 @@ void pushNativeXlibEvents(Display *display)
                 LOG(LL_DEBUG, LCF_EVENTS | LCF_WINDOW, "Answering a ping message");
                 XEvent reply = event;
                 reply.xclient.window = DefaultRootWindow(display);
-                NATIVECALL(XSendEvent(display, DefaultRootWindow(display), False,
-                    SubstructureNotifyMask | SubstructureRedirectMask, &reply));
+                XSendEvent(display, DefaultRootWindow(display), False,
+                    SubstructureNotifyMask | SubstructureRedirectMask, &reply);
             }
         }
         
         if (ImGui::GetCurrentContext()) {
-            GlobalNative gn;
             /* Redirect events to ImGui, and notify if it was interested in the event */
             if (ImGui_ImplXlib_ProcessEvent(&event))
                 RenderHUD::userInputs();
-                
-            /* Detect window resizing by the user */
-            if (event.type == ConfigureNotify) {
-                XConfigureEvent xce = event.xconfigure;
-
-                int w = 0, h = 0;
-                ScreenCapture::getDimensions(w, h);
-
-                if (w != xce.width || h != xce.height) {
-                    /* Check the saved dimension to see if the event was generated
-                     * by window resizing or API call */
-                     
-                    /* Detach the game window */
-                    RenderHUD::detachGameWindow();
-
-                    /* Skip the event */
-                    NATIVECALL(n = XPending(display));
-                    continue;
-                }
-                
-                /* TODO: We need to do something to prevent games to know that
-                 * we resized the game window */
-                // xce.width = w;
-                // xce.height = h;
-            }
         }
 
         if (!isEventFiltered(&event)) {
             xlibEventQueueList.insert(display, &event);
         }
 
-        NATIVECALL(n = XPending(display));
+        n = XPending(display);
     }
-    NATIVECALL(XUnlockDisplay(display));
+    XUnlockDisplay(display);
 }
 
 int XNextEvent(Display *display, XEvent *event_return)
@@ -194,7 +177,12 @@ int XNextEvent(Display *display, XEvent *event_return)
     }
 
     bool isEvent = false;
-    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    std::shared_ptr<XlibEventQueue> queue = getEventQueue(display, __func__);
+    if (!queue) {
+        LINK_NAMESPACE_GLOBAL(XNextEvent);
+        return orig::XNextEvent(display, event_return);
+    }
+
     for (int r=0; r<1000; r++) {
         isEvent = queue->pop(event_return, true);
         if (isEvent)
@@ -224,7 +212,12 @@ int XPeekEvent(Display *display, XEvent *event_return)
     }
 
     bool isEvent = false;
-    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    std::shared_ptr<XlibEventQueue> queue = getEventQueue(display, __func__);
+    if (!queue) {
+        LINK_NAMESPACE_GLOBAL(XPeekEvent);
+        return orig::XPeekEvent(display, event_return);
+    }
+
     for (int r=0; r<1000; r++) {
         isEvent = queue->pop(event_return, false);
         if (isEvent)
@@ -254,7 +247,12 @@ int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_retu
     }
 
     bool isEvent = false;
-    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    std::shared_ptr<XlibEventQueue> queue = getEventQueue(display, __func__);
+    if (!queue) {
+        LINK_NAMESPACE_GLOBAL(XWindowEvent);
+        return orig::XWindowEvent(display, w, event_mask, event_return);
+    }
+
     for (int r=0; r<1000; r++) {
         isEvent = queue->pop(event_return, w, event_mask);
         if (isEvent)
@@ -283,7 +281,12 @@ Bool XCheckWindowEvent(Display *display, Window w, long event_mask, XEvent *even
         return orig::XCheckWindowEvent(display, w, event_mask, event_return);
     }
 
-    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    std::shared_ptr<XlibEventQueue> queue = getEventQueue(display, __func__);
+    if (!queue) {
+        LINK_NAMESPACE_GLOBAL(XCheckWindowEvent);
+        return orig::XCheckWindowEvent(display, w, event_mask, event_return);
+    }
+
     bool isEvent = queue->pop(event_return, w, event_mask);
     return isEvent?True:False;
 }
@@ -303,7 +306,12 @@ int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
     }
 
     bool isEvent = false;
-    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    std::shared_ptr<XlibEventQueue> queue = getEventQueue(display, __func__);
+    if (!queue) {
+        LINK_NAMESPACE_GLOBAL(XMaskEvent);
+        return orig::XMaskEvent(display, event_mask, event_return);
+    }
+
     for (int r=0; r<1000; r++) {
         isEvent = queue->pop(event_return, 0, event_mask);
         if (isEvent)
@@ -332,7 +340,12 @@ Bool XCheckMaskEvent(Display *display, long event_mask, XEvent *event_return)
         return orig::XCheckMaskEvent(display, event_mask, event_return);
     }
 
-    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    std::shared_ptr<XlibEventQueue> queue = getEventQueue(display, __func__);
+    if (!queue) {
+        LINK_NAMESPACE_GLOBAL(XCheckMaskEvent);
+        return orig::XCheckMaskEvent(display, event_mask, event_return);
+    }
+
     bool isEvent = queue->pop(event_return, 0, event_mask);
     if (!isEvent) {
         pushNativeXlibEvents(display);
@@ -355,7 +368,12 @@ Bool XCheckTypedEvent(Display *display, int event_type, XEvent *event_return)
         return orig::XCheckTypedEvent(display, event_type, event_return);
     }
 
-    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    std::shared_ptr<XlibEventQueue> queue = getEventQueue(display, __func__);
+    if (!queue) {
+        LINK_NAMESPACE_GLOBAL(XCheckTypedEvent);
+        return orig::XCheckTypedEvent(display, event_type, event_return);
+    }
+
     bool isEvent = queue->pop(event_return, 0, event_type);
     if (!isEvent) {
         pushNativeXlibEvents(display);
@@ -378,7 +396,12 @@ Bool XCheckTypedWindowEvent(Display *display, Window w, int event_type, XEvent *
         return orig::XCheckTypedWindowEvent(display, w, event_type, event_return);
     }
 
-    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    std::shared_ptr<XlibEventQueue> queue = getEventQueue(display, __func__);
+    if (!queue) {
+        LINK_NAMESPACE_GLOBAL(XCheckTypedWindowEvent);
+        return orig::XCheckTypedWindowEvent(display, w, event_type, event_return);
+    }
+
     bool isEvent = queue->pop(event_return, w, event_type);
     if (!isEvent) {
         pushNativeXlibEvents(display);
@@ -401,7 +424,12 @@ int XEventsQueued(Display* display, int mode)
         return orig::XEventsQueued(display, mode);
     }
 
-    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    std::shared_ptr<XlibEventQueue> queue = getEventQueue(display, __func__);
+    if (!queue) {
+        LINK_NAMESPACE_GLOBAL(XEventsQueued);
+        return orig::XEventsQueued(display, mode);
+    }
+
     int ret = queue->size();
     LOG(LL_DEBUG, LCF_EVENTS, "    returns %d", ret);
     if ((ret == 0) && (mode != QueuedAlready))
@@ -424,7 +452,12 @@ int XPending(Display *display)
         return orig::XPending(display);
     }
 
-    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    std::shared_ptr<XlibEventQueue> queue = getEventQueue(display, __func__);
+    if (!queue) {
+        LINK_NAMESPACE_GLOBAL(XPending);
+        return orig::XPending(display);
+    }
+
     int ret = queue->size();
     LOG(LL_DEBUG, LCF_EVENTS, "    returns %d", ret);
     if (ret == 0)
@@ -447,7 +480,12 @@ int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *
     }
 
     bool isEvent = false;
-    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    std::shared_ptr<XlibEventQueue> queue = getEventQueue(display, __func__);
+    if (!queue) {
+        LINK_NAMESPACE_GLOBAL(XIfEvent);
+        return orig::XIfEvent(display, event_return, predicate, arg);
+    }
+
     for (int r=0; r<1000; r++) {
         isEvent = queue->pop(event_return, predicate, arg);
         if (isEvent)
@@ -482,7 +520,12 @@ Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Dis
 
     pushNativeXlibEvents(display);
 
-    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    std::shared_ptr<XlibEventQueue> queue = getEventQueue(display, __func__);
+    if (!queue) {
+        LINK_NAMESPACE_GLOBAL(XCheckIfEvent);
+        return orig::XCheckIfEvent(display, event_return, predicate, arg);
+    }
+
     bool isEvent = queue->pop(event_return, predicate, arg);
     return isEvent?True:False;
 }
@@ -677,7 +720,7 @@ void XFreeEventData(Display* dpy, XGenericEventCookie* cookie)
 }
 
 /* Show informations about an xevent */
-static void debugEvent(XEvent *event)
+[[maybe_unused]] static void debugEvent(XEvent *event)
 {
     LOG(LL_DEBUG, LCF_EVENTS, "Debug event %p:", event);
     if (!event) return;
@@ -777,7 +820,7 @@ static void debugEvent(XEvent *event)
         case UnmapNotify:
             LOG(LL_DEBUG, LCF_EVENTS, "| | type: UnmapNotify");
             break;
-    }    
+    }
     LOG(LL_DEBUG, LCF_EVENTS, "|___");
 }
 

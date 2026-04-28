@@ -38,6 +38,9 @@ namespace libtas {
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
 int AudioSource::ticksToSamples(struct timespec ticks, int frequency)
 {
+    if (frequency <= 0)
+        return 0;
+
     uint64_t nsecs = static_cast<uint64_t>(ticks.tv_sec) * 1000000000ULL + ticks.tv_nsec;
     uint64_t samples = (nsecs * frequency) / 1000000000ULL;
     samples_frac += (nsecs * frequency) % 1000000000ULL;
@@ -107,7 +110,8 @@ int AudioSource::queueSize()
 int AudioSource::getPosition()
 {
     int totalPos = 0;
-    for (int i=0; i<queue_index; i++) {
+    int processed = std::min(queue_index, static_cast<int>(buffer_queue.size()));
+    for (int i=0; i<processed; i++) {
         totalPos += buffer_queue[i]->sampleSize;
     }
     totalPos += position;
@@ -195,6 +199,11 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                                     (Global::shared_config.fastforward_mode & SharedConfig::FF_MIXING))));
 
     std::shared_ptr<AudioBuffer> curBuf = buffer_queue[queue_index];
+
+    if (curBuf->frequency <= 0) {
+        LOG(LL_ERROR, LCF_SOUND, "Invalid buffer frequency %d for source %d", curBuf->frequency, id);
+        return -1;
+    }
 
     if (!skipMixing) {
         /* Check if audio converter is initialized.

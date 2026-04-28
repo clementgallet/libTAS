@@ -36,17 +36,15 @@
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QSplitter>
 
-InputEditorWindow::InputEditorWindow(Context* c, MovieFile *movie, QWidget *parent) : QMainWindow(parent), context(c)
+InputEditorWindow::InputEditorWindow(Context* c, MovieFile *movie, QWidget *parent) : QMainWindow(parent), context(c), movie(movie)
 {
     setWindowTitle("Input Editor");
 
     /* Table */
     inputEditorView = new InputEditorView(c, movie, this);
 
-    /* Panels/Windows */
+    /* Panels */
     markerView = new MarkerView(c, movie, this);
-    inputChangeLogWindow = new InputChangeLogWindow(c, movie, this);
-    analogInputsWindow = new AnalogInputsWindow(c, this);
 
     /* Signals */
     connect(markerView, &MarkerView::seekSignal, inputEditorView->inputEditorModel, &InputEditorModel::seekToFrame);
@@ -68,7 +66,7 @@ InputEditorWindow::InputEditorWindow(Context* c, MovieFile *movie, QWidget *pare
     /* Main menu */
     QMenu* inputMenu = menuBar()->addMenu(tr("Inputs"));
     inputMenu->addAction(tr("Add boolean input column"), inputEditorView, &InputEditorView::addInputColumn);
-    inputMenu->addAction(tr("Add analog input column"), analogInputsWindow, &AnalogInputsWindow::show);
+    inputMenu->addAction(tr("Add analog input column"), this, &InputEditorWindow::showAnalogInputsWindow);
 
     QMenu* menu = menuBar()->addMenu(tr("Frames"));
     inputEditorView->fillMenu(menu);
@@ -80,7 +78,7 @@ InputEditorWindow::InputEditorWindow(Context* c, MovieFile *movie, QWidget *pare
 
     markerPanelAct->setCheckable(true);
 
-    panelMenu->addAction(tr("Change Log"), inputChangeLogWindow, &InputChangeLogWindow::show);
+    panelMenu->addAction(tr("Change Log"), this, &InputEditorWindow::showInputChangeLogWindow);
 
     QMenu* optionMenu = menuBar()->addMenu(tr("Options"));
     
@@ -131,8 +129,44 @@ InputEditorWindow::InputEditorWindow(Context* c, MovieFile *movie, QWidget *pare
 void InputEditorWindow::update()
 {
     inputEditorView->update();
-    inputChangeLogWindow->update();
+    if (inputChangeLogWindow) {
+        inputChangeLogWindow->update();
+    }
     updateProgressBar();
+}
+
+AnalogInputsWindow *InputEditorWindow::ensureAnalogInputsWindow()
+{
+    if (!analogInputsWindow) {
+        analogInputsWindow = new AnalogInputsWindow(context, this);
+    }
+
+    return analogInputsWindow;
+}
+
+InputChangeLogWindow *InputEditorWindow::ensureInputChangeLogWindow()
+{
+    if (!inputChangeLogWindow) {
+        inputChangeLogWindow = new InputChangeLogWindow(context, movie, this);
+    }
+
+    return inputChangeLogWindow;
+}
+
+void InputEditorWindow::showAnalogInputsWindow()
+{
+    AnalogInputsWindow *window = ensureAnalogInputsWindow();
+    window->show();
+    window->raise();
+    window->activateWindow();
+}
+
+void InputEditorWindow::showInputChangeLogWindow()
+{
+    InputChangeLogWindow *window = ensureInputChangeLogWindow();
+    window->show();
+    window->raise();
+    window->activateWindow();
 }
 
 void InputEditorWindow::update_config()

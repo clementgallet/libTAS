@@ -173,11 +173,16 @@ int ScreenCapture_SDL2_Renderer::getPixelsFromSurface(uint8_t **pixels, bool dra
     /* Access the texture and copy pixels */
     void* tex_pixels;
     int tex_pitch;
-    orig::SDL_LockTexture(screenSDLTex, nullptr, &tex_pixels, &tex_pitch);
-    memcpy(winpixels.data(), tex_pixels, size);
+    int ret = orig::SDL_LockTexture(screenSDLTex, nullptr, &tex_pixels, &tex_pitch);
+    if (ret < 0) {
+        LOG(LL_ERROR, LCF_DUMP | LCF_SDL, "SDL_LockTexture failed: %s", orig::SDL_GetError());
+        return -1;
+    }
+
+    ret = copyPixelRows(tex_pixels, tex_pitch);
     orig::SDL_UnlockTexture(screenSDLTex);
 
-    return size;
+    return ret;
 }
 
 int ScreenCapture_SDL2_Renderer::copySurfaceToScreen()

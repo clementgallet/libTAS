@@ -23,6 +23,8 @@
 #include "logging.h"
 #include "global.h"
 
+#include <X11/Xlibint.h>
+
 namespace libtas {
 
 Bool XF86VidModeGetModeLine(Display* dpy, int screen, int* dotclock, XF86VidModeModeLine* modeline)
@@ -62,7 +64,9 @@ Bool XF86VidModeGetAllModeLines(Display *dpy, int screen, int *modecount_return,
          * fake XF86VidModeModeInfo struct static, and allocate a 1-size array. */
 
         static XF86VidModeModeInfo modeinfo;
-        XF86VidModeModeInfo **modeinfoarr = static_cast<XF86VidModeModeInfo**>(malloc(1*sizeof(XF86VidModeModeInfo*)));
+        XF86VidModeModeInfo **modeinfoarr = static_cast<XF86VidModeModeInfo**>(Xmalloc(sizeof(XF86VidModeModeInfo*)));
+        if (!modeinfoarr)
+            return False;
         modeinfoarr[0] = &modeinfo;
 
         /* Fill the settings, using my monitor as reference, it

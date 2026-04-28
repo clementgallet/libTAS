@@ -44,7 +44,7 @@ int is_jsdev(const char* source)
     if (ret != 1)
         return -1;
 
-    if (jsnum < 0 || jsnum >= Global::shared_config.nb_controllers) {
+    if (jsnum < 0 || jsnum >= Global::shared_config.nb_controllers || jsnum >= AllInputsFlat::MAXJOYS) {
         return 0;
     }
 
@@ -56,10 +56,13 @@ int open_jsdev(const char* source, int flags)
     /* Extract the js number from the dev filename */
     int jsnum;
     int ret = sscanf(source, "/dev/input/js%d", &jsnum);
-    MYASSERT(ret == 1)
+    if (ret != 1) {
+        errno = ENOENT;
+        return -1;
+    }
 
     /* Return -1 and set errno if we don't support this js number */
-    if (jsnum < 0 || jsnum >= Global::shared_config.nb_controllers) {
+    if (jsnum < 0 || jsnum >= Global::shared_config.nb_controllers || jsnum >= AllInputsFlat::MAXJOYS) {
         errno = ENOENT;
         return -1;
     }

@@ -29,6 +29,7 @@
 #include "checkpoint/ThreadManager.h"
 #include "global.h"
 
+#include <cerrno>
 #include <time.h> //nanosleep
 #include <stdint.h>
 
@@ -608,11 +609,12 @@ snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_ufr
 
     /* We try to reuse a buffer that has been processed from the source */
     std::shared_ptr<AudioBuffer> ab;
-    if (source->nbQueueProcessed() > 0) {
+    if (source->nbQueueProcessed() > 0 && !source->buffer_queue.empty()) {
         /* Removing first buffer */
         ab = source->buffer_queue[0];
         source->buffer_queue.erase(source->buffer_queue.begin());
-        source->queue_index--;
+        if (source->queue_index > 0)
+            source->queue_index--;
     }
     else {
         /* Building a new buffer */
@@ -683,11 +685,12 @@ int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd
     auto source = audiocontext.getSource(sourceId);
 
     /* We try to reuse a buffer that has been processed from the source */
-    if (source->nbQueueProcessed() > 0) {
+    if (source->nbQueueProcessed() > 0 && !source->buffer_queue.empty()) {
         /* Removing first buffer */
         mmap_ab = source->buffer_queue[0];
         source->buffer_queue.erase(source->buffer_queue.begin());
-        source->queue_index--;
+        if (source->queue_index > 0)
+            source->queue_index--;
     }
     else {
         /* Building a new buffer */
@@ -966,6 +969,12 @@ int snd_pcm_hw_params_get_period_size(const snd_pcm_hw_params_t *params, snd_pcm
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_period_size, (params, frames, dir), nullptr);
 
     LOGTRACE(LCF_SOUND);
+
+    if (periods <= 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
     *frames = buffer_size / periods;
 
     return 0;
@@ -993,7 +1002,15 @@ int snd_pcm_hw_params_set_period_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 
     if (buffer->frequency != 0) {
         unsigned int period_size = static_cast<uint64_t>(*val) * buffer->frequency / 1000000;
+        if (period_size == 0) {
+            errno = EINVAL;
+            return -1;
+        }
         periods = buffer_size / period_size;
+        if (periods <= 0) {
+            errno = EINVAL;
+            return -1;
+        }
         /* Buffer size should be a multiple of period size, so we return a corrected value */
         /* TODO: support dir! */
         *val = 1000000 * (buffer_size / periods) / buffer->frequency;
@@ -1010,8 +1027,18 @@ int snd_pcm_hw_params_set_period_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_period_size_near, (pcm, params, val, dir), nullptr);
 
     LOG(LL_TRACE, LCF_SOUND, "%s call with period size %d and dir %d", __func__, *val, dir?*dir:-2);
+
+    if (*val == 0) {
+        errno = EINVAL;
+        return -1;
+    }
     
     periods = buffer_size / *val;
+    if (periods <= 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
     /* Buffer size should be a multiple of period size, so we return a corrected value */
     /* TODO: support dir! */
     *val = buffer_size / periods;
@@ -1076,6 +1103,11 @@ int snd_pcm_hw_params_get_buffer_time_max(const snd_pcm_hw_params_t *params, uns
     auto source = AudioContext::get().getSource(sourceId);
     auto buffer = source->buffer_queue[0];
 
+    if (buffer->frequency == 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
     /* The next operation can overflow using 32-bit ints */
     *val = static_cast<uint64_t>(buffer_size) * 1000000 / buffer->frequency;
     return 0;
@@ -1106,6 +1138,10 @@ int snd_pcm_hw_params_set_buffer_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 
     /* Special case for 0, return the default value */
     if (*val == 0) {
+        if (buffer->frequency == 0) {
+            errno = EINVAL;
+            return -1;
+        }
         *val = static_cast<uint64_t>(buffer_size) * 1000000 / buffer->frequency;
         return 0;
     }
@@ -1164,6 +1200,11 @@ int snd_pcm_get_params(snd_pcm_t *pcm, snd_pcm_uframes_t *bs, snd_pcm_uframes_t 
     RETURN_IF_NATIVE(snd_pcm_get_params, (pcm, bs, ps), nullptr);
 
     LOGTRACE(LCF_SOUND);
+
+    if (periods <= 0) {
+        errno = EINVAL;
+        return -1;
+    }
 
     /* TODO: does not support multiple pcms */
     if (bs) *bs = buffer_size;
@@ -1353,7 +1394,15 @@ snd_pcm_sframes_t snd_pcm_bytes_to_frames(snd_pcm_t *pcm, ssize_t bytes)
     LOG(LL_TRACE, LCF_SOUND, "%s called with bytes %d", __func__, bytes);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = AudioContext::get().getSource(sourceId);
+    if (!source || source->buffer_queue.empty()) {
+        LOG(LL_ERROR, LCF_SOUND, "Cannot convert bytes to frames without an initialized audio buffer");
+        return -1;
+    }
     auto buffer = source->buffer_queue[0];
+    if (buffer->alignSize <= 0) {
+        LOG(LL_ERROR, LCF_SOUND, "Cannot convert bytes to frames with invalid alignment %d", buffer->alignSize);
+        return -1;
+    }
     return bytes / buffer->alignSize;
 }
 
@@ -1364,7 +1413,15 @@ ssize_t snd_pcm_frames_to_bytes(snd_pcm_t *pcm, snd_pcm_sframes_t frames)
     LOG(LL_TRACE, LCF_SOUND, "%s called with frames %d", __func__, frames);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = AudioContext::get().getSource(sourceId);
+    if (!source || source->buffer_queue.empty()) {
+        LOG(LL_ERROR, LCF_SOUND, "Cannot convert frames to bytes without an initialized audio buffer");
+        return -1;
+    }
     auto buffer = source->buffer_queue[0];
+    if (buffer->alignSize <= 0) {
+        LOG(LL_ERROR, LCF_SOUND, "Cannot convert frames to bytes with invalid alignment %d", buffer->alignSize);
+        return -1;
+    }
     return buffer->alignSize * frames;
 }
 

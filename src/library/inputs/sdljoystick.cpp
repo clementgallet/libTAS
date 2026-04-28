@@ -32,7 +32,7 @@ namespace libtas {
 
 #define MAX_SDLJOYS 4
 static int joyids[MAX_SDLJOYS] = {-1, -1, -1, -1};
-static int refids[4] = {0, 0, 0, 0}; // joystick open/close is ref-counted
+static int refids[MAX_SDLJOYS] = {0, 0, 0, 0}; // joystick open/close is ref-counted
 static const char* joypaths[MAX_SDLJOYS] = {"/dev/input/js0", "/dev/input/js1", "/dev/input/js2", "/dev/input/js3"};
 
 /* Helper functions */
@@ -68,7 +68,7 @@ const char* joyname = "Microsoft X-Box 360 pad";
 /* Override */ const char *SDL_JoystickNameForIndex(int device_index)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
-    if (device_index < Global::shared_config.nb_controllers)
+    if (device_index >= 0 && device_index < MAX_SDLJOYS && device_index < Global::shared_config.nb_controllers)
         return joyname;
     return NULL;
 }
@@ -195,7 +195,7 @@ SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0
 /* Override */ SDL_JoystickGUID SDL_JoystickGetDeviceGUID(int device_index)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
-    if (device_index >= Global::shared_config.nb_controllers)
+	if (device_index < 0 || device_index >= MAX_SDLJOYS || device_index >= Global::shared_config.nb_controllers)
 	    return nullGUID;
 
     return xinputGUID;

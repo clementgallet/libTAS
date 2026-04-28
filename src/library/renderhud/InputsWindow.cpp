@@ -23,6 +23,7 @@
 #include "../external/keysymdesc.h"
 #include "../external/imgui/imgui.h"
 
+#include <algorithm>
 #include <sstream>
 
 namespace libtas {
@@ -36,7 +37,8 @@ void InputsWindow::draw(const AllInputsFlat& ai, const AllInputsFlat& preview_ai
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
         
         const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y + main_viewport->WorkSize.y), ImGuiCond_Always, ImVec2(0.0f, 1.0f));
+        if (main_viewport)
+            ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y + main_viewport->WorkSize.y), ImGuiCond_Always, ImVec2(0.0f, 1.0f));
 
         /* Guess and set the window size, so that it appears at correct size
          * on first draw */
@@ -48,7 +50,7 @@ void InputsWindow::draw(const AllInputsFlat& ai, const AllInputsFlat& preview_ai
         if (inputs_str.empty()) line_count--;
         ImGui::SetNextWindowContentSize(ImVec2(max_width, line_count*ImGui::GetTextLineHeight()));
 
-        if (ImGui::Begin("Inputs", nullptr, window_flags))
+        if (ImGui::Begin("Inputs", p_open, window_flags))
         {
             if (!preview_inputs_str.empty()) {
                 ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "%s", preview_inputs_str.c_str());
@@ -113,7 +115,8 @@ std::string InputsWindow::formatInputs(const AllInputsFlat& ai)
     }
 
     /* Joystick */
-    for (int i=0; i<Global::shared_config.nb_controllers; i++) {
+    int controller_count = std::min<int>(Global::shared_config.nb_controllers, ai.controllers.size());
+    for (int i=0; i<controller_count; i++) {
         for (int j=0; j<ControllerInputs::MAXAXES; j++) {
             if (ai.controllers[i].axes[j] != 0)
                 oss << "[J" << i << " a" << j << ":" << ai.controllers[i].axes[j] << "] ";

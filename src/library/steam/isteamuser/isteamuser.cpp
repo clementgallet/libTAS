@@ -45,6 +45,7 @@ void SteamSetUserDataFolder(std::string path)
 {
     LOGTRACE(LCF_STEAM);
     strncpy(steamuserdir, path.c_str(), sizeof(steamuserdir)-1);
+    steamuserdir[sizeof(steamuserdir)-1] = '\0';
 }
 
 struct ISteamUser *SteamUser_generic(const char *version)
@@ -158,7 +159,11 @@ void ISteamUser_TrackAppUsageEvent( CGameID gameID, int eAppUsageEvent, const ch
 bool ISteamUser_GetUserDataFolder( char *pchBuffer, int cubBuffer )
 {
     LOGTRACE(LCF_STEAM);
+    if (pchBuffer == nullptr || cubBuffer <= 0)
+        return false;
+
     strncpy(pchBuffer, steamuserdir, cubBuffer-1);
+    pchBuffer[cubBuffer-1] = '\0';
     LOG(LL_DEBUG, LCF_STEAM, "user data folder = \"%s\".", steamuserdir);
     return true;
 }

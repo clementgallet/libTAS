@@ -83,6 +83,9 @@ struct ThreadInfo {
 
     Profiler::Database* profilerDatabase;
 
+    TimeHolder addedDelay = {0, 0}; // how much this thread slept or wait
+    TimeHolder fakeExtraTicks = {0, 0}; // how much ticks to add when this thread queries current time
+
     ThreadInfo *next = nullptr; // next thread info in the linked list
     ThreadInfo *prev = nullptr; // previous thread info in the linked list
 };

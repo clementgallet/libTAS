@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <sys/types.h>
 
 namespace libtas {
 
@@ -37,13 +38,13 @@ struct FileHandle {
         FILE_SPECIAL,
     };
 
-    FileHandle() : fds{-1, -1}, fileName(nullptr), pipeContents(nullptr) {}
+        FileHandle() : fds{-1, -1}, fileName(nullptr), device(0), inode(0), pipeContents(nullptr) {}
     FileHandle(const char *file, int fd, int t)
         : type(t), fds{fd, -1}, fileName(::strdup(file)), fileOffset(-1),
-          size(-1), pipeContents(nullptr) {}
+                    size(-1), device(0), inode(0), pipeContents(nullptr) {}
     FileHandle(const char *file, int fds[2])
         : type(FileHandle::FILE_PIPE), fds{fds[0], fds[1]}, fileName(::strdup(file)), fileOffset(-1),
-          size(-1), pipeContents(nullptr) {}
+                    size(-1), device(0), inode(0), pipeContents(nullptr) {}
     ~FileHandle() { std::free(fileName); std::free(pipeContents); }
     bool needsTracking() const
     {
@@ -81,6 +82,10 @@ struct FileHandle {
 
     /* Saved size of the file or pipe */
     off_t size;
+
+    /* Identity of the underlying file when it exists */
+    dev_t device;
+    ino_t inode;
 
     /* Saved contents of the pipe */
     char *pipeContents;
