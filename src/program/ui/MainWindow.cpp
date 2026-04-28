@@ -225,7 +225,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     fpsNumField = new QSpinBox();
     fpsNumField->setMaximum(std::numeric_limits<int>::max());
     fpsNumField->setMinimum(1);
-    fpsNumField->setEnabled(movieRecording->isChecked());
+    fpsNumField->setEnabled(true);
     disabledWidgetsOnStart.append(fpsNumField);
     connect(fpsNumField, QOverload<int>::of(&QSpinBox::valueChanged),[=, this](int i){
         context->current_framerate_num = i;
@@ -235,7 +235,7 @@ MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
     fpsDenField = new QSpinBox();
     fpsDenField->setMaximum(std::numeric_limits<int>::max());
     fpsDenField->setMinimum(1);
-    fpsDenField->setEnabled(movieRecording->isChecked());
+    fpsDenField->setEnabled(true);
     disabledWidgetsOnStart.append(fpsDenField);
     connect(fpsDenField, QOverload<int>::of(&QSpinBox::valueChanged),[=, this](int i){
         context->current_framerate_den = i;
@@ -1028,6 +1028,8 @@ void MainWindow::updateMovieParams()
         authorField->setText(gameLoop->movie.header->authors.c_str());
     fpsNumField->setValue(context->config.sc.initial_framerate_num);
     fpsDenField->setValue(context->config.sc.initial_framerate_den);
+    fpsNumField->setEnabled(movieRecording->isChecked());
+    fpsDenField->setEnabled(movieRecording->isChecked());
     elapsedTimeSec->setValue(context->config.sc.initial_monotonic_time_sec);
     elapsedTimeNsec->setValue(context->config.sc.initial_monotonic_time_nsec);
     realTimeSec->setValue(context->config.sc.initial_time_sec);
