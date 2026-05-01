@@ -4,8 +4,8 @@ title: Unity games
 permalink: /guides/unity/
 ---
 
-Unity engine being one of the most used game engine, and having Linux support,
-a lot of work has been performed to support Unity games in libTAS. Running 
+With Unity being one of the most used game engines, and having Linux support,
+a lot of work has been done to support Unity games in libTAS. Running 
 games in libTAS has been possible for a long time, but movies desynced very 
 easily.
 
@@ -14,8 +14,8 @@ Here is an overview of what is required to run Unity games in libTAS.
 ## Porting
 
 If the game does not have a Linux version, you may be able to port from a 
-Windows or (even better) Mac version. ikuyo has made a nice [documentation](https://apps.microsoft.com/detail/9pdxgncfsczv)
-about it.
+Windows or (even better) Mac version. ikuyo has made a nice [guide](https://tasvideos.org/HomePages/ikuyo/Unity)
+for it.
 
 There is also the [Unify](https://github.com/0xf4b1/unify) project to
 automatically port games.
@@ -25,7 +25,7 @@ automatically port games.
 Running Unity games in libTAS does not require specific options. For determinism,
 however, you will need to add `-force-gfx-direct` to the command-line options
 field. libTAS tries to automatically detect Unity games and add this option, 
-but it may failed, so it's better to add it manually.
+but it may fail, so it's better to add it manually.
 
 For recent games that will default to using Vulkan, you may want to 
 enforce OpenGL which is more stable, by adding `-force-opengl` to command-line
@@ -59,7 +59,7 @@ So, the procedure is the following:
     - **versions 5.3.0+**: the [Official Unity archive](https://unity.com/fr/releases/editor/archive) 
       contains what you want. Download the file `̀Component installers` > 
       `macOS` > `Linux Build Support`, which can be extracted on Linux.
-      For recent Unity version, you will need to pick the correct one between
+      For recent Unity versions, you will need to pick the correct one between
       `Linux Build Support (IL2CPP)` and `Linux Build Support (Mono)`. You can 
       see easily if your game is compiled with IL2CPP, by looking if there is a
       `il2cpp` folder inside the game `Data` directory.

@@ -304,6 +304,20 @@ Returns 1 of the current frame is a draw frame, or 0 if not.
 
 Returns the full name of the movie file (.ltm).
 
+#### movie.getInitialSystemTime
+
+    (Number seconds, Number nseconds) movie.getInitialSystemTime()
+
+Returns the system time set at game startup. `seconds` is in whole seconds
+and `nseconds` is the number of nanoseconds.
+
+#### movie.getInitialElapsedTime
+
+    (Number seconds, Number nseconds) movie.getInitialElapsedTime()
+
+Returns the elapsed time set at game startup. `seconds` is in whole seconds
+and `nseconds` is the number of nanoseconds.
+
 ### Runtime functions
 
 Runtime functions must be performed in callback `onFrame()` to be effective on
