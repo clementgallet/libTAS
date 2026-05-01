@@ -186,8 +186,8 @@ int main(int argc, char **argv)
                 context.libtas32path = std::filesystem::weakly_canonical(optarg);
                 break;
             case '?':
-                std::cout << "Unknown option character" << std::endl;
-                break;
+                std::cerr << "Unknown option character" << std::endl;
+                return 1;
             case 'h':
                 print_usage();
                 return 0;
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
                 openInputEditor = true;
                 break;
             default:
-                return -1;
+                return 1;
         }
     }
 
@@ -220,7 +220,7 @@ int main(int argc, char **argv)
     if (xcb_connection_has_error(context.conn))
     {
         std::cerr << "Cannot open display" << std::endl;
-        return -1;
+        return 1;
     }
 
     /* Open the xkb extension */
@@ -384,7 +384,7 @@ int main(int argc, char **argv)
     catch (std::filesystem::filesystem_error const& ex) {
         std::cerr << "Cannot create dir " << context.config.configdir << std::endl;
         std::cerr << "what():  " << ex.what() << std::endl;
-        return -1;
+        return 1;
     }
 
     /* Now that we have the config dir, we load the game-specific config */
