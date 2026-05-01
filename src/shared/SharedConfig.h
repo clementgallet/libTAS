@@ -308,8 +308,13 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Force Mesa software OpenGL driver */
     bool opengl_soft = true;
 
-    /* Enable OpenGL performance tweaks */
-    bool opengl_performance = false;
+    /* OpenGL quality level for software rendering optimization */
+    enum OpenGLQuality {
+        OPENGL_QUALITY_NORMAL,   // No optimization
+        OPENGL_QUALITY_FAST,     // Moderate optimization
+        OPENGL_QUALITY_FASTEST   // Aggressive optimization
+    };
+    int opengl_quality = OPENGL_QUALITY_NORMAL;
 
     /* Tries to detect busy loops and advance time */
     bool busyloop_detection = false;

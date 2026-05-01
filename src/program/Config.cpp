@@ -177,7 +177,7 @@ void Config::save(const std::filesystem::path& gamepath) {
     settings.setValue("virtual_steam", sc.virtual_steam);
     settings.setValue("openal_soft", sc.openal_soft);
     settings.setValue("opengl_soft", sc.opengl_soft);
-    settings.setValue("opengl_performance", sc.opengl_performance);
+    settings.setValue("opengl_quality", sc.opengl_quality);
     settings.setValue("async_events", sc.async_events);
     settings.setValue("wait_timeout", sc.wait_timeout);
     settings.setValue("sleep_handling", sc.sleep_handling);
@@ -395,7 +395,7 @@ void Config::load(const std::filesystem::path& gamepath) {
     sc.audio_bitrate = settings.value("audio_bitrate", sc.audio_bitrate).toInt();
     sc.savestate_settings = settings.value("savestate_settings", sc.savestate_settings).toInt();
     sc.opengl_soft = settings.value("opengl_soft", sc.opengl_soft).toBool();
-    sc.opengl_performance = settings.value("opengl_performance", sc.opengl_performance).toBool();
+    sc.opengl_quality = settings.value("opengl_quality", sc.opengl_quality).toInt();
 
     size = settings.beginReadArray("main_gettimes_threshold");
     for (int t=0; t<size; t++) {
