@@ -6,6 +6,7 @@
 * Hook SDL_SetWindowResizable to avoid a window resize call (fix #700)
 * Input editor: highlight failed edit in red (#705)
 * Improve realtime playback target fps
+* Input editor: Add a "+" column
 
 ### Changed
 

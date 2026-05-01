@@ -73,6 +73,9 @@ InputEditorView::InputEditorView(Context* c, MovieFile *m, QWidget *parent) : QT
     /* Frame column is fixed */
     horizontalHeader()->resizeSection(1, 80);
 
+    /* Add column is fixed */
+    horizontalHeader()->resizeSection(inputEditorModel->columnCount()-1, 20);
+
     horizontalHeader()->setSectionsMovable(true);
     horizontalHeader()->setHighlightSections(false);
     horizontalHeader()->setDropIndicatorShown(true);
@@ -83,7 +86,7 @@ InputEditorView::InputEditorView(Context* c, MovieFile *m, QWidget *parent) : QT
     horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(horizontalHeader(), &QWidget::customContextMenuRequested, this, &InputEditorView::horizontalMenu);
     connect(horizontalHeader(), &QHeaderView::sectionMoved, this, &InputEditorView::moveAgainSection);
-    connect(horizontalHeader(), &QHeaderView::sectionClicked, this, &InputEditorView::holdSection);
+    connect(horizontalHeader(), &QHeaderView::sectionClicked, this, &InputEditorView::clickSection);
 
     horMenu = new QMenu(this);
     horMenu->addAction(tr("Rename label"), this, &InputEditorView::renameLabel);
@@ -236,12 +239,13 @@ void InputEditorView::resizeAllColumns()
 {
     horizontalHeader()->resizeSection(InputEditorModel::COLUMN_SAVESTATE, 20);
     horizontalHeader()->resizeSection(InputEditorModel::COLUMN_FRAME, 80);
+    horizontalHeader()->resizeSection(inputEditorModel->columnCount() - 1, 20);
 
     /* Set analog columns to be resizable by users.
      * Increase the other columns by a small amount, because even if it's
      * supposed to take the same place as the header, sometimes it considers
      * that it doesn't have enough space. */
-    for (int c = InputEditorModel::COLUMN_SPECIAL_SIZE; c < inputEditorModel->columnCount(); c++) {
+    for (int c = InputEditorModel::COLUMN_SPECIAL_SIZE; c < inputEditorModel->columnCount()-1; c++) {
         if (inputEditorModel->isInputAnalog(c)) {
             horizontalHeader()->setSectionResizeMode(c, QHeaderView::Interactive);
         }
@@ -463,8 +467,11 @@ void InputEditorView::mouseMoveEvent(QMouseEvent *event)
         return QTableView::mouseMoveEvent(event);
     }
 
-    /* We are not interested in the first columns */
+    /* We are not interested in the first columns or the add column */
     if (mouseColumn < InputEditorModel::COLUMN_SPECIAL_SIZE) {
+        return QTableView::mouseMoveEvent(event);
+    }
+    if (mouseColumn == inputEditorModel->columnCount() - 1) {
         return QTableView::mouseMoveEvent(event);
     }
 
@@ -611,6 +618,8 @@ void InputEditorView::horizontalMenu(QPoint pos)
 
     if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
         return;
+    if (contextSection == inputEditorModel->columnCount() - 1)
+        return;
 
     /* Only enable factor for analog values */
     factorAction->setEnabled(inputEditorModel->isInputAnalog(contextSection));
@@ -630,7 +639,8 @@ void InputEditorView::renameLabel()
 {
     if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
         return;
-
+    if (contextSection == inputEditorModel->columnCount() - 1)
+        return;
     QString text = QString("New label for input %1 is: ").arg(inputEditorModel->inputDescription(contextSection).c_str());
     QString newLabel = QInputDialog::getText(this, tr("Rename label"), text, QLineEdit::Normal, QString(inputEditorModel->inputLabel(contextSection).c_str()));
 
@@ -676,9 +686,6 @@ void InputEditorView::addInputColumn()
 
 void InputEditorView::clearInputColumn()
 {
-    if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
-        return;
-
     inputEditorModel->clearUniqueInput(contextSection);
 }
 
@@ -698,6 +705,8 @@ void InputEditorView::factorInputColumn()
 {
     if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
         return;
+    if (contextSection == inputEditorModel->columnCount() - 1)
+        return;
 
     bool ok;
     double factor = QInputDialog::getDouble(this, tr("Multiply values by a factor"), tr("Factor: "), 1.0, 0, 100.0, 4, &ok);
@@ -709,25 +718,16 @@ void InputEditorView::factorInputColumn()
 
 void InputEditorView::lockInputColumn(bool checked)
 {
-    if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
-        return;
-
     inputEditorModel->lockUniqueInput(contextSection, checked);
 }
 
 void InputEditorView::autoholdInput(bool checked)
 {
-    if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
-        return;
-
     inputEditorModel->setAutoholdInput(contextSection, checked);
 }
 
 void InputEditorView::autofireInput(bool checked)
 {
-    if (contextSection < InputEditorModel::COLUMN_SPECIAL_SIZE)
-        return;
-
     inputEditorModel->setAutofireInput(contextSection, checked);
 }
 
@@ -1061,10 +1061,12 @@ void InputEditorView::moveAgainSection(int logicalIndex, int oldVisualIndex, int
      * move it back and make the change in our list.
      */
 
-    /* Skip if moving the first two columns */
-    if ((oldVisualIndex >= InputEditorModel::COLUMN_SPECIAL_SIZE) && (newVisualIndex >= InputEditorModel::COLUMN_SPECIAL_SIZE)) {
+    /* Skip if moving the first two columns and add column */
+    if ((oldVisualIndex >= InputEditorModel::COLUMN_SPECIAL_SIZE) &&
+        (newVisualIndex >= InputEditorModel::COLUMN_SPECIAL_SIZE) && 
+        (oldVisualIndex != inputEditorModel->columnCount() - 1) &&
+        (newVisualIndex != inputEditorModel->columnCount() - 1))
         inputEditorModel->moveInputs(oldVisualIndex-InputEditorModel::COLUMN_SPECIAL_SIZE, newVisualIndex-InputEditorModel::COLUMN_SPECIAL_SIZE);
-    }
 
     /* Disconnect before moving back */
     disconnect(horizontalHeader(), &QHeaderView::sectionMoved, this, &InputEditorView::moveAgainSection);
@@ -1075,11 +1077,16 @@ void InputEditorView::moveAgainSection(int logicalIndex, int oldVisualIndex, int
     resizeAllColumns();
 }
 
-void InputEditorView::holdSection(int logicalIndex)
+void InputEditorView::clickSection(int logicalIndex)
 {
     /* Skip toggling the first two columns */
     if (logicalIndex < InputEditorModel::COLUMN_SPECIAL_SIZE)
         return;
+
+    if (logicalIndex == inputEditorModel->columnCount() - 1) {
+        addInputColumn();
+        return;
+    }
 
     /* Cycle between nothing, autohold, autofire */
     if (inputEditorModel->isAutoholdInput(logicalIndex))
