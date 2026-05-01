@@ -67,9 +67,6 @@ FROM debian:12 AS libtas-builder
       libx11-dev libx11-xcb-dev qtbase5-dev libsdl2-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xkb-dev libxcb-cursor-dev libxcb-randr0-dev libudev-dev libasound2-dev libavutil-dev libswresample-dev ffmpeg liblua5.4-dev libcap-dev libxcb-xinput-dev \
     # HUD
       libfreetype6-dev libfontconfig1-dev \
-    # fonts
-      libfreetype6-dev libfontconfig1-dev \
-      fonts-liberation \
     # i386
       g++-multilib \
       libx11-6:i386 libx11-dev:i386 libx11-xcb1:i386 libx11-xcb-dev:i386 libasound2:i386 libasound2-dev:i386 libavutil57:i386 libswresample4:i386 libfreetype6:i386 libfreetype6-dev:i386 libfontconfig1:i386 libfontconfig1-dev:i386
@@ -102,6 +99,7 @@ FROM debian:12-slim
     libqt5network5 \
     libqt5x11extras5 \
     liblua5.4-0 \
+    fonts-liberation \
   # util
     xvfb
 
