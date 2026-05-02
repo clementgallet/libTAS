@@ -218,7 +218,7 @@ int fileno (FILE *stream) __THROW
      * fd, because our custom SaveFileStream does not have a native associated fd */
     const SaveFile* sf = SaveFileList::getSaveFile(stream);
     if (sf) {
-        LOG(LL_WARN, LCF_FILEIO, "The game wants to access the file descriptor of our custom savefile stream (with fileno()) which does not have one. Depending on what it does with the file descriptor, it may fail.");
+        LOG(LL_DEBUG, LCF_FILEIO, "Our custom savefile stream for %s does not have a valid fd. Subsequent operations may fail.", sf->filename.c_str());
         return sf->fd;
     }
 
