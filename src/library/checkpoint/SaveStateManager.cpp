@@ -89,6 +89,9 @@ static int sig_suspend_threads = SIGXFSZ;
 static int sig_checkpoint = SIGSYS;
 static bool* state_dirty;
 
+static bool has_clone3_set_tid = false;
+static bool can_set_last_pid = false;
+
 #ifdef __unix__
 static void lockGameDisplays()
 {
@@ -162,6 +165,67 @@ void SaveStateManager::init()
 
     state_dirty = static_cast<bool*>(ReservedMemory::getAddr(ReservedMemory::SS_SLOTS_ADDR));
     memset(state_dirty, 0, 11*sizeof(bool));
+
+    /* Check for clone3 support */
+
+    {
+        GlobalNative gn;
+#ifdef __x86_64__
+        /* Detect if clone3 with set tid is supported.
+        * Taken from criu <https://criu.org/> source code */
+        struct clone_args args = {};
+        args.set_tid = -1;
+        /*
+        * On a system without clone3() this will return ENOSYS.
+        * On a system with clone3() but without set_tid this
+        * will return E2BIG.
+        * On a system with clone3() and set_tid it will return
+        * EINVAL.
+        */
+        pid_t pid = syscall(__NR_clone3, &args, sizeof(args));
+
+        if (pid != -1) {
+            std::cerr << "Unexpected success: clone3() returned " << pid << std::endl;
+        }
+
+        if (errno == ENOSYS || errno == E2BIG)
+            has_clone3_set_tid = false;
+
+        else if (errno != EINVAL) {
+            std::cerr << "Unexpected error from clone3" << std::endl;
+        }
+        else {
+            has_clone3_set_tid = true;
+        }
+    #elif __i386__
+        /* For now, disable clone3 until proper asm to use it can be written */
+        has_clone3_set_tid = false;
+    #endif
+
+        /* Detect if we can modify */
+        int fd = open("/proc/sys/kernel/ns_last_pid", O_RDWR);
+        if (fd == -1) {
+            can_set_last_pid = false;
+        }
+        else {
+            char last_pid[16];
+            ssize_t size = read(fd, last_pid, 16);
+            if (size == -1) {
+                can_set_last_pid = false;
+            }
+            else {
+                lseek(fd, 0, SEEK_SET);
+                size = write(fd, last_pid, size);
+                if (size == -1) {
+                    can_set_last_pid = false;            
+                }
+                else {
+                    can_set_last_pid = true;
+                }
+            }
+            close(fd);
+        }
+    }
 }
 
 void SaveStateManager::initCheckpointThread()
@@ -812,7 +876,7 @@ void SaveStateManager::createNewThreads()
         CLONE_PARENT_SETTID | CLONE_CHILD_CLEARTID;
 
     int fd = -1;
-    if ((!Global::shared_config.has_clone3_set_tid) && Global::shared_config.can_set_last_pid) {
+    if ((!has_clone3_set_tid) && can_set_last_pid) {
         fd = open("/proc/sys/kernel/ns_last_pid", O_WRONLY);
         if (fd != -1) {
             lseek(fd, 0, SEEK_SET);
@@ -835,7 +899,7 @@ void SaveStateManager::createNewThreads()
             /* Thread was not found, create one */
             LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_THREAD, "Recreate thread %llx (%d) ", thread->pthread_id, thread->translated_tid);
 
-            if (Global::shared_config.has_clone3_set_tid) {
+            if (has_clone3_set_tid) {
                 struct clone_args cargs;
                 cargs.flags = clone_flags;
                 cargs.child_tid = reinterpret_cast<uintptr_t>(thread->ptid);

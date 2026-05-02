@@ -279,62 +279,6 @@ int main(int argc, char **argv)
         }
     }
     
-#ifdef __x86_64__
-    /* Detect if clone3 with set tid is supported.
-     * Taken from criu <https://criu.org/> source code */
-    struct clone_args args = {};
-    args.set_tid = -1;
-    /*
-     * On a system without clone3() this will return ENOSYS.
-     * On a system with clone3() but without set_tid this
-     * will return E2BIG.
-     * On a system with clone3() and set_tid it will return
-     * EINVAL.
-     */
-    pid_t pid = syscall(__NR_clone3, &args, sizeof(args));
-
-    if (pid != -1) {
-        std::cerr << "Unexpected success: clone3() returned " << pid << std::endl;
-    }
-
-    if (errno == ENOSYS || errno == E2BIG)
-        context.config.sc.has_clone3_set_tid = false;
-
-    else if (errno != EINVAL) {
-        std::cerr << "Unexpected error from clone3" << std::endl;
-    }
-    else {
-        context.config.sc.has_clone3_set_tid = true;
-    }
-#elif __i386__
-    /* For now, disable clone3 until proper asm to use it can be written */
-    context.config.sc.has_clone3_set_tid = false;
-#endif
-
-    /* Detect if we can modify */
-    int fd = open("/proc/sys/kernel/ns_last_pid", O_RDWR);
-    if (fd == -1) {
-        context.config.sc.can_set_last_pid = false;
-    }
-    else {
-        char last_pid[16];
-        ssize_t size = read(fd, last_pid, 16);
-        if (size == -1) {
-            context.config.sc.can_set_last_pid = false;
-        }
-        else {
-            lseek(fd, 0, SEEK_SET);
-            size = write(fd, last_pid, size);
-            if (size == -1) {
-                context.config.sc.can_set_last_pid = false;            
-            }
-            else {
-                context.config.sc.can_set_last_pid = true;
-            }
-        }
-        close(fd);
-    }
-    
     /* libtas.so path */
     /* TODO: Not portable! */
     if (context.libtaspath.empty()) {
@@ -422,20 +366,6 @@ int main(int argc, char **argv)
 #endif
 
     if (old_preload) context.old_ld_preload = old_preload;
-
-    /* Check if incremental savestates is supported by checking the soft-dirty bit */
-
-    fd = open("/proc/self/pagemap", O_RDONLY);
-    if (fd != -1) {
-        lseek(fd, static_cast<off_t>((reinterpret_cast<uintptr_t>(&context)/4096)*8), SEEK_SET);
-
-        uint64_t page;
-        int ret = ::read(fd, &page, 8);
-        if (ret != -1) {
-            context.is_soft_dirty = page & (0x1ull << 55);
-        }
-        close(fd);
-    }
 
     /* Start the lua VM */
     Lua::Main::init(&context);

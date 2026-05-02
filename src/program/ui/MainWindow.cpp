@@ -1274,11 +1274,6 @@ void MainWindow::applyGamePathConfig()
     context->config.load(context->gamepath);
 
     updateRecentGamepaths();
-
-    if (!context->is_soft_dirty) {
-        context->config.sc.savestate_settings &= ~SharedConfig::SS_INCREMENTAL;
-    }
-
     updateUIFromConfig();
     reloadConfiguredWindows();
 }
