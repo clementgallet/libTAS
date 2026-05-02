@@ -414,11 +414,13 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 
     /* If not main thread, do not change the behavior */
     if (!ThreadManager::isMainThread()) {
+        DeterministicTimer::get().startThreadedDelay();
+
         int ret = orig::pthread_cond_timedwait(cond, mutex, &new_abstime);
         LOG(LL_DEBUG, LCF_WAIT, "   ret is %d ", ret);
         
         if (ret == ETIMEDOUT)
-            DeterministicTimer::get().addThreadedDelay(rel_timeout);
+            DeterministicTimer::get().endThreadedDelay(rel_timeout);
         
         return ret;
     }

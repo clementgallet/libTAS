@@ -228,11 +228,30 @@ void DeterministicTimer::addDelay(struct timespec delayTicks)
     }
 }
 
-void DeterministicTimer::addThreadedDelay(struct timespec delayTicks)
+void DeterministicTimer::startThreadedDelay()
+{
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+
+    if (isInsideFrameBoundary()) {
+        thread->startingFrameDelay = 0;
+        return;
+    }
+
+    thread->startingFrameDelay = framecount;
+}
+
+void DeterministicTimer::endThreadedDelay(struct timespec delayTicks)
 {
     ThreadInfo* thread = ThreadManager::getCurrentThread();
     
     if (isInsideFrameBoundary()) {
+        thread->addedDelay = {0, 0};
+        thread->fakeExtraTicks = {0, 0};
+        return;
+    }
+
+    if (framecount > thread->startingFrameDelay) {
+        /* We ended the delay after a frame boundary, so we don't add the delay to the timer */
         thread->addedDelay = {0, 0};
         thread->fakeExtraTicks = {0, 0};
         return;

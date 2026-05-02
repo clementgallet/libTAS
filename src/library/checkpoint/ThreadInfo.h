@@ -83,8 +83,16 @@ struct ThreadInfo {
 
     Profiler::Database* profilerDatabase;
 
-    TimeHolder addedDelay = {0, 0}; // how much this thread slept or wait
-    TimeHolder fakeExtraTicks = {0, 0}; // how much ticks to add when this thread queries current time
+    uint64_t startingFrameDelay = 0; // On which frame the delay has started
+
+    /* How much delay this thread has added to the timer, but not yet flushed.
+    * This is used to detect if a thread is adding too much delay, and so we
+    * can fake advancing time for it. */
+    TimeHolder addedDelay = {0, 0};
+
+    /* How much extra ticks to add when this thread queries current time, because
+    * it added too much delay. */
+    TimeHolder fakeExtraTicks = {0, 0};
 
     ThreadInfo *next = nullptr; // next thread info in the linked list
     ThreadInfo *prev = nullptr; // previous thread info in the linked list
