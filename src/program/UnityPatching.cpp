@@ -167,6 +167,11 @@ const static usymbol_t UNITY_SYMBOLS[] = {
     },
     {
         UNITY5_JOBQUEUE_HAS_JOB_COMPLETED,
+        "JobQueue::HasJobGroupCompleted",
+        "_ZN8JobQueue20HasJobGroupCompletedE10JobGroupID",
+    },
+    {
+        UNITY5_JOBQUEUE_HAS_JOB_ID_COMPLETED,
         "JobQueue::HasJobGroupIDCompleted",
         "_ZN8JobQueue22HasJobGroupIDCompletedE10JobGroupID",
     },
@@ -476,7 +481,12 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY_VERSION,
-        // Signature for Unity 2018
+        // Signature for Unity 2017.4.10f1
+        "53 41 ba 01 00 00 00 45 31 c9 48 83 ec 40",
+    },
+    {
+        UNITY_VERSION,
+        // Signature for Unity 2018.2.21f1/2018.4.2f1/2018.4.12f1
         "53 48 8d 57 14 48 83 ec 40 64 48 8b 04 25 28 00 00 00 48 89 44 24 38",
     },
     {
@@ -485,26 +495,32 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY4_JOBSCHEDULER_FETCH,
+        // Signature for Unity 4.6.2f1
         "41 54 55 48 89 F5 53 48 89 FB 48 83 EC 30 48 63 06 8B 57 7C 39 D0"
     },
     {
         UNITY4_JOBSCHEDULER_FETCH,
+        // Signature for Unity 4.7.2f1
         "41 55 41 54 49 89 f4 55 53 48 89 fb 48 83 ec 38 8b 06"
     },
     {
         UNITY4_JOBSCHEDULER_PROCESS,
+        // Signature for Unity 4.6.2f1
         "48 89 5C 24 E8 48 89 F3 48 89 6C 24 F0 4C 89 64 24 F8 89 D5 48 83 EC 48"
     },
     {
         UNITY4_JOBSCHEDULER_SUBMIT,
+        // Signature for Unity 4.6.2f1
         "48 83 EC 28 44 8b 4f 0c 45 85 c9 0f 8e ?? ?? ?? ?? 39 77 08"
     },
     {
         UNITY4_JOBSCHEDULER_SUBMIT,
+        // Signature for Unity 4.7.2f1
         "48 83 EC 28 44 8b 57 0c 45 85 d2 0f 8e ?? ?? ?? ?? 89 F0"
     },
     {
         UNITY4_JOBSCHEDULER_WAIT,
+        // Signature for Unity 4.6.2f1
         "41 55 49 89 FD 41 54 55 53 48 83 EC 38 39 77 08 0F 8E"
     },
     {
@@ -513,18 +529,28 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY5_JOBQUEUE_EXEC,
-        // Signature for Unity 2018
+        // Signature for Unity 2017.4.10f1
+        "41 57 41 56 49 89 d6 41 55 41 54 41 89 cc 55 48 89 fd 53 48 89 f3 48 81"
+    },
+    {
+        UNITY5_JOBQUEUE_EXEC,
+        // Signature for Unity 2018.4.2f1/2018.4.12f1
         "41 57 41 56 49 89 D6 41 55 41 54 41 89 CC 55 48 89 FD 53 48 89 F3 48 83 ec 18 f0 83 6f 68 01"
     },
     {
         UNITY5_JOBQUEUE_EXEC,
-        // Signature for Unity 5
+        // Signature for Unity 5.4.3f1
         "41 57 48 8D 47 70 41 56 41 89 CE 41 55 49 89 D5 41 54 55 48 89 F5 53"
     },
     {
         UNITY5_JOBQUEUE_EXECUTE,
-        // Signature for Unity 5
+        // Signature for Unity 5.4.3f1/5.6.5f1
         "48 89 5C 24 F0 48 89 6C 24 F8 48 89 FB 48 83 EC 18 48 8B 3F E8 ?? ?? ?? ?? 48 85 C0"
+    },
+    {
+        UNITY5_JOBQUEUE_EXECUTE,
+        // Signature for Unity 2017.4.10f1
+        "55 48 89 fd 53 48 83 ec 08 48 8b 3f e8 ?? ?? ?? ?? 48 85 c0 48 89 c3 74 ?? 48 8b 78 20 e8"
     },
     {
         UNITY5_JOBQUEUE_EXECUTE,
@@ -533,21 +559,27 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY5_JOBQUEUE_EXECUTE,
-        // Signature for Unity 2018
+        // Signature for Unity 2018.2.21f1/2018.4.2f1/2018.4.12f1
         "53 48 89 FB E8 ?? ?? ?? ?? 84 C0 74 ?? B8 01 00 00 00 5B C3 0F 1F 40 00 48 89 df 5B E9"
     },
     {
         UNITY5_JOBQUEUE_EXECUTE_QUEUE,
+        // Signature for Unity 5.4.3f1/5.6.5f1
         "41 54 55 48 89 FD 53 48 83 EC 10 48 8B 7F 08 E8"
     },
     {
         UNITY5_JOBQUEUE_PROCESS,
-        // Signature for Unity 2018
+        // Signature for Unity 2017.4.10f1
+        "41 57 41 56 41 55 41 54 4c 8d 67 6c 55 53 48 89 fb 48 83 ec 58"
+    },
+    {
+        UNITY5_JOBQUEUE_PROCESS,
+        // Signature for Unity 2018.2.21f1/2018.4.2f1/2018.4.12f1
         "41 57 41 56 41 55 41 54 55 53 48 89 FB 48 83 EC 48 48 8B 35 ?? ?? ?? ?? 48 8b 3d"
     },
     {
         UNITY5_JOBQUEUE_PROCESS,
-        // Signature for Unity 5
+        // Signature for Unity 5.4.3f1
         "41 55 41 54 55 48 8d 6f 74 53 48 89 fb 48 83 ec 28 f0 83 45 00 01 4c 8d 67 50"
     },
     {
@@ -557,22 +589,27 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY5_JOBQUEUE_SCHEDULE_JOB,
-        // Signature for Unity 2018
+        // Signature for Unity 2018.2.21f1/2018.4.2f1/2018.4.12f1
         "55 44 89 CD 53 48 89 fb 48 83 ec 08 e8 ?? ?? ?? ?? 89 ea 48 89 df 48 89 c6 e8"
     },
     {
         UNITY5_JOBQUEUE_SCHEDULE_JOB,
-        // Signature for Unity 5
+        // Signature for Unity 5.4.3f1/5.6.5f1
         "48 89 5C 24 D8 48 89 6C 24 E0 48 89 F5 4C 89 64 24 E8 4C 89 6C 24 F0 49 89 D4 4c 89 74 24 f8 48 83 EC 68 48 89 CA 44 89 44 24 18 48 89 4C 24 10 BE 01 00 00 00"
     },
     {
         UNITY5_JOBQUEUE_SCHEDULE_GROUP,
-        // Signature for Unity 2018
+        // Signature for Unity 2017.4.10f1
+        "41 57 41 56 41 55 49 89 FD 48 89 f7 41 54 49 89 F4 55 89 D5 53 48 83 ec 68"
+    },
+    {
+        UNITY5_JOBQUEUE_SCHEDULE_GROUP,
+        // Signature for Unity 2018.2.21f1/2018.4.2f1/2018.4.12f1
         "41 57 41 56 41 55 49 89 FD 48 89 f7 41 54 49 89 F4 55 89 D5 53 48 83 ec 58"
     },
     {
         UNITY5_JOBQUEUE_SCHEDULE_GROUP,
-        // Signature for Unity 5
+        // Signature for Unity 5.4.3f1
         "41 56 41 55 41 89 D5 41 54 49 89 fc 48 89 f7 55 53 48 89 f3 48 83 c4 80"
     },
     {
@@ -582,21 +619,32 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY5_JOBQUEUE_SCHEDULE_GROUPS,
-        // Signature for Unity 5
+        // Signature for Unity 5.4.3f1
         "41 55 41 54 49 89 FC 55 53 31 DB 48 83 EC 28 48 85 F6 48 8B 7F 08 74 ?? 48 89 F1 EB ?? ?? ?? ?? 48 8b 41 30"
     },
     {
         UNITY5_JOBQUEUE_SCHEDULE_JOB_MULTIPLE,
-        // Signature for Unity 2018
+        // Signature for Unity 2018.2.21f1/2018.4.2f1/2018.4.12f1
         "41 57 49 89 ff 41 56 45 89 c6 41 55 41 54 55 53 48 83 ec 68 64 48 8b 04 25 28 00 00 00"
     },
     {
         UNITY5_JOBQUEUE_WAIT_JOB_GROUP,
+        // Signature for Unity 5.4.3f1
         "41 57 41 89 cf 41 56 41 55 41 89 d5 41 54 55 48 89 f5 53 48 89 fb 48 83 ec 78 89 54 24 38"
     },
     {
         UNITY5_JOBQUEUE_HAS_JOB_COMPLETED,
-        // Signature for Unity 2018
+        // Signature for Unity 5.4.3f1
+        "53 89 d3 48 83 ec 10 48 85 f6 89 54 24 08 48 89 34 24 ba 01 00 00 00 74"
+    },
+    {
+        UNITY5_JOBQUEUE_HAS_JOB_COMPLETED,
+        // Signature for Unity 2017.4.10f1
+        "48 85 f6 b9 01 00 00 00 74 ?? 53 48 89 f7 89 d3 e8"
+    },
+    {
+        UNITY5_JOBQUEUE_HAS_JOB_ID_COMPLETED,
+        // Signature for Unity 2018.2.21f1/2018.4.2f1/2018.4.12f1
         "48 85 f6 74 2b 53 48 89 f7 89 d3 e8"
     },
     {
@@ -616,7 +664,7 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY5_JOBQUEUE_EXECUTE_QUEUE,
-        // Signature for Unity 2018
+        // Signature for Unity 2018.2.21f1/2018.4.2f1/2018.4.12f1
         "41 55 49 89 FD 41 54 55 53 48 83 EC 18 48 8B 7F 08 E8 ?? ?? ?? ?? 49 89 C4"
     },
     {
@@ -679,7 +727,7 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY6_WORKER_THREAD_ROUTINE,
-        "41 57 41 56 53 49 89 FE 48 8B 5F 08 48 63 07"
+        "41 57 41 56 53 49 89 FE 48 8B 5F 08 48 63 07",
     },
     {
         UNITY6_PRELOADMANAGER_ADD,
@@ -687,23 +735,43 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY6_PRELOADMANAGER_ADD,
-        // Signature for Unity 2018
-        "41 56 4c 8d b7 c0 00 00 00 41 55 41 54 55 48 89 f5 53 48 89 fb",
+        // Signature for Unity 5.4.3f1
+        "4c 89 6c 24 f0 4c 8d af 90 00 00 00 48 89 5c 24 d8 48 89 6c 24 e0 4c 89 64 24 e8",
     },
     {
         UNITY6_PRELOADMANAGER_ADD,
-        // Signature for Unity 4
+        // Signature for Unity 5.6.5f1/2017.4.10f1/2018.2.21f1/2018.4.2f1/2018.4.12f1
+        "41 56 4c 8d b7 ?? 00 00 00 41 55 41 54 55 48 89 f5 53 48 89 fb",
+    },
+    {
+        UNITY6_PRELOADMANAGER_ADD,
+        // Signature for Unity 4.6.2f1
+        "55 48 8d af 88 00 00 00 53 48 89 fb 48 89 ef 48",
+    },
+    {
+        UNITY6_PRELOADMANAGER_ADD,
+        // Signature for Unity 4.7.2f1
         "55 48 89 FD 53 48 8d 9f 88 00 00 00 48 83 ec 38 48 89 df",
     },
     {
         UNITY6_PRELOADMANAGER_PREPARE,
-        // Signature for Unity 2018
-        "41 56 4c 8d B7 c0 00 00 00 41 55 41 54 55 48 89 fd 4c 89 f7 53 31 db"        
+        // Signature for Unity 5.4.3f1
+        "41 56 41 55 41 54 4c 8d a7 90 00 00 00 55 31 ed 53 48 89 fb 4c 89 e7",
+    },
+    {
+        UNITY6_PRELOADMANAGER_PREPARE,
+        // Signature for Unity 2017.4.10f1/2018.2.21f1/2018.4.2f1/2018.4.12f1
+        "41 56 4c 8d B7 ?? 00 00 00 41 55 41 54 55 48 89 fd 4c 89 f7 53 31 db",
     },
     {
         UNITY6_PRELOADMANAGER_PROCESS,
-        // Signature for Unity 2018
-        "41 55 41 54 49 89 fc 55 53 48 83 ec 58 64 48 8b 04 25 28 00 00 00 48 89 44 24 48 31 c0 e8"        
+        // Signature for Unity 5.4.3f1
+        "55 48 89 fd 53 48 83 ec 28 e8 ?? ?? ?? ?? 48 85 C0",
+    },
+    {
+        UNITY6_PRELOADMANAGER_PROCESS,
+        // Signature for Unity 2017.4.10f1/2018.4.2f1/2018.4.12f1
+        "41 55 41 54 49 89 fc 55 53 48 83 ec 58 64 48 8b 04 25 28 00 00 00 48 89 44 24 48 31 c0 e8 ?? ?? ?? ?? 48 85 c0",
     },
     {
         UNITY6_PRELOADMANAGER_UPDATE,
@@ -711,21 +779,47 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY6_PRELOADMANAGER_UPDATE,
-        // Signature for Unity 2018
-        "41 56 41 55 4c 8d af c0 00 00 00 41 54 55 53 48 89 fb 4c 89 ef 48 83 ec 10 e8",
+        // Signature for Unity 5.4.3f1
+        "41 55 41 54 45 31 e4 55 48 8d af 90 00 00 00 53 48 89 fb 48 89 ef 48 83 ec 18 e8",
     },
     {
         UNITY6_PRELOADMANAGER_UPDATE,
-        // Signature for Unity 4
+        // Signature for Unity 2017.4.10f1/2018.2.21f1/2018.4.2f1/2018.4.12f1
+        "41 56 41 55 4c 8d af ?? 00 00 00 41 54 55 53 48 89 fb 4c 89 ef 48 83 ec 10 e8",
+    },
+    {
+        UNITY6_PRELOADMANAGER_UPDATE,
+        // Signature for Unity 4.6.2f1
+        "41 56 41 55 4c 8d af 88 00 00 00 41 54 55 48 89 fd 4c 89 ef 53 e8",
+    },
+    {
+        UNITY6_PRELOADMANAGER_UPDATE,
+        // Signature for Unity 4.7.2f1
         "41 55 45 31 ED 41 54 55 48 8d af 88 00 00 00 53",
     },
     {
         UNITY4_PRELOADMANAGER_UPDATE_STEP,
+        // Signature for Unity 4.6.2f1
+        "41 54 41 89 f4 55 53 48 89 fb 48 83 ec 40 0f b6 47 28 84 c0 75",
+    },
+    {
+        UNITY4_PRELOADMANAGER_UPDATE_STEP,
+        // Signature for Unity 4.7.2f1
         "41 55 41 54 55 89 F5 53 48 89 fb 48 83 ec 38 0f b6 47 28 84 c0",
     },
     {
         UNITY6_PRELOADMANAGER_UPDATE_STEP,
-        // Signature for Unity 2018
+        // Signature for Unity 5.4.3f1
+        "48 89 5c 24 d0 48 89 6c 24 d8 48 89 fd 4c 89 64 24 e0 4c 89 6c 24 e8 41 89 f5 4c 89 74 24 f0",
+    },
+    {
+        UNITY6_PRELOADMANAGER_UPDATE_STEP,
+        // Signature for Unity 2017.4.10f1
+        "41 57 41 56 41 89 d6 41 55 41 89 f5 41 54 41 89 f4 41 83 e4 01 55 53",
+    },
+    {
+        UNITY6_PRELOADMANAGER_UPDATE_STEP,
+        // Signature for Unity 2018.2.21f1/2018.4.2f1/2018.4.12f1
         "41 57 41 56 41 55 41 89 d5 41 54 41 89 f4 83 e6 01 55 53",
     },
     {
@@ -738,12 +832,27 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY6_PRELOADMANAGER_RUN,
-        // Signature for Unity 4
-        "41 57 41 56 41 55 41 54 55 53 48 89 fb 48 83 ec 58 e8 ?? ?? ?? ?? be 00 00 04 00 48 89 c7 e8",
+        // Signature for Unity 4.6.2f1
+        "41 57 41 56 41 55 41 54 55 48 89 fd 4c 8d b5 88 00 00 00 53 48 83 ec 48",
     },
     {
         UNITY6_PRELOADMANAGER_RUN,
-        // Signature for Unity 2018
+        // Signature for Unity 4.7.2f1
+        "41 57 41 56 41 55 41 54 55 53 48 89 fb 48 83 ec 58 e8 ?? ?? ?? ?? be 00 00 04 00 48 89 c7 e8",
+    }, 
+    {
+        UNITY6_PRELOADMANAGER_RUN,
+        // Signature for Unity 5.4.3f1
+        "41 56 41 55 41 54 55 53 48 89 fb 48 8d 6b 48 ?? 83 ec ?? 48 8b bf ?? ?? ?? ?? e8",
+    },
+    {
+        UNITY6_PRELOADMANAGER_RUN,
+        // Signature for Unity 2017.4.10f1
+        "41 57 41 56 41 55 49 89 fd 4d 8d b5 c0 00 00 00 41 54",
+    },
+    {
+        UNITY6_PRELOADMANAGER_RUN,
+        // Signature for Unity 2018.4.2f1/2018.4.12f1
         "41 57 41 56 41 55 41 54 55 48 89 fd 53 48 8d 5d 78 48 81 ec e8 00 00 00",
     },
     {
@@ -752,8 +861,13 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY2K_PRELOADMANAGER_PEEK,
-        // Signature for Unity 2018
+        // Signature for Unity 2018.4.2f1/2018.4.12f1
         "55 48 8d af c0 00 00 00 53 48 89 fb 48 89 ef 48 83 ec 08 e8 ?? ?? ?? ?? 48 83 bb 50 01 00 00 00",
+    },
+    {
+        UNITY6_ASYNCREADMANAGER_REQUEST,
+        // Signature for Unity 2017.4.10f1/2018.2.21f1/2018.4.2f1/2018.4.12f1
+        "41 56 41 55 49 89 f5 41 54 55 48 8d 6f 20 53 48 89 fb 48 89 ef 48 83 ec 40",
     },
     {
         UNITY6_ASYNCREADMANAGER_REQUEST,
@@ -766,7 +880,12 @@ const static usig_t UNITY_SIGNATURES_64[] = {
     },
     {
         UNITY2K_ASYNCREADMANAGER_SYNC_REQUEST,
-        // Signature for Unity 2018
+        // Signature for Unity 2017.4.10f1/2018.2.21f1
+        "41 54 4c 8d a7 ?? ?? ?? ?? 55 48 89 fd 4c 89 e7 53 48 89 f3 e8 ?? ?? ?? ?? 48 8d bd",
+    },
+    {
+        UNITY2K_ASYNCREADMANAGER_SYNC_REQUEST,
+        // Signature for Unity 2018.4.2f1/2018.4.12f1
         "41 54 49 89 fc 55 48 8d af 50 0a 00 00 53 48 89 ef 48 89 f3 e8",
     },
     {
@@ -925,7 +1044,7 @@ void UnityPatching::sendAddressesFromSignatures(std::pair<uintptr_t,uintptr_t> e
                     break;
                 case 1:
                     func_addr = executablefile_segment.first + func_offset;
-                    std::cout << "Found unique matching signature for function " << name << " in address " << std::hex << (uintptr_t)func_addr << std::endl;
+                    std::cout << "Found unique matching signature ("<< signature << ") for function " << name << " in address " << std::hex << (uintptr_t)func_addr << std::endl;
                     sendMessage(MSGN_UNITY_ADDR);
                     sendData(&signatures[i].id, sizeof(int));
                     sendData(&func_addr, sizeof(uintptr_t));

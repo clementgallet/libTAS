@@ -1431,7 +1431,9 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_GROUPS, U5_JobQueue_ScheduleGroups)
         FUNC_CASE(UNITY5_JOBQUEUE_WAIT_JOB_GROUP, U5_JobQueue_WaitForJobGroup)
         FUNC_CASE(UNITY5_JOBQUEUE_WAIT_JOB_GROUP_ID, U5_JobQueue_WaitForJobGroupID)
+        /* Use the same function for both symbols, because they have the same behavior */
         FUNC_CASE(UNITY5_JOBQUEUE_HAS_JOB_COMPLETED, U5_JobQueue_HasJobGroupIDCompleted)
+        FUNC_CASE(UNITY5_JOBQUEUE_HAS_JOB_ID_COMPLETED, U5_JobQueue_HasJobGroupIDCompleted)
         
         FUNC_CASE(UNITY2K_BACKGROUND_JOBQUEUE_SCHEDULE, U2K_BackgroundJobQueue_ScheduleJobInternal)
         FUNC_CASE(UNITY2K_BACKGROUND_JOBQUEUE_SCHEDULE_MAIN, U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal)
