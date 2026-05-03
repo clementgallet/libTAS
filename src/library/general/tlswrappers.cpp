@@ -34,8 +34,8 @@ DEFINE_ORIG_POINTER(pthread_setspecific)
 /* We declare our map static inside a function, so that we ensure it is
  * constructed when we call the function. */
 static std::map<pthread_key_t, void(*)(void*)>& getPthreadKeys() {
-    static std::map<pthread_key_t, void(*)(void*)> pthread_keys;
-    return pthread_keys;
+    static std::map<pthread_key_t, void(*)(void*)>* pthread_keys = new std::map<pthread_key_t, void(*)(void*)>();
+    return *pthread_keys;
 }
 
 void clear_pthread_keys()
