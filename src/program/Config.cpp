@@ -29,7 +29,8 @@
 #include <filesystem>
 
 QString Config::iniPath(const std::filesystem::path& gamepath) const {
-    std::filesystem::path iniFile = configdir / gamepath.filename() / ".ini";
+    std::filesystem::path iniFile = configdir / gamepath.filename();
+    iniFile += ".ini";
     return QString(iniFile.c_str());
 }
 
