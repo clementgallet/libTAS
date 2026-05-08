@@ -38,7 +38,7 @@ void InputsWindow::draw(const AllInputsFlat& ai, const AllInputsFlat& preview_ai
         
         const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
         if (main_viewport)
-            ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y + main_viewport->WorkSize.y), ImGuiCond_Always, ImVec2(0.0f, 1.0f));
+            ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y + main_viewport->WorkSize.y), ImGuiCond_Once, ImVec2(0.0f, 1.0f));
 
         /* Guess and set the window size, so that it appears at correct size
          * on first draw */

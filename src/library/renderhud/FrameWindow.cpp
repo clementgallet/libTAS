@@ -39,7 +39,7 @@ void FrameWindow::draw(uint64_t framecount, uint64_t nondraw_framecount, bool* p
 {    
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
     if (const ImGuiViewport* main_viewport = ImGui::GetMainViewport())
-        ImGui::SetNextWindowPos(main_viewport->WorkPos, ImGuiCond_Always, ImVec2(0.0f, 0.0f));
+        ImGui::SetNextWindowPos(main_viewport->WorkPos, ImGuiCond_Once, ImVec2(0.0f, 0.0f));
     
     if (ImGui::Begin("Framecount", p_open, window_flags))
     {
