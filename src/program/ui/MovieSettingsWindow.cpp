@@ -32,10 +32,21 @@
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QLineEdit>
 
 MovieSettingsWindow::MovieSettingsWindow(Context *c, MovieFile *m, QWidget *parent) : QDialog(parent), context(c), movie(m)
 {
     setWindowTitle("Movie Settings");
+
+    QGroupBox* metadataBox = new QGroupBox(tr("Metadata"));
+
+    authorField = new QLineEdit();
+
+    QFormLayout *metadataLayout = new QFormLayout;  
+    metadataLayout->setFormAlignment(Qt::AlignLeft | Qt::AlignTop);
+    metadataLayout->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+    metadataLayout->addRow(new QLabel(tr("Author:")), authorField);
+    metadataBox->setLayout(metadataLayout);
 
     QGroupBox* inputBox = new QGroupBox(tr("Inputs"));
 
@@ -156,6 +167,7 @@ MovieSettingsWindow::MovieSettingsWindow(Context *c, MovieFile *m, QWidget *pare
     connect(buttonBox, &QDialogButtonBox::rejected, this, &MovieSettingsWindow::reject);
 
     QVBoxLayout* const leftLayout = new QVBoxLayout;
+    leftLayout->addWidget(metadataBox);
     leftLayout->addWidget(inputBox);
     leftLayout->addWidget(timeBox);
 
@@ -184,6 +196,8 @@ void MovieSettingsWindow::loadConfig()
         return;
 
     /* Load settings */
+    authorField->setText(movie->header->authors.c_str());
+    
     mouseSupportChoice->setCurrentIndex(context->config.sc.mouse_support);
     int index = joystickSupportChoice->findData(context->config.sc.nb_controllers);
     if (index != -1) joystickSupportChoice->setCurrentIndex(index);
@@ -211,10 +225,12 @@ void MovieSettingsWindow::loadConfig()
 
 void MovieSettingsWindow::saveConfig()
 {
+    /* Save settings */
+    movie->header->authors = authorField->text().toStdString();
     context->config.sc.mouse_support = mouseSupportChoice->currentData().toBool();
     context->config.sc.nb_controllers = joystickSupportChoice->currentData().toInt();
-    context->config.sc.initial_framerate_num = framerateNum->value();
-    context->config.sc.initial_framerate_den = framerateDen->value();
+    movie->header->framerate_num = framerateNum->value();
+    movie->header->framerate_den = framerateDen->value();
     context->config.auto_restart = autoRestart->currentData().toBool();
 
     context->config.sc.initial_time_sec = initialSec->value();

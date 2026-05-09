@@ -27,6 +27,7 @@ class MovieFile;
 class QComboBox;
 class ToolTipGroupBox;
 class QSpinBox;
+class QLineEdit;
 
 class MovieSettingsWindow : public QDialog {
     Q_OBJECT
@@ -40,6 +41,7 @@ private:
     
     MovieFile *movie;
 
+    QLineEdit *authorField;
     QComboBox *mouseSupportChoice;
     QComboBox *joystickSupportChoice;
 

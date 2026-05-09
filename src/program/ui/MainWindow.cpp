@@ -1024,8 +1024,7 @@ void MainWindow::updateMovieParams()
 
     movieFrameCount->setText(QString::number(context->config.sc.movie_framecount));
     rerecordCount->setText(QString::number(context->rerecord_count));
-    if (authorField->text().toStdString() == "")
-        authorField->setText(gameLoop->movie.header->authors.c_str());
+    authorField->setText(gameLoop->movie.header->authors.c_str());
     fpsNumField->setValue(context->config.sc.initial_framerate_num);
     fpsDenField->setValue(context->config.sc.initial_framerate_den);
     fpsNumField->setEnabled(movieRecording->isChecked());
@@ -1040,6 +1039,8 @@ void MainWindow::updateMovieParams()
 void MainWindow::updateMovieLoadedState(bool movieLoaded)
 {
     if (movieLoaded) {
+
+        authorField->setReadOnly(true);
 
         /* Format movie length */
         double msec = gameLoop->movie.header->length_sec + ((double)gameLoop->movie.header->length_nsec)/1000000000.0;
@@ -1069,6 +1070,7 @@ void MainWindow::updateMovieLoadedState(bool movieLoaded)
         context->config.sc.movie_framecount = 0;
         context->rerecord_count = 0;
         gameLoop->movie.header->authors = "";
+        authorField->setReadOnly(false);
         movieLength->setText("Movie length: -");
         movieRecording->setChecked(true);
         if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
@@ -1348,7 +1350,6 @@ void MainWindow::slotMoviePathChanged()
 void MainWindow::slotSaveMovie()
 {
     if (context->config.sc.recording != SharedConfig::NO_RECORDING) {
-        gameLoop->movie.header->authors = authorField->text().toStdString();
         int ret = gameLoop->movie.saveMovie();
         if (ret < 0) {
             QMessageBox::warning(this, "Warning", gameLoop->movie.errorString(ret));
@@ -1431,16 +1432,11 @@ void MainWindow::slotMovieRecording()
      * Else, we set the recording mode.
      */
     if (context->status == Context::INACTIVE) {
-        if (movieRecording->isChecked()) {
-            context->config.sc.recording = SharedConfig::RECORDING_WRITE;
-            fpsNumField->setEnabled(true);
-            fpsDenField->setEnabled(true);
-        }
-        else {
-            context->config.sc.recording = SharedConfig::RECORDING_READ;
-            fpsNumField->setEnabled(false);
-            fpsDenField->setEnabled(false);
-        }
+        bool is_recording = movieRecording->isChecked();
+        context->config.sc.recording = is_recording ? SharedConfig::RECORDING_WRITE : SharedConfig::RECORDING_READ;
+        fpsNumField->setEnabled(is_recording);
+        fpsDenField->setEnabled(is_recording);
+        authorField->setReadOnly(!is_recording);
     }
     else {
         context->hotkey_pressed_queue.push(HOTKEY_READWRITE);
