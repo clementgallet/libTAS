@@ -887,6 +887,24 @@ int snd_pcm_hw_params_set_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, 
     return 0;
 }
 
+int snd_pcm_hw_params_set_channels_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val)
+{
+    RETURN_IF_NATIVE(snd_pcm_hw_params_set_channels_near, (pcm, params, val), nullptr);
+
+    LOG(LL_TRACE, LCF_SOUND, "%s call with channels %d", __func__, *val);
+
+    int sourceId = reinterpret_cast<intptr_t>(pcm);
+    auto source = AudioContext::get().getSource(sourceId);
+    auto buffer = source->buffer_queue[0];
+    if (*val < 1)
+        *val = 1;
+    else if (*val > 2)
+        *val = 2;
+    buffer->nbChannels = *val;
+
+    return 0;
+}
+
 int snd_pcm_hw_params_set_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int val, int dir)
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_rate, (pcm, params, val, dir), nullptr);
@@ -1047,9 +1065,27 @@ int snd_pcm_hw_params_set_period_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
     return 0;
 }
 
+int snd_pcm_hw_params_set_periods_min(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
+{
+    RETURN_IF_NATIVE(snd_pcm_hw_params_set_periods_min, (pcm, params, val, dir), nullptr);
+
+    LOG(LL_TRACE, LCF_SOUND, "%s call with period %d and dir %d", __func__, *val, dir?*dir:-2);
+    periods = *val;
+    return 0;
+}
+
 int snd_pcm_hw_params_set_periods_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_periods_near, (pcm, params, val, dir), nullptr);
+
+    LOG(LL_TRACE, LCF_SOUND, "%s call with period %d and dir %d", __func__, *val, dir?*dir:-2);
+    periods = *val;
+    return 0;
+}
+
+int snd_pcm_hw_params_set_periods_first(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsigned int *val, int *dir)
+{
+    RETURN_IF_NATIVE(snd_pcm_hw_params_set_periods_first, (pcm, params, val, dir), nullptr);
 
     LOG(LL_TRACE, LCF_SOUND, "%s call with period %d and dir %d", __func__, *val, dir?*dir:-2);
     periods = *val;
