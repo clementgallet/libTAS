@@ -153,11 +153,8 @@ int SaveStateList::stateAtFrame(uint64_t frame)
 
 uint64_t SaveStateList::rootStateFramecount()
 {
-    if (last_state_id == -1)
-        return 0;
-        
     int parent_id = last_state_id;
-    uint64_t framecount;
+    uint64_t framecount = 0;
     
     while (parent_id != -1) {
         framecount = states[parent_id].framecount;
