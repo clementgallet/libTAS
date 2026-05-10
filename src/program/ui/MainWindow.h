@@ -77,6 +77,7 @@ public:
     void closeEvent(QCloseEvent *event);
 
     void showInputEditorWindow();
+    void showLuaConsoleWindow();
 
     std::thread game_thread;
     GameLoop *gameLoop;

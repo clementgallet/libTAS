@@ -143,6 +143,7 @@ int main(int argc, char **argv)
         {"libtas32-so-path", required_argument, nullptr, 'P'},
         {"help", no_argument, nullptr, 'h'},
         {"input-editor", no_argument, nullptr, 'i'},
+        {"lua-console", no_argument, nullptr, 'L'},
         {"system-time-sec", required_argument, nullptr, 't'},
         {"system-time-nsec", required_argument, nullptr, 'T'},
         {"elapsed-time-sec", required_argument, nullptr, 'e'},
@@ -151,9 +152,10 @@ int main(int argc, char **argv)
     };
     int option_index = 0;
     bool openInputEditor = false;
+    bool openLuaConsole = false;
 
     // std::string libname;
-    while ((c = getopt_long (argc, argv, "+r:w:d:l:nhit:T:e:E:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long (argc, argv, "+r:w:d:l:nhiLt:T:e:E:", long_options, &option_index)) != -1) {
         switch (c) {
             case 'r':
             case 'w':
@@ -202,6 +204,9 @@ int main(int argc, char **argv)
                 return 0;
             case 'i':
                 openInputEditor = true;
+                break;
+            case 'L':
+                openLuaConsole = true;
                 break;
             case 'e':
                 context.config.sc.initial_monotonic_time_sec = atoll(optarg);
@@ -412,6 +417,9 @@ int main(int argc, char **argv)
 
     if (openInputEditor) {
         mainWin.showInputEditorWindow();
+    }
+    if (openLuaConsole) {
+        mainWin.showLuaConsoleWindow();
     }
 
     app.exec();

@@ -742,6 +742,11 @@ void MainWindow::showInputEditorWindow()
     windowManager->showInputEditorWindow();
 }
 
+void MainWindow::showLuaConsoleWindow()
+{
+    windowManager->showLuaConsoleWindow();
+}
+
 void MainWindow::slotSyncInputEditorVisible(bool &visible)
 {
     visible = windowManager->isInputEditorVisible();
