@@ -33,7 +33,7 @@ Here is a non-exhaustive list of tool-assisted speedruns made with this tool:
     - [Specter any% by Kilaye](https://www.youtube.com/watch?v=qIfl6rH31Wk), [TASVideos submission](https://tasvideos.org/3805M)
     - [King any% by Kilaye](https://www.youtube.com/watch?v=oHCcHc5eXBA), [TASVideos submission](https://tasvideos.org/4193M)
 * SteamWorld Dig 2 - [any% by Kilaye](https://www.youtube.com/watch?v=QKjqWH2yZAA), [TASVideos submission](https://tasvideos.org/3827M)
-* Super Meay Boy
+* Super Meat Boy
     - [any% by Matte](https://www.youtube.com/watch?v=mAQidEjCNTc)
     - [106% by Matte](https://www.youtube.com/watch?v=EF7ISgbS2-w)
 * The Binding of Isaac - [Sheol by rythin](http://www.youtube.com/watch?v=sfAQL_Y_pUY), [TASVideos submission](https://tasvideos.org/5153M)

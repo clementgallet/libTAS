@@ -28,6 +28,7 @@
 
 #include <unistd.h>
 #include <sys/mman.h> // PROT_READ, PROT_WRITE, etc.
+#include <sys/sysmacros.h>
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach/vm_prot.h> // VM_PROT_READ, VM_PROT_WRITE, etc.
 #endif
@@ -161,13 +162,8 @@ void Area::fillDeletedFd()
     if (!(flags & Area::AREA_FILE))
         return;
     
-    /* If the file is deleted, look at our stored file handles for a matching
-     * file name */
-    /* FIXME: Different files may have the same filename! e.g. in the case when 
-     * memfd_create is used, the filename is only indicative, and is not
-     * necessarily unique, oops! Maybe use file inode and something like that? */
     if (strlen(name) > 10 && (0 == strcmp(name + strlen(name) - 10, " (deleted)"))) {
-        fd = FileHandleList::fdFromFile(name);
+        fd = FileHandleList::fdFromFile(name, makedev(devmajor, devminor), inodenum);
     }
 }
 

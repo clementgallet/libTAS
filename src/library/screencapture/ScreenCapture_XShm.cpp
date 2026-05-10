@@ -79,9 +79,7 @@ int ScreenCapture_XShm::copyScreenToSurface()
     }
     
     /* There is no designated surface for XShm, just copy to our array */
-    memcpy(winpixels.data(), x11::gameXImage->data, size);
-    
-    return size;
+    return copyPixelRows(x11::gameXImage->data, x11::gameXImage->bytes_per_line);
 }
 
 int ScreenCapture_XShm::getPixelsFromSurface(uint8_t **pixels, bool draw)

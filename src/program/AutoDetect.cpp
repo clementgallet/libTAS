@@ -25,8 +25,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <sys/stat.h>
-#include <unistd.h> // access()
+#include <filesystem>
 
 int AutoDetect::arch(Context *context)
 {
@@ -184,8 +183,6 @@ void AutoDetect::game_libraries(Context *context)
 
 int AutoDetect::game_engine(Context *context)
 {
-    struct stat sb;
-    
     context->gameexecutable = context->gamepath;
     
     /* Get file extension */
@@ -212,6 +209,9 @@ int AutoDetect::game_engine(Context *context)
         std::cout << "Unity game detected" << std::endl;
 
         std::filesystem::path data_unity = data / "Resources" / "unity_builtin_extra";
+        if (!std::filesystem::exists(data_unity)) {
+            data_unity = data / "Resources" / "unity default resources";
+        }
         std::ostringstream oss;
         oss << "strings " << data_unity << " | head -n 1";
 

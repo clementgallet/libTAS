@@ -123,9 +123,6 @@ struct Context {
     /* A frame number that we are seeking to */
     uint64_t seek_frame = 0;
 
-    /* Can we use incremental savestates? */
-    bool is_soft_dirty = false;
-
     /* MD5 hash of the game executable */
     std::string md5_game;
 

@@ -239,7 +239,7 @@ libtas_so_SOURCES = \
     ../external/imgui/implot_items.cpp \
     ../external/imgui/implot.cpp
 
-libtas_so_CXXFLAGS = $(LIBSWRESAMPLE_CFLAGS) -fPIC -shared -rdynamic -fno-stack-protector
+libtas_so_CXXFLAGS = $(LIBSWRESAMPLE_CFLAGS) -fPIC -shared -rdynamic -fno-stack-protector -fvisibility=hidden
 libtas_so_CXXFLAGS += -DLIBTAS_LIBRARY
 libtas_so_LDFLAGS = -shared
 libtas_so_LDADD = $(LIBRARY_LIBS)

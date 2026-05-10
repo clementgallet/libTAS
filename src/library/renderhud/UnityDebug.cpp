@@ -24,6 +24,7 @@
 #include "../external/imgui/implot.h"
 #include "global.h"
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -119,8 +120,8 @@ void UnityDebug::update(uint64_t framecount)
     /* Build the array that will be used to plot */
     preloadAll.clear();
     size_t size = 400;
-    if (preloadPending.size() < size)
-        size = preloadPending.size();
+    size = std::min(size, preloadPending.size());
+    size = std::min(size, preloadProcessed.size());
 
     preloadAll.insert(preloadAll.end(), preloadProcessed.end() - size, preloadProcessed.end());
     preloadAll.insert(preloadAll.end(), preloadPending.end() - size, preloadPending.end());
@@ -145,8 +146,11 @@ void UnityDebug::draw(uint64_t framecount, bool* p_open = nullptr)
                      * very old data left. */
                     float min_x = framecount;
 
-                    for (const auto& unityThreadData : jobData.Buffers)
-                        min_x = std::min(min_x, static_cast<float>(framecount - unityThreadData.second.DataX.size()));
+                    for (const auto& unityThreadData : jobData.Buffers) {
+                        uint64_t historySize = unityThreadData.second.DataX.size();
+                        uint64_t firstFrame = (framecount >= historySize) ? (framecount - historySize) : 0;
+                        min_x = std::min(min_x, static_cast<float>(firstFrame));
+                    }
 
                     if (framecount != old_framecount)
                         ImPlot::SetupAxisLimits(ImAxis_X1, min_x, framecount, ImPlotCond_Always);
@@ -182,10 +186,13 @@ void UnityDebug::draw(uint64_t framecount, bool* p_open = nullptr)
                     // ImPlot::SetupAxisTicks(ImAxis_X1,positions, groups, glabels);
                     // ImPlot::SetupAxisTicks(ImAxis_X1, framecount - preloadAll.size() / 2, framecount, preloadAll.size() / 2, nullptr, true);
 
-                    if (framecount != old_framecount)
-                        ImPlot::SetupAxisLimits(ImAxis_X1, 1 + framecount - preloadAll.size() / 2, framecount, ImPlotCond_Always);
+                    size_t preloadCount = preloadAll.size() / 2;
+                    if (preloadCount > 0) {
+                        if (framecount != old_framecount)
+                            ImPlot::SetupAxisLimits(ImAxis_X1, 1 + framecount - preloadCount, framecount, ImPlotCond_Always);
 
-                    ImPlot::PlotBarGroups(labels, preloadAll.data(), 2, preloadAll.size() / 2, 0.67, 1 + framecount - preloadAll.size() / 2, ImPlotBarGroupsFlags_Stacked);
+                        ImPlot::PlotBarGroups(labels, preloadAll.data(), 2, preloadCount, 0.67, 1 + framecount - preloadCount, ImPlotBarGroupsFlags_Stacked);
+                    }
                     ImPlot::EndPlot();
                 }
                 ImGui::EndTabItem();

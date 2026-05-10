@@ -58,15 +58,21 @@ public:
 
     void pop(T& item)
     {
-        std::unique_lock<std::mutex> mlock(mutex_);
+        std::scoped_lock lock(mutex_);
         item = queue_.front();
         queue_.pop_front();
     }
 
     void push(const T& item)
     {
-        std::unique_lock<std::mutex> mlock(mutex_);
+        std::scoped_lock lock(mutex_);
         queue_.push_back(item);
+    }
+
+    void push(T&& item)
+    {
+        std::scoped_lock lock(mutex_);
+        queue_.push_back(std::move(item));
     }
 
     const T& back(void)

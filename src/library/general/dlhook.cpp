@@ -127,7 +127,7 @@ static void get_dlfct_symbols()
     dyld_func_lookup_helper("__dyld_dlsym", reinterpret_cast<void**>(&orig::dlsym));
 #endif
 
-    if (!orig::dlopen && !orig::dlsym)
+    if (!orig::dlopen || !orig::dlsym)
     {
         LOG(LL_ERROR, LCF_HOOK, "Could not get dl function symbols");
         exit(1);
@@ -295,10 +295,14 @@ void *find_sym(const char *name, bool original) {
         int res = dladdr(addr, &info);
         if (res != 0) {
             std::string libpath = info.dli_fname;
-            std::string libtasstr;
-            NATIVECALL(libtasstr = getenv("LIBTAS_LIBRARY_PATH"));
-            bool fromLibtas = libpath.length() >= libtasstr.length() &&
-                libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0;
+            const char* libtaspath = nullptr;
+            NATIVECALL(libtaspath = getenv("LIBTAS_LIBRARY_PATH"));
+            bool fromLibtas = false;
+            if (libtaspath != nullptr) {
+                std::string libtasstr = libtaspath;
+                fromLibtas = libpath.length() >= libtasstr.length() &&
+                    libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0;
+            }
             if (original == fromLibtas) {
                 addr = nullptr;
             }
@@ -318,10 +322,9 @@ void *dlsym(void *handle, const char *name) __THROW {
      * This is especially the case for jemalloc which calls a bunch of functions,
      * and dlsym allocates buffers for dlerror().
      */
-    static int recurs_count = 0;
-    static bool safe = false;
-    
-    safe = (recurs_count > 0);
+    static thread_local int recurs_count = 0;
+    bool safe = (recurs_count > 0);
+
     recurs_count++;
     
     if (GlobalState::isNative()) {

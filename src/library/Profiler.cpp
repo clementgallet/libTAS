@@ -47,8 +47,8 @@ Profiler::ScopeInfo& Profiler::Database::initNode(const char* label, int type, c
     };
 
     nextNodeId = (nextNodeId+1) % maxNodes;
-    if (nextNodeId > maxNodeId)
-        maxNodeId = nextNodeId;
+    if (maxNodeId < maxNodes)
+        maxNodeId++;
 
     return nodes[id];
 }

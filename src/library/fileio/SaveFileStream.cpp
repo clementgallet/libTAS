@@ -103,7 +103,7 @@ static ssize_t savefile_write (void *cookie, const char *b, size_t s)
 static int savefile_seek (void *cookie, off64_t *p, int w)
 {
     savefile_cookie_t *c = static_cast<savefile_cookie_t*>(cookie);
-    off_t np;
+    off64_t np;
 
     switch (w) {
         case SEEK_SET:
@@ -113,7 +113,7 @@ static int savefile_seek (void *cookie, off64_t *p, int w)
             np = c->pos + *p;
             break;
         case SEEK_END:
-            np = c->size - *p;
+            np = static_cast<off64_t>(c->size) + *p;
             break;
         default:
             return -1;
@@ -140,6 +140,11 @@ static int savefile_close (void *cookie)
 FILE *SaveFileStream::open (const char *path, const char *mode)
 {
     GlobalNative gn;
+
+    if (mode == nullptr) {
+        errno = EINVAL;
+        return nullptr;
+    }
     
     /* Check if file exists and get size */
     struct stat filestat;
@@ -168,11 +173,11 @@ FILE *SaveFileStream::open (const char *path, const char *mode)
 
     c->file_addr = static_cast<char*>(addr);
     c->file_size = filestat.st_size;
+    c->size = c->file_size;
     if (mode[0] == 'a')
         c->pos = c->size;
     else
         c->pos = 0;
-    c->size = c->file_size;
 
     cookie_io_functions_t iof;
     iof.read = savefile_read;

@@ -62,12 +62,14 @@ std::forward_list<std::unique_ptr<SaveFile>>::const_iterator end() {
 /* Check if the file open permission allows for write operation */
 bool isSaveFile(const char *file, const char *modes)
 {
-    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+    {
+        std::lock_guard<std::mutex> lock(getSaveFileListMutex());
 
-    const auto& savefiles = getSaveFileList();
-    for (const auto& savefile : savefiles) {
-        if (savefile->isSameFile(file)) {
-            return true;
+        const auto& savefiles = getSaveFileList();
+        for (const auto& savefile : savefiles) {
+            if (savefile->isSameFile(file)) {
+                return true;
+            }
         }
     }
 
@@ -79,12 +81,14 @@ bool isSaveFile(const char *file, const char *modes)
 
 bool isSaveFile(const char *file, int oflag)
 {
-    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+    {
+        std::lock_guard<std::mutex> lock(getSaveFileListMutex());
 
-    const auto& savefiles = getSaveFileList();
-    for (const auto& savefile : savefiles) {
-        if (savefile->isSameFile(file)) {
-            return true;
+        const auto& savefiles = getSaveFileList();
+        for (const auto& savefile : savefiles) {
+            if (savefile->isSameFile(file)) {
+                return true;
+            }
         }
     }
 
@@ -281,6 +285,20 @@ const SaveFile* getSaveFile(const char *file)
     auto& savefiles = getSaveFileList();
     for (const auto& savefile : savefiles) {
         if (savefile->isSameFile(file)) {
+            return savefile.get();
+        }
+    }
+
+    return nullptr;
+}
+
+const SaveFile* getSaveFile(FILE* stream)
+{
+    std::lock_guard<std::mutex> lock(getSaveFileListMutex());
+
+    auto& savefiles = getSaveFileList();
+    for (const auto& savefile : savefiles) {
+        if (savefile->stream == stream) {
             return savefile.get();
         }
     }

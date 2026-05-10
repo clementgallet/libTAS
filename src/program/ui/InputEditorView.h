@@ -78,7 +78,7 @@ public slots:
 
     void moveAgainSection(int logicalIndex, int oldVisualIndex, int newVisualIndex);
     void scrollToFrame(unsigned long long frame);
-    void holdSection(int logicalIndex);
+    void clickSection(int logicalIndex);
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
@@ -104,6 +104,9 @@ signals:
     void saveMovieRequested();
 
 private:
+    KeyPressedDialog *ensureKeyDialog();
+    InputEventWindow *ensureInputEventWindow();
+
     Context *context;
     QMenu *horMenu;
     QMenu *menu;
@@ -113,8 +116,8 @@ private:
     int mouseMinRow;
     int mouseMaxRow;
     int mouseValue;
-    KeyPressedDialog* keyDialog;
-    InputEventWindow* inputEventWindow;
+    KeyPressedDialog* keyDialog = nullptr;
+    InputEventWindow* inputEventWindow = nullptr;
     std::string currentMarkerText;
     MovieFile* movie;
 

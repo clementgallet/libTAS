@@ -220,6 +220,14 @@ EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_
     LOGTRACE(LCF_OGL);
     LINK_NAMESPACE(eglCreateContext, "EGL");
 
+    if (!attrib_list) {
+        if (bindAPI == EGL_OPENGL_ES_API)
+            Global::game_info.opengl_profile = GameInfo::ES;
+
+        Global::game_info.tosend = true;
+        return orig::eglCreateContext(dpy, config, share_context, attrib_list);
+    }
+
     int i = 0;
     while (attrib_list[i] != 0) {
         if (attrib_list[i] == EGL_CONTEXT_MAJOR_VERSION) {

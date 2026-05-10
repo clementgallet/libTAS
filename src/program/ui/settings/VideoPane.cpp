@@ -19,6 +19,7 @@
 
 #include "VideoPane.h"
 #include "tooltip/ToolTipCheckBox.h"
+#include "tooltip/ToolTipComboBox.h"
 
 #include "Context.h"
 
@@ -96,10 +97,13 @@ void VideoPane::initLayout()
 
     rendSoftBox = new ToolTipCheckBox(tr("Force software rendering"));
 
-    rendPerfBox = new ToolTipCheckBox(tr("Toggle performance tweaks"));
+    rendQualityChoice = new ToolTipComboBox();
+    rendQualityChoice->addItem(tr("Normal"), SharedConfig::OPENGL_QUALITY_NORMAL);
+    rendQualityChoice->addItem(tr("Fast"), SharedConfig::OPENGL_QUALITY_FAST);
+    rendQualityChoice->addItem(tr("Fastest"), SharedConfig::OPENGL_QUALITY_FASTEST);
 
     renderingLayout->addWidget(rendSoftBox);
-    renderingLayout->addWidget(rendPerfBox);
+    renderingLayout->addWidget(rendQualityChoice);
 
     QVBoxLayout* const mainLayout = new QVBoxLayout;
     mainLayout->addWidget(screenBox);
@@ -136,7 +140,7 @@ void VideoPane::initSignals()
     connect(osdEncodeBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
 
     connect(rendSoftBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
-    connect(rendPerfBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
+    connect(rendQualityChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
 }
 
 void VideoPane::initToolTips()
@@ -147,9 +151,9 @@ void VideoPane::initToolTips()
     "window and game startup if it is not the case."
     "<br><br><em>If unsure, leave this checked</em>");
 
-    rendPerfBox->setDescription("Change several GL parameters (e.g. texture filtering) "
-    "to save a bit of performance, useful when using software rendering."
-    "<br><br><em>If unsure, leave this unchecked</em>");
+    rendQualityChoice->setTitle("OpenGL rendering quality");
+    rendQualityChoice->setDescription("Select how aggressively libTAS should optimize OpenGL rendering for software driver. "
+    "Fast and Fastest modes disable expensive shader, texture, and post-processing operations to improve savestate compatibility and performance while still preserving TAS timing behavior.");
 }
 
 
@@ -189,7 +193,7 @@ void VideoPane::loadConfig()
     osdEncodeBox->setChecked(context->config.sc.osd_encode);
 
     rendSoftBox->setChecked(context->config.sc.opengl_soft);
-    rendPerfBox->setChecked(context->config.sc.opengl_performance);
+    rendQualityChoice->setCurrentIndex(rendQualityChoice->findData(context->config.sc.opengl_quality));
 }
 
 void VideoPane::saveConfig()
@@ -212,7 +216,7 @@ void VideoPane::saveConfig()
     context->config.sc.osd_encode = osdEncodeBox->isChecked();
 
     context->config.sc.opengl_soft = rendSoftBox->isChecked();
-    context->config.sc.opengl_performance = rendPerfBox->isChecked();
+    context->config.sc.opengl_quality = rendQualityChoice->itemData(rendQualityChoice->currentIndex()).toInt();
 
     context->config.sc_modified = true;
 }

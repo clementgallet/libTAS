@@ -20,6 +20,8 @@
 #ifndef LIBTAS_RAMWATCHVIEW_H_INCLUDED
 #define LIBTAS_RAMWATCHVIEW_H_INCLUDED
 
+#include "ramsearch/RamWatchDetailed.h"
+
 #include <QtWidgets/QTableView>
 
 /* Forward declaration */
@@ -34,8 +36,9 @@ public:
     RamWatchView(Context *c, QWidget *parent = Q_NULLPTR);
     void update();
     void update_frozen();
+    void addWatch(std::unique_ptr<RamWatchDetailed> watch);
+    RamWatchEditWindow *ensureEditWindow();
 
-    RamWatchEditWindow *editWindow;
     RamWatchModel *ramWatchModel;
 
 protected:
@@ -43,6 +46,7 @@ protected:
 
 private:
     Context *context;
+    RamWatchEditWindow *editWindow = nullptr;
 
 
 public slots:

@@ -67,7 +67,7 @@ LuaConsoleWindow::LuaConsoleWindow(Context *c, QWidget *parent) : QMainWindow(pa
     consoleText = new QPlainTextEdit();
     consoleText->setReadOnly(true);
     consoleText->setMaximumBlockCount(10000);
-    connect(&Lua::Print::get(), &Lua::Print::signalPrint, this, &LuaConsoleWindow::slotAppend);
+    connect(&Lua::Print::get(), &Lua::Print::signalPrint, this, &LuaConsoleWindow::slotAppend, Qt::QueuedConnection);
 
     QHBoxLayout *mainLayout = new QHBoxLayout;
 

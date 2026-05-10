@@ -69,7 +69,7 @@ void ProfilerDebug::renderFrame(int f, const TimeHolder& frame_start, const Time
     ImGui::SetCursorPosX(available_start + leftPos);
 
     char buffer_name[16];
-    sprintf(buffer_name, "%d", f);
+    snprintf(buffer_name, sizeof(buffer_name), "%d", f);
 
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
@@ -100,7 +100,7 @@ void ProfilerDebug::renderNode(int nodeId, const Profiler::Database* database, f
     ImGui::SetCursorPosX(available_start + leftPos);
 
     char buffer_name[16];
-    sprintf(buffer_name, "%d", nodeId);
+    snprintf(buffer_name, sizeof(buffer_name), "%d", nodeId);
 
     float hue = info.type * 0.13f;
     float sat_delta = info.depth * -0.2f;

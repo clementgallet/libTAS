@@ -48,7 +48,8 @@ void WatchesWindow::draw(bool* p_open = nullptr)
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
     
     const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + main_viewport->WorkSize.x, main_viewport->WorkPos.y), ImGuiCond_Once, ImVec2(1.0f, 0.0f));
+    if (main_viewport)
+        ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + main_viewport->WorkSize.x, main_viewport->WorkPos.y), ImGuiCond_Once, ImVec2(1.0f, 0.0f));
 
     if (ImGui::Begin("RAM Watches", p_open, window_flags)) {
         for (auto iter = watches.begin(); iter != watches.end(); iter++) {

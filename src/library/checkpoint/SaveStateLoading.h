@@ -59,6 +59,7 @@ class SaveStateLoading
 
     private:
     char nextFlag();
+    bool validateCompressedLength() const;
 
     char flags[4096];
     char current_flag;

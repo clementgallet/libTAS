@@ -19,10 +19,12 @@
 
 #include "posixiowrappers.h"
 #include "SaveFileList.h"
+#include "SaveFile.h"
 #include "URandom.h"
 
 #include "logging.h"
 #include "hook.h"
+#include "Utils.h"
 #include "global.h"
 #include "GlobalState.h"
 #ifdef __linux__
@@ -110,10 +112,16 @@ int open (const char *file, int oflag, ...)
             std::string s = datestr.str();
 
             LOG(LL_DEBUG, LCF_FILEIO, "Creating fake %s with %s", file, s.c_str());
-            write(fd, s.c_str(), s.size());
-            write(fd, " ", 1);
-            write(fd, s.c_str(), s.size());
-            lseek(fd, 0, SEEK_SET);
+            if ((Utils::writeAll(fd, s.c_str(), s.size()) != static_cast<ssize_t>(s.size())) ||
+                (Utils::writeAll(fd, " ", 1) != 1) ||
+                (Utils::writeAll(fd, s.c_str(), s.size()) != static_cast<ssize_t>(s.size()))) {
+                SaveFileList::closeSaveFile(fd);
+                return -1;
+            }
+            if (lseek(fd, 0, SEEK_SET) < 0) {
+                SaveFileList::closeSaveFile(fd);
+                return -1;
+            }
         }
         else {
             fd = SaveFileList::openSaveFile(file, oflag);
@@ -201,10 +209,16 @@ int open64 (const char *file, int oflag, ...)
             std::string s = datestr.str();
 
             LOG(LL_DEBUG, LCF_FILEIO, "Creating fake %s with %s", file, s.c_str());
-            write(fd, s.c_str(), s.size());
-            write(fd, " ", 1);
-            write(fd, s.c_str(), s.size());
-            lseek(fd, 0, SEEK_SET);
+            if ((Utils::writeAll(fd, s.c_str(), s.size()) != static_cast<ssize_t>(s.size())) ||
+                (Utils::writeAll(fd, " ", 1) != 1) ||
+                (Utils::writeAll(fd, s.c_str(), s.size()) != static_cast<ssize_t>(s.size()))) {
+                SaveFileList::closeSaveFile(fd);
+                return -1;
+            }
+            if (lseek(fd, 0, SEEK_SET) < 0) {
+                SaveFileList::closeSaveFile(fd);
+                return -1;
+            }
         }
         else {
             fd = SaveFileList::openSaveFile(file, oflag);
@@ -479,17 +493,15 @@ static int stat_special(const char *path, struct stat *buf)
     }
 #endif
 
-    /* Check if savefile. */
     if (SaveFileList::isSaveFileRemoved(path)) {
         errno = ENOENT;
         return -1;
     }
 
-    int fd = SaveFileList::getSaveFileFd(path);
-    if (fd != 0) {
-        NATIVECALL(fstat(fd, buf));
-        return 0;
-    }
+    /* Check if savefile. */
+    const SaveFile* sf = SaveFileList::getSaveFile(path);
+    if (sf)
+        return sf->getStat(buf);
     
     return 1;
 }
@@ -511,24 +523,25 @@ static int stat64_special(const char *path, struct stat64 *buf)
     }
 #endif
 
-    /* Check if savefile. */
     if (SaveFileList::isSaveFileRemoved(path)) {
         errno = ENOENT;
         return -1;
     }
 
-    int fd = SaveFileList::getSaveFileFd(path);
-    if (fd != 0) {
-        NATIVECALL(fstat64(fd, buf));
-        return 0;
-    }
-    
+    /* Check if savefile. */
+    const SaveFile* sf = SaveFileList::getSaveFile(path);
+    if (sf)
+        return sf->getStat64(buf);
+
     return 1;
 }
 
 int __xstat(int ver, const char *path, struct stat *buf) __THROW
 {
     RETURN_IF_NATIVE(__xstat, (ver, path, buf), nullptr);
+
+    if (path == nullptr || buf == nullptr)
+        RETURN_NATIVE(__xstat, (ver, path, buf), nullptr);
 
     LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
 
@@ -546,6 +559,9 @@ int __xstat64(int ver, const char *path, struct stat64 *buf) __THROW
 {
     RETURN_IF_NATIVE(__xstat64, (ver, path, buf), nullptr);
 
+    if (path == nullptr || buf == nullptr)
+        RETURN_NATIVE(__xstat64, (ver, path, buf), nullptr);
+
     LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
@@ -561,6 +577,9 @@ int __xstat64(int ver, const char *path, struct stat64 *buf) __THROW
 int stat(const char *path, struct stat *buf) __THROW
 {
     RETURN_IF_NATIVE(stat, (path, buf), nullptr);
+
+    if (path == nullptr || buf == nullptr)
+        RETURN_NATIVE(stat, (path, buf), nullptr);
 
     LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
 
@@ -578,6 +597,9 @@ int stat64(const char *path, struct stat64 *buf) __THROW
 {
     RETURN_IF_NATIVE(stat64, (path, buf), nullptr);
 
+    if (path == nullptr || buf == nullptr)
+        RETURN_NATIVE(stat64, (path, buf), nullptr);
+
     LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
@@ -593,6 +615,9 @@ int stat64(const char *path, struct stat64 *buf) __THROW
 int __lxstat(int ver, const char *path, struct stat *buf) __THROW
 {
     RETURN_IF_NATIVE(__lxstat, (ver, path, buf), nullptr);
+
+    if (path == nullptr || buf == nullptr)
+        RETURN_NATIVE(__lxstat, (ver, path, buf), nullptr);
     
     LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
 
@@ -610,6 +635,9 @@ int __lxstat64(int ver, const char *path, struct stat64 *buf) __THROW
 {
     RETURN_IF_NATIVE(__lxstat64, (ver, path, buf), nullptr);
 
+    if (path == nullptr || buf == nullptr)
+        RETURN_NATIVE(__lxstat64, (ver, path, buf), nullptr);
+
     LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
@@ -626,6 +654,9 @@ int __lxstat64(int ver, const char *path, struct stat64 *buf) __THROW
 int lstat(const char *path, struct stat *buf) __THROW
 {
     RETURN_IF_NATIVE(lstat, (path, buf), nullptr);
+
+    if (path == nullptr || buf == nullptr)
+        RETURN_NATIVE(lstat, (path, buf), nullptr);
     
     LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
 
@@ -643,6 +674,9 @@ int lstat64(const char *path, struct stat64 *buf) __THROW
 {
     RETURN_IF_NATIVE(lstat64, (path, buf), nullptr);
 
+    if (path == nullptr || buf == nullptr)
+        RETURN_NATIVE(lstat64, (path, buf), nullptr);
+
     LOG(LL_TRACE, LCF_FILEIO, "%s call with path %s", __func__, path);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
@@ -659,7 +693,16 @@ int __fxstat(int ver, int fd, struct stat *buf) __THROW
 {
     RETURN_IF_NATIVE(__fxstat, (ver, fd, buf), nullptr);
 
+    if (buf == nullptr)
+        RETURN_NATIVE(__fxstat, (ver, fd, buf), nullptr);
+
     LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
+    
+    /* Check if savefile. */
+    const SaveFile* sf = SaveFileList::getSaveFile(fd);
+    if (sf)
+        return sf->getStat(buf);
+
     RETURN_NATIVE(__fxstat, (ver, fd, buf), nullptr);
 }
 
@@ -667,7 +710,16 @@ int __fxstat64(int ver, int fd, struct stat64 *buf) __THROW
 {
     RETURN_IF_NATIVE(__fxstat64, (ver, fd, buf), nullptr);
 
+    if (buf == nullptr)
+        RETURN_NATIVE(__fxstat64, (ver, fd, buf), nullptr);
+
     LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
+
+    /* Check if savefile. */
+    const SaveFile* sf = SaveFileList::getSaveFile(fd);
+    if (sf)
+        return sf->getStat64(buf);
+
     RETURN_NATIVE(__fxstat64, (ver, fd, buf), nullptr);
 }
 
@@ -675,7 +727,16 @@ int fstat(int fd, struct stat *buf) __THROW
 {
     RETURN_IF_NATIVE(fstat, (fd, buf), nullptr);
 
+    if (buf == nullptr)
+        RETURN_NATIVE(fstat, (fd, buf), nullptr);
+
     LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
+    
+    /* Check if savefile. */
+    const SaveFile* sf = SaveFileList::getSaveFile(fd);
+    if (sf)
+        return sf->getStat(buf);
+
     RETURN_NATIVE(fstat, (fd, buf), nullptr);
 }
 
@@ -683,7 +744,16 @@ int fstat64(int fd, struct stat64 *buf) __THROW
 {
     RETURN_IF_NATIVE(fstat64, (fd, buf), nullptr);
 
+    if (buf == nullptr)
+        RETURN_NATIVE(fstat64, (fd, buf), nullptr);
+
     LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
+    
+    /* Check if savefile. */
+    const SaveFile* sf = SaveFileList::getSaveFile(fd);
+    if (sf)
+        return sf->getStat64(buf);
+
     RETURN_NATIVE(fstat64, (fd, buf), nullptr);    
 }
 

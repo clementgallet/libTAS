@@ -128,8 +128,13 @@ GLFUNCSKIPDRAW(DrawArraysEXT, (GLenum mode, GLint first, GLsizei count), (mode, 
 void myglBlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)
 {
     LOGTRACE(LCF_OGL);
-    if (!Global::skipping_draw)
+    if (!Global::skipping_draw) {
+        /* Skip framebuffer blits (expensive post-processing ops) in fast mode */
+        if (Global::shared_config.opengl_quality >= SharedConfig::OPENGL_QUALITY_FAST) {
+            return;  /* Skip framebuffer blit in optimization modes */
+        }
         return glProcs.BlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+    }
 }
 
 void glTexParameterf(GLenum target, GLenum pname, GLfloat param)
@@ -141,7 +146,7 @@ void glTexParameterf(GLenum target, GLenum pname, GLfloat param)
 void myglTexParameterf(GLenum target, GLenum pname, GLfloat param)
 {
     LOGTRACE(LCF_OGL);
-    if (Global::shared_config.opengl_performance) {
+    if (Global::shared_config.opengl_quality >= SharedConfig::OPENGL_QUALITY_FAST) {
         switch (pname) {
             case GL_TEXTURE_MIN_FILTER:
                 if (param == GL_NEAREST) {}
@@ -173,7 +178,7 @@ void glTexParameteri(GLenum target, GLenum pname, GLfloat param)
 void myglTexParameteri(GLenum target, GLenum pname, GLint param)
 {
     LOGTRACE(LCF_OGL);
-    if (Global::shared_config.opengl_performance) {
+    if (Global::shared_config.opengl_quality >= SharedConfig::OPENGL_QUALITY_FAST) {
         switch (pname) {
             case GL_TEXTURE_MIN_FILTER:
                 if (param == GL_NEAREST) {}
@@ -206,12 +211,33 @@ void myglEnable(GLenum cap)
 {
     if (GlobalState::isNative()) return glProcs.Enable(cap);
     LOGTRACE(LCF_OGL);
-    if (Global::shared_config.opengl_performance) {
+    if (Global::shared_config.opengl_quality >= SharedConfig::OPENGL_QUALITY_FAST) {
         switch (cap) {
             case GL_MULTISAMPLE:
             case GL_DITHER:
             case GL_TEXTURE_CUBE_MAP_SEAMLESS:
             // case GL_BLEND:
+                return;
+        }
+    }
+    /* Disable additional expensive features in fastest mode */
+    if (Global::shared_config.opengl_quality >= SharedConfig::OPENGL_QUALITY_FASTEST) {
+        switch (cap) {
+#ifdef GL_SAMPLE_ALPHA_TO_COVERAGE
+            case GL_SAMPLE_ALPHA_TO_COVERAGE:
+#endif
+#ifdef GL_SAMPLE_COVERAGE
+            case GL_SAMPLE_COVERAGE:
+#endif
+#ifdef GL_POLYGON_SMOOTH
+            case GL_POLYGON_SMOOTH:
+#endif
+#ifdef GL_LINE_SMOOTH
+            case GL_LINE_SMOOTH:
+#endif
+#ifdef GL_POINT_SMOOTH
+            case GL_POINT_SMOOTH:
+#endif
                 return;
         }
     }
@@ -254,6 +280,61 @@ void myglGetIntegerv(GLenum pname, GLint *data)
     }
 
     return glProcs.GetIntegerv(pname, data);
+}
+
+/* Texture copy operations - expensive on software rendering */
+
+void glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
+{
+    LINK_GL_POINTER(CopyTexImage2D);
+    return myglCopyTexImage2D(target, level, internalformat, x, y, width, height, border);
+}
+
+void myglCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
+{
+    LOGTRACE(LCF_OGL);
+    /* Skip texture copies in fast mode (reflection maps, shadow maps, etc.) */
+    if (Global::shared_config.opengl_quality >= SharedConfig::OPENGL_QUALITY_FAST) {
+        return;
+    }
+    return glProcs.CopyTexImage2D(target, level, internalformat, x, y, width, height, border);
+}
+
+void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    LINK_GL_POINTER(CopyTexSubImage2D);
+    return myglCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
+}
+
+void myglCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    LOGTRACE(LCF_OGL);
+    /* Skip texture sub-copies in fast mode */
+    if (Global::shared_config.opengl_quality >= SharedConfig::OPENGL_QUALITY_FAST) {
+        return;
+    }
+    return glProcs.CopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
+}
+
+/* Framebuffer attachments - optimize post-processing effects */
+
+void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
+{
+    LINK_GL_POINTER(FramebufferTexture2D);
+    return myglFramebufferTexture2D(target, attachment, textarget, texture, level);
+}
+
+void myglFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
+{
+    LOGTRACE(LCF_OGL);
+    /* Skip secondary color attachments (post-processing effects) in fast mode */
+    if (Global::shared_config.opengl_quality >= SharedConfig::OPENGL_QUALITY_FAST) {
+        /* Keep color attachment 0 (main render target) and depth attachment */
+        if (attachment != GL_COLOR_ATTACHMENT0 && attachment != GL_DEPTH_ATTACHMENT) {
+            return;  /* Skip secondary color attachments, depth stencil, etc. */
+        }
+    }
+    return glProcs.FramebufferTexture2D(target, attachment, textarget, texture, level);
 }
 
 }

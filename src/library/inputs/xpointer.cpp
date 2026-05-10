@@ -47,13 +47,21 @@ DEFINE_ORIG_POINTER(XQueryPointer)
                                    root_x_return, root_y_return,
                                    win_x_return, win_y_return, mask_return);
     }
-    *root_return = DefaultRootWindow(display);
-    *root_x_return = Inputs::game_ai.pointer.x;
-    *root_y_return = Inputs::game_ai.pointer.y;
-    *win_x_return = Inputs::game_ai.pointer.x;
-    *win_y_return = Inputs::game_ai.pointer.y;
-    *mask_return = SingleInput::toXlibPointerMask(Inputs::game_ai.pointer.mask);
-    *child_return = 0;
+
+    if (root_return)
+        *root_return = DefaultRootWindow(display);
+    if (root_x_return)
+        *root_x_return = Inputs::game_ai.pointer.x;
+    if (root_y_return)
+        *root_y_return = Inputs::game_ai.pointer.y;
+    if (win_x_return)
+        *win_x_return = Inputs::game_ai.pointer.x;
+    if (win_y_return)
+        *win_y_return = Inputs::game_ai.pointer.y;
+    if (mask_return)
+        *mask_return = SingleInput::toXlibPointerMask(Inputs::game_ai.pointer.mask);
+    if (child_return)
+        *child_return = 0;
     return 1;
 }
 

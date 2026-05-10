@@ -22,12 +22,15 @@
 #include "KeyMapping.h"
 
 #include <QtCore/QSettings>
+#include <algorithm>
 #include <fcntl.h>
 #include <unistd.h> // access
 #include <iostream>
+#include <filesystem>
 
 QString Config::iniPath(const std::filesystem::path& gamepath) const {
-    std::filesystem::path iniFile = configdir / gamepath.filename() / ".ini";
+    std::filesystem::path iniFile = configdir / gamepath.filename();
+    iniFile += ".ini";
     return QString(iniFile.c_str());
 }
 
@@ -37,20 +40,16 @@ void Config::save(const std::filesystem::path& gamepath) {
         return;
 
     /* Save the gamepath in recent gamepaths */
-    for (auto iter = recent_gamepaths.begin(); iter != recent_gamepaths.end(); iter++) {
-        if (iter->compare(gamepath) == 0) {
-            recent_gamepaths.erase(iter);
-            break;
-        }
+    auto it = std::find(recent_gamepaths.begin(), recent_gamepaths.end(), gamepath);
+    if (it != recent_gamepaths.end()) {
+        recent_gamepaths.erase(it);
     }
     recent_gamepaths.push_front(gamepath);
 
     /* Save the option in recent options */
-    for (auto iter = recent_args.begin(); iter != recent_args.end(); iter++) {
-        if (iter->compare(gameargs) == 0) {
-            recent_args.erase(iter);
-            break;
-        }
+    auto arg_it = std::find(recent_args.begin(), recent_args.end(), gameargs);
+    if (arg_it != recent_args.end()) {
+        recent_args.erase(arg_it);
     }
     recent_args.push_front(gameargs);
 
@@ -179,7 +178,7 @@ void Config::save(const std::filesystem::path& gamepath) {
     settings.setValue("virtual_steam", sc.virtual_steam);
     settings.setValue("openal_soft", sc.openal_soft);
     settings.setValue("opengl_soft", sc.opengl_soft);
-    settings.setValue("opengl_performance", sc.opengl_performance);
+    settings.setValue("opengl_quality", sc.opengl_quality);
     settings.setValue("async_events", sc.async_events);
     settings.setValue("wait_timeout", sc.wait_timeout);
     settings.setValue("sleep_handling", sc.sleep_handling);
@@ -397,7 +396,7 @@ void Config::load(const std::filesystem::path& gamepath) {
     sc.audio_bitrate = settings.value("audio_bitrate", sc.audio_bitrate).toInt();
     sc.savestate_settings = settings.value("savestate_settings", sc.savestate_settings).toInt();
     sc.opengl_soft = settings.value("opengl_soft", sc.opengl_soft).toBool();
-    sc.opengl_performance = settings.value("opengl_performance", sc.opengl_performance).toBool();
+    sc.opengl_quality = settings.value("opengl_quality", sc.opengl_quality).toInt();
 
     size = settings.beginReadArray("main_gettimes_threshold");
     for (int t=0; t<size; t++) {
@@ -412,7 +411,7 @@ void Config::load(const std::filesystem::path& gamepath) {
 void Config::createDirectories()
 {
     try {
-        std::filesystem::create_directory(datadir);
+        std::filesystem::create_directories(datadir);
     }
     catch (std::filesystem::filesystem_error const& ex) {
         std::cerr << "Cannot create dir " << datadir << std::endl;

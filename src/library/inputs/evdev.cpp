@@ -45,7 +45,7 @@ int is_evdev(const char* source)
     if (ret != 1)
         return -1;
 
-    if (evnum < 0 || evnum >= Global::shared_config.nb_controllers) {
+    if (evnum < 0 || evnum >= Global::shared_config.nb_controllers || evnum >= AllInputsFlat::MAXJOYS) {
         return 0;
     }
 
@@ -57,10 +57,13 @@ int open_evdev(const char* source, int flags)
     /* Extract the ev number from the dev filename */
     int evnum;
     int ret = sscanf(source, "/dev/input/event%d", &evnum);
-    MYASSERT(ret == 1)
+    if (ret != 1) {
+        errno = ENOENT;
+        return -1;
+    }
 
     /* Return -1 and set errno if we don't support this ev number */
-    if (evnum < 0 || evnum >= Global::shared_config.nb_controllers) {
+    if (evnum < 0 || evnum >= Global::shared_config.nb_controllers || evnum >= AllInputsFlat::MAXJOYS) {
         errno = ENOENT;
         return -1;
     }

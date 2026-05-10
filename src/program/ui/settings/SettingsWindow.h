@@ -23,6 +23,7 @@
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QMainWindow>
+#include <array>
 
 class Context;
 class RuntimePane;
@@ -68,15 +69,21 @@ public:
     void loadConfig();
 
 private:
+    void openTab(TabIndex index);
+    void ensureTab(TabIndex index);
+    QWidget *createTabWidget(TabIndex index);
+
     QTabWidget* tabWidget;
-    RuntimePane* rp;
-    MoviePane* mp;
-    InputPane* ip;
-    AudioPane* ap;
-    VideoPane* vp;
-    DebugPane* gp;
-    GameSpecificPane* gsp;
-    PathPane* pp;
+    RuntimePane* rp = nullptr;
+    MoviePane* mp = nullptr;
+    InputPane* ip = nullptr;
+    AudioPane* ap = nullptr;
+    VideoPane* vp = nullptr;
+    DebugPane* gp = nullptr;
+    GameSpecificPane* gsp = nullptr;
+    PathPane* pp = nullptr;
+    std::array<QWidget*, 8> tabPages{};
+    int currentStatus = 0;
 
 private slots:
     void save();

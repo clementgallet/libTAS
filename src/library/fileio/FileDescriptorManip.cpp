@@ -21,6 +21,7 @@
 
 #include "FileDescriptorManip.h"
 
+#include <cerrno>
 #include <unistd.h> // dup
 
 namespace libtas {
@@ -28,12 +29,23 @@ namespace libtas {
 /* Array of fds used to obtain the correct fd values */
 static int tmp_fds[256] = {};
 static int tmp_fds_index = -1;
+static constexpr int tmp_fds_capacity = sizeof(tmp_fds) / sizeof(tmp_fds[0]);
 
 int FileDescriptorManip::reserveUntil(int fd)
 {
+    if (tmp_fds_index + 1 >= tmp_fds_capacity) {
+        errno = EMFILE;
+        return -1;
+    }
+
     tmp_fds_index++;
     tmp_fds[tmp_fds_index] = dup(0);
     while ((tmp_fds[tmp_fds_index] != -1) && (tmp_fds[tmp_fds_index] < fd)) {
+        if (tmp_fds_index + 1 >= tmp_fds_capacity) {
+            errno = EMFILE;
+            return -1;
+        }
+
         tmp_fds_index++;
         tmp_fds[tmp_fds_index] = dup(0);
     }

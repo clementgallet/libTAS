@@ -42,6 +42,9 @@ namespace libtas {
 /* Helper function to convert ticks into a number of bytes in the audio buffer */
 static int ticksToBytes(struct timespec ticks, int alignSize, int frequency)
 {
+    if (alignSize <= 0 || frequency <= 0)
+        return 0;
+
     static int64_t samples_frac = 0;
     uint64_t nsecs = static_cast<uint64_t>(ticks.tv_sec) * 1000000000 + ticks.tv_nsec;
     uint64_t samples = (nsecs * frequency) / 1000000000;
@@ -57,6 +60,9 @@ static int ticksToBytes(struct timespec ticks, int alignSize, int frequency)
 /* Helper function to convert a number of samples in the audio buffer into ticks */
 static struct timespec samplesToTicks(int nbSamples, int frequency)
 {
+    if (frequency <= 0)
+        return {0, 0};
+
     static int64_t nsec_frac = 0;
     uint64_t nsecs = (static_cast<uint64_t>(nbSamples) * 1000000000) / frequency;
 
@@ -65,7 +71,7 @@ static struct timespec samplesToTicks(int nbSamples, int frequency)
     ticks.tv_nsec = nsecs % 1000000000;
 
     nsec_frac += (static_cast<uint64_t>(nbSamples) * 1000000000) % frequency;
-    if (nsec_frac > frequency) {
+    if (nsec_frac >= frequency) {
         nsec_frac -= frequency;
         ticks.tv_nsec++;
     }
@@ -208,6 +214,9 @@ std::shared_ptr<AudioSource> AudioContext::getSource(int id) const
 
 void AudioContext::mixAllSources(int nbSamples)
 {
+    if (outFrequency <= 0)
+        return;
+
     return mixAllSources(samplesToTicks(nbSamples, outFrequency));
 }
 
@@ -217,6 +226,14 @@ void AudioContext::mixAllSources(struct timespec ticks)
     /* Check that ticks is positive! */
     if (ticks.tv_sec < 0) {
         LOG(LL_ERROR, LCF_SOUND, "Negative number of ticks for audio mixing!");
+        return;
+    }
+
+    if (outAlignSize <= 0 || outFrequency <= 0) {
+        LOG(LL_ERROR, LCF_SOUND, "Invalid output audio format, alignment %d frequency %d", outAlignSize, outFrequency);
+        outBytes = 0;
+        outNbSamples = 0;
+        outSamples.clear();
         return;
     }
 

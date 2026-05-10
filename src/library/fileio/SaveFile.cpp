@@ -40,6 +40,8 @@
 
 namespace libtas {
 
+int SaveFile::last_stream_fd = FIRST_SAVEFILE_STREAM_FD;
+
 SaveFile::SaveFile(const char *file) {
     /* Storing the canonicalized path so that we can compare paths. Only works
      * if the file actually exists. */
@@ -200,8 +202,11 @@ FILE* SaveFile::open(const char *modes) {
         }
         else {
             /* File was removed and opened in write mode */
-            this->open(O_RDWR); // creates a file descriptor
+            if (this->open(O_RDWR) < 0)
+                return nullptr;
             NATIVECALL(stream = fdopen(fd, modes));
+            if (stream == nullptr)
+                return nullptr;
             setvbuf(stream, nullptr, _IONBF, 0);
             removed = false;
             return stream;
@@ -214,6 +219,13 @@ FILE* SaveFile::open(const char *modes) {
         stream = SaveFileStream::open(filename.c_str(), modes);
         if (stream != nullptr) {
             setvbuf(stream, nullptr, _IONBF, 0);
+
+            /* When we are using our own memory stream, it is not associated with
+             * a real fd. So we define a dummy fd, in case games wants to access
+             * it using `fileno()`. We need to issue a warning in this case,
+             * because we won't be able to support most of the functions that 
+             * take a fd. */
+            fd = last_stream_fd++;
             return stream;
         }
 
@@ -222,17 +234,23 @@ FILE* SaveFile::open(const char *modes) {
         /* Choose the right mode to open the memory stream.
          * We need to always allow read/write */
         if (strstr(modes, "r") != nullptr) {
-            this->open(O_RDWR);
+            if (this->open(O_RDWR) < 0)
+                return nullptr;
             NATIVECALL(stream = fdopen(fd, "r+"));
         }
         else if (strstr(modes, "w") != nullptr) {
-            this->open(O_RDWR | O_CREAT | O_TRUNC);
+            if (this->open(O_RDWR | O_CREAT | O_TRUNC) < 0)
+                return nullptr;
             NATIVECALL(stream = fdopen(fd, "w+"));
         }
         else {
-            this->open(O_RDWR | O_CREAT | O_APPEND);
+            if (this->open(O_RDWR | O_CREAT | O_APPEND) < 0)
+                return nullptr;
             NATIVECALL(stream = fdopen(fd, "a+"));
         }
+
+        if (stream == nullptr)
+            return nullptr;
 
         setvbuf(stream, nullptr, _IONBF, 0);
         return stream;
@@ -307,6 +325,9 @@ int SaveFile::open(int flags)
 #ifdef __linux__
         /* Create an anonymous file and store its file descriptor using memfd_create syscall. */
         fd = syscall(SYS_memfd_create, filename.c_str(), 0);
+        if (fd < 0) {
+            return -1;
+        }
 
         if (!overwrite) {
             /* Append the content of the file to the newly created memfile
@@ -331,9 +352,22 @@ int SaveFile::open(int flags)
                     off_t offset = 0;
                     while (offset < filestat.st_size) {
                         ssize_t ret = sendfile(fd, fd_file, &offset, filestat.st_size - offset);
-                
+
                         if (ret < 0) {
                             LOG(LL_ERROR, LCF_FILEIO, "Could not transfer file %s of size %jd to savefile", filename.c_str(), filestat.st_size);
+                            close(fd_file);
+                            close(fd);
+                            fd = 0;
+                            return -1;
+                        }
+
+                        if (ret == 0) {
+                            LOG(LL_ERROR, LCF_FILEIO, "Could not fully transfer file %s of size %jd to savefile", filename.c_str(), filestat.st_size);
+                            close(fd_file);
+                            close(fd);
+                            errno = EIO;
+                            fd = 0;
+                            return -1;
                         }
                     }
                     close(fd_file);
@@ -410,13 +444,73 @@ int SaveFile::remove()
     return 0;
 }
 
+int SaveFile::getStat(struct stat *buf) const
+{
+    if (removed) {
+        errno = ENOENT;
+        return -1;
+    }
+    
+    if (fd >= FIRST_SAVEFILE_STREAM_FD) {
+        /* TODO: We only fill the mode and size for now */
+        buf->st_mode = S_IFREG;
+        long off = ftell(stream);
+        if (off < 0)
+            return -1;
+        fseek(stream, 0, SEEK_END);
+        buf->st_size = ftell(stream);
+        fseek(stream, off, SEEK_SET);
+        return 0;
+    }
+    
+    if (fd != 0) {
+        NATIVECALL(fstat(fd, buf));
+        return 0;
+    }
+    
+    return -1;
+}
+
+int SaveFile::getStat64(struct stat64 *buf) const
+{
+    if (removed) {
+        errno = ENOENT;
+        return -1;
+    }
+    
+    if (fd >= FIRST_SAVEFILE_STREAM_FD) {
+        /* TODO: We only fill the mode and size for now */
+        buf->st_mode = S_IFREG;
+        long off = ftell(stream);
+        if (off < 0)
+            return -1;
+        fseek(stream, 0, SEEK_END);
+        buf->st_size = ftell(stream);
+        fseek(stream, off, SEEK_SET);
+        return 0;
+    }
+    
+    if (fd != 0) {
+        NATIVECALL(fstat64(fd, buf));
+        return 0;
+    }
+
+    return -1;
+}
+
 bool SaveFile::saveOnDisk() const {
     if (fd == 0)
+        return true;
+        
+    if (fd >= FIRST_SAVEFILE_STREAM_FD)
         return true;
     
     LOG(LL_DEBUG, LCF_FILEIO, "Save back fd %d into file %s", fd, filename.c_str());
     GlobalNative gn;
-    lseek(fd, 0, SEEK_SET);
+    if (lseek(fd, 0, SEEK_SET) < 0) {
+        LOG(LL_WARN, LCF_FILEIO, "Could not rewind savefile fd %d before saving to disk", fd);
+        return false;
+    }
     int file_fd = creat(filename.c_str(), 00777);
     
     if (file_fd < 0) {
@@ -438,7 +532,10 @@ bool SaveFile::saveOnDisk() const {
 bool SaveFile::removeFromDisk() const {
     if (fd == 0)
         return true;
-    
+
+    if (fd >= FIRST_SAVEFILE_STREAM_FD)
+        return true;
+
     LOG(LL_DEBUG, LCF_FILEIO, "Remove file %s from disk", filename.c_str());
     GlobalNative gn;
     int ret = ::remove(filename.c_str());

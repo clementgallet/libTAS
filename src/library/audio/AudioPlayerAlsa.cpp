@@ -38,8 +38,12 @@ bool AudioPlayerAlsa::init(AudioContext& ac)
     snd_pcm_format_t format;
     if (ac.outBitDepth == 8)
         format = SND_PCM_FORMAT_U8;
-    if (ac.outBitDepth == 16)
+    else if (ac.outBitDepth == 16)
         format = SND_PCM_FORMAT_S16_LE;
+    else {
+        LOG(LL_ERROR, LCF_SOUND, "Unsupported ALSA output bit depth %d", ac.outBitDepth);
+        return false;
+    }
 
     /* Build a 50 ms silence buffer */
     int sil_bytes = static_cast<int>(0.05 * ac.outFrequency) * ac.outAlignSize;
@@ -47,13 +51,13 @@ bool AudioPlayerAlsa::init(AudioContext& ac)
     if (ac.outBitDepth == 8) {
         silence.assign(sil_bytes, -128);
     }
-    if (ac.outBitDepth == 16) {
+    else {
         silence.assign(sil_bytes, 0x00);
     }
 
     GlobalNative gn;
 
-    if (snd_pcm_open(&phandle, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0) {
+    if (snd_pcm_open(&phandle, "default", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) < 0) {
         LOG(LL_ERROR, LCF_SOUND, "  Cannot open default audio device");
         return false;
     }
@@ -136,16 +140,16 @@ bool AudioPlayerAlsa::play(AudioContext& ac)
         GlobalNative gn;
         err = snd_pcm_writei(phandle, ac.outSamples.data(), ac.outNbSamples);
     }
-	if (err < 0) {
-		if (err == -EPIPE) {
-			LOG(LL_DEBUG, LCF_SOUND, "  Underrun");
+    if (err < 0) {
+        if (err == -EPIPE) {
+            LOG(LL_DEBUG, LCF_SOUND, "  Underrun");
             {
                 GlobalNative gn;
-	            err = snd_pcm_prepare(phandle);
+                err = snd_pcm_prepare(phandle);
             }
-			if (err < 0) {
-				LOG(LL_ERROR, LCF_SOUND, "  Can't recovery from underrun, prepare failed: %s", snd_strerror(err));
-			    return false;
+            if (err < 0) {
+                LOG(LL_ERROR, LCF_SOUND, "  Can't recovery from underrun, prepare failed: %s", snd_strerror(err));
+                return false;
             }
             else {
                 {
@@ -155,12 +159,16 @@ bool AudioPlayerAlsa::play(AudioContext& ac)
                     snd_pcm_writei(phandle, ac.outSamples.data(), ac.outNbSamples);
                 }
             }
-		}
-		else {
-			LOG(LL_ERROR, LCF_SOUND, "  snd_pcm_writei() failed: %s", snd_strerror (err));
-			return false;
-		}
-	}
+        }
+        else if (err == -EAGAIN) {
+            LOG(LL_DEBUG, LCF_SOUND, "  Skip frame to catch up");            
+            return false;
+        }
+        else {
+            LOG(LL_ERROR, LCF_SOUND, "  snd_pcm_writei() failed: %s", snd_strerror (err));
+            return false;
+        }
+    }
 
     return true;
 }

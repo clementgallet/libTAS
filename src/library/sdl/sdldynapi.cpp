@@ -143,6 +143,11 @@ void setDynapiAddr(uint64_t addr)
 
     char* libtaspath;
     NATIVECALL(libtaspath = getenv("SDL_DYNAMIC_API"));
+    if (libtaspath == nullptr) {
+        LOG(LL_ERROR, LCF_SDL, "   SDL_DYNAMIC_API is not set, cannot resolve libtas SDL dynapi hooks");
+        return 1;
+    }
+
     void *libtaslib;
     NATIVECALL(libtaslib = dlopen(libtaspath, RTLD_LAZY | RTLD_NOLOAD));
     if (libtaslib == nullptr) {

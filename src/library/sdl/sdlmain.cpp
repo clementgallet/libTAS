@@ -127,7 +127,7 @@ Uint32 SDL_WasInit(Uint32 flags)
     LOG(LL_TRACE, LCF_SDL, "%s with flags %d", __func__, flags);
 
     if (flags == 0)
-        flags = SDL_INIT_EVERYTHING;
+        return init_flags;
 
     return flags & init_flags;
 }

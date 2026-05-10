@@ -131,10 +131,11 @@ std::filesystem::path extractMacOSExecutable(std::filesystem::path path)
     return "";
 }
 
-std::string queryCmd(const std::string& cmd, int* status)
+std::string queryCmd(std::string_view cmd, int* status)
 {
     std::string outputstr;
-    FILE *output = popen(cmd.c_str(), "r");
+    std::string cmd_str(cmd);  // Convert string_view to std::string for popen
+    FILE *output = popen(cmd_str.c_str(), "r");
     if (output != NULL) {
         char buf[256];
         if (fgets(buf, 256, output) != 0) {

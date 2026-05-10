@@ -41,6 +41,19 @@
 
 namespace libtas {
 
+static int copyControllerName(char* name, int len)
+{
+    static const char controllerName[] = "Microsoft X-Box 360 pad";
+
+    if (name == nullptr || len <= 0)
+        return 0;
+
+    int copyLen = strnlen(controllerName, len - 1);
+    std::memcpy(name, controllerName, copyLen);
+    name[copyLen] = '\0';
+    return copyLen;
+}
+
 DEFINE_ORIG_POINTER(ioctl)
 
 int ioctl(int fd, unsigned long request, ...) __THROW
@@ -85,7 +98,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
         if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
-        strncpy(name, "Microsoft X-Box 360 pad", len);
+        copyControllerName(name, len);
         return 0;
     }
 
@@ -172,8 +185,7 @@ int ioctl(int fd, unsigned long request, ...) __THROW
         if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO) {
             return orig::ioctl(fd, request, argp);
         }
-        strncpy(name, "Microsoft X-Box 360 pad", len);
-        return strnlen(name, len);
+        return copyControllerName(name, len);
 
         // debuglog(LCF_JOYSTICK, "ioctl access to EVIOCGNAME with len ", len, " on fd ", fd);
         // int ret = orig::ioctl(fd, request, argp);
@@ -352,6 +364,10 @@ int ioctl(int fd, unsigned long request, ...) __THROW
                 return orig::ioctl(fd, request, argp);
             }
             struct input_absinfo* absinfo = static_cast<struct input_absinfo*>(argp);
+            if (absinfo == nullptr) {
+                errno = EFAULT;
+                return -1;
+            }
 
             /* Write the axis parameters */
             switch (_IOC_NR(request)) {

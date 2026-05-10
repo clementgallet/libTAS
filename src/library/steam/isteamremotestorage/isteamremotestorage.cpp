@@ -52,6 +52,7 @@ void SteamSetRemoteStorageFolder(std::string path)
 {
     LOGTRACE(LCF_STEAM);
     strncpy(steamremotestorage, path.c_str(), sizeof(steamremotestorage)-1);
+    steamremotestorage[sizeof(steamremotestorage)-1] = '\0';
 }
 
 struct ISteamRemoteStorage *SteamRemoteStorage_generic(const char *version)
@@ -135,6 +136,9 @@ bool ISteamRemoteStorage_FileWrite( void* iface, const char *pchFile, const void
 {
     LOGTRACE(LCF_STEAM);
 
+    if (!pchFile || cubData < 0)
+        return false;
+
     /* Store the file locally */
     std::string path = steamremotestorage;
     path += "/";
@@ -146,7 +150,10 @@ bool ISteamRemoteStorage_FileWrite( void* iface, const char *pchFile, const void
     if (fd < 0)
         return false;
 
-    Utils::writeAll(fd, pvData, cubData);
+    if (Utils::writeAll(fd, pvData, cubData) != cubData) {
+        close(fd);
+        return false;
+    }
 
     if (close(fd) < 0) {
         return false;
@@ -179,14 +186,14 @@ SteamAPICall_t ISteamRemoteStorage_FileWriteAsync( void* iface, const char *pchF
 {
     LOGTRACE(LCF_STEAM);
     /* Calling the sync version */
-    ISteamRemoteStorage_FileWrite(iface, pchFile, pvData, cubData);
+    bool write_ok = ISteamRemoteStorage_FileWrite(iface, pchFile, pvData, cubData);
     
     SteamAPICall_t api_call = CCallbackManager::AwaitApiCallResultOutput();
 
     struct RemoteStorageFileWriteAsyncComplete_t remote_storage_received;
-    bool io_failure = false;
+    bool io_failure = !write_ok;
 
-    remote_storage_received.m_eResult = 1; // k_EResultOK
+    remote_storage_received.m_eResult = write_ok ? 1 : 2; // k_EResultOK : k_EResultFail
     
     CCallbackManager::DispatchApiCallResultOutput(api_call, STEAM_CALLBACK_TYPE_CLIENT_REMOTE_STORAGE_FILE_WRITE_ASYNC_COMPLETE, io_failure, &remote_storage_received, sizeof(remote_storage_received));
     

@@ -21,18 +21,30 @@
 
 #include "logging.h"
 
+#include <string>
+
 namespace libtas {
+
+namespace {
+
+std::string currentPersonaName;
+
+}
 
 const char *ISteamFriends::GetPersonaName()
 {
     LOGTRACE(LCF_STEAM);
-	return "";
+    if (currentPersonaName.empty())
+        return "";
+
+    return currentPersonaName.c_str();
 }
 
 SteamAPICall_t ISteamFriends::SetPersonaName( const char *pchPersonaName )
 {
     LOGTRACE(LCF_STEAM);
-	return 1;
+    currentPersonaName = pchPersonaName ? pchPersonaName : "";
+    return 0;
 }
 
 EPersonaState ISteamFriends::GetPersonaState()
@@ -92,7 +104,7 @@ int ISteamFriends::GetFriendSteamLevel( CSteamID steamIDFriend )
 const char *ISteamFriends::GetPlayerNickname( CSteamID steamIDPlayer )
 {
     LOGTRACE(LCF_STEAM);
-	return "";
+    return nullptr;
 }
 
 }

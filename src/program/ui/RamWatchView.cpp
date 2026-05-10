@@ -53,7 +53,20 @@ RamWatchView::RamWatchView(Context* c, QWidget *parent) : QTableView(parent), co
     ramWatchModel = new RamWatchModel();
     setModel(ramWatchModel);
 
-    editWindow = new RamWatchEditWindow(this);
+}
+
+RamWatchEditWindow *RamWatchView::ensureEditWindow()
+{
+    if (!editWindow) {
+        editWindow = new RamWatchEditWindow(this);
+    }
+
+    return editWindow;
+}
+
+void RamWatchView::addWatch(std::unique_ptr<RamWatchDetailed> watch)
+{
+    ramWatchModel->addWatch(std::move(watch));
 }
 
 void RamWatchView::update()
@@ -78,12 +91,13 @@ void RamWatchView::mouseDoubleClickEvent(QMouseEvent *event)
     int row = index.row();
 
     /* Fill and show the watch edit window */
-    editWindow->fill(ramWatchModel->ramwatches.at(row));
-    editWindow->exec();
+    RamWatchEditWindow *window = ensureEditWindow();
+    window->fill(ramWatchModel->ramwatches.at(row));
+    window->exec();
 
     /* Modify the watch */
-    if (editWindow->ramwatch) {
-        ramWatchModel->ramwatches[row] = std::move(editWindow->ramwatch);
+    if (window->ramwatch) {
+        ramWatchModel->ramwatches[row] = std::move(window->ramwatch);
         ramWatchModel->update();
     }
 
@@ -92,10 +106,11 @@ void RamWatchView::mouseDoubleClickEvent(QMouseEvent *event)
 
 void RamWatchView::slotAdd()
 {
-    editWindow->exec();
+    RamWatchEditWindow *window = ensureEditWindow();
+    window->exec();
 
-    if (editWindow->ramwatch) {
-        ramWatchModel->addWatch(std::move(editWindow->ramwatch));
+    if (window->ramwatch) {
+        ramWatchModel->addWatch(std::move(window->ramwatch));
     }
 }
 
@@ -128,12 +143,13 @@ void RamWatchView::slotEdit()
     int row = index.row();
 
     /* Fill and show the watch edit window */
-    editWindow->fill(ramWatchModel->ramwatches.at(row));
-    editWindow->exec();
+    RamWatchEditWindow *window = ensureEditWindow();
+    window->fill(ramWatchModel->ramwatches.at(row));
+    window->exec();
 
     /* Modify the watch */
-    if (editWindow->ramwatch) {
-        ramWatchModel->ramwatches[row] = std::move(editWindow->ramwatch);
+    if (window->ramwatch) {
+        ramWatchModel->ramwatches[row] = std::move(window->ramwatch);
         ramWatchModel->update();
     }
 }

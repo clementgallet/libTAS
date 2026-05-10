@@ -23,6 +23,7 @@
 #include <utility>
 #include <cstdio>
 #include <forward_list>
+#include <sys/types.h>
 
 namespace libtas {
 
@@ -37,6 +38,7 @@ std::pair<int, int> createPipe(int flags = 0);
 
 /* Return the file descriptor from a filename */
 int fdFromFile(const char* file);
+int fdFromFile(const char* file, dev_t device, ino_t inode);
 
 /* Return a registered file handle from a file descriptor */
 const FileHandle& fileHandleFromFd(int fd);

@@ -67,6 +67,12 @@ public:
     /* Add a delay in the timer, and sleep */
 	void addDelay(struct timespec delayTicks);
 
+    /* Called when a non-main thread starts a wait call. */
+    void startThreadedDelay();
+
+    /* Called when a non-main thread ends a wait call. */
+    void endThreadedDelay(struct timespec delayTicks);
+
     /* Flush the accumulated timer delay. Used when game is exiting */
 	void flushDelay();
 
@@ -140,6 +146,9 @@ private:
 
     /* Accumulated delay */
     TimeHolder addedDelay;
+    
+    /* Accumulated delay of non-main threads */
+    TimeHolder addedThreadedDelay;
 
     /* Count for each time-getting method before time auto-advances to
      * avoid a freeze. Distinguish between main and secondary threads.

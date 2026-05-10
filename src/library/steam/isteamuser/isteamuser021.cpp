@@ -32,11 +32,11 @@ static const struct ISteamUser021Vtbl ISteamUser021_vtbl = {
 
 struct ISteamUser *SteamUser021(void)
 {
-	static struct ISteamUser impl;
+    static struct ISteamUser impl;
 
-	impl.vtbl.v021 = &ISteamUser021_vtbl;
+    impl.vtbl.v021 = &ISteamUser021_vtbl;
 
-	return &impl;
+    return &impl;
 }
 
 }

@@ -96,6 +96,7 @@ static void print_usage(void)
     std::cout << "  -w, --write MOVIE       Record game inputs into the specified MOVIE file" << std::endl;
     std::cout << "  -l, --lua FILE          Start the specified FILE lua scripts (comma-separated list). Can be used several times" << std::endl;
     std::cout << "  -n, --non-interactive   Don't offer any interactive choice, so that it can run headless" << std::endl;
+    std::cout << "  -t, --test-mode         Enable test mode: disable 'prevent writing to disk' and enable non-interactive mode" << std::endl;
     std::cout << "      --libtas-so-path    Path to libtas.so (equivalent to setting LIBTAS_SO_PATH)" << std::endl;
     std::cout << "      --libtas32-so-path  Path to libtas32.so (equivalent to setting LIBTAS32_SO_PATH)" << std::endl;
     std::cout << "  -i, --input-editor      Open Input Editor window at startup" << std::endl;
@@ -122,12 +123,12 @@ int main(int argc, char **argv)
 
     /* Parsing arguments */
     int c;
-    char buf[PATH_MAX];
     std::filesystem::path abspath;
     std::ofstream o;
     std::filesystem::path moviefile;
     std::filesystem::path dumpfile;
     std::vector<std::filesystem::path> luafiles;
+    bool test_mode = false;
     int recordingmode = SharedConfig::RECORDING_WRITE;
 
     static struct option long_options[] =
@@ -137,6 +138,7 @@ int main(int argc, char **argv)
         {"dump", required_argument, nullptr, 'd'},
         {"lua", required_argument, nullptr, 'l'},
         {"non-interactive", no_argument, nullptr, 'n'},
+        {"test-mode", no_argument, nullptr, 'N'},
         {"libtas-so-path", required_argument, nullptr, 'p'},
         {"libtas32-so-path", required_argument, nullptr, 'P'},
         {"help", no_argument, nullptr, 'h'},
@@ -180,6 +182,12 @@ int main(int argc, char **argv)
             case 'n':
                 context.interactive = false;
                 break;
+            case 'N':
+                /* Test mode: disable prevent_savefiles and enable non-interactive */
+                test_mode = true;
+                context.config.sc.prevent_savefiles = false;
+                context.interactive = false;
+                break;
             case 'p':
                 context.libtaspath = std::filesystem::weakly_canonical(optarg);
                 break;
@@ -187,8 +195,8 @@ int main(int argc, char **argv)
                 context.libtas32path = std::filesystem::weakly_canonical(optarg);
                 break;
             case '?':
-                std::cout << "Unknown option character" << std::endl;
-                break;
+                std::cerr << "Unknown option character" << std::endl;
+                return 1;
             case 'h':
                 print_usage();
                 return 0;
@@ -212,7 +220,7 @@ int main(int argc, char **argv)
                 context.config.sc.initial_time_set_via_cli = true;
                 break;
             default:
-                return -1;
+                return 1;
         }
     }
 
@@ -237,7 +245,7 @@ int main(int argc, char **argv)
     if (xcb_connection_has_error(context.conn))
     {
         std::cerr << "Cannot open display" << std::endl;
-        return -1;
+        return 1;
     }
 
     /* Open the xkb extension */
@@ -296,62 +304,6 @@ int main(int argc, char **argv)
         }
     }
     
-#ifdef __x86_64__
-    /* Detect if clone3 with set tid is supported.
-     * Taken from criu <https://criu.org/> source code */
-    struct clone_args args = {};
-    args.set_tid = -1;
-    /*
-     * On a system without clone3() this will return ENOSYS.
-     * On a system with clone3() but without set_tid this
-     * will return E2BIG.
-     * On a system with clone3() and set_tid it will return
-     * EINVAL.
-     */
-    pid_t pid = syscall(__NR_clone3, &args, sizeof(args));
-
-    if (pid != -1) {
-        std::cerr << "Unexpected success: clone3() returned " << pid << std::endl;
-    }
-
-    if (errno == ENOSYS || errno == E2BIG)
-        context.config.sc.has_clone3_set_tid = false;
-
-    else if (errno != EINVAL) {
-        std::cerr << "Unexpected error from clone3" << std::endl;
-    }
-    else {
-        context.config.sc.has_clone3_set_tid = true;
-    }
-#elif __i386__
-    /* For now, disable clone3 until proper asm to use it can be written */
-    context.config.sc.has_clone3_set_tid = false;
-#endif
-
-    /* Detect if we can modify */
-    int fd = open("/proc/sys/kernel/ns_last_pid", O_RDWR);
-    if (fd == -1) {
-        context.config.sc.can_set_last_pid = false;
-    }
-    else {
-        char last_pid[16];
-        ssize_t size = read(fd, last_pid, 16);
-        if (size == -1) {
-            context.config.sc.can_set_last_pid = false;
-        }
-        else {
-            lseek(fd, 0, SEEK_SET);
-            size = write(fd, last_pid, size);
-            if (size == -1) {
-                context.config.sc.can_set_last_pid = false;            
-            }
-            else {
-                context.config.sc.can_set_last_pid = true;
-            }
-        }
-        close(fd);
-    }
-    
     /* libtas.so path */
     /* TODO: Not portable! */
     if (context.libtaspath.empty()) {
@@ -396,18 +348,24 @@ int main(int argc, char **argv)
     context.config.configdir /= "libTAS";
     
     try {
-        std::filesystem::create_directory(context.config.configdir);
+        std::filesystem::create_directories(context.config.configdir);
     }
     catch (std::filesystem::filesystem_error const& ex) {
         std::cerr << "Cannot create dir " << context.config.configdir << std::endl;
         std::cerr << "what():  " << ex.what() << std::endl;
-        return -1;
+        return 1;
     }
 
     /* Now that we have the config dir, we load the game-specific config */
     context.config.load(context.gamepath);
     if (! gameargsoverride.empty()) {
         context.config.gameargs = gameargsoverride;
+    }
+
+    /* Reapply test mode settings after config loading (to override config file settings) */
+    if (test_mode) {
+        context.config.sc.prevent_savefiles = false;
+        context.interactive = false;
     }
 
     /* Overwrite the movie path if specified in commandline */
@@ -434,20 +392,6 @@ int main(int argc, char **argv)
 
     if (old_preload) context.old_ld_preload = old_preload;
 
-    /* Check if incremental savestates is supported by checking the soft-dirty bit */
-
-    fd = open("/proc/self/pagemap", O_RDONLY);
-    if (fd != -1) {
-        lseek(fd, static_cast<off_t>((reinterpret_cast<uintptr_t>(&context)/4096)*8), SEEK_SET);
-
-        uint64_t page;
-        int ret = ::read(fd, &page, 8);
-        if (ret != -1) {
-            context.is_soft_dirty = page & (0x1ull << 55);
-        }
-        close(fd);
-    }
-
     /* Start the lua VM */
     Lua::Main::init(&context);
 
@@ -467,7 +411,7 @@ int main(int argc, char **argv)
     mainWin.show();
 
     if (openInputEditor) {
-        mainWin.inputEditorWindow->show();
+        mainWin.showInputEditorWindow();
     }
 
     app.exec();

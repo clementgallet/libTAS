@@ -25,6 +25,7 @@
 #include "../external/imgui/imgui.h"
 #include "global.h"
 
+#include <algorithm>
 #include <cinttypes>
 #include <cmath>
 
@@ -74,11 +75,16 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
         if (source->state == AudioSource::SOURCE_PLAYING) {
             activeSources++;
             if (source->buffer_queue.size() != 0) {
-                float ms = 1000.0f * (float)source->getPosition() / (float)source->buffer_queue[0]->frequency;
+                int frequency = source->buffer_queue[0]->frequency;
+                if (frequency <= 0)
+                    continue;
+
+                float ms = 1000.0f * (float)source->getPosition() / (float)frequency;
                 if (ms > consumedMS)
                     consumedMS = ms;
 
-                ms = 1000.0f * (float)(source->queueSize() - source->getPosition()) / (float)source->buffer_queue[0]->frequency;
+                int remainingSamples = std::max(0, source->queueSize() - source->getPosition());
+                ms = 1000.0f * (float)remainingSamples / (float)frequency;
                 if (ms > nonConsumedMS)
                     nonConsumedMS = ms;
                     
@@ -136,7 +142,7 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
             float framePos = centerPosX + (f - (int64_t)framecount) * 1000 * Global::shared_config.initial_framerate_den / (Global::shared_config.initial_framerate_num * msPerUnit);
             ImGui::GetWindowDrawList()->AddLine(ImVec2(pos.x+framePos, pos.y), ImVec2(pos.x+framePos, pos.y+ImGui::GetTextLineHeight()), 0x80ffffff, 1.0f);
             char frame_string[21];
-            sprintf(frame_string, "%" PRId64, f);
+            snprintf(frame_string, sizeof(frame_string), "%" PRId64, f);
             ImGui::GetWindowDrawList()->AddText(ImVec2(pos.x+framePos+5.0f, pos.y), 0x80ffffff, frame_string, nullptr);
         }
         
@@ -163,7 +169,7 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
     
                 const auto& buffer = source->buffer_queue[i];
                 char buffer_name[16];
-                sprintf(buffer_name, "%d", buffer->id);
+                snprintf(buffer_name, sizeof(buffer_name), "%d", buffer->id);
                 
                 float bufferMS = 1000.0f * (float)buffer->sampleSize / (float)buffer->frequency;
                 
@@ -211,7 +217,7 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
             for (size_t i = 0; i < source->buffer_queue.size(); i++) {
                 const auto& buffer = source->buffer_queue[i];
                 char buffer_name[16];
-                sprintf(buffer_name, "%d", buffer->id);
+                snprintf(buffer_name, sizeof(buffer_name), "%d", buffer->id);
 
                 float bufferMS = 1000.0f * (float)buffer->sampleSize / (float)buffer->frequency;
 

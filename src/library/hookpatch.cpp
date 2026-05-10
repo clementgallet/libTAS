@@ -489,14 +489,16 @@ struct jmp_info {
  * where some instructions needs a modification, and a jump
  * to the remaining instructions of original function.
  */
-static void write_tramp_function(const void *orig_fun, void **pTramp)
+static bool write_tramp_function(const void *orig_fun, void **pTramp)
 {
     static unsigned char* currentTrampAddr = nullptr;
     
     currentTrampAddr = static_cast<unsigned char*>(allocate_nearby_segment(currentTrampAddr, orig_fun));
     
-    if (!currentTrampAddr)
-        return;
+    if (!currentTrampAddr) {
+        *pTramp = nullptr;
+        return false;
+    }
     
     *pTramp = currentTrampAddr;
     
@@ -597,6 +599,8 @@ static void write_tramp_function(const void *orig_fun, void **pTramp)
             /* Check if it fits into signed 32-bit */
             if (new_offset < INT32_MIN || new_offset > INT32_MAX) {
                 LOG(LL_ERROR, LCF_HOOK, "  Could not modify instruction, offset too large: %lld", new_offset);
+                *pTramp = nullptr;
+                return false;
             }
             int32_t new_offset_32 = static_cast<int32_t>(new_offset);
             
@@ -656,7 +660,13 @@ static void write_tramp_function(const void *orig_fun, void **pTramp)
     /* Write all the call target functions, and edit the offsets */
     for (auto info = jmp_list.begin(); info != jmp_list.end(); info++) {
         /* Write 8-bit offset */
-        int8_t off = reinterpret_cast<ptrdiff_t>(currentTrampAddr) - reinterpret_cast<ptrdiff_t>(info->offset_addr) - 1;
+        ptrdiff_t jump_offset = reinterpret_cast<ptrdiff_t>(currentTrampAddr) - reinterpret_cast<ptrdiff_t>(info->offset_addr) - 1;
+        if (jump_offset < INT8_MIN || jump_offset > INT8_MAX) {
+            LOG(LL_ERROR, LCF_HOOK, "  Could not rewrite short jump, offset too large: %lld", jump_offset);
+            *pTramp = nullptr;
+            return false;
+        }
+        int8_t off = static_cast<int8_t>(jump_offset);
         memcpy(info->offset_addr, &off, sizeof(int8_t));
         
         /* Write JMP instruction */
@@ -673,6 +683,8 @@ static void write_tramp_function(const void *orig_fun, void **pTramp)
         memcpy(currentTrampAddr, &addr, sizeof(uintptr_t));
         currentTrampAddr += sizeof(uintptr_t);
     }
+
+    return true;
 }
 
 void overwrite_orig_function(void *orig_fun, void* my_function)
@@ -759,7 +771,10 @@ void hook_patch(const char* name, const char* library, void** tramp_function, vo
 
 void hook_patch_addr(void *orig_fun, void** tramp_function, void* my_function)
 {
-    write_tramp_function(orig_fun, tramp_function);
+    if (!write_tramp_function(orig_fun, tramp_function)) {
+        LOG(LL_ERROR, LCF_HOOK, "Aborting hook patch because trampoline generation failed for %p", orig_fun);
+        return;
+    }
     overwrite_orig_function(orig_fun, my_function);
 }
 

@@ -138,6 +138,7 @@ libTAS_SOURCES = \
     ui/LuaConsoleWindow.cpp \
     ui/LuaConsoleModel.cpp \
     ui/MainWindow.cpp \
+    ui/WindowManager.cpp \
     ui/MarkerModel.cpp \
     ui/MarkerView.cpp \
     ui/MovieSettingsWindow.cpp \
@@ -211,6 +212,9 @@ libTAS_LDADD = $(QT5_LIBS) $(LIBLUA_LIBS) $(PROGRAM_LIBS)
 SUFFIXES = .h _moc.cpp
 
 CLEANFILES = $(libTAS_MOCSOURCES)
+
+noinst_HEADERS = \
+    ui/WindowManager.h
 
 install-exec-hook:
 	if command -v setcap >/dev/null 2>&1; then setcap cap_checkpoint_restore+eip $(DESTDIR)$(bindir)/$(bin_PROGRAMS); fi

@@ -20,12 +20,14 @@
 #include "xatom.h"
 
 #include "hook.h"
+#include "GlobalState.h"
 #include "logging.h"
 
 namespace libtas {
 
 Atom XInternAtom(Display* display, const char* atom_name, Bool only_if_exists)
 {
+    RETURN_IF_NATIVE(XInternAtom, (display, atom_name, only_if_exists), nullptr);
     LOG(LL_TRACE, LCF_WINDOW, "%s call with atom %s", __func__, atom_name);
     RETURN_NATIVE(XInternAtom, (display, atom_name, only_if_exists), nullptr);
 }
@@ -37,8 +39,12 @@ static const char * const atom_names[NB_XATOMS] =
     "WM_DELETE_WINDOW",
     "_NET_WM_STATE",
     "_NET_WM_STATE_FULLSCREEN",
+    "_NET_WM_STATE_MAXIMIZED_HORZ",
+    "_NET_WM_STATE_MAXIMIZED_VERT",
     "_NET_WM_STATE_ABOVE",
     "_NET_WM_PING",
+    "_NET_CURRENT_DESKTOP",
+    "_NET_WORKAREA",
     "_MOTIF_WM_HINTS",
     "_NET_WM_NAME",
     "UTF8_STRING",

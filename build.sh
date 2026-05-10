@@ -3,6 +3,12 @@
 set -e
 cd "$(dirname "$0")"
 
+SKIP_APPIMAGE=0
+if [ "$1" = "--skip-appimage" ]; then
+    SKIP_APPIMAGE=1
+    shift
+fi
+
 aclocal
 autoconf
 autoheader
@@ -14,10 +20,14 @@ make -j4
 
 # Build .AppImage
 
-wget -nc https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-chmod +x linuxdeploy*.AppImage
+if [ $SKIP_APPIMAGE -eq 0 ]; then
+    wget -nc https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+    chmod +x linuxdeploy*.AppImage
+fi
 
 APPDIR_PATH=$(readlink -f ./AppDir)
 
 make prefix=/usr DESTDIR=$APPDIR_PATH install
-ARCH=x86_64 ./linuxdeploy*.AppImage --appimage-extract-and-run --appdir AppDir/ --output appimage
+if [ $SKIP_APPIMAGE -eq 0 ]; then
+    ARCH=x86_64 ./linuxdeploy*.AppImage --appimage-extract-and-run --appdir AppDir/ --output appimage
+fi

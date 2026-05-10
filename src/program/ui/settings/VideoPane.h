@@ -28,6 +28,7 @@ class QCheckBox;
 class QRadioButton;
 class QSpinBox;
 class ToolTipCheckBox;
+class ToolTipComboBox;
 class QGroupBox;
 
 class VideoPane : public QWidget {
@@ -60,7 +61,7 @@ private:
     QCheckBox* osdEncodeBox;
 
     ToolTipCheckBox* rendSoftBox;
-    ToolTipCheckBox* rendPerfBox;
+    ToolTipComboBox* rendQualityChoice;
 
 public slots:
     void loadConfig();

@@ -426,11 +426,12 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 
     /* We try to reuse a buffer that has been processed from the source */
     std::shared_ptr<AudioBuffer> ab;
-    if (sourcesSDL[dev-1]->nbQueueProcessed() > 0) {
+    if (sourcesSDL[dev-1]->nbQueueProcessed() > 0 && !sourcesSDL[dev-1]->buffer_queue.empty()) {
         /* Removing first buffer */
         ab = sourcesSDL[dev-1]->buffer_queue[0];
         sourcesSDL[dev-1]->buffer_queue.erase(sourcesSDL[dev-1]->buffer_queue.begin());
-        sourcesSDL[dev-1]->queue_index--;
+        if (sourcesSDL[dev-1]->queue_index > 0)
+            sourcesSDL[dev-1]->queue_index--;
     }
     else {
         /* Building a new buffer */
