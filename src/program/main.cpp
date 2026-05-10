@@ -210,19 +210,19 @@ int main(int argc, char **argv)
                 break;
             case 'e':
                 context.config.sc.initial_monotonic_time_sec = atoll(optarg);
-                context.config.sc.initial_monotonic_time_set_via_cli = true;
+                context.config.initial_monotonic_time_set_via_cli = true;
                 break;
             case 'E':
                 context.config.sc.initial_monotonic_time_nsec = atoll(optarg);
-                context.config.sc.initial_monotonic_time_set_via_cli = true;
+                context.config.initial_monotonic_time_set_via_cli = true;
                 break;
             case 't':
                 context.config.sc.initial_time_sec = atoll(optarg);
-                context.config.sc.initial_time_set_via_cli = true;
+                context.config.initial_time_set_via_cli = true;
                 break;
             case 'T':
                 context.config.sc.initial_time_nsec = atoll(optarg);
-                context.config.sc.initial_time_set_via_cli = true;
+                context.config.initial_time_set_via_cli = true;
                 break;
             default:
                 return 1;

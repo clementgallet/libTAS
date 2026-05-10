@@ -158,6 +158,10 @@ public:
     /* Strace events, passed as [-e expr] */
     std::string strace_events;
 
+    /* Indicate if initial time was set using command-line argument. Will override the movie settings, used for batch processing */
+    bool initial_time_set_via_cli = false;
+    bool initial_monotonic_time_set_via_cli = false;
+
     /* Save the config into the config file */
     void save(const std::filesystem::path& gamepath);
 

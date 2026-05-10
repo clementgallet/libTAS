@@ -1291,11 +1291,11 @@ void MainWindow::applyLaunchTimeSettings()
 
     context->config.sc.initial_framerate_num = fpsNumField->value();
     context->config.sc.initial_framerate_den = fpsDenField->value();
-    if (! context->config.sc.initial_monotonic_time_set_via_cli) {
+    if (! context->config.initial_monotonic_time_set_via_cli) {
         context->config.sc.initial_monotonic_time_sec = elapsedTimeSec->value();
         context->config.sc.initial_monotonic_time_nsec = elapsedTimeNsec->value();
     }
-    if (! context->config.sc.initial_time_set_via_cli) {
+    if (! context->config.initial_time_set_via_cli) {
         context->config.sc.initial_time_sec = realTimeSec->value();
         context->config.sc.initial_time_nsec = realTimeNsec->value();
     }
