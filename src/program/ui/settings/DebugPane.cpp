@@ -54,6 +54,7 @@ void DebugPane::initLayout()
     debugMainBox = new ToolTipCheckBox(tr("Keep main first thread"));
     debugIOBox = new ToolTipCheckBox(tr("Native file IO"));
     debugInetBox = new ToolTipCheckBox(tr("Native internet"));
+    debugInetBox->setChecked(true);
 
     generalLayout->addWidget(debugUncontrolledBox, 0, 0);
     generalLayout->addWidget(debugEventsBox, 1, 0);

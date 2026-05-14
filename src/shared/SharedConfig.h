@@ -164,7 +164,7 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
         DEBUG_NATIVE_INET = 0x10, // Allow game to access the internet
     };
 
-    int debug_state = 0;
+    int debug_state = DEBUG_NATIVE_INET;
 
     /* An enum indicating which lang are we enforcing */
     enum LocaleType
