@@ -48,3 +48,5 @@ Here is a non-exhaustive list of tool-assisted speedruns made with this tool:
     - [game end glitch by Info Teddy](https://www.youtube.com/watch?v=XfT-5coSJdY), [TASVideos submission](https://tasvideos.org/4588M)
     - [20 trinkets by Elomavi](https://www.youtube.com/watch?v=EgJD95OWi3E), [TASVideos submission](https://tasvideos.org/4881M)
 * Völgarr the Viking - [best ending by Kilaye](https://www.youtube.com/watch?v=4em3CE0TXjs), [TASVideos submission](https://tasvideos.org/3808M)
+
+You will find many more examples on the TASVideos pages listing [Linux](https://tasvideos.org/Movies-Linux), [Flash](https://tasvideos.org/Movies-Flash), [MacOS](https://tasvideos.org/Movies-MacOS), [PICO8](https://tasvideos.org/Movies-PICO8) and [CDi](https://tasvideos.org/Movies-CDi) movies, along with some [Windows](https://tasvideos.org/Movies-Windows), [DOS](https://tasvideos.org/Movies-DOS), [PC-98](https://tasvideos.org/Movies-PC98) and [Arcade](https://tasvideos.org/Movies-Arcade) ones (check used emulator).
