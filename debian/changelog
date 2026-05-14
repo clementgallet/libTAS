@@ -1,3 +1,28 @@
+libtas (1.4.8) unstable; urgency=medium
+
+  * Debug window for file descriptors
+  * File Debug OSD shows all files with types
+  * Hook SDL_SetWindowResizable to avoid a window resize call (fix #700)
+  * Input editor: highlight failed edit in red (#705)
+  * Improve realtime playback target fps
+  * Input editor: Add a "+" column
+  * Don't enforce memory commit of a 8MB stack, but support stack changing size
+    between savestates (#684)
+  * Savestates now restore better file descriptors
+  * Fix SDL getting window dimensions of zero
+  * Better handling of opendir/readdir and savefiles
+  * Fix the Unity job handling not calling the completed callback
+  * Fix crash when using lua input function outside onInput callback (fix #697)
+  * Fix a crash when pasting no input in the input editor (fix #696)
+  * Fix lua script getting activated when modified (fix #692)
+  * gui.pixel() now actually draws a pixel (fix #691)
+  * Fix encoding softlock when resolution has changed (fix #689)
+  * Fix Paths settings not saved
+  * Fix a crash when fastforwarding under Vulkan
+  * Fix desync in GM:S startup due to missing event mask (#695)
+
+ -- clement <clement@debian.home>  Thu, 14 May 2026 13:05:46 +0200
+
 libtas (1.4.7) unstable; urgency=medium
 
   * Add input events in movies

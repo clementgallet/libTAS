@@ -1,5 +1,10 @@
 ## [Unreleased]
 ### Added
+### Changed
+### Fixed
+
+## [1.4.8] - 2026-05-14
+### Added
 
 * Debug window for file descriptors
 * File Debug OSD shows all files with types
