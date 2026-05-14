@@ -48,7 +48,7 @@ public:
     enum TabIndex
     {
         RuntimeTab = 0,
-        MovieTab= 1,
+        MovieTab = 1,
         InputTab = 2,
         AudioTab = 3,
         VideoTab = 4,
@@ -57,19 +57,11 @@ public:
         PathTab = 7,
     };
 
-    void openRuntimeTab();
-    void openMovieTab();
-    void openInputTab();
-    void openAudioTab();
-    void openVideoTab();
-    void openDebugTab();
-    void openGameSpecificTab();
-    void openPathTab();
+    void openTab(TabIndex index);
 
     void loadConfig();
 
 private:
-    void openTab(TabIndex index);
     void ensureTab(TabIndex index);
     QWidget *createTabWidget(TabIndex index);
 

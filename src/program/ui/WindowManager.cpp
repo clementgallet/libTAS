@@ -222,42 +222,42 @@ void WindowManager::showExecutableWindow()
 
 void WindowManager::openRuntimeSettingsWindow()
 {
-    settingsWindow()->openRuntimeTab();
+    settingsWindow()->openTab(SettingsWindow::RuntimeTab);
 }
-
+    
 void WindowManager::openMovieSettingsTab()
 {
-    settingsWindow()->openMovieTab();
+    settingsWindow()->openTab(SettingsWindow::MovieTab);
 }
 
 void WindowManager::openInputSettingsTab()
 {
-    settingsWindow()->openInputTab();
+    settingsWindow()->openTab(SettingsWindow::InputTab);
 }
 
 void WindowManager::openAudioSettingsTab()
 {
-    settingsWindow()->openAudioTab();
+    settingsWindow()->openTab(SettingsWindow::AudioTab);
 }
 
 void WindowManager::openVideoSettingsTab()
 {
-    settingsWindow()->openVideoTab();
+    settingsWindow()->openTab(SettingsWindow::VideoTab);
 }
 
 void WindowManager::openDebugSettingsTab()
 {
-    settingsWindow()->openDebugTab();
+    settingsWindow()->openTab(SettingsWindow::DebugTab);
 }
 
 void WindowManager::openGameSpecificSettingsTab()
 {
-    settingsWindow()->openGameSpecificTab();
+    settingsWindow()->openTab(SettingsWindow::GameSpecificTab);
 }
 
 void WindowManager::openPathSettingsTab()
 {
-    settingsWindow()->openPathTab();
+    settingsWindow()->openTab(SettingsWindow::PathTab);
 }
 
 void WindowManager::showMovieSettingsWindow()

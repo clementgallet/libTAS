@@ -77,49 +77,9 @@ SettingsWindow::SettingsWindow(Context* c, QWidget *parent) : QMainWindow(parent
     ensureTab(RuntimeTab);
 }
 
-void SettingsWindow::openRuntimeTab()
-{
-    openTab(RuntimeTab);
-}
-
-void SettingsWindow::openMovieTab()
-{
-    openTab(MovieTab);
-}
-
-void SettingsWindow::openInputTab()
-{
-    openTab(InputTab);
-}
-
-void SettingsWindow::openAudioTab()
-{
-    openTab(AudioTab);
-}
-
-void SettingsWindow::openVideoTab()
-{
-    openTab(VideoTab);
-}
-
-void SettingsWindow::openDebugTab()
-{
-    openTab(DebugTab);
-}
-
-void SettingsWindow::openGameSpecificTab()
-{
-    openTab(GameSpecificTab);
-}
-
-void SettingsWindow::openPathTab()
-{
-    openTab(PathTab);
-}
-
 void SettingsWindow::openTab(TabIndex index)
 {
-    ensureTab(index);
+    /* This will call `ensureTab` */
     tabWidget->setCurrentIndex(static_cast<int>(index));
     show();
     raise();
@@ -213,8 +173,17 @@ void SettingsWindow::ensureTab(TabIndex index)
 
     QString label = tabWidget->tabText(tabIndex);
     tabPages[tabIndex] = page;
+
+    /* The following calls will call `currentChanged` signal, so we need to disconnect it. */
+    disconnect(tabWidget, &QTabWidget::currentChanged, this, nullptr);
+
+    tabWidget->insertTab(tabIndex+1, page, label);
     tabWidget->removeTab(tabIndex);
-    tabWidget->insertTab(tabIndex, page, label);
+
+    connect(tabWidget, &QTabWidget::currentChanged, this, [this](int index) {
+        ensureTab(static_cast<TabIndex>(index));
+    });
+
     if (oldPage) {
         oldPage->deleteLater();
     }
