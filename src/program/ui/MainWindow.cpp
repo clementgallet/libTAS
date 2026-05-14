@@ -713,13 +713,13 @@ void MainWindow::createToolsMenu()
 
     toolsMenu->addAction(tr("Lua Console..."), this, [this] { windowManager->showLuaConsoleWindow(); });
 
-    toolsMenu->addSeparator();
+    // toolsMenu->addSeparator();
 
-    busyloopAction = toolsMenu->addAction(tr("Busy loop detection"), this, LAMBDABOOLSLOT(context->config.sc.busyloop_detection));
-    busyloopAction->setCheckable(true);
-    disabledActionsOnStart.append(busyloopAction);
+    // busyloopAction = toolsMenu->addAction(tr("Busy loop detection"), this, LAMBDABOOLSLOT(context->config.sc.busyloop_detection));
+    // busyloopAction->setCheckable(true);
+    // disabledActionsOnStart.append(busyloopAction);
 
-    toolsMenu->addAction(tr("Time Trace..."), this, [this] { windowManager->showTimeTraceWindow(); });
+    // toolsMenu->addAction(tr("Time Trace..."), this, [this] { windowManager->showTimeTraceWindow(); });
 }
 
 void MainWindow::createInputMenu()
