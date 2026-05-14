@@ -22,12 +22,14 @@ make -j4
 
 if [ $SKIP_APPIMAGE -eq 0 ]; then
     wget -nc https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-    chmod +x linuxdeploy*.AppImage
+    chmod +x linuxdeploy-x86_64.AppImage
+    wget -nc https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+    chmod +x linuxdeploy-plugin-qt-x86_64.AppImage
 fi
 
 APPDIR_PATH=$(readlink -f ./AppDir)
 
 make prefix=/usr DESTDIR=$APPDIR_PATH install
 if [ $SKIP_APPIMAGE -eq 0 ]; then
-    ARCH=x86_64 ./linuxdeploy*.AppImage --appimage-extract-and-run --appdir AppDir/ --output appimage
+    ARCH=x86_64 ./linuxdeploy-x86_64.AppImage --appimage-extract-and-run --appdir AppDir/ --plugin qt --output appimage
 fi
