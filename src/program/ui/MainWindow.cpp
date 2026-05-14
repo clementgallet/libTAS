@@ -1112,7 +1112,7 @@ void MainWindow::updateUIFromConfig()
 
     mouseModeAction->setChecked(context->config.sc.mouse_mode_relative);
 
-    busyloopAction->setChecked(context->config.sc.busyloop_detection);
+    // busyloopAction->setChecked(context->config.sc.busyloop_detection);
 
     setCheckboxesFromMask(fastforwardGroup, context->config.sc.fastforward_mode);
     setRadioFromList(fastforwardRenderGroup, context->config.sc.fastforward_render);
