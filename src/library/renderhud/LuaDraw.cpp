@@ -106,7 +106,7 @@ void LuaDraw::LuaRect::render(ImDrawList* draw_list, ImVec2 offset, float scale)
     if (filled)
         draw_list->AddRectFilled(ImVec2(x, y)*scale + offset, ImVec2(x+w, y+h)*scale + offset, color);
     else
-        draw_list->AddRect(ImVec2(x, y)*scale + offset, ImVec2(x+w, y+h)*scale + offset, color, 0.0f, 0, thickness);
+        draw_list->AddRect(ImVec2(x, y)*scale + offset, ImVec2(x+w, y+h)*scale + offset, color, 0.0f, thickness, 0);
 }
 
 bool LuaDraw::LuaRect::isInbound()
@@ -143,9 +143,9 @@ bool LuaDraw::LuaQuad::isInbound()
 void LuaDraw::LuaEllipse::render(ImDrawList* draw_list, ImVec2 offset, float scale)
 {
     if (filled)
-        draw_list->AddEllipseFilled(ImVec2(center_x, center_y)*scale + offset, radius_x*scale, radius_y*scale, color);
+        draw_list->AddEllipseFilled(ImVec2(center_x, center_y)*scale + offset, ImVec2(radius_x*scale, radius_y*scale), color);
     else
-        draw_list->AddEllipse(ImVec2(center_x, center_y)*scale + offset, radius_x*scale, radius_y*scale, color, 0.0f, 0, thickness);
+        draw_list->AddEllipse(ImVec2(center_x, center_y)*scale + offset, ImVec2(radius_x*scale, radius_y*scale), color, 0.0f, 0, thickness);
 }
 
 bool LuaDraw::LuaEllipse::isInbound()

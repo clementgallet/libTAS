@@ -92,7 +92,7 @@ static ImGui_ImplXlib_Data* ImGui_ImplXlib_GetBackendData()
 }
 
 // Functions
-static const char* ImGui_ImplXlib_GetClipboardText(void*)
+static const char* ImGui_ImplXlib_GetClipboardText(ImGuiContext*)
 {
     ImGui_ImplXlib_Data* bd = ImGui_ImplXlib_GetBackendData();
     
@@ -153,7 +153,7 @@ static const char* ImGui_ImplXlib_GetClipboardText(void*)
     return bd->ClipboardTextData;
 }
 
-static void ImGui_ImplXlib_SetClipboardText(void*, const char* text)
+static void ImGui_ImplXlib_SetClipboardText(ImGuiContext*, const char* text)
 {
     ImGui_ImplXlib_Data* bd = ImGui_ImplXlib_GetBackendData();
 
@@ -483,9 +483,10 @@ bool ImGui_ImplXlib_Init(Display* display, Window window)
     bd->Dpy = display;
     bd->Win = window;
 
-    io.SetClipboardTextFn = ImGui_ImplXlib_SetClipboardText;
-    io.GetClipboardTextFn = ImGui_ImplXlib_GetClipboardText;
-    io.ClipboardUserData = nullptr;
+    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    platform_io.Platform_SetClipboardTextFn = ImGui_ImplXlib_SetClipboardText;
+    platform_io.Platform_GetClipboardTextFn = ImGui_ImplXlib_GetClipboardText;
+    platform_io.Platform_ClipboardUserData = nullptr;
 
     // Store all used atoms
     bd->XA_SELECTION = XInternAtom(bd->Dpy, "IMGUI_SELECTION", 0);

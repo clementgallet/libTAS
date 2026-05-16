@@ -160,7 +160,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
             game_window_scale = avail_size.x / static_cast<float>(w);
             
             ImGui::GetWindowDrawList()->AddImage(
-                reinterpret_cast<void*>(ScreenCapture::screenTexture()), 
+                ImTextureRef(ScreenCapture::screenTexture()), 
                 ImVec2(game_window_x, game_window_y), 
                 ImVec2(game_window_x + avail_size.x, game_window_y + avail_size.y), 
                 ImVec2(0, invertedOrigin()?1:0), 

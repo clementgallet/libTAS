@@ -688,7 +688,7 @@ uint64_t ScreenCapture_Vulkan::screenTexture()
 {
     /* Lazy-initialized because of init ordering, see `ScreenCapture_Vulkan::initScreenSurface()` */
     if (vkScreenDescriptorSet == VK_NULL_HANDLE)
-        vkScreenDescriptorSet = ImGui_ImplVulkan_AddTexture(vkScreenSampler, vkScreenImageView, VK_IMAGE_LAYOUT_GENERAL);
+        vkScreenDescriptorSet = ImGui_ImplVulkan_AddTexture(vkScreenImageView, VK_IMAGE_LAYOUT_GENERAL);
 
     return reinterpret_cast<uint64_t>(vkScreenDescriptorSet);
 }

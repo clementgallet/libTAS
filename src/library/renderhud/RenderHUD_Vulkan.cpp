@@ -46,7 +46,7 @@ RenderHUD_Vulkan::~RenderHUD_Vulkan() {
 
 void RenderHUD_Vulkan::init() {
     
-    bool ret = ImGui_ImplVulkan_LoadFunctions([](const char* function_name, void*) { return orig::vkGetInstanceProcAddr(vk::context.instance, function_name); });
+    bool ret = ImGui_ImplVulkan_LoadFunctions(0, [](const char* function_name, void*) { return orig::vkGetInstanceProcAddr(vk::context.instance, function_name); });
     if (!ret) {
         LOG(LL_ERROR, LCF_VULKAN, "ImGui_ImplVulkan_LoadFunctions failed");
     }
@@ -59,11 +59,11 @@ void RenderHUD_Vulkan::init() {
     init_info.Queue = vk::context.graphicsQueue;
     init_info.PipelineCache = VK_NULL_HANDLE;
     init_info.DescriptorPool = vk::context.descriptorPool;
-    init_info.RenderPass = vk::context.renderPass;
-    init_info.Subpass = 0;
+    init_info.PipelineInfoMain.RenderPass = vk::context.renderPass;
+    init_info.PipelineInfoMain.Subpass = 0;
     init_info.MinImageCount = vk::context.imageCount;
     init_info.ImageCount = vk::context.imageCount;
-    init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     init_info.UseDynamicRendering = false;
     init_info.Allocator = vk::context.allocator;
     init_info.CheckVkResultFn = vk::checkVkResult;

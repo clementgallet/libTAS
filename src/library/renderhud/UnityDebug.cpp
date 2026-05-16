@@ -139,7 +139,8 @@ void UnityDebug::draw(uint64_t framecount, bool* p_open = nullptr)
                     /* Auto-resize when running, but allow zooming when paused */
                     int flags = (framecount != old_framecount) ? (ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit) : 0;
                     ImPlot::SetupAxes("Frame","Job Count", 0, flags);
-                    ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
+                    ImPlotSpec spec;
+                    spec.FillAlpha = 0.25f;
                     ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
                     
                     /* Crop the plot to recent data, because some old threads may have
@@ -156,19 +157,19 @@ void UnityDebug::draw(uint64_t framecount, bool* p_open = nullptr)
                         ImPlot::SetupAxisLimits(ImAxis_X1, min_x, framecount, ImPlotCond_Always);
                     
                     for (const auto& unityThreadData : jobData.Buffers) {
+                        spec.Offset = unityThreadData.second.Offset;
                         std::string label = unityThreadData.second.name;
                         if (unityThreadData.first == 0) {
-                            ImPlot::PlotShaded(label.c_str(), unityThreadData.second.DataX.data(), unityThreadData.second.DataY.data(), unityThreadData.second.DataY.size(), 0, 0, unityThreadData.second.Offset);
+                            ImPlot::PlotShaded(label.c_str(), unityThreadData.second.DataX.data(), unityThreadData.second.DataY.data(), unityThreadData.second.DataY.size(), 0, spec);
                         }
                         else {
                             label += " (";
                             label += std::to_string(unityThreadData.first);
                             label += ")";                    
-                            ImPlot::PlotLine(label.c_str(), unityThreadData.second.DataX.data(), unityThreadData.second.DataY.data(), unityThreadData.second.DataY.size(), 0, unityThreadData.second.Offset);
+                            ImPlot::PlotLine(label.c_str(), unityThreadData.second.DataX.data(), unityThreadData.second.DataY.data(), unityThreadData.second.DataY.size(), spec);
                         }
                     }            
 
-                    ImPlot::PopStyleVar();    
                     ImPlot::EndPlot();
                 }
                 ImGui::EndTabItem();
@@ -191,7 +192,7 @@ void UnityDebug::draw(uint64_t framecount, bool* p_open = nullptr)
                         if (framecount != old_framecount)
                             ImPlot::SetupAxisLimits(ImAxis_X1, 1 + framecount - preloadCount, framecount, ImPlotCond_Always);
 
-                        ImPlot::PlotBarGroups(labels, preloadAll.data(), 2, preloadCount, 0.67, 1 + framecount - preloadCount, ImPlotBarGroupsFlags_Stacked);
+                        ImPlot::PlotBarGroups(labels, preloadAll.data(), 2, preloadCount, 0.67, 1 + framecount - preloadCount, {ImPlotProp_Flags, ImPlotBarGroupsFlags_Stacked});
                     }
                     ImPlot::EndPlot();
                 }
