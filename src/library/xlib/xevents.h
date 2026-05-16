@@ -45,7 +45,7 @@ OVERRIDE int XEventsQueued(Display* display, int mode);
 OVERRIDE int XPending(Display *display);
 OVERRIDE int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *, XEvent *, XPointer), XPointer arg);
 OVERRIDE Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *, XEvent *, XPointer), XPointer arg);
-OVERRIDE Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, XEvent *event_send);
+OVERRIDE int XSendEvent(Display *display, Window w, Bool propagate, long event_mask, XEvent *event_send);
 
 OVERRIDE Bool XFilterEvent(XEvent *event, Window w);
 

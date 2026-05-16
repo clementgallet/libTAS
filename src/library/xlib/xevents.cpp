@@ -530,7 +530,7 @@ Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Dis
     return isEvent?True:False;
 }
 
-Status XSendEvent(Display *display, Window w, Bool propagate, long event_mask, XEvent *event_send)
+int XSendEvent(Display *display, Window w, Bool propagate, long event_mask, XEvent *event_send)
 {
     LINK_NAMESPACE_GLOBAL(XSendEvent);
 
