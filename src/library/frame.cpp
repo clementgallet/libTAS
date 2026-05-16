@@ -519,14 +519,14 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 static void pushQuitEvent(void)
 {
     if (Global::game_info.video & GameInfo::SDL1) {
-        SDL1::SDL_Event ev;
-        ev.type = SDL1::SDL_QUIT;
+        sdl1::SDL_Event ev;
+        ev.type = sdl1::SDL_QUIT;
         sdlEventQueue.insert(&ev);
     }
 
     if (Global::game_info.video & GameInfo::SDL2) {
-        SDL2::SDL_Event ev;
-        ev.type = SDL2::SDL_QUIT;
+        sdl2::SDL_Event ev;
+        ev.type = sdl2::SDL_QUIT;
         sdlEventQueue.insert(&ev);
     }
 
@@ -623,8 +623,7 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
             /* We need to poll events, otherwise the game appears as non-responsive.
              * TODO: Put this at appropriate place */
             if ((Global::game_info.video & GameInfo::SDL1) || (Global::game_info.video & GameInfo::SDL2)) {
-                LINK_NAMESPACE_SDLX(SDL_PumpEvents);
-                orig::SDL_PumpEvents();
+                ORIG_SDL2_CALL(SDL_PumpEvents,());
             }
 #endif
             

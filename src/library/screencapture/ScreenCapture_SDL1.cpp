@@ -18,7 +18,9 @@
  */
 
 #include "ScreenCapture_SDL1.h"
-#include "hook.h"
+//#include "hook.h"
+#include "sdl/sdldynapi.h"
+
 #include "logging.h"
 #include "../external/SDL1.h" // SDL_Surface
 #include "global.h"
@@ -30,15 +32,15 @@ namespace libtas {
 
 /* Original function pointers */
 namespace orig {
-    static void (*SDL1_FreeSurface)(::SDL1::SDL_Surface *surface);
-    static ::SDL1::SDL_Surface* (*SDL_GetVideoSurface)(void);
-    static int (*SDL1_LockSurface)(::SDL1::SDL_Surface* surface);
-    static void (*SDL1_UnlockSurface)(::SDL1::SDL_Surface* surface);
-    static int (*SDL1_UpperBlit)(::SDL1::SDL_Surface *src, ::SDL1::SDL_Rect *srcrect, ::SDL1::SDL_Surface *dst, ::SDL1::SDL_Rect *dstrect);
-    static uint8_t (*SDL1_SetClipRect)(::SDL1::SDL_Surface *surface, const ::SDL1::SDL_Rect *rect);
-    static void (*SDL1_GetClipRect)(::SDL1::SDL_Surface *surface, ::SDL1::SDL_Rect *rect);
-    static int (*SDL_SetAlpha)(::SDL1::SDL_Surface *surface, ::SDL1::Uint32 flag, ::SDL1::Uint8 alpha);
-    static ::SDL1::SDL_Surface *(*SDL_DisplayFormat)(::SDL1::SDL_Surface *surface);
+    static void (*SDL1_FreeSurface)(::sdl1::SDL_Surface *surface);
+    static ::sdl1::SDL_Surface* (*SDL_GetVideoSurface)(void);
+    static int (*SDL1_LockSurface)(::sdl1::SDL_Surface* surface);
+    static void (*SDL1_UnlockSurface)(::sdl1::SDL_Surface* surface);
+    static int (*SDL1_UpperBlit)(::sdl1::SDL_Surface *src, ::sdl1::SDL_Rect *srcrect, ::sdl1::SDL_Surface *dst, ::sdl1::SDL_Rect *dstrect);
+    static uint8_t (*SDL1_SetClipRect)(::sdl1::SDL_Surface *surface, const ::sdl1::SDL_Rect *rect);
+    static void (*SDL1_GetClipRect)(::sdl1::SDL_Surface *surface, ::sdl1::SDL_Rect *rect);
+    static int (*SDL_SetAlpha)(::sdl1::SDL_Surface *surface, ::sdl1::Uint32 flag, ::sdl1::Uint8 alpha);
+    static ::sdl1::SDL_Surface *(*SDL_DisplayFormat)(::sdl1::SDL_Surface *surface);
 }
 
 int ScreenCapture_SDL1::init()
@@ -47,7 +49,7 @@ int ScreenCapture_SDL1::init()
         return -1;
 
     LINK_NAMESPACE_SDL1(SDL_GetVideoSurface);
-    ::SDL1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
+    ::sdl1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
     if (!surf) {
         return -1;
     }
@@ -62,11 +64,11 @@ void ScreenCapture_SDL1::initScreenSurface()
     LINK_NAMESPACE_SDL1(SDL_SetAlpha);
     LINK_NAMESPACE_SDL1(SDL_DisplayFormat);
 
-    ::SDL1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
+    ::sdl1::SDL_Surface *surf = orig::SDL_GetVideoSurface();
     screenSDL1Surf = orig::SDL_DisplayFormat(surf);
 
     /* Disable alpha blending for that texture */
-    if (screenSDL1Surf->flags & ::SDL1::SDL1_SRCALPHA) {
+    if (screenSDL1Surf->flags & ::sdl1::SDL1_SRCALPHA) {
         orig::SDL_SetAlpha(screenSDL1Surf, 0, 0);
     }
 }
@@ -110,7 +112,7 @@ int ScreenCapture_SDL1::copyScreenToSurface()
     LINK_NAMESPACE_SDL1(SDL_SetAlpha);
 
     /* Get surface from window */
-    ::SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
+    ::sdl1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
 
     /* Checking for a size modification */
     int cw = surf1->w;
@@ -120,10 +122,10 @@ int ScreenCapture_SDL1::copyScreenToSurface()
         return -1;
     }
 
-    if (surf1->flags & ::SDL1::SDL1_SRCALPHA) {
+    if (surf1->flags & ::sdl1::SDL1_SRCALPHA) {
         orig::SDL_SetAlpha(surf1, 0, 0);
         orig::SDL1_UpperBlit(surf1, nullptr, screenSDL1Surf, nullptr);
-        orig::SDL_SetAlpha(surf1, ::SDL1::SDL1_SRCALPHA, 0);
+        orig::SDL_SetAlpha(surf1, ::sdl1::SDL1_SRCALPHA, 0);
     }
     else {
         orig::SDL1_UpperBlit(surf1, nullptr, screenSDL1Surf, nullptr);
@@ -171,10 +173,10 @@ int ScreenCapture_SDL1::copySurfaceToScreen()
     LOG(LL_DEBUG, LCF_DUMP, "Set SDL1_Surface pixels");
 
     /* Get surface from window */
-    ::SDL1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
+    ::sdl1::SDL_Surface* surf1 = orig::SDL_GetVideoSurface();
 
     /* Save and restore the clip rectangle */
-    ::SDL1::SDL_Rect clip_rect;
+    ::sdl1::SDL_Rect clip_rect;
     orig::SDL1_GetClipRect(surf1, &clip_rect);
     orig::SDL1_SetClipRect(surf1, nullptr);
     orig::SDL1_UpperBlit(screenSDL1Surf, nullptr, surf1, nullptr);

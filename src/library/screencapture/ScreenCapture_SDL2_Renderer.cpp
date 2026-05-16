@@ -24,6 +24,7 @@
 #include "encoding/AVEncoder.h"
 #include "GlobalState.h"
 #include "sdl/sdlwindows.h" // sdl::gameSDLWindow
+#include "sdl/sdldynapi.h"
 
 #include "../external/SDL2.h"
 #include <cstring> // memcpy
@@ -31,27 +32,13 @@
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderReadPixels, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_GetWindowPixelFormat, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_GetRenderer, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_CreateTexture, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_LockTexture, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_UnlockTexture, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderCopy, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_DestroyTexture, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_GetError, SDL2)
-DECLARE_ORIG_POINTER(SDL_GetWindowSize)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderClear, SDL2)
-
 int ScreenCapture_SDL2_Renderer::init()
 {
     if (ScreenCapture_Impl::init() < 0)
         return -1;
 
-    LINK_NAMESPACE_SDL2(SDL_GetWindowSize);
-    orig::SDL_GetWindowSize(sdl::gameSDLWindow, &width, &height);
-    LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
-    Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
+    ORIG_SDL2_CALL(SDL_GetWindowSize, (sdl::gameSDLWindow, &width, &height));
+    Uint32 sdlpixfmt = ORIG_SDL2_CALL(SDL_GetWindowPixelFormat, (sdl::gameSDLWindow));
     pixelSize = sdlpixfmt & 0xFF;
 
     return ScreenCapture_Impl::postInit();
@@ -59,22 +46,17 @@ int ScreenCapture_SDL2_Renderer::init()
 
 void ScreenCapture_SDL2_Renderer::initScreenSurface()
 {
-    LINK_NAMESPACE_SDL2(SDL_GetRenderer);
-    LINK_NAMESPACE_SDL2(SDL_CreateTexture);
-    LINK_NAMESPACE_SDL2(SDL_GetError);
-    LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
-
     /* Create the screen texture */
-    sdl_renderer = orig::SDL_GetRenderer(sdl::gameSDLWindow);
+    sdl_renderer = ORIG_SDL2_CALL(SDL_GetRenderer, (sdl::gameSDLWindow));
     if (!sdl_renderer) {
-        LOG(LL_ERROR, LCF_WINDOW | LCF_SDL, "SDL_GetRenderer failed: %s", orig::SDL_GetError());
+        LOG(LL_ERROR, LCF_WINDOW | LCF_SDL, "SDL_GetRenderer failed: %s", ORIG_SDL2_CALL(SDL_GetError, ()));
     }
-    Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
+    Uint32 sdlpixfmt = ORIG_SDL2_CALL(SDL_GetWindowPixelFormat, (sdl::gameSDLWindow));
     if (!screenSDLTex) {
-        screenSDLTex = orig::SDL_CreateTexture(sdl_renderer, sdlpixfmt,
-            SDL2::SDL_TEXTUREACCESS_STREAMING, width, height);
+        screenSDLTex = ORIG_SDL2_CALL(SDL_CreateTexture, (sdl_renderer, sdlpixfmt,
+            sdl2::SDL_TEXTUREACCESS_STREAMING, width, height));
         if (!screenSDLTex) {
-            LOG(LL_ERROR, LCF_WINDOW | LCF_SDL, "SDL_CreateTexture failed: %s", orig::SDL_GetError());
+            LOG(LL_ERROR, LCF_WINDOW | LCF_SDL, "SDL_CreateTexture failed: %s", ORIG_SDL2_CALL(SDL_GetError, ()));
         }
     }
 }
@@ -82,45 +64,43 @@ void ScreenCapture_SDL2_Renderer::initScreenSurface()
 void ScreenCapture_SDL2_Renderer::destroyScreenSurface()
 {
     if (screenSDLTex) {
-        LINK_NAMESPACE_SDL2(SDL_DestroyTexture);
-        orig::SDL_DestroyTexture(screenSDLTex);
+        ORIG_SDL2_CALL(SDL_DestroyTexture, (screenSDLTex));
         screenSDLTex = nullptr;
     }
 }
 
 const char* ScreenCapture_SDL2_Renderer::getPixelFormat()
 {
-    LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
-    Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
+    Uint32 sdlpixfmt = ORIG_SDL2_CALL(SDL_GetWindowPixelFormat, (sdl::gameSDLWindow));
     switch (sdlpixfmt) {
-        case SDL2::SDL_PIXELFORMAT_RGBA8888:
+        case sdl2::SDL_PIXELFORMAT_RGBA8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGBA");
             return "BGRA";
-        case SDL2::SDL_PIXELFORMAT_BGRA8888:
+        case sdl2::SDL_PIXELFORMAT_BGRA8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGRA");
             return "RGBA";
-        case SDL2::SDL_PIXELFORMAT_ARGB8888:
+        case sdl2::SDL_PIXELFORMAT_ARGB8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  ARGB");
             return "ABGR";
-        case SDL2::SDL_PIXELFORMAT_ABGR8888:
+        case sdl2::SDL_PIXELFORMAT_ABGR8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  ABGR");
             return "ARGB";
-        case SDL2::SDL_PIXELFORMAT_RGB888:
+        case sdl2::SDL_PIXELFORMAT_RGB888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGB888");
             return "BGR\0";
-        case SDL2::SDL_PIXELFORMAT_RGBX8888:
+        case sdl2::SDL_PIXELFORMAT_RGBX8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGBX8888");
             return "\0BGR";
-        case SDL2::SDL_PIXELFORMAT_BGR888:
+        case sdl2::SDL_PIXELFORMAT_BGR888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGR888");
             return "RGB\0";
-        case SDL2::SDL_PIXELFORMAT_BGRX8888:
+        case sdl2::SDL_PIXELFORMAT_BGRX8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGRX8888");
             return "\0RGB";
-        case SDL2::SDL_PIXELFORMAT_RGB24:
+        case sdl2::SDL_PIXELFORMAT_RGB24:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGB24");
             return "24BG";
-        case SDL2::SDL_PIXELFORMAT_BGR24:
+        case sdl2::SDL_PIXELFORMAT_BGR24:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGR24");
             return "RAW ";
         default:
@@ -134,24 +114,20 @@ int ScreenCapture_SDL2_Renderer::copyScreenToSurface()
 {
     GlobalNative gn;
 
-    LINK_NAMESPACE_SDL2(SDL_RenderReadPixels);
-    LINK_NAMESPACE_SDL2(SDL_LockTexture);
-    LINK_NAMESPACE_SDL2(SDL_UnlockTexture);
-
     /* I couldn't find a way to directly copy the screen to a texture.
      * Because apparently there is no way to access to the screen texture.
      * So copying the screen pixels into the texture. */
     void* tex_pixels;
     int tex_pitch;
-    int ret = orig::SDL_LockTexture(screenSDLTex, nullptr, &tex_pixels, &tex_pitch);
+    int ret = ORIG_SDL2_CALL(SDL_LockTexture, (screenSDLTex, nullptr, &tex_pixels, &tex_pitch));
     if (ret < 0) {
-        LOG(LL_ERROR, LCF_DUMP | LCF_SDL, "SDL_LockTexture failed: %s", orig::SDL_GetError());
+        LOG(LL_ERROR, LCF_DUMP | LCF_SDL, "SDL_LockTexture failed: %s", ORIG_SDL2_CALL(SDL_GetError, ()));
     }
-    ret = orig::SDL_RenderReadPixels(sdl_renderer, NULL, 0, tex_pixels, tex_pitch);
+    ret = ORIG_SDL2_CALL(SDL_RenderReadPixels, (sdl_renderer, NULL, 0, tex_pixels, tex_pitch));
     if (ret < 0) {
-        LOG(LL_ERROR, LCF_DUMP | LCF_SDL, "SDL_RenderReadPixels failed: %s", orig::SDL_GetError());
+        LOG(LL_ERROR, LCF_DUMP | LCF_SDL, "SDL_RenderReadPixels failed: %s", ORIG_SDL2_CALL(SDL_GetError, ()));
     }
-    orig::SDL_UnlockTexture(screenSDLTex);
+    ORIG_SDL2_CALL(SDL_UnlockTexture, (screenSDLTex));
 
     return size;
 }
@@ -167,20 +143,17 @@ int ScreenCapture_SDL2_Renderer::getPixelsFromSurface(uint8_t **pixels, bool dra
 
     GlobalNative gn;
 
-    LINK_NAMESPACE_SDL2(SDL_LockTexture);
-    LINK_NAMESPACE_SDL2(SDL_UnlockTexture);
-
     /* Access the texture and copy pixels */
     void* tex_pixels;
     int tex_pitch;
-    int ret = orig::SDL_LockTexture(screenSDLTex, nullptr, &tex_pixels, &tex_pitch);
+    int ret = ORIG_SDL2_CALL(SDL_LockTexture, (screenSDLTex, nullptr, &tex_pixels, &tex_pitch));
     if (ret < 0) {
-        LOG(LL_ERROR, LCF_DUMP | LCF_SDL, "SDL_LockTexture failed: %s", orig::SDL_GetError());
+        LOG(LL_ERROR, LCF_DUMP | LCF_SDL, "SDL_LockTexture failed: %s", ORIG_SDL2_CALL(SDL_GetError, ()));
         return -1;
     }
 
     ret = copyPixelRows(tex_pixels, tex_pitch);
-    orig::SDL_UnlockTexture(screenSDLTex);
+    ORIG_SDL2_CALL(SDL_UnlockTexture, (screenSDLTex));
 
     return ret;
 }
@@ -189,11 +162,9 @@ int ScreenCapture_SDL2_Renderer::copySurfaceToScreen()
 {
     GlobalNative gn;
 
-    LINK_NAMESPACE_SDL2(SDL_RenderCopy);
-
-    int ret = orig::SDL_RenderCopy(sdl_renderer, screenSDLTex, NULL, NULL);
+    int ret = ORIG_SDL2_CALL(SDL_RenderCopy, (sdl_renderer, screenSDLTex, NULL, NULL));
     if (ret < 0) {
-        LOG(LL_ERROR, LCF_WINDOW | LCF_SDL, "SDL_RenderCopy to screen failed: %s", orig::SDL_GetError());
+        LOG(LL_ERROR, LCF_WINDOW | LCF_SDL, "SDL_RenderCopy to screen failed: %s", ORIG_SDL2_CALL(SDL_GetError, ()));
     }
 
     return 0;
@@ -206,8 +177,7 @@ void ScreenCapture_SDL2_Renderer::restoreScreenState()
 
 void ScreenCapture_SDL2_Renderer::clearScreen()
 {
-    LINK_NAMESPACE_SDL2(SDL_RenderClear);
-    orig::SDL_RenderClear(sdl_renderer);
+    ORIG_SDL2_CALL(SDL_RenderClear, (sdl_renderer));
 }
 
 uint64_t ScreenCapture_SDL2_Renderer::screenTexture()

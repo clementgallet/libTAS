@@ -49,31 +49,31 @@ OVERRIDE SDL_bool SDL_IsGameController(int joystick_index);
  *
  *  \return A controller identifier, or NULL if an error occurred.
  */
-OVERRIDE SDL2::SDL_GameController *SDL_GameControllerOpen(int joystick_index);
+OVERRIDE sdl2::SDL_GameController *SDL_GameControllerOpen(int joystick_index);
 
 /**
  *  Get the underlying joystick object used by a controller
  */
-OVERRIDE SDL2::SDL_Joystick* SDL_GameControllerGetJoystick(SDL2::SDL_GameController* gamecontroller);
+OVERRIDE sdl2::SDL_Joystick* SDL_GameControllerGetJoystick(sdl2::SDL_GameController* gamecontroller);
 
 /**
  * Return the SDL_GameController associated with an instance id.
  */
-OVERRIDE SDL2::SDL_GameController* SDL_GameControllerFromInstanceID(SDL2::SDL_JoystickID joyid);
+OVERRIDE sdl2::SDL_GameController* SDL_GameControllerFromInstanceID(sdl2::SDL_JoystickID joyid);
 
 /**
  *  Get a mapping string for a GUID
  *
  *  \return the mapping string.  Must be freed with SDL_free.  Returns NULL if no mapping is available
  */
-OVERRIDE char *SDL_GameControllerMappingForGUID( SDL2::SDL_JoystickGUID guid );
+OVERRIDE char *SDL_GameControllerMappingForGUID( sdl2::SDL_JoystickGUID guid );
 
 /**
  *  Get a mapping string for an open GameController
  *
  *  \return the mapping string.  Must be freed with SDL_free.  Returns NULL if no mapping is available
  */
-OVERRIDE char *SDL_GameControllerMapping( SDL2::SDL_GameController * gamecontroller );
+OVERRIDE char *SDL_GameControllerMapping( sdl2::SDL_GameController * gamecontroller );
 
 /**
  *  Get the implementation dependent name of a game controller.
@@ -107,12 +107,12 @@ OVERRIDE char *SDL_GameControllerMappingForDeviceIndex(int joystick_index);
  *
  * \since This function is available since SDL 2.0.12.
  */
-OVERRIDE SDL2::SDL_GameControllerType SDL_GameControllerTypeForIndex(int joystick_index);
+OVERRIDE sdl2::SDL_GameControllerType SDL_GameControllerTypeForIndex(int joystick_index);
 
 /**
  *  Return the name for this currently opened controller
  */
-OVERRIDE const char *SDL_GameControllerName(SDL2::SDL_GameController *gamecontroller);
+OVERRIDE const char *SDL_GameControllerName(sdl2::SDL_GameController *gamecontroller);
 
 /**
  * Get the type of this currently opened controller
@@ -125,13 +125,13 @@ OVERRIDE const char *SDL_GameControllerName(SDL2::SDL_GameController *gamecontro
  *
  * \since This function is available since SDL 2.0.12.
  */
-OVERRIDE SDL2::SDL_GameControllerType SDL_GameControllerGetType(SDL2::SDL_GameController *gamecontroller);
+OVERRIDE sdl2::SDL_GameControllerType SDL_GameControllerGetType(sdl2::SDL_GameController *gamecontroller);
 
 /**
  *  Returns SDL_TRUE if the controller has been opened and currently connected,
  *  or SDL_FALSE if it has not.
  */
-OVERRIDE SDL_bool SDL_GameControllerGetAttached(SDL2::SDL_GameController *gamecontroller);
+OVERRIDE SDL_bool SDL_GameControllerGetAttached(sdl2::SDL_GameController *gamecontroller);
 
 /**
  *  Enable/disable controller event polling.
@@ -165,8 +165,8 @@ OVERRIDE void SDL_GameControllerUpdate(void);
  *
  * \sa SDL_GameControllerGetBindForButton
  */
-OVERRIDE SDL2::SDL_GameControllerButtonBind SDL_GameControllerGetBindForAxis(SDL2::SDL_GameController *gamecontroller,
-                                 SDL2::SDL_GameControllerAxis axis);
+OVERRIDE sdl2::SDL_GameControllerButtonBind SDL_GameControllerGetBindForAxis(sdl2::SDL_GameController *gamecontroller,
+                                 sdl2::SDL_GameControllerAxis axis);
 
 /**
  * Query whether a game controller has a given axis.
@@ -180,7 +180,7 @@ OVERRIDE SDL2::SDL_GameControllerButtonBind SDL_GameControllerGetBindForAxis(SDL
  *
  * \since This function is available since SDL 2.0.14.
  */
-OVERRIDE SDL_bool SDL_GameControllerHasAxis(SDL2::SDL_GameController *gamecontroller, SDL2::SDL_GameControllerAxis axis);
+OVERRIDE SDL_bool SDL_GameControllerHasAxis(sdl2::SDL_GameController *gamecontroller, sdl2::SDL_GameControllerAxis axis);
 
 
 /**
@@ -190,8 +190,8 @@ OVERRIDE SDL_bool SDL_GameControllerHasAxis(SDL2::SDL_GameController *gamecontro
  *
  *  The axis indices start at index 0.
  */
-OVERRIDE Sint16 SDL_GameControllerGetAxis(SDL2::SDL_GameController *gamecontroller,
-                                                SDL2::SDL_GameControllerAxis axis);
+OVERRIDE Sint16 SDL_GameControllerGetAxis(sdl2::SDL_GameController *gamecontroller,
+                                                sdl2::SDL_GameControllerAxis axis);
 
 /**
  * Get the SDL joystick layer binding for a controller button mapping.
@@ -206,9 +206,9 @@ OVERRIDE Sint16 SDL_GameControllerGetAxis(SDL2::SDL_GameController *gamecontroll
  *
  * \sa SDL_GameControllerGetBindForAxis
  */
-OVERRIDE SDL2::SDL_GameControllerButtonBind 
-SDL_GameControllerGetBindForButton(SDL2::SDL_GameController *gamecontroller,
-                                   SDL2::SDL_GameControllerButton button);
+OVERRIDE sdl2::SDL_GameControllerButtonBind 
+SDL_GameControllerGetBindForButton(sdl2::SDL_GameController *gamecontroller,
+                                   sdl2::SDL_GameControllerButton button);
 
 /**
  * Query whether a game controller has a given button.
@@ -222,16 +222,16 @@ SDL_GameControllerGetBindForButton(SDL2::SDL_GameController *gamecontroller,
  *
  * \since This function is available since SDL 2.0.14.
  */
-OVERRIDE SDL_bool SDL_GameControllerHasButton(SDL2::SDL_GameController *gamecontroller,
-                                                             SDL2::SDL_GameControllerButton button);
+OVERRIDE SDL_bool SDL_GameControllerHasButton(sdl2::SDL_GameController *gamecontroller,
+                                                             sdl2::SDL_GameControllerButton button);
 
 /**
  *  Get the current state of a button on a game controller.
  *
  *  The button indices start at index 0.
  */
-OVERRIDE Uint8 SDL_GameControllerGetButton(SDL2::SDL_GameController *gamecontroller,
-                                                 SDL2::SDL_GameControllerButton button);
+OVERRIDE Uint8 SDL_GameControllerGetButton(sdl2::SDL_GameController *gamecontroller,
+                                                 sdl2::SDL_GameControllerButton button);
 
 /**
  * Return whether a game controller has a particular sensor.
@@ -242,7 +242,7 @@ OVERRIDE Uint8 SDL_GameControllerGetButton(SDL2::SDL_GameController *gamecontrol
  *
  * \since This function is available since SDL 2.0.14.
  */
-OVERRIDE SDL_bool SDL_GameControllerHasSensor(SDL2::SDL_GameController *gamecontroller, SDL2::SDL_SensorType type);
+OVERRIDE SDL_bool SDL_GameControllerHasSensor(sdl2::SDL_GameController *gamecontroller, sdl2::SDL_SensorType type);
 
 /**
  * Set whether data reporting for a game controller sensor is enabled.
@@ -254,7 +254,7 @@ OVERRIDE SDL_bool SDL_GameControllerHasSensor(SDL2::SDL_GameController *gamecont
  *
  * \since This function is available since SDL 2.0.14.
  */
-OVERRIDE int SDL_GameControllerSetSensorEnabled(SDL2::SDL_GameController *gamecontroller, SDL2::SDL_SensorType type, SDL_bool enabled);
+OVERRIDE int SDL_GameControllerSetSensorEnabled(sdl2::SDL_GameController *gamecontroller, sdl2::SDL_SensorType type, SDL_bool enabled);
 
 /**
  * Query whether sensor data reporting is enabled for a game controller.
@@ -265,7 +265,7 @@ OVERRIDE int SDL_GameControllerSetSensorEnabled(SDL2::SDL_GameController *gameco
  *
  * \since This function is available since SDL 2.0.14.
  */
-OVERRIDE SDL_bool SDL_GameControllerIsSensorEnabled(SDL2::SDL_GameController *gamecontroller, SDL2::SDL_SensorType type);
+OVERRIDE SDL_bool SDL_GameControllerIsSensorEnabled(sdl2::SDL_GameController *gamecontroller, sdl2::SDL_SensorType type);
 
 /**
  * Get the data rate (number of events per second) of a game controller
@@ -277,7 +277,7 @@ OVERRIDE SDL_bool SDL_GameControllerIsSensorEnabled(SDL2::SDL_GameController *ga
  *
  * \since This function is available since SDL 2.0.16.
  */
-OVERRIDE float SDL_GameControllerGetSensorDataRate(SDL2::SDL_GameController *gamecontroller, SDL2::SDL_SensorType type);
+OVERRIDE float SDL_GameControllerGetSensorDataRate(sdl2::SDL_GameController *gamecontroller, sdl2::SDL_SensorType type);
 
 /**
  * Get the current state of a game controller sensor.
@@ -293,7 +293,7 @@ OVERRIDE float SDL_GameControllerGetSensorDataRate(SDL2::SDL_GameController *gam
  *
  * \since This function is available since SDL 2.0.14.
  */
-OVERRIDE int SDL_GameControllerGetSensorData(SDL2::SDL_GameController *gamecontroller, SDL2::SDL_SensorType type, float *data, int num_values);
+OVERRIDE int SDL_GameControllerGetSensorData(sdl2::SDL_GameController *gamecontroller, sdl2::SDL_SensorType type, float *data, int num_values);
 
 /**
  *  Trigger a rumble effect
@@ -306,7 +306,7 @@ OVERRIDE int SDL_GameControllerGetSensorData(SDL2::SDL_GameController *gamecontr
  *
  *  \return 0, or -1 if rumble isn't supported on this joystick
  */
-OVERRIDE int SDL_GameControllerRumble(SDL2::SDL_GameController *gamecontroller, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms);
+OVERRIDE int SDL_GameControllerRumble(sdl2::SDL_GameController *gamecontroller, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms);
 
 /**
  * Start a rumble effect in the game controller's triggers.
@@ -331,7 +331,7 @@ OVERRIDE int SDL_GameControllerRumble(SDL2::SDL_GameController *gamecontroller, 
  *
  * \sa SDL_GameControllerHasRumbleTriggers
  */
-OVERRIDE int SDL_GameControllerRumbleTriggers(SDL2::SDL_GameController *gamecontroller, Uint16 left_rumble, Uint16 right_rumble, Uint32 duration_ms);
+OVERRIDE int SDL_GameControllerRumbleTriggers(sdl2::SDL_GameController *gamecontroller, Uint16 left_rumble, Uint16 right_rumble, Uint32 duration_ms);
 
 /**
  * Query whether a game controller has an LED.
@@ -342,7 +342,7 @@ OVERRIDE int SDL_GameControllerRumbleTriggers(SDL2::SDL_GameController *gamecont
  *
  * \since This function is available since SDL 2.0.14.
  */
-OVERRIDE SDL_bool SDL_GameControllerHasLED(SDL2::SDL_GameController *gamecontroller);
+OVERRIDE SDL_bool SDL_GameControllerHasLED(sdl2::SDL_GameController *gamecontroller);
 
 /**
  * Query whether a game controller has rumble support.
@@ -355,7 +355,7 @@ OVERRIDE SDL_bool SDL_GameControllerHasLED(SDL2::SDL_GameController *gamecontrol
  *
  * \sa SDL_GameControllerRumble
  */
-OVERRIDE SDL_bool SDL_GameControllerHasRumble(SDL2::SDL_GameController *gamecontroller);
+OVERRIDE SDL_bool SDL_GameControllerHasRumble(sdl2::SDL_GameController *gamecontroller);
 
 /**
  * Query whether a game controller has rumble support on triggers.
@@ -368,7 +368,7 @@ OVERRIDE SDL_bool SDL_GameControllerHasRumble(SDL2::SDL_GameController *gamecont
  *
  * \sa SDL_GameControllerRumbleTriggers
  */
-OVERRIDE SDL_bool SDL_GameControllerHasRumbleTriggers(SDL2::SDL_GameController *gamecontroller);
+OVERRIDE SDL_bool SDL_GameControllerHasRumbleTriggers(sdl2::SDL_GameController *gamecontroller);
 
 /**
  * Update a game controller's LED color.
@@ -381,7 +381,7 @@ OVERRIDE SDL_bool SDL_GameControllerHasRumbleTriggers(SDL2::SDL_GameController *
  *
  * \since This function is available since SDL 2.0.14.
  */
-OVERRIDE int SDL_GameControllerSetLED(SDL2::SDL_GameController *gamecontroller, Uint8 red, Uint8 green, Uint8 blue);
+OVERRIDE int SDL_GameControllerSetLED(sdl2::SDL_GameController *gamecontroller, Uint8 red, Uint8 green, Uint8 blue);
 
 /**
  * Send a controller specific effect packet
@@ -394,12 +394,12 @@ OVERRIDE int SDL_GameControllerSetLED(SDL2::SDL_GameController *gamecontroller, 
  *
  * \since This function is available since SDL 2.0.16.
  */
-OVERRIDE int SDL_GameControllerSendEffect(SDL2::SDL_GameController *gamecontroller, const void *data, int size);
+OVERRIDE int SDL_GameControllerSendEffect(sdl2::SDL_GameController *gamecontroller, const void *data, int size);
 
 /**
  *  Close a controller previously opened with SDL_GameControllerOpen().
  */
-OVERRIDE void SDL_GameControllerClose(SDL2::SDL_GameController *gamecontroller);
+OVERRIDE void SDL_GameControllerClose(sdl2::SDL_GameController *gamecontroller);
 
 /* We don't need to hook these functions */
 // SDL_GameControllerAxis SDL_GameControllerGetAxisFromString(const char *pchString);

@@ -25,7 +25,7 @@
 
 #include <stdint.h>
 
-namespace SDL1 {
+namespace sdl1 {
 class SDL_Surface;
 }
 
@@ -65,7 +65,7 @@ public:
     void restoreScreenState();
 
 private:
-    ::SDL1::SDL_Surface* screenSDL1Surf = nullptr;
+    ::sdl1::SDL_Surface* screenSDL1Surf = nullptr;
 
 };
 }

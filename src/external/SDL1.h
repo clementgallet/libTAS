@@ -29,7 +29,7 @@
 
 #include <stdint.h>
 
-namespace SDL1 {
+namespace sdl1 {
 
     typedef uint8_t Uint8;
     typedef uint16_t Uint16;

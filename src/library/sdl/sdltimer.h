@@ -31,7 +31,7 @@ namespace libtas {
  *
  * \return A timer ID, or 0 when an error occurs.
  */
-OVERRIDE SDL2::SDL_TimerID SDL_AddTimer(Uint32 interval, SDL2::SDL_NewTimerCallback callback, void *param);
+OVERRIDE sdl2::SDL_TimerID SDL_AddTimer(Uint32 interval, sdl2::SDL_NewTimerCallback callback, void *param);
 
 /**
  * \brief Remove a timer knowing its ID.
@@ -40,7 +40,7 @@ OVERRIDE SDL2::SDL_TimerID SDL_AddTimer(Uint32 interval, SDL2::SDL_NewTimerCallb
  *
  * \warning It is not safe to remove a timer multiple times.
  */
-OVERRIDE SDL_bool SDL_RemoveTimer(SDL2::SDL_TimerID id);
+OVERRIDE SDL_bool SDL_RemoveTimer(sdl2::SDL_TimerID id);
 
 }
 

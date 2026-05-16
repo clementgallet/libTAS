@@ -18,16 +18,13 @@
  */
 
 #include "sdlthreads.h"
+#include "sdldynapi.h"
 
 #include "logging.h"
-#include "hook.h"
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER(SDL_CreateThread)
-DECLARE_ORIG_POINTER(SDL_WaitThread)
-
-/* Override */ SDL2::SDL_Thread* SDL_CreateThread(SDL2::SDL_ThreadFunction fn, const char *name, void *data)
+/* Override */ sdl2::SDL_Thread* SDL_CreateThread(sdl2::SDL_ThreadFunction fn, const char *name, void *data)
 {
     if (get_sdlversion() == 1)
         /* SDL1 version prototype is SDL_CreateThread(int (SDLCALL *fn)(void *), void *data)
@@ -35,15 +32,13 @@ DECLARE_ORIG_POINTER(SDL_WaitThread)
         LOGTRACE(LCF_THREAD);
     else
         LOG(LL_TRACE, LCF_THREAD, "SDL Thread %s was created.", name);
-    LINK_NAMESPACE_SDLX(SDL_CreateThread);
-    return orig::SDL_CreateThread(fn, name, data);
+    return ORIG_SDL2_CALL(SDL_CreateThread, (fn, name, data));
 }
 
-/* Override */ void SDL_WaitThread(SDL2::SDL_Thread * thread, int *status)
+/* Override */ void SDL_WaitThread(sdl2::SDL_Thread * thread, int *status)
 {
     LOGTRACE(LCF_THREAD);
-    LINK_NAMESPACE_SDLX(SDL_WaitThread);
-    orig::SDL_WaitThread(thread, status);
+    return ORIG_SDL2_CALL(SDL_WaitThread, (thread, status));
 }
 
 }

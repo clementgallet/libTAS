@@ -36,7 +36,7 @@ static int refids[MAX_SDLJOYS] = {0, 0, 0, 0}; // joystick open/close is ref-cou
 static const char* joypaths[MAX_SDLJOYS] = {"/dev/input/js0", "/dev/input/js1", "/dev/input/js2", "/dev/input/js3"};
 
 /* Helper functions */
-static bool isIdValid(SDL2::SDL_Joystick* joy)
+static bool isIdValid(sdl2::SDL_Joystick* joy)
 {
     if (joy == NULL)
         return false;
@@ -46,7 +46,7 @@ static bool isIdValid(SDL2::SDL_Joystick* joy)
     return true;
 }
 
-static bool isIdValidOpen(SDL2::SDL_Joystick* joy)
+static bool isIdValidOpen(sdl2::SDL_Joystick* joy)
 {
     if (!isIdValid(joy))
         return false;
@@ -80,21 +80,21 @@ bool mySDL_JoystickReportEvents(int index)
         return false;
 
     const int joyevents1[] = {
-        SDL1::SDL_JOYAXISMOTION,
-        SDL1::SDL_JOYBUTTONDOWN,
-        SDL1::SDL_JOYBUTTONUP,
-        SDL1::SDL_JOYHATMOTION,
-        SDL1::SDL_JOYBALLMOTION
+        sdl1::SDL_JOYAXISMOTION,
+        sdl1::SDL_JOYBUTTONDOWN,
+        sdl1::SDL_JOYBUTTONUP,
+        sdl1::SDL_JOYHATMOTION,
+        sdl1::SDL_JOYBALLMOTION
     };
 
     const int joyevents2[] = {
-        SDL2::SDL_JOYAXISMOTION,
-        SDL2::SDL_JOYBUTTONDOWN,
-        SDL2::SDL_JOYBUTTONUP,
-        SDL2::SDL_JOYHATMOTION,
-        SDL2::SDL_JOYBALLMOTION,
-        SDL2::SDL_JOYDEVICEADDED,
-        SDL2::SDL_JOYDEVICEREMOVED
+        sdl2::SDL_JOYAXISMOTION,
+        sdl2::SDL_JOYBUTTONDOWN,
+        sdl2::SDL_JOYBUTTONUP,
+        sdl2::SDL_JOYHATMOTION,
+        sdl2::SDL_JOYBALLMOTION,
+        sdl2::SDL_JOYDEVICEADDED,
+        sdl2::SDL_JOYDEVICEREMOVED
     };
 
     bool enabled = false;
@@ -127,7 +127,7 @@ const char* joyname = "Microsoft X-Box 360 pad";
     return NULL;
 }
 
-/* Override */ const char* SDL_JoystickName(SDL2::SDL_Joystick* joystick)
+/* Override */ const char* SDL_JoystickName(sdl2::SDL_Joystick* joystick)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
     /* Do not use joystick argument unless you know what you are doing.
@@ -146,7 +146,7 @@ const char* joyname = "Microsoft X-Box 360 pad";
     return joypaths[device_index];
 }
 
-/* Override */ const char *SDL_JoystickPath(SDL2::SDL_Joystick *joystick)
+/* Override */ const char *SDL_JoystickPath(sdl2::SDL_Joystick *joystick)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
     if (!isIdValidOpen(joystick))
@@ -156,7 +156,7 @@ const char* joyname = "Microsoft X-Box 360 pad";
     return joypaths[device_index];
 }
 
-/* Override */ SDL2::SDL_Joystick *SDL_JoystickOpen(int device_index)
+/* Override */ sdl2::SDL_Joystick *SDL_JoystickOpen(int device_index)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
     if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
@@ -170,10 +170,10 @@ const char* joyname = "Microsoft X-Box 360 pad";
     /* Increment ref count */
     refids[device_index]++;
 
-    return reinterpret_cast<SDL2::SDL_Joystick*>(&joyids[device_index]);
+    return reinterpret_cast<sdl2::SDL_Joystick*>(&joyids[device_index]);
 }
 
-/* Override */ SDL2::SDL_Joystick *SDL_JoystickFromInstanceID(SDL2::SDL_JoystickID joyid)
+/* Override */ sdl2::SDL_Joystick *SDL_JoystickFromInstanceID(sdl2::SDL_JoystickID joyid)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy id %d", __func__, joyid);
 
@@ -185,7 +185,7 @@ const char* joyname = "Microsoft X-Box 360 pad";
         /* Device not opened */
         return NULL;
 
-    return reinterpret_cast<SDL2::SDL_Joystick*>(&joyids[joyid]);
+    return reinterpret_cast<sdl2::SDL_Joystick*>(&joyids[joyid]);
 }
 
 /* Override */ Uint16 SDL_JoystickGetDeviceVendor(int device_index)
@@ -221,32 +221,32 @@ const char* joyname = "Microsoft X-Box 360 pad";
     return 0x0114; // product version of the wired xbox360 controller
 }
 
-/* Override */ SDL2::SDL_JoystickType SDL_JoystickGetDeviceType(int device_index)
+/* Override */ sdl2::SDL_JoystickType SDL_JoystickGetDeviceType(int device_index)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
     if ((device_index < 0) || (device_index >= MAX_SDLJOYS))
-        return SDL2::SDL_JOYSTICK_TYPE_UNKNOWN;
+        return sdl2::SDL_JOYSTICK_TYPE_UNKNOWN;
     if (device_index >= Global::shared_config.nb_controllers)
-        return SDL2::SDL_JOYSTICK_TYPE_UNKNOWN;
+        return sdl2::SDL_JOYSTICK_TYPE_UNKNOWN;
 
-    return SDL2::SDL_JOYSTICK_TYPE_GAMECONTROLLER;
+    return sdl2::SDL_JOYSTICK_TYPE_GAMECONTROLLER;
 }
 
-/* Override */ SDL2::SDL_JoystickID SDL_JoystickGetDeviceInstanceID(int device_index)
+/* Override */ sdl2::SDL_JoystickID SDL_JoystickGetDeviceInstanceID(int device_index)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
     if (device_index < 0 || device_index >= MAX_SDLJOYS || device_index >= Global::shared_config.nb_controllers)
         return -1;
 
     /* This function can be called without the joystick been opened... */
-    return static_cast<SDL2::SDL_JoystickID>(device_index);
+    return static_cast<sdl2::SDL_JoystickID>(device_index);
 }
 
 /* Xbox 360 GUID */
-SDL2::SDL_JoystickGUID xinputGUID = {{0x03,0x00,0x00,0x00,0x5e,0x04,0x00,0x00,0x8e,0x02,0x00,0x00,0x14,0x01,0x00,0x00}};
-SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}};
+sdl2::SDL_JoystickGUID xinputGUID = {{0x03,0x00,0x00,0x00,0x5e,0x04,0x00,0x00,0x8e,0x02,0x00,0x00,0x14,0x01,0x00,0x00}};
+sdl2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}};
 
-/* Override */ SDL2::SDL_JoystickGUID SDL_JoystickGetDeviceGUID(int device_index)
+/* Override */ sdl2::SDL_JoystickGUID SDL_JoystickGetDeviceGUID(int device_index)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
 	if (device_index < 0 || device_index >= MAX_SDLJOYS || device_index >= Global::shared_config.nb_controllers)
@@ -255,7 +255,7 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
     return xinputGUID;
 }
 
-/* Override */ Uint16 SDL_JoystickGetVendor(SDL2::SDL_Joystick * joystick)
+/* Override */ Uint16 SDL_JoystickGetVendor(sdl2::SDL_Joystick * joystick)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
 
@@ -265,7 +265,7 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
     return 0x045e; // vendor of the wired xbox360 controller
 }
 
-/* Override */ Uint16 SDL_JoystickGetProduct(SDL2::SDL_Joystick * joystick)
+/* Override */ Uint16 SDL_JoystickGetProduct(sdl2::SDL_Joystick * joystick)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
 
@@ -275,7 +275,7 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
     return 0x028e; // product of the wired xbox360 controller
 }
 
-/* Override */ Uint16 SDL_JoystickGetProductVersion(SDL2::SDL_Joystick * joystick)
+/* Override */ Uint16 SDL_JoystickGetProductVersion(sdl2::SDL_Joystick * joystick)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
 
@@ -285,17 +285,17 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
     return 0x0114; // product version of the wired xbox360 controller
 }
 
-/* Override */ SDL2::SDL_JoystickType SDL_JoystickGetType(SDL2::SDL_Joystick * joystick)
+/* Override */ sdl2::SDL_JoystickType SDL_JoystickGetType(sdl2::SDL_Joystick * joystick)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
 
     if (!isIdValid(joystick))
-        return SDL2::SDL_JOYSTICK_TYPE_UNKNOWN;
+        return sdl2::SDL_JOYSTICK_TYPE_UNKNOWN;
 
-    return SDL2::SDL_JOYSTICK_TYPE_GAMECONTROLLER;
+    return sdl2::SDL_JOYSTICK_TYPE_GAMECONTROLLER;
 }
 
-/* Override */ SDL2::SDL_JoystickGUID SDL_JoystickGetGUID(SDL2::SDL_Joystick * joystick)
+/* Override */ sdl2::SDL_JoystickGUID SDL_JoystickGetGUID(sdl2::SDL_Joystick * joystick)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
     if (!isIdValid(joystick))
@@ -304,7 +304,7 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
     return xinputGUID;
 }
 
-/* Override */ SDL_bool SDL_JoystickGetAttached(SDL2::SDL_Joystick * joystick)
+/* Override */ SDL_bool SDL_JoystickGetAttached(sdl2::SDL_Joystick * joystick)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     if (!isIdValidOpen(joystick))
@@ -316,23 +316,23 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
 /* Override */ int SDL_JoystickOpened(int device_index)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, device_index);
-    if (!isIdValidOpen(reinterpret_cast<SDL2::SDL_Joystick*>(&device_index)))
+    if (!isIdValidOpen(reinterpret_cast<sdl2::SDL_Joystick*>(&device_index)))
         return 0;
 
     return 1;
 }
 
-/* Override */ SDL2::SDL_JoystickID SDL_JoystickInstanceID(SDL2::SDL_Joystick * joystick)
+/* Override */ sdl2::SDL_JoystickID SDL_JoystickInstanceID(sdl2::SDL_Joystick * joystick)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     if (!isIdValid(joystick))
         return -1;
 
     /* This function can be called without the joystick been opened... */
-    return static_cast<SDL2::SDL_JoystickID>(*reinterpret_cast<int*>(joystick));
+    return static_cast<sdl2::SDL_JoystickID>(*reinterpret_cast<int*>(joystick));
 }
 
-/* Override */ int SDL_JoystickIndex(SDL2::SDL_Joystick *joystick)
+/* Override */ int SDL_JoystickIndex(sdl2::SDL_Joystick *joystick)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     if (!isIdValidOpen(joystick))
@@ -341,7 +341,7 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
     return *reinterpret_cast<int*>(joystick);
 }
 
-/* Override */ int SDL_JoystickNumAxes(SDL2::SDL_Joystick* joystick)
+/* Override */ int SDL_JoystickNumAxes(sdl2::SDL_Joystick* joystick)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
     if (!isIdValid(joystick))
@@ -349,7 +349,7 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
     return 6;
 }
 
-/* Override */ int SDL_JoystickNumBalls(SDL2::SDL_Joystick* joystick)
+/* Override */ int SDL_JoystickNumBalls(sdl2::SDL_Joystick* joystick)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
     if (!isIdValid(joystick))
@@ -357,7 +357,7 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
     return 0;
 }
 
-/* Override */ int SDL_JoystickNumButtons(SDL2::SDL_Joystick* joystick)
+/* Override */ int SDL_JoystickNumButtons(sdl2::SDL_Joystick* joystick)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
     if (!isIdValid(joystick))
@@ -365,7 +365,7 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
     return 11;
 }
 
-/* Override */ int SDL_JoystickNumHats(SDL2::SDL_Joystick* joystick)
+/* Override */ int SDL_JoystickNumHats(sdl2::SDL_Joystick* joystick)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
     if (!isIdValid(joystick))
@@ -382,21 +382,21 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with state %d", __func__, state);
     const int joyevents1[] = {
-        SDL1::SDL_JOYAXISMOTION,
-        SDL1::SDL_JOYBUTTONDOWN,
-        SDL1::SDL_JOYBUTTONUP,
-        SDL1::SDL_JOYHATMOTION,
-        SDL1::SDL_JOYBALLMOTION
+        sdl1::SDL_JOYAXISMOTION,
+        sdl1::SDL_JOYBUTTONDOWN,
+        sdl1::SDL_JOYBUTTONUP,
+        sdl1::SDL_JOYHATMOTION,
+        sdl1::SDL_JOYBALLMOTION
     };
 
     const int joyevents2[] = {
-        SDL2::SDL_JOYAXISMOTION,
-        SDL2::SDL_JOYBUTTONDOWN,
-        SDL2::SDL_JOYBUTTONUP,
-        SDL2::SDL_JOYHATMOTION,
-        SDL2::SDL_JOYBALLMOTION,
-        SDL2::SDL_JOYDEVICEADDED,
-        SDL2::SDL_JOYDEVICEREMOVED
+        sdl2::SDL_JOYAXISMOTION,
+        sdl2::SDL_JOYBUTTONDOWN,
+        sdl2::SDL_JOYBUTTONUP,
+        sdl2::SDL_JOYHATMOTION,
+        sdl2::SDL_JOYBALLMOTION,
+        sdl2::SDL_JOYDEVICEADDED,
+        sdl2::SDL_JOYDEVICEREMOVED
     };
 
     bool enabled = false;
@@ -434,7 +434,7 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
     }
 }
 
-/* Override */ Sint16 SDL_JoystickGetAxis(SDL2::SDL_Joystick * joystick, int axis)
+/* Override */ Sint16 SDL_JoystickGetAxis(sdl2::SDL_Joystick * joystick, int axis)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with axis %d", __func__, axis);
 
@@ -449,7 +449,7 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
     return Inputs::game_ai.controllers[*joyid].axes[axis];
 }
 
-/* Override */ Uint8 SDL_JoystickGetHat(SDL2::SDL_Joystick * joystick, int hat)
+/* Override */ Uint8 SDL_JoystickGetHat(sdl2::SDL_Joystick * joystick, int hat)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with hat %d", __func__, hat);
 
@@ -461,26 +461,26 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
 
     int *joyid = reinterpret_cast<int*>(joystick);
 
-    Uint8 hatState = SDL2::SDL_HAT_CENTERED;
-    if (Inputs::game_ai.controllers[*joyid].buttons & (1 << SDL2::SDL_CONTROLLER_BUTTON_DPAD_UP))
-        hatState |= SDL2::SDL_HAT_UP;
-    if (Inputs::game_ai.controllers[*joyid].buttons & (1 << SDL2::SDL_CONTROLLER_BUTTON_DPAD_DOWN))
-        hatState |= SDL2::SDL_HAT_DOWN;
-    if (Inputs::game_ai.controllers[*joyid].buttons & (1 << SDL2::SDL_CONTROLLER_BUTTON_DPAD_LEFT))
-        hatState |= SDL2::SDL_HAT_LEFT;
-    if (Inputs::game_ai.controllers[*joyid].buttons & (1 << SDL2::SDL_CONTROLLER_BUTTON_DPAD_RIGHT))
-        hatState |= SDL2::SDL_HAT_RIGHT;
+    Uint8 hatState = sdl2::SDL_HAT_CENTERED;
+    if (Inputs::game_ai.controllers[*joyid].buttons & (1 << sdl2::SDL_CONTROLLER_BUTTON_DPAD_UP))
+        hatState |= sdl2::SDL_HAT_UP;
+    if (Inputs::game_ai.controllers[*joyid].buttons & (1 << sdl2::SDL_CONTROLLER_BUTTON_DPAD_DOWN))
+        hatState |= sdl2::SDL_HAT_DOWN;
+    if (Inputs::game_ai.controllers[*joyid].buttons & (1 << sdl2::SDL_CONTROLLER_BUTTON_DPAD_LEFT))
+        hatState |= sdl2::SDL_HAT_LEFT;
+    if (Inputs::game_ai.controllers[*joyid].buttons & (1 << sdl2::SDL_CONTROLLER_BUTTON_DPAD_RIGHT))
+        hatState |= sdl2::SDL_HAT_RIGHT;
 
     return hatState;
 }
 
-/* Override */ int SDL_JoystickGetBall(SDL2::SDL_Joystick * joystick, int ball, int *dx, int *dy)
+/* Override */ int SDL_JoystickGetBall(sdl2::SDL_Joystick * joystick, int ball, int *dx, int *dy)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with ball %d", __func__, ball);
     return 0;
 }
 
-/* Override */ Uint8 SDL_JoystickGetButton(SDL2::SDL_Joystick * joystick, int button)
+/* Override */ Uint8 SDL_JoystickGetButton(sdl2::SDL_Joystick * joystick, int button)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with button %d", __func__, button);
 
@@ -495,49 +495,49 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
     return (Inputs::game_ai.controllers[*joyid].buttons >> button) & 0x1;
 }
 
-/* Override */ int SDL_JoystickRumble(SDL2::SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms)
+/* Override */ int SDL_JoystickRumble(sdl2::SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     return -1;
 }
 
-/* Override */ int SDL_JoystickRumbleTriggers(SDL2::SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble, Uint32 duration_ms)
+/* Override */ int SDL_JoystickRumbleTriggers(sdl2::SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble, Uint32 duration_ms)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     return -1;
 }
 
-/* Override */ SDL_bool SDL_JoystickHasLED(SDL2::SDL_Joystick *joystick)
+/* Override */ SDL_bool SDL_JoystickHasLED(sdl2::SDL_Joystick *joystick)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     return SDL_FALSE;
 }
 
-/* Override */ SDL_bool SDL_JoystickHasRumble(SDL2::SDL_Joystick *joystick)
+/* Override */ SDL_bool SDL_JoystickHasRumble(sdl2::SDL_Joystick *joystick)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     return SDL_FALSE;
 }
 
-/* Override */ SDL_bool SDL_JoystickHasRumbleTriggers(SDL2::SDL_Joystick *joystick)
+/* Override */ SDL_bool SDL_JoystickHasRumbleTriggers(sdl2::SDL_Joystick *joystick)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     return SDL_FALSE;
 }
 
-/* Override */ int SDL_JoystickSetLED(SDL2::SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue)
+/* Override */ int SDL_JoystickSetLED(sdl2::SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     return -1;
 }
 
-/* Override */ int SDL_JoystickSendEffect(SDL2::SDL_Joystick *joystick, const void *data, int size)
+/* Override */ int SDL_JoystickSendEffect(sdl2::SDL_Joystick *joystick, const void *data, int size)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     return -1;
 }
 
-/* Override */ void SDL_JoystickClose(SDL2::SDL_Joystick * joystick)
+/* Override */ void SDL_JoystickClose(sdl2::SDL_Joystick * joystick)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_JOYSTICK, "%s call with joy %d", __func__, joystick?*reinterpret_cast<int*>(joystick):-1);
     if (!isIdValidOpen(joystick))
@@ -553,10 +553,10 @@ SDL2::SDL_JoystickGUID nullGUID   = {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
         joyids[*joyid] = -1;
 }
 
-/* Override */ SDL2::SDL_JoystickPowerLevel SDL_JoystickCurrentPowerLevel(SDL2::SDL_Joystick * joystick)
+/* Override */ sdl2::SDL_JoystickPowerLevel SDL_JoystickCurrentPowerLevel(sdl2::SDL_Joystick * joystick)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
-	return SDL2::SDL_JOYSTICK_POWER_WIRED;
+	return sdl2::SDL_JOYSTICK_POWER_WIRED;
 }
 
 }

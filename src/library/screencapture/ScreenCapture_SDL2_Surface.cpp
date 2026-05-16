@@ -24,34 +24,20 @@
 #include "encoding/AVEncoder.h"
 #include "GlobalState.h"
 #include "sdl/sdlwindows.h" // sdl::gameSDLWindow
+#include "sdl/sdldynapi.h"
 
 #include "../external/SDL2.h"
 #include <cstring> // memcpy
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_GetError, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_GetWindowPixelFormat, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_DestroyTexture, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_GetWindowSurface, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_ConvertSurfaceFormat, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_FreeSurface, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_SetClipRect, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_GetClipRect, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_LockSurface, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_UnlockSurface, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_UpperBlit, SDL2)
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_GetWindowSize, SDL2)
-
 int ScreenCapture_SDL2_Surface::init()
 {
     if (ScreenCapture_Impl::init() < 0)
         return -1;
 
-    LINK_NAMESPACE_SDL2(SDL_GetWindowSize);
-    orig::SDL_GetWindowSize(sdl::gameSDLWindow, &width, &height);
-    LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
-    Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
+    ORIG_SDL2_CALL(SDL_GetWindowSize, (sdl::gameSDLWindow, &width, &height));
+    Uint32 sdlpixfmt = ORIG_SDL2_CALL(SDL_GetWindowPixelFormat, (sdl::gameSDLWindow));
     pixelSize = sdlpixfmt & 0xFF;
 
     return ScreenCapture_Impl::postInit();
@@ -59,64 +45,57 @@ int ScreenCapture_SDL2_Surface::init()
 
 void ScreenCapture_SDL2_Surface::initScreenSurface()
 {
-    LINK_NAMESPACE_SDL2(SDL_GetWindowSurface);
-    LINK_NAMESPACE_SDL2(SDL_ConvertSurfaceFormat);
-    LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
-
-    SDL2::SDL_Surface *surf = orig::SDL_GetWindowSurface(sdl::gameSDLWindow);
-    screenSDL2Surf = orig::SDL_ConvertSurfaceFormat(surf, orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow), 0);
+    sdl2::SDL_Surface *surf = ORIG_SDL2_CALL(SDL_GetWindowSurface, (sdl::gameSDLWindow));
+    screenSDL2Surf = ORIG_SDL2_CALL(SDL_ConvertSurfaceFormat, (surf, ORIG_SDL2_CALL(SDL_GetWindowPixelFormat, (sdl::gameSDLWindow)), 0));
 }
 
 void ScreenCapture_SDL2_Surface::destroyScreenSurface()
 {
     /* Delete the SDL2 screen surface */
     if (screenSDL2Surf) {
-        LINK_NAMESPACE_SDL2(SDL_FreeSurface);
-        orig::SDL_FreeSurface(screenSDL2Surf);
+        ORIG_SDL2_CALL(SDL_FreeSurface, (screenSDL2Surf));
         screenSDL2Surf = nullptr;
     }
 
     /* Delete the SDL2 screen texture */
     if (screenSDLTex) {
-        LINK_NAMESPACE_SDL2(SDL_DestroyTexture);
-        orig::SDL_DestroyTexture(screenSDLTex);
+        ORIG_SDL2_CALL(SDL_DestroyTexture, (screenSDLTex));
         screenSDLTex = nullptr;
     }
 }
 
 const char* ScreenCapture_SDL2_Surface::getPixelFormat()
 {
-    LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
-    Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
+    Uint32 sdlpixfmt = ORIG_SDL2_CALL(SDL_GetWindowPixelFormat, (sdl::gameSDLWindow));
     switch (sdlpixfmt) {
-        case SDL2::SDL_PIXELFORMAT_RGBA8888:
+        case sdl2::SDL_PIXELFORMAT_RGBA8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGBA");
             return "BGRA";
-        case SDL2::SDL_PIXELFORMAT_BGRA8888:
+        case sdl2::SDL_PIXELFORMAT_BGRA8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGRA");
             return "RGBA";
-        case SDL2::SDL_PIXELFORMAT_ARGB8888:
+        case sdl2::SDL_PIXELFORMAT_ARGB8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  ARGB");
             return "ABGR";
-        case SDL2::SDL_PIXELFORMAT_ABGR8888:
+        case sdl2::SDL_PIXELFORMAT_ABGR8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  ABGR");
             return "ARGB";
-        case SDL2::SDL_PIXELFORMAT_RGB888:
+        case sdl2::SDL_PIXELFORMAT_RGB888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGB888");
             return "BGR\0";
-        case SDL2::SDL_PIXELFORMAT_RGBX8888:
+        case sdl2::SDL_PIXELFORMAT_RGBX8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGBX8888");
             return "\0BGR";
-        case SDL2::SDL_PIXELFORMAT_BGR888:
+        case sdl2::SDL_PIXELFORMAT_BGR888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGR888");
             return "RGB\0";
-        case SDL2::SDL_PIXELFORMAT_BGRX8888:
+        case sdl2::SDL_PIXELFORMAT_BGRX8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGRX8888");
             return "\0RGB";
-        case SDL2::SDL_PIXELFORMAT_RGB24:
+        case sdl2::SDL_PIXELFORMAT_RGB24:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGB24");
             return "24BG";
-        case SDL2::SDL_PIXELFORMAT_BGR24:
+        case sdl2::SDL_PIXELFORMAT_BGR24:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGR24");
             return "RAW ";
         default:
@@ -132,11 +111,8 @@ int ScreenCapture_SDL2_Surface::copyScreenToSurface()
 
     LOG(LL_DEBUG, LCF_DUMP, "Access SDL_Surface pixels for video dump");
 
-    LINK_NAMESPACE_SDL2(SDL_GetWindowSurface);
-    LINK_NAMESPACE_SDL2(SDL_UpperBlit);
-
     /* Get surface from window */
-    SDL2::SDL_Surface* surf2 = orig::SDL_GetWindowSurface(sdl::gameSDLWindow);
+    sdl2::SDL_Surface* surf2 = ORIG_SDL2_CALL(SDL_GetWindowSurface, (sdl::gameSDLWindow));
 
     /* Checking for a size modification */
     int cw = surf2->w;
@@ -146,7 +122,7 @@ int ScreenCapture_SDL2_Surface::copyScreenToSurface()
         return -1;
     }
 
-    orig::SDL_UpperBlit(surf2, nullptr, screenSDL2Surf, nullptr);
+    ORIG_SDL2_CALL(SDL_UpperBlit, (surf2, nullptr, screenSDL2Surf, nullptr));
     
     return size;
 }
@@ -162,11 +138,9 @@ int ScreenCapture_SDL2_Surface::getPixelsFromSurface(uint8_t **pixels, bool draw
 
     // GlobalNative gn;
 
-    LINK_NAMESPACE_SDL2(SDL_LockSurface);
-    LINK_NAMESPACE_SDL2(SDL_UnlockSurface);
     /* We must lock the surface before accessing the raw pixels */
-    if (SDL_MUSTLOCK(screenSDL2Surf) && (orig::SDL_LockSurface(screenSDL2Surf) != 0)) {
-        LOG(LL_ERROR, LCF_DUMP | LCF_SDL, "Could not lock SDL surface: %s", orig::SDL_GetError());
+    if (SDL_MUSTLOCK(screenSDL2Surf) && (ORIG_SDL2_CALL(SDL_LockSurface, (screenSDL2Surf)) != 0)) {
+        LOG(LL_ERROR, LCF_DUMP | LCF_SDL, "Could not lock SDL surface: %s", ORIG_SDL2_CALL(SDL_GetError, ()));
         return -1;
     }
 
@@ -174,7 +148,7 @@ int ScreenCapture_SDL2_Surface::getPixelsFromSurface(uint8_t **pixels, bool draw
 
     /* Unlock surface */
     if (SDL_MUSTLOCK(screenSDL2Surf))
-        orig::SDL_UnlockSurface(screenSDL2Surf);
+        ORIG_SDL2_CALL(SDL_UnlockSurface, (screenSDL2Surf));
 
     return ret;
 }
@@ -183,22 +157,17 @@ int ScreenCapture_SDL2_Surface::copySurfaceToScreen()
 {
     GlobalNative gn;
 
-    LINK_NAMESPACE_SDL2(SDL_GetWindowSurface);
-    LINK_NAMESPACE_SDL2(SDL_UpperBlit);
-    LINK_NAMESPACE_SDL2(SDL_GetClipRect);
-    LINK_NAMESPACE_SDL2(SDL_SetClipRect);
-
     LOG(LL_DEBUG, LCF_DUMP, "Set SDL1_Surface pixels");
 
     /* Get surface from window */
-    SDL2::SDL_Surface* surf2 = orig::SDL_GetWindowSurface(sdl::gameSDLWindow);
+    sdl2::SDL_Surface* surf2 = ORIG_SDL2_CALL(SDL_GetWindowSurface, (sdl::gameSDLWindow));
 
     /* Save and restore the clip rectangle */
-    SDL2::SDL_Rect clip_rect;
-    orig::SDL_GetClipRect(surf2, &clip_rect);
-    orig::SDL_SetClipRect(surf2, nullptr);
-    orig::SDL_UpperBlit(screenSDL2Surf, nullptr, surf2, nullptr);
-    orig::SDL_SetClipRect(surf2, &clip_rect);
+    sdl2::SDL_Rect clip_rect;
+    ORIG_SDL2_CALL(SDL_GetClipRect, (surf2, &clip_rect));
+    ORIG_SDL2_CALL(SDL_SetClipRect, (surf2, nullptr));
+    ORIG_SDL2_CALL(SDL_UpperBlit, (screenSDL2Surf, nullptr, surf2, nullptr));
+    ORIG_SDL2_CALL(SDL_SetClipRect, (surf2, &clip_rect));
 
     return 0;
 }

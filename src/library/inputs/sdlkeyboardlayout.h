@@ -27,8 +27,8 @@
 
 namespace libtas {
 
-SDL2::SDL_Scancode GetScanFromKey(SDL2::SDL_Keycode keycode);
-unsigned char GetScanFromKey1(SDL1::SDLKey key);
+sdl2::SDL_Scancode GetScanFromKey(sdl2::SDL_Keycode keycode);
+unsigned char GetScanFromKey1(sdl1::SDLKey key);
 
 /**
  *  \brief Get the key code corresponding to the given scancode according
@@ -38,7 +38,7 @@ unsigned char GetScanFromKey1(SDL1::SDLKey key);
  *
  *  \sa SDL_GetKeyName()
  */
-OVERRIDE SDL2::SDL_Keycode SDL_GetKeyFromScancode(SDL2::SDL_Scancode scancode);
+OVERRIDE sdl2::SDL_Keycode SDL_GetKeyFromScancode(sdl2::SDL_Scancode scancode);
 
 /**
  *  \brief Get the scancode corresponding to the given key code according to the
@@ -48,7 +48,7 @@ OVERRIDE SDL2::SDL_Keycode SDL_GetKeyFromScancode(SDL2::SDL_Scancode scancode);
  *
  *  \sa SDL_GetScancodeName()
  */
-OVERRIDE SDL2::SDL_Scancode SDL_GetScancodeFromKey(SDL2::SDL_Keycode key);
+OVERRIDE sdl2::SDL_Scancode SDL_GetScancodeFromKey(sdl2::SDL_Keycode key);
 
 }
 

@@ -40,7 +40,7 @@ namespace libtas {
  *  \sa SDL_GetRendererInfo()
  *  \sa SDL_DestroyRenderer()
  */
-OVERRIDE SDL2::SDL_Renderer *SDL_CreateRenderer(SDL2::SDL_Window * window, int index, Uint32 flags);
+OVERRIDE sdl2::SDL_Renderer *SDL_CreateRenderer(sdl2::SDL_Window * window, int index, Uint32 flags);
 
 /**
  *  \brief Destroy the rendering context for a window and free associated
@@ -48,13 +48,13 @@ OVERRIDE SDL2::SDL_Renderer *SDL_CreateRenderer(SDL2::SDL_Window * window, int i
  *
  *  \sa SDL_CreateRenderer()
  */
-OVERRIDE void SDL_DestroyRenderer(SDL2::SDL_Renderer * renderer);
+OVERRIDE void SDL_DestroyRenderer(sdl2::SDL_Renderer * renderer);
 
 
 /**
  *  \brief Update the screen with rendering performed.
  */
-OVERRIDE void SDL_RenderPresent(SDL2::SDL_Renderer * renderer);
+OVERRIDE void SDL_RenderPresent(sdl2::SDL_Renderer * renderer);
 
 /**
  *  \brief Set device independent resolution for rendering
@@ -79,7 +79,7 @@ OVERRIDE void SDL_RenderPresent(SDL2::SDL_Renderer * renderer);
  *  \sa SDL_RenderSetScale()
  *  \sa SDL_RenderSetViewport()
  */
-OVERRIDE int SDL_RenderSetLogicalSize(SDL2::SDL_Renderer * renderer, int w, int h);
+OVERRIDE int SDL_RenderSetLogicalSize(sdl2::SDL_Renderer * renderer, int w, int h);
 
 /**
  *  \brief Get device independent resolution for rendering
@@ -90,7 +90,7 @@ OVERRIDE int SDL_RenderSetLogicalSize(SDL2::SDL_Renderer * renderer, int w, int 
  *
  *  \sa SDL_RenderSetLogicalSize()
  */
-OVERRIDE void SDL_RenderGetLogicalSize(SDL2::SDL_Renderer * renderer, int *w, int *h);
+OVERRIDE void SDL_RenderGetLogicalSize(sdl2::SDL_Renderer * renderer, int *w, int *h);
 
 /**
  *  \brief Set the drawing area for rendering on the current target.
@@ -107,16 +107,16 @@ OVERRIDE void SDL_RenderGetLogicalSize(SDL2::SDL_Renderer * renderer, int *w, in
  *  \sa SDL_RenderGetViewport()
  *  \sa SDL_RenderSetLogicalSize()
  */
-OVERRIDE int SDL_RenderSetViewport(SDL2::SDL_Renderer * renderer,
-                                                  const SDL2::SDL_Rect * rect);
+OVERRIDE int SDL_RenderSetViewport(sdl2::SDL_Renderer * renderer,
+                                                  const sdl2::SDL_Rect * rect);
 
 /**
  *  \brief Get the drawing area for the current target.
  *
  *  \sa SDL_RenderSetViewport()
  */
-OVERRIDE void SDL_RenderGetViewport(SDL2::SDL_Renderer * renderer,
-                                                   SDL2::SDL_Rect * rect);
+OVERRIDE void SDL_RenderGetViewport(sdl2::SDL_Renderer * renderer,
+                                                   sdl2::SDL_Rect * rect);
 
 /**
  *  \brief Set the drawing scale for rendering on the current target.
@@ -136,7 +136,7 @@ OVERRIDE void SDL_RenderGetViewport(SDL2::SDL_Renderer * renderer,
  *  \sa SDL_RenderGetScale()
  *  \sa SDL_RenderSetLogicalSize()
  */
-OVERRIDE int SDL_RenderSetScale(SDL2::SDL_Renderer * renderer,
+OVERRIDE int SDL_RenderSetScale(sdl2::SDL_Renderer * renderer,
                                                float scaleX, float scaleY);
 
 /**
@@ -148,7 +148,7 @@ OVERRIDE int SDL_RenderSetScale(SDL2::SDL_Renderer * renderer,
  *
  *  \sa SDL_RenderSetScale()
  */
-OVERRIDE void SDL_RenderGetScale(SDL2::SDL_Renderer * renderer,
+OVERRIDE void SDL_RenderGetScale(sdl2::SDL_Renderer * renderer,
                                                float *scaleX, float *scaleY);
 
 

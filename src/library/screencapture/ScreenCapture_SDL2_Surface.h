@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 
-namespace SDL2 {
+namespace sdl2 {
     struct SDL_Surface;
     struct SDL_Texture;
 }
@@ -67,10 +67,10 @@ public:
 private:
     
     /* SDL2 screen surface */
-    SDL2::SDL_Surface* screenSDL2Surf = nullptr;
+    sdl2::SDL_Surface* screenSDL2Surf = nullptr;
 
     /* SDL2 screen texture */
-    SDL2::SDL_Texture* screenSDLTex = nullptr;
+    sdl2::SDL_Texture* screenSDLTex = nullptr;
 
 };
 }

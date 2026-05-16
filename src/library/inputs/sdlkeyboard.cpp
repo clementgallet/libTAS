@@ -27,15 +27,15 @@
 
 namespace libtas {
 
-static Uint8 SDL2_keyboard[SDL2::SDL_NUM_SCANCODES] = {0};
-static Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
+static Uint8 SDL2_keyboard[sdl2::SDL_NUM_SCANCODES] = {0};
+static Uint8 SDL1_keyboard[sdl1::SDLK_LAST] = {0};
 
 /* Override */ const Uint8* SDL_GetKeyboardState( int* numkeys)
 {
     LOGTRACE(LCF_SDL | LCF_KEYBOARD);
 
     if (numkeys)
-        *numkeys = SDL2::SDL_NUM_SCANCODES;
+        *numkeys = sdl2::SDL_NUM_SCANCODES;
 
     xkeyboardToSDL2keyboard(Inputs::game_ai.keyboard, SDL2_keyboard);
     return SDL2_keyboard;
@@ -46,25 +46,25 @@ static Uint8 SDL1_keyboard[SDL1::SDLK_LAST] = {0};
     LOGTRACE(LCF_SDL | LCF_KEYBOARD);
 
     if (numkeys)
-        *numkeys = SDL1::SDLK_LAST;
+        *numkeys = sdl1::SDLK_LAST;
 
     xkeyboardToSDL1keyboard(Inputs::game_ai.keyboard, SDL1_keyboard);
     return SDL1_keyboard;
 }
 
-/* Override */ SDL2::SDL_Window* SDL_GetKeyboardFocus(void)
+/* Override */ sdl2::SDL_Window* SDL_GetKeyboardFocus(void)
 {
     LOGTRACE(LCF_SDL | LCF_KEYBOARD);
     return sdl::gameSDLWindow;
 }
 
-/* Override */ SDL2::SDL_Keymod SDL_GetModState(void)
+/* Override */ sdl2::SDL_Keymod SDL_GetModState(void)
 {
     LOGTRACE(LCF_SDL | LCF_KEYBOARD);
     return xkeyboardToSDLMod(Inputs::game_ai.keyboard);
 }
 
-/* Override */ void SDL_SetModState(SDL2::SDL_Keymod modstate)
+/* Override */ void SDL_SetModState(sdl2::SDL_Keymod modstate)
 {
     LOGTRACE(LCF_SDL | LCF_KEYBOARD | LCF_TODO);
 }

@@ -57,42 +57,26 @@
 // SDL
 #include "../SDL2.h"
 
-#include "hook.h"
+#include "sdl/sdldynapi.h"
 
-namespace libtas {
-    DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderSetClipRect, SDL2)
-    DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderIsClipEnabled, SDL2)
-    DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderGetClipRect, SDL2)
-    DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderGeometryRaw, SDL2)
-    DECLARE_ORIG_POINTER_NAMESPACE(SDL_SetTextureScaleMode, SDL2)
-    DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderSetViewport, SDL2)
-    DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderGetScale, SDL2)
-    DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderGetViewport, SDL2)
-    DECLARE_ORIG_POINTER_NAMESPACE(SDL_CreateTexture, SDL2)
-    DECLARE_ORIG_POINTER_NAMESPACE(SDL_UpdateTexture, SDL2)
-    DECLARE_ORIG_POINTER_NAMESPACE(SDL_SetTextureBlendMode, SDL2)
-    DECLARE_ORIG_POINTER_NAMESPACE(SDL_DestroyTexture, SDL2)
-    DECLARE_ORIG_POINTER_NAMESPACE(SDL_Log, SDL2)
-}
-
-#define SDL_RenderSetClipRect libtas::orig::SDL_RenderSetClipRect
-#define SDL_RenderIsClipEnabled libtas::orig::SDL_RenderIsClipEnabled
-#define SDL_RenderGetClipRect libtas::orig::SDL_RenderGetClipRect
-#define SDL_RenderGeometryRaw libtas::orig::SDL_RenderGeometryRaw
-#define SDL_SetTextureScaleMode libtas::orig::SDL_SetTextureScaleMode
-#define SDL_RenderSetViewport libtas::orig::SDL_RenderSetViewport
-#define SDL_RenderGetScale libtas::orig::SDL_RenderGetScale
-#define SDL_RenderGetViewport libtas::orig::SDL_RenderGetViewport
-#define SDL_CreateTexture libtas::orig::SDL_CreateTexture
-#define SDL_UpdateTexture libtas::orig::SDL_UpdateTexture
-#define SDL_SetTextureBlendMode libtas::orig::SDL_SetTextureBlendMode
-#define SDL_DestroyTexture libtas::orig::SDL_DestroyTexture
-#define SDL_Log libtas::orig::SDL_Log
+#define SDL_RenderSetClipRect reinterpret_cast<decltype(&sdl2::SDL_RenderSetClipRect)>(libtas::origSDLTable()[libtas::index_sdl2::SDL_RenderSetClipRect])
+#define SDL_RenderIsClipEnabled reinterpret_cast<decltype(&sdl2::SDL_RenderIsClipEnabled)>(libtas::origSDLTable()[libtas::index_sdl2::SDL_RenderIsClipEnabled])
+#define SDL_RenderGetClipRect reinterpret_cast<decltype(&sdl2::SDL_RenderGetClipRect)>(libtas::origSDLTable()[libtas::index_sdl2::SDL_RenderGetClipRect])
+#define SDL_RenderGeometryRaw reinterpret_cast<decltype(&sdl2::SDL_RenderGeometryRaw)>(libtas::origSDLTable()[libtas::index_sdl2::SDL_RenderGeometryRaw])
+#define SDL_SetTextureScaleMode reinterpret_cast<decltype(&sdl2::SDL_SetTextureScaleMode)>(libtas::origSDLTable()[libtas::index_sdl2::SDL_SetTextureScaleMode])
+#define SDL_RenderSetViewport reinterpret_cast<decltype(&sdl2::SDL_RenderSetViewport)>(libtas::origSDLTable()[libtas::index_sdl2::SDL_RenderSetViewport])
+#define SDL_RenderGetScale reinterpret_cast<decltype(&sdl2::SDL_RenderGetScale)>(libtas::origSDLTable()[libtas::index_sdl2::SDL_RenderGetScale])
+#define SDL_RenderGetViewport reinterpret_cast<decltype(&sdl2::SDL_RenderGetViewport)>(libtas::origSDLTable()[libtas::index_sdl2::SDL_RenderGetViewport])
+#define SDL_CreateTexture reinterpret_cast<decltype(&sdl2::SDL_CreateTexture)>(libtas::origSDLTable()[libtas::index_sdl2::SDL_CreateTexture])
+#define SDL_UpdateTexture reinterpret_cast<decltype(&sdl2::SDL_UpdateTexture)>(libtas::origSDLTable()[libtas::index_sdl2::SDL_UpdateTexture])
+#define SDL_SetTextureBlendMode reinterpret_cast<decltype(&sdl2::SDL_SetTextureBlendMode)>(libtas::origSDLTable()[libtas::index_sdl2::SDL_SetTextureBlendMode])
+#define SDL_DestroyTexture reinterpret_cast<decltype(&sdl2::SDL_DestroyTexture)>(libtas::origSDLTable()[libtas::index_sdl2::SDL_DestroyTexture])
+#define SDL_Log reinterpret_cast<decltype(&sdl2::SDL_Log)>(libtas::origSDLTable()[libtas::index_sdl2::SDL_Log])
 
 // SDL_Renderer data
 struct ImGui_ImplSDLRenderer2_Data
 {
-    SDL2::SDL_Renderer*   Renderer;       // Main viewport's renderer
+    sdl2::SDL_Renderer*   Renderer;       // Main viewport's renderer
 
     ImGui_ImplSDLRenderer2_Data()   { memset((void*)this, 0, sizeof(*this)); }
 };
@@ -105,7 +89,7 @@ static ImGui_ImplSDLRenderer2_Data* ImGui_ImplSDLRenderer2_GetBackendData()
 }
 
 // Functions
-static void ImGui_ImplSDLRenderer2_SetupRenderState(SDL2::SDL_Renderer* renderer)
+static void ImGui_ImplSDLRenderer2_SetupRenderState(sdl2::SDL_Renderer* renderer)
 {
     // Clear out any viewports and cliprect set by the user
     // FIXME: Technically speaking there are lots of other things we could backup/setup/restore during our render process.
@@ -123,7 +107,7 @@ void ImGui_ImplSDLRenderer2_NewFrame()
 // Draw callbacks
 static void ImGui_ImplSDLRenderer2_DrawCallback_ResetRenderState(const ImDrawList*, const ImDrawCmd*) {} // Intentionally empty. Used as an identifier for rendering loop to call its code. Simpler to implement this way.
 
-void ImGui_ImplSDLRenderer2_RenderDrawData(ImDrawData* draw_data, SDL2::SDL_Renderer* renderer)
+void ImGui_ImplSDLRenderer2_RenderDrawData(ImDrawData* draw_data, sdl2::SDL_Renderer* renderer)
 {
     // If there's a scale factor set by the user, use that instead
     // If the user has specified a scale factor to SDL_Renderer already via SDL_RenderSetScale(), SDL will scale whatever we pass
@@ -151,9 +135,9 @@ void ImGui_ImplSDLRenderer2_RenderDrawData(ImDrawData* draw_data, SDL2::SDL_Rend
     // Backup SDL_Renderer state that will be modified to restore it afterwards
     struct BackupSDLRendererState
     {
-        SDL2::SDL_Rect    Viewport;
+        sdl2::SDL_Rect    Viewport;
         bool        ClipEnabled;
-        SDL2::SDL_Rect    ClipRect;
+        sdl2::SDL_Rect    ClipRect;
     };
     BackupSDLRendererState old = {};
     old.ClipEnabled = SDL_RenderIsClipEnabled(renderer) == SDL_TRUE;
@@ -202,19 +186,19 @@ void ImGui_ImplSDLRenderer2_RenderDrawData(ImDrawData* draw_data, SDL2::SDL_Rend
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
                     continue;
 
-                SDL2::SDL_Rect r = { (int)(clip_min.x), (int)(clip_min.y), (int)(clip_max.x - clip_min.x), (int)(clip_max.y - clip_min.y) };
+                sdl2::SDL_Rect r = { (int)(clip_min.x), (int)(clip_min.y), (int)(clip_max.x - clip_min.x), (int)(clip_max.y - clip_min.y) };
                 SDL_RenderSetClipRect(renderer, &r);
 
                 const float* xy = (const float*)(const void*)((const char*)(vtx_buffer + pcmd->VtxOffset) + offsetof(ImDrawVert, pos));
                 const float* uv = (const float*)(const void*)((const char*)(vtx_buffer + pcmd->VtxOffset) + offsetof(ImDrawVert, uv));
 #if SDL_VERSION_ATLEAST(2,0,19)
-                const SDL2::SDL_Color* color = (const SDL2::SDL_Color*)(const void*)((const char*)(vtx_buffer + pcmd->VtxOffset) + offsetof(ImDrawVert, col)); // SDL 2.0.19+
+                const sdl2::SDL_Color* color = (const sdl2::SDL_Color*)(const void*)((const char*)(vtx_buffer + pcmd->VtxOffset) + offsetof(ImDrawVert, col)); // SDL 2.0.19+
 #else
                 const int* color = (const int*)(const void*)((const char*)(vtx_buffer + pcmd->VtxOffset) + offsetof(ImDrawVert, col)); // SDL 2.0.17 and 2.0.18
 #endif
 
                 // Bind texture, Draw
-                SDL2::SDL_Texture* tex = (SDL2::SDL_Texture*)pcmd->GetTexID();
+                sdl2::SDL_Texture* tex = (sdl2::SDL_Texture*)pcmd->GetTexID();
                 SDL_RenderGeometryRaw(renderer, tex,
                     xy, (int)sizeof(ImDrawVert),
                     color, (int)sizeof(ImDrawVert),
@@ -244,11 +228,11 @@ void ImGui_ImplSDLRenderer2_UpdateTexture(ImTextureData* tex)
 
         // Create texture
         // (Bilinear sampling is required by default. Set 'io.Fonts->Flags |= ImFontAtlasFlags_NoBakedLines' or 'style.AntiAliasedLinesUseTex = false' to allow point/nearest sampling)
-        SDL2::SDL_Texture* sdl_texture = SDL_CreateTexture(bd->Renderer, SDL2::SDL_PIXELFORMAT_RGBA32, SDL2::SDL_TEXTUREACCESS_STATIC, tex->Width, tex->Height);
+        sdl2::SDL_Texture* sdl_texture = SDL_CreateTexture(bd->Renderer, sdl2::SDL_PIXELFORMAT_RGBA32, sdl2::SDL_TEXTUREACCESS_STATIC, tex->Width, tex->Height);
         IM_ASSERT(sdl_texture != nullptr && "Backend failed to create texture!");
         SDL_UpdateTexture(sdl_texture, nullptr, tex->GetPixels(), tex->GetPitch());
-        SDL_SetTextureBlendMode(sdl_texture, SDL2::SDL_BLENDMODE_BLEND);
-        SDL_SetTextureScaleMode(sdl_texture, SDL2::SDL_ScaleModeLinear);
+        SDL_SetTextureBlendMode(sdl_texture, sdl2::SDL_BLENDMODE_BLEND);
+        SDL_SetTextureScaleMode(sdl_texture, sdl2::SDL_ScaleModeLinear);
 
         // Store identifiers
         tex->SetTexID((ImTextureID)(intptr_t)sdl_texture);
@@ -258,10 +242,10 @@ void ImGui_ImplSDLRenderer2_UpdateTexture(ImTextureData* tex)
     {
         // Update selected blocks. We only ever write to textures regions which have never been used before!
         // This backend choose to use tex->Updates[] but you can use tex->UpdateRect to upload a single region.
-        SDL2::SDL_Texture* sdl_texture = (SDL2::SDL_Texture*)(intptr_t)tex->TexID;
+        sdl2::SDL_Texture* sdl_texture = (sdl2::SDL_Texture*)(intptr_t)tex->TexID;
         for (ImTextureRect& r : tex->Updates)
         {
-            SDL2::SDL_Rect sdl_r = { r.x, r.y, r.w, r.h };
+            sdl2::SDL_Rect sdl_r = { r.x, r.y, r.w, r.h };
             SDL_UpdateTexture(sdl_texture, &sdl_r, tex->GetPixelsAt(r.x, r.y), tex->GetPitch());
         }
         tex->SetStatus(ImTextureStatus_OK);
@@ -269,7 +253,7 @@ void ImGui_ImplSDLRenderer2_UpdateTexture(ImTextureData* tex)
     else if (tex->Status == ImTextureStatus_WantDestroy)
     {
         if (tex->TexID != ImTextureID_Invalid)
-            if (SDL2::SDL_Texture* sdl_texture = (SDL2::SDL_Texture*)(intptr_t)tex->TexID)
+            if (sdl2::SDL_Texture* sdl_texture = (sdl2::SDL_Texture*)(intptr_t)tex->TexID)
                 SDL_DestroyTexture(sdl_texture);
 
         // Clear identifiers and mark as destroyed (in order to allow e.g. calling InvalidateDeviceObjects while running)
@@ -293,7 +277,7 @@ void ImGui_ImplSDLRenderer2_DestroyDeviceObjects()
         }
 }
 
-bool ImGui_ImplSDLRenderer2_Init(SDL2::SDL_Renderer* renderer)
+bool ImGui_ImplSDLRenderer2_Init(sdl2::SDL_Renderer* renderer)
 {
     ImGuiIO& io = ImGui::GetIO();
     IMGUI_CHECKVERSION();

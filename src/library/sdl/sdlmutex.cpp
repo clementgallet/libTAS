@@ -18,155 +18,118 @@
  */
 
 #include "sdlmutex.h"
+#include "sdldynapi.h"
 
 #include "logging.h"
-#include "hook.h"
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER(SDL_CreateMutex)
-DECLARE_ORIG_POINTER(SDL_LockMutex)
-DECLARE_ORIG_POINTER(SDL_TryLockMutex)
-DECLARE_ORIG_POINTER(SDL_UnlockMutex)
-DECLARE_ORIG_POINTER(SDL_DestroyMutex)
-DECLARE_ORIG_POINTER(SDL_CreateSemaphore)
-DECLARE_ORIG_POINTER(SDL_DestroySemaphore)
-DECLARE_ORIG_POINTER(SDL_SemWait)
-DECLARE_ORIG_POINTER(SDL_SemTryWait)
-DECLARE_ORIG_POINTER(SDL_SemWaitTimeout)
-DECLARE_ORIG_POINTER(SDL_SemPost)
-DECLARE_ORIG_POINTER(SDL_SemValue)
-DECLARE_ORIG_POINTER(SDL_CreateCond)
-DECLARE_ORIG_POINTER(SDL_DestroyCond)
-DECLARE_ORIG_POINTER(SDL_CondSignal)
-DECLARE_ORIG_POINTER(SDL_CondBroadcast)
-DECLARE_ORIG_POINTER(SDL_CondWait)
-DECLARE_ORIG_POINTER(SDL_CondWaitTimeout)
-
-/* Override */ SDL2::SDL_mutex* SDL_CreateMutex(void)
+    /* Override */ sdl2::SDL_mutex* SDL_CreateMutex(void)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_CreateMutex);
-    return orig::SDL_CreateMutex();
+    return ORIG_SDL2_CALL(SDL_CreateMutex, ());
 }
 
-int SDL_LockMutex(SDL2::SDL_mutex * mutex)
+int SDL_LockMutex(sdl2::SDL_mutex * mutex)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_LockMutex);
-    return orig::SDL_LockMutex(mutex);
+    return ORIG_SDL2_CALL(SDL_LockMutex, (mutex));
 }
 
-int SDL_TryLockMutex(SDL2::SDL_mutex * mutex)
+int SDL_TryLockMutex(sdl2::SDL_mutex * mutex)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_TryLockMutex);
-    return orig::SDL_TryLockMutex(mutex);
+    return ORIG_SDL2_CALL(SDL_TryLockMutex, (mutex));
 }
 
-int SDL_UnlockMutex(SDL2::SDL_mutex * mutex)
+int SDL_UnlockMutex(sdl2::SDL_mutex * mutex)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_UnlockMutex);
-    return orig::SDL_UnlockMutex(mutex);
+    return ORIG_SDL2_CALL(SDL_UnlockMutex, (mutex));
 }
 
-void SDL_DestroyMutex(SDL2::SDL_mutex * mutex)
+void SDL_DestroyMutex(sdl2::SDL_mutex * mutex)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_DestroyMutex);
-    return orig::SDL_DestroyMutex(mutex);
+    return ORIG_SDL2_CALL(SDL_DestroyMutex, (mutex));
 }
 
-SDL2::SDL_sem *SDL_CreateSemaphore(Uint32 initial_value)
+sdl2::SDL_sem *SDL_CreateSemaphore(Uint32 initial_value)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_CreateSemaphore);
-    return orig::SDL_CreateSemaphore(initial_value);
+    return ORIG_SDL2_CALL(SDL_CreateSemaphore, (initial_value));
 }
 
-void SDL_DestroySemaphore(SDL2::SDL_sem * sem)
+void SDL_DestroySemaphore(sdl2::SDL_sem * sem)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_DestroySemaphore);
-    return orig::SDL_DestroySemaphore(sem);
+    return ORIG_SDL2_CALL(SDL_DestroySemaphore, (sem));
 }
 
-int SDL_SemWait(SDL2::SDL_sem * sem)
+int SDL_SemWait(sdl2::SDL_sem * sem)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_SemWait);
-    return orig::SDL_SemWait(sem);
+    return ORIG_SDL2_CALL(SDL_SemWait, (sem));
 }
 
-int SDL_SemTryWait(SDL2::SDL_sem * sem)
+int SDL_SemTryWait(sdl2::SDL_sem * sem)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_SemTryWait);
-    return orig::SDL_SemTryWait(sem);
+    return ORIG_SDL2_CALL(SDL_SemTryWait, (sem));
 }
 
-int SDL_SemWaitTimeout(SDL2::SDL_sem * sem, Uint32 ms)
+int SDL_SemWaitTimeout(sdl2::SDL_sem * sem, Uint32 ms)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_SemWaitTimeout);
-    return orig::SDL_SemWaitTimeout(sem, ms);
+    return ORIG_SDL2_CALL(SDL_SemWaitTimeout, (sem, ms));
 }
 
-int SDL_SemPost(SDL2::SDL_sem * sem)
+int SDL_SemPost(sdl2::SDL_sem * sem)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_SemPost);
-    return orig::SDL_SemPost(sem);
+    return ORIG_SDL2_CALL(SDL_SemPost, (sem));
 }
 
-Uint32 SDL_SemValue(SDL2::SDL_sem * sem)
+Uint32 SDL_SemValue(sdl2::SDL_sem * sem)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_SemValue);
-    return orig::SDL_SemValue(sem);
+    return ORIG_SDL2_CALL(SDL_SemValue, (sem));
 }
 
-SDL2::SDL_cond *SDL_CreateCond(void)
+sdl2::SDL_cond *SDL_CreateCond(void)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_CreateCond);
-    return orig::SDL_CreateCond();
+    return ORIG_SDL2_CALL(SDL_CreateCond, ());
 }
 
-void SDL_DestroyCond(SDL2::SDL_cond * cond)
+void SDL_DestroyCond(sdl2::SDL_cond * cond)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_DestroyCond);
-    return orig::SDL_DestroyCond(cond);
+    return ORIG_SDL2_CALL(SDL_DestroyCond, (cond));
 }
 
-int SDL_CondSignal(SDL2::SDL_cond * cond)
+int SDL_CondSignal(sdl2::SDL_cond * cond)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_CondSignal);
-    return orig::SDL_CondSignal(cond);
+    return ORIG_SDL2_CALL(SDL_CondSignal, (cond));
 }
 
-int SDL_CondBroadcast(SDL2::SDL_cond * cond)
+int SDL_CondBroadcast(sdl2::SDL_cond * cond)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_CondBroadcast);
-    return orig::SDL_CondBroadcast(cond);
+    return ORIG_SDL2_CALL(SDL_CondBroadcast, (cond));
 }
 
-int SDL_CondWait(SDL2::SDL_cond * cond, SDL2::SDL_mutex * mutex)
+int SDL_CondWait(sdl2::SDL_cond * cond, sdl2::SDL_mutex * mutex)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_CondWait);
-    return orig::SDL_CondWait(cond, mutex);
+    return ORIG_SDL2_CALL(SDL_CondWait, (cond, mutex));
 }
 
-int SDL_CondWaitTimeout(SDL2::SDL_cond * cond, SDL2::SDL_mutex * mutex, Uint32 ms)
+int SDL_CondWaitTimeout(sdl2::SDL_cond * cond, sdl2::SDL_mutex * mutex, Uint32 ms)
 {
     LOGTRACE(LCF_WAIT | LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_CondWaitTimeout);
-    return orig::SDL_CondWaitTimeout(cond, mutex, ms);
+    return ORIG_SDL2_CALL(SDL_CondWaitTimeout, (cond, mutex, ms));
 }
 
 

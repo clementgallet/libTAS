@@ -104,8 +104,8 @@ OVERRIDE const char *SDL_GetCurrentAudioDriver(void);
  *  may modify the requested size of the audio buffer, you should allocate
  *  any local mixing buffers after you open the audio device.
  */
-OVERRIDE int SDL_OpenAudio(SDL2::SDL_AudioSpec * desired,
-                                          SDL2::SDL_AudioSpec * obtained);
+OVERRIDE int SDL_OpenAudio(sdl2::SDL_AudioSpec * desired,
+                                          sdl2::SDL_AudioSpec * obtained);
 
 /**
  *  Get the number of available devices exposed by the current driver.
@@ -160,7 +160,7 @@ OVERRIDE const char *SDL_GetAudioDeviceName(int index, int iscapture);
  * \sa SDL_GetDefaultAudioInfo
  */
 
-OVERRIDE int SDL_GetAudioDeviceSpec(int index, int iscapture, SDL2::SDL_AudioSpec *spec);
+OVERRIDE int SDL_GetAudioDeviceSpec(int index, int iscapture, sdl2::SDL_AudioSpec *spec);
 
 /**
  * Get the name and preferred format of the default audio device.
@@ -192,7 +192,7 @@ OVERRIDE int SDL_GetAudioDeviceSpec(int index, int iscapture, SDL2::SDL_AudioSpe
  * \sa SDL_GetAudioDeviceSpec
  * \sa SDL_OpenAudioDevice
  */
-OVERRIDE int SDL_GetDefaultAudioInfo(char **name, SDL2::SDL_AudioSpec *spec, int iscapture);
+OVERRIDE int SDL_GetDefaultAudioInfo(char **name, sdl2::SDL_AudioSpec *spec, int iscapture);
 
 /**
  *  Open a specific audio device. Passing in a device name of NULL requests
@@ -207,23 +207,24 @@ OVERRIDE int SDL_GetDefaultAudioInfo(char **name, SDL2::SDL_AudioSpec *spec, int
  *
  *  SDL_OpenAudio(), unlike this function, always acts on device ID 1.
  */
-OVERRIDE SDL2::SDL_AudioDeviceID SDL_OpenAudioDevice(const char
+OVERRIDE sdl2::SDL_AudioDeviceID SDL_OpenAudioDevice(const char
                                                               *device,
                                                               int iscapture,
                                                               const
-                                                              SDL2::SDL_AudioSpec *
+                                                              sdl2::SDL_AudioSpec *
                                                               desired,
-                                                              SDL2::SDL_AudioSpec *
+                                                              sdl2::SDL_AudioSpec *
                                                               obtained,
                                                               int
                                                               allowed_changes);
 
+// OVERRIDE SDL_AudioDeviceID SDL_OpenAudioDevice(SDL_AudioDeviceID devid, const SDL_AudioSpec *spec);
 
 
 
-OVERRIDE SDL2::SDL_AudioStatus SDL_GetAudioStatus(void);
+OVERRIDE sdl2::SDL_AudioStatus SDL_GetAudioStatus(void);
 
-OVERRIDE SDL2::SDL_AudioStatus SDL_GetAudioDeviceStatus(SDL2::SDL_AudioDeviceID dev);
+OVERRIDE sdl2::SDL_AudioStatus SDL_GetAudioDeviceStatus(sdl2::SDL_AudioDeviceID dev);
 /* @} *//* Audio State */
 
 /**
@@ -237,7 +238,7 @@ OVERRIDE SDL2::SDL_AudioStatus SDL_GetAudioDeviceStatus(SDL2::SDL_AudioDeviceID 
  */
 /* @{ */
 OVERRIDE void SDL_PauseAudio(int pause_on);
-OVERRIDE void SDL_PauseAudioDevice(SDL2::SDL_AudioDeviceID dev,
+OVERRIDE void SDL_PauseAudioDevice(sdl2::SDL_AudioDeviceID dev,
                                                   int pause_on);
 /* @} *//* Pause audio functions */
 
@@ -356,7 +357,7 @@ OVERRIDE void SDL_MixAudio(Uint8 * dst, const Uint8 * src,
  *  \sa SDL_GetQueuedAudioSize
  *  \sa SDL_ClearQueuedAudio
  */
-OVERRIDE int SDL_QueueAudio(SDL2::SDL_AudioDeviceID dev, const void *data, Uint32 len);
+OVERRIDE int SDL_QueueAudio(sdl2::SDL_AudioDeviceID dev, const void *data, Uint32 len);
 
 /**
  *  Get the number of bytes of still-queued audio.
@@ -383,7 +384,7 @@ OVERRIDE int SDL_QueueAudio(SDL2::SDL_AudioDeviceID dev, const void *data, Uint3
  *  \sa SDL_QueueAudio
  *  \sa SDL_ClearQueuedAudio
  */
-OVERRIDE Uint32 SDL_GetQueuedAudioSize(SDL2::SDL_AudioDeviceID dev);
+OVERRIDE Uint32 SDL_GetQueuedAudioSize(sdl2::SDL_AudioDeviceID dev);
 
 /**
  *  Drop any queued audio data waiting to be sent to the hardware.
@@ -412,7 +413,7 @@ OVERRIDE Uint32 SDL_GetQueuedAudioSize(SDL2::SDL_AudioDeviceID dev);
  *  \sa SDL_QueueAudio
  *  \sa SDL_GetQueuedAudioSize
  */
-OVERRIDE void SDL_ClearQueuedAudio(SDL2::SDL_AudioDeviceID dev);
+OVERRIDE void SDL_ClearQueuedAudio(sdl2::SDL_AudioDeviceID dev);
 
 
 /**
@@ -425,16 +426,16 @@ OVERRIDE void SDL_ClearQueuedAudio(SDL2::SDL_AudioDeviceID dev);
  */
 /* @{ */
 OVERRIDE void SDL_LockAudio(void);
-OVERRIDE void SDL_LockAudioDevice(SDL2::SDL_AudioDeviceID dev);
+OVERRIDE void SDL_LockAudioDevice(sdl2::SDL_AudioDeviceID dev);
 OVERRIDE void SDL_UnlockAudio(void);
-OVERRIDE void SDL_UnlockAudioDevice(SDL2::SDL_AudioDeviceID dev);
+OVERRIDE void SDL_UnlockAudioDevice(sdl2::SDL_AudioDeviceID dev);
 /* @} *//* Audio lock functions */
 
 /**
  *  This function shuts down audio processing and closes the audio device.
  */
 OVERRIDE void SDL_CloseAudio(void);
-OVERRIDE void SDL_CloseAudioDevice(SDL2::SDL_AudioDeviceID dev);
+OVERRIDE void SDL_CloseAudioDevice(sdl2::SDL_AudioDeviceID dev);
 
 }
 

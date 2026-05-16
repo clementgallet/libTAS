@@ -19,6 +19,8 @@
 
 #include "sdlaudio.h"
 
+#include "sdl/sdldynapi.h"
+#include "sdl/sdlversion.h"
 #include "checkpoint/ThreadManager.h" // getThreadId()
 #include "logging.h"
 #include "hook.h"
@@ -32,16 +34,13 @@
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_MixAudioFormat, SDL2)
-DECLARE_ORIG_POINTER(SDL_MixAudio)
-
 static const char* dummySDLDriver = "libtas";
 
 /* Keep a copy of the SDL_AudioFormat used to open the audio device, because
  * SDL_MixAudio uses the current audio format, but as we actually don't open the
  * audio device, we call instead SDL_MixAudioFormat with the saved audio format.
  */
-static SDL2::SDL_AudioFormat audioFormat;
+static sdl2::SDL_AudioFormat audioFormat;
 // static Uint16 bufferSamplesSize;
 
 /* All SDL devices. From SDL implementation, there is a limit of 16 devices */
@@ -107,9 +106,9 @@ char * SDL_AudioDriverName(char *namebuf, int maxlen)
 }
 
 /* Helper function for SDL_OpenAudio() and SDL_OpenAudioDevice() */
-static int open_audio_device(const SDL2::SDL_AudioSpec * desired, SDL2::SDL_AudioSpec * obtained, int min_id)
+static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_AudioSpec * obtained, int min_id)
 {
-    SDL2::SDL_AudioSpec _obtained;
+    sdl2::SDL_AudioSpec _obtained;
 
     if (Global::shared_config.audio_disabled)
         return -1;
@@ -129,7 +128,7 @@ static int open_audio_device(const SDL2::SDL_AudioSpec * desired, SDL2::SDL_Audi
         obtained = &_obtained;
     }
 
-    memcpy(obtained, desired, sizeof(SDL2::SDL_AudioSpec));
+    memcpy(obtained, desired, sizeof(sdl2::SDL_AudioSpec));
     AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
@@ -141,7 +140,7 @@ static int open_audio_device(const SDL2::SDL_AudioSpec * desired, SDL2::SDL_Audi
     buffer->frequency = obtained->freq;
     LOG(LL_DEBUG, LCF_SDL | LCF_SOUND, "Frequency %d Hz", buffer->frequency);
 
-    if (desired->format == 0) obtained->format = SDL2::AUDIO_S16LSB;
+    if (desired->format == 0) obtained->format = sdl2::AUDIO_S16LSB;
 
     if (desired->samples == 0) {
 		/* Pick a default of ~46 ms at desired frequency */
@@ -154,16 +153,16 @@ static int open_audio_device(const SDL2::SDL_AudioSpec * desired, SDL2::SDL_Audi
 	}
 
     switch(obtained->format) {
-        case SDL2::AUDIO_U8:
+        case sdl2::AUDIO_U8:
             buffer->format = AudioBuffer::SAMPLE_FMT_U8;
             break;
-        case SDL2::AUDIO_S16LSB:
+        case sdl2::AUDIO_S16LSB:
             buffer->format = AudioBuffer::SAMPLE_FMT_S16;
             break;
-        case SDL2::AUDIO_S32LSB:
+        case sdl2::AUDIO_S32LSB:
             buffer->format = AudioBuffer::SAMPLE_FMT_S32;
             break;
-        case SDL2::AUDIO_F32LSB:
+        case sdl2::AUDIO_F32LSB:
             buffer->format = AudioBuffer::SAMPLE_FMT_FLT;
             break;
         default:
@@ -198,7 +197,7 @@ static int open_audio_device(const SDL2::SDL_AudioSpec * desired, SDL2::SDL_Audi
          */
 
         sourcesSDL[id-1]->source = AudioSource::SOURCE_CALLBACK;
-        SDL2::SDL_AudioCallback audioCallback = obtained->callback;
+        sdl2::SDL_AudioCallback audioCallback = obtained->callback;
         void* callbackArg = obtained->userdata;
         sourcesSDL[id-1]->callback = [audioCallback, callbackArg](AudioBuffer& ab){
             /* Emptying the audio buffer */
@@ -234,7 +233,7 @@ static int open_audio_device(const SDL2::SDL_AudioSpec * desired, SDL2::SDL_Audi
     return id;
 }
 
-/* Override */ int SDL_OpenAudio(SDL2::SDL_AudioSpec * desired, SDL2::SDL_AudioSpec * obtained)
+/* Override */ int SDL_OpenAudio(sdl2::SDL_AudioSpec * desired, sdl2::SDL_AudioSpec * obtained)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
 
@@ -244,14 +243,14 @@ static int open_audio_device(const SDL2::SDL_AudioSpec * desired, SDL2::SDL_Audi
         return -1;
     }
 
-    SDL2::SDL_AudioDeviceID id = 0;
+    sdl2::SDL_AudioDeviceID id = 0;
     
     if (obtained) {
         id = open_audio_device(desired, obtained, 1);
     }
     else {
-        SDL2::SDL_AudioSpec _obtained;
-        memset(&_obtained, 0, sizeof(SDL2::SDL_AudioSpec));
+        sdl2::SDL_AudioSpec _obtained;
+        memset(&_obtained, 0, sizeof(sdl2::SDL_AudioSpec));
         id = open_audio_device(desired, &_obtained, 1);
         /* On successful open, copy calculated values into 'desired'. */
         if (id > 0) {
@@ -282,7 +281,7 @@ static int open_audio_device(const SDL2::SDL_AudioSpec * desired, SDL2::SDL_Audi
     return NULL;
 }
 
-/* Override */ int SDL_GetAudioDeviceSpec(int index, int iscapture, SDL2::SDL_AudioSpec *spec)
+/* Override */ int SDL_GetAudioDeviceSpec(int index, int iscapture, sdl2::SDL_AudioSpec *spec)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
     if (iscapture != 0)
@@ -295,10 +294,10 @@ static int open_audio_device(const SDL2::SDL_AudioSpec * desired, SDL2::SDL_Audi
     spec->freq = Global::shared_config.audio_frequency;
     switch (Global::shared_config.audio_bitdepth) {
         case 8:
-            spec->format = SDL2::AUDIO_U8;
+            spec->format = sdl2::AUDIO_U8;
             break;
         case 16:
-            spec->format = SDL2::AUDIO_S16LSB;
+            spec->format = sdl2::AUDIO_S16LSB;
             break;
     }
     spec->channels = Global::shared_config.audio_channels;
@@ -306,7 +305,7 @@ static int open_audio_device(const SDL2::SDL_AudioSpec * desired, SDL2::SDL_Audi
     return 0;
 }
 
-/* Override */ int SDL_GetDefaultAudioInfo(char **name, SDL2::SDL_AudioSpec *spec, int iscapture)
+/* Override */ int SDL_GetDefaultAudioInfo(char **name, sdl2::SDL_AudioSpec *spec, int iscapture)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
     if (iscapture != 0)
@@ -319,10 +318,10 @@ static int open_audio_device(const SDL2::SDL_AudioSpec * desired, SDL2::SDL_Audi
     spec->freq = Global::shared_config.audio_frequency;
     switch (Global::shared_config.audio_bitdepth) {
         case 8:
-            spec->format = SDL2::AUDIO_U8;
+            spec->format = sdl2::AUDIO_U8;
             break;
         case 16:
-            spec->format = SDL2::AUDIO_S16LSB;
+            spec->format = sdl2::AUDIO_S16LSB;
             break;
     }
     spec->channels = Global::shared_config.audio_channels;
@@ -330,42 +329,42 @@ static int open_audio_device(const SDL2::SDL_AudioSpec * desired, SDL2::SDL_Audi
     return 0;
 }
 
-/* Override */ SDL2::SDL_AudioDeviceID SDL_OpenAudioDevice(const char *device,
-                   int iscapture, const SDL2::SDL_AudioSpec *desired,
-                   SDL2::SDL_AudioSpec *obtained, int allowed_changes)
+/* Override */ sdl2::SDL_AudioDeviceID SDL_OpenAudioDevice(const char *device,
+                   int iscapture, const sdl2::SDL_AudioSpec *desired,
+                   sdl2::SDL_AudioSpec *obtained, int allowed_changes)
 {
     LOG(LL_DEBUG, LCF_SDL | LCF_SOUND, "%s called for device %s", __func__, device?device:"NULL");
     if (iscapture != 0)
         return 0;
 
-    SDL2::SDL_AudioDeviceID id = open_audio_device(desired, obtained, 2);
+    sdl2::SDL_AudioDeviceID id = open_audio_device(desired, obtained, 2);
     return (id > 0)? id : 0;
 }
 
-/* Override */ SDL2::SDL_AudioStatus SDL_GetAudioStatus(void)
+/* Override */ sdl2::SDL_AudioStatus SDL_GetAudioStatus(void)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
     return SDL_GetAudioDeviceStatus(1);
 }
 
-/* Override */ SDL2::SDL_AudioStatus SDL_GetAudioDeviceStatus(SDL2::SDL_AudioDeviceID dev)
+/* Override */ sdl2::SDL_AudioStatus SDL_GetAudioDeviceStatus(sdl2::SDL_AudioDeviceID dev)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
 
     if ((dev < 1) || (dev > MAX_SDL_SOURCES) || (!sourcesSDL[dev-1]))
-        return SDL2::SDL_AUDIO_STOPPED;
+        return sdl2::SDL_AUDIO_STOPPED;
 
     switch(sourcesSDL[dev-1]->state) {
         case AudioSource::SOURCE_INITIAL:
         case AudioSource::SOURCE_STOPPED:
-            return SDL2::SDL_AUDIO_STOPPED;
+            return sdl2::SDL_AUDIO_STOPPED;
         case AudioSource::SOURCE_PLAYING:
-            return SDL2::SDL_AUDIO_PLAYING;
+            return sdl2::SDL_AUDIO_PLAYING;
         case AudioSource::SOURCE_PAUSED:
-            return SDL2::SDL_AUDIO_PAUSED;
+            return sdl2::SDL_AUDIO_PAUSED;
         default:
             LOG(LL_FATAL, LCF_SDL | LCF_SOUND, "Unknown source state");
-            return SDL2::SDL_AUDIO_STOPPED;
+            return sdl2::SDL_AUDIO_STOPPED;
     }
 }
 
@@ -375,7 +374,7 @@ static int open_audio_device(const SDL2::SDL_AudioSpec * desired, SDL2::SDL_Audi
     SDL_PauseAudioDevice(1, pause_on);
 }
 
-/* Override */ void SDL_PauseAudioDevice(SDL2::SDL_AudioDeviceID dev, int pause_on)
+/* Override */ void SDL_PauseAudioDevice(sdl2::SDL_AudioDeviceID dev, int pause_on)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
     if ((dev < 1) || (dev > MAX_SDL_SOURCES) || (!sourcesSDL[dev-1]))
@@ -400,16 +399,14 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
          * and instead let us specify the audio format.
          */
 
-         LINK_NAMESPACE_SDL2(SDL_MixAudioFormat);
-         return orig::SDL_MixAudioFormat(dst, src, audioFormat, len, volume);
+        return ORIG_SDL2_CALL(SDL_MixAudioFormat, (dst, src, audioFormat, len, volume));
     }
 
-    LINK_NAMESPACE_SDL1(SDL_MixAudio);
-    return orig::SDL_MixAudio(dst, src, len, volume);
+    return ORIG_SDL2_CALL(SDL_MixAudio, (dst, src, len, volume));
 }
 
 
-/* Override */ int SDL_QueueAudio(SDL2::SDL_AudioDeviceID dev, const void *data, Uint32 len)
+/* Override */ int SDL_QueueAudio(sdl2::SDL_AudioDeviceID dev, const void *data, Uint32 len)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_SOUND, "%s call with %d bytes of data", __func__, len);
 
@@ -464,7 +461,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
     return 0;
 }
 
-/* Override */ Uint32 SDL_GetQueuedAudioSize(SDL2::SDL_AudioDeviceID dev)
+/* Override */ Uint32 SDL_GetQueuedAudioSize(sdl2::SDL_AudioDeviceID dev)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
 
@@ -482,7 +479,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
     return qsize;
 }
 
-/* Override */ void SDL_ClearQueuedAudio(SDL2::SDL_AudioDeviceID dev)
+/* Override */ void SDL_ClearQueuedAudio(sdl2::SDL_AudioDeviceID dev)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
 
@@ -507,7 +504,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
     return SDL_LockAudioDevice(1);
 }
 
-/* Override */ void SDL_LockAudioDevice(SDL2::SDL_AudioDeviceID dev)
+/* Override */ void SDL_LockAudioDevice(sdl2::SDL_AudioDeviceID dev)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
     if (ThreadManager::getThreadId() == AudioContext::get().audio_thread)
@@ -521,7 +518,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
     return SDL_UnlockAudioDevice(1);
 }
 
-/* Override */ void SDL_UnlockAudioDevice(SDL2::SDL_AudioDeviceID dev)
+/* Override */ void SDL_UnlockAudioDevice(sdl2::SDL_AudioDeviceID dev)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
     if (ThreadManager::getThreadId() == AudioContext::get().audio_thread)
@@ -535,7 +532,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
     return SDL_CloseAudioDevice(1);
 }
 
-/* Override */ void SDL_CloseAudioDevice(SDL2::SDL_AudioDeviceID dev)
+/* Override */ void SDL_CloseAudioDevice(sdl2::SDL_AudioDeviceID dev)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_SOUND, "%s called with dev %d", __func__, dev);
 

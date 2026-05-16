@@ -20,8 +20,6 @@
 #ifndef LIBTAS_HOOK_H_INCLUDED
 #define LIBTAS_HOOK_H_INCLUDED
 
-#include "sdl/sdlversion.h"
-
 namespace libtas {
 
 /* Include this file in every source code that override functions of the game */
@@ -40,9 +38,9 @@ namespace libtas {
  * @param[out] function   pointer the function pointer we want to access
  * @param[in]  source     name of the function we want to access
  * @param[in]  library    substring of the name of the library which contains the function
- * @return                whether we successfully accessed to the function
+ * @return                function pointer if we successfully accessed to the function, nullptr otherwise
  */
-bool link_function(void** function, const char* source, const char* library, const char *version = nullptr);
+void* link_function(void** function, const char* source, const char* library, const char *version = nullptr);
 
 /* Some macros to make the above function easier to use */
 
@@ -88,17 +86,11 @@ do { \
 #define LINK_NAMESPACE_FULLNAME(FUNC,LIB) link_function((void**)&orig::FUNC, #FUNC, LIB)
 #define LINK_NAMESPACE_GLOBAL(FUNC) link_function((void**)&orig::FUNC, #FUNC, nullptr)
 #define LINK_NAMESPACE_VERSION(FUNC,LIB,V) link_function((void**)&orig::FUNC, #FUNC, "lib" LIB ".so", V)
-#define LINK_NAMESPACE_SDL1(FUNC) link_function((void**)&orig::FUNC, #FUNC, "libSDL-1.2.so.0")
-#define LINK_NAMESPACE_SDL2(FUNC) link_function((void**)&orig::FUNC, #FUNC, "libSDL2-2.0.so.0")
 #elif defined(__APPLE__) && defined(__MACH__)
 #define LINK_NAMESPACE(FUNC,LIB) link_function((void**)&orig::FUNC, #FUNC, "lib" LIB ".dylib")
 #define LINK_NAMESPACE_GLOBAL(FUNC) link_function((void**)&orig::FUNC, #FUNC, nullptr)
 #define LINK_NAMESPACE_VERSION(FUNC,LIB,V) link_function((void**)&orig::FUNC, #FUNC, "lib" LIB ".dylib", V)
-#define LINK_NAMESPACE_SDL1(FUNC) link_function((void**)&orig::FUNC, #FUNC, "libSDL-1.2.0.dylib")
-#define LINK_NAMESPACE_SDL2(FUNC) link_function((void**)&orig::FUNC, #FUNC, "libSDL2-2.0.0.dylib")
 #endif
-#define LINK_NAMESPACE_SDLX(FUNC) (get_sdlversion()==1)?LINK_NAMESPACE_SDL1(FUNC):LINK_NAMESPACE_SDL2(FUNC)
-
 
 }
 

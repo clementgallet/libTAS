@@ -59,7 +59,7 @@ OVERRIDE void SDL_StopTextInput(void);
  *
  *  \sa SDL_StartTextInput()
  */
-OVERRIDE void SDL_SetTextInputRect(const SDL2::SDL_Rect *rect);
+OVERRIDE void SDL_SetTextInputRect(const sdl2::SDL_Rect *rect);
 
 /**
  * Enable/Disable UNICODE translation of keyboard input.

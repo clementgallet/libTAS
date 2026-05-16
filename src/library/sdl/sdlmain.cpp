@@ -19,6 +19,7 @@
 
 #include "sdlmain.h"
 #include "sdlversion.h"
+#include "sdldynapi.h"
 
 #include "logging.h"
 #include "hook.h"
@@ -26,15 +27,8 @@
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER(SDL_Init)
-DECLARE_ORIG_POINTER(SDL_InitSubSystem)
-DECLARE_ORIG_POINTER(SDL_WasInit)
-DECLARE_ORIG_POINTER(SDL_Quit)
-
 /* Override */ int SDL_Init(Uint32 flags){
     LOGTRACE(LCF_SDL);
-
-    LINK_NAMESPACE_SDLX(SDL_Init);
 
     /* In both SDL1 and SDL2, SDL_Init() calls SDL_InitSubSystem(),
      * but in SDL2, SDL_Init() can actually never be called by the game,
@@ -66,39 +60,36 @@ static Uint32 init_flags = 0;
     int SDLver = get_sdlversion();
     GameInfo::Flag sdl_flag = (SDLver==2)?GameInfo::SDL2:((SDLver==1)?GameInfo::SDL1:GameInfo::UNKNOWN);
 
-    /* Link function pointers to SDL functions */
-    LINK_NAMESPACE_SDLX(SDL_InitSubSystem);
-
-    if (flags & SDL2::SDL_INIT_TIMER)
+    if (flags & sdl2::SDL_INIT_TIMER)
         LOG(LL_DEBUG, LCF_SDL, "    SDL_TIMER enabled.");
 
-    if (flags & SDL2::SDL_INIT_AUDIO) {
+    if (flags & sdl2::SDL_INIT_AUDIO) {
         LOG(LL_DEBUG, LCF_SDL, "    SDL_AUDIO fake enabled.");
-        SDL2::SDL_AudioInit(nullptr);
+        sdl2::SDL_AudioInit(nullptr);
         Global::game_info.audio = sdl_flag;
     }
 
-    if (flags & SDL2::SDL_INIT_VIDEO) {
+    if (flags & sdl2::SDL_INIT_VIDEO) {
         LOG(LL_DEBUG, LCF_SDL, "    SDL_VIDEO enabled.");
         Global::game_info.video |= sdl_flag;
         Global::game_info.keyboard = sdl_flag;
         Global::game_info.mouse = sdl_flag;
     }
 
-    if (flags & SDL2::SDL_INIT_JOYSTICK) {
+    if (flags & sdl2::SDL_INIT_JOYSTICK) {
         LOG(LL_DEBUG, LCF_SDL, "    SDL_JOYSTICK fake enabled.");
         Global::game_info.joystick = sdl_flag;
     }
 
-    if (flags & SDL2::SDL_INIT_HAPTIC)
+    if (flags & sdl2::SDL_INIT_HAPTIC)
         LOG(LL_DEBUG, LCF_SDL, "    SDL_HAPTIC fake enabled.");
 
-    if (flags & SDL2::SDL_INIT_GAMECONTROLLER) {
+    if (flags & sdl2::SDL_INIT_GAMECONTROLLER) {
         LOG(LL_DEBUG, LCF_SDL, "    SDL_GAMECONTROLLER fake enabled.");
         Global::game_info.joystick = sdl_flag;
     }
 
-    if (flags & SDL2::SDL_INIT_EVENTS)
+    if (flags & sdl2::SDL_INIT_EVENTS)
         LOG(LL_DEBUG, LCF_SDL, "    SDL_EVENTS enabled.");
 
     Global::game_info.tosend = true;
@@ -108,18 +99,18 @@ static Uint32 init_flags = 0;
     init_flags |= flags;
 
     /* Disabling Joystick subsystem, we don't need any initialization from SDL */
-    flags &= 0xFFFFFFFF ^ SDL2::SDL_INIT_JOYSTICK;
+    flags &= 0xFFFFFFFF ^ sdl2::SDL_INIT_JOYSTICK;
 
     /* Disabling Haptic subsystem, we don't need any initialization from SDL */
-    flags &= 0xFFFFFFFF ^ SDL2::SDL_INIT_HAPTIC;
+    flags &= 0xFFFFFFFF ^ sdl2::SDL_INIT_HAPTIC;
 
     /* Disabling GameController subsystem, we don't need any initialization from SDL */
-    flags &= 0xFFFFFFFF ^ SDL2::SDL_INIT_GAMECONTROLLER;
+    flags &= 0xFFFFFFFF ^ sdl2::SDL_INIT_GAMECONTROLLER;
 
     /* Disabling Audio subsystem so that it does not create an extra thread */
-    flags &= 0xFFFFFFFF ^ SDL2::SDL_INIT_AUDIO;
+    flags &= 0xFFFFFFFF ^ sdl2::SDL_INIT_AUDIO;
 
-    return orig::SDL_InitSubSystem(flags);
+    return ORIG_SDL2_CALL(SDL_InitSubSystem, (flags));
 }
 
 Uint32 SDL_WasInit(Uint32 flags)
@@ -135,8 +126,7 @@ Uint32 SDL_WasInit(Uint32 flags)
 /* Override */ void SDL_Quit()
 {
     LOGTRACE(LCF_SDL);
-    LINK_NAMESPACE_SDLX(SDL_Quit);
-    orig::SDL_Quit();
+    return ORIG_SDL2_CALL(SDL_Quit, ());
 }
 
 }

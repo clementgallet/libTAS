@@ -18,28 +18,23 @@
  */
 
 #include "sdltimer.h"
+#include "sdldynapi.h"
 
 #include "logging.h"
 #include "DeterministicTimer.h"
-#include "hook.h"
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER(SDL_AddTimer)
-DECLARE_ORIG_POINTER(SDL_RemoveTimer)
-
-/* Override */ SDL2::SDL_TimerID SDL_AddTimer(Uint32 interval, SDL2::SDL_NewTimerCallback callback, void *param)
+/* Override */ sdl2::SDL_TimerID SDL_AddTimer(Uint32 interval, sdl2::SDL_NewTimerCallback callback, void *param)
 {
     LOG(LL_TRACE, LCF_TIMERS | LCF_SDL | LCF_TODO, "Add SDL Timer with call after %d ms", interval);
-    LINK_NAMESPACE_SDLX(SDL_AddTimer);
-    return orig::SDL_AddTimer(interval, callback, param);
+    return ORIG_SDL2_CALL(SDL_AddTimer, (interval, callback, param));
 }
 
-/* Override */ SDL_bool SDL_RemoveTimer(SDL2::SDL_TimerID id)
+/* Override */ SDL_bool SDL_RemoveTimer(sdl2::SDL_TimerID id)
 {
     LOG(LL_TRACE, LCF_TIMERS | LCF_SDL | LCF_TODO, "Remove SDL Timer.");
-    LINK_NAMESPACE_SDLX(SDL_RemoveTimer);
-    return orig::SDL_RemoveTimer(id);
+    return ORIG_SDL2_CALL(SDL_RemoveTimer, (id));
 }
 
 }

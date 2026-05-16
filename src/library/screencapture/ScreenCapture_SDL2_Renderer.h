@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 
-namespace SDL2 {
+namespace sdl2 {
     struct SDL_Renderer;
     struct SDL_Texture;
 }
@@ -68,8 +68,8 @@ void clearScreen();
 uint64_t screenTexture();
 
 private:
-    SDL2::SDL_Texture* screenSDLTex = nullptr;
-    SDL2::SDL_Renderer* sdl_renderer = nullptr;
+    sdl2::SDL_Texture* screenSDLTex = nullptr;
+    sdl2::SDL_Renderer* sdl_renderer = nullptr;
 
 };
 }

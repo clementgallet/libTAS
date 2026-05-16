@@ -82,7 +82,7 @@
         SDL_TRUE = 1
     };
 
-namespace SDL2 {
+namespace sdl2 {
 
     // Pixel format macros
 #define SDL_DEFINE_PIXELFORMAT(type, order, layout, bits, bytes) \
@@ -1769,7 +1769,7 @@ namespace SDL2 {
 #define SDLCALL
 #endif
 
-#include "SDL_dynapi_procs.h"
+#include "SDL2_dynapi_procs.h"
 
 #ifdef SDL_DYNAPI_PROC
 #undef SDL_DYNAPI_PROC

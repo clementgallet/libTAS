@@ -29,15 +29,15 @@
 #ifndef IMGUI_DISABLE
 #include "imgui.h"      // IMGUI_IMPL_API
 
-namespace SDL2 {
+namespace sdl2 {
     struct SDL_Renderer;
 }
 
 // Follow "Getting Started" link and check examples/ folder to learn about using backends!
-IMGUI_IMPL_API bool     ImGui_ImplSDLRenderer2_Init(SDL2::SDL_Renderer* renderer);
+IMGUI_IMPL_API bool     ImGui_ImplSDLRenderer2_Init(sdl2::SDL_Renderer* renderer);
 IMGUI_IMPL_API void     ImGui_ImplSDLRenderer2_Shutdown();
 IMGUI_IMPL_API void     ImGui_ImplSDLRenderer2_NewFrame();
-IMGUI_IMPL_API void     ImGui_ImplSDLRenderer2_RenderDrawData(ImDrawData* draw_data, SDL2::SDL_Renderer* renderer);
+IMGUI_IMPL_API void     ImGui_ImplSDLRenderer2_RenderDrawData(ImDrawData* draw_data, sdl2::SDL_Renderer* renderer);
 
 // Called by Init/NewFrame/Shutdown
 IMGUI_IMPL_API void     ImGui_ImplSDLRenderer2_CreateDeviceObjects();
@@ -51,7 +51,7 @@ IMGUI_IMPL_API void     ImGui_ImplSDLRenderer2_UpdateTexture(ImTextureData* tex)
 // (Please open an issue if you feel you need access to more data)
 struct ImGui_ImplSDLRenderer2_RenderState
 {
-    SDL2::SDL_Renderer*       Renderer;
+    sdl2::SDL_Renderer*       Renderer;
 };
 
 #endif // #ifndef IMGUI_DISABLE

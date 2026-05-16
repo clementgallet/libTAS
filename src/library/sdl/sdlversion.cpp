@@ -18,6 +18,7 @@
  */
 
 #include "sdlversion.h"
+#include "sdldynapi.h"
 
 #include "hook.h"
 #include "logging.h"
@@ -29,11 +30,9 @@
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER_NAMESPACE(SDL_GetVersion, SDL2)
-
 namespace orig {
     /* SDL 1.2 specific function */
-    static SDL1::SDL_version * (*SDL_Linked_Version)(void);
+    static sdl1::SDL_version * (*SDL_Linked_Version)(void);
 }
 
 int get_sdlversion(void)
@@ -45,29 +44,29 @@ int get_sdlversion(void)
         return SDLver;
 
     /* Determine SDL version */
-    SDL2::SDL_version ver = {0, 0, 0};
+    sdl2::SDL_version ver = {0, 0, 0};
 
     /* First look if symbols are already accessible */
-    if (!orig::SDL_GetVersion) {
+    if (!ORIG_SDL2_FUNCTION_POINTER(SDL_GetVersion)) {
         NATIVECALL(orig::SDL_Linked_Version = (decltype(orig::SDL_Linked_Version)) dlsym(RTLD_DEFAULT, "SDL_Linked_Version"));
         if (!orig::SDL_Linked_Version) {
-            NATIVECALL(orig::SDL_GetVersion = (decltype(orig::SDL_GetVersion)) dlsym(RTLD_DEFAULT, "SDL_GetVersion"));
+            NATIVECALL(origSDLTable()[index_sdl2::SDL_GetVersion] = dlsym(RTLD_DEFAULT, "SDL_GetVersion"));
         }
     }
 
-    if (orig::SDL_GetVersion) {
-        orig::SDL_GetVersion(&ver);
+    if (ORIG_SDL2_FUNCTION_POINTER(SDL_GetVersion)) {
+        ORIG_SDL2_FUNCTION_POINTER(SDL_GetVersion)(&ver);
     }
 
     if (orig::SDL_Linked_Version) {
-        SDL1::SDL_version *verp;
+        sdl1::SDL_version *verp;
         verp = orig::SDL_Linked_Version();
         ver.major = verp->major;
         ver.minor = verp->minor;
         ver.patch = verp->patch;
     }
 
-    if (orig::SDL_GetVersion && orig::SDL_Linked_Version) {
+    if (ORIG_SDL2_FUNCTION_POINTER(SDL_GetVersion) && orig::SDL_Linked_Version) {
         LOG(LL_ERROR, LCF_SDL | LCF_HOOK, "Both SDL versions were detected! Taking SDL1 in priority");
     }
 

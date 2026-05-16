@@ -30,25 +30,19 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(SDL_DYNAPI_entry)
-#define SDL_LINK(FUNC) DEFINE_ORIG_POINTER_NAMESPACE(FUNC, SDL2)
-#define SDL_HOOK(FUNC)
-#include "sdlhooks.h"
+void** orig_sdl2_table = nullptr;
 
-namespace index {
-enum {
-#define SDL_DYNAPI_PROC(rc,fn,params,args,ret) fn,
-#define SDL_DYNAPI_PROC_NO_VARARGS 0
-#include "../../external/SDL_dynapi_procs.h"
-#undef SDL_DYNAPI_PROC_NO_VARARGS
-#undef SDL_DYNAPI_PROC
-};
+void** origSDLTable()
+{
+    return orig_sdl2_table;
 }
+
+decltype(&SDL_DYNAPI_entry) orig_SDL_DYNAPI_entry;
 
 void setDynapiAddr(uint64_t addr)
 {
     LOG(LL_DEBUG, LCF_SDL, "Received SDL_DYNAPI_entry address %llx", addr);
-    orig::SDL_DYNAPI_entry = reinterpret_cast<decltype(orig::SDL_DYNAPI_entry)>(addr);
+    orig_SDL_DYNAPI_entry = reinterpret_cast<decltype(&SDL_DYNAPI_entry)>(addr);
 }
 
 /* Override */ Sint32 SDL_DYNAPI_entry(Uint32 apiver, void *table, Uint32 tablesize) {
@@ -62,7 +56,7 @@ void setDynapiAddr(uint64_t addr)
      * executables, even if bash command `readelf` shows the symbol...
      * So in this case, we received the symbol address from libtas program. */
 
-    if (!orig::SDL_DYNAPI_entry) {
+    if (!orig_SDL_DYNAPI_entry) {
         Dl_info info;
         if (dladdr(__builtin_return_address(0), &info)) {
             /* Get the dynamic library name of our caller */
@@ -71,26 +65,26 @@ void setDynapiAddr(uint64_t addr)
             eh_obj_t obj;
             int ret = eh_find_obj(&obj, info.dli_fname);
             if (ret == 0) {
-                eh_find_sym(&obj, "SDL_DYNAPI_entry", (void **) &orig::SDL_DYNAPI_entry);
+                eh_find_sym(&obj, "SDL_DYNAPI_entry", (void **) &orig_SDL_DYNAPI_entry);
                 eh_destroy_obj(&obj);
             }
         }
     }
 
-    if (!orig::SDL_DYNAPI_entry) {        
+    if (!orig_SDL_DYNAPI_entry) {
         /* We couldn't find the SDL library that is supposed to be used by the
         * game, so we load the system SDL library instead */
         LOG(LL_WARN, LCF_SDL, "   Could not find the original SDL_DYNAPI_entry function, using the system one");
-        LINK_NAMESPACE_SDL2(SDL_DYNAPI_entry);
+        link_function((void**)&orig_SDL_DYNAPI_entry, "SDL_DYNAPI_entry", "libSDL2-2.0.so.0");
         
-        if (!orig::SDL_DYNAPI_entry) {
+        if (!orig_SDL_DYNAPI_entry) {
             LOG(LL_ERROR, LCF_SDL, "   Could not find any SDL_DYNAPI_entry function!");
             return 1;
         }
     }
     
     /* Get the original pointers. */
-    Sint32 res = orig::SDL_DYNAPI_entry(apiver, table, tablesize);
+    Sint32 res = orig_SDL_DYNAPI_entry(apiver, table, tablesize);
     if (res != 0) {
         LOG(LL_ERROR, LCF_SDL, "   The original SDL_DYNAPI_entry failed!");
         return res;
@@ -99,9 +93,12 @@ void setDynapiAddr(uint64_t addr)
     /* Now save original pointers while replacing them with our hooks. */
     void **entries = static_cast<void **>(table);
 
+    orig_sdl2_table = reinterpret_cast<void**>(malloc(tablesize));
+    memcpy(orig_sdl2_table, table, tablesize);
+
     /* TODO: Check SDL version, and try loading the system SDL instead of the
      * bundled SDL to get a version compatible with Dear ImGui. */
-    // orig::SDL_GetVersion = reinterpret_cast<decltype(&SDL_GetVersion)>(entries[index::SDL_GetVersion]);
+    // orig::SDL_GetVersion = reinterpret_cast<decltype(&SDL_GetVersion)>(entries[index_sdl2::SDL_GetVersion]);
     // SDL_version ver = {0, 0, 0};
     // orig::SDL_GetVersion(&ver);
     // 
@@ -112,9 +109,9 @@ void setDynapiAddr(uint64_t addr)
     /* TODO: Load the `SDL_DYNAPI_entry()` function from system SDL library */
     
     // std::vector<void*> full_entries;
-    // full_entries.resize(index::SDL_GetTouchName); // First function past 2.0.18
+    // full_entries.resize(index_sdl2::SDL_GetTouchName); // First function past 2.0.18
     // orig::SDL_DYNAPI_entry(apiver, full_entries.data(), full_entries.size() * sizeof(void *));
-// #define IF_IN_BOUNDS_FULL(FUNC) if (index::FUNC < full_entries.size())
+// #define IF_IN_BOUNDS_FULL(FUNC) if (index_sdl2::FUNC < full_entries.size())
 
     char* libtaspath;
     NATIVECALL(libtaspath = getenv("SDL_DYNAMIC_API"));
@@ -130,9 +127,8 @@ void setDynapiAddr(uint64_t addr)
         return 1;
     }
 
-#define IF_IN_BOUNDS(FUNC) if (index::FUNC * sizeof(void *) < tablesize)
-#define SDL_LINK(FUNC) IF_IN_BOUNDS(FUNC) orig::FUNC = reinterpret_cast<decltype(orig::FUNC)>(entries[index::FUNC]); else LOG(LL_DEBUG, LCF_SDL | LCF_HOOK, "sdl dynapi symbol %s will not be imported", #FUNC);
-#define SDL_HOOK(FUNC) IF_IN_BOUNDS(FUNC) entries[index::FUNC] = reinterpret_cast<void *>(dlsym(libtaslib, #FUNC));
+#define IF_IN_BOUNDS(FUNC) if (index_sdl2::FUNC * sizeof(void *) < tablesize)
+#define SDL_HOOK(FUNC) IF_IN_BOUNDS(FUNC) entries[index_sdl2::FUNC] = reinterpret_cast<void *>(dlsym(libtaslib, #FUNC));
 #include "sdlhooks.h"
 
     dlclose(libtaslib);
