@@ -20,7 +20,7 @@
 #ifndef LIBTAS_SDLKEYBOARD_H_INCL
 #define LIBTAS_SDLKEYBOARD_H_INCL
 
-#include <SDL2/SDL.h>
+#include "../external/SDL2.h"
 
 #include "hook.h"
 
@@ -29,9 +29,9 @@ namespace libtas {
 /* Keyboard functions */
 OVERRIDE const Uint8* SDL_GetKeyboardState(int* numkeys); // SDL 2
 OVERRIDE Uint8* SDL_GetKeyState(int* numkeys); // SDL 1
-OVERRIDE SDL_Window* SDL_GetKeyboardFocus(void);
-OVERRIDE SDL_Keymod SDL_GetModState(void);
-OVERRIDE void SDL_SetModState(SDL_Keymod modstate);
+OVERRIDE SDL2::SDL_Window* SDL_GetKeyboardFocus(void);
+OVERRIDE SDL2::SDL_Keymod SDL_GetModState(void);
+OVERRIDE void SDL_SetModState(SDL2::SDL_Keymod modstate);
 
 }
 

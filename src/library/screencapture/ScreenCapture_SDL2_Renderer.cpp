@@ -25,23 +25,23 @@
 #include "GlobalState.h"
 #include "sdl/sdlwindows.h" // sdl::gameSDLWindow
 
-#include <SDL2/SDL.h>
+#include "../external/SDL2.h"
 #include <cstring> // memcpy
 
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER(SDL_RenderReadPixels)
-DECLARE_ORIG_POINTER(SDL_GetWindowPixelFormat)
-DECLARE_ORIG_POINTER(SDL_GetRenderer)
-DECLARE_ORIG_POINTER(SDL_CreateTexture)
-DECLARE_ORIG_POINTER(SDL_LockTexture)
-DECLARE_ORIG_POINTER(SDL_UnlockTexture)
-DECLARE_ORIG_POINTER(SDL_RenderCopy)
-DECLARE_ORIG_POINTER(SDL_DestroyTexture)
-DECLARE_ORIG_POINTER(SDL_GetError)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderReadPixels, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_GetWindowPixelFormat, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_GetRenderer, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_CreateTexture, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_LockTexture, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_UnlockTexture, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderCopy, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_DestroyTexture, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_GetError, SDL2)
 DECLARE_ORIG_POINTER(SDL_GetWindowSize)
-DECLARE_ORIG_POINTER(SDL_RenderClear)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderClear, SDL2)
 
 int ScreenCapture_SDL2_Renderer::init()
 {
@@ -72,7 +72,7 @@ void ScreenCapture_SDL2_Renderer::initScreenSurface()
     Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
     if (!screenSDLTex) {
         screenSDLTex = orig::SDL_CreateTexture(sdl_renderer, sdlpixfmt,
-            SDL_TEXTUREACCESS_STREAMING, width, height);
+            SDL2::SDL_TEXTUREACCESS_STREAMING, width, height);
         if (!screenSDLTex) {
             LOG(LL_ERROR, LCF_WINDOW | LCF_SDL, "SDL_CreateTexture failed: %s", orig::SDL_GetError());
         }
@@ -93,34 +93,34 @@ const char* ScreenCapture_SDL2_Renderer::getPixelFormat()
     LINK_NAMESPACE_SDL2(SDL_GetWindowPixelFormat);
     Uint32 sdlpixfmt = orig::SDL_GetWindowPixelFormat(sdl::gameSDLWindow);
     switch (sdlpixfmt) {
-        case SDL_PIXELFORMAT_RGBA8888:
+        case SDL2::SDL_PIXELFORMAT_RGBA8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGBA");
             return "BGRA";
-        case SDL_PIXELFORMAT_BGRA8888:
+        case SDL2::SDL_PIXELFORMAT_BGRA8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGRA");
             return "RGBA";
-        case SDL_PIXELFORMAT_ARGB8888:
+        case SDL2::SDL_PIXELFORMAT_ARGB8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  ARGB");
             return "ABGR";
-        case SDL_PIXELFORMAT_ABGR8888:
+        case SDL2::SDL_PIXELFORMAT_ABGR8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  ABGR");
             return "ARGB";
-        case SDL_PIXELFORMAT_RGB888:
+        case SDL2::SDL_PIXELFORMAT_RGB888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGB888");
             return "BGR\0";
-        case SDL_PIXELFORMAT_RGBX8888:
+        case SDL2::SDL_PIXELFORMAT_RGBX8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGBX8888");
             return "\0BGR";
-        case SDL_PIXELFORMAT_BGR888:
+        case SDL2::SDL_PIXELFORMAT_BGR888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGR888");
             return "RGB\0";
-        case SDL_PIXELFORMAT_BGRX8888:
+        case SDL2::SDL_PIXELFORMAT_BGRX8888:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGRX8888");
             return "\0RGB";
-        case SDL_PIXELFORMAT_RGB24:
+        case SDL2::SDL_PIXELFORMAT_RGB24:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGB24");
             return "24BG";
-        case SDL_PIXELFORMAT_BGR24:
+        case SDL2::SDL_PIXELFORMAT_BGR24:
             LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGR24");
             return "RAW ";
         default:

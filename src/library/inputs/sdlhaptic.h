@@ -20,11 +20,11 @@
 #ifndef LIBTAS_SDLHAPTIC_H_INCL
 #define LIBTAS_SDLHAPTIC_H_INCL
 
-#include "sdljoystick.h"
+//#include "sdljoystick.h"
 
 #include "hook.h"
 
-#include <SDL2/SDL.h>
+#include "../external/SDL2.h"
 
 namespace libtas {
 
@@ -57,7 +57,7 @@ OVERRIDE int SDL_NumHaptics(void);
  *  \sa SDL_HapticPause
  *  \sa SDL_HapticStopAll
  */
-OVERRIDE SDL_Haptic * SDL_HapticOpen(int device_index);
+OVERRIDE SDL2::SDL_Haptic * SDL_HapticOpen(int device_index);
 
 /**
  *  \brief Checks to see if a joystick has haptic features.
@@ -68,7 +68,7 @@ OVERRIDE SDL_Haptic * SDL_HapticOpen(int device_index);
  *
  *  \sa SDL_HapticOpenFromJoystick
  */
-OVERRIDE int SDL_JoystickIsHaptic(SDL_Joystick * joystick);
+OVERRIDE int SDL_JoystickIsHaptic(SDL2::SDL_Joystick * joystick);
 
 /**
  *  \brief Opens a Haptic device for usage from a Joystick device.
@@ -87,14 +87,14 @@ OVERRIDE int SDL_JoystickIsHaptic(SDL_Joystick * joystick);
  *  \sa SDL_HapticOpen
  *  \sa SDL_HapticClose
  */
-OVERRIDE SDL_Haptic *SDL_HapticOpenFromJoystick(SDL_Joystick *joystick);
+OVERRIDE SDL2::SDL_Haptic *SDL_HapticOpenFromJoystick(SDL2::SDL_Joystick *joystick);
 
 /**
  *  \brief Closes a Haptic device previously opened with SDL_HapticOpen().
  *
  *  \param haptic Haptic device to close.
  */
-OVERRIDE void SDL_HapticClose(SDL_Haptic * haptic);
+OVERRIDE void SDL_HapticClose(SDL2::SDL_Haptic * haptic);
 
 }
 

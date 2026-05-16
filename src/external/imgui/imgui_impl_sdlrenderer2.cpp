@@ -39,41 +39,24 @@
 #endif
 
 // SDL
-#include <SDL2/SDL.h>
-#if !SDL_VERSION_ATLEAST(2,0,12)
-typedef enum
-{
-    SDL_ScaleModeNearest, /**< nearest pixel sampling */
-    SDL_ScaleModeLinear,  /**< linear filtering */
-    SDL_ScaleModeBest     /**< anisotropic filtering */
-} SDL_ScaleMode;
-
-extern int SDL_SetTextureScaleMode(SDL_Texture * texture, SDL_ScaleMode scaleMode);
-#endif
-
-#if !SDL_VERSION_ATLEAST(2,0,17)
-extern int SDL_RenderGeometryRaw(SDL_Renderer *renderer, SDL_Texture *texture,
-    const float *xy, int xy_stride, const int *color, int color_stride,
-    const float *uv, int uv_stride, int num_vertices,
-    const void *indices, int num_indices, int size_indices);
-#endif
+#include "../SDL2.h"
 
 #include "hook.h"
 
 namespace libtas {
-    DECLARE_ORIG_POINTER(SDL_RenderSetClipRect)
-    DECLARE_ORIG_POINTER(SDL_RenderIsClipEnabled)
-    DECLARE_ORIG_POINTER(SDL_RenderGetClipRect)
-    DECLARE_ORIG_POINTER(SDL_RenderGeometryRaw)
-    DECLARE_ORIG_POINTER(SDL_SetTextureScaleMode)
-    DECLARE_ORIG_POINTER(SDL_RenderSetViewport)
-    DECLARE_ORIG_POINTER(SDL_RenderGetScale)
-    DECLARE_ORIG_POINTER(SDL_RenderGetViewport)
-    DECLARE_ORIG_POINTER(SDL_CreateTexture)
-    DECLARE_ORIG_POINTER(SDL_UpdateTexture)
-    DECLARE_ORIG_POINTER(SDL_SetTextureBlendMode)
-    DECLARE_ORIG_POINTER(SDL_DestroyTexture)
-    DECLARE_ORIG_POINTER(SDL_Log)
+    DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderSetClipRect, SDL2)
+    DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderIsClipEnabled, SDL2)
+    DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderGetClipRect, SDL2)
+    DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderGeometryRaw, SDL2)
+    DECLARE_ORIG_POINTER_NAMESPACE(SDL_SetTextureScaleMode, SDL2)
+    DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderSetViewport, SDL2)
+    DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderGetScale, SDL2)
+    DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderGetViewport, SDL2)
+    DECLARE_ORIG_POINTER_NAMESPACE(SDL_CreateTexture, SDL2)
+    DECLARE_ORIG_POINTER_NAMESPACE(SDL_UpdateTexture, SDL2)
+    DECLARE_ORIG_POINTER_NAMESPACE(SDL_SetTextureBlendMode, SDL2)
+    DECLARE_ORIG_POINTER_NAMESPACE(SDL_DestroyTexture, SDL2)
+    DECLARE_ORIG_POINTER_NAMESPACE(SDL_Log, SDL2)
 }
 
 #define SDL_RenderSetClipRect libtas::orig::SDL_RenderSetClipRect
@@ -93,8 +76,8 @@ namespace libtas {
 // SDL_Renderer data
 struct ImGui_ImplSDLRenderer2_Data
 {
-    SDL_Renderer*   SDLRenderer;
-    SDL_Texture*    FontTexture;
+    SDL2::SDL_Renderer*   SDLRenderer;
+    SDL2::SDL_Texture*    FontTexture;
     ImGui_ImplSDLRenderer2_Data() { memset((void*)this, 0, sizeof(*this)); }
 };
 
@@ -106,7 +89,7 @@ static ImGui_ImplSDLRenderer2_Data* ImGui_ImplSDLRenderer2_GetBackendData()
 }
 
 // Functions
-bool ImGui_ImplSDLRenderer2_Init(SDL_Renderer* renderer)
+bool ImGui_ImplSDLRenderer2_Init(SDL2::SDL_Renderer* renderer)
 {
     ImGuiIO& io = ImGui::GetIO();
     IM_ASSERT(io.BackendRendererUserData == nullptr && "Already initialized a renderer backend!");
@@ -179,9 +162,9 @@ void ImGui_ImplSDLRenderer2_RenderDrawData(ImDrawData* draw_data)
     // Backup SDL_Renderer state that will be modified to restore it afterwards
     struct BackupSDLRendererState
     {
-        SDL_Rect    Viewport;
+        SDL2::SDL_Rect    Viewport;
         bool        ClipEnabled;
-        SDL_Rect    ClipRect;
+        SDL2::SDL_Rect    ClipRect;
     };
     BackupSDLRendererState old = {};
     old.ClipEnabled = SDL_RenderIsClipEnabled(bd->SDLRenderer) == SDL_TRUE;
@@ -224,19 +207,19 @@ void ImGui_ImplSDLRenderer2_RenderDrawData(ImDrawData* draw_data)
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
                     continue;
 
-                SDL_Rect r = { (int)(clip_min.x), (int)(clip_min.y), (int)(clip_max.x - clip_min.x), (int)(clip_max.y - clip_min.y) };
+                SDL2::SDL_Rect r = { (int)(clip_min.x), (int)(clip_min.y), (int)(clip_max.x - clip_min.x), (int)(clip_max.y - clip_min.y) };
                 SDL_RenderSetClipRect(bd->SDLRenderer, &r);
 
                 const float* xy = (const float*)(const void*)((const char*)(vtx_buffer + pcmd->VtxOffset) + offsetof(ImDrawVert, pos));
                 const float* uv = (const float*)(const void*)((const char*)(vtx_buffer + pcmd->VtxOffset) + offsetof(ImDrawVert, uv));
 #if SDL_VERSION_ATLEAST(2,0,19)
-                const SDL_Color* color = (const SDL_Color*)(const void*)((const char*)(vtx_buffer + pcmd->VtxOffset) + offsetof(ImDrawVert, col)); // SDL 2.0.19+
+                const SDL2::SDL_Color* color = (const SDL2::SDL_Color*)(const void*)((const char*)(vtx_buffer + pcmd->VtxOffset) + offsetof(ImDrawVert, col)); // SDL 2.0.19+
 #else
                 const int* color = (const int*)(const void*)((const char*)(vtx_buffer + pcmd->VtxOffset) + offsetof(ImDrawVert, col)); // SDL 2.0.17 and 2.0.18
 #endif
 
                 // Bind texture, Draw
-				SDL_Texture* tex = (SDL_Texture*)pcmd->GetTexID();
+				SDL2::SDL_Texture* tex = (SDL2::SDL_Texture*)pcmd->GetTexID();
                 SDL_RenderGeometryRaw(bd->SDLRenderer, tex,
                     xy, (int)sizeof(ImDrawVert),
                     color, (int)sizeof(ImDrawVert),
@@ -265,15 +248,15 @@ bool ImGui_ImplSDLRenderer2_CreateFontsTexture()
 
     // Upload texture to graphics system
     // (Bilinear sampling is required by default. Set 'io.Fonts->Flags |= ImFontAtlasFlags_NoBakedLines' or 'style.AntiAliasedLinesUseTex = false' to allow point/nearest sampling)
-    bd->FontTexture = SDL_CreateTexture(bd->SDLRenderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STATIC, width, height);
+    bd->FontTexture = SDL_CreateTexture(bd->SDLRenderer, SDL2::SDL_PIXELFORMAT_ABGR8888, SDL2::SDL_TEXTUREACCESS_STATIC, width, height);
     if (bd->FontTexture == nullptr)
     {
         SDL_Log("error creating texture");
         return false;
     }
     SDL_UpdateTexture(bd->FontTexture, nullptr, pixels, 4 * width);
-    SDL_SetTextureBlendMode(bd->FontTexture, SDL_BLENDMODE_BLEND);
-    SDL_SetTextureScaleMode(bd->FontTexture, SDL_ScaleModeLinear);
+    SDL_SetTextureBlendMode(bd->FontTexture, SDL2::SDL_BLENDMODE_BLEND);
+    SDL_SetTextureScaleMode(bd->FontTexture, SDL2::SDL_ScaleModeLinear);
 
     // Store our identifier
     io.Fonts->SetTexID((ImTextureID)(intptr_t)bd->FontTexture);

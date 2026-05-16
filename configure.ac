@@ -96,7 +96,6 @@ AC_CHECK_HEADERS([X11/Xlib.h X11/Xlib-xcb.h], [], AC_MSG_ERROR(Some X11 headers 
 AC_SEARCH_LIBS([XOpenDisplay], [X11], [], [AC_MSG_ERROR(The x11 library is required!)])
 AC_SEARCH_LIBS([XGetXCBConnection], [X11-xcb], [], [AC_MSG_ERROR(The x11-xcb library is required!)])
 
-AC_CHECK_HEADERS([SDL2/SDL.h], [], AC_MSG_ERROR(The SDL2 headers are required!))
 AC_CHECK_HEADERS([libudev.h], [], AC_MSG_ERROR(The udev headers are required!))
 
 AC_CHECK_HEADER([xcb/randr.h], [AC_DEFINE([LIBTAS_HAS_XCB_RANDR], [1], [Extension xcb randr is present])])

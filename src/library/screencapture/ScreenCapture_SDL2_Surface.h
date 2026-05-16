@@ -24,8 +24,10 @@
 
 #include <stdint.h>
 
-class SDL_Surface;
-class SDL_Texture;
+namespace SDL2 {
+    struct SDL_Surface;
+    struct SDL_Texture;
+}
 
 namespace libtas {
 
@@ -65,10 +67,10 @@ public:
 private:
     
     /* SDL2 screen surface */
-    SDL_Surface* screenSDL2Surf = nullptr;
+    SDL2::SDL_Surface* screenSDL2Surf = nullptr;
 
     /* SDL2 screen texture */
-    SDL_Texture* screenSDLTex = nullptr;
+    SDL2::SDL_Texture* screenSDLTex = nullptr;
 
 };
 }

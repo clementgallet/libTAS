@@ -107,6 +107,23 @@ namespace SDL1 {
     } SDL_EventMask;
     /*@}*/
 
+    typedef enum SDL_eventaction
+    {
+        SDL_ADDEVENT,
+        SDL_PEEKEVENT,
+        SDL_GETEVENT
+    } SDL_eventaction;
+
+    enum 
+    {
+        SDL_RELEASED = 0,
+        SDL_PRESSED = 1,
+        SDL_QUERY = -1,
+        SDL_IGNORE = 0,
+        SDL_DISABLE = 0,
+        SDL_ENABLE = 1
+    };
+
     typedef enum {
         /** @name ASCII mapped keysyms
          *  The keyboard syms have been cleverly chosen to map to ASCII
@@ -637,6 +654,14 @@ namespace SDL1 {
         SDL_APPINPUTFOCUS = 0x02,        /**< The app has input focus */
         SDL_APPACTIVE = 0x04,        /**< The application is active */
     };
+
+    typedef struct SDL_version
+    {
+        Uint8 major;
+        Uint8 minor;
+        Uint8 patch;
+    } SDL_version;
+
 }
 
 #endif /* _SDL_h */

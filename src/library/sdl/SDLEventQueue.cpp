@@ -33,7 +33,7 @@ SDLEventQueue::~SDLEventQueue()
         if (Global::game_info.video & GameInfo::SDL1)
             delete static_cast<SDL1::SDL_Event*>(ev);
         if (Global::game_info.video & GameInfo::SDL2)
-            delete static_cast<SDL_Event*>(ev);
+            delete static_cast<SDL2::SDL_Event*>(ev);
     }
 }
 
@@ -42,9 +42,9 @@ void SDLEventQueue::init(void)
     emptied = false;
     if (Global::game_info.video & GameInfo::SDL2) {
         /* Insert default filters */
-        droppedEvents.insert(SDL_TEXTINPUT);
-        droppedEvents.insert(SDL_TEXTEDITING);
-        droppedEvents.insert(SDL_SYSWMEVENT);
+        droppedEvents.insert(SDL2::SDL_TEXTINPUT);
+        droppedEvents.insert(SDL2::SDL_TEXTEDITING);
+        droppedEvents.insert(SDL2::SDL_SYSWMEVENT);
     }
 }
 
@@ -67,7 +67,7 @@ bool SDLEventQueue::isEnabled(int type)
 
 #define EVENTQUEUE_MAXLEN 1024
 
-int SDLEventQueue::insert(SDL_Event* event)
+int SDLEventQueue::insert(SDL2::SDL_Event* event)
 {
     /* Before inserting the event, we have some checks in a specific order */
 
@@ -94,8 +94,8 @@ int SDLEventQueue::insert(SDL_Event* event)
     }
 
     /* Building a dynamically allocated event */
-    SDL_Event* ev = new SDL_Event;
-    memcpy(ev, event, sizeof(SDL_Event));
+    SDL2::SDL_Event* ev = new SDL2::SDL_Event;
+    memcpy(ev, event, sizeof(SDL2::SDL_Event));
 
     /* Push the event at the end of the queue */
     eventQueue.push_back(ev);
@@ -134,7 +134,7 @@ int SDLEventQueue::insert(SDL1::SDL_Event* event)
     return 0;
 }
 
-int SDLEventQueue::pop(SDL_Event* events, int num, Uint32 minType, Uint32 maxType, bool update)
+int SDLEventQueue::pop(SDL2::SDL_Event* events, int num, Uint32 minType, Uint32 maxType, bool update)
 {
     std::lock_guard<std::mutex> lock(mutex);
     int evi = 0;
@@ -144,14 +144,14 @@ int SDLEventQueue::pop(SDL_Event* events, int num, Uint32 minType, Uint32 maxTyp
 
     std::list<void*>::iterator it = eventQueue.begin();
     while (it != eventQueue.end()) {
-        SDL_Event* ev = static_cast<SDL_Event*>(*it);
+        SDL2::SDL_Event* ev = static_cast<SDL2::SDL_Event*>(*it);
 
         /* Check if event match the filter */
         if ((ev->type >= minType) && (ev->type <= maxType)) {
 
             /* Copy the event in the array */
             if (events != nullptr)
-                memcpy(&events[evi], ev, sizeof(SDL_Event));
+                memcpy(&events[evi], ev, sizeof(SDL2::SDL_Event));
             evi++;
 
             if (update) {
@@ -224,7 +224,7 @@ void SDLEventQueue::flush(Uint32 minType, Uint32 maxType)
 {
     std::list<void*>::iterator it = eventQueue.begin();
     while (it != eventQueue.end()) {
-        SDL_Event* ev = static_cast<SDL_Event*>(*it);
+        SDL2::SDL_Event* ev = static_cast<SDL2::SDL_Event*>(*it);
 
         /* Check if event match the filter */
         if ((ev->type >= minType) && (ev->type <= maxType)) {
@@ -256,11 +256,11 @@ void SDLEventQueue::flush(Uint32 mask)
     }
 }
 
-void SDLEventQueue::applyFilter(SDL_EventFilter filter, void* userdata)
+void SDLEventQueue::applyFilter(SDL2::SDL_EventFilter filter, void* userdata)
 {
     std::list<void*>::iterator it = eventQueue.begin();
     while (it != eventQueue.end()) {
-        SDL_Event* ev = static_cast<SDL_Event*>(*it);
+        SDL2::SDL_Event* ev = static_cast<SDL2::SDL_Event*>(*it);
 
         /* Run the filter function and check the result */
         int isKept = filter(userdata, ev);
@@ -275,7 +275,7 @@ void SDLEventQueue::applyFilter(SDL_EventFilter filter, void* userdata)
     }
 }
 
-void SDLEventQueue::setFilter(SDL_EventFilter filter, void* userdata)
+void SDLEventQueue::setFilter(SDL2::SDL_EventFilter filter, void* userdata)
 {
     filterFunc = filter;
     filterData = userdata;
@@ -286,7 +286,7 @@ void SDLEventQueue::setFilter(SDL1::SDL_EventFilter filter)
     filterFunc1 = filter;
 }
 
-bool SDLEventQueue::getFilter(SDL_EventFilter* filter, void** userdata)
+bool SDLEventQueue::getFilter(SDL2::SDL_EventFilter* filter, void** userdata)
 {
     if (filter != nullptr)
         *filter = nullptr;
@@ -308,14 +308,14 @@ SDL1::SDL_EventFilter SDLEventQueue::getFilter(void)
     return filterFunc1;
 }
 
-void SDLEventQueue::addWatch(SDL_EventFilter filter, void* userdata)
+void SDLEventQueue::addWatch(SDL2::SDL_EventFilter filter, void* userdata)
 {
     watches.insert(std::make_pair(filter, userdata));
 }
 
-void SDLEventQueue::delWatch(SDL_EventFilter filter, void* userdata)
+void SDLEventQueue::delWatch(SDL2::SDL_EventFilter filter, void* userdata)
 {
-    std::set<std::pair<SDL_EventFilter,void*>>::iterator it = watches.find(std::make_pair(filter, userdata));
+    std::set<std::pair<SDL2::SDL_EventFilter,void*>>::iterator it = watches.find(std::make_pair(filter, userdata));
     if (it != watches.end())
         watches.erase(it);
 }

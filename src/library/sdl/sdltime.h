@@ -22,7 +22,7 @@
 
 #include "hook.h"
 
-#include <SDL2/SDL.h>
+#include "../external/SDL2.h"
 
 namespace libtas {
 

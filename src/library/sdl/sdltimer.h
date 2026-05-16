@@ -22,18 +22,16 @@
 
 #include "hook.h"
 
-#include <SDL2/SDL.h>
+#include "../external/SDL2.h"
 
 namespace libtas {
-
-typedef Uint32 (*SDL_NewTimerCallback)(Uint32 interval, void *param);
 
 /**
  * \brief Add a new timer to the pool of timers already running.
  *
  * \return A timer ID, or 0 when an error occurs.
  */
-OVERRIDE SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param);
+OVERRIDE SDL2::SDL_TimerID SDL_AddTimer(Uint32 interval, SDL2::SDL_NewTimerCallback callback, void *param);
 
 /**
  * \brief Remove a timer knowing its ID.
@@ -42,7 +40,7 @@ OVERRIDE SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback
  *
  * \warning It is not safe to remove a timer multiple times.
  */
-OVERRIDE SDL_bool SDL_RemoveTimer(SDL_TimerID id);
+OVERRIDE SDL_bool SDL_RemoveTimer(SDL2::SDL_TimerID id);
 
 }
 

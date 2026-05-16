@@ -24,15 +24,16 @@
 #include "GlobalState.h"
 
 #include <dlfcn.h>
-#include <SDL2/SDL.h> // SDL_version
+#include "../external/SDL1.h" // SDL_version
+#include "../external/SDL2.h" // SDL_version
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER(SDL_GetVersion)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_GetVersion, SDL2)
 
 namespace orig {
     /* SDL 1.2 specific function */
-    static SDL_version * (*SDL_Linked_Version)(void);
+    static SDL1::SDL_version * (*SDL_Linked_Version)(void);
 }
 
 int get_sdlversion(void)
@@ -44,7 +45,7 @@ int get_sdlversion(void)
         return SDLver;
 
     /* Determine SDL version */
-    SDL_version ver = {0, 0, 0};
+    SDL2::SDL_version ver = {0, 0, 0};
 
     /* First look if symbols are already accessible */
     if (!orig::SDL_GetVersion) {
@@ -59,9 +60,11 @@ int get_sdlversion(void)
     }
 
     if (orig::SDL_Linked_Version) {
-        SDL_version *verp;
+        SDL1::SDL_version *verp;
         verp = orig::SDL_Linked_Version();
-        ver = *verp;
+        ver.major = verp->major;
+        ver.minor = verp->minor;
+        ver.patch = verp->patch;
     }
 
     if (orig::SDL_GetVersion && orig::SDL_Linked_Version) {

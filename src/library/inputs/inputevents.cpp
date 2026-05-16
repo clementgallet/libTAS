@@ -55,7 +55,7 @@
 #endif
 
 #include <stdlib.h>
-#include <SDL2/SDL.h>
+#include "../external/SDL2.h"
 #ifdef __linux__
 #include <linux/joystick.h>
 #include <linux/input.h>
@@ -71,15 +71,15 @@ static void generateKeyEvent(int event_key, bool pressed)
 
     /* Key was released. Generate event */
     if (Global::game_info.keyboard & GameInfo::SDL2) {
-        SDL_Event event2;
-        event2.type = pressed ? SDL_KEYDOWN : SDL_KEYUP;
-        event2.key.state = pressed ? SDL_PRESSED : SDL_RELEASED;
+        SDL2::SDL_Event event2;
+        event2.type = pressed ? SDL2::SDL_KEYDOWN : SDL2::SDL_KEYUP;
+        event2.key.state = pressed ? SDL2::SDL_PRESSED : SDL2::SDL_RELEASED;
         event2.key.windowID = 1;
         event2.key.timestamp = timestamp;
         event2.key.repeat = 0;
 
-        SDL_Keysym keysym;
-        xkeysymToSDL(&keysym, event_key);
+        SDL2::SDL_Keysym keysym;
+        xkeysymToSDL2(&keysym, event_key);
         keysym.mod = xkeyboardToSDLMod(Inputs::game_ai.keyboard);
         event2.key.keysym = keysym;
 
@@ -92,7 +92,7 @@ static void generateKeyEvent(int event_key, bool pressed)
             SDL_bool isTextInputActive;
             NOLOGCALL(isTextInputActive = SDL_IsTextInputActive());
             if ((isTextInputActive == SDL_TRUE) && ((event2.key.keysym.sym >> 8) == 0)) {
-                event2.type = SDL_TEXTINPUT;
+                event2.type = SDL2::SDL_TEXTINPUT;
                 event2.text.windowID = 1;
                 event2.text.timestamp = timestamp;
                 /* SDL keycode is identical to its char number for common chars */
@@ -109,7 +109,7 @@ static void generateKeyEvent(int event_key, bool pressed)
     if (Global::game_info.keyboard & GameInfo::SDL1) {
         SDL1::SDL_Event event1;
         event1.type = pressed ? SDL1::SDL_KEYDOWN : SDL1::SDL_KEYUP;
-        event1.key.state = pressed ? SDL_PRESSED : SDL_RELEASED;            
+        event1.key.state = pressed ? SDL1::SDL_PRESSED : SDL1::SDL_RELEASED;            
         event1.key.which = 0; // FIXME: I don't know what is going here
 
         SDL1::SDL_keysym keysym;
@@ -268,14 +268,14 @@ static void generateControllerAdded(void)
     if (!init_added) {
         init_added = true;
         for (int i = 0; i < Global::shared_config.nb_controllers; i++) {
-            SDL_Event ev;
-            ev.type = SDL_CONTROLLERDEVICEADDED;
+            SDL2::SDL_Event ev;
+            ev.type = SDL2::SDL_CONTROLLERDEVICEADDED;
             ev.cdevice.timestamp = timestamp;
             ev.cdevice.which = i;
             sdlEventQueue.insert(&ev);
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_CONTROLLERDEVICEADDED with joy %d", i);
 
-            ev.type = SDL_JOYDEVICEADDED;
+            ev.type = SDL2::SDL_JOYDEVICEADDED;
             ev.jdevice.timestamp = timestamp;
             ev.jdevice.which = i;
             sdlEventQueue.insert(&ev);
@@ -297,8 +297,8 @@ static void generateControllerAdded(void)
             (Global::shared_config.nb_controllers >= i)) {
                 
             bool attached = mySDL_GameControllerIsAttached(i);
-            SDL_Event ev;
-            ev.type = attached ? SDL_CONTROLLERDEVICEREMOVED : SDL_CONTROLLERDEVICEADDED;
+            SDL2::SDL_Event ev;
+            ev.type = attached ? SDL2::SDL_CONTROLLERDEVICEREMOVED : SDL2::SDL_CONTROLLERDEVICEADDED;
             ev.cdevice.timestamp = timestamp;
             ev.cdevice.which = i;
             sdlEventQueue.insert(&ev);
@@ -307,7 +307,7 @@ static void generateControllerAdded(void)
             else
                 LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event SDL_CONTROLLERDEVICEADDED with joy %d", i);
 
-            ev.type = attached ? SDL_JOYDEVICEADDED : SDL_JOYDEVICEREMOVED;
+            ev.type = attached ? SDL2::SDL_JOYDEVICEADDED : SDL2::SDL_JOYDEVICEREMOVED;
             ev.jdevice.timestamp = timestamp;
             ev.jdevice.which = i;
             sdlEventQueue.insert(&ev);
@@ -338,20 +338,15 @@ static void generateControllerEvents(void)
         bool genGC = true, genJoy = true;
 
         if (Global::game_info.joystick & GameInfo::SDL2) {
-            GlobalNoLog gnl;
-            genGC = (SDL_GameControllerEventState(SDL_QUERY) == SDL_ENABLE) && SDL_GameControllerGetAttached(reinterpret_cast<SDL_GameController*>(&ji));
-            //bool genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(&ji);
-            /* I'm not sure this is the right thing to do, but enabling joystick events when only the GC is opened */
-            genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && (SDL_JoystickGetAttached(reinterpret_cast<SDL_Joystick*>(&ji)) || SDL_GameControllerGetAttached(reinterpret_cast<SDL_GameController*>(&ji)));
+            genGC = mySDL_GameControllerReportEvents(ji);
+            genJoy = mySDL_JoystickReportEvents(ji);
 
             if (!genGC && !genJoy)
                 continue;
         }
 
         if (Global::game_info.joystick & GameInfo::SDL1) {
-            GlobalNoLog gnl;
-            genJoy = (SDL_JoystickEventState(SDL_QUERY) == SDL_ENABLE) && SDL_JoystickGetAttached(reinterpret_cast<SDL_Joystick*>(&ji));
-
+            genJoy = mySDL_JoystickReportEvents(ji);
             if (!genJoy)
                 continue;
         }
@@ -363,8 +358,8 @@ static void generateControllerEvents(void)
 
                 if (Global::game_info.joystick & GameInfo::SDL2) {
                     if (genGC) {
-                        SDL_Event event2;
-                        event2.type = SDL_CONTROLLERAXISMOTION;
+                        SDL2::SDL_Event event2;
+                        event2.type = SDL2::SDL_CONTROLLERAXISMOTION;
                         event2.caxis.timestamp = timestamp;
                         event2.caxis.which = ji;
                         event2.caxis.axis = SingleInput::toSDL2Axis(axis);
@@ -373,8 +368,8 @@ static void generateControllerEvents(void)
                         LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERAXISMOTION with axis %d", axis);
                     }
                     if (genJoy) {
-                        SDL_Event event2;
-                        event2.type = SDL_JOYAXISMOTION;
+                        SDL2::SDL_Event event2;
+                        event2.type = SDL2::SDL_JOYAXISMOTION;
                         event2.jaxis.timestamp = timestamp;
                         event2.jaxis.which = ji;
                         event2.jaxis.axis = axis;
@@ -434,15 +429,15 @@ static void generateControllerEvents(void)
                 if (Global::game_info.joystick & GameInfo::SDL2) {
                     if (genGC) {
                         /* SDL2 controller button */
-                        SDL_Event event2;
+                        SDL2::SDL_Event event2;
                         if ((buttons >> bi) & 0x1) {
-                            event2.type = SDL_CONTROLLERBUTTONDOWN;
-                            event2.cbutton.state = SDL_PRESSED;
+                            event2.type = SDL2::SDL_CONTROLLERBUTTONDOWN;
+                            event2.cbutton.state = SDL2::SDL_PRESSED;
                             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERBUTTONDOWN with button %d", bi);
                         }
                         else {
-                            event2.type = SDL_CONTROLLERBUTTONUP;
-                            event2.cbutton.state = SDL_RELEASED;
+                            event2.type = SDL2::SDL_CONTROLLERBUTTONUP;
+                            event2.cbutton.state = SDL2::SDL_RELEASED;
                             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERBUTTONUP with button %d", bi);
                         }
                         event2.cbutton.timestamp = timestamp;
@@ -457,15 +452,15 @@ static void generateControllerEvents(void)
                         }
                         else {
                             /* SDL2 joystick button */
-                            SDL_Event event2;
+                            SDL2::SDL_Event event2;
                             if ((buttons >> bi) & 0x1) {
-                                event2.type = SDL_JOYBUTTONDOWN;
-                                event2.jbutton.state = SDL_PRESSED;
+                                event2.type = SDL2::SDL_JOYBUTTONDOWN;
+                                event2.jbutton.state = SDL2::SDL_PRESSED;
                                 LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYBUTTONDOWN with button %d", bi);
                             }
                             else {
-                                event2.type = SDL_JOYBUTTONUP;
-                                event2.jbutton.state = SDL_RELEASED;
+                                event2.type = SDL2::SDL_JOYBUTTONUP;
+                                event2.jbutton.state = SDL2::SDL_RELEASED;
                                 LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYBUTTONUP with button %d", bi);
                             }
                             event2.jbutton.timestamp = timestamp;
@@ -485,12 +480,12 @@ static void generateControllerEvents(void)
                         SDL1::SDL_Event event1;
                         if ((buttons >> bi) & 0x1) {
                             event1.type = SDL1::SDL_JOYBUTTONDOWN;
-                            event1.jbutton.state = SDL_PRESSED;
+                            event1.jbutton.state = SDL1::SDL_PRESSED;
                             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYBUTTONDOWN with button %d", bi);
                         }
                         else {
                             event1.type = SDL1::SDL_JOYBUTTONUP;
-                            event1.jbutton.state = SDL_RELEASED;
+                            event1.jbutton.state = SDL1::SDL_RELEASED;
                             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYBUTTONUP with button %d", bi);
                         }
                         event1.jbutton.which = ji;
@@ -539,8 +534,8 @@ static void generateControllerEvents(void)
 
             if (Global::game_info.joystick & GameInfo::SDL2) {
                 /* SDL2 joystick hat */
-                SDL_Event event2;
-                event2.type = SDL_JOYHATMOTION;
+                SDL2::SDL_Event event2;
+                event2.type = SDL2::SDL_JOYHATMOTION;
                 event2.jhat.timestamp = timestamp;
                 event2.jhat.which = ji;
                 event2.jhat.hat = 0;
@@ -661,8 +656,8 @@ static void generateMouseMotionEvents(void)
         return;
 
     if (Global::game_info.mouse & GameInfo::SDL2) {
-        SDL_Event event2;
-        event2.type = SDL_MOUSEMOTION;
+        SDL2::SDL_Event event2;
+        event2.type = SDL2::SDL_MOUSEMOTION;
         event2.motion.timestamp = timestamp;
         event2.motion.windowID = 1;
         event2.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
@@ -776,15 +771,15 @@ static void generateMouseButtonEvent(int button, bool pressed)
 
     /* Fill the event structure */
     if (Global::game_info.mouse & GameInfo::SDL2) {
-        SDL_Event event2;
+        SDL2::SDL_Event event2;
         if (pressed) {
-            event2.type = SDL_MOUSEBUTTONDOWN;
-            event2.button.state = SDL_PRESSED;
+            event2.type = SDL2::SDL_MOUSEBUTTONDOWN;
+            event2.button.state = SDL2::SDL_PRESSED;
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONDOWN with button %d", SingleInput::toSDL2PointerButton(button));
         }
         else {
-            event2.type = SDL_MOUSEBUTTONUP;
-            event2.button.state = SDL_RELEASED;
+            event2.type = SDL2::SDL_MOUSEBUTTONUP;
+            event2.button.state = SDL2::SDL_RELEASED;
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONUP with button %d", SingleInput::toSDL2PointerButton(button));
         }
         event2.button.timestamp = timestamp;
@@ -801,12 +796,12 @@ static void generateMouseButtonEvent(int button, bool pressed)
         SDL1::SDL_Event event1;
         if (pressed) {
             event1.type = SDL1::SDL_MOUSEBUTTONDOWN;
-            event1.button.state = SDL_PRESSED;
+            event1.button.state = SDL1::SDL_PRESSED;
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONDOWN with button %d", SingleInput::toSDL1PointerButton(button));
         }
         else {
             event1.type = SDL1::SDL_MOUSEBUTTONUP;
-            event1.button.state = SDL_RELEASED;
+            event1.button.state = SDL1::SDL_RELEASED;
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONUP with button %d", SingleInput::toSDL1PointerButton(button));
         }
         event1.button.which = 0; // TODO: Same as above...
@@ -954,14 +949,14 @@ static void generateMouseButtonEvents(void)
         return;
 
     if (Global::game_info.mouse & GameInfo::SDL2) {
-        SDL_Event event2;
-        event2.type = SDL_MOUSEWHEEL;
+        SDL2::SDL_Event event2;
+        event2.type = SDL2::SDL_MOUSEWHEEL;
         event2.wheel.timestamp = timestamp;
         event2.wheel.windowID = 1;
         event2.wheel.which = 0; // TODO: Mouse instance id. No idea what to put here...
         event2.wheel.x = 0; // Only vertical wheel is supported
         event2.wheel.y = Inputs::game_ai.pointer.wheel;
-        event2.wheel.direction = SDL_MOUSEWHEEL_FLIPPED;
+        event2.wheel.direction = SDL2::SDL_MOUSEWHEEL_FLIPPED;
         sdlEventQueue.insert(&event2);
         LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEWHEEL with new value (%d)", Inputs::game_ai.pointer.wheel);
     }
@@ -981,14 +976,14 @@ static void generateFocusEvents(void)
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     if (Global::game_info.keyboard & GameInfo::SDL2) {
-        SDL_Event event2;
-        event2.type = SDL_WINDOWEVENT;
+        SDL2::SDL_Event event2;
+        event2.type = SDL2::SDL_WINDOWEVENT;
         if (win_focused) {
-            event2.window.event = SDL_WINDOWEVENT_FOCUS_LOST;
+            event2.window.event = SDL2::SDL_WINDOWEVENT_FOCUS_LOST;
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_WINDOW, "Generate SDL event SDL_WINDOWEVENT_FOCUS_LOST");
         }
         else {
-            event2.window.event = SDL_WINDOWEVENT_FOCUS_GAINED;
+            event2.window.event = SDL2::SDL_WINDOWEVENT_FOCUS_GAINED;
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_WINDOW, "Generate SDL event SDL_WINDOWEVENT_FOCUS_GAINED");                        
         }
         event2.window.timestamp = timestamp;

@@ -22,28 +22,28 @@
 
 #include "hook.h"
 
-#include <SDL2/SDL.h>
+#include "../external/SDL2.h"
 
 namespace libtas {
 
 /**
  *  Create a mutex, initialized unlocked.
  */
-OVERRIDE SDL_mutex* SDL_CreateMutex(void);
+OVERRIDE SDL2::SDL_mutex* SDL_CreateMutex(void);
 
 /**
  *  Lock the mutex.
  *
  *  \return 0, or -1 on error.
  */
-OVERRIDE int SDL_LockMutex(SDL_mutex * mutex);
+OVERRIDE int SDL_LockMutex(SDL2::SDL_mutex * mutex);
 
 /**
  *  Try to lock the mutex
  *
  *  \return 0, SDL_MUTEX_TIMEDOUT, or -1 on error
  */
-OVERRIDE int SDL_TryLockMutex(SDL_mutex * mutex);
+OVERRIDE int SDL_TryLockMutex(SDL2::SDL_mutex * mutex);
 
 /**
  *  Unlock the mutex.
@@ -53,29 +53,29 @@ OVERRIDE int SDL_TryLockMutex(SDL_mutex * mutex);
  *  \warning It is an error to unlock a mutex that has not been locked by
  *           the current thread, and doing so results in undefined behavior.
  */
-OVERRIDE int SDL_UnlockMutex(SDL_mutex * mutex);
+OVERRIDE int SDL_UnlockMutex(SDL2::SDL_mutex * mutex);
 
 /**
  *  Destroy a mutex.
  */
-OVERRIDE void SDL_DestroyMutex(SDL_mutex * mutex);
+OVERRIDE void SDL_DestroyMutex(SDL2::SDL_mutex * mutex);
 
 /**
  *  Create a semaphore, initialized with value, returns NULL on failure.
  */
-OVERRIDE SDL_sem *SDL_CreateSemaphore(Uint32 initial_value);
+OVERRIDE SDL2::SDL_sem *SDL_CreateSemaphore(Uint32 initial_value);
 
 /**
  *  Destroy a semaphore.
  */
-OVERRIDE void SDL_DestroySemaphore(SDL_sem * sem);
+OVERRIDE void SDL_DestroySemaphore(SDL2::SDL_sem * sem);
 
 /**
  *  This function suspends the calling thread until the semaphore pointed
  *  to by \c sem has a positive count. It then atomically decreases the
  *  semaphore count.
  */
-OVERRIDE int SDL_SemWait(SDL_sem * sem);
+OVERRIDE int SDL_SemWait(SDL2::SDL_sem * sem);
 
 /**
  *  Non-blocking variant of SDL_SemWait().
@@ -83,7 +83,7 @@ OVERRIDE int SDL_SemWait(SDL_sem * sem);
  *  \return 0 if the wait succeeds, ::SDL_MUTEX_TIMEDOUT if the wait would
  *          block, and -1 on error.
  */
-OVERRIDE int SDL_SemTryWait(SDL_sem * sem);
+OVERRIDE int SDL_SemTryWait(SDL2::SDL_sem * sem);
 
 /**
  *  Variant of SDL_SemWait() with a timeout in milliseconds.
@@ -94,19 +94,19 @@ OVERRIDE int SDL_SemTryWait(SDL_sem * sem);
  *  \warning On some platforms this function is implemented by looping with a
  *           delay of 1 ms, and so should be avoided if possible.
  */
-OVERRIDE int SDL_SemWaitTimeout(SDL_sem * sem, Uint32 ms);
+OVERRIDE int SDL_SemWaitTimeout(SDL2::SDL_sem * sem, Uint32 ms);
 
 /**
  *  Atomically increases the semaphore's count (not blocking).
  *
  *  \return 0, or -1 on error.
  */
-OVERRIDE int SDL_SemPost(SDL_sem * sem);
+OVERRIDE int SDL_SemPost(SDL2::SDL_sem * sem);
 
 /**
  *  Returns the current count of the semaphore.
  */
-OVERRIDE Uint32 SDL_SemValue(SDL_sem * sem);
+OVERRIDE Uint32 SDL_SemValue(SDL2::SDL_sem * sem);
 
 /**
  *  Create a condition variable.
@@ -136,26 +136,26 @@ OVERRIDE Uint32 SDL_SemValue(SDL_sem * sem);
  *  In general it's safer to signal the condition variable while the
  *  mutex is locked.
  */
-OVERRIDE SDL_cond *SDL_CreateCond(void);
+OVERRIDE SDL2::SDL_cond *SDL_CreateCond(void);
 
 /**
  *  Destroy a condition variable.
  */
-OVERRIDE void SDL_DestroyCond(SDL_cond * cond);
+OVERRIDE void SDL_DestroyCond(SDL2::SDL_cond * cond);
 
 /**
  *  Restart one of the threads that are waiting on the condition variable.
  *
  *  \return 0 or -1 on error.
  */
-OVERRIDE int SDL_CondSignal(SDL_cond * cond);
+OVERRIDE int SDL_CondSignal(SDL2::SDL_cond * cond);
 
 /**
  *  Restart all threads that are waiting on the condition variable.
  *
  *  \return 0 or -1 on error.
  */
-OVERRIDE int SDL_CondBroadcast(SDL_cond * cond);
+OVERRIDE int SDL_CondBroadcast(SDL2::SDL_cond * cond);
 
 /**
  *  Wait on the condition variable, unlocking the provided mutex.
@@ -166,7 +166,7 @@ OVERRIDE int SDL_CondBroadcast(SDL_cond * cond);
  *
  *  \return 0 when it is signaled, or -1 on error.
  */
-OVERRIDE int SDL_CondWait(SDL_cond * cond, SDL_mutex * mutex);
+OVERRIDE int SDL_CondWait(SDL2::SDL_cond * cond, SDL2::SDL_mutex * mutex);
 
 /**
  *  Waits for at most \c ms milliseconds, and returns 0 if the condition
@@ -176,7 +176,7 @@ OVERRIDE int SDL_CondWait(SDL_cond * cond, SDL_mutex * mutex);
  *  \warning On some platforms this function is implemented by looping with a
  *           delay of 1 ms, and so should be avoided if possible.
  */
-OVERRIDE int SDL_CondWaitTimeout(SDL_cond * cond, SDL_mutex * mutex, Uint32 ms);
+OVERRIDE int SDL_CondWaitTimeout(SDL2::SDL_cond * cond, SDL2::SDL_mutex * mutex, Uint32 ms);
 
 }
 

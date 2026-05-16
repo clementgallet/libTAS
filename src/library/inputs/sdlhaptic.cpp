@@ -29,25 +29,25 @@ int SDL_NumHaptics(void)
 	return 0;
 }
 
-SDL_Haptic * SDL_HapticOpen(int device_index)
+SDL2::SDL_Haptic * SDL_HapticOpen(int device_index)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
 	return NULL;
 }
 
-int SDL_JoystickIsHaptic(SDL_Joystick * joystick)
+int SDL_JoystickIsHaptic(SDL2::SDL_Joystick * joystick)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
 	return 0;
 }
 
-SDL_Haptic *SDL_HapticOpenFromJoystick(SDL_Joystick *joystick)
+SDL2::SDL_Haptic *SDL_HapticOpenFromJoystick(SDL2::SDL_Joystick *joystick)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
 	return NULL;
 }
 
-void SDL_HapticClose(SDL_Haptic * haptic)
+void SDL_HapticClose(SDL2::SDL_Haptic * haptic)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
 }

@@ -30,15 +30,15 @@
 
 namespace libtas {
 
-DECLARE_ORIG_POINTER(SDL_CreateTexture)
-DECLARE_ORIG_POINTER(SDL_DestroyTexture)
-DECLARE_ORIG_POINTER(SDL_LockTexture)
-DECLARE_ORIG_POINTER(SDL_UnlockTexture)
-DECLARE_ORIG_POINTER(SDL_RenderCopy)
-DECLARE_ORIG_POINTER(SDL_SetTextureBlendMode)
-DECLARE_ORIG_POINTER(SDL_GetError)
-DECLARE_ORIG_POINTER(SDL_GetVersion)
-DECLARE_ORIG_POINTER(SDL_SetWindowResizable)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_CreateTexture, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_DestroyTexture, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_LockTexture, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_UnlockTexture, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_RenderCopy, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_SetTextureBlendMode, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_GetError, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_GetVersion, SDL2)
+DECLARE_ORIG_POINTER_NAMESPACE(SDL_SetWindowResizable, SDL2)
 
 RenderHUD_SDL2_renderer::~RenderHUD_SDL2_renderer()
 {
@@ -46,7 +46,7 @@ RenderHUD_SDL2_renderer::~RenderHUD_SDL2_renderer()
     ImGui::DestroyContext();
 }
 
-void RenderHUD_SDL2_renderer::setRenderer(SDL_Renderer* r)
+void RenderHUD_SDL2_renderer::setRenderer(SDL2::SDL_Renderer* r)
 {
     /* If renderer has changed, the texture becomes invalid */
     if (renderer && (renderer != r)) {
@@ -65,7 +65,7 @@ void RenderHUD_SDL2_renderer::newFrame()
         /* 2.0.18 is required for OSD */    
         if (!orig::SDL_GetVersion)
             return;
-        SDL_version ver;
+        SDL2::SDL_version ver;
         orig::SDL_GetVersion(&ver);
         if ((ver.minor == 0) && (ver.patch < 18))
             return;

@@ -22,21 +22,20 @@
 
 #include "hook.h"
 #include "../external/SDL1.h"
-
-#include <SDL2/SDL.h>
+#include "../external/SDL2.h"
 
 namespace libtas {
 
 namespace sdl {
     /* SDL2 game window (we suppose there is only one) */
-    extern SDL_Window* gameSDLWindow;    
+    extern SDL2::SDL_Window* gameSDLWindow;    
 }
 
 /**
  * \brief Swap the OpenGL buffers for a window, if double-buffering is
  *        supported.
  */
-OVERRIDE void SDL_GL_SwapWindow(SDL_Window* window);
+OVERRIDE void SDL_GL_SwapWindow(SDL2::SDL_Window* window);
 
 /**
  *  \brief Create a window with the specified position, dimensions, and flags.
@@ -65,29 +64,29 @@ OVERRIDE void SDL_GL_SwapWindow(SDL_Window* window);
  *
  *  \sa SDL_DestroyWindow()
  */
-OVERRIDE SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags);
+OVERRIDE SDL2::SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags);
 
 /**
  *  \brief Get the numeric ID of a window, for logging purposes.
  */
-OVERRIDE Uint32 SDL_GetWindowID(SDL_Window* window);
+OVERRIDE Uint32 SDL_GetWindowID(SDL2::SDL_Window* window);
 
 /**
  *  \brief Get a window from a stored ID, or NULL if it doesn't exist.
  */
-OVERRIDE SDL_Window* SDL_GetWindowFromID(Uint32 id);
+OVERRIDE SDL2::SDL_Window* SDL_GetWindowFromID(Uint32 id);
 
 /**
  *  \brief Get the window flags.
  */
-OVERRIDE Uint32 SDL_GetWindowFlags(SDL_Window* window);
+OVERRIDE Uint32 SDL_GetWindowFlags(SDL2::SDL_Window* window);
 
 /**
  *  \brief Set the title of a window, in UTF-8 format.
  *
  *  \sa SDL_GetWindowTitle()
  */
-OVERRIDE void SDL_SetWindowTitle(SDL_Window * window, const char *title);
+OVERRIDE void SDL_SetWindowTitle(SDL2::SDL_Window * window, const char *title);
 
 /** SDL 1.2
  * Sets the title and icon text of the display window (UTF-8 encoded)
@@ -108,7 +107,7 @@ OVERRIDE void SDL_WM_SetCaption(const char *title, const char *icon);
  *
  *  \sa SDL_GetWindowFlags()
  */
-OVERRIDE void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered);
+OVERRIDE void SDL_SetWindowBordered(SDL2::SDL_Window * window, SDL_bool bordered);
 
 /**
  * Set the user-resizable state of a window.
@@ -126,7 +125,7 @@ OVERRIDE void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered);
  *
  * \sa SDL_GetWindowFlags
  */
-OVERRIDE void SDL_SetWindowResizable(SDL_Window * window, SDL_bool resizable);
+OVERRIDE void SDL_SetWindowResizable(SDL2::SDL_Window * window, SDL_bool resizable);
 
 /**
  *  \brief Set a window's fullscreen state.
@@ -136,7 +135,7 @@ OVERRIDE void SDL_SetWindowResizable(SDL_Window * window, SDL_bool resizable);
  *  \sa SDL_SetWindowDisplayMode()
  *  \sa SDL_GetWindowDisplayMode()
  */
-OVERRIDE int SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags);
+OVERRIDE int SDL_SetWindowFullscreen(SDL2::SDL_Window * window, Uint32 flags);
 
 /**
  *  \brief Create an OpenGL context for use with an OpenGL window, and make it
@@ -144,14 +143,14 @@ OVERRIDE int SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags);
  *
  *  \sa SDL_GL_DeleteContext()
  */
-OVERRIDE void* SDL_GL_CreateContext(SDL_Window *window);
+OVERRIDE void* SDL_GL_CreateContext(SDL2::SDL_Window *window);
 
 /**
  *  \brief Delete an OpenGL context.
  *
  *  \sa SDL_GL_CreateContext()
  */
-OVERRIDE void SDL_GL_DeleteContext(SDL_GLContext context);
+OVERRIDE void SDL_GL_DeleteContext(SDL2::SDL_GLContext context);
 
 /**
  *  \brief Set the swap interval for the current OpenGL context.
@@ -183,7 +182,7 @@ OVERRIDE int SDL_GL_GetSwapInterval(void);
 /**
  *  \brief Destroy a window.
  */
-OVERRIDE void SDL_DestroyWindow(SDL_Window* window);
+OVERRIDE void SDL_DestroyWindow(SDL2::SDL_Window* window);
 
 /**
  *  \brief Create a window and default renderer
@@ -198,7 +197,7 @@ OVERRIDE void SDL_DestroyWindow(SDL_Window* window);
  */
 OVERRIDE int SDL_CreateWindowAndRenderer(
                  int width, int height, Uint32 window_flags,
-                 SDL_Window **window, SDL_Renderer **renderer);
+                 SDL2::SDL_Window **window, SDL2::SDL_Renderer **renderer);
 
 /**
  *  \brief Set the position of a window.
@@ -213,7 +212,7 @@ OVERRIDE int SDL_CreateWindowAndRenderer(
  *
  *  \sa SDL_GetWindowPosition()
  */
-OVERRIDE void SDL_SetWindowPosition(SDL_Window * window, int x, int y);
+OVERRIDE void SDL_SetWindowPosition(SDL2::SDL_Window * window, int x, int y);
 
 /**
  *  \brief Get the position of a window.
@@ -226,7 +225,7 @@ OVERRIDE void SDL_SetWindowPosition(SDL_Window * window, int x, int y);
  *
  *  \sa SDL_SetWindowPosition()
  */
-OVERRIDE void SDL_GetWindowPosition(SDL_Window * window, int *x, int *y);
+OVERRIDE void SDL_GetWindowPosition(SDL2::SDL_Window * window, int *x, int *y);
 
 /**
  *  \brief Set the size of a window's client area.
@@ -246,7 +245,7 @@ OVERRIDE void SDL_GetWindowPosition(SDL_Window * window, int *x, int *y);
  *  \sa SDL_GetWindowSize()
  *  \sa SDL_SetWindowDisplayMode()
  */
-OVERRIDE void SDL_SetWindowSize(SDL_Window* window, int w, int h);
+OVERRIDE void SDL_SetWindowSize(SDL2::SDL_Window* window, int w, int h);
 
 /**
  * Get the size of a window's client area.
@@ -272,7 +271,7 @@ OVERRIDE void SDL_SetWindowSize(SDL_Window* window, int w, int h);
  * \sa SDL_Vulkan_GetDrawableSize
  * \sa SDL_SetWindowSize
  */
-OVERRIDE void SDL_GetWindowSize(SDL_Window * window, int *w, int *h);
+OVERRIDE void SDL_GetWindowSize(SDL2::SDL_Window * window, int *w, int *h);
 
 /**
  * Set up a video mode with the specified width, height and bits-per-pixel.
@@ -364,7 +363,7 @@ OVERRIDE void SDL_UpdateRect(SDL1::SDL_Surface *screen, Sint32 x, Sint32 y, Uint
  * If 'flag' is 0, this function clears any current color key.
  * This function returns 0, or -1 if there was an error.
  */
-OVERRIDE int SDL_SetColorKey(SDL_Surface *surface, int flag, Uint32 key);
+OVERRIDE int SDL_SetColorKey(SDL2::SDL_Surface *surface, int flag, Uint32 key);
 
 /**
  * On hardware that supports double-buffering, this function sets up a flip
@@ -391,22 +390,22 @@ OVERRIDE SDL1::SDL_GrabMode SDL_WM_GrabInput(SDL1::SDL_GrabMode mode);
 /**
  *  \brief Set an OpenGL window attribute before window creation.
  */
-OVERRIDE int SDL_GL_SetAttribute(SDL_GLattr attr, int value);
+OVERRIDE int SDL_GL_SetAttribute(SDL2::SDL_GLattr attr, int value);
 
 /**
  *  \brief Copy the window surface to the screen.
  *
  *  \return 0 on success, or -1 on error.
  */
-OVERRIDE int SDL_UpdateWindowSurface(SDL_Window * window);
+OVERRIDE int SDL_UpdateWindowSurface(SDL2::SDL_Window * window);
 
 /**
  *  \brief Copy a number of rectangles on the window surface to the screen.
  *
  *  \return 0 on success, or -1 on error.
  */
-OVERRIDE int SDL_UpdateWindowSurfaceRects(SDL_Window * window,
-                                                         const SDL_Rect * rects,
+OVERRIDE int SDL_UpdateWindowSurfaceRects(SDL2::SDL_Window * window,
+                                                         const SDL2::SDL_Rect * rects,
                                                          int numrects);
 
 

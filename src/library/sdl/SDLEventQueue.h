@@ -25,7 +25,7 @@
 #include <list>
 #include <set>
 #include <mutex>
-#include <SDL2/SDL.h>
+#include "../external/SDL2.h"
 
 namespace libtas {
 /* This is a replacement of the SDL event queue.
@@ -50,7 +50,7 @@ class SDLEventQueue
         /* For SDL2 events, returns 1 if event was inserted, 0 if event was
          * filtered and -1 if event queue is full.
          */
-        int insert(SDL_Event* event);
+        int insert(SDL2::SDL_Event* event);
 
         /* Return a number of events from the queue.
          * @param events [OUT]  array of events to write to
@@ -62,7 +62,7 @@ class SDLEventQueue
          * @return              the actual number of returned events.
          */
         int pop(SDL1::SDL_Event* events, int num, Uint32 mask, bool update);
-        int pop(SDL_Event* events, int num, Uint32 minType, Uint32 maxType, bool update);
+        int pop(SDL2::SDL_Event* events, int num, Uint32 minType, Uint32 maxType, bool update);
 
         /* Flush the event queue */
         void flush(Uint32 mask);
@@ -80,23 +80,23 @@ class SDLEventQueue
          * Function filter has the following prototype:
          *     int filter(void* userdata, SDL_Event* event)
          */
-        void applyFilter(SDL_EventFilter filter, void* userdata);
+        void applyFilter(SDL2::SDL_EventFilter filter, void* userdata);
 
         /* Set a filter that will be called when an event is added
          * to the queue. For SDL 1.2 we don't have userdata.
          */
-        void setFilter(SDL_EventFilter filter, void* userdata);
+        void setFilter(SDL2::SDL_EventFilter filter, void* userdata);
         void setFilter(SDL1::SDL_EventFilter filter);
 
         /* Return the filter */
-        bool getFilter(SDL_EventFilter* filter, void** userdata);
+        bool getFilter(SDL2::SDL_EventFilter* filter, void** userdata);
         SDL1::SDL_EventFilter getFilter(void);
 
         /* Add a watch that is called when an event is inserted */
-        void addWatch(SDL_EventFilter filter, void* userdata);
+        void addWatch(SDL2::SDL_EventFilter filter, void* userdata);
 
         /* Remove a watch */
-        void delWatch(SDL_EventFilter filter, void* userdata);
+        void delWatch(SDL2::SDL_EventFilter filter, void* userdata);
 
         /* Wait for the queue to become empty */
         bool waitForEmpty();
@@ -110,9 +110,9 @@ class SDLEventQueue
     private:
         std::list<void*> eventQueue;
         std::set<int> droppedEvents;
-        std::set<std::pair<SDL_EventFilter,void*>> watches;
+        std::set<std::pair<SDL2::SDL_EventFilter,void*>> watches;
         SDL1::SDL_EventFilter filterFunc1 = nullptr;
-        SDL_EventFilter filterFunc = nullptr;
+        SDL2::SDL_EventFilter filterFunc = nullptr;
         void* filterData = nullptr;
 
         /* Was the queue emptied? Used for asynchronous events */

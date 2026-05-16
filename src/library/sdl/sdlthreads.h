@@ -22,7 +22,7 @@
 
 #include "hook.h"
 
-#include <SDL2/SDL.h> // SDL_Thread, SDL_ThreadFunction
+#include "../external/SDL2.h" // SDL_Thread, SDL_ThreadFunction
 
 namespace libtas {
 
@@ -35,7 +35,7 @@ namespace libtas {
   * performed in low-level pthread API, so having one prototype for both versions
   * is fine.
   */
-OVERRIDE SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data);
+OVERRIDE SDL2::SDL_Thread* SDL_CreateThread(SDL2::SDL_ThreadFunction fn, const char *name, void *data);
 
 
 /**
@@ -56,7 +56,7 @@ OVERRIDE SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, v
  *
  *  It is safe to pass NULL to this function; it is a no-op.
  */
-OVERRIDE void SDL_WaitThread(SDL_Thread * thread, int *status);
+OVERRIDE void SDL_WaitThread(SDL2::SDL_Thread * thread, int *status);
 
 /**
  *  A thread may be "detached" to signify that it should not remain until
@@ -84,7 +84,7 @@ OVERRIDE void SDL_WaitThread(SDL_Thread * thread, int *status);
  *
  *  It is safe to pass NULL to this function; it is a no-op.
  */
-/*OVERRIDE void SDL_DetachThread(SDL_Thread * thread);*/
+/*OVERRIDE void SDL_DetachThread(SDL2::SDL_Thread * thread);*/
 
 }
 

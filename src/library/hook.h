@@ -53,9 +53,17 @@ bool link_function(void** function, const char* source, const char* library, con
 namespace orig { \
     extern decltype(&FUNC) FUNC; \
 }
+#define DECLARE_ORIG_POINTER_NAMESPACE(FUNC, NAMESPACE) \
+namespace orig { \
+    extern decltype(&NAMESPACE::FUNC) FUNC; \
+}
 #define DEFINE_ORIG_POINTER(FUNC) \
 namespace orig { \
     decltype(&FUNC) FUNC; \
+}
+#define DEFINE_ORIG_POINTER_NAMESPACE(FUNC, NAMESPACE) \
+namespace orig { \
+    decltype(&NAMESPACE::FUNC) FUNC; \
 }
 
 /* Macro to return the native function if Native global state is set 

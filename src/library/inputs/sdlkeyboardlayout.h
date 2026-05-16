@@ -23,11 +23,11 @@
 #include "hook.h"
 #include "../external/SDL1.h"
 
-#include <SDL2/SDL.h>
+#include "../external/SDL2.h"
 
 namespace libtas {
 
-SDL_Scancode GetScanFromKey(SDL_Keycode keycode);
+SDL2::SDL_Scancode GetScanFromKey(SDL2::SDL_Keycode keycode);
 unsigned char GetScanFromKey1(SDL1::SDLKey key);
 
 /**
@@ -38,7 +38,7 @@ unsigned char GetScanFromKey1(SDL1::SDLKey key);
  *
  *  \sa SDL_GetKeyName()
  */
-OVERRIDE SDL_Keycode SDL_GetKeyFromScancode(SDL_Scancode scancode);
+OVERRIDE SDL2::SDL_Keycode SDL_GetKeyFromScancode(SDL2::SDL_Scancode scancode);
 
 /**
  *  \brief Get the scancode corresponding to the given key code according to the
@@ -48,7 +48,7 @@ OVERRIDE SDL_Keycode SDL_GetKeyFromScancode(SDL_Scancode scancode);
  *
  *  \sa SDL_GetScancodeName()
  */
-OVERRIDE SDL_Scancode SDL_GetScancodeFromKey(SDL_Keycode key);
+OVERRIDE SDL2::SDL_Scancode SDL_GetScancodeFromKey(SDL2::SDL_Keycode key);
 
 }
 

@@ -27,7 +27,7 @@ namespace libtas {
 DECLARE_ORIG_POINTER(SDL_CreateThread)
 DECLARE_ORIG_POINTER(SDL_WaitThread)
 
-/* Override */ SDL_Thread* SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data)
+/* Override */ SDL2::SDL_Thread* SDL_CreateThread(SDL2::SDL_ThreadFunction fn, const char *name, void *data)
 {
     if (get_sdlversion() == 1)
         /* SDL1 version prototype is SDL_CreateThread(int (SDLCALL *fn)(void *), void *data)
@@ -39,7 +39,7 @@ DECLARE_ORIG_POINTER(SDL_WaitThread)
     return orig::SDL_CreateThread(fn, name, data);
 }
 
-/* Override */ void SDL_WaitThread(SDL_Thread * thread, int *status)
+/* Override */ void SDL_WaitThread(SDL2::SDL_Thread * thread, int *status)
 {
     LOGTRACE(LCF_THREAD);
     LINK_NAMESPACE_SDLX(SDL_WaitThread);

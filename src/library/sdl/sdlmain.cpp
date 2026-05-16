@@ -69,36 +69,36 @@ static Uint32 init_flags = 0;
     /* Link function pointers to SDL functions */
     LINK_NAMESPACE_SDLX(SDL_InitSubSystem);
 
-    if (flags & SDL_INIT_TIMER)
+    if (flags & SDL2::SDL_INIT_TIMER)
         LOG(LL_DEBUG, LCF_SDL, "    SDL_TIMER enabled.");
 
-    if (flags & SDL_INIT_AUDIO) {
+    if (flags & SDL2::SDL_INIT_AUDIO) {
         LOG(LL_DEBUG, LCF_SDL, "    SDL_AUDIO fake enabled.");
-        SDL_AudioInit(nullptr);
+        SDL2::SDL_AudioInit(nullptr);
         Global::game_info.audio = sdl_flag;
     }
 
-    if (flags & SDL_INIT_VIDEO) {
+    if (flags & SDL2::SDL_INIT_VIDEO) {
         LOG(LL_DEBUG, LCF_SDL, "    SDL_VIDEO enabled.");
         Global::game_info.video |= sdl_flag;
         Global::game_info.keyboard = sdl_flag;
         Global::game_info.mouse = sdl_flag;
     }
 
-    if (flags & SDL_INIT_JOYSTICK) {
+    if (flags & SDL2::SDL_INIT_JOYSTICK) {
         LOG(LL_DEBUG, LCF_SDL, "    SDL_JOYSTICK fake enabled.");
         Global::game_info.joystick = sdl_flag;
     }
 
-    if (flags & SDL_INIT_HAPTIC)
+    if (flags & SDL2::SDL_INIT_HAPTIC)
         LOG(LL_DEBUG, LCF_SDL, "    SDL_HAPTIC fake enabled.");
 
-    if (flags & SDL_INIT_GAMECONTROLLER) {
+    if (flags & SDL2::SDL_INIT_GAMECONTROLLER) {
         LOG(LL_DEBUG, LCF_SDL, "    SDL_GAMECONTROLLER fake enabled.");
         Global::game_info.joystick = sdl_flag;
     }
 
-    if (flags & SDL_INIT_EVENTS)
+    if (flags & SDL2::SDL_INIT_EVENTS)
         LOG(LL_DEBUG, LCF_SDL, "    SDL_EVENTS enabled.");
 
     Global::game_info.tosend = true;
@@ -108,16 +108,16 @@ static Uint32 init_flags = 0;
     init_flags |= flags;
 
     /* Disabling Joystick subsystem, we don't need any initialization from SDL */
-    flags &= 0xFFFFFFFF ^ SDL_INIT_JOYSTICK;
+    flags &= 0xFFFFFFFF ^ SDL2::SDL_INIT_JOYSTICK;
 
     /* Disabling Haptic subsystem, we don't need any initialization from SDL */
-    flags &= 0xFFFFFFFF ^ SDL_INIT_HAPTIC;
+    flags &= 0xFFFFFFFF ^ SDL2::SDL_INIT_HAPTIC;
 
     /* Disabling GameController subsystem, we don't need any initialization from SDL */
-    flags &= 0xFFFFFFFF ^ SDL_INIT_GAMECONTROLLER;
+    flags &= 0xFFFFFFFF ^ SDL2::SDL_INIT_GAMECONTROLLER;
 
     /* Disabling Audio subsystem so that it does not create an extra thread */
-    flags &= 0xFFFFFFFF ^ SDL_INIT_AUDIO;
+    flags &= 0xFFFFFFFF ^ SDL2::SDL_INIT_AUDIO;
 
     return orig::SDL_InitSubSystem(flags);
 }

@@ -20,31 +20,17 @@
 #ifndef LIBTAS_SDLJOYSTICK_H_INCL
 #define LIBTAS_SDLJOYSTICK_H_INCL
 
-#include <SDL2/SDL.h>
+#include "../external/SDL2.h"
 
 #include "hook.h"
 
 namespace libtas {
 
-#if SDL_VERSION_ATLEAST(2, 0, 6)
-#else
-/* Adding the SDL_JoystickType enum because it was introduced in 2.0.6 and many
- * systems still use 2.0.5
- */
-typedef enum
-{
-    SDL_JOYSTICK_TYPE_UNKNOWN,
-    SDL_JOYSTICK_TYPE_GAMECONTROLLER,
-    SDL_JOYSTICK_TYPE_WHEEL,
-    SDL_JOYSTICK_TYPE_ARCADE_STICK,
-    SDL_JOYSTICK_TYPE_FLIGHT_STICK,
-    SDL_JOYSTICK_TYPE_DANCE_PAD,
-    SDL_JOYSTICK_TYPE_GUITAR,
-    SDL_JOYSTICK_TYPE_DRUM_KIT,
-    SDL_JOYSTICK_TYPE_ARCADE_PAD,
-    SDL_JOYSTICK_TYPE_THROTTLE
-} SDL_JoystickType;
-#endif
+/* Detach a joystick */
+void mySDL_JoystickDetached(int index);
+
+/* Report if events are enabled for a joystick */
+bool mySDL_JoystickReportEvents(int index);
 
 /**
  *  Count the number of joysticks attached to the system right now
@@ -86,7 +72,7 @@ OVERRIDE const char *SDL_JoystickPathForIndex(int device_index);
  *
  * \sa SDL_JoystickPathForIndex
  */
-OVERRIDE const char *SDL_JoystickPath(SDL_Joystick *joystick);
+OVERRIDE const char *SDL_JoystickPath(SDL2::SDL_Joystick *joystick);
 
 /**
  *  Open a joystick for use.
@@ -97,12 +83,12 @@ OVERRIDE const char *SDL_JoystickPath(SDL_Joystick *joystick);
  *
  *  \return A joystick identifier, or NULL if an error occurred.
  */
-OVERRIDE SDL_Joystick *SDL_JoystickOpen(int device_index);
+OVERRIDE SDL2::SDL_Joystick *SDL_JoystickOpen(int device_index);
 
 /**
  * Return the SDL_Joystick associated with an instance id.
  */
-OVERRIDE SDL_Joystick *SDL_JoystickFromInstanceID(SDL_JoystickID joyid);
+OVERRIDE SDL2::SDL_Joystick *SDL_JoystickFromInstanceID(SDL2::SDL_JoystickID joyid);
 
 /**
  *  Get the USB vendor ID of a joystick, if available.
@@ -129,7 +115,7 @@ OVERRIDE Uint16 SDL_JoystickGetDeviceProductVersion(int device_index);
  *  Get the type of a joystick, if available.
  *  This can be called before any joysticks are opened.
  */
-OVERRIDE SDL_JoystickType SDL_JoystickGetDeviceType(int device_index);
+OVERRIDE SDL2::SDL_JoystickType SDL_JoystickGetDeviceType(int device_index);
 
 /**
  * Get the instance ID of a joystick.
@@ -144,40 +130,40 @@ OVERRIDE SDL_JoystickType SDL_JoystickGetDeviceType(int device_index);
  *
  * \since This function is available since SDL 2.0.6.
  */
-OVERRIDE SDL_JoystickID SDL_JoystickGetDeviceInstanceID(int device_index);
+OVERRIDE SDL2::SDL_JoystickID SDL_JoystickGetDeviceInstanceID(int device_index);
 
 /**
  *  Return the GUID for the joystick at this index
  */
-OVERRIDE SDL_JoystickGUID SDL_JoystickGetDeviceGUID(int device_index);
+OVERRIDE SDL2::SDL_JoystickGUID SDL_JoystickGetDeviceGUID(int device_index);
 
 /**
  *  Get the USB vendor ID of an opened joystick, if available.
  *  If the vendor ID isn't available this function returns 0.
  */
-OVERRIDE Uint16 SDL_JoystickGetVendor(SDL_Joystick * joystick);
+OVERRIDE Uint16 SDL_JoystickGetVendor(SDL2::SDL_Joystick * joystick);
 
 /**
  *  Get the USB product ID of an opened joystick, if available.
  *  If the product ID isn't available this function returns 0.
  */
-OVERRIDE Uint16 SDL_JoystickGetProduct(SDL_Joystick * joystick);
+OVERRIDE Uint16 SDL_JoystickGetProduct(SDL2::SDL_Joystick * joystick);
 
 /**
  *  Get the product version of an opened joystick, if available.
  *  If the product version isn't available this function returns 0.
  */
-OVERRIDE Uint16 SDL_JoystickGetProductVersion(SDL_Joystick * joystick);
+OVERRIDE Uint16 SDL_JoystickGetProductVersion(SDL2::SDL_Joystick * joystick);
 
 /**
  *  Get the type of an opened joystick.
  */
-OVERRIDE SDL_JoystickType SDL_JoystickGetType(SDL_Joystick * joystick);
+OVERRIDE SDL2::SDL_JoystickType SDL_JoystickGetType(SDL2::SDL_Joystick * joystick);
 
 /**
  *  Return the GUID for this opened joystick
  */
-OVERRIDE SDL_JoystickGUID SDL_JoystickGetGUID(SDL_Joystick * joystick);
+OVERRIDE SDL2::SDL_JoystickGUID SDL_JoystickGetGUID(SDL2::SDL_Joystick * joystick);
 
 /**
  *  Return the name for this currently opened joystick.
@@ -185,12 +171,12 @@ OVERRIDE SDL_JoystickGUID SDL_JoystickGetGUID(SDL_Joystick * joystick);
  *  Note: in SDL 1, there is a function of the same name,
  *  which is actually SDL_JoystickNameForIndex(int).
  */
-OVERRIDE const char *SDL_JoystickName(SDL_Joystick * joystick);
+OVERRIDE const char *SDL_JoystickName(SDL2::SDL_Joystick * joystick);
 
 /**
  *  Returns SDL_TRUE if the joystick has been opened and currently connected, or SDL_FALSE if it has not.
  */
-OVERRIDE SDL_bool SDL_JoystickGetAttached(SDL_Joystick * joystick);
+OVERRIDE SDL_bool SDL_JoystickGetAttached(SDL2::SDL_Joystick * joystick);
 
 /** SDL 1.2
  * Returns 1 if the joystick has been opened, or 0 if it has not.
@@ -200,17 +186,17 @@ OVERRIDE int SDL_JoystickOpened(int device_index);
 /**
  *  Get the instance ID of an opened joystick or -1 if the joystick is invalid.
  */
-OVERRIDE SDL_JoystickID SDL_JoystickInstanceID(SDL_Joystick * joystick);
+OVERRIDE SDL2::SDL_JoystickID SDL_JoystickInstanceID(SDL2::SDL_Joystick * joystick);
 
 /** SDL 1.2
  * Get the device index of an opened joystick.
  */
-OVERRIDE int SDL_JoystickIndex(SDL_Joystick *joystick);
+OVERRIDE int SDL_JoystickIndex(SDL2::SDL_Joystick *joystick);
 
 /**
  *  Get the number of general axis controls on a joystick.
  */
-OVERRIDE int SDL_JoystickNumAxes(SDL_Joystick * joystick);
+OVERRIDE int SDL_JoystickNumAxes(SDL2::SDL_Joystick * joystick);
 
 /**
  *  Get the number of trackballs on a joystick.
@@ -218,17 +204,17 @@ OVERRIDE int SDL_JoystickNumAxes(SDL_Joystick * joystick);
  *  Joystick trackballs have only relative motion events associated
  *  with them and their state cannot be polled.
  */
-OVERRIDE int SDL_JoystickNumBalls(SDL_Joystick * joystick);
+OVERRIDE int SDL_JoystickNumBalls(SDL2::SDL_Joystick * joystick);
 
 /**
  *  Get the number of POV hats on a joystick.
  */
-OVERRIDE int SDL_JoystickNumHats(SDL_Joystick * joystick);
+OVERRIDE int SDL_JoystickNumHats(SDL2::SDL_Joystick * joystick);
 
 /**
  *  Get the number of buttons on a joystick.
  */
-OVERRIDE int SDL_JoystickNumButtons(SDL_Joystick * joystick);
+OVERRIDE int SDL_JoystickNumButtons(SDL2::SDL_Joystick * joystick);
 
 /**
  *  Update the current state of the open joysticks.
@@ -256,7 +242,7 @@ OVERRIDE int SDL_JoystickEventState(int state);
  *
  *  The axis indices start at index 0.
  */
-OVERRIDE Sint16 SDL_JoystickGetAxis(SDL_Joystick * joystick, int axis);
+OVERRIDE Sint16 SDL_JoystickGetAxis(SDL2::SDL_Joystick * joystick, int axis);
 
 /**
  *  Get the current state of a POV hat on a joystick.
@@ -274,7 +260,7 @@ OVERRIDE Sint16 SDL_JoystickGetAxis(SDL_Joystick * joystick, int axis);
  *           - ::SDL_HAT_LEFTUP
  *           - ::SDL_HAT_LEFTDOWN
  */
-OVERRIDE Uint8 SDL_JoystickGetHat(SDL_Joystick * joystick, int hat);
+OVERRIDE Uint8 SDL_JoystickGetHat(SDL2::SDL_Joystick * joystick, int hat);
 
 /**
  *  Get the ball axis change since the last poll.
@@ -283,14 +269,14 @@ OVERRIDE Uint8 SDL_JoystickGetHat(SDL_Joystick * joystick, int hat);
  *
  *  The ball indices start at index 0.
  */
-OVERRIDE int SDL_JoystickGetBall(SDL_Joystick * joystick, int ball, int *dx, int *dy);
+OVERRIDE int SDL_JoystickGetBall(SDL2::SDL_Joystick * joystick, int ball, int *dx, int *dy);
 
 /**
  *  Get the current state of a button on a joystick.
  *
  *  The button indices start at index 0.
  */
-OVERRIDE Uint8 SDL_JoystickGetButton(SDL_Joystick * joystick, int button);
+OVERRIDE Uint8 SDL_JoystickGetButton(SDL2::SDL_Joystick * joystick, int button);
 
 /**
  *  Trigger a rumble effect
@@ -303,7 +289,7 @@ OVERRIDE Uint8 SDL_JoystickGetButton(SDL_Joystick * joystick, int button);
  *
  *  \return 0, or -1 if rumble isn't supported on this joystick
  */
-OVERRIDE int SDL_JoystickRumble(SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms);
+OVERRIDE int SDL_JoystickRumble(SDL2::SDL_Joystick * joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms);
 
 /**
  * Start a rumble effect in the joystick's triggers
@@ -328,7 +314,7 @@ OVERRIDE int SDL_JoystickRumble(SDL_Joystick * joystick, Uint16 low_frequency_ru
  *
  * \sa SDL_JoystickHasRumbleTriggers
  */
-OVERRIDE int SDL_JoystickRumbleTriggers(SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble, Uint32 duration_ms);
+OVERRIDE int SDL_JoystickRumbleTriggers(SDL2::SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble, Uint32 duration_ms);
 
 /**
  * Query whether a joystick has an LED.
@@ -341,7 +327,7 @@ OVERRIDE int SDL_JoystickRumbleTriggers(SDL_Joystick *joystick, Uint16 left_rumb
  *
  * \since This function is available since SDL 2.0.14.
  */
-OVERRIDE SDL_bool SDL_JoystickHasLED(SDL_Joystick *joystick);
+OVERRIDE SDL_bool SDL_JoystickHasLED(SDL2::SDL_Joystick *joystick);
 
 /**
  * Query whether a joystick has rumble support.
@@ -353,7 +339,7 @@ OVERRIDE SDL_bool SDL_JoystickHasLED(SDL_Joystick *joystick);
  *
  * \sa SDL_JoystickRumble
  */
-OVERRIDE SDL_bool SDL_JoystickHasRumble(SDL_Joystick *joystick);
+OVERRIDE SDL_bool SDL_JoystickHasRumble(SDL2::SDL_Joystick *joystick);
 
 /**
  * Query whether a joystick has rumble support on triggers.
@@ -365,7 +351,7 @@ OVERRIDE SDL_bool SDL_JoystickHasRumble(SDL_Joystick *joystick);
  *
  * \sa SDL_JoystickRumbleTriggers
  */
-OVERRIDE SDL_bool SDL_JoystickHasRumbleTriggers(SDL_Joystick *joystick);
+OVERRIDE SDL_bool SDL_JoystickHasRumbleTriggers(SDL2::SDL_Joystick *joystick);
 
 /**
  * Update a joystick's LED color.
@@ -381,7 +367,7 @@ OVERRIDE SDL_bool SDL_JoystickHasRumbleTriggers(SDL_Joystick *joystick);
  *
  * \since This function is available since SDL 2.0.14.
  */
-OVERRIDE int SDL_JoystickSetLED(SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue);
+OVERRIDE int SDL_JoystickSetLED(SDL2::SDL_Joystick *joystick, Uint8 red, Uint8 green, Uint8 blue);
 
 /**
  * Send a joystick specific effect packet
@@ -393,17 +379,17 @@ OVERRIDE int SDL_JoystickSetLED(SDL_Joystick *joystick, Uint8 red, Uint8 green, 
  *
  * \since This function is available since SDL 2.0.16.
  */
-OVERRIDE int SDL_JoystickSendEffect(SDL_Joystick *joystick, const void *data, int size);
+OVERRIDE int SDL_JoystickSendEffect(SDL2::SDL_Joystick *joystick, const void *data, int size);
 
 /**
  *  Close a joystick previously opened with SDL_JoystickOpen().
  */
-OVERRIDE void SDL_JoystickClose(SDL_Joystick * joystick);
+OVERRIDE void SDL_JoystickClose(SDL2::SDL_Joystick * joystick);
 
 /**
  *  Return the battery level of this joystick
  */
-OVERRIDE SDL_JoystickPowerLevel SDL_JoystickCurrentPowerLevel(SDL_Joystick * joystick);
+OVERRIDE SDL2::SDL_JoystickPowerLevel SDL_JoystickCurrentPowerLevel(SDL2::SDL_Joystick * joystick);
 
 }
 

@@ -49,39 +49,43 @@ DECLARE_ORIG_POINTER(SDL_FilterEvents)
 DECLARE_ORIG_POINTER(SDL_EventState)
 DECLARE_ORIG_POINTER(SDL_RegisterEvents)
 
+static_assert(static_cast<int>(SDL1::SDL_ADDEVENT) == static_cast<int>(SDL2::SDL_ADDEVENT), "SDL1 and SDL2 event action values must be the same");
+static_assert(static_cast<int>(SDL1::SDL_PEEKEVENT) == static_cast<int>(SDL2::SDL_PEEKEVENT), "SDL1 and SDL2 event action values must be the same");
+static_assert(static_cast<int>(SDL1::SDL_GETEVENT) == static_cast<int>(SDL2::SDL_GETEVENT), "SDL1 and SDL2 event action values must be the same");
+
 /* Return if the SDL 2 event must be passed to the game or be filtered */
-static bool isBannedEvent(SDL_Event *event)
+static bool isBannedEvent(SDL2::SDL_Event *event)
 {
     switch(event->type) {
-        case SDL_KEYDOWN:
-        case SDL_KEYUP:
-        case SDL_MOUSEMOTION:
-        case SDL_MOUSEBUTTONDOWN:
-        case SDL_MOUSEBUTTONUP:
-        case SDL_MOUSEWHEEL:
-        case SDL_JOYAXISMOTION:
-        case SDL_JOYBALLMOTION:
-        case SDL_JOYHATMOTION:
-        case SDL_JOYBUTTONDOWN:
-        case SDL_JOYBUTTONUP:
-        case SDL_JOYDEVICEADDED:
-        case SDL_JOYDEVICEREMOVED:
-        case SDL_CONTROLLERAXISMOTION:
-        case SDL_CONTROLLERBUTTONDOWN:
-        case SDL_CONTROLLERBUTTONUP:
-        case SDL_CONTROLLERDEVICEADDED:
-        case SDL_CONTROLLERDEVICEREMOVED:
-        case SDL_CONTROLLERDEVICEREMAPPED:
+        case SDL2::SDL_KEYDOWN:
+        case SDL2::SDL_KEYUP:
+        case SDL2::SDL_MOUSEMOTION:
+        case SDL2::SDL_MOUSEBUTTONDOWN:
+        case SDL2::SDL_MOUSEBUTTONUP:
+        case SDL2::SDL_MOUSEWHEEL:
+        case SDL2::SDL_JOYAXISMOTION:
+        case SDL2::SDL_JOYBALLMOTION:
+        case SDL2::SDL_JOYHATMOTION:
+        case SDL2::SDL_JOYBUTTONDOWN:
+        case SDL2::SDL_JOYBUTTONUP:
+        case SDL2::SDL_JOYDEVICEADDED:
+        case SDL2::SDL_JOYDEVICEREMOVED:
+        case SDL2::SDL_CONTROLLERAXISMOTION:
+        case SDL2::SDL_CONTROLLERBUTTONDOWN:
+        case SDL2::SDL_CONTROLLERBUTTONUP:
+        case SDL2::SDL_CONTROLLERDEVICEADDED:
+        case SDL2::SDL_CONTROLLERDEVICEREMOVED:
+        case SDL2::SDL_CONTROLLERDEVICEREMAPPED:
             return true;
-        case SDL_WINDOWEVENT:
+        case SDL2::SDL_WINDOWEVENT:
             switch (event->window.event) {
-                case SDL_WINDOWEVENT_FOCUS_GAINED:
-                case SDL_WINDOWEVENT_FOCUS_LOST:
-                case SDL_WINDOWEVENT_SHOWN:
-                case SDL_WINDOWEVENT_EXPOSED:
-                case SDL_WINDOWEVENT_ENTER:
-                case SDL_WINDOWEVENT_LEAVE:
-                case SDL_WINDOWEVENT_TAKE_FOCUS:
+                case SDL2::SDL_WINDOWEVENT_FOCUS_GAINED:
+                case SDL2::SDL_WINDOWEVENT_FOCUS_LOST:
+                case SDL2::SDL_WINDOWEVENT_SHOWN:
+                case SDL2::SDL_WINDOWEVENT_EXPOSED:
+                case SDL2::SDL_WINDOWEVENT_ENTER:
+                case SDL2::SDL_WINDOWEVENT_LEAVE:
+                case SDL2::SDL_WINDOWEVENT_TAKE_FOCUS:
                     return true;
                 default:
                     return false;
@@ -135,7 +139,7 @@ void pushNativeSDLEvents(void)
     int SDLver = get_sdlversion();
     if (SDLver == 1) {
         SDL1::SDL_Event ev;
-        while (orig::SDL_PeepEvents(reinterpret_cast<SDL_Event*>(&ev), 1, SDL_GETEVENT, SDL1::SDL_ALLEVENTS, 0)) {
+        while (orig::SDL_PeepEvents(reinterpret_cast<SDL2::SDL_Event*>(&ev), 1, SDL2::SDL_GETEVENT, SDL1::SDL_ALLEVENTS, 0)) {
             if (ev.type == SDL1::SDL_QUIT) {
                 Global::is_exiting = true;
             }
@@ -143,11 +147,11 @@ void pushNativeSDLEvents(void)
                 sdlEventQueue.insert(&ev);
         }
     }
-
+    
     if (SDLver == 2) {
-        SDL_Event ev;
-        while (orig::SDL_PeepEvents(&ev, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT)) {
-            if (ev.type == SDL_QUIT) {
+        SDL2::SDL_Event ev;
+        while (orig::SDL_PeepEvents(&ev, 1, SDL2::SDL_GETEVENT, SDL2::SDL_FIRSTEVENT, SDL2::SDL_LASTEVENT)) {
+            if (ev.type == SDL2::SDL_QUIT) {
                 Global::is_exiting = true;
             }
             if (! isBannedEvent(&ev))
@@ -176,7 +180,7 @@ void pushNativeSDLEvents(void)
     }
 }
 
-/* Override */ int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType)
+/* Override */ int SDL_PeepEvents(SDL2::SDL_Event* events, int numevents, SDL2::SDL_eventaction action, Uint32 minType, Uint32 maxType)
 {
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
@@ -202,7 +206,7 @@ void pushNativeSDLEvents(void)
 
     int nevents = 0;
     switch (action) {
-        case SDL_ADDEVENT:
+        case SDL2::SDL_ADDEVENT:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "The game wants to add %d events", numevents);
             if ((numevents > 0) && (events == nullptr))
                 return -1;
@@ -229,14 +233,14 @@ void pushNativeSDLEvents(void)
                 }
             }
             return nevents;
-        case SDL_PEEKEVENT:
+        case SDL2::SDL_PEEKEVENT:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "The game wants to peek at %d events", numevents);
             if (SDLver == 1)
                 return sdlEventQueue.pop(events1, numevents, mask, false);
             if (SDLver == 2)
                 return sdlEventQueue.pop(events, numevents, minType, maxType, false);
             break;
-        case SDL_GETEVENT:
+        case SDL2::SDL_GETEVENT:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "The game wants to get %d events", numevents);
             if (SDLver == 1)
                 return sdlEventQueue.pop(events1, numevents, mask, true);
@@ -248,7 +252,7 @@ void pushNativeSDLEvents(void)
     return 0;
 }
 
-/* Override */ int SDL_PollEvent(SDL_Event *event)
+/* Override */ int SDL_PollEvent(SDL2::SDL_Event *event)
 {
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
@@ -269,7 +273,7 @@ void pushNativeSDLEvents(void)
         if (SDLver == 1)
             return sdlEventQueue.pop(reinterpret_cast<SDL1::SDL_Event*>(event), 1, SDL1::SDL_ALLEVENTS, true);
         if (SDLver == 2)
-            return sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true);
+            return sdlEventQueue.pop(event, 1, SDL2::SDL_FIRSTEVENT, SDL2::SDL_LASTEVENT, true);
     } else {
         /*
          * In the case the event pointer is NULL, SDL doc says to
@@ -281,8 +285,8 @@ void pushNativeSDLEvents(void)
             return sdlEventQueue.pop(&ev1, 1, SDL1::SDL_ALLEVENTS, false);
         }
         if (SDLver == 2) {
-            SDL_Event ev;
-            return sdlEventQueue.pop(&ev, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, false);
+            SDL2::SDL_Event ev;
+            return sdlEventQueue.pop(&ev, 1, SDL2::SDL_FIRSTEVENT, SDL2::SDL_LASTEVENT, false);
         }
     }
     return -1;
@@ -310,7 +314,7 @@ void pushNativeSDLEvents(void)
     }
 
     /* Try to get one event without updating, and return if we got one */
-    SDL_Event ev;
+    SDL2::SDL_Event ev;
     return sdlEventQueue.pop(&ev, 1, minType, maxType, false) ? SDL_TRUE : SDL_FALSE;
 }
 
@@ -338,7 +342,7 @@ void pushNativeSDLEvents(void)
     sdlEventQueue.flush(minType, maxType);
 }
 
-/* Override */ int SDL_WaitEvent(SDL_Event * event)
+/* Override */ int SDL_WaitEvent(SDL2::SDL_Event * event)
 {
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
@@ -351,17 +355,17 @@ void pushNativeSDLEvents(void)
     NOLOGCALL(SDL_PumpEvents());
 
     struct timespec mssleep = {0, 1000000};
-    SDL_Event ev;
+    SDL2::SDL_Event ev;
     if (!event) event = &ev;
 
-    while (! sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true)) {
+    while (! sdlEventQueue.pop(event, 1, SDL2::SDL_FIRSTEVENT, SDL2::SDL_LASTEVENT, true)) {
         NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
         pushNativeSDLEvents();
     }
     return 1;
 }
 
-/* Override */ int SDL_WaitEventTimeout(SDL_Event * event, int timeout)
+/* Override */ int SDL_WaitEventTimeout(SDL2::SDL_Event * event, int timeout)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_EVENTS | LCF_TODO, "%s call with timeout %d", __func__, timeout);
 
@@ -375,21 +379,21 @@ void pushNativeSDLEvents(void)
 
     int t;
     struct timespec mssleep = {0, 1000000};
-    SDL_Event ev;
+    SDL2::SDL_Event ev;
     if (!event) event = &ev;
 
-    if (sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true))
+    if (sdlEventQueue.pop(event, 1, SDL2::SDL_FIRSTEVENT, SDL2::SDL_LASTEVENT, true))
         return 1;
     for (t=0; t<timeout; t++) {
         NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
         pushNativeSDLEvents();
-        if (sdlEventQueue.pop(event, 1, SDL_FIRSTEVENT, SDL_LASTEVENT, true))
+        if (sdlEventQueue.pop(event, 1, SDL2::SDL_FIRSTEVENT, SDL2::SDL_LASTEVENT, true))
             break;
     }
     return (t<timeout);
 }
 
-/* Override */ int SDL_PushEvent(SDL_Event * event)
+/* Override */ int SDL_PushEvent(SDL2::SDL_Event * event)
 {
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
@@ -422,18 +426,18 @@ void pushNativeSDLEvents(void)
 
     int ret = sdlEventQueue.insert(event);
 
-    if (event->type == SDL_QUIT) {
+    if (event->type == SDL2::SDL_QUIT) {
         /* SDL may be used only for controllers. In that case, exiting SDL does
         * not mean that the game is stopped */
-        Uint32 init_flags = SDL_WasInit(0);
-        if (init_flags & SDL_INIT_VIDEO)
+        Uint32 init_flags = SDL2::SDL_WasInit(0);
+        if (init_flags & SDL2::SDL_INIT_VIDEO)
             Global::is_exiting = true;
     }
 
     return ret;
 }
 
-/* Override */ void SDL_SetEventFilter(SDL_EventFilter filter, void *userdata)
+/* Override */ void SDL_SetEventFilter(SDL2::SDL_EventFilter filter, void *userdata)
 {
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
@@ -449,7 +453,7 @@ void pushNativeSDLEvents(void)
         sdlEventQueue.setFilter(filter, userdata);
 }
 
-/* Override */ SDL_bool SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata)
+/* Override */ SDL_bool SDL_GetEventFilter(SDL2::SDL_EventFilter * filter, void **userdata)
 {
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
@@ -478,7 +482,7 @@ void pushNativeSDLEvents(void)
     return SDL_FALSE;
 }
 
-/* Override */ void SDL_AddEventWatch(SDL_EventFilter filter, void *userdata)
+/* Override */ void SDL_AddEventWatch(SDL2::SDL_EventFilter filter, void *userdata)
 {
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
@@ -490,7 +494,7 @@ void pushNativeSDLEvents(void)
     sdlEventQueue.addWatch(filter, userdata);
 }
 
-/* Override */ void SDL_DelEventWatch(SDL_EventFilter filter, void *userdata)
+/* Override */ void SDL_DelEventWatch(SDL2::SDL_EventFilter filter, void *userdata)
 {
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
@@ -502,7 +506,7 @@ void pushNativeSDLEvents(void)
     sdlEventQueue.delWatch(filter, userdata);
 }
 
-/* Override */ void SDL_FilterEvents(SDL_EventFilter filter, void *userdata)
+/* Override */ void SDL_FilterEvents(SDL2::SDL_EventFilter filter, void *userdata)
 {
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
@@ -546,30 +550,30 @@ void pushNativeSDLEvents(void)
         return orig::SDL_RegisterEvents(numevents);
     }
 
-    return SDL_USEREVENT;
+    return SDL2::SDL_USEREVENT;
 }
 
-void logEvent(SDL_Event *event)
+void logEvent(SDL2::SDL_Event *event)
 {
     switch(event->type) {
-        case SDL_KEYDOWN:
-        case SDL_KEYUP:
+        case SDL2::SDL_KEYDOWN:
+        case SDL2::SDL_KEYUP:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Receiving KEYUP/KEYDOWN event with scancode %d and sym %d", (int)event->key.keysym.scancode, event->key.keysym.sym);
             break;
 
-        case SDL_QUIT:
+        case SDL2::SDL_QUIT:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving QUIT event.");
             break;
 
-        case SDL_WINDOWEVENT:
+        case SDL2::SDL_WINDOWEVENT:
             switch (event->window.event) {
-                case SDL_WINDOWEVENT_FOCUS_GAINED:
+                case SDL2::SDL_WINDOWEVENT_FOCUS_GAINED:
                     LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Window %d gained keyboard focus.", event->window.windowID);
                     break;
-                case SDL_WINDOWEVENT_FOCUS_LOST:
+                case SDL2::SDL_WINDOWEVENT_FOCUS_LOST:
                     LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Window %d lost keyboard focus.", event->window.windowID);
                     break;
-                case SDL_WINDOWEVENT_CLOSE:
+                case SDL2::SDL_WINDOWEVENT_CLOSE:
                     LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Window %d closed.", event->window.windowID);
                     break;
                 default:
@@ -578,126 +582,126 @@ void logEvent(SDL_Event *event)
             }
             break;
 
-        case SDL_TEXTEDITING:
+        case SDL2::SDL_TEXTEDITING:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Receiving a keyboard text editing event.");
             break;
 
-        case SDL_TEXTINPUT:
+        case SDL2::SDL_TEXTINPUT:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Receiving a keyboard text input event %s", event->text.text);
             break;
             /*
-               case SDL_KEYMAPCHANGED:
+               case SDL2::SDL_KEYMAPCHANGED:
                LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a keymap change event.");
                break;
                */
-        case SDL_MOUSEMOTION:
+        case SDL2::SDL_MOUSEMOTION:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a mouse move event.");
             break;
 
-        case SDL_MOUSEBUTTONDOWN:
+        case SDL2::SDL_MOUSEBUTTONDOWN:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a mouse button press event.");
             break;
 
-        case SDL_MOUSEBUTTONUP:
+        case SDL2::SDL_MOUSEBUTTONUP:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a mouse button release event.");
             break;
 
-        case SDL_MOUSEWHEEL:
+        case SDL2::SDL_MOUSEWHEEL:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a mouse wheel event.");
             break;
 
-        case SDL_JOYAXISMOTION:
+        case SDL2::SDL_JOYAXISMOTION:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a joystick axis motion event.");
             break;
 
-        case SDL_JOYBALLMOTION:
+        case SDL2::SDL_JOYBALLMOTION:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a joystick trackball event.");
             break;
 
-        case SDL_JOYHATMOTION:
+        case SDL2::SDL_JOYHATMOTION:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a joystick hat position event.");
             break;
 
-        case SDL_JOYBUTTONDOWN:
+        case SDL2::SDL_JOYBUTTONDOWN:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a joystick button press event.");
             break;
 
-        case SDL_JOYBUTTONUP:
+        case SDL2::SDL_JOYBUTTONUP:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a joystick button release event.");
             break;
 
-        case SDL_JOYDEVICEADDED:
+        case SDL2::SDL_JOYDEVICEADDED:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a joystick connected event.");
             break;
 
-        case SDL_JOYDEVICEREMOVED:
+        case SDL2::SDL_JOYDEVICEREMOVED:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a joystick disconnected event.");
             break;
 
-        case SDL_CONTROLLERAXISMOTION:
+        case SDL2::SDL_CONTROLLERAXISMOTION:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a controller axis motion event.");
             break;
 
-        case SDL_CONTROLLERBUTTONDOWN:
+        case SDL2::SDL_CONTROLLERBUTTONDOWN:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a controller button press event.");
             break;
 
-        case SDL_CONTROLLERBUTTONUP:
+        case SDL2::SDL_CONTROLLERBUTTONUP:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a controller button release event.");
             break;
 
-        case SDL_CONTROLLERDEVICEADDED:
+        case SDL2::SDL_CONTROLLERDEVICEADDED:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a controller connected event.");
             break;
 
-        case SDL_CONTROLLERDEVICEREMOVED:
+        case SDL2::SDL_CONTROLLERDEVICEREMOVED:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a controller disconnected event.");
             break;
 
-        case SDL_CONTROLLERDEVICEREMAPPED:
+        case SDL2::SDL_CONTROLLERDEVICEREMAPPED:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a controller mapping update event.");
             break;
 
-        case SDL_FINGERDOWN:
+        case SDL2::SDL_FINGERDOWN:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving an input device touch event.");
             break;
 
-        case SDL_FINGERUP:
+        case SDL2::SDL_FINGERUP:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving an input device release event.");
             break;
 
-        case SDL_FINGERMOTION:
+        case SDL2::SDL_FINGERMOTION:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving an input device drag event.");
             break;
 
-        case SDL_DOLLARGESTURE:
-        case SDL_DOLLARRECORD:
-        case SDL_MULTIGESTURE:
+        case SDL2::SDL_DOLLARGESTURE:
+        case SDL2::SDL_DOLLARRECORD:
+        case SDL2::SDL_MULTIGESTURE:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a gesture event.");
             break;
 
-        case SDL_CLIPBOARDUPDATE:
+        case SDL2::SDL_CLIPBOARDUPDATE:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a clipboard update event.");
             break;
 
-        case SDL_DROPFILE:
+        case SDL2::SDL_DROPFILE:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a drag and drop event.");
             break;
             /*
-               case SDL_AUDIODEVICEADDED:
+               case SDL2::SDL_AUDIODEVICEADDED:
                LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a new audio device event.");
                break;
 
-               case SDL_AUDIODEVICEREMOVED:
+               case SDL2::SDL_AUDIODEVICEREMOVED:
                LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a audio device removal event.");
                break;
                */
-        case SDL_RENDER_TARGETS_RESET:
-            //            case SDL_RENDER_DEVICE_RESET:
+        case SDL2::SDL_RENDER_TARGETS_RESET:
+            //            case SDL2::SDL_RENDER_DEVICE_RESET:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a render event.");
             break;
 
-        case SDL_USEREVENT:
+        case SDL2::SDL_USEREVENT:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "Receiving a user-specified event.");
             break;
 

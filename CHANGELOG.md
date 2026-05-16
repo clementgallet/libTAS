@@ -1,6 +1,9 @@
 ## [Unreleased]
 ### Added
 ### Changed
+
+* Include all SDL2 needed definitions
+
 ### Fixed
 
 ## [1.4.8] - 2026-05-14

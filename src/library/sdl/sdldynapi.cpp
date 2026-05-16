@@ -19,31 +19,6 @@
 
 #include "sdldynapi.h"
 
-/* Define some SDL functions that appear in later versions, so that 
- * distributions that are bundled with old version can still compile this */
-#include "inputs/sdljoystick.h"
-
-#if !SDL_VERSION_ATLEAST(2,0,5)
-OVERRIDE int SDL_GetDisplayUsableBounds(int displayIndex, SDL_Rect * rect);
-#endif
-
-#if !SDL_VERSION_ATLEAST(2,0,12)
-typedef enum
-{
-    SDL_ScaleModeNearest, /**< nearest pixel sampling */
-    SDL_ScaleModeLinear,  /**< linear filtering */
-    SDL_ScaleModeBest     /**< anisotropic filtering */
-} SDL_ScaleMode;
-OVERRIDE int SDL_SetTextureScaleMode(SDL_Texture * texture, SDL_ScaleMode scaleMode);
-#endif
-
-#if !SDL_VERSION_ATLEAST(2,0,17)
-OVERRIDE int SDL_RenderGeometryRaw(SDL_Renderer *renderer, SDL_Texture *texture,
-    const float *xy, int xy_stride, const SDL_Color *color, int color_stride,
-    const float *uv, int uv_stride, int num_vertices,
-    const void *indices, int num_indices, int size_indices);
-#endif
-
 #include "logging.h"
 #include "general/dlhook.h"
 #include "hook.h"
@@ -56,7 +31,7 @@ OVERRIDE int SDL_RenderGeometryRaw(SDL_Renderer *renderer, SDL_Texture *texture,
 namespace libtas {
 
 DEFINE_ORIG_POINTER(SDL_DYNAPI_entry)
-#define SDL_LINK(FUNC) DEFINE_ORIG_POINTER(FUNC)
+#define SDL_LINK(FUNC) DEFINE_ORIG_POINTER_NAMESPACE(FUNC, SDL2)
 #define SDL_HOOK(FUNC)
 #include "sdlhooks.h"
 
@@ -156,7 +131,7 @@ void setDynapiAddr(uint64_t addr)
     }
 
 #define IF_IN_BOUNDS(FUNC) if (index::FUNC * sizeof(void *) < tablesize)
-#define SDL_LINK(FUNC) IF_IN_BOUNDS(FUNC) orig::FUNC = reinterpret_cast<decltype(&FUNC)>(entries[index::FUNC]); else LOG(LL_DEBUG, LCF_SDL | LCF_HOOK, "sdl dynapi symbol %s will not be imported", #FUNC);
+#define SDL_LINK(FUNC) IF_IN_BOUNDS(FUNC) orig::FUNC = reinterpret_cast<decltype(orig::FUNC)>(entries[index::FUNC]); else LOG(LL_DEBUG, LCF_SDL | LCF_HOOK, "sdl dynapi symbol %s will not be imported", #FUNC);
 #define SDL_HOOK(FUNC) IF_IN_BOUNDS(FUNC) entries[index::FUNC] = reinterpret_cast<void *>(dlsym(libtaslib, #FUNC));
 #include "sdlhooks.h"
 

@@ -24,7 +24,7 @@
 
 #include <time.h>
 #include <unistd.h>
-#include <SDL2/SDL.h>
+#include "../external/SDL2.h"
 
 namespace libtas {
 

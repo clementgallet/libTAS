@@ -26,7 +26,7 @@
 #include "RenderHUD_Base_MacOS.h"
 #endif
 
-#include <SDL2/SDL.h> // SDL_Renderer
+#include "../external/SDL2.h" // SDL_Renderer
 
 namespace libtas {
 #ifdef __unix__
@@ -37,7 +37,7 @@ class RenderHUD_SDL2_renderer : public RenderHUD_Base_MacOS
 {
     public:
         ~RenderHUD_SDL2_renderer();
-        void setRenderer(SDL_Renderer* r);
+        void setRenderer(SDL2::SDL_Renderer* r);
 
         void newFrame();
 
@@ -51,7 +51,7 @@ class RenderHUD_SDL2_renderer : public RenderHUD_Base_MacOS
         bool supportsLargerViewport() {return false;}
 
     private:
-        SDL_Renderer* renderer = nullptr;
+        SDL2::SDL_Renderer* renderer = nullptr;
 
 };
 }

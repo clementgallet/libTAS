@@ -31,7 +31,7 @@
 
 #include <X11/Xlib.h>
 #include <cstring>
-// #include <SDL2/SDL.h>
+// #include "../external/SDL2.h"
 
 namespace libtas {
 

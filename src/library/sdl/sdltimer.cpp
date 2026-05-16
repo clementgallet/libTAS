@@ -28,14 +28,14 @@ namespace libtas {
 DECLARE_ORIG_POINTER(SDL_AddTimer)
 DECLARE_ORIG_POINTER(SDL_RemoveTimer)
 
-/* Override */ SDL_TimerID SDL_AddTimer(Uint32 interval, SDL_NewTimerCallback callback, void *param)
+/* Override */ SDL2::SDL_TimerID SDL_AddTimer(Uint32 interval, SDL2::SDL_NewTimerCallback callback, void *param)
 {
     LOG(LL_TRACE, LCF_TIMERS | LCF_SDL | LCF_TODO, "Add SDL Timer with call after %d ms", interval);
     LINK_NAMESPACE_SDLX(SDL_AddTimer);
     return orig::SDL_AddTimer(interval, callback, param);
 }
 
-/* Override */ SDL_bool SDL_RemoveTimer(SDL_TimerID id)
+/* Override */ SDL_bool SDL_RemoveTimer(SDL2::SDL_TimerID id)
 {
     LOG(LL_TRACE, LCF_TIMERS | LCF_SDL | LCF_TODO, "Remove SDL Timer.");
     LINK_NAMESPACE_SDLX(SDL_RemoveTimer);

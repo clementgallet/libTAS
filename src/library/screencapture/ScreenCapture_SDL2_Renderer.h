@@ -24,8 +24,10 @@
 
 #include <stdint.h>
 
-class SDL_Renderer;
-class SDL_Texture;
+namespace SDL2 {
+    struct SDL_Renderer;
+    struct SDL_Texture;
+}
 
 namespace libtas {
 
@@ -66,8 +68,8 @@ void clearScreen();
 uint64_t screenTexture();
 
 private:
-    SDL_Texture* screenSDLTex = nullptr;
-    SDL_Renderer* sdl_renderer = nullptr;
+    SDL2::SDL_Texture* screenSDLTex = nullptr;
+    SDL2::SDL_Renderer* sdl_renderer = nullptr;
 
 };
 }

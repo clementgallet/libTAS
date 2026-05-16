@@ -44,7 +44,7 @@ void SDL_StopTextInput(void)
     isTextInputActive = false;
 }
 
-void SDL_SetTextInputRect(SDL_Rect *rect)
+void SDL_SetTextInputRect(const SDL2::SDL_Rect *rect)
 {
     LOGTRACE(LCF_SDL | LCF_KEYBOARD);
 }

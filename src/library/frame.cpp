@@ -525,8 +525,8 @@ static void pushQuitEvent(void)
     }
 
     if (Global::game_info.video & GameInfo::SDL2) {
-        SDL_Event ev;
-        ev.type = SDL_QUIT;
+        SDL2::SDL_Event ev;
+        ev.type = SDL2::SDL_QUIT;
         sdlEventQueue.insert(&ev);
     }
 

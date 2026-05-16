@@ -25,7 +25,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/signal.h>
-#include <SDL2/SDL.h>
 #ifdef __linux__
 #include <sys/epoll.h>
 #endif

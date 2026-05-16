@@ -20,7 +20,7 @@
 #ifndef LIBTAS_SDLTEXTINPUT_H_INCL
 #define LIBTAS_SDLTEXTINPUT_H_INCL
 
-#include <SDL2/SDL.h>
+#include "../external/SDL2.h"
 
 #include "hook.h"
 
@@ -59,7 +59,7 @@ OVERRIDE void SDL_StopTextInput(void);
  *
  *  \sa SDL_StartTextInput()
  */
-OVERRIDE void SDL_SetTextInputRect(SDL_Rect *rect);
+OVERRIDE void SDL_SetTextInputRect(const SDL2::SDL_Rect *rect);
 
 /**
  * Enable/Disable UNICODE translation of keyboard input.
