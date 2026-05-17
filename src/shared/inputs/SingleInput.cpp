@@ -70,12 +70,12 @@ bool SingleInput::isValid() const
         case IT_CONTROLLER2_BUTTON:
         case IT_CONTROLLER3_BUTTON:
         case IT_CONTROLLER4_BUTTON:
-            return toSDL2Button(which) != sdl2::SDL_CONTROLLER_BUTTON_INVALID;
+            return toSDL2Button(which) != libtas::sdl2::SDL_CONTROLLER_BUTTON_INVALID;
         case IT_CONTROLLER1_AXIS:
         case IT_CONTROLLER2_AXIS:
         case IT_CONTROLLER3_AXIS:
         case IT_CONTROLLER4_AXIS:
-            return toSDL2Axis(which) != sdl2::SDL_CONTROLLER_AXIS_INVALID;
+            return toSDL2Axis(which) != libtas::sdl2::SDL_CONTROLLER_AXIS_INVALID;
     }
     return false;
 }
@@ -160,15 +160,15 @@ unsigned int SingleInput::toSDL1PointerButton(int button)
 {
     switch (button) {
         case SingleInput::POINTER_B1:
-            return sdl1::SDL1_BUTTON_LEFT;
+            return libtas::sdl1::SDL1_BUTTON_LEFT;
         case SingleInput::POINTER_B2:
-            return sdl1::SDL1_BUTTON_MIDDLE;
+            return libtas::sdl1::SDL1_BUTTON_MIDDLE;
         case SingleInput::POINTER_B3:
-            return sdl1::SDL1_BUTTON_RIGHT;
+            return libtas::sdl1::SDL1_BUTTON_RIGHT;
         case SingleInput::POINTER_B4:
-            return sdl1::SDL1_BUTTON_X1;
+            return libtas::sdl1::SDL1_BUTTON_X1;
         case SingleInput::POINTER_B5:
-            return sdl1::SDL1_BUTTON_X2;
+            return libtas::sdl1::SDL1_BUTTON_X2;
         default:
             return 0;
     }
@@ -178,15 +178,15 @@ unsigned int SingleInput::toSDL2PointerButton(int button)
 {
     switch (button) {
         case SingleInput::POINTER_B1:
-            return sdl2::SDL_BUTTON_LEFT;
+            return libtas::sdl2::SDL_BUTTON_LEFT;
         case SingleInput::POINTER_B2:
-            return sdl2::SDL_BUTTON_MIDDLE;
+            return libtas::sdl2::SDL_BUTTON_MIDDLE;
         case SingleInput::POINTER_B3:
-            return sdl2::SDL_BUTTON_RIGHT;
+            return libtas::sdl2::SDL_BUTTON_RIGHT;
         case SingleInput::POINTER_B4:
-            return sdl2::SDL_BUTTON_X1;
+            return libtas::sdl2::SDL_BUTTON_X1;
         case SingleInput::POINTER_B5:
-            return sdl2::SDL_BUTTON_X2;
+            return libtas::sdl2::SDL_BUTTON_X2;
         default:
             return 0;
     }
@@ -215,15 +215,15 @@ unsigned int SingleInput::toSDL1PointerMask(int mask)
 {
     unsigned int sdl_mask = 0;
     if (mask & (1 << SingleInput::POINTER_B1))
-        sdl_mask |= sdl1::SDL1_BUTTON_LMASK;
+        sdl_mask |= libtas::sdl1::SDL1_BUTTON_LMASK;
     if (mask & (1 << SingleInput::POINTER_B2))
-        sdl_mask |= sdl1::SDL1_BUTTON_MMASK;
+        sdl_mask |= libtas::sdl1::SDL1_BUTTON_MMASK;
     if (mask & (1 << SingleInput::POINTER_B3))
-        sdl_mask |= sdl1::SDL1_BUTTON_RMASK;
+        sdl_mask |= libtas::sdl1::SDL1_BUTTON_RMASK;
     if (mask & (1 << SingleInput::POINTER_B4))
-        sdl_mask |= sdl1::SDL1_BUTTON_X1MASK;
+        sdl_mask |= libtas::sdl1::SDL1_BUTTON_X1MASK;
     if (mask & (1 << SingleInput::POINTER_B5))
-        sdl_mask |= sdl1::SDL1_BUTTON_X2MASK;
+        sdl_mask |= libtas::sdl1::SDL1_BUTTON_X2MASK;
 
     return sdl_mask;
 }
@@ -232,15 +232,15 @@ unsigned int SingleInput::toSDL2PointerMask(int mask)
 {
     unsigned int sdl_mask = 0;
     if (mask & (1 << SingleInput::POINTER_B1))
-        sdl_mask |= sdl2::SDL_BUTTON_LMASK;
+        sdl_mask |= libtas::sdl2::SDL_BUTTON_LMASK;
     if (mask & (1 << SingleInput::POINTER_B2))
-        sdl_mask |= sdl2::SDL_BUTTON_MMASK;
+        sdl_mask |= libtas::sdl2::SDL_BUTTON_MMASK;
     if (mask & (1 << SingleInput::POINTER_B3))
-        sdl_mask |= sdl2::SDL_BUTTON_RMASK;
+        sdl_mask |= libtas::sdl2::SDL_BUTTON_RMASK;
     if (mask & (1 << SingleInput::POINTER_B4))
-        sdl_mask |= sdl2::SDL_BUTTON_X1MASK;
+        sdl_mask |= libtas::sdl2::SDL_BUTTON_X1MASK;
     if (mask & (1 << SingleInput::POINTER_B5))
-        sdl_mask |= sdl2::SDL_BUTTON_X2MASK;
+        sdl_mask |= libtas::sdl2::SDL_BUTTON_X2MASK;
 
     return sdl_mask;
 }
@@ -250,19 +250,19 @@ int SingleInput::toSDL2Axis(int axis)
 {
     switch(axis) {
         case SingleInput::AXIS_LEFTX:
-            return sdl2::SDL_CONTROLLER_AXIS_LEFTX;
+            return libtas::sdl2::SDL_CONTROLLER_AXIS_LEFTX;
         case SingleInput::AXIS_LEFTY:
-            return sdl2::SDL_CONTROLLER_AXIS_LEFTY;
+            return libtas::sdl2::SDL_CONTROLLER_AXIS_LEFTY;
         case SingleInput::AXIS_RIGHTX:
-            return sdl2::SDL_CONTROLLER_AXIS_RIGHTX;
+            return libtas::sdl2::SDL_CONTROLLER_AXIS_RIGHTX;
         case SingleInput::AXIS_RIGHTY:
-            return sdl2::SDL_CONTROLLER_AXIS_RIGHTY;
+            return libtas::sdl2::SDL_CONTROLLER_AXIS_RIGHTY;
         case SingleInput::AXIS_TRIGGERLEFT:
-            return sdl2::SDL_CONTROLLER_AXIS_TRIGGERLEFT;
+            return libtas::sdl2::SDL_CONTROLLER_AXIS_TRIGGERLEFT;
         case SingleInput::AXIS_TRIGGERRIGHT:
-            return sdl2::SDL_CONTROLLER_AXIS_TRIGGERRIGHT;
+            return libtas::sdl2::SDL_CONTROLLER_AXIS_TRIGGERRIGHT;
         default:
-            return sdl2::SDL_CONTROLLER_AXIS_INVALID;
+            return libtas::sdl2::SDL_CONTROLLER_AXIS_INVALID;
     }
 }
 
@@ -270,37 +270,37 @@ int SingleInput::toSDL2Button(int button)
 {
     switch(button) {
         case SingleInput::BUTTON_A:
-            return sdl2::SDL_CONTROLLER_BUTTON_A;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_A;
         case SingleInput::BUTTON_B:
-            return sdl2::SDL_CONTROLLER_BUTTON_B;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_B;
         case SingleInput::BUTTON_X:
-            return sdl2::SDL_CONTROLLER_BUTTON_X;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_X;
         case SingleInput::BUTTON_Y:
-            return sdl2::SDL_CONTROLLER_BUTTON_Y;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_Y;
         case SingleInput::BUTTON_BACK:
-            return sdl2::SDL_CONTROLLER_BUTTON_BACK;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_BACK;
         case SingleInput::BUTTON_GUIDE:
-            return sdl2::SDL_CONTROLLER_BUTTON_GUIDE;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_GUIDE;
         case SingleInput::BUTTON_START:
-            return sdl2::SDL_CONTROLLER_BUTTON_START;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_START;
         case SingleInput::BUTTON_LEFTSTICK:
-            return sdl2::SDL_CONTROLLER_BUTTON_LEFTSTICK;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_LEFTSTICK;
         case SingleInput::BUTTON_RIGHTSTICK:
-            return sdl2::SDL_CONTROLLER_BUTTON_RIGHTSTICK;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_RIGHTSTICK;
         case SingleInput::BUTTON_LEFTSHOULDER:
-            return sdl2::SDL_CONTROLLER_BUTTON_LEFTSHOULDER;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_LEFTSHOULDER;
         case SingleInput::BUTTON_RIGHTSHOULDER:
-            return sdl2::SDL_CONTROLLER_BUTTON_RIGHTSHOULDER;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_RIGHTSHOULDER;
         case SingleInput::BUTTON_DPAD_UP:
-            return sdl2::SDL_CONTROLLER_BUTTON_DPAD_UP;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_DPAD_UP;
         case SingleInput::BUTTON_DPAD_DOWN:
-            return sdl2::SDL_CONTROLLER_BUTTON_DPAD_DOWN;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_DPAD_DOWN;
         case SingleInput::BUTTON_DPAD_LEFT:
-            return sdl2::SDL_CONTROLLER_BUTTON_DPAD_LEFT;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_DPAD_LEFT;
         case SingleInput::BUTTON_DPAD_RIGHT:
-            return sdl2::SDL_CONTROLLER_BUTTON_DPAD_RIGHT;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_DPAD_RIGHT;
         default:
-            return sdl2::SDL_CONTROLLER_BUTTON_INVALID;
+            return libtas::sdl2::SDL_CONTROLLER_BUTTON_INVALID;
     }
 }
 
@@ -321,15 +321,15 @@ int SingleInput::toSDLHat(int buttons)
     /* Fortunately, we use the fact that SDL_HAT_X constants
      * are the same in SDL 1 and SDL 2
      */
-    Uint8 hatState = sdl2::SDL_HAT_CENTERED;
+    Uint8 hatState = libtas::sdl2::SDL_HAT_CENTERED;
     if (buttons & (1 << SingleInput::BUTTON_DPAD_UP))
-        hatState |= sdl2::SDL_HAT_UP;
+        hatState |= libtas::sdl2::SDL_HAT_UP;
     if (buttons & (1 << SingleInput::BUTTON_DPAD_DOWN))
-        hatState |= sdl2::SDL_HAT_DOWN;
+        hatState |= libtas::sdl2::SDL_HAT_DOWN;
     if (buttons & (1 << SingleInput::BUTTON_DPAD_LEFT))
-        hatState |= sdl2::SDL_HAT_LEFT;
+        hatState |= libtas::sdl2::SDL_HAT_LEFT;
     if (buttons & (1 << SingleInput::BUTTON_DPAD_RIGHT))
-        hatState |= sdl2::SDL_HAT_RIGHT;
+        hatState |= libtas::sdl2::SDL_HAT_RIGHT;
 
     return hatState;
 }

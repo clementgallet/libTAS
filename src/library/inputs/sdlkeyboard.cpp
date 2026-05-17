@@ -52,7 +52,7 @@ static Uint8 SDL1_keyboard[sdl1::SDLK_LAST] = {0};
     return SDL1_keyboard;
 }
 
-/* Override */ sdl2::SDL_Window* SDL_GetKeyboardFocus(void)
+/* Override */ SDL_Window* SDL_GetKeyboardFocus(void)
 {
     LOGTRACE(LCF_SDL | LCF_KEYBOARD);
     return sdl::gameSDLWindow;

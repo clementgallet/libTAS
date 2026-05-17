@@ -24,12 +24,12 @@
 
 #include <stdint.h>
 
+namespace libtas {
+
 namespace sdl2 {
     struct SDL_Surface;
-    struct SDL_Texture;
 }
-
-namespace libtas {
+struct SDL_Texture;
 
 class ScreenCapture_SDL2_Surface : public ScreenCapture_Impl {
 
@@ -70,7 +70,7 @@ private:
     sdl2::SDL_Surface* screenSDL2Surf = nullptr;
 
     /* SDL2 screen texture */
-    sdl2::SDL_Texture* screenSDLTex = nullptr;
+    SDL_Texture* screenSDLTex = nullptr;
 
 };
 }

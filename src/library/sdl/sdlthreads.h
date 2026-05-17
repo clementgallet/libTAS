@@ -35,7 +35,7 @@ namespace libtas {
   * performed in low-level pthread API, so having one prototype for both versions
   * is fine.
   */
-OVERRIDE sdl2::SDL_Thread* SDL_CreateThread(sdl2::SDL_ThreadFunction fn, const char *name, void *data);
+OVERRIDE SDL_Thread* SDL_CreateThread(sdl2::SDL_ThreadFunction fn, const char *name, void *data);
 
 
 /**
@@ -56,7 +56,7 @@ OVERRIDE sdl2::SDL_Thread* SDL_CreateThread(sdl2::SDL_ThreadFunction fn, const c
  *
  *  It is safe to pass NULL to this function; it is a no-op.
  */
-OVERRIDE void SDL_WaitThread(sdl2::SDL_Thread * thread, int *status);
+OVERRIDE void SDL_WaitThread(SDL_Thread * thread, int *status);
 
 /**
  *  A thread may be "detached" to signify that it should not remain until

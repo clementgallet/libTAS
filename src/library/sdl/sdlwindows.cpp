@@ -51,7 +51,7 @@ DEFINE_ORIG_POINTER(SDL_Flip)
 DEFINE_ORIG_POINTER(SDL_UpdateRects)
 DEFINE_ORIG_POINTER(SDL_UpdateRect)
 
-sdl2::SDL_Window* sdl::gameSDLWindow = nullptr;
+SDL_Window* sdl::gameSDLWindow = nullptr;
 
 static int swapInterval = 0;
 static bool windowFullscreen = false;
@@ -71,7 +71,7 @@ static bool windowFullscreen = false;
     frameBoundary([] () {orig::SDL_GL_SwapBuffers();}, renderHUD_GL);
 }
 
-/* Override */ void SDL_GL_SwapWindow(sdl2::SDL_Window* window)
+/* Override */ void SDL_GL_SwapWindow(SDL_Window* window)
 {
     if (GlobalState::isNative())
         return ORIG_SDL2_CALL(SDL_GL_SwapWindow, (window));
@@ -83,7 +83,7 @@ static bool windowFullscreen = false;
     frameBoundary([&] () {ORIG_SDL2_CALL(SDL_GL_SwapWindow, (window));}, renderHUD_GL);
 }
 
-void* SDL_GL_CreateContext(sdl2::SDL_Window *window)
+void* SDL_GL_CreateContext(SDL_Window *window)
 {
     LOGTRACE(LCF_SDL | LCF_OGL | LCF_WINDOW);
 
@@ -150,7 +150,7 @@ void SDL_GL_DeleteContext(sdl2::SDL_GLContext context)
     return swapInterval;
 }
 
-/* Override */ sdl2::SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
+/* Override */ SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: %x", __func__,  title?title:"", x, y, w, h, flags);
 
     ThreadManager::setMainThread();
@@ -231,7 +231,7 @@ void SDL_GL_DeleteContext(sdl2::SDL_GLContext context)
     return sdl::gameSDLWindow;
 }
 
-/* Override */ void SDL_DestroyWindow(sdl2::SDL_Window* window)
+/* Override */ void SDL_DestroyWindow(SDL_Window* window)
 {
     LOGTRACE(LCF_SDL | LCF_WINDOW);
 
@@ -247,7 +247,7 @@ void SDL_GL_DeleteContext(sdl2::SDL_GLContext context)
     ScreenCapture::fini();
 }
 
-/* Override */ Uint32 SDL_GetWindowID(sdl2::SDL_Window* window)
+/* Override */ Uint32 SDL_GetWindowID(SDL_Window* window)
 {
     LOGTRACE(LCF_SDL | LCF_WINDOW);
     if (sdl::gameSDLWindow == window)
@@ -255,7 +255,7 @@ void SDL_GL_DeleteContext(sdl2::SDL_GLContext context)
     return ORIG_SDL2_CALL(SDL_GetWindowID, (window));
 }
 
-/* Override */ sdl2::SDL_Window* SDL_GetWindowFromID(Uint32 id)
+/* Override */ SDL_Window* SDL_GetWindowFromID(Uint32 id)
 {
     LOGTRACE(LCF_SDL | LCF_WINDOW);
     if (id == 1)
@@ -263,7 +263,7 @@ void SDL_GL_DeleteContext(sdl2::SDL_GLContext context)
     return ORIG_SDL2_CALL(SDL_GetWindowFromID, (id));
 }
 
-/* Override */ Uint32 SDL_GetWindowFlags(sdl2::SDL_Window* window){
+/* Override */ Uint32 SDL_GetWindowFlags(SDL_Window* window){
     LOGTRACE(LCF_SDL | LCF_WINDOW);
     Uint32 flags = ORIG_SDL2_CALL(SDL_GetWindowFlags, (window));
     flags |= sdl2::SDL_WINDOW_INPUT_FOCUS | sdl2::SDL_WINDOW_MOUSE_FOCUS;
@@ -279,7 +279,7 @@ void SDL_GL_DeleteContext(sdl2::SDL_GLContext context)
     return flags;
 }
 
-/* Override */ void SDL_SetWindowTitle(sdl2::SDL_Window * window, const char *title)
+/* Override */ void SDL_SetWindowTitle(SDL_Window * window, const char *title)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with title %s", __func__, title?title:"[null]");
 
@@ -295,7 +295,7 @@ void SDL_GL_DeleteContext(sdl2::SDL_GLContext context)
     WindowTitle::setUpdateFunc([icon] (const char* t) {orig::SDL_WM_SetCaption(t, icon);});
 }
 
-/* Override */ int SDL_SetWindowFullscreen(sdl2::SDL_Window * window, Uint32 flags)
+/* Override */ int SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with flags %d", __func__, flags);
 
@@ -323,20 +323,20 @@ void SDL_GL_DeleteContext(sdl2::SDL_GLContext context)
     return 0; // success
 }
 
-/* Override */ void SDL_SetWindowResizable(sdl2::SDL_Window * window, SDL_bool resizable)
+/* Override */ void SDL_SetWindowResizable(SDL_Window * window, SDL_bool resizable)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with resizable %d", __func__, resizable);
     /* Don't do anything */
 }
 
-/* Override */ void SDL_SetWindowBordered(sdl2::SDL_Window * window, SDL_bool bordered)
+/* Override */ void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with border %d", __func__, bordered);
     /* Don't do anything */
 }
 
 /* Override */ int SDL_CreateWindowAndRenderer(int width, int height,
-        Uint32 window_flags, sdl2::SDL_Window **window, sdl2::SDL_Renderer **renderer)
+        Uint32 window_flags, SDL_Window **window, SDL_Renderer **renderer)
 {
     LOGTRACE(LCF_SDL | LCF_WINDOW);
     LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "  size %d x %d", width, height);
@@ -361,7 +361,7 @@ void SDL_GL_DeleteContext(sdl2::SDL_GLContext context)
     return ret;
 }
 
-/* Override */ void SDL_SetWindowPosition(sdl2::SDL_Window*, int x, int y)
+/* Override */ void SDL_SetWindowPosition(SDL_Window*, int x, int y)
 {
     LOGTRACE(LCF_SDL | LCF_WINDOW);
     /* Preventing the game to change the window position, but still push the event */
@@ -382,7 +382,7 @@ void SDL_GL_DeleteContext(sdl2::SDL_GLContext context)
     sdlEventQueue.insert(&event);
 }
 
-/* Override */ void SDL_GetWindowPosition(sdl2::SDL_Window *, int *x, int *y)
+/* Override */ void SDL_GetWindowPosition(SDL_Window *, int *x, int *y)
 {
     LOGTRACE(LCF_SDL | LCF_WINDOW);
     /* Always simulate the game window being on top-left corner, so that games
@@ -395,7 +395,7 @@ void SDL_GL_DeleteContext(sdl2::SDL_GLContext context)
         *y = 0;
 }
 
-/* Override */ void SDL_SetWindowSize(sdl2::SDL_Window* window, int w, int h)
+/* Override */ void SDL_SetWindowSize(SDL_Window* window, int w, int h)
 {
     if (GlobalState::isNative()) {
         return ORIG_SDL2_CALL(SDL_SetWindowSize, (window, w, h));
@@ -412,7 +412,7 @@ void SDL_GL_DeleteContext(sdl2::SDL_GLContext context)
     ScreenCapture::resize(w, h);
 }
 
-/* Override */ void SDL_GetWindowSize(sdl2::SDL_Window * window, int *w, int *h)
+/* Override */ void SDL_GetWindowSize(SDL_Window * window, int *w, int *h)
 {
     if (GlobalState::isNative()) {
         return ORIG_SDL2_CALL(SDL_GetWindowSize, (window, w, h));
@@ -568,7 +568,7 @@ OVERRIDE void SDL_UpdateRects(sdl1::SDL_Surface *screen, int numrects, sdl1::SDL
     return ORIG_SDL2_CALL(SDL_GL_SetAttribute, (attr, value));
 }
 
-/* Override */ int SDL_UpdateWindowSurface(sdl2::SDL_Window * window)
+/* Override */ int SDL_UpdateWindowSurface(SDL_Window * window)
 {
     if (GlobalState::isNative())
         return ORIG_SDL2_CALL(SDL_UpdateWindowSurface, (window));
@@ -583,7 +583,7 @@ OVERRIDE void SDL_UpdateRects(sdl1::SDL_Surface *screen, int numrects, sdl1::SDL
     return 0;
 }
 
-/* Override */ int SDL_UpdateWindowSurfaceRects(sdl2::SDL_Window * window, const sdl2::SDL_Rect * rects, int numrects)
+/* Override */ int SDL_UpdateWindowSurfaceRects(SDL_Window * window, const sdl2::SDL_Rect * rects, int numrects)
 {
     if (GlobalState::isNative()) {
         return ORIG_SDL2_CALL(SDL_UpdateWindowSurfaceRects,(window, rects, numrects));
@@ -599,5 +599,53 @@ OVERRIDE void SDL_UpdateRects(sdl1::SDL_Surface *screen, int numrects, sdl1::SDL
     return 0;
 }
 
+namespace sdl3 {
+
+/**
+ * Create a window and default renderer.
+ *
+ * \param title the title of the window, in UTF-8 encoding.
+ * \param width the width of the window.
+ * \param height the height of the window.
+ * \param window_flags the flags used to create the window (see
+ *                     SDL_CreateWindow()).
+ * \param window a pointer filled with the window, or NULL on error.
+ * \param renderer a pointer filled with the renderer, or NULL on error.
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_CreateRenderer
+ * \sa SDL_CreateWindow
+ */
+bool SDL_CreateWindowAndRenderer(const char *title, int width, int height, SDL_WindowFlags window_flags, SDL_Window **window, SDL_Renderer **renderer)
+{
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "  size %d x %d", width, height);
+
+    ThreadManager::setMainThread();
+
+    /* Disable fullscreen */
+    windowFullscreen = (window_flags & sdl3::SDL_WINDOW_FULLSCREEN);
+    window_flags &= 0xFFFFFFFF ^ sdl3::SDL_WINDOW_FULLSCREEN;
+
+    /* Disable hidden windows */
+    // window_flags &= 0xFFFFFFFF ^ SDL2::SDL_WINDOW_HIDDEN;
+
+    /* Disable high DPI mode */
+    window_flags &= 0xFFFFFFFF ^ sdl3::SDL_WINDOW_HIGH_PIXEL_DENSITY;
+
+    Global::game_info.video |= GameInfo::SDL2_RENDERER;
+
+    int ret = ORIG_SDL3_CALL(SDL_CreateWindowAndRenderer, (title, width, height, window_flags, window, renderer));
+    sdl::gameSDLWindow = *window;
+
+    return ret;
+}
+
+}
 
 }

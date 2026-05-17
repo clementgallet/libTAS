@@ -23,6 +23,7 @@
 #include "hook.h"
 #include "../external/SDL1.h"
 #include "../external/SDL2.h"
+#include "../external/SDL3.h"
 
 namespace libtas {
 
@@ -162,6 +163,23 @@ OVERRIDE void SDL_AddEventWatch(sdl2::SDL_EventFilter filter, void *userdata);
 OVERRIDE void SDL_DelEventWatch(sdl2::SDL_EventFilter filter, void *userdata);
 
 /**
+ * Remove an event watch callback added with SDL_AddEventWatch().
+ *
+ * This function takes the same input as SDL_AddEventWatch() to identify and
+ * delete the corresponding callback.
+ *
+ * \param filter the function originally passed to SDL_AddEventWatch().
+ * \param userdata the pointer originally passed to SDL_AddEventWatch().
+ *
+ * \threadsafety It is safe to call this function from any thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_AddEventWatch
+ */
+OVERRIDE void SDL_RemoveEventWatch(sdl3::SDL_EventFilter filter, void *userdata);
+
+/**
  *  Run the filter function on the current event queue, removing any
  *  events for which the filter returns 0.
  */
@@ -178,6 +196,34 @@ OVERRIDE void SDL_FilterEvents(sdl2::SDL_EventFilter filter, void *userdata);
  */
 OVERRIDE Uint8 SDL_EventState(Uint32 type, int state);
 /* @} */
+
+/**
+ * Set the state of processing events by type.
+ *
+ * \param type the type of event; see SDL_EventType for details.
+ * \param enabled whether to process the event or not.
+ *
+ * \threadsafety It is safe to call this function from any thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_EventEnabled
+ */
+OVERRIDE void SDL_SetEventEnabled(Uint32 type, bool enabled);
+
+/**
+ * Query the state of processing events by type.
+ *
+ * \param type the type of event; see SDL_EventType for details.
+ * \returns true if the event is being processed, false otherwise.
+ *
+ * \threadsafety It is safe to call this function from any thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_SetEventEnabled
+ */
+OVERRIDE bool SDL_EventEnabled(Uint32 type);
 
 /**
  *  This function allocates a set of user-defined events, and returns

@@ -27,20 +27,14 @@
 #ifndef _SDL1_h
 #define _SDL1_h
 
+#include "SDL_common.h"
 #include <stdint.h>
+
+namespace libtas {
 
 namespace sdl1 {
 
-    typedef uint8_t Uint8;
-    typedef uint16_t Uint16;
-    typedef uint32_t Uint32;
-    typedef uint64_t Uint64;
-    typedef int32_t Sint32;
-    typedef int16_t Sint16;
-    typedef int64_t Sint64;
-
-
-    /** Event enumerations */
+        /** Event enumerations */
     typedef enum {
         SDL_NOEVENT = 0,			/**< Unused (do not remove) */
         SDL_ACTIVEEVENT,			/**< Application loses/gains visibility */
@@ -113,16 +107,6 @@ namespace sdl1 {
         SDL_PEEKEVENT,
         SDL_GETEVENT
     } SDL_eventaction;
-
-    enum 
-    {
-        SDL_RELEASED = 0,
-        SDL_PRESSED = 1,
-        SDL_QUERY = -1,
-        SDL_IGNORE = 0,
-        SDL_DISABLE = 0,
-        SDL_ENABLE = 1
-    };
 
     typedef enum {
         /** @name ASCII mapped keysyms
@@ -655,12 +639,7 @@ namespace sdl1 {
         SDL_APPACTIVE = 0x04,        /**< The application is active */
     };
 
-    typedef struct SDL_version
-    {
-        Uint8 major;
-        Uint8 minor;
-        Uint8 patch;
-    } SDL_version;
+}
 
 }
 

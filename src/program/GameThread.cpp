@@ -128,6 +128,7 @@ void GameThread::set_env_variables(Context *context, int gameArch)
          * Does not work for wine games, because our custom SDL functions don't
          * have the correct calling convention. */
         setenv("SDL_DYNAMIC_API", context->libtaspath.c_str(), 1);
+        setenv("SDL3_DYNAMIC_API", context->libtaspath.c_str(), 1);
     }
 }
 

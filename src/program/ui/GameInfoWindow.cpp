@@ -48,6 +48,15 @@ void GameInfoWindow::update(GameInfo game_info)
     if (game_info.video & GameInfo::SDL1) {
         videoStr = "SDL 1";
     }
+    else if (game_info.video & GameInfo::SDL3_RENDERER) {
+        videoStr = "SDL 3 renderer";
+    }
+    else if (game_info.video & GameInfo::SDL3_SURFACE) {
+        videoStr = "SDL 3 surface";
+    }
+    else if (game_info.video & GameInfo::SDL3) {
+        videoStr = "SDL 3";
+    }
     else if (game_info.video & GameInfo::SDL2_RENDERER) {
         videoStr = "SDL 2 renderer";
     }
@@ -98,6 +107,9 @@ void GameInfoWindow::update(GameInfo game_info)
     else if (game_info.audio & GameInfo::SDL2) {
         audioLabel->setText(tr("yes (SDL 2)"));
     }
+    else if (game_info.audio & GameInfo::SDL3) {
+        audioLabel->setText(tr("yes (SDL 3)"));
+    }
     else if (game_info.audio & GameInfo::OPENAL) {
         audioLabel->setText(tr("yes (OpenAL)"));
     }
@@ -117,6 +129,9 @@ void GameInfoWindow::update(GameInfo game_info)
     else if (game_info.keyboard & GameInfo::SDL2) {
         keyboardLabel->setText(tr("yes (SDL 2)"));
     }
+    else if (game_info.keyboard & GameInfo::SDL3) {
+        keyboardLabel->setText(tr("yes (SDL 3)"));
+    }
     else if (game_info.keyboard & GameInfo::XCBEVENTS) {
         keyboardLabel->setText(tr("yes (xcb)"));
     }
@@ -133,6 +148,9 @@ void GameInfoWindow::update(GameInfo game_info)
     else if (game_info.mouse & GameInfo::SDL2) {
         mouseLabel->setText(tr("yes (SDL 2)"));
     }
+    else if (game_info.mouse & GameInfo::SDL3) {
+        mouseLabel->setText(tr("yes (SDL 3)"));
+    }
     else if (game_info.mouse & GameInfo::XCBEVENTS) {
         mouseLabel->setText(tr("yes (xcb)"));
     }
@@ -148,6 +166,9 @@ void GameInfoWindow::update(GameInfo game_info)
     }
     else if (game_info.joystick & GameInfo::SDL2) {
         joystickLabel->setText(tr("yes (SDL 2)"));
+    }
+    else if (game_info.joystick & GameInfo::SDL3) {
+        joystickLabel->setText(tr("yes (SDL 3)"));
     }
     else if (game_info.joystick & GameInfo::JSDEV) {
         joystickLabel->setText(tr("yes (jsdev)"));

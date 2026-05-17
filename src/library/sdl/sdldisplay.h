@@ -142,7 +142,7 @@ OVERRIDE sdl2::SDL_DisplayMode *SDL_GetClosestDisplayMode(int displayIndex, cons
  *  \return the display index of the display containing the center of the
  *          window, or -1 on error.
  */
-OVERRIDE int SDL_GetWindowDisplayIndex(sdl2::SDL_Window * window);
+OVERRIDE int SDL_GetWindowDisplayIndex(SDL_Window * window);
 
 /**
  *  \brief Set the display mode used when a fullscreen window is visible.
@@ -158,7 +158,7 @@ OVERRIDE int SDL_GetWindowDisplayIndex(sdl2::SDL_Window * window);
  *  \sa SDL_GetWindowDisplayMode()
  *  \sa SDL_SetWindowFullscreen()
  */
-OVERRIDE int SDL_SetWindowDisplayMode(sdl2::SDL_Window * window, const sdl2::SDL_DisplayMode* mode);
+OVERRIDE int SDL_SetWindowDisplayMode(SDL_Window * window, const sdl2::SDL_DisplayMode* mode);
 
 /**
  *  \brief Fill in information about the display mode used when a fullscreen
@@ -167,7 +167,7 @@ OVERRIDE int SDL_SetWindowDisplayMode(sdl2::SDL_Window * window, const sdl2::SDL
  *  \sa SDL_SetWindowDisplayMode()
  *  \sa SDL_SetWindowFullscreen()
  */
-OVERRIDE int SDL_GetWindowDisplayMode(sdl2::SDL_Window * window, sdl2::SDL_DisplayMode * mode);
+OVERRIDE int SDL_GetWindowDisplayMode(SDL_Window * window, sdl2::SDL_DisplayMode * mode);
 
 }
 

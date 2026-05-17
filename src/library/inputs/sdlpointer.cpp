@@ -33,7 +33,7 @@ namespace libtas {
 
 DEFINE_ORIG_POINTER(SDL_WarpMouse)
 
-sdl2::SDL_Window *SDL_GetMouseFocus(void)
+SDL_Window *SDL_GetMouseFocus(void)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
     return sdl::gameSDLWindow;
@@ -91,7 +91,7 @@ Uint32 SDL_GetRelativeMouseState(int *x, int *y)
     return SingleInput::toSDL2PointerMask(Inputs::game_ai.pointer.mask);
 }
 
-void SDL_WarpMouseInWindow(sdl2::SDL_Window * window, int x, int y)
+void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
 
@@ -186,47 +186,47 @@ SDL_bool SDL_GetRelativeMouseMode(void)
     return relativeMode;
 }
 
-sdl2::SDL_Cursor *SDL_CreateCursor(const Uint8 * data, const Uint8 * mask, int w, int h, int hot_x, int hot_y)
+SDL_Cursor *SDL_CreateCursor(const Uint8 * data, const Uint8 * mask, int w, int h, int hot_x, int hot_y)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
     /* Return some non-null value */
-    return reinterpret_cast<sdl2::SDL_Cursor*>(1);
+    return reinterpret_cast<SDL_Cursor*>(1);
 }
 
-sdl2::SDL_Cursor *SDL_CreateColorCursor(sdl2::SDL_Surface *surface, int hot_x, int hot_y)
+SDL_Cursor *SDL_CreateColorCursor(sdl2::SDL_Surface *surface, int hot_x, int hot_y)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
     /* Return some non-null value */
-    return reinterpret_cast<sdl2::SDL_Cursor*>(1);
+    return reinterpret_cast<SDL_Cursor*>(1);
 }
 
-sdl2::SDL_Cursor *SDL_CreateSystemCursor(sdl2::SDL_SystemCursor id)
+SDL_Cursor *SDL_CreateSystemCursor(sdl2::SDL_SystemCursor id)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
     /* Return some non-null value */
-    return reinterpret_cast<sdl2::SDL_Cursor*>(1);
+    return reinterpret_cast<SDL_Cursor*>(1);
 }
 
-void SDL_SetCursor(sdl2::SDL_Cursor * cursor)
+void SDL_SetCursor(SDL_Cursor * cursor)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
 }
 
-sdl2::SDL_Cursor *SDL_GetCursor(void)
-{
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
-    /* Return some non-null value */
-    return reinterpret_cast<sdl2::SDL_Cursor*>(1);
-}
-
-sdl2::SDL_Cursor *SDL_GetDefaultCursor(void)
+SDL_Cursor *SDL_GetCursor(void)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
     /* Return some non-null value */
-    return reinterpret_cast<sdl2::SDL_Cursor*>(1);
+    return reinterpret_cast<SDL_Cursor*>(1);
 }
 
-void SDL_FreeCursor(sdl2::SDL_Cursor * cursor)
+SDL_Cursor *SDL_GetDefaultCursor(void)
+{
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    /* Return some non-null value */
+    return reinterpret_cast<SDL_Cursor*>(1);
+}
+
+void SDL_FreeCursor(SDL_Cursor * cursor)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
 }
@@ -242,9 +242,9 @@ int SDL_ShowCursor(int toggle)
     return showCursor;
 }
 
-static sdl2::SDL_Window* pointer_grab_sdl_window = nullptr;
+static SDL_Window* pointer_grab_sdl_window = nullptr;
 
-void SDL_SetWindowGrab(sdl2::SDL_Window * window, SDL_bool grabbed)
+void SDL_SetWindowGrab(SDL_Window * window, SDL_bool grabbed)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
 
@@ -284,7 +284,7 @@ void SDL_SetWindowGrab(sdl2::SDL_Window * window, SDL_bool grabbed)
     }
 }
 
-void SDL_SetWindowMouseGrab(sdl2::SDL_Window * window, SDL_bool grabbed)
+void SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
 
@@ -324,19 +324,19 @@ void SDL_SetWindowMouseGrab(sdl2::SDL_Window * window, SDL_bool grabbed)
     }
 }
 
-SDL_bool SDL_GetWindowGrab(sdl2::SDL_Window * window)
+SDL_bool SDL_GetWindowGrab(SDL_Window * window)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
     return (window == pointer_grab_sdl_window) ? SDL_TRUE : SDL_FALSE;
 }
 
-SDL_bool SDL_GetWindowMouseGrab(sdl2::SDL_Window * window)
+SDL_bool SDL_GetWindowMouseGrab(SDL_Window * window)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
     return (window == pointer_grab_sdl_window) ? SDL_TRUE : SDL_FALSE;
 }
 
-sdl2::SDL_Window* SDL_GetGrabbedWindow(void)
+SDL_Window* SDL_GetGrabbedWindow(void)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
     return pointer_grab_sdl_window;

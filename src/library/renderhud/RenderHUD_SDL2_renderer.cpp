@@ -37,7 +37,7 @@ RenderHUD_SDL2_renderer::~RenderHUD_SDL2_renderer()
     ImGui::DestroyContext();
 }
 
-void RenderHUD_SDL2_renderer::setRenderer(sdl2::SDL_Renderer* r)
+void RenderHUD_SDL2_renderer::setRenderer(SDL_Renderer* r)
 {
     /* If renderer has changed, the texture becomes invalid */
     if (renderer && (renderer != r)) {
@@ -56,7 +56,7 @@ void RenderHUD_SDL2_renderer::newFrame()
         /* 2.0.18 is required for OSD */    
         if (!ORIG_SDL2_FUNCTION_POINTER(SDL_GetVersion))
             return;
-        sdl2::SDL_version ver;
+        SDL_version ver;
         ORIG_SDL2_CALL(SDL_GetVersion, (&ver));
         if ((ver.minor == 0) && (ver.patch < 18))
             return;

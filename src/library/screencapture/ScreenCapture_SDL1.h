@@ -25,11 +25,11 @@
 
 #include <stdint.h>
 
+namespace libtas {
+
 namespace sdl1 {
 class SDL_Surface;
 }
-
-namespace libtas {
 
 class ScreenCapture_SDL1 : public ScreenCapture_Impl {
 
@@ -65,7 +65,7 @@ public:
     void restoreScreenState();
 
 private:
-    ::sdl1::SDL_Surface* screenSDL1Surf = nullptr;
+    sdl1::SDL_Surface* screenSDL1Surf = nullptr;
 
 };
 }

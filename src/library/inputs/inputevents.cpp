@@ -73,7 +73,7 @@ static void generateKeyEvent(int event_key, bool pressed)
     if (Global::game_info.keyboard & GameInfo::SDL2) {
         sdl2::SDL_Event event2;
         event2.type = pressed ? sdl2::SDL_KEYDOWN : sdl2::SDL_KEYUP;
-        event2.key.state = pressed ? sdl2::SDL_PRESSED : sdl2::SDL_RELEASED;
+        event2.key.state = pressed ? SDL_PRESSED : SDL_RELEASED;
         event2.key.windowID = 1;
         event2.key.timestamp = timestamp;
         event2.key.repeat = 0;
@@ -109,7 +109,7 @@ static void generateKeyEvent(int event_key, bool pressed)
     if (Global::game_info.keyboard & GameInfo::SDL1) {
         sdl1::SDL_Event event1;
         event1.type = pressed ? sdl1::SDL_KEYDOWN : sdl1::SDL_KEYUP;
-        event1.key.state = pressed ? sdl1::SDL_PRESSED : sdl1::SDL_RELEASED;            
+        event1.key.state = pressed ? SDL_PRESSED : SDL_RELEASED;            
         event1.key.which = 0; // FIXME: I don't know what is going here
 
         sdl1::SDL_keysym keysym;
@@ -432,12 +432,12 @@ static void generateControllerEvents(void)
                         sdl2::SDL_Event event2;
                         if ((buttons >> bi) & 0x1) {
                             event2.type = sdl2::SDL_CONTROLLERBUTTONDOWN;
-                            event2.cbutton.state = sdl2::SDL_PRESSED;
+                            event2.cbutton.state = SDL_PRESSED;
                             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERBUTTONDOWN with button %d", bi);
                         }
                         else {
                             event2.type = sdl2::SDL_CONTROLLERBUTTONUP;
-                            event2.cbutton.state = sdl2::SDL_RELEASED;
+                            event2.cbutton.state = SDL_RELEASED;
                             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event CONTROLLERBUTTONUP with button %d", bi);
                         }
                         event2.cbutton.timestamp = timestamp;
@@ -455,12 +455,12 @@ static void generateControllerEvents(void)
                             sdl2::SDL_Event event2;
                             if ((buttons >> bi) & 0x1) {
                                 event2.type = sdl2::SDL_JOYBUTTONDOWN;
-                                event2.jbutton.state = sdl2::SDL_PRESSED;
+                                event2.jbutton.state = SDL_PRESSED;
                                 LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYBUTTONDOWN with button %d", bi);
                             }
                             else {
                                 event2.type = sdl2::SDL_JOYBUTTONUP;
-                                event2.jbutton.state = sdl2::SDL_RELEASED;
+                                event2.jbutton.state = SDL_RELEASED;
                                 LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYBUTTONUP with button %d", bi);
                             }
                             event2.jbutton.timestamp = timestamp;
@@ -480,12 +480,12 @@ static void generateControllerEvents(void)
                         sdl1::SDL_Event event1;
                         if ((buttons >> bi) & 0x1) {
                             event1.type = sdl1::SDL_JOYBUTTONDOWN;
-                            event1.jbutton.state = sdl1::SDL_PRESSED;
+                            event1.jbutton.state = SDL_PRESSED;
                             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYBUTTONDOWN with button %d", bi);
                         }
                         else {
                             event1.type = sdl1::SDL_JOYBUTTONUP;
-                            event1.jbutton.state = sdl1::SDL_RELEASED;
+                            event1.jbutton.state = SDL_RELEASED;
                             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_JOYSTICK, "Generate SDL event JOYBUTTONUP with button %d", bi);
                         }
                         event1.jbutton.which = ji;
@@ -774,12 +774,12 @@ static void generateMouseButtonEvent(int button, bool pressed)
         sdl2::SDL_Event event2;
         if (pressed) {
             event2.type = sdl2::SDL_MOUSEBUTTONDOWN;
-            event2.button.state = sdl2::SDL_PRESSED;
+            event2.button.state = SDL_PRESSED;
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONDOWN with button %d", SingleInput::toSDL2PointerButton(button));
         }
         else {
             event2.type = sdl2::SDL_MOUSEBUTTONUP;
-            event2.button.state = sdl2::SDL_RELEASED;
+            event2.button.state = SDL_RELEASED;
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONUP with button %d", SingleInput::toSDL2PointerButton(button));
         }
         event2.button.timestamp = timestamp;
@@ -796,12 +796,12 @@ static void generateMouseButtonEvent(int button, bool pressed)
         sdl1::SDL_Event event1;
         if (pressed) {
             event1.type = sdl1::SDL_MOUSEBUTTONDOWN;
-            event1.button.state = sdl1::SDL_PRESSED;
+            event1.button.state = SDL_PRESSED;
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONDOWN with button %d", SingleInput::toSDL1PointerButton(button));
         }
         else {
             event1.type = sdl1::SDL_MOUSEBUTTONUP;
-            event1.button.state = sdl1::SDL_RELEASED;
+            event1.button.state = SDL_RELEASED;
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSEBUTTONUP with button %d", SingleInput::toSDL1PointerButton(button));
         }
         event1.button.which = 0; // TODO: Same as above...

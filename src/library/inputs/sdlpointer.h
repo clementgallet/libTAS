@@ -34,7 +34,7 @@ namespace libtas {
 /**
  *  \brief Get the window which currently has mouse focus.
  */
-OVERRIDE sdl2::SDL_Window *SDL_GetMouseFocus(void);
+OVERRIDE SDL_Window *SDL_GetMouseFocus(void);
 
 /**
  *  \brief Retrieve the current state of the mouse.
@@ -89,7 +89,7 @@ OVERRIDE Uint32 SDL_GetRelativeMouseState(int *x, int *y);
  *
  *  \note This function generates a mouse motion event
  */
-OVERRIDE void SDL_WarpMouseInWindow(sdl2::SDL_Window * window, int x, int y);
+OVERRIDE void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y);
 
 /**
  *  \brief Moves the mouse to the given position in global screen space.
@@ -181,7 +181,7 @@ OVERRIDE SDL_bool SDL_GetRelativeMouseMode(void);
  *
  *  \sa SDL_FreeCursor()
  */
-OVERRIDE sdl2::SDL_Cursor *SDL_CreateCursor(const Uint8 * data,
+OVERRIDE SDL_Cursor *SDL_CreateCursor(const Uint8 * data,
                                                      const Uint8 * mask,
                                                      int w, int h, int hot_x,
                                                      int hot_y);
@@ -191,7 +191,7 @@ OVERRIDE sdl2::SDL_Cursor *SDL_CreateCursor(const Uint8 * data,
  *
  *  \sa SDL_FreeCursor()
  */
-OVERRIDE sdl2::SDL_Cursor *SDL_CreateColorCursor(sdl2::SDL_Surface *surface,
+OVERRIDE SDL_Cursor *SDL_CreateColorCursor(sdl2::SDL_Surface *surface,
                                                           int hot_x,
                                                           int hot_y);
 
@@ -200,29 +200,29 @@ OVERRIDE sdl2::SDL_Cursor *SDL_CreateColorCursor(sdl2::SDL_Surface *surface,
  *
  *  \sa SDL_FreeCursor()
  */
-OVERRIDE sdl2::SDL_Cursor *SDL_CreateSystemCursor(sdl2::SDL_SystemCursor id);
+OVERRIDE SDL_Cursor *SDL_CreateSystemCursor(sdl2::SDL_SystemCursor id);
 
 /**
  *  \brief Set the active cursor.
  */
-OVERRIDE void SDL_SetCursor(sdl2::SDL_Cursor * cursor);
+OVERRIDE void SDL_SetCursor(SDL_Cursor * cursor);
 
 /**
  *  \brief Return the active cursor.
  */
-OVERRIDE sdl2::SDL_Cursor *SDL_GetCursor(void);
+OVERRIDE SDL_Cursor *SDL_GetCursor(void);
 
 /**
  *  \brief Return the default cursor.
  */
-OVERRIDE sdl2::SDL_Cursor *SDL_GetDefaultCursor(void);
+OVERRIDE SDL_Cursor *SDL_GetDefaultCursor(void);
 
 /**
  *  \brief Frees a cursor created with SDL_CreateCursor().
  *
  *  \sa SDL_CreateCursor()
  */
-OVERRIDE void SDL_FreeCursor(sdl2::SDL_Cursor * cursor);
+OVERRIDE void SDL_FreeCursor(SDL_Cursor * cursor);
 
 /**
  *  \brief Toggle whether or not the cursor is shown.
@@ -252,7 +252,7 @@ OVERRIDE int SDL_ShowCursor(int toggle);
  * \sa SDL_GetGrabbedWindow
  * \sa SDL_GetWindowGrab
  */
-OVERRIDE void SDL_SetWindowGrab(sdl2::SDL_Window * window, SDL_bool grabbed);
+OVERRIDE void SDL_SetWindowGrab(SDL_Window * window, SDL_bool grabbed);
 
 /**
  * Set a window's mouse grab mode.
@@ -268,7 +268,7 @@ OVERRIDE void SDL_SetWindowGrab(sdl2::SDL_Window * window, SDL_bool grabbed);
  * \sa SDL_SetWindowKeyboardGrab
  * \sa SDL_SetWindowGrab
  */
-OVERRIDE void SDL_SetWindowMouseGrab(sdl2::SDL_Window * window, SDL_bool grabbed);
+OVERRIDE void SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed);
 
 /**
  * Get a window's input grab mode.
@@ -280,7 +280,7 @@ OVERRIDE void SDL_SetWindowMouseGrab(sdl2::SDL_Window * window, SDL_bool grabbed
  *
  * \sa SDL_SetWindowGrab
  */
-OVERRIDE SDL_bool SDL_GetWindowGrab(sdl2::SDL_Window * window);
+OVERRIDE SDL_bool SDL_GetWindowGrab(SDL_Window * window);
 
 /**
  * Get a window's mouse grab mode.
@@ -293,7 +293,7 @@ OVERRIDE SDL_bool SDL_GetWindowGrab(sdl2::SDL_Window * window);
  * \sa SDL_SetWindowKeyboardGrab
  * \sa SDL_GetWindowGrab
  */
-OVERRIDE SDL_bool SDL_GetWindowMouseGrab(sdl2::SDL_Window * window);
+OVERRIDE SDL_bool SDL_GetWindowMouseGrab(SDL_Window * window);
 
 /**
  * Get the window that currently has an input grab enabled.
@@ -305,7 +305,7 @@ OVERRIDE SDL_bool SDL_GetWindowMouseGrab(sdl2::SDL_Window * window);
  * \sa SDL_GetWindowGrab
  * \sa SDL_SetWindowGrab
  */
-OVERRIDE sdl2::SDL_Window* SDL_GetGrabbedWindow(void);
+OVERRIDE SDL_Window* SDL_GetGrabbedWindow(void);
 
 }
 

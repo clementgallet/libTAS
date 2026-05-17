@@ -50,6 +50,9 @@ struct GameInfo {
         VULKAN = 0x20000,
         AKAUDIO = 0x40000,
         FMOD = 0x80000,
+        SDL3 = 0x100000,
+        SDL3_RENDERER = 0x200000,
+        SDL3_SURFACE = 0x400000,
     };
 
     int video = UNKNOWN;

@@ -23,6 +23,7 @@
 #include "hook.h"
 
 #include "../external/SDL2.h"
+#include "../external/SDL3.h"
 
 #include "sdl/sdlversion.h"
 
@@ -42,7 +43,20 @@ namespace index_sdl2 {
     };
 }
 
-void** origSDLTable();
+namespace index_sdl3 {
+    enum {
+#define SDL_DYNAPI_PROC(rc,fn,params,args,ret) fn,
+// As opposed to SDL2, in SDL3, we need SDL_DYNAPI_PROC_NO_VARARGS to be not defined!
+#include "../../external/SDL3_dynapi_procs.h"
+#undef SDL_DYNAPI_PROC
+    };
+}
+
+int getSDLApiver();
+
+/* Return a pointer to the location of the original SDL2 or SDL3 function, based on its index. */
+void** getOrigSDLFuncLoc(int index_sdl);
+void** getOrigSDLFuncLoc(int index_sdl2, int index_sdl3);
 
 #ifdef __unix__
 #define LINK_NAMESPACE_SDL1(FUNC) link_function((void**)&orig::FUNC, #FUNC, "libSDL-1.2.so.0")
@@ -50,10 +64,26 @@ void** origSDLTable();
 #define LINK_NAMESPACE_SDL1(FUNC) link_function((void**)&orig::FUNC, #FUNC, "libSDL-1.2.0.dylib")
 #endif
 
-/* We also catch here SDL1 functions that are available in SDL2 */
-#define ORIG_SDL2_FUNCTION_POINTER(FUNC) reinterpret_cast<decltype(&sdl2::FUNC)>(origSDLTable()[index_sdl2::FUNC])
-#define ORIG_SDL2_LINK(FUNC) link_function((void**)&origSDLTable()[index_sdl2::FUNC], #FUNC, get_sdlversion()==1?"libSDL-1.2.so.0":"libSDL2-2.0.so.0")
+/* Return a pointer to the original SDL2 or SDL3 function */
+#define ORIG_SDL2_FUNCTION_POINTER(FUNC) getOrigSDLFuncLoc(index_sdl2::FUNC)
+#define ORIG_SDL3_FUNCTION_POINTER(FUNC) getOrigSDLFuncLoc(index_sdl3::FUNC)
+
+/* When both SDL2 and SDL3 functions are available, return either one */
+#define ORIG_SDL23_FUNCTION_POINTER(FUNC) getOrigSDLFuncLoc(index_sdl2::FUNC, index_sdl3::FUNC)
+
+/* Call a SDL2 function, and optionally link it if it is not defined already.
+ * We also catch here SDL1 functions that are available in SDL2. */
+#define ORIG_SDL2_LINK(FUNC) link_function(getOrigSDLFuncLoc(index_sdl2::FUNC), #FUNC, get_sdlversion()==1?"libSDL-1.2.so.0":"libSDL2-2.0.so.0")
 #define ORIG_SDL2_CALL(FUNC, PARAMS) reinterpret_cast<decltype(&sdl2::FUNC)>(ORIG_SDL2_LINK(FUNC)) PARAMS
+
+/* Call a SDL3 function */
+#define ORIG_SDL3_LINK(FUNC) link_function(getOrigSDLFuncLoc(index_sdl3::FUNC), #FUNC, "libSDL3.so.0")
+#define ORIG_SDL3_CALL(FUNC, PARAMS) reinterpret_cast<decltype(&sdl3::FUNC)>(ORIG_SDL3_LINK(FUNC)) PARAMS
+
+/* Call a SDL2 or SDL3 function depending on which version is used. The function signature must be the same!
+ * We also catch here SDL1 functions that are available in SDL2/SDL3. */
+#define ORIG_SDL23_LINK(FUNC) link_function(getOrigSDLFuncLoc(index_sdl2::FUNC, index_sdl3::FUNC), #FUNC, get_sdlversion()==1?"libSDL-1.2.so.0":(get_sdlversion()==2?"libSDL2-2.0.so.0":"libSDL3.so.0"))
+#define ORIG_SDL23_CALL(FUNC, PARAMS) reinterpret_cast<decltype(&sdl2::FUNC)>(ORIG_SDL23_LINK(FUNC)) PARAMS
 
 /**
  * This function initializes the SDL jump table.

@@ -44,6 +44,18 @@ OVERRIDE Uint32 SDL_GetTicks(void);
 OVERRIDE Uint64 SDL_GetTicks64(void);
 
 /**
+ * Get the number of nanoseconds since SDL library initialization.
+ *
+ * \returns an unsigned 64-bit value representing the number of nanoseconds
+ *          since the SDL library initialized.
+ *
+ * \threadsafety It is safe to call this function from any thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ */
+OVERRIDE Uint64 SDL_GetTicksNS(void);
+
+/**
  * \brief Get the count per second of the high resolution counter
  */
 OVERRIDE Uint64 SDL_GetPerformanceFrequency(void);

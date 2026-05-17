@@ -29,7 +29,7 @@ namespace libtas {
 /* Keyboard functions */
 OVERRIDE const Uint8* SDL_GetKeyboardState(int* numkeys); // SDL 2
 OVERRIDE Uint8* SDL_GetKeyState(int* numkeys); // SDL 1
-OVERRIDE sdl2::SDL_Window* SDL_GetKeyboardFocus(void);
+OVERRIDE SDL_Window* SDL_GetKeyboardFocus(void);
 OVERRIDE sdl2::SDL_Keymod SDL_GetModState(void);
 OVERRIDE void SDL_SetModState(sdl2::SDL_Keymod modstate);
 

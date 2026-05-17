@@ -202,7 +202,7 @@ namespace libtas {
     return dm;
 }
 
-/* Override */ int SDL_GetWindowDisplayIndex(sdl2::SDL_Window * window)
+/* Override */ int SDL_GetWindowDisplayIndex(SDL_Window * window)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with window %d", __func__, (void*)window);
 
@@ -215,7 +215,7 @@ namespace libtas {
     return ret;
 }
 
-/* Override */ int SDL_SetWindowDisplayMode(sdl2::SDL_Window * window, const sdl2::SDL_DisplayMode* mode)
+/* Override */ int SDL_SetWindowDisplayMode(SDL_Window * window, const sdl2::SDL_DisplayMode* mode)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with window %d and mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", __func__, (void*)window, mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
 
@@ -225,7 +225,7 @@ namespace libtas {
     return ret;
 }
 
-/* Override */ int SDL_GetWindowDisplayMode(sdl2::SDL_Window * window, sdl2::SDL_DisplayMode * mode)
+/* Override */ int SDL_GetWindowDisplayMode(SDL_Window * window, sdl2::SDL_DisplayMode * mode)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with window %d", __func__, (void*)window);
 

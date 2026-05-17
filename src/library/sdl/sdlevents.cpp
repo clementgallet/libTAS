@@ -35,6 +35,58 @@ static_assert(static_cast<int>(sdl1::SDL_ADDEVENT) == static_cast<int>(sdl2::SDL
 static_assert(static_cast<int>(sdl1::SDL_PEEKEVENT) == static_cast<int>(sdl2::SDL_PEEKEVENT), "SDL1 and SDL2 event action values must be the same");
 static_assert(static_cast<int>(sdl1::SDL_GETEVENT) == static_cast<int>(sdl2::SDL_GETEVENT), "SDL1 and SDL2 event action values must be the same");
 
+/* Return if the SDL 3 event must be passed to the game or be filtered */
+static bool isBannedEvent(sdl3::SDL_Event *event)
+{
+    switch(event->type) {
+        case sdl3::SDL_EVENT_KEY_DOWN:
+        case sdl3::SDL_EVENT_KEY_UP:
+        case sdl3::SDL_EVENT_MOUSE_MOTION:
+        case sdl3::SDL_EVENT_MOUSE_BUTTON_DOWN:
+        case sdl3::SDL_EVENT_MOUSE_BUTTON_UP:
+        case sdl3::SDL_EVENT_MOUSE_WHEEL:
+        case sdl3::SDL_EVENT_JOYSTICK_AXIS_MOTION:
+        case sdl3::SDL_EVENT_JOYSTICK_BALL_MOTION:
+        case sdl3::SDL_EVENT_JOYSTICK_HAT_MOTION:
+        case sdl3::SDL_EVENT_JOYSTICK_BUTTON_DOWN:
+        case sdl3::SDL_EVENT_JOYSTICK_BUTTON_UP:
+        case sdl3::SDL_EVENT_JOYSTICK_ADDED:
+        case sdl3::SDL_EVENT_JOYSTICK_REMOVED:
+        case sdl3::SDL_EVENT_JOYSTICK_BATTERY_UPDATED:
+        case sdl3::SDL_EVENT_JOYSTICK_UPDATE_COMPLETE:
+        case sdl3::SDL_EVENT_GAMEPAD_AXIS_MOTION:
+        case sdl3::SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+        case sdl3::SDL_EVENT_GAMEPAD_BUTTON_UP:
+        case sdl3::SDL_EVENT_GAMEPAD_ADDED:
+        case sdl3::SDL_EVENT_GAMEPAD_REMOVED:
+        case sdl3::SDL_EVENT_GAMEPAD_REMAPPED:
+        case sdl3::SDL_EVENT_GAMEPAD_TOUCHPAD_DOWN:
+        case sdl3::SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION:
+        case sdl3::SDL_EVENT_GAMEPAD_TOUCHPAD_UP:
+        case sdl3::SDL_EVENT_GAMEPAD_SENSOR_UPDATE:
+        case sdl3::SDL_EVENT_GAMEPAD_UPDATE_COMPLETE:
+        case sdl3::SDL_EVENT_GAMEPAD_STEAM_HANDLE_UPDATED:
+        case sdl3::SDL_EVENT_GAMEPAD_CAPSENSE_TOUCH:
+        case sdl3::SDL_EVENT_GAMEPAD_CAPSENSE_RELEASE:
+        case sdl3::SDL_EVENT_FINGER_DOWN:
+        case sdl3::SDL_EVENT_FINGER_UP:
+        case sdl3::SDL_EVENT_FINGER_MOTION:
+        case sdl3::SDL_EVENT_FINGER_CANCELED:
+        case sdl3::SDL_EVENT_PINCH_BEGIN:
+        case sdl3::SDL_EVENT_PINCH_UPDATE:
+        case sdl3::SDL_EVENT_PINCH_END:
+        case sdl3::SDL_EVENT_WINDOW_FOCUS_GAINED:
+        case sdl3::SDL_EVENT_WINDOW_FOCUS_LOST:
+        case sdl3::SDL_EVENT_WINDOW_SHOWN:
+        case sdl3::SDL_EVENT_WINDOW_EXPOSED:
+        case sdl3::SDL_EVENT_WINDOW_MOUSE_ENTER:
+        case sdl3::SDL_EVENT_WINDOW_MOUSE_LEAVE:
+            return true;
+        default:
+            return false;
+    }
+}
+
 /* Return if the SDL 2 event must be passed to the game or be filtered */
 static bool isBannedEvent(sdl2::SDL_Event *event)
 {
@@ -154,38 +206,46 @@ void pushNativeSDLEvents(void)
     }
     
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
-        return ORIG_SDL2_CALL(SDL_PumpEvents, ());
+        return ORIG_SDL23_CALL(SDL_PumpEvents, ());
     }
 }
 
-/* Override */ int SDL_PeepEvents(sdl2::SDL_Event* events, int numevents, sdl2::SDL_eventaction action, Uint32 minType, Uint32 maxType)
+/* Override */ int SDL_PeepEvents(sdl2::SDL_Event* events2, int numevents, sdl2::SDL_eventaction action, Uint32 minType, Uint32 maxType)
 {
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
-        return ORIG_SDL2_CALL(SDL_PeepEvents, (events, numevents, action, minType, maxType));
+        return ORIG_SDL23_CALL(SDL_PeepEvents, (events2, numevents, action, minType, maxType));
     }
 
     /* We need to use a function signature with variable arguments,
-     * because SDL 1.2 and SDL 2 provide a different function with the same name.
+     * because SDL 1.2 and SDL 2/3 provide a different function with the same name.
      * SDL 1.2 is int SDL_PeepEvents(SDL1_Event *events, int numevents, SDL_eventaction action, Uint32 mask);
-     * SDL 2   is int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType);
+     * SDL 2/3 is int SDL_PeepEvents(SDL_Event* events, int numevents, SDL_eventaction action, Uint32 minType, Uint32 maxType);
      */
 
     Uint32 mask;
     sdl1::SDL_Event* events1 = nullptr;
+    sdl3::SDL_Event* events3 = nullptr;
 
     int SDLver = get_sdlversion();
     if (SDLver == 1) {
         mask = minType;
-        events1 = reinterpret_cast<sdl1::SDL_Event*>(events);
+        events1 = reinterpret_cast<sdl1::SDL_Event*>(events2);
     }
+    if (SDLver == 3) {
+        events3 = reinterpret_cast<sdl3::SDL_Event*>(events2);
+    }
+
+    static_assert(static_cast<int>(sdl2::SDL_ADDEVENT) == static_cast<int>(sdl3::SDL_ADDEVENT), "SDL2 and SDL3 event action values must be the same");
+    static_assert(static_cast<int>(sdl2::SDL_PEEKEVENT) == static_cast<int>(sdl3::SDL_PEEKEVENT), "SDL2 and SDL3 event action values must be the same");
+    static_assert(static_cast<int>(sdl2::SDL_GETEVENT) == static_cast<int>(sdl3::SDL_GETEVENT), "SDL2 and SDL3 event action values must be the same");
 
     int nevents = 0;
     switch (action) {
         case sdl2::SDL_ADDEVENT:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "The game wants to add %d events", numevents);
-            if ((numevents > 0) && (events == nullptr))
+            if ((numevents > 0) && (events2 == nullptr))
                 return -1;
             for (int i=0; i<numevents; i++) {
                 if (SDLver == 1) {
@@ -198,8 +258,19 @@ void pushNativeSDLEvents(void)
                     }
                 }
                 if (SDLver == 2) {
-                    if (! isBannedEvent(&events[i])) {
-                        int ret = sdlEventQueue.insert(&events[i]);
+                    if (! isBannedEvent(&events2[i])) {
+                        int ret = sdlEventQueue.insert(&events2[i]);
+                        /* Return -1 if the queue is fulled */
+                        if (ret == -1) return -1;
+                        else nevents += ret;
+                    }
+                    else {
+                        nevents++;
+                    }
+                }
+                if (SDLver == 3) {
+                    if (! isBannedEvent(&events3[i])) {
+                        int ret = sdlEventQueue.insert(&events3[i]);
                         /* Return -1 if the queue is fulled */
                         if (ret == -1) return -1;
                         else nevents += ret;
@@ -215,14 +286,18 @@ void pushNativeSDLEvents(void)
             if (SDLver == 1)
                 return sdlEventQueue.pop(events1, numevents, mask, false);
             if (SDLver == 2)
-                return sdlEventQueue.pop(events, numevents, minType, maxType, false);
+                return sdlEventQueue.pop(events2, numevents, minType, maxType, false);
+            if (SDLver == 3)
+                return sdlEventQueue.pop(events3, numevents, minType, maxType, false);
             break;
         case sdl2::SDL_GETEVENT:
             LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS, "The game wants to get %d events", numevents);
             if (SDLver == 1)
                 return sdlEventQueue.pop(events1, numevents, mask, true);
             if (SDLver == 2)
-                return sdlEventQueue.pop(events, numevents, minType, maxType, true);
+                return sdlEventQueue.pop(events2, numevents, minType, maxType, true);
+            if (SDLver == 3)
+                return sdlEventQueue.pop(events3, numevents, minType, maxType, true);
             break;
     }
 
@@ -234,13 +309,13 @@ void pushNativeSDLEvents(void)
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
-        int ret = ORIG_SDL2_CALL(SDL_PollEvent, (event));
+        int ret = ORIG_SDL23_CALL(SDL_PollEvent, (event));
         if (event && (ret == 1))
             logEvent(event);
         return ret;
     }
     
-    /* From SDL2 code, this function calls SDL_PumpEvents at the beginning */
+    /* From SDL2/3 code, this function calls SDL_PumpEvents at the beginning */
     NOLOGCALL(ORIG_SDL2_CALL(SDL_PumpEvents, ()));
 
     int SDLver = get_sdlversion();
@@ -250,6 +325,8 @@ void pushNativeSDLEvents(void)
             return sdlEventQueue.pop(reinterpret_cast<sdl1::SDL_Event*>(event), 1, sdl1::SDL_ALLEVENTS, true);
         if (SDLver == 2)
             return sdlEventQueue.pop(event, 1, sdl2::SDL_FIRSTEVENT, sdl2::SDL_LASTEVENT, true);
+        if (SDLver == 3)
+            return sdlEventQueue.pop(reinterpret_cast<sdl3::SDL_Event*>(event), 1, sdl3::SDL_EVENT_FIRST, sdl3::SDL_EVENT_LAST, true);
     } else {
         /*
          * In the case the event pointer is NULL, SDL doc says to
@@ -264,6 +341,10 @@ void pushNativeSDLEvents(void)
             sdl2::SDL_Event ev;
             return sdlEventQueue.pop(&ev, 1, sdl2::SDL_FIRSTEVENT, sdl2::SDL_LASTEVENT, false);
         }
+        if (SDLver == 3) {
+            sdl3::SDL_Event ev;
+            return sdlEventQueue.pop(&ev, 1, sdl3::SDL_EVENT_FIRST, sdl3::SDL_EVENT_LAST, false);
+        }
     }
     return -1;
 }
@@ -273,7 +354,7 @@ void pushNativeSDLEvents(void)
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
-        return ORIG_SDL2_CALL(SDL_HasEvent, (type));
+        return ORIG_SDL23_CALL(SDL_HasEvent, (type));
     }
 
     return SDL_HasEvents(type, type);
@@ -284,12 +365,22 @@ void pushNativeSDLEvents(void)
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
-        return ORIG_SDL2_CALL(SDL_HasEvents, (minType, maxType));
+        return ORIG_SDL23_CALL(SDL_HasEvents, (minType, maxType));
     }
 
+    int SDLver = get_sdlversion();
+
     /* Try to get one event without updating, and return if we got one */
-    sdl2::SDL_Event ev;
-    return sdlEventQueue.pop(&ev, 1, minType, maxType, false) ? SDL_TRUE : SDL_FALSE;
+    if (SDLver == 2) {
+        sdl2::SDL_Event ev;
+        return sdlEventQueue.pop(&ev, 1, minType, maxType, false) ? SDL_TRUE : SDL_FALSE;
+    }
+    if (SDLver == 3) {
+        sdl3::SDL_Event ev;
+        return sdlEventQueue.pop(&ev, 1, minType, maxType, false) ? SDL_TRUE : SDL_FALSE;
+    }
+
+    return false;
 }
 
 /* Override */ void SDL_FlushEvent(Uint32 type)
@@ -297,7 +388,7 @@ void pushNativeSDLEvents(void)
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
-        return ORIG_SDL2_CALL(SDL_FlushEvent, (type));
+        return ORIG_SDL23_CALL(SDL_FlushEvent, (type));
     }
 
     return SDL_FlushEvents(type, type);
@@ -308,7 +399,7 @@ void pushNativeSDLEvents(void)
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
-        return ORIG_SDL2_CALL(SDL_FlushEvents, (minType, maxType));
+        return ORIG_SDL23_CALL(SDL_FlushEvents, (minType, maxType));
     }
 
     sdlEventQueue.flush(minType, maxType);
@@ -319,19 +410,30 @@ void pushNativeSDLEvents(void)
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
-        return ORIG_SDL2_CALL(SDL_WaitEvent, (event));
+        return ORIG_SDL23_CALL(SDL_WaitEvent, (event));
     }
 
-    /* From SDL2 code, this function calls SDL_PumpEvents at the beginning */
+    /* From SDL2/3 code, this function calls SDL_PumpEvents at the beginning */
     NOLOGCALL(SDL_PumpEvents());
 
     struct timespec mssleep = {0, 1000000};
+
+    int SDLver = get_sdlversion();
+
     sdl2::SDL_Event ev;
     if (!event) event = &ev;
 
-    while (! sdlEventQueue.pop(event, 1, sdl2::SDL_FIRSTEVENT, sdl2::SDL_LASTEVENT, true)) {
-        NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
-        pushNativeSDLEvents();
+    if (SDLver == 2) {
+        while (! sdlEventQueue.pop(event, 1, sdl2::SDL_FIRSTEVENT, sdl2::SDL_LASTEVENT, true)) {
+            NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
+            pushNativeSDLEvents();
+        }
+    }
+    if (SDLver == 3) {
+        while (! sdlEventQueue.pop(reinterpret_cast<sdl3::SDL_Event*>(event), 1, sdl3::SDL_EVENT_FIRST, sdl3::SDL_EVENT_LAST, true)) {
+            NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
+            pushNativeSDLEvents();
+        }
     }
     return 1;
 }
@@ -341,25 +443,40 @@ void pushNativeSDLEvents(void)
     LOG(LL_TRACE, LCF_SDL | LCF_EVENTS | LCF_TODO, "%s call with timeout %d", __func__, timeout);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
-        return ORIG_SDL2_CALL(SDL_WaitEventTimeout, (event, timeout));
+        return ORIG_SDL23_CALL(SDL_WaitEventTimeout, (event, timeout));
     }
 
-    /* From SDL2 code, this function calls SDL_PumpEvents at the beginning */
+    /* From SDL2/3 code, this function calls SDL_PumpEvents at the beginning */
     NOLOGCALL(SDL_PumpEvents());
 
-    int t;
+    int t = 0;
     struct timespec mssleep = {0, 1000000};
     sdl2::SDL_Event ev;
     if (!event) event = &ev;
 
-    if (sdlEventQueue.pop(event, 1, sdl2::SDL_FIRSTEVENT, sdl2::SDL_LASTEVENT, true))
-        return 1;
-    for (t=0; t<timeout; t++) {
-        NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
-        pushNativeSDLEvents();
+    int SDLver = get_sdlversion();
+
+    if (SDLver == 2) {
         if (sdlEventQueue.pop(event, 1, sdl2::SDL_FIRSTEVENT, sdl2::SDL_LASTEVENT, true))
-            break;
+            return 1;
+        for (t=0; t<timeout; t++) {
+            NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
+            pushNativeSDLEvents();
+            if (sdlEventQueue.pop(event, 1, sdl2::SDL_FIRSTEVENT, sdl2::SDL_LASTEVENT, true))
+                break;
+        }
     }
+    if (SDLver == 3) {
+        if (sdlEventQueue.pop(reinterpret_cast<sdl3::SDL_Event*>(event), 1, sdl3::SDL_EVENT_FIRST, sdl3::SDL_EVENT_LAST, true))
+            return 1;
+        for (t=0; t<timeout; t++) {
+            NATIVECALL(nanosleep(&mssleep, NULL)); // Wait 1 ms before trying again
+            pushNativeSDLEvents();
+            if (sdlEventQueue.pop(reinterpret_cast<sdl3::SDL_Event*>(event), 1, sdl3::SDL_EVENT_FIRST, sdl3::SDL_EVENT_LAST, true))
+                break;
+        }
+    }
+
     return (t<timeout);
 }
 
@@ -371,7 +488,7 @@ void pushNativeSDLEvents(void)
         return -1;
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
-        return ORIG_SDL2_CALL(SDL_PushEvent, (event));
+        return ORIG_SDL23_CALL(SDL_PushEvent, (event));
     }
 
     int SDLver = get_sdlversion();
@@ -388,6 +505,24 @@ void pushNativeSDLEvents(void)
         }
 
         return ret; // success
+    }
+
+    if (SDLver == 3) {
+        sdl3::SDL_Event* ev3 = reinterpret_cast<sdl3::SDL_Event*>(event);
+        if (isBannedEvent(ev3))
+            return 0;
+
+        int ret = sdlEventQueue.insert(ev3);
+
+        if (ev3->type == sdl3::SDL_EVENT_QUIT) {
+            /* SDL may be used only for controllers. In that case, exiting SDL does
+            * not mean that the game is stopped */
+            Uint32 init_flags = sdl3::SDL_WasInit(static_cast<sdl3::SDL_InitFlags>(0));
+            if (init_flags & sdl3::SDL_INIT_VIDEO)
+                Global::is_exiting = true;
+        }
+
+        return ret;
     }
 
     if (isBannedEvent(event))
@@ -411,7 +546,7 @@ void pushNativeSDLEvents(void)
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
-        return ORIG_SDL2_CALL(SDL_SetEventFilter, (filter, userdata));
+        return ORIG_SDL23_CALL(SDL_SetEventFilter, (filter, userdata));
     }
 
     int SDLver = get_sdlversion();
@@ -419,6 +554,8 @@ void pushNativeSDLEvents(void)
         sdlEventQueue.setFilter(reinterpret_cast<sdl1::SDL_EventFilter>(filter));
     if (SDLver == 2)
         sdlEventQueue.setFilter(filter, userdata);
+    if (SDLver == 3)
+        sdlEventQueue.setFilter(reinterpret_cast<sdl3::SDL_EventFilter>(filter), userdata);
 }
 
 /* Override */ SDL_bool SDL_GetEventFilter(sdl2::SDL_EventFilter * filter, void **userdata)
@@ -431,7 +568,7 @@ void pushNativeSDLEvents(void)
         *userdata = nullptr;
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
-        return ORIG_SDL2_CALL(SDL_GetEventFilter, (filter, userdata));
+        return ORIG_SDL23_CALL(SDL_GetEventFilter, (filter, userdata));
     }
 
     int SDLver = get_sdlversion();
@@ -445,6 +582,11 @@ void pushNativeSDLEvents(void)
             return SDL_TRUE;
         return SDL_FALSE;
     }
+    if (SDLver == 3) {
+        if (sdlEventQueue.getFilter(reinterpret_cast<sdl3::SDL_EventFilter*>(filter), userdata))
+            return SDL_TRUE;
+        return SDL_FALSE;
+    }
 
     return SDL_FALSE;
 }
@@ -454,10 +596,14 @@ void pushNativeSDLEvents(void)
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
-        return ORIG_SDL2_CALL(SDL_AddEventWatch, (filter, userdata));
+        return ORIG_SDL23_CALL(SDL_AddEventWatch, (filter, userdata));
     }
 
-    sdlEventQueue.addWatch(filter, userdata);
+    int SDLver = get_sdlversion();
+    if (SDLver == 2)
+        sdlEventQueue.addWatch(filter, userdata);
+    if (SDLver == 3)
+        sdlEventQueue.addWatch(reinterpret_cast<sdl3::SDL_EventFilter>(filter), userdata);
 }
 
 /* Override */ void SDL_DelEventWatch(sdl2::SDL_EventFilter filter, void *userdata)
@@ -471,15 +617,30 @@ void pushNativeSDLEvents(void)
     sdlEventQueue.delWatch(filter, userdata);
 }
 
+/* Override */ void SDL_RemoveEventWatch(sdl3::SDL_EventFilter filter, void *userdata)
+{
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
+
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        return ORIG_SDL3_CALL(SDL_RemoveEventWatch, (filter, userdata));
+    }
+
+    sdlEventQueue.delWatch(filter, userdata);
+}
+
 /* Override */ void SDL_FilterEvents(sdl2::SDL_EventFilter filter, void *userdata)
 {
     LOGTRACE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
-        return ORIG_SDL2_CALL(SDL_FilterEvents, (filter, userdata));
+        return ORIG_SDL23_CALL(SDL_FilterEvents, (filter, userdata));
     }
 
-    sdlEventQueue.applyFilter(filter, userdata);
+    int SDLver = get_sdlversion();
+    if (SDLver == 2)
+        sdlEventQueue.applyFilter(filter, userdata);
+    if (SDLver == 3)
+        sdlEventQueue.applyFilter(reinterpret_cast<sdl3::SDL_EventFilter>(filter), userdata);
 }
 
 /* Override */ Uint8 SDL_EventState(Uint32 type, int state)
@@ -502,6 +663,31 @@ void pushNativeSDLEvents(void)
             return previousState;
     }
     return state;
+}
+
+/* Override */ void SDL_SetEventEnabled(Uint32 type, bool enabled)
+{
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
+
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        return ORIG_SDL3_CALL(SDL_SetEventEnabled, (type, enabled));
+    }
+
+    if (enabled)
+        sdlEventQueue.enable(type);
+    else
+        sdlEventQueue.disable(type);
+}
+
+/* Override */ bool SDL_EventEnabled(Uint32 type)
+{
+    LOGTRACE(LCF_SDL | LCF_EVENTS);
+
+    if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
+        return ORIG_SDL3_CALL(SDL_EventEnabled, (type));
+    }
+
+    return sdlEventQueue.isEnabled(type);
 }
 
 /* Override */ Uint32 SDL_RegisterEvents(int numevents)

@@ -32,7 +32,9 @@ namespace libtas {
 
 namespace orig {
     /* SDL 1.2 specific function */
-    static sdl1::SDL_version * (*SDL_Linked_Version)(void);
+    static SDL_version * (*SDL_Linked_Version)(void);
+    static void (*SDL2_GetVersion)(SDL_version * ver);
+    static int (*SDL3_GetVersion)();
 }
 
 int get_sdlversion(void)
@@ -43,30 +45,48 @@ int get_sdlversion(void)
     if (SDLver != -1)
         return SDLver;
 
-    /* Determine SDL version */
-    sdl2::SDL_version ver = {0, 0, 0};
+    /* Determine SDL version. SDL1 and SDL2 versions have the same struct, so using either one. */
+    SDL_version ver = {0, 0, 0};
 
     /* First look if symbols are already accessible */
-    if (!ORIG_SDL2_FUNCTION_POINTER(SDL_GetVersion)) {
+    void* SDL_GetVersion_ptr = *ORIG_SDL23_FUNCTION_POINTER(SDL_GetVersion);
+
+    if (SDL_GetVersion_ptr) {
+        /* Both SDL2 and SDL3 have the same function name with a different signature.
+         * To differentiate, we check the SDL API version. */
+        if (getSDLApiver() == 2) {
+            orig::SDL3_GetVersion = reinterpret_cast<decltype(orig::SDL3_GetVersion)>(SDL_GetVersion_ptr);
+        }
+        else {
+            orig::SDL2_GetVersion = reinterpret_cast<decltype(orig::SDL2_GetVersion)>(SDL_GetVersion_ptr);
+        }
+    }
+    if (!SDL_GetVersion_ptr) {
         NATIVECALL(orig::SDL_Linked_Version = (decltype(orig::SDL_Linked_Version)) dlsym(RTLD_DEFAULT, "SDL_Linked_Version"));
         if (!orig::SDL_Linked_Version) {
-            NATIVECALL(origSDLTable()[index_sdl2::SDL_GetVersion] = dlsym(RTLD_DEFAULT, "SDL_GetVersion"));
+            /* We rely on the fact that it is more likely for SDL2 to miss the dynapi feature than SDL3,
+             * so we check for SDL2 as a fallback. */
+            NATIVECALL(orig::SDL2_GetVersion = reinterpret_cast<decltype(orig::SDL2_GetVersion)>(dlsym(RTLD_DEFAULT, "SDL_GetVersion")));
         }
     }
 
-    if (ORIG_SDL2_FUNCTION_POINTER(SDL_GetVersion)) {
-        ORIG_SDL2_FUNCTION_POINTER(SDL_GetVersion)(&ver);
+    if (orig::SDL3_GetVersion) {
+        int ver_int = orig::SDL3_GetVersion();
+        ver.major = SDL_VERSIONNUM_MAJOR(ver_int);
+        ver.minor = SDL_VERSIONNUM_MINOR(ver_int);
+        ver.patch = SDL_VERSIONNUM_MICRO(ver_int);
+    }
+
+    if (orig::SDL2_GetVersion) {
+        orig::SDL2_GetVersion(&ver);
     }
 
     if (orig::SDL_Linked_Version) {
-        sdl1::SDL_version *verp;
-        verp = orig::SDL_Linked_Version();
-        ver.major = verp->major;
-        ver.minor = verp->minor;
-        ver.patch = verp->patch;
+        SDL_version *verp = orig::SDL_Linked_Version();
+        ver = *verp;
     }
 
-    if (ORIG_SDL2_FUNCTION_POINTER(SDL_GetVersion) && orig::SDL_Linked_Version) {
+    if (orig::SDL2_GetVersion && orig::SDL_Linked_Version) {
         LOG(LL_ERROR, LCF_SDL | LCF_HOOK, "Both SDL versions were detected! Taking SDL1 in priority");
     }
 
@@ -77,32 +97,38 @@ int get_sdlversion(void)
     }
 
     /* If not, determine which library was already dynamically loaded. */
-    void *sdl1, *sdl2;
+    void *sdl1_handle, *sdl2_handle, *sdl3_handle;
 #ifdef __unix__
-    NATIVECALL(sdl1 = dlopen("libSDL-1.2.so.0", RTLD_NOLOAD));
-    NATIVECALL(sdl2 = dlopen("libSDL2-2.0.so.0", RTLD_NOLOAD));
+    NATIVECALL(sdl1_handle = dlopen("libSDL-1.2.so.0", RTLD_NOLOAD));
+    NATIVECALL(sdl2_handle = dlopen("libSDL2-2.0.so.0", RTLD_NOLOAD));
+    NATIVECALL(sdl3_handle = dlopen("libSDL3.so.0", RTLD_NOLOAD));
 #elif defined(__APPLE__) && defined(__MACH__)
-    NATIVECALL(sdl1 = dlopen("libSDL-1.2.0.dylib", RTLD_NOLOAD));
-    NATIVECALL(sdl2 = dlopen("libSDL2-2.0.0.dylib", RTLD_NOLOAD));
+    NATIVECALL(sdl1_handle = dlopen("libSDL-1.2.0.dylib", RTLD_NOLOAD));
+    NATIVECALL(sdl2_handle = dlopen("libSDL2-2.0.0.dylib", RTLD_NOLOAD));
+    NATIVECALL(sdl3_handle = dlopen("libSDL3.so.0", RTLD_NOLOAD));
 #endif
 
-    if (sdl1 && !sdl2) {
-        dlclose(sdl1);
+    if (sdl1_handle && !sdl2_handle && !sdl3_handle) {
         SDLver = 1;
     }
-    else if (!sdl1 && sdl2) {
-        dlclose(sdl2);
+    else if (!sdl1_handle && sdl2_handle && !sdl3_handle) {
         SDLver = 2;
     }
-    else if (sdl1 && sdl2) {
-        dlclose(sdl1);
-        dlclose(sdl2);
-        LOG(LL_ERROR, LCF_SDL | LCF_HOOK, "Multiple SDL versions were detected! Taking SDL1 in priority");
-        SDLver = 1;
+    else if (!sdl1_handle && !sdl2_handle && sdl3_handle) {
+        SDLver = 3;
     }
-    else {
+    else if (!sdl1_handle && !sdl2_handle && !sdl3_handle) {
         LOG(LL_ERROR, LCF_SDL | LCF_HOOK, "No SDL versions were detected!");
     }
+    else {
+        LOG(LL_ERROR, LCF_SDL | LCF_HOOK, "Multiple SDL versions were detected! Taking the lowest available version");
+        if (sdl1_handle) SDLver = 1;
+        else SDLver = 2;
+    }
+
+    if (sdl1_handle) dlclose(sdl1_handle);
+    if (sdl2_handle) dlclose(sdl2_handle);
+    if (sdl3_handle) dlclose(sdl3_handle);
 
     return SDLver;
 }

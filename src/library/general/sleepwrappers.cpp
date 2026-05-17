@@ -85,6 +85,24 @@ void transfer_sleep(const struct timespec &ts, struct timespec *rem)
     transfer_sleep(ts, NULL);
 }
 
+/* Override */ void SDL_DelayNS(Uint64 ns)
+{
+    LINK_NAMESPACE_GLOBAL(nanosleep);
+
+    struct timespec ts;
+    ts.tv_sec = ns / 1000000000;
+    ts.tv_nsec = ns % 1000000000;
+
+    if (GlobalState::isNative()) {
+        orig::nanosleep(&ts, NULL);
+        return;
+    }
+
+    LOG(LL_TRACE, LCF_SDL | LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, ts.tv_sec, ts.tv_nsec);
+
+    transfer_sleep(ts, NULL);
+}
+
 /* Override */ int usleep(useconds_t usec)
 {
     LINK_NAMESPACE_GLOBAL(nanosleep);
