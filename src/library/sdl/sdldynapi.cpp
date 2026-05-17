@@ -20,7 +20,6 @@
 #include "sdldynapi.h"
 
 #include "logging.h"
-#include "general/dlhook.h"
 #include "hook.h"
 #include "GlobalState.h"
 #include "../external/elfhacks.h"
@@ -128,8 +127,17 @@ void setDynapiAddr(uint64_t addr)
     }
 
 #define IF_IN_BOUNDS(FUNC) if (index_sdl2::FUNC * sizeof(void *) < tablesize)
-#define SDL_HOOK(FUNC) IF_IN_BOUNDS(FUNC) entries[index_sdl2::FUNC] = reinterpret_cast<void *>(dlsym(libtaslib, #FUNC));
-#include "sdlhooks.h"
+#define SDL_DYNAPI_PROC(rc,fn,params,args,ret) \
+    IF_IN_BOUNDS(fn) { \
+        void *sym = dlsym(libtaslib, #fn); \
+        if (sym != nullptr) { \
+            entries[index_sdl2::fn] = sym; \
+        } \
+    }
+#define SDL_DYNAPI_PROC_NO_VARARGS 0
+#include "../../external/SDL2_dynapi_procs.h"
+#undef SDL_DYNAPI_PROC_NO_VARARGS
+#undef SDL_DYNAPI_PROC
 
     dlclose(libtaslib);
     return res;
