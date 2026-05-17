@@ -3,7 +3,9 @@
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 cd $SCRIPT_DIR
 
-docker build -f ../Dockerfile --tag libtas_test . --build-arg=RUFFLE_VERSION=nightly-$(date +%Y-%m-%d)
+LIBTAS_VERSION=$(git rev-parse origin/master)
+
+docker build -f ../Dockerfile --tag libtas_test . --build-arg=RUFFLE_VERSION=nightly-$(date +%Y-%m-%d) --build-arg=LIBTAS_VERSION=$LIBTAS_VERSION
 docker run --rm -it -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v $HOME/.Xauthority:/root/.Xauthority:rw -v "$SCRIPT_DIR"/test_ruffle_nv14.ltm:/home/test_ruffle_nv14.ltm --net=host libtas_test bash -c 'apt-get -y install wget && \
        cd /home/ && \
        # Download game to test
