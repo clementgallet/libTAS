@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# This is an end-to-end test: this script builds libTAS and ruffle
+# using the repository's Dockerfile, then runs a ltm file for a single
+# level of a flash game (N), and verify if the level was correctly
+# finished (i.e. no desync) by checking the size of the save file.
+# Note:
+# - This tests origin/master, not the current local branch
+# - This requires an X server
+
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 cd $SCRIPT_DIR
 
