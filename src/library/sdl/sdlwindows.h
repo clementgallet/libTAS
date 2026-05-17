@@ -200,6 +200,32 @@ OVERRIDE void SDL_DestroyWindow(SDL_Window* window);
 //                  int width, int height, Uint32 window_flags,
 //                  SDL_Window **window, SDL_Renderer **renderer);
 
+namespace sdl3 {
+
+/**
+ * Create a window and default renderer.
+ *
+ * \param title the title of the window, in UTF-8 encoding.
+ * \param width the width of the window.
+ * \param height the height of the window.
+ * \param window_flags the flags used to create the window (see
+ *                     SDL_CreateWindow()).
+ * \param window a pointer filled with the window, or NULL on error.
+ * \param renderer a pointer filled with the renderer, or NULL on error.
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_CreateRenderer
+ * \sa SDL_CreateWindow
+ */
+bool SDL_CreateWindowAndRenderer(const char *title, int width, int height, SDL_WindowFlags window_flags, SDL_Window **window, SDL_Renderer **renderer);
+
+}
+
 /**
  *  \brief Set the position of a window.
  *
@@ -408,32 +434,6 @@ OVERRIDE int SDL_UpdateWindowSurface(SDL_Window * window);
 OVERRIDE int SDL_UpdateWindowSurfaceRects(SDL_Window * window,
                                                          const sdl2::SDL_Rect * rects,
                                                          int numrects);
-
-namespace sdl3 {
-
-/**
- * Create a window and default renderer.
- *
- * \param title the title of the window, in UTF-8 encoding.
- * \param width the width of the window.
- * \param height the height of the window.
- * \param window_flags the flags used to create the window (see
- *                     SDL_CreateWindow()).
- * \param window a pointer filled with the window, or NULL on error.
- * \param renderer a pointer filled with the renderer, or NULL on error.
- * \returns true on success or false on failure; call SDL_GetError() for more
- *          information.
- *
- * \threadsafety This function should only be called on the main thread.
- *
- * \since This function is available since SDL 3.2.0.
- *
- * \sa SDL_CreateRenderer
- * \sa SDL_CreateWindow
- */
-bool SDL_CreateWindowAndRenderer(const char *title, int width, int height, SDL_WindowFlags window_flags, SDL_Window **window, SDL_Renderer **renderer);
-
-}
 
 }
 

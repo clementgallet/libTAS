@@ -27,7 +27,6 @@ typedef int SDL_JoystickID;
 typedef Sint64 SDL_TouchID;
 typedef Sint64 SDL_FingerID;
 typedef Sint64 SDL_GestureID;
-typedef Uint16 SDL_AudioFormat;
 typedef Uint32 SDL_AudioDeviceID;
 typedef Uint32 SDL_TimerID;
 typedef Sint32 SDL_Keycode;
@@ -48,7 +47,6 @@ typedef void *SDL_AsyncIOQueue;
 typedef void *SDL_AtomicInt;
 typedef void *SDL_AtomicU32;
 // SDL_AudioDeviceID defined as Uint32 typedef
-// SDL_AudioFormat defined as Uint16 typedef
 // SDL_AudioPostmixCallback: skip
 // SDL_AudioSpec defined as struct
 // SDL_AudioStream: forward declared
@@ -76,8 +74,7 @@ typedef void *SDL_DateFormat;
 typedef void *SDL_DateTime;
 typedef void *SDL_DialogFileCallback;
 typedef void *SDL_DialogFileFilter;
-typedef void *SDL_DisplayID;
-// SDL_DisplayMode defined as struct
+typedef Uint32 SDL_DisplayID;
 // SDL_DisplayOrientation defined as enum
 typedef void *SDL_EGLAttribArrayCallback;
 typedef void *SDL_EGLConfig;
@@ -90,7 +87,6 @@ typedef void *SDL_Environment;
 // SDL_Event defined as union
 // SDL_EventAction: skip
 // SDL_EventFilter defined as function pointer
-typedef void *SDL_FColor;
 // SDL_FPoint defined as struct
 // SDL_FRect defined as struct
 typedef void *SDL_FileDialogType;
@@ -147,14 +143,7 @@ typedef void *SDL_GPUTransferBufferLocation;
 typedef void *SDL_GPUViewport;
 // SDL_GUID defined in forward declarations
 typedef void *SDL_Gamepad;
-typedef void *SDL_GamepadBinding;
-typedef void *SDL_GamepadButtonLabel;
-// SDL_GamepadType defined as enum
 typedef void *SDL_GlobFlags;
-// SDL_Haptic defined in forward declarations
-// SDL_HapticEffect defined in forward declarations
-typedef void *SDL_HapticEffectID;
-typedef void *SDL_HapticID;
 // SDL_HintCallback defined as function pointer
 // SDL_HintPriority defined as enum
 // SDL_HitTest defined as int typedef
@@ -165,7 +154,6 @@ typedef void *SDL_IOStreamInterface;
 typedef void *SDL_IOWhence;
 typedef void *SDL_InitState;
 // SDL_Joystick defined in forward declarations
-typedef void *SDL_JoystickConnectionState;
 // SDL_JoystickID defined as int typedef
 // SDL_JoystickType defined as enum
 typedef void *SDL_KeyboardID;
@@ -187,18 +175,14 @@ typedef void *SDL_NSTimerCallback;
 typedef void *SDL_PathInfo;
 typedef void *SDL_PenDeviceType;
 typedef void *SDL_PenID;
-// SDL_PixelFormat defined as struct
-typedef void *SDL_PixelFormatDetails;
 // SDL_Point defined as struct
 // SDL_PowerState defined as enum
 typedef void *SDL_Process;
-typedef void *SDL_ProgressState;
 typedef void *SDL_PropertiesID;
 typedef void *SDL_PropertyType;
 typedef void *SDL_RWLock;
 // SDL_Rect defined as struct
 // SDL_Renderer defined in forward declarations
-typedef void *SDL_RendererLogicalPresentation;
 typedef void *SDL_RequestAndroidPermissionCallback;
 typedef void *SDL_Sandbox;
 // SDL_ScaleMode: skip
@@ -309,51 +293,228 @@ typedef struct SDL_Color
     Uint8 a;
 } SDL_Color;
 
+typedef struct SDL_FColor
+{
+    float r;
+    float g;
+    float b;
+    float a;
+} SDL_FColor;
+
 typedef struct SDL_Palette
 {
-    int ncolors;
-    SDL_Color *colors;
-    Uint32 version;
-    int refcount;
+    int ncolors;        /**< number of elements in `colors`. */
+    SDL_Color *colors;  /**< an array of colors, `ncolors` long. */
+    Uint32 version;     /**< internal use only, do not touch. */
+    int refcount;       /**< internal use only, do not touch. */
 } SDL_Palette;
 
-typedef struct SDL_PixelFormat
+typedef enum SDL_PixelFormat
 {
-    Uint32 format;
-    SDL_Palette *palette;
-    Uint8 BitsPerPixel;
-    Uint8 BytesPerPixel;
+    SDL_PIXELFORMAT_UNKNOWN = 0,
+    SDL_PIXELFORMAT_INDEX1LSB = 0x11100100u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_INDEX1, SDL_BITMAPORDER_4321, 0, 1, 0), */
+    SDL_PIXELFORMAT_INDEX1MSB = 0x11200100u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_INDEX1, SDL_BITMAPORDER_1234, 0, 1, 0), */
+    SDL_PIXELFORMAT_INDEX2LSB = 0x1c100200u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_INDEX2, SDL_BITMAPORDER_4321, 0, 2, 0), */
+    SDL_PIXELFORMAT_INDEX2MSB = 0x1c200200u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_INDEX2, SDL_BITMAPORDER_1234, 0, 2, 0), */
+    SDL_PIXELFORMAT_INDEX4LSB = 0x12100400u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_INDEX4, SDL_BITMAPORDER_4321, 0, 4, 0), */
+    SDL_PIXELFORMAT_INDEX4MSB = 0x12200400u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_INDEX4, SDL_BITMAPORDER_1234, 0, 4, 0), */
+    SDL_PIXELFORMAT_INDEX8 = 0x13000801u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_INDEX8, 0, 0, 8, 1), */
+    SDL_PIXELFORMAT_RGB332 = 0x14110801u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED8, SDL_PACKEDORDER_XRGB, SDL_PACKEDLAYOUT_332, 8, 1), */
+    SDL_PIXELFORMAT_XRGB4444 = 0x15120c02u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_XRGB, SDL_PACKEDLAYOUT_4444, 12, 2), */
+    SDL_PIXELFORMAT_XBGR4444 = 0x15520c02u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_XBGR, SDL_PACKEDLAYOUT_4444, 12, 2), */
+    SDL_PIXELFORMAT_XRGB1555 = 0x15130f02u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_XRGB, SDL_PACKEDLAYOUT_1555, 15, 2), */
+    SDL_PIXELFORMAT_XBGR1555 = 0x15530f02u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_XBGR, SDL_PACKEDLAYOUT_1555, 15, 2), */
+    SDL_PIXELFORMAT_ARGB4444 = 0x15321002u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_ARGB, SDL_PACKEDLAYOUT_4444, 16, 2), */
+    SDL_PIXELFORMAT_RGBA4444 = 0x15421002u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_RGBA, SDL_PACKEDLAYOUT_4444, 16, 2), */
+    SDL_PIXELFORMAT_ABGR4444 = 0x15721002u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_ABGR, SDL_PACKEDLAYOUT_4444, 16, 2), */
+    SDL_PIXELFORMAT_BGRA4444 = 0x15821002u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_BGRA, SDL_PACKEDLAYOUT_4444, 16, 2), */
+    SDL_PIXELFORMAT_ARGB1555 = 0x15331002u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_ARGB, SDL_PACKEDLAYOUT_1555, 16, 2), */
+    SDL_PIXELFORMAT_RGBA5551 = 0x15441002u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_RGBA, SDL_PACKEDLAYOUT_5551, 16, 2), */
+    SDL_PIXELFORMAT_ABGR1555 = 0x15731002u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_ABGR, SDL_PACKEDLAYOUT_1555, 16, 2), */
+    SDL_PIXELFORMAT_BGRA5551 = 0x15841002u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_BGRA, SDL_PACKEDLAYOUT_5551, 16, 2), */
+    SDL_PIXELFORMAT_RGB565 = 0x15151002u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_XRGB, SDL_PACKEDLAYOUT_565, 16, 2), */
+    SDL_PIXELFORMAT_BGR565 = 0x15551002u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED16, SDL_PACKEDORDER_XBGR, SDL_PACKEDLAYOUT_565, 16, 2), */
+    SDL_PIXELFORMAT_RGB24 = 0x17101803u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYU8, SDL_ARRAYORDER_RGB, 0, 24, 3), */
+    SDL_PIXELFORMAT_BGR24 = 0x17401803u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYU8, SDL_ARRAYORDER_BGR, 0, 24, 3), */
+    SDL_PIXELFORMAT_XRGB8888 = 0x16161804u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_XRGB, SDL_PACKEDLAYOUT_8888, 24, 4), */
+    SDL_PIXELFORMAT_RGBX8888 = 0x16261804u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_RGBX, SDL_PACKEDLAYOUT_8888, 24, 4), */
+    SDL_PIXELFORMAT_XBGR8888 = 0x16561804u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_XBGR, SDL_PACKEDLAYOUT_8888, 24, 4), */
+    SDL_PIXELFORMAT_BGRX8888 = 0x16661804u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_BGRX, SDL_PACKEDLAYOUT_8888, 24, 4), */
+    SDL_PIXELFORMAT_ARGB8888 = 0x16362004u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_ARGB, SDL_PACKEDLAYOUT_8888, 32, 4), */
+    SDL_PIXELFORMAT_RGBA8888 = 0x16462004u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_RGBA, SDL_PACKEDLAYOUT_8888, 32, 4), */
+    SDL_PIXELFORMAT_ABGR8888 = 0x16762004u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_ABGR, SDL_PACKEDLAYOUT_8888, 32, 4), */
+    SDL_PIXELFORMAT_BGRA8888 = 0x16862004u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_BGRA, SDL_PACKEDLAYOUT_8888, 32, 4), */
+    SDL_PIXELFORMAT_XRGB2101010 = 0x16172004u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_XRGB, SDL_PACKEDLAYOUT_2101010, 32, 4), */
+    SDL_PIXELFORMAT_XBGR2101010 = 0x16572004u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_XBGR, SDL_PACKEDLAYOUT_2101010, 32, 4), */
+    SDL_PIXELFORMAT_ARGB2101010 = 0x16372004u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_ARGB, SDL_PACKEDLAYOUT_2101010, 32, 4), */
+    SDL_PIXELFORMAT_ABGR2101010 = 0x16772004u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_ABGR, SDL_PACKEDLAYOUT_2101010, 32, 4), */
+    SDL_PIXELFORMAT_RGB48 = 0x18103006u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYU16, SDL_ARRAYORDER_RGB, 0, 48, 6), */
+    SDL_PIXELFORMAT_BGR48 = 0x18403006u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYU16, SDL_ARRAYORDER_BGR, 0, 48, 6), */
+    SDL_PIXELFORMAT_RGBA64 = 0x18204008u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYU16, SDL_ARRAYORDER_RGBA, 0, 64, 8), */
+    SDL_PIXELFORMAT_ARGB64 = 0x18304008u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYU16, SDL_ARRAYORDER_ARGB, 0, 64, 8), */
+    SDL_PIXELFORMAT_BGRA64 = 0x18504008u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYU16, SDL_ARRAYORDER_BGRA, 0, 64, 8), */
+    SDL_PIXELFORMAT_ABGR64 = 0x18604008u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYU16, SDL_ARRAYORDER_ABGR, 0, 64, 8), */
+    SDL_PIXELFORMAT_RGB48_FLOAT = 0x1a103006u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYF16, SDL_ARRAYORDER_RGB, 0, 48, 6), */
+    SDL_PIXELFORMAT_BGR48_FLOAT = 0x1a403006u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYF16, SDL_ARRAYORDER_BGR, 0, 48, 6), */
+    SDL_PIXELFORMAT_RGBA64_FLOAT = 0x1a204008u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYF16, SDL_ARRAYORDER_RGBA, 0, 64, 8), */
+    SDL_PIXELFORMAT_ARGB64_FLOAT = 0x1a304008u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYF16, SDL_ARRAYORDER_ARGB, 0, 64, 8), */
+    SDL_PIXELFORMAT_BGRA64_FLOAT = 0x1a504008u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYF16, SDL_ARRAYORDER_BGRA, 0, 64, 8), */
+    SDL_PIXELFORMAT_ABGR64_FLOAT = 0x1a604008u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYF16, SDL_ARRAYORDER_ABGR, 0, 64, 8), */
+    SDL_PIXELFORMAT_RGB96_FLOAT = 0x1b10600cu,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYF32, SDL_ARRAYORDER_RGB, 0, 96, 12), */
+    SDL_PIXELFORMAT_BGR96_FLOAT = 0x1b40600cu,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYF32, SDL_ARRAYORDER_BGR, 0, 96, 12), */
+    SDL_PIXELFORMAT_RGBA128_FLOAT = 0x1b208010u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYF32, SDL_ARRAYORDER_RGBA, 0, 128, 16), */
+    SDL_PIXELFORMAT_ARGB128_FLOAT = 0x1b308010u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYF32, SDL_ARRAYORDER_ARGB, 0, 128, 16), */
+    SDL_PIXELFORMAT_BGRA128_FLOAT = 0x1b508010u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYF32, SDL_ARRAYORDER_BGRA, 0, 128, 16), */
+    SDL_PIXELFORMAT_ABGR128_FLOAT = 0x1b608010u,
+        /* SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYF32, SDL_ARRAYORDER_ABGR, 0, 128, 16), */
+
+    SDL_PIXELFORMAT_YV12 = 0x32315659u,      /**< Planar mode: Y + V + U  (3 planes) */
+        /* SDL_DEFINE_PIXELFOURCC('Y', 'V', '1', '2'), */
+    SDL_PIXELFORMAT_IYUV = 0x56555949u,      /**< Planar mode: Y + U + V  (3 planes) */
+        /* SDL_DEFINE_PIXELFOURCC('I', 'Y', 'U', 'V'), */
+    SDL_PIXELFORMAT_YUY2 = 0x32595559u,      /**< Packed mode: Y0+U0+Y1+V0 (1 plane) */
+        /* SDL_DEFINE_PIXELFOURCC('Y', 'U', 'Y', '2'), */
+    SDL_PIXELFORMAT_UYVY = 0x59565955u,      /**< Packed mode: U0+Y0+V0+Y1 (1 plane) */
+        /* SDL_DEFINE_PIXELFOURCC('U', 'Y', 'V', 'Y'), */
+    SDL_PIXELFORMAT_YVYU = 0x55595659u,      /**< Packed mode: Y0+V0+Y1+U0 (1 plane) */
+        /* SDL_DEFINE_PIXELFOURCC('Y', 'V', 'Y', 'U'), */
+    SDL_PIXELFORMAT_NV12 = 0x3231564eu,      /**< Planar mode: Y + U/V interleaved  (2 planes) */
+        /* SDL_DEFINE_PIXELFOURCC('N', 'V', '1', '2'), */
+    SDL_PIXELFORMAT_NV21 = 0x3132564eu,      /**< Planar mode: Y + V/U interleaved  (2 planes) */
+        /* SDL_DEFINE_PIXELFOURCC('N', 'V', '2', '1'), */
+    SDL_PIXELFORMAT_P010 = 0x30313050u,      /**< Planar mode: Y + U/V interleaved  (2 planes) */
+        /* SDL_DEFINE_PIXELFOURCC('P', '0', '1', '0'), */
+    SDL_PIXELFORMAT_EXTERNAL_OES = 0x2053454fu,     /**< Android video texture format */
+        /* SDL_DEFINE_PIXELFOURCC('O', 'E', 'S', ' ') */
+
+    SDL_PIXELFORMAT_MJPG = 0x47504a4du,     /**< Motion JPEG */
+        /* SDL_DEFINE_PIXELFOURCC('M', 'J', 'P', 'G') */
+
+    /* Aliases for RGBA byte arrays of color data, for the current platform */
+    #if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    SDL_PIXELFORMAT_RGBA32 = SDL_PIXELFORMAT_RGBA8888,
+    SDL_PIXELFORMAT_ARGB32 = SDL_PIXELFORMAT_ARGB8888,
+    SDL_PIXELFORMAT_BGRA32 = SDL_PIXELFORMAT_BGRA8888,
+    SDL_PIXELFORMAT_ABGR32 = SDL_PIXELFORMAT_ABGR8888,
+    SDL_PIXELFORMAT_RGBX32 = SDL_PIXELFORMAT_RGBX8888,
+    SDL_PIXELFORMAT_XRGB32 = SDL_PIXELFORMAT_XRGB8888,
+    SDL_PIXELFORMAT_BGRX32 = SDL_PIXELFORMAT_BGRX8888,
+    SDL_PIXELFORMAT_XBGR32 = SDL_PIXELFORMAT_XBGR8888
+    #else
+    SDL_PIXELFORMAT_RGBA32 = SDL_PIXELFORMAT_ABGR8888,
+    SDL_PIXELFORMAT_ARGB32 = SDL_PIXELFORMAT_BGRA8888,
+    SDL_PIXELFORMAT_BGRA32 = SDL_PIXELFORMAT_ARGB8888,
+    SDL_PIXELFORMAT_ABGR32 = SDL_PIXELFORMAT_RGBA8888,
+    SDL_PIXELFORMAT_RGBX32 = SDL_PIXELFORMAT_XBGR8888,
+    SDL_PIXELFORMAT_XRGB32 = SDL_PIXELFORMAT_BGRX8888,
+    SDL_PIXELFORMAT_BGRX32 = SDL_PIXELFORMAT_XRGB8888,
+    SDL_PIXELFORMAT_XBGR32 = SDL_PIXELFORMAT_RGBX8888
+    #endif
+} SDL_PixelFormat;
+
+typedef struct SDL_PixelFormatDetails
+{
+    SDL_PixelFormat format;
+    Uint8 bits_per_pixel;
+    Uint8 bytes_per_pixel;
     Uint8 padding[2];
     Uint32 Rmask;
     Uint32 Gmask;
     Uint32 Bmask;
     Uint32 Amask;
-    Uint8 Rloss;
-    Uint8 Gloss;
-    Uint8 Bloss;
-    Uint8 Aloss;
+    Uint8 Rbits;
+    Uint8 Gbits;
+    Uint8 Bbits;
+    Uint8 Abits;
     Uint8 Rshift;
     Uint8 Gshift;
     Uint8 Bshift;
     Uint8 Ashift;
-    int refcount;
-    struct SDL_PixelFormat *next;
-} SDL_PixelFormat;
+} SDL_PixelFormatDetails;
 
-typedef struct SDL_Surface
+typedef enum SDL_SurfaceFlags
 {
-    Uint32 flags;
-    SDL_PixelFormat *format;
-    int w, h;
-    int pitch;
-    void *pixels;
-    void *userdata;
-    int locked;
-    void *list_blitmap;
-    SDL_Rect clip_rect;
-    struct SDL_BlitMap *map;
-    int refcount;
-} SDL_Surface;
+    SDL_SURFACE_PREALLOCATED    = 0x00000001u, /**< Surface uses preallocated pixel memory */
+    SDL_SURFACE_LOCK_NEEDED     = 0x00000002u, /**< Surface needs to be locked to access pixels */
+    SDL_SURFACE_LOCKED          = 0x00000004u, /**< Surface is currently locked */
+    SDL_SURFACE_SIMD_ALIGNED    = 0x00000008u  /**< Surface uses pixel memory allocated with SDL_aligned_alloc() */
+} SDL_SurfaceFlags;
+
+struct SDL_Surface
+{
+    SDL_SurfaceFlags flags;     /**< The flags of the surface, read-only */
+    SDL_PixelFormat format;     /**< The format of the surface, read-only */
+    int w;                      /**< The width of the surface, read-only. */
+    int h;                      /**< The height of the surface, read-only. */
+    int pitch;                  /**< The distance in bytes between rows of pixels, read-only */
+    void *pixels;               /**< A pointer to the pixels of the surface, the pixels are writeable if non-NULL */
+
+    int refcount;               /**< Application reference count, used when freeing surface */
+
+    void *reserved;             /**< Reserved for internal use */
+};
+
+typedef enum SDL_RendererLogicalPresentation
+{
+    SDL_LOGICAL_PRESENTATION_DISABLED,  /**< There is no logical size in effect */
+    SDL_LOGICAL_PRESENTATION_STRETCH,   /**< The rendered content is stretched to the output resolution */
+    SDL_LOGICAL_PRESENTATION_LETTERBOX, /**< The rendered content is fit to the largest dimension and the other dimension is letterboxed with the clear color */
+    SDL_LOGICAL_PRESENTATION_OVERSCAN,  /**< The rendered content is fit to the smallest dimension and the other dimension extends beyond the output bounds */
+    SDL_LOGICAL_PRESENTATION_INTEGER_SCALE   /**< The rendered content is scaled up by integer multiples to fit the output resolution */
+} SDL_RendererLogicalPresentation;
 
 typedef Uint64 SDL_WindowFlags;
 
@@ -512,6 +673,16 @@ typedef enum SDL_PowerState
     SDL_POWERSTATE_CHARGING,
     SDL_POWERSTATE_CHARGED
 } SDL_PowerState;
+
+typedef enum SDL_ProgressState
+{
+    SDL_PROGRESS_STATE_INVALID = -1,    /**< An invalid progress state indicating an error; check SDL_GetError() */
+    SDL_PROGRESS_STATE_NONE,            /**< No progress bar is shown */
+    SDL_PROGRESS_STATE_INDETERMINATE,   /**< The progress bar is shown in a indeterminate state */
+    SDL_PROGRESS_STATE_NORMAL,          /**< The progress bar is shown in a normal state */
+    SDL_PROGRESS_STATE_PAUSED,          /**< The progress bar is shown in a paused state */
+    SDL_PROGRESS_STATE_ERROR            /**< The progress bar is shown in a state indicating the application had an error */
+} SDL_ProgressState;
 
 typedef int SDL_SensorID;
 
@@ -1587,124 +1758,238 @@ typedef enum SDL_TextureAddressMode
     SDL_TEXTURE_ADDRESS_WRAP    /**< The texture is repeated (tiled) */
 } SDL_TextureAddressMode;
 
-typedef enum SDL_AudioStatus
+typedef enum SDL_AudioFormat
 {
-    SDL_AUDIO_STOPPED = 0,
-    SDL_AUDIO_PLAYING,
-    SDL_AUDIO_PAUSED
-} SDL_AudioStatus;
+    SDL_AUDIO_UNKNOWN   = 0x0000u,  /**< Unspecified audio format */
+    SDL_AUDIO_U8        = 0x0008u,  /**< Unsigned 8-bit samples */
+        /* SDL_DEFINE_AUDIO_FORMAT(0, 0, 0, 8), */
+    SDL_AUDIO_S8        = 0x8008u,  /**< Signed 8-bit samples */
+        /* SDL_DEFINE_AUDIO_FORMAT(1, 0, 0, 8), */
+    SDL_AUDIO_S16LE     = 0x8010u,  /**< Signed 16-bit samples */
+        /* SDL_DEFINE_AUDIO_FORMAT(1, 0, 0, 16), */
+    SDL_AUDIO_S16BE     = 0x9010u,  /**< As above, but big-endian byte order */
+        /* SDL_DEFINE_AUDIO_FORMAT(1, 1, 0, 16), */
+    SDL_AUDIO_S32LE     = 0x8020u,  /**< 32-bit integer samples */
+        /* SDL_DEFINE_AUDIO_FORMAT(1, 0, 0, 32), */
+    SDL_AUDIO_S32BE     = 0x9020u,  /**< As above, but big-endian byte order */
+        /* SDL_DEFINE_AUDIO_FORMAT(1, 1, 0, 32), */
+    SDL_AUDIO_F32LE     = 0x8120u,  /**< 32-bit floating point samples */
+        /* SDL_DEFINE_AUDIO_FORMAT(1, 0, 1, 32), */
+    SDL_AUDIO_F32BE     = 0x9120u,  /**< As above, but big-endian byte order */
+        /* SDL_DEFINE_AUDIO_FORMAT(1, 1, 1, 32), */
+
+    /* These represent the current system's byteorder. */
+    #if SDL_BYTEORDER == SDL_LIL_ENDIAN
+    SDL_AUDIO_S16 = SDL_AUDIO_S16LE,
+    SDL_AUDIO_S32 = SDL_AUDIO_S32LE,
+    SDL_AUDIO_F32 = SDL_AUDIO_F32LE
+    #else
+    SDL_AUDIO_S16 = SDL_AUDIO_S16BE,
+    SDL_AUDIO_S32 = SDL_AUDIO_S32BE,
+    SDL_AUDIO_F32 = SDL_AUDIO_F32BE
+    #endif
+} SDL_AudioFormat;
 
 typedef struct SDL_AudioSpec
 {
-    int freq;
-    SDL_AudioFormat format;
-    Uint8 channels;
-    Uint8 silence;
-    Uint16 samples;
-    Uint16 padding;
-    Uint32 size;
-    void (*callback)(void *userdata, Uint8 *stream, int len);
-    void *userdata;
+    SDL_AudioFormat format;     /**< Audio data format */
+    int channels;               /**< Number of channels: 1 mono, 2 stereo, etc */
+    int freq;                   /**< sample rate: sample frames per second */
 } SDL_AudioSpec;
-
-typedef struct SDL_AudioCVT
-{
-    int needed;
-    SDL_AudioFormat src_format;
-    SDL_AudioFormat dst_format;
-    double rate_incr;
-    Uint8 *buf;
-    int len;
-    int len_cvt;
-    int len_mult;
-    double len_ratio;
-    void (*filters[10])(struct SDL_AudioCVT *cvt, SDL_AudioFormat format);
-    int filter_index;
-} SDL_AudioCVT;
 
 typedef void (*SDL_AudioPostmixCallback)(void *userdata, const float *buffer, int buflen);
 typedef void (*SDL_AudioStreamCallback)(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount);
 typedef void (*SDL_AudioStreamDataCompleteCallback)(SDL_AudioStream *stream, void *userdata);
 
-typedef struct SDL_HapticEffect
+typedef Uint32 SDL_HapticID;
+typedef Uint16 SDL_HapticEffectType;
+typedef Uint8 SDL_HapticDirectionType;
+typedef int SDL_HapticEffectID;
+
+typedef struct SDL_HapticDirection
 {
-    Uint16 type;
-    Uint8 padding[2];
-    struct {
-        Uint16 length;
-        Uint16 delay;
-        Uint16 button;
-        Uint16 interval;
-    } replay;
-    union {
-        struct {
-            Uint8 type;
-            Sint16 x;
-            Sint16 y;
-            Sint16 coefficient;
-            Uint16 period;
-            Sint16 phase;
-            Sint16 magnitude;
-            Sint16 offset;
-            Uint16 attack_length;
-            Uint16 attack_level;
-            Uint16 fade_length;
-            Uint16 fade_level;
-        } constant;
-        struct {
-            Uint8 type;
-            Sint16 x;
-            Sint16 y;
-            Sint16 radius;
-            Sint16 ramp;
-            Uint16 period;
-            Sint16 phase;
-            Sint16 magnitude;
-            Sint16 offset;
-            Uint16 attack_length;
-            Uint16 attack_level;
-            Uint16 fade_length;
-            Uint16 fade_level;
-        } periodic;
-        struct {
-            Uint8 type;
-            Sint16 direction;
-            Uint16 length;
-            Sint16 delay;
-            Sint16 x;
-            Sint16 y;
-            Sint16 coefficient;
-            Uint16 period;
-            Sint16 phase;
-            Sint16 magnitude;
-            Sint16 offset;
-            Uint16 attack_length;
-            Uint16 attack_level;
-            Uint16 fade_length;
-            Uint16 fade_level;
-        } ramp;
-    } u;
+    SDL_HapticDirectionType type;  /**< The type of encoding. */
+    Sint32 dir[3];                 /**< The encoded direction. */
+} SDL_HapticDirection;
+
+typedef struct SDL_HapticConstant
+{
+    /* Header */
+    SDL_HapticEffectType type;      /**< SDL_HAPTIC_CONSTANT */
+    SDL_HapticDirection direction;  /**< Direction of the effect. */
+
+    /* Replay */
+    Uint32 length;          /**< Duration of the effect. */
+    Uint16 delay;           /**< Delay before starting the effect. */
+
+    /* Trigger */
+    Uint16 button;          /**< Button that triggers the effect. */
+    Uint16 interval;        /**< How soon it can be triggered again after button. */
+
+    /* Constant */
+    Sint16 level;           /**< Strength of the constant effect. */
+
+    /* Envelope */
+    Uint16 attack_length;   /**< Duration of the attack. */
+    Uint16 attack_level;    /**< Level at the start of the attack. */
+    Uint16 fade_length;     /**< Duration of the fade. */
+    Uint16 fade_level;      /**< Level at the end of the fade. */
+} SDL_HapticConstant;
+
+typedef struct SDL_HapticPeriodic
+{
+    /* Header */
+    SDL_HapticEffectType type;      /**< SDL_HAPTIC_SINE, SDL_HAPTIC_SQUARE
+                                         SDL_HAPTIC_TRIANGLE, SDL_HAPTIC_SAWTOOTHUP or
+                                         SDL_HAPTIC_SAWTOOTHDOWN */
+    SDL_HapticDirection direction;  /**< Direction of the effect. */
+
+    /* Replay */
+    Uint32 length;      /**< Duration of the effect. */
+    Uint16 delay;       /**< Delay before starting the effect. */
+
+    /* Trigger */
+    Uint16 button;      /**< Button that triggers the effect. */
+    Uint16 interval;    /**< How soon it can be triggered again after button. */
+
+    /* Periodic */
+    Uint16 period;      /**< Period of the wave. */
+    Sint16 magnitude;   /**< Peak value; if negative, equivalent to 180 degrees extra phase shift. */
+    Sint16 offset;      /**< Mean value of the wave. */
+    Uint16 phase;       /**< Positive phase shift given by hundredth of a degree. */
+
+    /* Envelope */
+    Uint16 attack_length;   /**< Duration of the attack. */
+    Uint16 attack_level;    /**< Level at the start of the attack. */
+    Uint16 fade_length; /**< Duration of the fade. */
+    Uint16 fade_level;  /**< Level at the end of the fade. */
+} SDL_HapticPeriodic;
+
+typedef struct SDL_HapticCondition
+{
+    /* Header */
+    SDL_HapticEffectType type;      /**< SDL_HAPTIC_SPRING, SDL_HAPTIC_DAMPER,
+                                         SDL_HAPTIC_INERTIA or SDL_HAPTIC_FRICTION */
+    SDL_HapticDirection direction;  /**< Direction of the effect. */
+
+    /* Replay */
+    Uint32 length;          /**< Duration of the effect. */
+    Uint16 delay;           /**< Delay before starting the effect. */
+
+    /* Trigger */
+    Uint16 button;          /**< Button that triggers the effect. */
+    Uint16 interval;        /**< How soon it can be triggered again after button. */
+
+    /* Condition */
+    Uint16 right_sat[3];    /**< Level when joystick is to the positive side; max 0xFFFF. */
+    Uint16 left_sat[3];     /**< Level when joystick is to the negative side; max 0xFFFF. */
+    Sint16 right_coeff[3];  /**< How fast to increase the force towards the positive side. */
+    Sint16 left_coeff[3];   /**< How fast to increase the force towards the negative side. */
+    Uint16 deadband[3];     /**< Size of the dead zone; max 0xFFFF: whole axis-range when 0-centered. */
+    Sint16 center[3];       /**< Position of the dead zone. */
+} SDL_HapticCondition;
+
+typedef struct SDL_HapticRamp
+{
+    /* Header */
+    SDL_HapticEffectType type;      /**< SDL_HAPTIC_RAMP */
+    SDL_HapticDirection direction;  /**< Direction of the effect. */
+
+    /* Replay */
+    Uint32 length;          /**< Duration of the effect. */
+    Uint16 delay;           /**< Delay before starting the effect. */
+
+    /* Trigger */
+    Uint16 button;          /**< Button that triggers the effect. */
+    Uint16 interval;        /**< How soon it can be triggered again after button. */
+
+    /* Ramp */
+    Sint16 start;           /**< Beginning strength level. */
+    Sint16 end;             /**< Ending strength level. */
+
+    /* Envelope */
+    Uint16 attack_length;   /**< Duration of the attack. */
+    Uint16 attack_level;    /**< Level at the start of the attack. */
+    Uint16 fade_length;     /**< Duration of the fade. */
+    Uint16 fade_level;      /**< Level at the end of the fade. */
+} SDL_HapticRamp;
+
+typedef struct SDL_HapticLeftRight
+{
+    /* Header */
+    SDL_HapticEffectType type;  /**< SDL_HAPTIC_LEFTRIGHT */
+
+    /* Replay */
+    Uint32 length;          /**< Duration of the effect in milliseconds. */
+
+    /* Rumble */
+    Uint16 large_magnitude; /**< Control of the large controller motor. */
+    Uint16 small_magnitude; /**< Control of the small controller motor. */
+} SDL_HapticLeftRight;
+
+typedef struct SDL_HapticCustom
+{
+    /* Header */
+    SDL_HapticEffectType type;      /**< SDL_HAPTIC_CUSTOM */
+    SDL_HapticDirection direction;  /**< Direction of the effect. */
+
+    /* Replay */
+    Uint32 length;          /**< Duration of the effect. */
+    Uint16 delay;           /**< Delay before starting the effect. */
+
+    /* Trigger */
+    Uint16 button;          /**< Button that triggers the effect. */
+    Uint16 interval;        /**< How soon it can be triggered again after button. */
+
+    /* Custom */
+    Uint8 channels;         /**< Axes to use, minimum of one. */
+    Uint16 period;          /**< Sample periods. */
+    Uint16 samples;         /**< Amount of samples. */
+    Uint16 *data;           /**< Should contain channels*samples items. */
+
+    /* Envelope */
+    Uint16 attack_length;   /**< Duration of the attack. */
+    Uint16 attack_level;    /**< Level at the start of the attack. */
+    Uint16 fade_length;     /**< Duration of the fade. */
+    Uint16 fade_level;      /**< Level at the end of the fade. */
+} SDL_HapticCustom;
+
+typedef union SDL_HapticEffect
+{
+    /* Common for all force feedback effects */
+    SDL_HapticEffectType type;      /**< Effect type. */
+    SDL_HapticConstant constant;    /**< Constant effect. */
+    SDL_HapticPeriodic periodic;    /**< Periodic effect. */
+    SDL_HapticCondition condition;  /**< Condition effect. */
+    SDL_HapticRamp ramp;            /**< Ramp effect. */
+    SDL_HapticLeftRight leftright;  /**< Left/Right effect. */
+    SDL_HapticCustom custom;        /**< Custom effect. */
 } SDL_HapticEffect;
 
 typedef enum SDL_FlipMode
 {
-    SDL_FLIP_NONE = 0,
-    SDL_FLIP_HORIZONTAL,
-    SDL_FLIP_VERTICAL
+    SDL_FLIP_NONE,                                                                  /**< Do not flip */
+    SDL_FLIP_HORIZONTAL,                                                            /**< flip horizontally */
+    SDL_FLIP_VERTICAL,                                                              /**< flip vertically */
+    SDL_FLIP_HORIZONTAL_AND_VERTICAL = (SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL)    /**< flip horizontally and vertically (not a diagonal flip) */
 } SDL_FlipMode;
 
 typedef enum SDL_GamepadType
 {
     SDL_GAMEPAD_TYPE_UNKNOWN = 0,
     SDL_GAMEPAD_TYPE_STANDARD,
-    SDL_GAMEPAD_TYPE_WHEEL,
-    SDL_GAMEPAD_TYPE_ARCADE_STICK,
-    SDL_GAMEPAD_TYPE_FLIGHT_STICK,
-    SDL_GAMEPAD_TYPE_DANCE_PAD,
-    SDL_GAMEPAD_TYPE_GUITAR,
-    SDL_GAMEPAD_TYPE_DRUM_KIT,
-    SDL_GAMEPAD_TYPE_ARCADE_PAD,
-    SDL_GAMEPAD_TYPE_THROTTLE
+    SDL_GAMEPAD_TYPE_XBOX360,
+    SDL_GAMEPAD_TYPE_XBOXONE,
+    SDL_GAMEPAD_TYPE_PS3,
+    SDL_GAMEPAD_TYPE_PS4,
+    SDL_GAMEPAD_TYPE_PS5,
+    SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_PRO,
+    SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_LEFT,
+    SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT,
+    SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_PAIR,
+    SDL_GAMEPAD_TYPE_GAMECUBE,
+    SDL_GAMEPAD_TYPE_STEAM,
+    SDL_GAMEPAD_TYPE_COUNT
 } SDL_GamepadType;
 
 typedef enum SDL_GLAttr
@@ -1738,66 +2023,117 @@ typedef enum SDL_GLAttr
     SDL_GL_CONTEXT_NO_ERROR
 } SDL_GLAttr;
 
-typedef enum SDL_GameControllerAxis
+typedef enum SDL_GamepadAxis
 {
-    SDL_CONTROLLER_AXIS_INVALID = -1,
-    SDL_CONTROLLER_AXIS_LEFTX,
-    SDL_CONTROLLER_AXIS_LEFTY,
-    SDL_CONTROLLER_AXIS_RIGHTX,
-    SDL_CONTROLLER_AXIS_RIGHTY,
-    SDL_CONTROLLER_AXIS_TRIGGERLEFT,
-    SDL_CONTROLLER_AXIS_TRIGGERRIGHT,
-    SDL_CONTROLLER_AXIS_MAX
-} SDL_GameControllerAxis;
+    SDL_GAMEPAD_AXIS_INVALID = -1,
+    SDL_GAMEPAD_AXIS_LEFTX,
+    SDL_GAMEPAD_AXIS_LEFTY,
+    SDL_GAMEPAD_AXIS_RIGHTX,
+    SDL_GAMEPAD_AXIS_RIGHTY,
+    SDL_GAMEPAD_AXIS_LEFT_TRIGGER,
+    SDL_GAMEPAD_AXIS_RIGHT_TRIGGER,
+    SDL_GAMEPAD_AXIS_COUNT
+} SDL_GamepadAxis;
 
-typedef enum SDL_GameControllerButton
+typedef enum SDL_GamepadButton
 {
-    SDL_CONTROLLER_BUTTON_INVALID = -1,
-    SDL_CONTROLLER_BUTTON_A,
-    SDL_CONTROLLER_BUTTON_B,
-    SDL_CONTROLLER_BUTTON_X,
-    SDL_CONTROLLER_BUTTON_Y,
-    SDL_CONTROLLER_BUTTON_BACK,
-    SDL_CONTROLLER_BUTTON_GUIDE,
-    SDL_CONTROLLER_BUTTON_START,
-    SDL_CONTROLLER_BUTTON_LEFTSTICK,
-    SDL_CONTROLLER_BUTTON_RIGHTSTICK,
-    SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
-    SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
-    SDL_CONTROLLER_BUTTON_DPAD_UP,
-    SDL_CONTROLLER_BUTTON_DPAD_DOWN,
-    SDL_CONTROLLER_BUTTON_DPAD_LEFT,
-    SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
-    SDL_CONTROLLER_BUTTON_MISC1,
-    SDL_CONTROLLER_BUTTON_PADDLE1,
-    SDL_CONTROLLER_BUTTON_PADDLE2,
-    SDL_CONTROLLER_BUTTON_PADDLE3,
-    SDL_CONTROLLER_BUTTON_PADDLE4,
-    SDL_CONTROLLER_BUTTON_TOUCHPAD,
-    SDL_CONTROLLER_BUTTON_MAX
-} SDL_GameControllerButton;
+    SDL_GAMEPAD_BUTTON_INVALID = -1,
+    SDL_GAMEPAD_BUTTON_SOUTH,           /**< Bottom face button (e.g. Xbox A button) */
+    SDL_GAMEPAD_BUTTON_EAST,            /**< Right face button (e.g. Xbox B button) */
+    SDL_GAMEPAD_BUTTON_WEST,            /**< Left face button (e.g. Xbox X button) */
+    SDL_GAMEPAD_BUTTON_NORTH,           /**< Top face button (e.g. Xbox Y button) */
+    SDL_GAMEPAD_BUTTON_BACK,
+    SDL_GAMEPAD_BUTTON_GUIDE,
+    SDL_GAMEPAD_BUTTON_START,
+    SDL_GAMEPAD_BUTTON_LEFT_STICK,
+    SDL_GAMEPAD_BUTTON_RIGHT_STICK,
+    SDL_GAMEPAD_BUTTON_LEFT_SHOULDER,
+    SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER,
+    SDL_GAMEPAD_BUTTON_DPAD_UP,
+    SDL_GAMEPAD_BUTTON_DPAD_DOWN,
+    SDL_GAMEPAD_BUTTON_DPAD_LEFT,
+    SDL_GAMEPAD_BUTTON_DPAD_RIGHT,
+    SDL_GAMEPAD_BUTTON_MISC1,           /**< Additional button (e.g. Xbox Series X share button, PS5 microphone button, Nintendo Switch Pro capture button, Steam Controller QAM button, Amazon Luna microphone button, Google Stadia capture button) */
+    SDL_GAMEPAD_BUTTON_RIGHT_PADDLE1,   /**< Upper or primary paddle, under your right hand (e.g. Xbox Elite paddle P1, DualSense Edge RB button, Right Joy-Con SR button, Steam Controller R4 button) */
+    SDL_GAMEPAD_BUTTON_LEFT_PADDLE1,    /**< Upper or primary paddle, under your left hand (e.g. Xbox Elite paddle P3, DualSense Edge LB button, Left Joy-Con SL button, Steam Controller L4 button) */
+    SDL_GAMEPAD_BUTTON_RIGHT_PADDLE2,   /**< Lower or secondary paddle, under your right hand (e.g. Xbox Elite paddle P2, DualSense Edge right Fn button, Right Joy-Con SL button, Steam Controller R5 button) */
+    SDL_GAMEPAD_BUTTON_LEFT_PADDLE2,    /**< Lower or secondary paddle, under your left hand (e.g. Xbox Elite paddle P4, DualSense Edge left Fn button, Left Joy-Con SR button, Steam Controller L5 button) */
+    SDL_GAMEPAD_BUTTON_TOUCHPAD,        /**< PS4/PS5 touchpad button */
+    SDL_GAMEPAD_BUTTON_MISC2,           /**< Additional button */
+    SDL_GAMEPAD_BUTTON_MISC3,           /**< Additional button (e.g. Nintendo GameCube left trigger click) */
+    SDL_GAMEPAD_BUTTON_MISC4,           /**< Additional button (e.g. Nintendo GameCube right trigger click) */
+    SDL_GAMEPAD_BUTTON_MISC5,           /**< Additional button */
+    SDL_GAMEPAD_BUTTON_MISC6,           /**< Additional button */
+    SDL_GAMEPAD_BUTTON_COUNT
+} SDL_GamepadButton;
 
-typedef enum SDL_GameControllerType
+typedef enum SDL_GamepadCapSenseType
 {
-    SDL_CONTROLLER_TYPE_UNKNOWN = 0,
-    SDL_CONTROLLER_TYPE_XBOX360,
-    SDL_CONTROLLER_TYPE_XBOXONE,
-    SDL_CONTROLLER_TYPE_PS3,
-    SDL_CONTROLLER_TYPE_PS4,
-    SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO,
-    SDL_CONTROLLER_TYPE_VIRTUAL,
-    SDL_CONTROLLER_TYPE_PS5,
-    SDL_CONTROLLER_TYPE_AMAZON_LUNA,
-    SDL_CONTROLLER_TYPE_GOOGLE_STADIA,
-    SDL_CONTROLLER_TYPE_NVIDIA_SHIELD,
-    SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_JOYCON_L,
-    SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_JOYCON_R,
-    SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_JOYCON_PAIR
-} SDL_GameControllerType;
+    SDL_GAMEPAD_CAPSENSE_INVALID = -1,
+    SDL_GAMEPAD_CAPSENSE_LEFT_STICK,    /**< Activated by touching the top of the left thumbstick */
+    SDL_GAMEPAD_CAPSENSE_RIGHT_STICK,   /**< Activated by touching the top of the right thumbstick */
+    SDL_GAMEPAD_CAPSENSE_LEFT_GRIP,     /**< Activated by gripping the left handle of the controller */
+    SDL_GAMEPAD_CAPSENSE_RIGHT_GRIP,    /**< Activated by gripping the right handle of the controller */
+    SDL_GAMEPAD_CAPSENSE_COUNT
+} SDL_GamepadCapSenseType;
 
-typedef enum SDL_GameControllerAxis SDL_GamepadAxis;
-typedef enum SDL_GameControllerButton SDL_GamepadButton;
-typedef enum SDL_GameControllerType SDL_GamepadType_Alias;
+typedef enum SDL_GamepadBindingType
+{
+    SDL_GAMEPAD_BINDTYPE_NONE = 0,
+    SDL_GAMEPAD_BINDTYPE_BUTTON,
+    SDL_GAMEPAD_BINDTYPE_AXIS,
+    SDL_GAMEPAD_BINDTYPE_HAT
+} SDL_GamepadBindingType;
+
+typedef struct SDL_GamepadBinding
+{
+    SDL_GamepadBindingType input_type;
+    union
+    {
+        int button;
+
+        struct
+        {
+            int axis;
+            int axis_min;
+            int axis_max;
+        } axis;
+
+        struct
+        {
+            int hat;
+            int hat_mask;
+        } hat;
+
+    } input;
+
+    SDL_GamepadBindingType output_type;
+    union
+    {
+        SDL_GamepadButton button;
+
+        struct
+        {
+            SDL_GamepadAxis axis;
+            int axis_min;
+            int axis_max;
+        } axis;
+
+    } output;
+} SDL_GamepadBinding;
+
+typedef enum SDL_GamepadButtonLabel
+{
+    SDL_GAMEPAD_BUTTON_LABEL_UNKNOWN,
+    SDL_GAMEPAD_BUTTON_LABEL_A,
+    SDL_GAMEPAD_BUTTON_LABEL_B,
+    SDL_GAMEPAD_BUTTON_LABEL_X,
+    SDL_GAMEPAD_BUTTON_LABEL_Y,
+    SDL_GAMEPAD_BUTTON_LABEL_CROSS,
+    SDL_GAMEPAD_BUTTON_LABEL_CIRCLE,
+    SDL_GAMEPAD_BUTTON_LABEL_SQUARE,
+    SDL_GAMEPAD_BUTTON_LABEL_TRIANGLE
+} SDL_GamepadButtonLabel;
 
 typedef enum SDL_SensorType
 {
@@ -1830,15 +2166,16 @@ typedef enum SDL_SystemCursor
 
 typedef enum SDL_ScaleMode
 {
-    SDL_ScaleModeNearest,
-    SDL_ScaleModeLinear,
-    SDL_ScaleModeBest
+    SDL_SCALEMODE_INVALID = -1,
+    SDL_SCALEMODE_NEAREST,  /**< nearest pixel sampling */
+    SDL_SCALEMODE_LINEAR,   /**< linear filtering */
+    SDL_SCALEMODE_PIXELART  /**< nearest pixel sampling with improved scaling for pixel art, available since SDL 3.4.0 */
 } SDL_ScaleMode;
 
 typedef enum SDL_JoystickType
 {
     SDL_JOYSTICK_TYPE_UNKNOWN,
-    SDL_JOYSTICK_TYPE_GAMECONTROLLER,
+    SDL_JOYSTICK_TYPE_GAMEPAD,
     SDL_JOYSTICK_TYPE_WHEEL,
     SDL_JOYSTICK_TYPE_ARCADE_STICK,
     SDL_JOYSTICK_TYPE_FLIGHT_STICK,
@@ -1846,8 +2183,17 @@ typedef enum SDL_JoystickType
     SDL_JOYSTICK_TYPE_GUITAR,
     SDL_JOYSTICK_TYPE_DRUM_KIT,
     SDL_JOYSTICK_TYPE_ARCADE_PAD,
-    SDL_JOYSTICK_TYPE_THROTTLE
+    SDL_JOYSTICK_TYPE_THROTTLE,
+    SDL_JOYSTICK_TYPE_COUNT
 } SDL_JoystickType;
+
+typedef enum SDL_JoystickConnectionState
+{
+    SDL_JOYSTICK_CONNECTION_INVALID = -1,
+    SDL_JOYSTICK_CONNECTION_UNKNOWN,
+    SDL_JOYSTICK_CONNECTION_WIRED,
+    SDL_JOYSTICK_CONNECTION_WIRELESS
+} SDL_JoystickConnectionState;
 
 typedef enum SDL_HintPriority
 {
@@ -1868,11 +2214,11 @@ typedef enum SDL_LogPriority
 
 typedef enum SDL_DisplayOrientation
 {
-    SDL_ORIENTATION_UNKNOWN = 0,
-    SDL_ORIENTATION_LANDSCAPE,
-    SDL_ORIENTATION_LANDSCAPE_FLIPPED,
-    SDL_ORIENTATION_PORTRAIT,
-    SDL_ORIENTATION_PORTRAIT_FLIPPED
+    SDL_ORIENTATION_UNKNOWN,            /**< The display orientation can't be determined */
+    SDL_ORIENTATION_LANDSCAPE,          /**< The display is in landscape mode, with the right side up, relative to portrait mode */
+    SDL_ORIENTATION_LANDSCAPE_FLIPPED,  /**< The display is in landscape mode, with the left side up, relative to portrait mode */
+    SDL_ORIENTATION_PORTRAIT,           /**< The display is in portrait mode */
+    SDL_ORIENTATION_PORTRAIT_FLIPPED    /**< The display is in portrait mode, upside down */
 } SDL_DisplayOrientation;
 
 typedef enum SDL_TouchDeviceType
@@ -1890,13 +2236,21 @@ typedef struct SDL_Vertex
     SDL_FPoint tex_coord;
 } SDL_Vertex;
 
+typedef struct SDL_DisplayModeData SDL_DisplayModeData;
+
 typedef struct SDL_DisplayMode
 {
-    Uint32 format;
-    int w;
-    int h;
-    int refresh_rate;
-    void *driverdata;
+    SDL_DisplayID displayID;        /**< the display this mode is associated with */
+    SDL_PixelFormat format;         /**< pixel format */
+    int w;                          /**< width */
+    int h;                          /**< height */
+    float pixel_density;            /**< scale converting size to pixels (e.g. a 1920x1080 mode with 2.0 scale would have 3840x2160 pixels) */
+    float refresh_rate;             /**< refresh rate (or 0.0f for unspecified) */
+    int refresh_rate_numerator;     /**< precise refresh rate numerator (or 0 for unspecified) */
+    int refresh_rate_denominator;   /**< precise refresh rate denominator */
+
+    SDL_DisplayModeData *internal;  /**< Private */
+
 } SDL_DisplayMode;
 
 // Type aliases

@@ -24,6 +24,7 @@
 #include "logging.h"
 #include "frame.h"
 #include "renderhud/RenderHUD_SDL2_renderer.h"
+#include "renderhud/RenderHUD_SDL3_renderer.h"
 #include "screencapture/ScreenCapture.h"
 #include "global.h"
 #include "GlobalState.h"
@@ -54,6 +55,21 @@ SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
 
 };
 
+namespace sdl3 {
+
+SDL_Renderer *SDL_CreateRenderer(SDL_Window *window, const char *name)
+{
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
+
+    SDL_Renderer* renderer = ORIG_SDL3_CALL(SDL_CreateRenderer, (window, name));
+
+    Global::game_info.video |=  GameInfo::SDL3_RENDERER;
+
+    return renderer;
+}
+
+}
+
 /* Override */ void SDL_DestroyRenderer(SDL_Renderer * renderer)
 {
     LOGTRACE(LCF_SDL | LCF_WINDOW);
@@ -61,8 +77,9 @@ SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
     ScreenCapture::fini();
 
     Global::game_info.video &= ~GameInfo::SDL2_RENDERER;
+    Global::game_info.video &= ~GameInfo::SDL3_RENDERER;
 
-    ORIG_SDL2_CALL(SDL_DestroyRenderer, (renderer));
+    ORIG_SDL23_CALL(SDL_DestroyRenderer, (renderer));
 }
 
 /* Override */ void SDL_RenderPresent(SDL_Renderer * renderer)
@@ -73,9 +90,16 @@ SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
     LOGTRACE(LCF_SDL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
-    static RenderHUD_SDL2_renderer renderHUD;
-    renderHUD.setRenderer(renderer);
-    frameBoundary([&] () {ORIG_SDL23_CALL(SDL_RenderPresent, (renderer));}, renderHUD);
+    if (Global::game_info.video & GameInfo::SDL3_RENDERER) {
+        static RenderHUD_SDL3_renderer renderHUD;
+        renderHUD.setRenderer(renderer);
+        frameBoundary([&] () {ORIG_SDL3_CALL(SDL_RenderPresent, (renderer));}, renderHUD);
+    }
+    else {
+        static RenderHUD_SDL2_renderer renderHUD;
+        renderHUD.setRenderer(renderer);
+        frameBoundary([&] () {ORIG_SDL2_CALL(SDL_RenderPresent, (renderer));}, renderHUD);
+    }
 }
 
 static int logical_w = 0;
@@ -97,6 +121,24 @@ int SDL_RenderSetLogicalSize(SDL_Renderer * renderer, int w, int h)
     return 0;
 }
 
+static sdl3::SDL_RendererLogicalPresentation logical_mode = sdl3::SDL_LOGICAL_PRESENTATION_DISABLED;
+
+bool SDL_SetRenderLogicalPresentation(SDL_Renderer *renderer, int w, int h, sdl3::SDL_RendererLogicalPresentation mode)
+{
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s called with new size: %d x %d", __func__, w, h);
+
+    /* Don't let the game have logical size that differs from screen size,
+     * so we resize the window instead.
+     */
+    if (sdl::gameSDLWindow) {
+        libtas::SDL_SetWindowSize(sdl::gameSDLWindow, w, h);
+    }
+    logical_w = w;
+    logical_h = h;
+    logical_mode = mode;
+    return true;
+}
+
 void SDL_RenderGetLogicalSize(SDL_Renderer * renderer, int *w, int *h)
 {
     LOGTRACE(LCF_SDL | LCF_WINDOW);
@@ -108,6 +150,24 @@ void SDL_RenderGetLogicalSize(SDL_Renderer * renderer, int *w, int *h)
     if (h) {
         *h = logical_h;
     }
+}
+
+bool SDL_GetRenderLogicalPresentation(SDL_Renderer *renderer, int *w, int *h, sdl3::SDL_RendererLogicalPresentation *mode)
+{
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
+
+    /* Set the stored values of logical size and presentation mode */
+    if (w) {
+        *w = logical_w;
+    }
+    if (h) {
+        *h = logical_h;
+    }
+    if (mode) {
+        *mode = logical_mode;
+    }
+
+    return true;
 }
 
 int SDL_RenderSetViewport(SDL_Renderer * renderer, const sdl2::SDL_Rect * rect)
@@ -136,21 +196,6 @@ void SDL_RenderGetScale(SDL_Renderer * renderer, float *scaleX, float *scaleY)
 {
     LOGTRACE(LCF_SDL | LCF_WINDOW | LCF_TODO);
     return ORIG_SDL2_CALL(SDL_RenderGetScale, (renderer, scaleX, scaleY));
-}
-
-namespace sdl3 {
-
-SDL_Renderer * SDL_CreateRenderer(SDL_Window *window, const char *name)
-{
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
-
-    SDL_Renderer* renderer = ORIG_SDL3_CALL(SDL_CreateRenderer, (window, name));
-
-    Global::game_info.video |=  GameInfo::SDL2_RENDERER;
-
-    return renderer;
-}
-
 }
 
 }

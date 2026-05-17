@@ -18,6 +18,7 @@
  */
 
 #include "sdldisplay.h"
+#include "sdlversion.h"
 
 #include "hook.h"
 #include "sdldynapi.h"
@@ -41,7 +42,7 @@ namespace libtas {
 {
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
-    const char* ret = ORIG_SDL2_CALL(SDL_GetDisplayName, (displayIndex));
+    const char* ret = ORIG_SDL23_CALL(SDL_GetDisplayName, (displayIndex));
     LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns %d", ret);
 
     return ret;
@@ -53,7 +54,7 @@ namespace libtas {
 
     int ret = 0;
     if (GlobalState::isNative() || !Global::shared_config.screen_width) {
-        ret = ORIG_SDL2_CALL(SDL_GetDisplayBounds, (displayIndex, rect));
+        ret = ORIG_SDL23_CALL(SDL_GetDisplayBounds, (displayIndex, rect));
     }
     else {
         if (!rect) {
@@ -89,7 +90,7 @@ namespace libtas {
 {
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
-    int ret = ORIG_SDL2_CALL(SDL_GetDisplayUsableBounds, (displayIndex, rect));
+    int ret = ORIG_SDL23_CALL(SDL_GetDisplayUsableBounds, (displayIndex, rect));
     if (rect) {
         LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns rect (%d,%d,%d,%d)", rect->x, rect->y, rect->w, rect->h);
     }
@@ -140,16 +141,34 @@ namespace libtas {
 {
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
-    int ret = ORIG_SDL2_CALL(SDL_GetDesktopDisplayMode, (displayIndex, mode));
+    int ret = ORIG_SDL23_CALL(SDL_GetDesktopDisplayMode, (displayIndex, mode));
 
-    if (!GlobalState::isNative() && Global::shared_config.screen_width) {
-        mode->format = sdl2::SDL_PIXELFORMAT_RGB888;
-        mode->w = Global::shared_config.screen_width;
-        mode->h = Global::shared_config.screen_height;
+    int SDLver = get_sdlversion();
+
+    if (SDLver == 2) {
+        if (!GlobalState::isNative() && Global::shared_config.screen_width) {
+            mode->format = sdl2::SDL_PIXELFORMAT_RGB888;
+            mode->w = Global::shared_config.screen_width;
+            mode->h = Global::shared_config.screen_height;
+        }
+        mode->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
+
+        LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %p", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
     }
-    mode->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
+    else if (SDLver == 3) {
+        sdl3::SDL_DisplayMode* mode3 = reinterpret_cast<sdl3::SDL_DisplayMode*>(mode);
+        if (!GlobalState::isNative() && Global::shared_config.screen_width) {
+            mode3->format = sdl3::SDL_PIXELFORMAT_RGB24;
+            mode3->w = Global::shared_config.screen_width;
+            mode3->h = Global::shared_config.screen_height;
+        }
+        mode3->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
+        mode3->refresh_rate_numerator = Global::shared_config.initial_framerate_num;
+        mode3->refresh_rate_denominator = Global::shared_config.initial_framerate_den;
 
-    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
+        LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %p", mode3->format, mode3->w, mode3->h, mode3->refresh_rate, mode3->internal);
+    }
+
     return ret;
 }
 
@@ -159,19 +178,38 @@ namespace libtas {
 
     int ret = 0;
     if (GlobalState::isNative() || !Global::shared_config.screen_width) {
-        ret = ORIG_SDL2_CALL(SDL_GetCurrentDisplayMode, (displayIndex, mode));
+        ret = ORIG_SDL23_CALL(SDL_GetCurrentDisplayMode, (displayIndex, mode));
     }
     else {
         /* We must get one real display mode to have a correct data parameter */
-        ret = ORIG_SDL2_CALL(SDL_GetDesktopDisplayMode, (displayIndex, mode));
-
-        mode->format = sdl2::SDL_PIXELFORMAT_RGB888;
-        mode->w = Global::shared_config.screen_width;
-        mode->h = Global::shared_config.screen_height;
+        ret = ORIG_SDL23_CALL(SDL_GetDesktopDisplayMode, (displayIndex, mode));
     }
-    mode->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
 
-    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
+    int SDLver = get_sdlversion();
+
+    if (SDLver == 2) {
+        if (GlobalState::isNative() || !Global::shared_config.screen_width) {
+            mode->format = sdl2::SDL_PIXELFORMAT_RGB888;
+            mode->w = Global::shared_config.screen_width;
+            mode->h = Global::shared_config.screen_height;
+        }
+        mode->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
+        LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %p", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
+    }
+    if (SDLver == 3) {
+        sdl3::SDL_DisplayMode* mode3 = reinterpret_cast<sdl3::SDL_DisplayMode*>(mode);
+        if (GlobalState::isNative() || !Global::shared_config.screen_width) {
+            mode3->format = sdl3::SDL_PIXELFORMAT_RGB24;
+            mode3->w = Global::shared_config.screen_width;
+            mode3->h = Global::shared_config.screen_height;
+        }
+        mode3->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
+        mode3->refresh_rate_numerator = Global::shared_config.initial_framerate_num;
+        mode3->refresh_rate_denominator = Global::shared_config.initial_framerate_den;
+
+        LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %p", mode3->format, mode3->w, mode3->h, mode3->refresh_rate, mode3->internal);
+    }
+
     return ret;
 }
 

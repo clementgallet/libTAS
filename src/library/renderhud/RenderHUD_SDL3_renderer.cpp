@@ -17,9 +17,9 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "RenderHUD_SDL2_renderer.h"
+#include "RenderHUD_SDL3_renderer.h"
 
-#include "../external/SDL2.h" // SDL_Renderer
+#include "../external/SDL3.h" // SDL_Renderer
 #include "logging.h"
 #include "hook.h"
 #include "GlobalState.h"
@@ -28,57 +28,49 @@
 #include "sdl/sdldynapi.h"
 
 #include "../external/imgui/imgui.h"
-#include "../external/imgui/imgui_impl_sdlrenderer2.h"
+#include "../external/imgui/imgui_impl_sdlrenderer3.h"
 
 namespace libtas {
 
-RenderHUD_SDL2_renderer::~RenderHUD_SDL2_renderer()
+RenderHUD_SDL3_renderer::~RenderHUD_SDL3_renderer()
 {
-    ImGui_ImplSDLRenderer2_Shutdown();
+    ImGui_ImplSDLRenderer3_Shutdown();
     ImGui::DestroyContext();
 }
 
-void RenderHUD_SDL2_renderer::setRenderer(SDL_Renderer* r)
+void RenderHUD_SDL3_renderer::setRenderer(SDL_Renderer* r)
 {
     /* If renderer has changed, the texture becomes invalid */
     if (renderer && (renderer != r)) {
-        ImGui_ImplSDLRenderer2_Shutdown();        
-        ImGui_ImplSDLRenderer2_Init(r);
+        ImGui_ImplSDLRenderer3_Shutdown();        
+        ImGui_ImplSDLRenderer3_Init(r);
     }
     renderer = r;
 }
 
-void RenderHUD_SDL2_renderer::newFrame()
+void RenderHUD_SDL3_renderer::newFrame()
 {
     if (!ImGui::GetCurrentContext()) {
         if (!renderer)
             return;
         
-        /* 2.0.18 is required for OSD */    
-        if (!ORIG_SDL2_FUNCTION_POINTER(SDL_GetVersion))
-            return;
-        SDL_version ver;
-        ORIG_SDL2_CALL(SDL_GetVersion, (&ver));
-        if ((ver.minor == 0) && (ver.patch < 18))
-            return;
-        
         if (RenderHUD::init()) {
-            ImGui_ImplSDLRenderer2_Init(renderer);
-            ORIG_SDL2_CALL(SDL_SetWindowResizable, (sdl::gameSDLWindow, supportsLargerViewport()?SDL_TRUE:SDL_FALSE));
+            ImGui_ImplSDLRenderer3_Init(renderer);
+            ORIG_SDL3_CALL(SDL_SetWindowResizable, (sdl::gameSDLWindow, supportsLargerViewport()?SDL_TRUE:SDL_FALSE));
         }
         else
             return;
     }
-    ImGui_ImplSDLRenderer2_NewFrame();
+    ImGui_ImplSDLRenderer3_NewFrame();
 
     RenderHUD::newFrame();
 }
 
-void RenderHUD_SDL2_renderer::render()
+void RenderHUD_SDL3_renderer::render()
 {
     if (ImGui::GetCurrentContext()) {
         ImGui::Render();
-        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);        
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);        
     }
 }
 

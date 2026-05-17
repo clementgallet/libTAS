@@ -43,9 +43,11 @@ namespace libtas {
  */
 
 namespace sdl2 {
-
     SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags);
+};
 
+namespace sdl3 {
+    SDL_Renderer *SDL_CreateRenderer(SDL_Window *window, const char *name);
 };
 
 /**
@@ -88,6 +90,53 @@ OVERRIDE void SDL_RenderPresent(SDL_Renderer * renderer);
 OVERRIDE int SDL_RenderSetLogicalSize(SDL_Renderer * renderer, int w, int h);
 
 /**
+ * Set a device-independent resolution and presentation mode for rendering.
+ *
+ * This function sets the width and height of the logical rendering output.
+ * The renderer will act as if the current render target is always the
+ * requested dimensions, scaling to the actual resolution as necessary.
+ *
+ * This can be useful for games that expect a fixed size, but would like to
+ * scale the output to whatever is available, regardless of how a user resizes
+ * a window, or if the display is high DPI.
+ *
+ * Logical presentation can be used with both render target textures and the
+ * renderer's window; the state is unique to each render target, and this
+ * function sets the state for the current render target. It might be useful
+ * to draw to a texture that matches the window dimensions with logical
+ * presentation enabled, and then draw that texture across the entire window
+ * with logical presentation disabled. Be careful not to render both with
+ * logical presentation enabled, however, as this could produce
+ * double-letterboxing, etc.
+ *
+ * You can disable logical coordinates by setting the mode to
+ * SDL_LOGICAL_PRESENTATION_DISABLED, and in that case you get the full pixel
+ * resolution of the render target; it is safe to toggle logical presentation
+ * during the rendering of a frame: perhaps most of the rendering is done to
+ * specific dimensions but to make fonts look sharp, the app turns off logical
+ * presentation while drawing text, for example.
+ *
+ * You can convert coordinates in an event into rendering coordinates using
+ * SDL_ConvertEventToRenderCoordinates().
+ *
+ * \param renderer the rendering context.
+ * \param w the width of the logical resolution.
+ * \param h the height of the logical resolution.
+ * \param mode the presentation mode used.
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_ConvertEventToRenderCoordinates
+ * \sa SDL_GetRenderLogicalPresentation
+ * \sa SDL_GetRenderLogicalPresentationRect
+ */
+OVERRIDE bool SDL_SetRenderLogicalPresentation(SDL_Renderer *renderer, int w, int h, sdl3::SDL_RendererLogicalPresentation mode);
+
+/**
  *  \brief Get device independent resolution for rendering
  *
  *  \param renderer The renderer from which resolution should be queried.
@@ -97,6 +146,31 @@ OVERRIDE int SDL_RenderSetLogicalSize(SDL_Renderer * renderer, int w, int h);
  *  \sa SDL_RenderSetLogicalSize()
  */
 OVERRIDE void SDL_RenderGetLogicalSize(SDL_Renderer * renderer, int *w, int *h);
+
+/**
+ * Get device independent resolution and presentation mode for rendering.
+ *
+ * This function gets the width and height of the logical rendering output, or
+ * 0 if a logical resolution is not enabled.
+ *
+ * Each render target has its own logical presentation state. This function
+ * gets the state for the current render target.
+ *
+ * \param renderer the rendering context.
+ * \param w an int filled with the logical presentation width.
+ * \param h an int filled with the logical presentation height.
+ * \param mode a variable filled with the logical presentation mode being
+ *             used.
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_SetRenderLogicalPresentation
+ */
+OVERRIDE bool SDL_GetRenderLogicalPresentation(SDL_Renderer *renderer, int *w, int *h, sdl3::SDL_RendererLogicalPresentation *mode);
 
 /**
  *  \brief Set the drawing area for rendering on the current target.
@@ -156,11 +230,6 @@ OVERRIDE int SDL_RenderSetScale(SDL_Renderer * renderer,
  */
 OVERRIDE void SDL_RenderGetScale(SDL_Renderer * renderer,
                                                float *scaleX, float *scaleY);
-
-
-namespace sdl3 {
-    SDL_Renderer * SDL_CreateRenderer(SDL_Window *window, const char *name);
-};
 
 }
 

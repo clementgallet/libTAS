@@ -361,6 +361,35 @@ void SDL_GL_DeleteContext(sdl2::SDL_GLContext context)
     return ret;
 }
 
+namespace sdl3 {
+
+bool SDL_CreateWindowAndRenderer(const char *title, int width, int height, SDL_WindowFlags window_flags, SDL_Window **window, SDL_Renderer **renderer)
+{
+    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "  size %d x %d", width, height);
+
+    ThreadManager::setMainThread();
+
+    /* Disable fullscreen */
+    windowFullscreen = (window_flags & sdl3::SDL_WINDOW_FULLSCREEN);
+    window_flags &= 0xFFFFFFFF ^ sdl3::SDL_WINDOW_FULLSCREEN;
+
+    /* Disable hidden windows */
+    // window_flags &= 0xFFFFFFFF ^ SDL2::SDL_WINDOW_HIDDEN;
+
+    /* Disable high DPI mode */
+    window_flags &= 0xFFFFFFFF ^ sdl3::SDL_WINDOW_HIGH_PIXEL_DENSITY;
+
+    Global::game_info.video |= GameInfo::SDL3_RENDERER;
+
+    int ret = ORIG_SDL3_CALL(SDL_CreateWindowAndRenderer, (title, width, height, window_flags, window, renderer));
+    sdl::gameSDLWindow = *window;
+
+    return ret;
+}
+
+}
+
 /* Override */ void SDL_SetWindowPosition(SDL_Window*, int x, int y)
 {
     LOGTRACE(LCF_SDL | LCF_WINDOW);
@@ -597,55 +626,6 @@ OVERRIDE void SDL_UpdateRects(sdl1::SDL_Surface *screen, int numrects, sdl1::SDL
     frameBoundary([&] () {ORIG_SDL2_CALL(SDL_UpdateWindowSurface, (window));}, renderHUD);
 
     return 0;
-}
-
-namespace sdl3 {
-
-/**
- * Create a window and default renderer.
- *
- * \param title the title of the window, in UTF-8 encoding.
- * \param width the width of the window.
- * \param height the height of the window.
- * \param window_flags the flags used to create the window (see
- *                     SDL_CreateWindow()).
- * \param window a pointer filled with the window, or NULL on error.
- * \param renderer a pointer filled with the renderer, or NULL on error.
- * \returns true on success or false on failure; call SDL_GetError() for more
- *          information.
- *
- * \threadsafety This function should only be called on the main thread.
- *
- * \since This function is available since SDL 3.2.0.
- *
- * \sa SDL_CreateRenderer
- * \sa SDL_CreateWindow
- */
-bool SDL_CreateWindowAndRenderer(const char *title, int width, int height, SDL_WindowFlags window_flags, SDL_Window **window, SDL_Renderer **renderer)
-{
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
-    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "  size %d x %d", width, height);
-
-    ThreadManager::setMainThread();
-
-    /* Disable fullscreen */
-    windowFullscreen = (window_flags & sdl3::SDL_WINDOW_FULLSCREEN);
-    window_flags &= 0xFFFFFFFF ^ sdl3::SDL_WINDOW_FULLSCREEN;
-
-    /* Disable hidden windows */
-    // window_flags &= 0xFFFFFFFF ^ SDL2::SDL_WINDOW_HIDDEN;
-
-    /* Disable high DPI mode */
-    window_flags &= 0xFFFFFFFF ^ sdl3::SDL_WINDOW_HIGH_PIXEL_DENSITY;
-
-    Global::game_info.video |= GameInfo::SDL2_RENDERER;
-
-    int ret = ORIG_SDL3_CALL(SDL_CreateWindowAndRenderer, (title, width, height, window_flags, window, renderer));
-    sdl::gameSDLWindow = *window;
-
-    return ret;
-}
-
 }
 
 }

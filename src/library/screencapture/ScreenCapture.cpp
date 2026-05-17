@@ -21,6 +21,7 @@
 #include "ScreenCapture_GL.h"
 #include "ScreenCapture_SDL1.h"
 #include "ScreenCapture_SDL2_Renderer.h"
+#include "ScreenCapture_SDL3_Renderer.h"
 #include "ScreenCapture_SDL2_Surface.h"
 #include "ScreenCapture_VDPAU.h"
 #include "ScreenCapture_Vulkan.h"
@@ -48,6 +49,9 @@ int ScreenCapture::init()
         else if (Global::game_info.video & GameInfo::XSHM) {
             impl = new ScreenCapture_XShm();
         }
+        else if (Global::game_info.video & GameInfo::SDL3_RENDERER) {
+            impl = new ScreenCapture_SDL3_Renderer();
+        }    
         else if (Global::game_info.video & GameInfo::SDL2_RENDERER) {
             impl = new ScreenCapture_SDL2_Renderer();
         }    

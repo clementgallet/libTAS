@@ -17,8 +17,8 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBTAS_RENDERHUD_SDL2_RENDERER_H_INCL
-#define LIBTAS_RENDERHUD_SDL2_RENDERER_H_INCL
+#ifndef LIBTAS_RENDERHUD_SDL3_RENDERER_H_INCL
+#define LIBTAS_RENDERHUD_SDL3_RENDERER_H_INCL
 
 #ifdef __unix__
 #include "RenderHUD_Base_Linux.h"
@@ -30,13 +30,13 @@ struct SDL_Renderer;
 
 namespace libtas {
 #ifdef __unix__
-class RenderHUD_SDL2_renderer : public RenderHUD_Base_Linux
+class RenderHUD_SDL3_renderer : public RenderHUD_Base_Linux
 #elif defined(__APPLE__) && defined(__MACH__)
-class RenderHUD_SDL2_renderer : public RenderHUD_Base_MacOS
+class RenderHUD_SDL3_renderer : public RenderHUD_Base_MacOS
 #endif
 {
     public:
-        ~RenderHUD_SDL2_renderer();
+        ~RenderHUD_SDL3_renderer();
         void setRenderer(SDL_Renderer* r);
 
         void newFrame();
