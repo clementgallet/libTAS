@@ -42,13 +42,9 @@ namespace libtas {
  *  \sa SDL_DestroyRenderer()
  */
 
-namespace sdl2 {
-    SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags);
-};
+SDL_Renderer *sdl2::SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags);
 
-namespace sdl3 {
-    SDL_Renderer *SDL_CreateRenderer(SDL_Window *window, const char *name);
-};
+SDL_Renderer *sdl3::SDL_CreateRenderer(SDL_Window *window, const char *name);
 
 /**
  *  \brief Destroy the rendering context for a window and free associated

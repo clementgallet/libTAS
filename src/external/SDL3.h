@@ -92,8 +92,6 @@ typedef void *SDL_FileDialogType;
 // SDL_FlipMode: skip
 typedef void *SDL_Folder;
 typedef void *SDL_FunctionPointer;
-// SDL_GLAttr defined as enum
-// SDL_GLContext defined as void* alias
 typedef void *SDL_GPUBlitInfo;
 typedef void *SDL_GPUBuffer;
 typedef void *SDL_GPUBufferBinding;
@@ -212,7 +210,7 @@ typedef void *SDL_TrayMenu;
 // SDL_Vertex defined as struct
 // SDL_VirtualJoystickDesc defined in forward declarations
 // SDL_Window defined in forward declarations
-typedef void *SDL_WindowID;
+typedef Uint32 SDL_WindowID;
 // SDL_WindowsMessageHook defined as function pointer
 typedef void *SDL_X11EventHook;
 typedef void *SDL_calloc_func;
@@ -1963,34 +1961,62 @@ enum {
 
 typedef enum SDL_GLAttr
 {
-    SDL_GL_RED_SIZE,
-    SDL_GL_GREEN_SIZE,
-    SDL_GL_BLUE_SIZE,
-    SDL_GL_ALPHA_SIZE,
-    SDL_GL_BUFFER_SIZE,
-    SDL_GL_DOUBLEBUFFER,
-    SDL_GL_DEPTH_SIZE,
-    SDL_GL_STENCIL_SIZE,
-    SDL_GL_ACCUM_RED_SIZE,
-    SDL_GL_ACCUM_GREEN_SIZE,
-    SDL_GL_ACCUM_BLUE_SIZE,
-    SDL_GL_ACCUM_ALPHA_SIZE,
-    SDL_GL_STEREO,
-    SDL_GL_MULTISAMPLEBUFFERS,
-    SDL_GL_MULTISAMPLESAMPLES,
-    SDL_GL_ACCELERATED_VISUAL,
-    SDL_GL_RETAINED_BACKING,
-    SDL_GL_CONTEXT_MAJOR_VERSION,
-    SDL_GL_CONTEXT_MINOR_VERSION,
-    SDL_GL_CONTEXT_EGL,
-    SDL_GL_CONTEXT_FLAGS,
-    SDL_GL_CONTEXT_PROFILE_MASK,
-    SDL_GL_SHARE_WITH_CURRENT_CONTEXT,
-    SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
-    SDL_GL_CONTEXT_RELEASE_BEHAVIOR,
-    SDL_GL_CONTEXT_RESET_NOTIFICATION,
-    SDL_GL_CONTEXT_NO_ERROR
+    SDL_GL_RED_SIZE,                    /**< the minimum number of bits for the red channel of the color buffer; defaults to 3. */
+    SDL_GL_GREEN_SIZE,                  /**< the minimum number of bits for the green channel of the color buffer; defaults to 3. */
+    SDL_GL_BLUE_SIZE,                   /**< the minimum number of bits for the blue channel of the color buffer; defaults to 2. */
+    SDL_GL_ALPHA_SIZE,                  /**< the minimum number of bits for the alpha channel of the color buffer; defaults to 0. */
+    SDL_GL_BUFFER_SIZE,                 /**< the minimum number of bits for frame buffer size; defaults to 0. */
+    SDL_GL_DOUBLEBUFFER,                /**< whether the output is single or double buffered; defaults to double buffering on. */
+    SDL_GL_DEPTH_SIZE,                  /**< the minimum number of bits in the depth buffer; defaults to 16. */
+    SDL_GL_STENCIL_SIZE,                /**< the minimum number of bits in the stencil buffer; defaults to 0. */
+    SDL_GL_ACCUM_RED_SIZE,              /**< the minimum number of bits for the red channel of the accumulation buffer; defaults to 0. */
+    SDL_GL_ACCUM_GREEN_SIZE,            /**< the minimum number of bits for the green channel of the accumulation buffer; defaults to 0. */
+    SDL_GL_ACCUM_BLUE_SIZE,             /**< the minimum number of bits for the blue channel of the accumulation buffer; defaults to 0. */
+    SDL_GL_ACCUM_ALPHA_SIZE,            /**< the minimum number of bits for the alpha channel of the accumulation buffer; defaults to 0. */
+    SDL_GL_STEREO,                      /**< whether the output is stereo 3D; defaults to off. */
+    SDL_GL_MULTISAMPLEBUFFERS,          /**< the number of buffers used for multisample anti-aliasing; defaults to 0. */
+    SDL_GL_MULTISAMPLESAMPLES,          /**< the number of samples used around the current pixel used for multisample anti-aliasing. */
+    SDL_GL_ACCELERATED_VISUAL,          /**< set to 1 to require hardware acceleration, set to 0 to force software rendering; defaults to allow either. */
+    SDL_GL_RETAINED_BACKING,            /**< not used (deprecated). */
+    SDL_GL_CONTEXT_MAJOR_VERSION,       /**< OpenGL context major version. */
+    SDL_GL_CONTEXT_MINOR_VERSION,       /**< OpenGL context minor version. */
+    SDL_GL_CONTEXT_FLAGS,               /**< some combination of 0 or more of elements of the SDL_GLContextFlag enumeration; defaults to 0. */
+    SDL_GL_CONTEXT_PROFILE_MASK,        /**< type of GL context (Core, Compatibility, ES). See SDL_GLProfile; default value depends on platform. */
+    SDL_GL_SHARE_WITH_CURRENT_CONTEXT,  /**< OpenGL context sharing; defaults to 0. */
+    SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,    /**< requests sRGB capable visual; defaults to 0. */
+    SDL_GL_CONTEXT_RELEASE_BEHAVIOR,    /**< sets context the release behavior. See SDL_GLContextReleaseFlag; defaults to FLUSH. */
+    SDL_GL_CONTEXT_RESET_NOTIFICATION,  /**< set context reset notification. See SDL_GLContextResetNotification; defaults to NO_NOTIFICATION. */
+    SDL_GL_CONTEXT_NO_ERROR,
+    SDL_GL_FLOATBUFFERS,
+    SDL_GL_EGL_PLATFORM
 } SDL_GLAttr;
+
+typedef enum SDL_GLProfile
+{
+    SDL_GL_CONTEXT_PROFILE_CORE =          0x0001,  /**< OpenGL Core Profile context */
+    SDL_GL_CONTEXT_PROFILE_COMPATIBILITY = 0x0002,  /**< OpenGL Compatibility Profile context */
+    SDL_GL_CONTEXT_PROFILE_ES =            0x0004,  /**< GLX_CONTEXT_ES2_PROFILE_BIT_EXT */
+} SDL_GLProfile;
+
+typedef enum SDL_GLContextFlag
+{
+    SDL_GL_CONTEXT_DEBUG_FLAG =              0x0001,
+    SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG = 0x0002,
+    SDL_GL_CONTEXT_ROBUST_ACCESS_FLAG =      0x0004,
+    SDL_GL_CONTEXT_RESET_ISOLATION_FLAG =    0x0008
+} SDL_GLContextFlag;
+
+typedef enum SDL_GLContextReleaseFlag
+{
+    SDL_GL_CONTEXT_RELEASE_BEHAVIOR_NONE =  0x0000,
+    SDL_GL_CONTEXT_RELEASE_BEHAVIOR_FLUSH = 0x0001,
+} SDL_GLContextReleaseFlag;
+
+typedef enum SDL_GLContextResetNotification
+{
+    SDL_GL_CONTEXT_RESET_NO_NOTIFICATION =  0x0000,
+    SDL_GL_CONTEXT_RESET_LOSE_CONTEXT = 0x0001,
+} SDL_GLContextResetNotification;
 
 typedef enum SDL_GamepadAxis
 {
@@ -2237,7 +2263,6 @@ typedef void (*SDL_LogOutputFunction)(void *userdata, int category, SDL_LogPrior
 typedef int (*SDL_ThreadFunction)(void *data);
 typedef int (*SDL_EventFilter)(void *userdata, SDL_Event *event);
 typedef int (*SDL_CompareCallback)(const void *a, const void *b);
-typedef void *SDL_GLContext;
 typedef int SDL_SpinLock;
 typedef int SDL_ThreadPriority;
 typedef int SDL_HitTest;

@@ -137,80 +137,101 @@ namespace libtas {
     return ret;
 }
 
-/* Override */ int SDL_GetDesktopDisplayMode(int displayIndex, sdl2::SDL_DisplayMode * mode)
+/* Override */ int sdl2::SDL_GetDesktopDisplayMode(int displayIndex, sdl2::SDL_DisplayMode * mode)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
-    int ret = ORIG_SDL23_CALL(SDL_GetDesktopDisplayMode, (displayIndex, mode));
+    int ret = ORIG_SDL2_CALL(SDL_GetDesktopDisplayMode, (displayIndex, mode));
 
-    int SDLver = get_sdlversion();
-
-    if (SDLver == 2) {
-        if (!GlobalState::isNative() && Global::shared_config.screen_width) {
-            mode->format = sdl2::SDL_PIXELFORMAT_RGB888;
-            mode->w = Global::shared_config.screen_width;
-            mode->h = Global::shared_config.screen_height;
-        }
-        mode->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
-
-        LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %p", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
+    if (!GlobalState::isNative() && Global::shared_config.screen_width) {
+        mode->format = sdl2::SDL_PIXELFORMAT_RGB888;
+        mode->w = Global::shared_config.screen_width;
+        mode->h = Global::shared_config.screen_height;
     }
-    else if (SDLver == 3) {
-        sdl3::SDL_DisplayMode* mode3 = reinterpret_cast<sdl3::SDL_DisplayMode*>(mode);
-        if (!GlobalState::isNative() && Global::shared_config.screen_width) {
-            mode3->format = sdl3::SDL_PIXELFORMAT_RGB24;
-            mode3->w = Global::shared_config.screen_width;
-            mode3->h = Global::shared_config.screen_height;
-        }
-        mode3->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
-        mode3->refresh_rate_numerator = Global::shared_config.initial_framerate_num;
-        mode3->refresh_rate_denominator = Global::shared_config.initial_framerate_den;
+    mode->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
 
-        LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %p", mode3->format, mode3->w, mode3->h, mode3->refresh_rate, mode3->internal);
-    }
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %p", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
 
     return ret;
 }
 
-/* Override */ int SDL_GetCurrentDisplayMode(int displayIndex, sdl2::SDL_DisplayMode * mode)
+/* Override */ const sdl3::SDL_DisplayMode * sdl3::SDL_GetDesktopDisplayMode(SDL_DisplayID displayID)
+{
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayID);
+
+    const sdl3::SDL_DisplayMode* mode = ORIG_SDL3_CALL(SDL_GetDesktopDisplayMode, (displayID));
+
+    if (!mode)
+        return mode;
+
+    static sdl3::SDL_DisplayMode new_mode = *mode;
+
+    if (!GlobalState::isNative() && Global::shared_config.screen_width) {
+        new_mode.format = sdl3::SDL_PIXELFORMAT_RGB24;
+        new_mode.w = Global::shared_config.screen_width;
+        new_mode.h = Global::shared_config.screen_height;
+    }
+    new_mode.refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
+    new_mode.refresh_rate_numerator = Global::shared_config.initial_framerate_num;
+    new_mode.refresh_rate_denominator = Global::shared_config.initial_framerate_den;
+
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %p", new_mode.format, new_mode.w, new_mode.h, new_mode.refresh_rate, new_mode.internal);
+
+    return &new_mode;
+}
+
+/* Override */ int sdl2::SDL_GetCurrentDisplayMode(int displayIndex, sdl2::SDL_DisplayMode * mode)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
     int ret = 0;
     if (GlobalState::isNative() || !Global::shared_config.screen_width) {
-        ret = ORIG_SDL23_CALL(SDL_GetCurrentDisplayMode, (displayIndex, mode));
+        ret = ORIG_SDL2_CALL(SDL_GetCurrentDisplayMode, (displayIndex, mode));
     }
     else {
         /* We must get one real display mode to have a correct data parameter */
-        ret = ORIG_SDL23_CALL(SDL_GetDesktopDisplayMode, (displayIndex, mode));
+        ret = ORIG_SDL2_CALL(SDL_GetDesktopDisplayMode, (displayIndex, mode));
     }
 
-    int SDLver = get_sdlversion();
-
-    if (SDLver == 2) {
-        if (GlobalState::isNative() || !Global::shared_config.screen_width) {
-            mode->format = sdl2::SDL_PIXELFORMAT_RGB888;
-            mode->w = Global::shared_config.screen_width;
-            mode->h = Global::shared_config.screen_height;
-        }
-        mode->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
-        LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %p", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
+    if (GlobalState::isNative() || !Global::shared_config.screen_width) {
+        mode->format = sdl2::SDL_PIXELFORMAT_RGB888;
+        mode->w = Global::shared_config.screen_width;
+        mode->h = Global::shared_config.screen_height;
     }
-    if (SDLver == 3) {
-        sdl3::SDL_DisplayMode* mode3 = reinterpret_cast<sdl3::SDL_DisplayMode*>(mode);
-        if (GlobalState::isNative() || !Global::shared_config.screen_width) {
-            mode3->format = sdl3::SDL_PIXELFORMAT_RGB24;
-            mode3->w = Global::shared_config.screen_width;
-            mode3->h = Global::shared_config.screen_height;
-        }
-        mode3->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
-        mode3->refresh_rate_numerator = Global::shared_config.initial_framerate_num;
-        mode3->refresh_rate_denominator = Global::shared_config.initial_framerate_den;
-
-        LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %p", mode3->format, mode3->w, mode3->h, mode3->refresh_rate, mode3->internal);
-    }
+    mode->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %p", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
 
     return ret;
+}
+
+const sdl3::SDL_DisplayMode * sdl3::SDL_GetCurrentDisplayMode(SDL_DisplayID displayID)
+{
+    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayID);
+
+    const sdl3::SDL_DisplayMode* mode;
+
+    if (GlobalState::isNative() || !Global::shared_config.screen_width) {
+        mode = ORIG_SDL3_CALL(SDL_GetCurrentDisplayMode, (displayID));
+    }
+    else {
+        /* We must get one real display mode to have a correct data parameter */
+        mode = ORIG_SDL3_CALL(SDL_GetDesktopDisplayMode, (displayID));
+    }
+
+    static sdl3::SDL_DisplayMode new_mode = *mode;
+
+    if (GlobalState::isNative() || !Global::shared_config.screen_width) {
+        new_mode.format = sdl3::SDL_PIXELFORMAT_RGB24;
+        new_mode.w = Global::shared_config.screen_width;
+        new_mode.h = Global::shared_config.screen_height;
+    }
+    new_mode.refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
+    new_mode.refresh_rate_numerator = Global::shared_config.initial_framerate_num;
+    new_mode.refresh_rate_denominator = Global::shared_config.initial_framerate_den;
+
+    LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %p", new_mode.format, new_mode.w, new_mode.h, new_mode.refresh_rate, new_mode.internal);
+
+    return &new_mode;
 }
 
 /* Override */ sdl2::SDL_DisplayMode *SDL_GetClosestDisplayMode(int displayIndex, const sdl2::SDL_DisplayMode * mode, sdl2::SDL_DisplayMode * closest)

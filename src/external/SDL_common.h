@@ -152,5 +152,6 @@ typedef struct SDL_Sensor SDL_Sensor;
 typedef struct SDL_SysWMinfo SDL_SysWMinfo;
 typedef struct SDL_VirtualJoystickDesc SDL_VirtualJoystickDesc;
 typedef struct SDL_MessageBoxData SDL_MessageBoxData;
+typedef void *SDL_GLContext;
 
 #endif /* _SDL_h */

@@ -31,9 +31,7 @@
 
 namespace libtas {
 
-namespace sdl2 {
-
-SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
+SDL_Renderer *sdl2::SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
 {
     LOGTRACE(LCF_SDL | LCF_WINDOW);
 
@@ -53,11 +51,7 @@ SDL_Renderer *SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
     return renderer;
 }
 
-};
-
-namespace sdl3 {
-
-SDL_Renderer *SDL_CreateRenderer(SDL_Window *window, const char *name)
+SDL_Renderer *sdl3::SDL_CreateRenderer(SDL_Window *window, const char *name)
 {
     LOGTRACE(LCF_SDL | LCF_WINDOW);
 
@@ -66,8 +60,6 @@ SDL_Renderer *SDL_CreateRenderer(SDL_Window *window, const char *name)
     Global::game_info.video |=  GameInfo::SDL3_RENDERER;
 
     return renderer;
-}
-
 }
 
 /* Override */ void SDL_DestroyRenderer(SDL_Renderer * renderer)
@@ -113,7 +105,7 @@ int SDL_RenderSetLogicalSize(SDL_Renderer * renderer, int w, int h)
      * so we resize the window instead.
      */
     if (sdl::gameSDLWindow) {
-        libtas::SDL_SetWindowSize(sdl::gameSDLWindow, w, h);
+        libtas::sdl2::SDL_SetWindowSize(sdl::gameSDLWindow, w, h);
     }
     logical_w = w;
     logical_h = h;
@@ -131,7 +123,7 @@ bool SDL_SetRenderLogicalPresentation(SDL_Renderer *renderer, int w, int h, sdl3
      * so we resize the window instead.
      */
     if (sdl::gameSDLWindow) {
-        libtas::SDL_SetWindowSize(sdl::gameSDLWindow, w, h);
+        libtas::sdl3::SDL_SetWindowSize(sdl::gameSDLWindow, w, h);
     }
     logical_w = w;
     logical_h = h;

@@ -977,7 +977,6 @@ namespace sdl2 {
     typedef void (*SDL_HintCallback)(void *userdata, const char *name, const char *oldValue, const char *newValue);
     typedef int SDL_LogPriority;
     typedef int SDL_PowerState;
-    typedef void *SDL_GLContext;
     typedef struct SDL_AssertData SDL_AssertData;
     typedef int SDL_AssertState;
     typedef SDL_AssertState (*SDL_AssertionHandler)(const SDL_AssertData *data, void *userdata);

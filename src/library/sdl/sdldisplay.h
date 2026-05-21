@@ -23,6 +23,7 @@
 #include "hook.h"
 
 #include "../external/SDL2.h"
+#include "../external/SDL3.h"
 
 namespace libtas {
 
@@ -106,12 +107,54 @@ OVERRIDE int SDL_GetDisplayMode(int displayIndex, int modeIndex, sdl2::SDL_Displ
 /**
  *  \brief Fill in information about the desktop display mode.
  */
-OVERRIDE int SDL_GetDesktopDisplayMode(int displayIndex, sdl2::SDL_DisplayMode * mode);
+int sdl2::SDL_GetDesktopDisplayMode(int displayIndex, sdl2::SDL_DisplayMode * mode);
+
+/**
+ * Get information about the desktop's display mode.
+ *
+ * There's a difference between this function and SDL_GetCurrentDisplayMode()
+ * when SDL runs fullscreen and has changed the resolution. In that case this
+ * function will return the previous native display mode, and not the current
+ * display mode.
+ *
+ * \param displayID the instance ID of the display to query.
+ * \returns a pointer to the desktop display mode or NULL on failure; call
+ *          SDL_GetError() for more information.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_GetCurrentDisplayMode
+ * \sa SDL_GetDisplays
+ */
+const sdl3::SDL_DisplayMode * sdl3::SDL_GetDesktopDisplayMode(SDL_DisplayID displayID);
 
 /**
  *  \brief Fill in information about the current display mode.
  */
-OVERRIDE int SDL_GetCurrentDisplayMode(int displayIndex, sdl2::SDL_DisplayMode * mode);
+int sdl2::SDL_GetCurrentDisplayMode(int displayIndex, sdl2::SDL_DisplayMode * mode);
+
+/**
+ * Get information about the current display mode.
+ *
+ * There's a difference between this function and SDL_GetDesktopDisplayMode()
+ * when SDL runs fullscreen and has changed the resolution. In that case this
+ * function will return the current display mode, and not the previous native
+ * display mode.
+ *
+ * \param displayID the instance ID of the display to query.
+ * \returns a pointer to the desktop display mode or NULL on failure; call
+ *          SDL_GetError() for more information.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_GetDesktopDisplayMode
+ * \sa SDL_GetDisplays
+ */
+const sdl3::SDL_DisplayMode * sdl3::SDL_GetCurrentDisplayMode(SDL_DisplayID displayID);
 
 /**
  *  \brief Get the closest match to the requested display mode.
