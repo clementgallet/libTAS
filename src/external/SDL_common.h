@@ -52,7 +52,11 @@ typedef int16_t Sint16;
 typedef int32_t Sint32;
 typedef int64_t Sint64;
 
-typedef int SDL_bool;
+/* In SDL3, they changed the type SDL_bool to bool. However, SDL_bool was defined as int.
+ * To be able to define SDL3 functions as aliases of SDL2 functions, we need the same signature.
+ * So I changed SDL_bool type from int to bool. */
+//typedef int SDL_bool;
+typedef bool SDL_bool;
 
 enum {
     SDL_FALSE = 0,
@@ -77,6 +81,10 @@ typedef struct SDL_version
     Uint8 patch;        /**< update version */
 } SDL_version;
 
+typedef struct SDL_GUID {
+    Uint8 data[16];
+} SDL_GUID;
+
 // Forward declarations for incomplete types
 typedef struct SDL_Window SDL_Window;
 typedef struct SDL_Renderer SDL_Renderer;
@@ -89,6 +97,7 @@ typedef struct SDL_sem SDL_sem;
 typedef struct SDL_cond SDL_cond;
 typedef struct SDL_Joystick SDL_Joystick;
 typedef struct SDL_GameController SDL_GameController;
+typedef struct SDL_Gamepad SDL_Gamepad;
 typedef struct SDL_Haptic SDL_Haptic;
 typedef struct SDL_Cursor SDL_Cursor;
 typedef struct SDL_RWops SDL_RWops;
@@ -97,7 +106,6 @@ typedef void *SDL_MetalView;
 typedef struct SDL_Locale SDL_Locale;
 typedef struct SDL_hid_device_info SDL_hid_device_info;
 typedef struct SDL_hid_device SDL_hid_device;
-typedef struct SDL_AudioStream SDL_AudioStream;
 typedef struct SDL_Vertex SDL_Vertex;
 typedef struct SDL_Palette SDL_Palette;
 typedef struct SDL_Point SDL_Point;
@@ -109,7 +117,6 @@ typedef struct SDL_HapticEffect SDL_HapticEffect;
 typedef struct SDL_Sensor SDL_Sensor;
 typedef struct SDL_SysWMinfo SDL_SysWMinfo;
 typedef struct SDL_VirtualJoystickDesc SDL_VirtualJoystickDesc;
-typedef struct SDL_GUID SDL_GUID;
 typedef struct SDL_MessageBoxData SDL_MessageBoxData;
 
 #endif /* _SDL_h */

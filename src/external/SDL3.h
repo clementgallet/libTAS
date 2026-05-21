@@ -46,10 +46,8 @@ typedef void *SDL_AsyncIOOutcome;
 typedef void *SDL_AsyncIOQueue;
 typedef void *SDL_AtomicInt;
 typedef void *SDL_AtomicU32;
-// SDL_AudioDeviceID defined as Uint32 typedef
 // SDL_AudioPostmixCallback: skip
-// SDL_AudioSpec defined as struct
-// SDL_AudioStream: forward declared
+typedef struct SDL_AudioStream SDL_AudioStream;
 // SDL_AudioStreamCallback: skip
 // SDL_AudioStreamDataCompleteCallback: skip
 // SDL_BlendFactor defined as enum
@@ -141,7 +139,6 @@ typedef void *SDL_GPUTransferBuffer;
 typedef void *SDL_GPUTransferBufferCreateInfo;
 typedef void *SDL_GPUTransferBufferLocation;
 typedef void *SDL_GPUViewport;
-// SDL_GUID defined in forward declarations
 typedef void *SDL_Gamepad;
 typedef void *SDL_GlobFlags;
 // SDL_HintCallback defined as function pointer
@@ -153,10 +150,7 @@ typedef void *SDL_IOStream;
 typedef void *SDL_IOStreamInterface;
 typedef void *SDL_IOWhence;
 typedef void *SDL_InitState;
-// SDL_Joystick defined in forward declarations
-// SDL_JoystickID defined as int typedef
-// SDL_JoystickType defined as enum
-typedef void *SDL_KeyboardID;
+typedef Uint32 SDL_KeyboardID;
 // SDL_Keycode defined as Sint32 typedef
 // SDL_Keymod defined as Uint16 typedef
 // SDL_Locale defined in forward declarations
@@ -166,8 +160,7 @@ typedef void *SDL_MainThreadCallback;
 // SDL_MessageBoxData defined in forward declarations
 typedef void *SDL_MessageBoxFlags;
 // SDL_MetalView defined as void* alias
-typedef void *SDL_MouseButtonFlags;
-typedef void *SDL_MouseID;
+typedef Uint32 SDL_MouseID;
 typedef void *SDL_MouseMotionTransformCallback;
 typedef void *SDL_Mutex;
 typedef void *SDL_NSTimerCallback;
@@ -181,7 +174,6 @@ typedef void *SDL_Process;
 typedef void *SDL_PropertiesID;
 typedef void *SDL_PropertyType;
 typedef void *SDL_RWLock;
-// SDL_Rect defined as struct
 // SDL_Renderer defined in forward declarations
 typedef void *SDL_RequestAndroidPermissionCallback;
 typedef void *SDL_Sandbox;
@@ -619,9 +611,6 @@ typedef enum SDL_Scancode
     SDL_NUM_SCANCODES = 512
 } SDL_Scancode;
 
-typedef Sint32 SDL_Keycode;
-typedef Uint16 SDL_Keymod;
-
 typedef struct SDL_Keysym
 {
     SDL_Scancode scancode;
@@ -629,6 +618,8 @@ typedef struct SDL_Keysym
     Uint16 mod;
     Uint32 unused;
 } SDL_Keysym;
+
+typedef Uint32 SDL_MouseButtonFlags;
 
 /**
  * Pen input flags, as reported by various pen events' `pen_state` field.
@@ -1987,10 +1978,21 @@ typedef enum SDL_GamepadType
     SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_LEFT,
     SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT,
     SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_PAIR,
-    SDL_GAMEPAD_TYPE_GAMECUBE,
-    SDL_GAMEPAD_TYPE_STEAM,
     SDL_GAMEPAD_TYPE_COUNT
 } SDL_GamepadType;
+
+// Hat positions
+enum {
+    SDL_HAT_CENTERED = 0x00,
+    SDL_HAT_UP = 0x01,
+    SDL_HAT_RIGHT = 0x02,
+    SDL_HAT_DOWN = 0x04,
+    SDL_HAT_LEFT = 0x08,
+    SDL_HAT_RIGHTUP = SDL_HAT_RIGHT | SDL_HAT_UP,
+    SDL_HAT_RIGHTDOWN = SDL_HAT_RIGHT | SDL_HAT_DOWN,
+    SDL_HAT_LEFTUP = SDL_HAT_LEFT | SDL_HAT_UP,
+    SDL_HAT_LEFTDOWN = SDL_HAT_LEFT | SDL_HAT_DOWN
+};
 
 typedef enum SDL_GLAttr
 {
@@ -2149,19 +2151,27 @@ typedef enum SDL_SensorType
 
 typedef enum SDL_SystemCursor
 {
-    SDL_SYSTEM_CURSOR_ARROW,
-    SDL_SYSTEM_CURSOR_IBEAM,
-    SDL_SYSTEM_CURSOR_WAIT,
-    SDL_SYSTEM_CURSOR_CROSSHAIR,
-    SDL_SYSTEM_CURSOR_WAITARROW,
-    SDL_SYSTEM_CURSOR_SIZENWSE,
-    SDL_SYSTEM_CURSOR_SIZENESW,
-    SDL_SYSTEM_CURSOR_SIZEWE,
-    SDL_SYSTEM_CURSOR_SIZENS,
-    SDL_SYSTEM_CURSOR_SIZEALL,
-    SDL_SYSTEM_CURSOR_NO,
-    SDL_SYSTEM_CURSOR_HAND,
-    SDL_NUM_SYSTEM_CURSORS
+    SDL_SYSTEM_CURSOR_DEFAULT,      /**< Default cursor. Usually an arrow. */
+    SDL_SYSTEM_CURSOR_TEXT,         /**< Text selection. Usually an I-beam. */
+    SDL_SYSTEM_CURSOR_WAIT,         /**< Wait. Usually an hourglass or watch or spinning ball. */
+    SDL_SYSTEM_CURSOR_CROSSHAIR,    /**< Crosshair. */
+    SDL_SYSTEM_CURSOR_PROGRESS,     /**< Program is busy but still interactive. Usually it's WAIT with an arrow. */
+    SDL_SYSTEM_CURSOR_NWSE_RESIZE,  /**< Double arrow pointing northwest and southeast. */
+    SDL_SYSTEM_CURSOR_NESW_RESIZE,  /**< Double arrow pointing northeast and southwest. */
+    SDL_SYSTEM_CURSOR_EW_RESIZE,    /**< Double arrow pointing west and east. */
+    SDL_SYSTEM_CURSOR_NS_RESIZE,    /**< Double arrow pointing north and south. */
+    SDL_SYSTEM_CURSOR_MOVE,         /**< Four pointed arrow pointing north, south, east, and west. */
+    SDL_SYSTEM_CURSOR_NOT_ALLOWED,  /**< Not permitted. Usually a slashed circle or crossbones. */
+    SDL_SYSTEM_CURSOR_POINTER,      /**< Pointer that indicates a link. Usually a pointing hand. */
+    SDL_SYSTEM_CURSOR_NW_RESIZE,    /**< Window resize top-left. This may be a single arrow or a double arrow like NWSE_RESIZE. */
+    SDL_SYSTEM_CURSOR_N_RESIZE,     /**< Window resize top. May be NS_RESIZE. */
+    SDL_SYSTEM_CURSOR_NE_RESIZE,    /**< Window resize top-right. May be NESW_RESIZE. */
+    SDL_SYSTEM_CURSOR_E_RESIZE,     /**< Window resize right. May be EW_RESIZE. */
+    SDL_SYSTEM_CURSOR_SE_RESIZE,    /**< Window resize bottom-right. May be NWSE_RESIZE. */
+    SDL_SYSTEM_CURSOR_S_RESIZE,     /**< Window resize bottom. May be NS_RESIZE. */
+    SDL_SYSTEM_CURSOR_SW_RESIZE,    /**< Window resize bottom-left. May be NESW_RESIZE. */
+    SDL_SYSTEM_CURSOR_W_RESIZE,     /**< Window resize left. May be EW_RESIZE. */
+    SDL_SYSTEM_CURSOR_COUNT
 } SDL_SystemCursor;
 
 typedef enum SDL_ScaleMode

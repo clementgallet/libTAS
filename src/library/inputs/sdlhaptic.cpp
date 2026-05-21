@@ -18,6 +18,7 @@
  */
 
 #include "sdlhaptic.h"
+#include "sdl/sdldynapi.h"
 
 #include "logging.h"
 
@@ -29,10 +30,29 @@ int SDL_NumHaptics(void)
 	return 0;
 }
 
+sdl3::SDL_HapticID * SDL_GetHaptics(int *count)
+{
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    if (count) {
+        *count = 0;
+    }
+
+    /* The caller is responsible for freeing the returned array */
+    sdl3::SDL_HapticID *haptics = (sdl3::SDL_HapticID *)ORIG_SDL3_CALL(SDL_malloc, (sizeof(sdl3::SDL_HapticID)));
+    haptics[0] = 0;
+    return haptics;
+}
+
 SDL_Haptic * SDL_HapticOpen(int device_index)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
 	return NULL;
+}
+
+SDL_Haptic * SDL_OpenHaptic(sdl3::SDL_HapticID instance_id)
+{
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    return NULL;
 }
 
 int SDL_JoystickIsHaptic(SDL_Joystick * joystick)
@@ -41,13 +61,42 @@ int SDL_JoystickIsHaptic(SDL_Joystick * joystick)
 	return 0;
 }
 
+bool SDL_IsJoystickHaptic(SDL_Joystick *joystick)
+{
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    return false;
+}
+
 SDL_Haptic *SDL_HapticOpenFromJoystick(SDL_Joystick *joystick)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
 	return NULL;
 }
 
+SDL_Haptic * SDL_OpenHapticFromJoystick(SDL_Joystick *joystick)
+{
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    return NULL;
+}
+
+bool SDL_IsMouseHaptic(void)
+{
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    return false;
+}
+
+SDL_Haptic * SDL_OpenHapticFromMouse(void)
+{
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    return NULL;
+}
+
 void SDL_HapticClose(SDL_Haptic * haptic)
+{
+    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+}
+
+void SDL_CloseHaptic(SDL_Haptic *haptic)
 {
     LOGTRACE(LCF_SDL | LCF_JOYSTICK);
 }

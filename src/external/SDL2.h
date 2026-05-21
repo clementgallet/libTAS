@@ -427,7 +427,24 @@ namespace sdl2 {
 
     typedef Uint32 (*SDL_TimerCallback)(Uint32 interval, void *param);
 
-    typedef Uint16 SDL_AudioFormat;
+    // Audio formats
+    typedef enum SDL_AudioFormat
+    {
+        AUDIO_U8 = 0x0008,
+        AUDIO_S8 = 0x8008,
+        AUDIO_U16LSB = 0x0010,
+        AUDIO_S16LSB = 0x8010,
+        AUDIO_U16MSB = 0x1010,
+        AUDIO_S16MSB = 0x9010,
+        AUDIO_U16 = AUDIO_U16LSB,
+        AUDIO_S16 = AUDIO_S16LSB,
+        AUDIO_S32LSB = 0x8020,
+        AUDIO_S32MSB = 0x9020,
+        AUDIO_S32 = AUDIO_S32LSB,
+        AUDIO_F32LSB = 0x8120,
+        AUDIO_F32MSB = 0x9120,
+        AUDIO_F32 = AUDIO_F32LSB
+    } SDL_AudioFormat;
 
     typedef enum SDL_AudioStatus
     {
@@ -1559,24 +1576,6 @@ namespace sdl2 {
         SDL_ScaleModeBest
     } SDL_ScaleMode;
 
-    // Audio formats
-    enum {
-        AUDIO_U8 = 0x0008,
-        AUDIO_S8 = 0x8008,
-        AUDIO_U16LSB = 0x0010,
-        AUDIO_S16LSB = 0x8010,
-        AUDIO_U16MSB = 0x1010,
-        AUDIO_S16MSB = 0x9010,
-        AUDIO_U16 = AUDIO_U16LSB,
-        AUDIO_S16 = AUDIO_S16LSB,
-        AUDIO_S32LSB = 0x8020,
-        AUDIO_S32MSB = 0x9020,
-        AUDIO_S32 = AUDIO_S32LSB,
-        AUDIO_F32LSB = 0x8120,
-        AUDIO_F32MSB = 0x9120,
-        AUDIO_F32 = AUDIO_F32LSB
-    };
-
     // Audio allow change flags
     enum {
         SDL_AUDIO_ALLOW_FREQUENCY_CHANGE = 0x00000001,
@@ -1620,11 +1619,7 @@ namespace sdl2 {
         } value;
     } SDL_GameControllerButtonBind;
 
-    // Joystick GUID
-    typedef struct SDL_JoystickGUID
-    {
-        Uint8 data[16];
-    } SDL_JoystickGUID;
+    typedef SDL_GUID SDL_JoystickGUID;
 
     #define SDL_BUTTON(X)       (1 << ((X)-1))
     enum {

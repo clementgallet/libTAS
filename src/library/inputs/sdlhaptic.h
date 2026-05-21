@@ -25,6 +25,7 @@
 #include "hook.h"
 
 #include "../external/SDL2.h"
+#include "../external/SDL3.h"
 
 namespace libtas {
 
@@ -34,6 +35,21 @@ namespace libtas {
  *  \return Number of haptic devices detected on the system.
  */
 OVERRIDE int SDL_NumHaptics(void);
+
+/**
+ * Get a list of currently connected haptic devices.
+ *
+ * \param count a pointer filled in with the number of haptic devices
+ *              returned, may be NULL.
+ * \returns a 0 terminated array of haptic device instance IDs or NULL on
+ *          failure; call SDL_GetError() for more information. This should be
+ *          freed with SDL_free() when it is no longer needed.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_OpenHaptic
+ */
+OVERRIDE sdl3::SDL_HapticID * SDL_GetHaptics(int *count);
 
 /**
  *  \brief Opens a Haptic device for usage.
@@ -60,6 +76,31 @@ OVERRIDE int SDL_NumHaptics(void);
 OVERRIDE SDL_Haptic * SDL_HapticOpen(int device_index);
 
 /**
+ * Open a haptic device for use.
+ *
+ * The index passed as an argument refers to the N'th haptic device on this
+ * system.
+ *
+ * When opening a haptic device, its gain will be set to maximum and
+ * autocenter will be disabled. To modify these values use SDL_SetHapticGain()
+ * and SDL_SetHapticAutocenter().
+ *
+ * \param instance_id the haptic device instance ID.
+ * \returns the device identifier or NULL on failure; call SDL_GetError() for
+ *          more information.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_CloseHaptic
+ * \sa SDL_GetHaptics
+ * \sa SDL_OpenHapticFromJoystick
+ * \sa SDL_OpenHapticFromMouse
+ * \sa SDL_SetHapticAutocenter
+ * \sa SDL_SetHapticGain
+ */
+OVERRIDE SDL_Haptic * SDL_OpenHaptic(sdl3::SDL_HapticID instance_id);
+
+/**
  *  \brief Checks to see if a joystick has haptic features.
  *
  *  \param joystick Joystick to test for haptic capabilities.
@@ -69,6 +110,18 @@ OVERRIDE SDL_Haptic * SDL_HapticOpen(int device_index);
  *  \sa SDL_HapticOpenFromJoystick
  */
 OVERRIDE int SDL_JoystickIsHaptic(SDL_Joystick * joystick);
+
+/**
+ * Query if a joystick has haptic features.
+ *
+ * \param joystick the SDL_Joystick to test for haptic capabilities.
+ * \returns true if the joystick is haptic or false if it isn't.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_OpenHapticFromJoystick
+ */
+OVERRIDE bool SDL_IsJoystickHaptic(SDL_Joystick *joystick);
 
 /**
  *  \brief Opens a Haptic device for usage from a Joystick device.
@@ -90,11 +143,68 @@ OVERRIDE int SDL_JoystickIsHaptic(SDL_Joystick * joystick);
 OVERRIDE SDL_Haptic *SDL_HapticOpenFromJoystick(SDL_Joystick *joystick);
 
 /**
+ * Open a haptic device for use from a joystick device.
+ *
+ * You must still close the haptic device separately. It will not be closed
+ * with the joystick.
+ *
+ * When opened from a joystick you should first close the haptic device before
+ * closing the joystick device. If not, on some implementations the haptic
+ * device will also get unallocated and you'll be unable to use force feedback
+ * on that device.
+ *
+ * \param joystick the SDL_Joystick to create a haptic device from.
+ * \returns a valid haptic device identifier on success or NULL on failure;
+ *          call SDL_GetError() for more information.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_CloseHaptic
+ * \sa SDL_IsJoystickHaptic
+ */
+OVERRIDE SDL_Haptic * SDL_OpenHapticFromJoystick(SDL_Joystick *joystick);
+
+/**
+ * Query whether or not the current mouse has haptic capabilities.
+ *
+ * \returns true if the mouse is haptic or false if it isn't.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_OpenHapticFromMouse
+ */
+OVERRIDE bool SDL_IsMouseHaptic(void);
+
+/**
+ * Try to open a haptic device from the current mouse.
+ *
+ * \returns the haptic device identifier or NULL on failure; call
+ *          SDL_GetError() for more information.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_CloseHaptic
+ * \sa SDL_IsMouseHaptic
+ */
+OVERRIDE SDL_Haptic * SDL_OpenHapticFromMouse(void);
+
+/**
  *  \brief Closes a Haptic device previously opened with SDL_HapticOpen().
  *
  *  \param haptic Haptic device to close.
  */
 OVERRIDE void SDL_HapticClose(SDL_Haptic * haptic);
+
+/**
+ * Close a haptic device previously opened with SDL_OpenHaptic().
+ *
+ * \param haptic the SDL_Haptic device to close.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_OpenHaptic
+ */
+OVERRIDE void SDL_CloseHaptic(SDL_Haptic *haptic);
 
 }
 
