@@ -58,6 +58,7 @@ class AudioBuffer
 
         /* Sample format */
         enum SampleFormat {
+            SAMPLE_FMT_UNKNOWN = -1,
             SAMPLE_FMT_U8,  /* Unsigned 8-bit samples */
             SAMPLE_FMT_S16, /* Signed 16-bit samples */
             SAMPLE_FMT_S32, /* Signed 32-bit samples */
@@ -69,8 +70,11 @@ class AudioBuffer
         };
         SampleFormat format;
 
+        /* Convert sample format to bit depth */
+        static int formatToBitDepth(SampleFormat f);
+
         /* Number of channels of the buffer */
-        int nbChannels;
+        int channels;
 
         /* Frequency of buffer in Hz */
         int frequency;

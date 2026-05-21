@@ -24,10 +24,9 @@
 #include <memory>
 #include <functional>
 #include "AudioConverter.h"
+#include "AudioBuffer.h"
 
 namespace libtas {
-
-class AudioBuffer;
 
 /* Class storing an audio source, whose role is to control the playback
  * of an audio buffer or a queue of audio buffers.
@@ -41,6 +40,11 @@ class AudioSource
 
         /* Identifier of the buffer */
         int id;
+
+        /* Format, channels and frequency of the audio buffers contained in this source. */
+        AudioBuffer::SampleFormat format;
+        int channels;
+        int frequency;
 
         /* Position inside the buffer, in samples */
         int position;
@@ -102,18 +106,6 @@ class AudioSource
         };
         SourceState state;
 
-        /* A queue of buffers to play */
-        std::vector<std::shared_ptr<AudioBuffer>> buffer_queue;
-
-        /* Indicate the current position in the buffer queue */
-        int queue_index;
-
-        /* Object for resampling audio */
-        std::unique_ptr<AudioConverter> audioConverter;
-
-        /* Temporary array of mixed samples */
-        std::vector<uint8_t> mixedSamples;
-
         /* In case of callback type, callback function.
          * We send as an argument a pointer to the buffer to refill.
          */
@@ -121,6 +113,9 @@ class AudioSource
 
         /* Callback data avaible to the callback function */
         void* callback_data;
+
+        /* Returns the ratio of bytes per frame for the audio source */
+        int frameToByteRatio();
 
         /* Helper function to convert ticks into a number of samples
          * in the audio buffer
@@ -137,20 +132,23 @@ class AudioSource
         void dirty();
 
         /* Returns the number of buffers in its queue */
-        int nbQueue();
+        int nbQueue() const;
 
         /* Returns the number of buffers in its queue
          * that are read until the end.
          */
-        int nbQueueProcessed();
+        int nbQueueProcessed() const;
+
+        /* Return the buffer at the specified index */
+        const std::shared_ptr<AudioBuffer> buffer(int index) const;
 
         /* Returns the sum of the sizes of each queued buffer (in samples) */
-        int queueSize();
+        int queueSize() const;
 
         /* Get the position of playback inside a queue of buffers (in samples).
          * The position is relate to the beginning of the first buffer in queue.
          */
-        int getPosition();
+        int getPosition() const;
 
         /* Set the position of playback inside a queue of buffers (in samples).
          * The position is relate to the beginning of the first buffer in queue.
@@ -162,14 +160,46 @@ class AudioSource
          */
         void setPosition(int pos);
 
+        /* Push the buffer with the given ID to the queue, only if the buffer specs match the source specs.
+         */
+        int queueBuffer(std::shared_ptr<AudioBuffer> buffer);
+
+        /* Remove the first buffer in the queue and returns its ID.
+         * If the queue is empty, returns -1.
+         */
+        int unqueueBuffer();
+
+        /* Remove and return the first buffer in the queue if it's been fully processed.
+         * Otherwise, returns nullptr.
+         */
+        std::shared_ptr<AudioBuffer> reuseBuffer();
+
+        /* Clear the buffer queue, and reset position */
+        void clearBuffers();
+
         /* Check if reading a number of ticks will reach the end of the source */
-        bool willEnd(struct timespec ticks);
+        bool willEnd(struct timespec ticks) const;
 
         /* Mix the buffer with an external buffer of the given format.
          * The number of samples to mix correspond to the number of ticks given.
          * The function returns the number of samples written in the output buffer.
          */
         int mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume);
+
+    private:
+        /* A queue of buffers to play */
+        std::vector<std::shared_ptr<AudioBuffer>> buffer_queue;
+
+        /* Indicate the current position in the buffer queue */
+        int queue_index;
+
+        /* Object for resampling audio */
+        std::unique_ptr<AudioConverter> audioConverter;
+
+        /* Temporary array of mixed samples */
+        std::vector<uint8_t> mixedSamples;
+
+
 };
 }
 

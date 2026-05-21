@@ -88,17 +88,29 @@ void AudioSource::dirty(void)
     audioConverter->dirty();
 }
 
-int AudioSource::nbQueue()
+int AudioSource::frameToByteRatio()
+{
+    return channels * AudioBuffer::formatToBitDepth(format) / 8;
+}
+
+int AudioSource::nbQueue() const
 {
     return buffer_queue.size();
 }
 
-int AudioSource::nbQueueProcessed()
+int AudioSource::nbQueueProcessed() const
 {
     return queue_index;
 }
 
-int AudioSource::queueSize()
+const std::shared_ptr<AudioBuffer> AudioSource::buffer(int index) const
+{
+    if (index < 0 || index >= static_cast<int>(buffer_queue.size()))
+        return nullptr;
+    return buffer_queue[index];
+}
+
+int AudioSource::queueSize() const
 {
     int totalSize = 0;
     for (auto& buffer : buffer_queue) {
@@ -107,7 +119,7 @@ int AudioSource::queueSize()
     return totalSize;
 }
 
-int AudioSource::getPosition()
+int AudioSource::getPosition() const
 {
     int totalPos = 0;
     int processed = std::min(queue_index, static_cast<int>(buffer_queue.size()));
@@ -157,7 +169,57 @@ void AudioSource::setPosition(int pos)
     samples_frac = 0;
 }
 
-bool AudioSource::willEnd(struct timespec ticks)
+int AudioSource::queueBuffer(std::shared_ptr<AudioBuffer> buffer)
+{
+    if (!buffer) {
+        LOG(LL_ERROR, LCF_SOUND, "Invalid buffer");
+        return -1;
+    }
+
+    if ((!buffer_queue.empty()) && (buffer->format != format || buffer->channels != channels || buffer->frequency != frequency)) {
+        LOG(LL_WARN, LCF_SOUND, "Buffer format mismatch for source %d", id);
+    }
+    format = buffer->format;
+    channels = buffer->channels;
+    frequency = buffer->frequency;
+
+    buffer_queue.push_back(buffer);
+    return buffer->id;
+}
+
+int AudioSource::unqueueBuffer()
+{
+    if (!buffer_queue.empty()) {
+        /* Removing first buffer */
+        std::shared_ptr<AudioBuffer> ab = buffer_queue[0];
+        buffer_queue.erase(buffer_queue.begin());
+        return ab->id;
+    }
+    return -1;
+}
+
+std::shared_ptr<AudioBuffer> AudioSource::reuseBuffer()
+{
+    if (nbQueueProcessed() > 0 && !buffer_queue.empty()) {
+        /* Removing first buffer */
+        std::shared_ptr<AudioBuffer> ab = buffer_queue[0];
+        buffer_queue.erase(buffer_queue.begin());
+        if (queue_index > 0)
+            queue_index--;
+        return ab;
+    }
+    return nullptr;
+}
+
+void AudioSource::clearBuffers()
+{
+    buffer_queue.clear();
+    queue_index = 0;
+    position = 0;
+    samples_frac = 0;
+}
+
+bool AudioSource::willEnd(struct timespec ticks) const
 {
     if (state != SOURCE_PLAYING)
         return false;
@@ -223,7 +285,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
                     break;
             }
 
-            audioConverter->init(curBuf->format, curBuf->nbChannels, static_cast<int>(curBuf->frequency*pitch), outFormat, outNbChannels, outFrequency);
+            audioConverter->init(curBuf->format, curBuf->channels, static_cast<int>(curBuf->frequency*pitch), outFormat, outNbChannels, outFrequency);
         }
     }
 

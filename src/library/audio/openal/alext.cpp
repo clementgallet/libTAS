@@ -110,43 +110,43 @@ void myalBufferSubDataSOFT(ALuint buffer, ALenum format, const ALvoid *data, ALs
     switch(format) {
         case AL_FORMAT_MONO8:
             match = ab->format == AudioBuffer::SAMPLE_FMT_U8;
-            match &= ab->nbChannels == 1;
+            match &= ab->channels == 1;
             break;
         case AL_FORMAT_MONO16:
             match = ab->format == AudioBuffer::SAMPLE_FMT_S16;
-            match &= ab->nbChannels == 1;
+            match &= ab->channels == 1;
             break;
         case AL_FORMAT_STEREO8:
             match = ab->format == AudioBuffer::SAMPLE_FMT_U8;
-            match &= ab->nbChannels == 2;
+            match &= ab->channels == 2;
             break;
         case AL_FORMAT_STEREO16:
             match = ab->format == AudioBuffer::SAMPLE_FMT_S16;
-            match &= ab->nbChannels == 2;
+            match &= ab->channels == 2;
             break;
         case AL_FORMAT_MONO_FLOAT32:
             match = ab->format == AudioBuffer::SAMPLE_FMT_FLT;
-            match &= ab->nbChannels == 1;
+            match &= ab->channels == 1;
             break;
         case AL_FORMAT_STEREO_FLOAT32:
             match = ab->format == AudioBuffer::SAMPLE_FMT_FLT;
-            match &= ab->nbChannels == 2;
+            match &= ab->channels == 2;
             break;
         case AL_FORMAT_MONO_DOUBLE_EXT:
             match = ab->format == AudioBuffer::SAMPLE_FMT_DBL;
-            match &= ab->nbChannels == 1;
+            match &= ab->channels == 1;
             break;
         case AL_FORMAT_STEREO_DOUBLE_EXT:
             match = ab->format == AudioBuffer::SAMPLE_FMT_DBL;
-            match &= ab->nbChannels == 2;
+            match &= ab->channels == 2;
             break;
         case AL_FORMAT_MONO_MSADPCM_SOFT:
             match = ab->format == AudioBuffer::SAMPLE_FMT_MSADPCM;
-            match &= ab->nbChannels == 1;
+            match &= ab->channels == 1;
             break;
         case AL_FORMAT_STEREO_MSADPCM_SOFT:
             match = ab->format == AudioBuffer::SAMPLE_FMT_MSADPCM;
-            match &= ab->nbChannels == 2;
+            match &= ab->channels == 2;
             break;
         default:
             LOG(LL_ERROR, LCF_SOUND, "Unsupported format: %d", format);

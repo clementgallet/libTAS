@@ -101,16 +101,16 @@ void AudioContext::init(void)
     paused = false;
 }
 
-int AudioContext::createBuffer(void)
+std::shared_ptr<AudioBuffer> AudioContext::createBuffer(void)
 {
     if (buffers.size() >= MAXBUFFERS)
-        return -1;
+        return nullptr;
 
     /* Check if we can recycle a deleted buffer */
     if (!buffers_pool.empty()) {
         buffers.push_front(buffers_pool.front());
         buffers_pool.pop_front();
-        return buffers.front()->id;
+        return buffers.front();
     }
 
     /* If not, we create a new buffer.
@@ -120,7 +120,26 @@ int AudioContext::createBuffer(void)
     auto newab = std::make_shared<AudioBuffer>();
     newab->id = buffers.size() + 1;
     buffers.push_front(newab);
-    return newab->id;
+    return newab;
+}
+
+std::shared_ptr<AudioBuffer> AudioContext::reuseBufferFromSourceOrCreate(std::shared_ptr<AudioSource> source)
+{
+    auto buffer = source->reuseBuffer();
+    if (buffer)
+        return buffer;
+
+    /* Apply the source specs to the buffer */
+    buffer = createBuffer();
+    if (!buffer)
+        return nullptr;
+
+    buffer->format = source->format;
+    buffer->channels = source->channels;
+    buffer->frequency = source->frequency;
+    buffer->update();
+
+    return buffer;
 }
 
 void AudioContext::deleteBuffer(int id)
@@ -156,17 +175,17 @@ std::shared_ptr<AudioBuffer> AudioContext::getBuffer(int id) const
     return nullptr;
 }
 
-int AudioContext::createSource(void)
+std::shared_ptr<AudioSource> AudioContext::createSource(void)
 {
     if (sources.size() >= MAXSOURCES)
-        return -1;
+        return nullptr;
 
     /* Check if we can recycle a deleted source */
     if (!sources_pool.empty()) {
         sources.push_front(sources_pool.front());
         sources_pool.pop_front();
         sources.front()->init();
-        return sources.front()->id;
+        return sources.front();
     }
 
     /* If not, we create a new source.
@@ -176,7 +195,7 @@ int AudioContext::createSource(void)
     auto newas = std::make_shared<AudioSource>();
     newas->id = sources.size() + 1;
     sources.push_front(newas);
-    return newas->id;
+    return newas;
 }
 
 void AudioContext::deleteSource(int id)

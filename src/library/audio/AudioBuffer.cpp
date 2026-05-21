@@ -30,7 +30,7 @@ AudioBuffer::AudioBuffer(void)
     id = 0;
     format = SAMPLE_FMT_S16;
     bitDepth = 16;
-    nbChannels = 2;
+    channels = 2;
     alignSize = 4;
     frequency = 0;
     size = 0;
@@ -50,29 +50,29 @@ void AudioBuffer::makeSilent() {
     }
 }
 
+int AudioBuffer::formatToBitDepth(SampleFormat f)
+{
+    switch (f) {
+        case SAMPLE_FMT_U8:
+            return 8;
+        case SAMPLE_FMT_S16:
+            return 16;
+        case SAMPLE_FMT_S32:
+            return 32;
+        case SAMPLE_FMT_FLT:
+            return 32;
+        case SAMPLE_FMT_DBL:
+            return 64;
+        default:
+            return 8;
+    }
+}
+
 void AudioBuffer::update(void)
 {
-    switch (format) {
-        case SAMPLE_FMT_U8:
-            bitDepth = 8;
-            break;
-        case SAMPLE_FMT_S16:
-            bitDepth = 16;
-            break;
-        case SAMPLE_FMT_S32:
-            bitDepth = 32;
-            break;
-        case SAMPLE_FMT_FLT:
-            bitDepth = 32;
-            break;
-        case SAMPLE_FMT_DBL:
-            bitDepth = 64;
-            break;
-        default:
-            break;
-    }
+    bitDepth = formatToBitDepth(format);
 
-    alignSize = nbChannels * bitDepth / 8;
+    alignSize = channels * bitDepth / 8;
 
     switch (format) {
         case SAMPLE_FMT_U8:
@@ -81,7 +81,7 @@ void AudioBuffer::update(void)
         case SAMPLE_FMT_FLT:
         case SAMPLE_FMT_DBL:
             if (alignSize <= 0) {
-                LOG(LL_ERROR, LCF_SOUND, "Invalid audio alignment for format %d, channels %d, bit depth %d", format, nbChannels, bitDepth);
+                LOG(LL_ERROR, LCF_SOUND, "Invalid audio alignment for format %d, channels %d, bit depth %d", format, channels, bitDepth);
                 sampleSize = 0;
             }
             else {
@@ -91,17 +91,17 @@ void AudioBuffer::update(void)
         case SAMPLE_FMT_MSADPCM:
 
             /* Number of bytes of a block */
-            blockSize = nbChannels * (7 + (blockSamples - 2) / 2);
+            blockSize = channels * (7 + (blockSamples - 2) / 2);
 
-            if (blockSize <= 0 || nbChannels <= 0) {
-                LOG(LL_ERROR, LCF_SOUND, "Invalid MSADPCM block geometry, channels %d, block samples %d", nbChannels, blockSamples);
+            if (blockSize <= 0 || channels <= 0) {
+                LOG(LL_ERROR, LCF_SOUND, "Invalid MSADPCM block geometry, channels %d, block samples %d", channels, blockSamples);
                 sampleSize = 0;
             }
             else {
                 sampleSize = blockSamples * (size / blockSize);
-                if ((size % blockSize) >= (7 * nbChannels))
+                if ((size % blockSize) >= (7 * channels))
                     /* We have an incomplete block */
-                    sampleSize += 2 + ((size % blockSize)/nbChannels - 7) * 2;
+                    sampleSize += 2 + ((size % blockSize)/channels - 7) * 2;
             }
             break;
         default:
@@ -121,9 +121,9 @@ bool AudioBuffer::checkSize(void)
                 return false;
             return (size % alignSize) == 0;
         case SAMPLE_FMT_MSADPCM:
-            if (nbChannels <= 0)
+            if (channels <= 0)
                 return false;
-            return (size % nbChannels) == 0;
+            return (size % channels) == 0;
         default:
             break;
     }
@@ -146,6 +146,7 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position, b
         
     switch (format) {
         case SAMPLE_FMT_NB:
+        case SAMPLE_FMT_UNKNOWN:
             break;
         case SAMPLE_FMT_U8:
         case SAMPLE_FMT_S16:
@@ -179,7 +180,7 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position, b
                 return (sampleSize - position);
         case SAMPLE_FMT_MSADPCM:
 
-            if (blockSamples <= 0 || blockSize <= 0 || nbChannels <= 0)
+            if (blockSamples <= 0 || blockSize <= 0 || channels <= 0)
                 return 0;
 
             /*** 1. Compute which portion of our buffer we decompress ***/
@@ -200,19 +201,19 @@ int AudioBuffer::getSamples(uint8_t* &outSamples, int nbSamples, int position, b
             /*** 2. Prepare the uncompressed buffer ***/
 
             /* Compute the maximum uncompressed size */
-            int rawSize = nbSamples * nbChannels;
+            int rawSize = nbSamples * channels;
             rawSamples.clear();
             rawSamples.reserve(rawSize);
 
             /*** 3. Call the decompression routine ***/
-            DecoderMSADPCM::toPCM(sourceStream, nbChannels, blockSamples, rawSamples);
+            DecoderMSADPCM::toPCM(sourceStream, channels, blockSamples, rawSamples);
 
             /*** 4. Return the proper values ***/
             int rawPosition = position % blockSamples;
-            outSamples = reinterpret_cast<uint8_t*>(&rawSamples[rawPosition*nbChannels]);
+            outSamples = reinterpret_cast<uint8_t*>(&rawSamples[rawPosition*channels]);
             int totSamples = nbSamples;
-            if ((rawSamples.size()/nbChannels - rawPosition) < static_cast<size_t>(nbSamples))
-                totSamples = rawSamples.size()/nbChannels - rawPosition;
+            if ((rawSamples.size()/channels - rawPosition) < static_cast<size_t>(nbSamples))
+                totSamples = rawSamples.size()/channels - rawPosition;
 
             LOG(LL_DEBUG, LCF_SOUND, "   Decompressed %d B -> %d B", portionSize, rawSamples.size());
             return totSamples;

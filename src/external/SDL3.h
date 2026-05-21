@@ -47,7 +47,6 @@ typedef void *SDL_AsyncIOQueue;
 typedef void *SDL_AtomicInt;
 typedef void *SDL_AtomicU32;
 // SDL_AudioPostmixCallback: skip
-typedef struct SDL_AudioStream SDL_AudioStream;
 // SDL_AudioStreamCallback: skip
 // SDL_AudioStreamDataCompleteCallback: skip
 // SDL_BlendFactor defined as enum
@@ -171,7 +170,7 @@ typedef void *SDL_PenID;
 // SDL_Point defined as struct
 // SDL_PowerState defined as enum
 typedef void *SDL_Process;
-typedef void *SDL_PropertiesID;
+typedef Uint32 SDL_PropertiesID;
 typedef void *SDL_PropertyType;
 typedef void *SDL_RWLock;
 // SDL_Renderer defined in forward declarations
@@ -1748,38 +1747,6 @@ typedef enum SDL_TextureAddressMode
     SDL_TEXTURE_ADDRESS_CLAMP,  /**< Texture coordinates are clamped to the [0, 1] range */
     SDL_TEXTURE_ADDRESS_WRAP    /**< The texture is repeated (tiled) */
 } SDL_TextureAddressMode;
-
-typedef enum SDL_AudioFormat
-{
-    SDL_AUDIO_UNKNOWN   = 0x0000u,  /**< Unspecified audio format */
-    SDL_AUDIO_U8        = 0x0008u,  /**< Unsigned 8-bit samples */
-        /* SDL_DEFINE_AUDIO_FORMAT(0, 0, 0, 8), */
-    SDL_AUDIO_S8        = 0x8008u,  /**< Signed 8-bit samples */
-        /* SDL_DEFINE_AUDIO_FORMAT(1, 0, 0, 8), */
-    SDL_AUDIO_S16LE     = 0x8010u,  /**< Signed 16-bit samples */
-        /* SDL_DEFINE_AUDIO_FORMAT(1, 0, 0, 16), */
-    SDL_AUDIO_S16BE     = 0x9010u,  /**< As above, but big-endian byte order */
-        /* SDL_DEFINE_AUDIO_FORMAT(1, 1, 0, 16), */
-    SDL_AUDIO_S32LE     = 0x8020u,  /**< 32-bit integer samples */
-        /* SDL_DEFINE_AUDIO_FORMAT(1, 0, 0, 32), */
-    SDL_AUDIO_S32BE     = 0x9020u,  /**< As above, but big-endian byte order */
-        /* SDL_DEFINE_AUDIO_FORMAT(1, 1, 0, 32), */
-    SDL_AUDIO_F32LE     = 0x8120u,  /**< 32-bit floating point samples */
-        /* SDL_DEFINE_AUDIO_FORMAT(1, 0, 1, 32), */
-    SDL_AUDIO_F32BE     = 0x9120u,  /**< As above, but big-endian byte order */
-        /* SDL_DEFINE_AUDIO_FORMAT(1, 1, 1, 32), */
-
-    /* These represent the current system's byteorder. */
-    #if SDL_BYTEORDER == SDL_LIL_ENDIAN
-    SDL_AUDIO_S16 = SDL_AUDIO_S16LE,
-    SDL_AUDIO_S32 = SDL_AUDIO_S32LE,
-    SDL_AUDIO_F32 = SDL_AUDIO_F32LE
-    #else
-    SDL_AUDIO_S16 = SDL_AUDIO_S16BE,
-    SDL_AUDIO_S32 = SDL_AUDIO_S32BE,
-    SDL_AUDIO_F32 = SDL_AUDIO_F32BE
-    #endif
-} SDL_AudioFormat;
 
 typedef struct SDL_AudioSpec
 {

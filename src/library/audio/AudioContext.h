@@ -79,8 +79,13 @@ class AudioContext
         /* Init parameters from the config */
         void init(void);
 
-        /* Create a new buffer object and return an id of the buffer or -1 if it failed */
-        int createBuffer(void);
+        /* Create a new buffer object or return nullptr if it failed */
+        std::shared_ptr<AudioBuffer> createBuffer(void);
+
+        /* Reuse a buffer from the source that has been processed, or create a new one.
+         * The new buffer will be empty and have the same format, channels and frequency as the source.
+         * Return the id of the buffer or -1 if it failed */
+        std::shared_ptr<AudioBuffer> reuseBufferFromSourceOrCreate(std::shared_ptr<AudioSource> source);
 
         /* Delete buffers that have a corresponding id */
         void deleteBuffer(int id);
@@ -91,8 +96,8 @@ class AudioContext
         /* Return the buffer of requested id, or nullptr if not exists */
         std::shared_ptr<AudioBuffer> getBuffer(int id) const;
 
-        /* Create a new source object and return an id of the source or -1 if it failed */
-        int createSource(void);
+        /* Create a new source object or return nullptr if it failed */
+        std::shared_ptr<AudioSource> createSource(void);
 
         /* Delete source that have a corresponding id */
         void deleteSource(int id);

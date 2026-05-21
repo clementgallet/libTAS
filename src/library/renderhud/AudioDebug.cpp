@@ -74,27 +74,21 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
     for (const auto& source : sources) {
         if (source->state == AudioSource::SOURCE_PLAYING) {
             activeSources++;
-            if (source->buffer_queue.size() != 0) {
-                int frequency = source->buffer_queue[0]->frequency;
-                if (frequency <= 0)
+            float ms = 1000.0f * (float)source->getPosition() / (float)source->frequency;
+            if (ms > consumedMS)
+                consumedMS = ms;
+
+            int remainingSamples = std::max(0, source->queueSize() - source->getPosition());
+            ms = 1000.0f * (float)remainingSamples / (float)source->frequency;
+            if (ms > nonConsumedMS)
+                nonConsumedMS = ms;
+                
+            for (int i = 0; i < source->nbQueue(); i++) {
+                const auto& buffer = source->buffer(i);
+                if (!buffer->sampleSize)
                     continue;
-
-                float ms = 1000.0f * (float)source->getPosition() / (float)frequency;
-                if (ms > consumedMS)
-                    consumedMS = ms;
-
-                int remainingSamples = std::max(0, source->queueSize() - source->getPosition());
-                ms = 1000.0f * (float)remainingSamples / (float)frequency;
-                if (ms > nonConsumedMS)
-                    nonConsumedMS = ms;
-                    
-                for (size_t i = 0; i < source->buffer_queue.size(); i++) {
-                    const auto& buffer = source->buffer_queue[i];
-                    if (!buffer->sampleSize)
-                        continue;
-                    float bufferMS = 1000.0f * (float)buffer->sampleSize / (float)buffer->frequency;
-                    minBufferMS = std::min(minBufferMS, bufferMS);
-                }
+                float bufferMS = 1000.0f * (float)buffer->sampleSize / (float)buffer->frequency;
+                minBufferMS = std::min(minBufferMS, bufferMS);
             }
         }
     }
@@ -156,18 +150,18 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Source %d", source->id);
             
-            if (source->buffer_queue.size() == 0)
+            if (source->nbQueue() == 0)
                 continue;
             
             ImGui::SameLine();
     
-            int alignedSamplePos = consumedMS + leftPadding * msPerUnit - (1000.0f * (float)source->getPosition() / (float)source->buffer_queue[0]->frequency);
+            int alignedSamplePos = consumedMS + leftPadding * msPerUnit - (1000.0f * (float)source->getPosition() / (float)source->frequency);
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-            for (size_t i = 0; i < source->buffer_queue.size(); i++) {
+            for (int i = 0; i < source->nbQueue(); i++) {
     
                 ImGui::SetCursorPosX((float)alignedSamplePos / msPerUnit);
     
-                const auto& buffer = source->buffer_queue[i];
+                const auto& buffer = source->buffer(i);
                 char buffer_name[16];
                 snprintf(buffer_name, sizeof(buffer_name), "%d", buffer->id);
                 
@@ -214,8 +208,8 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
             ImGui::SameLine();
             
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-            for (size_t i = 0; i < source->buffer_queue.size(); i++) {
-                const auto& buffer = source->buffer_queue[i];
+            for (int i = 0; i < source->nbQueue(); i++) {
+                const auto& buffer = source->buffer(i);
                 char buffer_name[16];
                 snprintf(buffer_name, sizeof(buffer_name), "%d", buffer->id);
 

@@ -233,9 +233,9 @@ void alGenBuffers(ALsizei n, ALuint *buffers)
     AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     for (int i=0; i<n; i++) {
-        int id = audiocontext.createBuffer();
-        if (id > 0)
-            buffers[i] = (ALuint) id;
+        auto buffer = audiocontext.createBuffer();
+        if (buffer)
+            buffers[i] = (ALuint) buffer->id;
         /* TODO: else generate an error */
     }
 }
@@ -289,45 +289,45 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
     switch(format) {
         case AL_FORMAT_MONO8:
             ab->format = AudioBuffer::SAMPLE_FMT_U8;
-            ab->nbChannels = 1;
+            ab->channels = 1;
             break;
         case AL_FORMAT_MONO16:
             ab->format = AudioBuffer::SAMPLE_FMT_S16;
-            ab->nbChannels = 1;
+            ab->channels = 1;
             break;
         case AL_FORMAT_STEREO8:
             ab->format = AudioBuffer::SAMPLE_FMT_U8;
-            ab->nbChannels = 2;
+            ab->channels = 2;
             break;
         case AL_FORMAT_STEREO16:
             ab->format = AudioBuffer::SAMPLE_FMT_S16;
-            ab->nbChannels = 2;
+            ab->channels = 2;
             break;
         case AL_FORMAT_MONO_FLOAT32:
             ab->format = AudioBuffer::SAMPLE_FMT_FLT;
-            ab->nbChannels = 1;
+            ab->channels = 1;
             break;
         case AL_FORMAT_STEREO_FLOAT32:
             ab->format = AudioBuffer::SAMPLE_FMT_FLT;
-            ab->nbChannels = 2;
+            ab->channels = 2;
             break;
         case AL_FORMAT_MONO_DOUBLE_EXT:
             ab->format = AudioBuffer::SAMPLE_FMT_DBL;
-            ab->nbChannels = 1;
+            ab->channels = 1;
             break;
         case AL_FORMAT_STEREO_DOUBLE_EXT:
             ab->format = AudioBuffer::SAMPLE_FMT_DBL;
-            ab->nbChannels = 2;
+            ab->channels = 2;
             break;
         case AL_FORMAT_MONO_MSADPCM_SOFT:
             ab->format = AudioBuffer::SAMPLE_FMT_MSADPCM;
-            ab->nbChannels = 1;
+            ab->channels = 1;
             if (ab->blockSamples == 0)
                 ab->blockSamples = 64;
             break;
         case AL_FORMAT_STEREO_MSADPCM_SOFT:
             ab->format = AudioBuffer::SAMPLE_FMT_MSADPCM;
-            ab->nbChannels = 2;
+            ab->channels = 2;
             if (ab->blockSamples == 0)
                 ab->blockSamples = 64;
             break;
@@ -469,7 +469,7 @@ void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
             LOG(LL_DEBUG, LCF_SOUND, "  Get bit depth of %d", *value);
             return;
         case AL_CHANNELS:
-            *value = ab->nbChannels;
+            *value = ab->channels;
             LOG(LL_DEBUG, LCF_SOUND, "  Get channel number of %d", *value);
             return;
         case AL_SIZE:
@@ -513,7 +513,7 @@ void alGetBufferiv(ALuint buffer, ALenum pname, ALint *values)
             LOG(LL_DEBUG, LCF_SOUND, "  Get bit depth of %d", *values);
             return;
         case AL_CHANNELS:
-            *values = ab->nbChannels;
+            *values = ab->channels;
             LOG(LL_DEBUG, LCF_SOUND, "  Get channel number of %d", *values);
             return;
         case AL_SIZE:
@@ -541,9 +541,9 @@ void alGenSources(ALsizei n, ALuint *sources)
     AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 	for (int i=0; i<n; i++) {
-		int id = audiocontext.createSource();
-		if (id > 0) {
-			sources[i] = (ALuint) id;
+        auto source = audiocontext.createSource();
+		if (source) {
+			sources[i] = (ALuint) source->id;
         }
         else {
             alSetError(AL_INVALID_VALUE);
@@ -598,7 +598,6 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
         return;
     }
 
-    std::shared_ptr<AudioBuffer> ab;
     switch(param) {
         case AL_GAIN:
             CHECKVAL(value >= 0.0f);
@@ -621,15 +620,9 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
             break;
         case AL_SEC_OFFSET:
             CHECKVAL(value >= 0.0f);
-            /* We fetch the buffer format of the source.
-             * Normally, all buffers from a queue share the exact same format.
-             */
-            if (! as->buffer_queue.empty()) {
-                ab = as->buffer_queue[0];
-                LOG(LL_DEBUG, LCF_SOUND, "  Set position of %f seconds", value);
-                value *= (ALfloat) ab->frequency;
-                as->setPosition((int)value);
-            }
+            LOG(LL_DEBUG, LCF_SOUND, "  Set position of %f seconds", value);
+            value *= (ALfloat) as->frequency;
+            as->setPosition((int)value);
             break;
         case AL_SAMPLE_OFFSET:
             CHECKVAL(value >= 0.0f);
@@ -641,12 +634,9 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
             break;
         case AL_BYTE_OFFSET:
             CHECKVAL(value >= 0.0f);
-            if (! as->buffer_queue.empty()) {
-                ab = as->buffer_queue[0];
-                value /= (ALfloat) ab->alignSize;
-                LOG(LL_DEBUG, LCF_SOUND, "  Set position of %f bytes", value);
-                as->setPosition((int)value);
-            }
+            value /= (ALfloat) as->frameToByteRatio();
+            LOG(LL_DEBUG, LCF_SOUND, "  Set position of %f bytes", value);
+            as->setPosition((int)value);
             break;
         /* Unsupported operations */
         case AL_MIN_GAIN:
@@ -738,7 +728,6 @@ void alSourcei(ALuint source, ALenum param, ALint value)
         return;
     }
 
-    std::shared_ptr<AudioBuffer> ab;
     switch(param) {
         case AL_LOOPING:
             CHECKVAL(value == AL_FALSE || value == AL_TRUE);
@@ -752,7 +741,6 @@ void alSourcei(ALuint source, ALenum param, ALint value)
             break;
         case AL_BUFFER:
             /* Bind a buffer to the source */
-
             if ((as->state == AudioSource::SOURCE_PLAYING) || (as->state == AudioSource::SOURCE_PAUSED)) {
                 alSetError(AL_INVALID_OPERATION);
                 return;
@@ -761,32 +749,26 @@ void alSourcei(ALuint source, ALenum param, ALint value)
             if (value == 0) {
                 /* Unbind buffer from source */
                 as->source = AudioSource::SOURCE_UNDETERMINED;
-                as->buffer_queue.clear();
+                as->clearBuffers();
                 LOG(LL_DEBUG, LCF_SOUND, "  Unbind buffer");
             }
             else {
-                ab = audiocontext.getBuffer(value);
+                std::shared_ptr<AudioBuffer> ab = audiocontext.getBuffer(value);
                 if (!ab) {
                     alSetError(AL_INVALID_VALUE);
                     return;
                 }
-                as->buffer_queue.clear();
-                as->buffer_queue.push_back(ab);
+                as->clearBuffers();
+                as->queueBuffer(ab);
                 as->source = AudioSource::SOURCE_STATIC;
                 LOG(LL_DEBUG, LCF_SOUND, "  Bind to buffer %d", value);
             }
             break;
         case AL_SEC_OFFSET:
             CHECKVAL(value >= 0);
-            /* We fetch the buffer format of the source.
-             * Normally, all buffers from a queue share the exact same format.
-             */
-            if (! as->buffer_queue.empty()) {
-                ab = as->buffer_queue[0];
-                LOG(LL_DEBUG, LCF_SOUND, "  Set position of %d seconds", value);
-                value *= static_cast<ALint>(ab->frequency);
-                as->setPosition(static_cast<int>(value));
-            }
+            LOG(LL_DEBUG, LCF_SOUND, "  Set position of %d seconds", value);
+            value *= static_cast<ALint>(as->frequency);
+            as->setPosition(static_cast<int>(value));
             break;
         case AL_SAMPLE_OFFSET:
             CHECKVAL(value >= 0);
@@ -798,12 +780,9 @@ void alSourcei(ALuint source, ALenum param, ALint value)
             break;
         case AL_BYTE_OFFSET:
             CHECKVAL(value >= 0);
-            if (! as->buffer_queue.empty()) {
-                ab = as->buffer_queue[0];
-                value /= static_cast<ALint>(ab->alignSize);
-                LOG(LL_DEBUG, LCF_SOUND, "  Set position of %d bytes", value);
-                as->setPosition(static_cast<int>(value));
-            }
+            value /= static_cast<ALint>(as->frameToByteRatio());
+            LOG(LL_DEBUG, LCF_SOUND, "  Set position of %d bytes", value);
+            as->setPosition(static_cast<int>(value));
             break;
         case AL_SOURCE_RELATIVE:
             CHECKVAL(value == AL_FALSE || value == AL_TRUE);
@@ -879,7 +858,6 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
     if (!as)
         return;
 
-    std::shared_ptr<AudioBuffer> ab;
     switch(param) {
         case AL_GAIN:
             *value = as->volume;
@@ -903,37 +881,20 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
             LOG(LL_DEBUG, LCF_SOUND, "Operation not supported: %d", param);
             break;
         case AL_SEC_OFFSET:
-            /* We fetch the buffer format of the source.
-             * Normally, all buffers from a queue share the exact same format.
-             */
-            if (! as->buffer_queue.empty()) {
-                ab = as->buffer_queue[0];
-                *value = static_cast<ALfloat>(as->getPosition()) / ab->frequency;
-                LOG(LL_DEBUG, LCF_SOUND, "  Get position of %f seconds", *value);
-            }
+            *value = static_cast<ALfloat>(as->getPosition()) / as->frequency;
+            LOG(LL_DEBUG, LCF_SOUND, "  Get position of %f seconds", *value);
             break;
         case AL_SAMPLE_OFFSET:
             *value = (ALfloat) as->getPosition();
             LOG(LL_DEBUG, LCF_SOUND, "  Get position of %f samples", *value);
             break;
         case AL_BYTE_OFFSET:
-            /* We fetch the buffer format of the source.
-             * Normally, all buffers from a queue share the exact same format.
-             */
-            *value = 0;
-            if (! as->buffer_queue.empty()) {
-                ab = as->buffer_queue[0];
-                *value = static_cast<ALfloat>(as->getPosition()) * ab->alignSize;
-                LOG(LL_DEBUG, LCF_SOUND, "  Get position of %f bytes", *value);
-            }
+            *value = static_cast<ALfloat>(as->getPosition()) * as->frameToByteRatio();
+            LOG(LL_DEBUG, LCF_SOUND, "  Get position of %f bytes", *value);
             break;
         case AL_BYTE_RW_OFFSETS_SOFT:
-            value[0] = value[1] = 0;
-            if (! as->buffer_queue.empty()) {
-                ab = as->buffer_queue[0];
-                value[0] = value[1] = static_cast<ALfloat>(as->getPosition()) * ab->alignSize;
-                LOG(LL_DEBUG, LCF_SOUND, "  Get position of %f bytes", *value);
-            }
+            value[0] = value[1] = static_cast<ALfloat>(as->getPosition()) * as->frameToByteRatio();
+            LOG(LL_DEBUG, LCF_SOUND, "  Get position of %f bytes", *value);
             break;
         case AL_SAMPLE_RW_OFFSETS_SOFT:
             value[0] = value[1] = static_cast<ALfloat>(as->getPosition());
@@ -979,12 +940,11 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
         return;
     }
 
-    std::shared_ptr<AudioBuffer> ab;
     switch(param) {
         case AL_BUFFER:
-            if (! as->buffer_queue.empty())
+            if (as->nbQueue() > 0)
                 // TODO: for queued buffers, return the index of current buffer?
-                *value = as->buffer_queue[0]->id;
+                *value = as->buffer(0)->id;
             else
                 *value = AL_NONE;
             break;
@@ -1051,37 +1011,20 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
             LOG(LL_DEBUG, LCF_SOUND, "  Get number of processed queued buffers of %d", *value);
             break;
         case AL_SEC_OFFSET:
-            /* We fetch the buffer format of the source.
-             * Normally, all buffers from a queue share the exact same format.
-             */
-            if (! as->buffer_queue.empty()) {
-                ab = as->buffer_queue[0];
-                *value = as->getPosition() / ab->frequency;
-                LOG(LL_DEBUG, LCF_SOUND, "  Get position of %d seconds", *value);
-            }
+            *value = as->getPosition() / as->frequency;
+            LOG(LL_DEBUG, LCF_SOUND, "  Get position of %d seconds", *value);
             break;
         case AL_SAMPLE_OFFSET:
             *value = static_cast<ALint>(as->getPosition());
             LOG(LL_DEBUG, LCF_SOUND, "  Get position of %d samples", *value);
             break;
         case AL_BYTE_OFFSET:
-            /* We fetch the buffer format of the source.
-             * Normally, all buffers from a queue share the exact same format.
-             */
-            *value = 0;
-            if (! as->buffer_queue.empty()) {
-                ab = as->buffer_queue[0];
-                *value = as->getPosition() * ab->alignSize;
-                LOG(LL_DEBUG, LCF_SOUND, "  Get position of %d bytes", *value);
-            }
+            *value = as->getPosition() * as->frameToByteRatio();
+            LOG(LL_DEBUG, LCF_SOUND, "  Get position of %d bytes", *value);
             break;
         case AL_BYTE_RW_OFFSETS_SOFT:
-            value[0] = value[1] = 0;
-            if (! as->buffer_queue.empty()) {
-                ab = as->buffer_queue[0];
-                value[0] = value[1] = as->getPosition() * ab->alignSize;
-                LOG(LL_DEBUG, LCF_SOUND, "  Get position of %d bytes", *value);
-            }
+            value[0] = value[1] = as->getPosition() * as->frameToByteRatio();
+            LOG(LL_DEBUG, LCF_SOUND, "  Get position of %d bytes", *value);
             break;
         case AL_SAMPLE_RW_OFFSETS_SOFT:
             value[0] = value[1] = static_cast<ALint>(as->getPosition());
@@ -1239,13 +1182,12 @@ void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 
     as->source = AudioSource::SOURCE_STREAMING;
 
-    /* TODO: Check that all buffers have the same format */
     for (int i=0; i<n; i++) {
         auto queue_ab = audiocontext.getBuffer(buffers[i]);
         if (!queue_ab)
             return;
 
-        as->buffer_queue.push_back(queue_ab);
+        as->queueBuffer(queue_ab);
         LOG(LL_DEBUG, LCF_SOUND, "  Pushed buffer %d", buffers[i]);
     }
 }
@@ -1274,17 +1216,13 @@ void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 
     LOG(LL_DEBUG, LCF_SOUND, "Unqueueing %d buffers out of %d", n, as->nbQueue());
 
-    /* Save the id of the unqueued buffers */
+    /* Save the id of the unqueued buffers, and remove them from the source. */
     for (int i=0; i<n; i++) {
-        buffers[i] = as->buffer_queue[i]->id;
+        if (as->state == AudioSource::SOURCE_STOPPED)
+            buffers[i] = as->unqueueBuffer();
+        else
+            buffers[i] = as->reuseBuffer()->id;
     }
-
-    /* Remove the buffers from the queue.
-     * TODO: This is slow on a vector, maybe use forward_list?
-     */
-    as->buffer_queue.erase(as->buffer_queue.begin(), as->buffer_queue.begin()+n);
-    if (as->state != AudioSource::SOURCE_STOPPED)
-        as->queue_index -= n;
 }
 
 /*** Listener ***/

@@ -91,8 +91,7 @@ int cubeb_stream_init(cubeb * context,
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
     /* Create the buffer and fill params */
-    int bufferId = audiocontext.createBuffer();
-    auto buffer = audiocontext.getBuffer(bufferId);
+    auto buffer = audiocontext.createBuffer();
 
     buffer->frequency = output_stream_params->rate;
     LOG(LL_DEBUG, LCF_SOUND, "   Frequency %d Hz", buffer->frequency);
@@ -109,8 +108,8 @@ int cubeb_stream_init(cubeb * context,
             return -1;
     }
 
-    buffer->nbChannels = output_stream_params->channels;
-    LOG(LL_DEBUG, LCF_SOUND, "   Channels %d", buffer->nbChannels);
+    buffer->channels = output_stream_params->channels;
+    LOG(LL_DEBUG, LCF_SOUND, "   Channels %d", buffer->channels);
 
     buffer->update();
     LOG(LL_DEBUG, LCF_SOUND, "   Format %d bits", buffer->bitDepth);
@@ -120,11 +119,10 @@ int cubeb_stream_init(cubeb * context,
     buffer->samples.resize(buffer->size);
 
     /* Push buffers in a source */
-    int sourceId = audiocontext.createSource();
-    auto source = audiocontext.getSource(sourceId);
-    *stream = reinterpret_cast<cubeb_stream*>(sourceId);
+    auto source = audiocontext.createSource();
+    *stream = reinterpret_cast<cubeb_stream*>(source->id);
 
-    source->buffer_queue.push_back(buffer);
+    source->queueBuffer(buffer);
 
     source->source = AudioSource::SOURCE_CALLBACK;
     source->callback = ([data_callback, stream, user_ptr](AudioBuffer& ab) {
