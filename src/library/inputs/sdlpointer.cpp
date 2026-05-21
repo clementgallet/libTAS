@@ -33,13 +33,33 @@ namespace libtas {
 
 DEFINE_ORIG_POINTER(SDL_WarpMouse)
 
+bool SDL_HasMouse(void)
+{
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    return Global::shared_config.mouse_support;
+}
+
+sdl3::SDL_MouseID * SDL_GetMice(int *count)
+{
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    if (count != NULL)
+        *count = Global::shared_config.mouse_support?1:0;
+
+    /* We just return a single mouse with instance id 0. */
+    sdl3::SDL_MouseID *mice = (sdl3::SDL_MouseID *)ORIG_SDL3_CALL(SDL_malloc, (sizeof(sdl3::SDL_MouseID) * 2));
+    mice[0] = Global::shared_config.mouse_support?1:0;
+    mice[1] = 0; // Null-terminated array
+
+    return mice;
+}
+
 SDL_Window *SDL_GetMouseFocus(void)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
     return sdl::gameSDLWindow;
 }
 
-Uint32 SDL_GetMouseState(int *x, int *y)
+Uint32 sdl2::SDL_GetMouseState(int *x, int *y)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
 
@@ -52,7 +72,20 @@ Uint32 SDL_GetMouseState(int *x, int *y)
     return SingleInput::toSDL2PointerMask(Inputs::game_ai.pointer.mask);
 }
 
-Uint32 SDL_GetGlobalMouseState(int *x, int *y)
+sdl3::SDL_MouseButtonFlags sdl3::SDL_GetMouseState(float *x, float *y)
+{
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
+
+    if (x != NULL)
+        *x = (float)Inputs::game_ai.pointer.x;
+    if (y != NULL)
+        *y = (float)Inputs::game_ai.pointer.y;
+
+    /* Translating pointer mask to SDL pointer state */
+    return SingleInput::toSDL2PointerMask(Inputs::game_ai.pointer.mask);
+}
+
+Uint32 sdl2::SDL_GetGlobalMouseState(int *x, int *y)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
     /* We don't support global mouse state. We consider that the window
@@ -60,10 +93,21 @@ Uint32 SDL_GetGlobalMouseState(int *x, int *y)
      * same result as SDL_GetMouseState().
      * Hopefully games won't use this function anyway.
      */
-    return SDL_GetMouseState(x, y);
+    return sdl2::SDL_GetMouseState(x, y);
 }
 
-Uint32 SDL_GetRelativeMouseState(int *x, int *y)
+sdl3::SDL_MouseButtonFlags sdl3::SDL_GetGlobalMouseState(float *x, float *y)
+{
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    /* We don't support global mouse state. We consider that the window
+     * is located at the bottom left of the screen and just output the
+     * same result as SDL_GetMouseState().
+     * Hopefully games won't use this function anyway.
+     */
+    return sdl3::SDL_GetMouseState(x, y);
+}
+
+Uint32 sdl2::SDL_GetRelativeMouseState(int *x, int *y)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
 
@@ -91,7 +135,20 @@ Uint32 SDL_GetRelativeMouseState(int *x, int *y)
     return SingleInput::toSDL2PointerMask(Inputs::game_ai.pointer.mask);
 }
 
-void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
+sdl3::SDL_MouseButtonFlags sdl3::SDL_GetRelativeMouseState(float *x, float *y)
+{
+    int intx, inty;
+    int ret = sdl2::SDL_GetRelativeMouseState(&intx, &inty);
+
+    if (x != NULL)
+        *x = (float)intx;
+    if (y != NULL)
+        *y = (float)inty;
+
+    return ret;
+}
+
+void sdl2::SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
 
@@ -126,13 +183,27 @@ void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
     NATIVECALL(ORIG_SDL2_CALL(SDL_WarpMouseInWindow, (window, x, y)));    
 }
 
-int SDL_WarpMouseGlobal(int x, int y)
+void sdl3::SDL_WarpMouseInWindow(SDL_Window *window, float x, float y)
+{
+    return sdl2::SDL_WarpMouseInWindow(window, (int)x, (int)y);
+}
+
+int sdl2::SDL_WarpMouseGlobal(int x, int y)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
 
     /* Should we support this? */
-    SDL_WarpMouseInWindow(nullptr, x, y);
+    sdl2::SDL_WarpMouseInWindow(nullptr, x, y);
     return 0;
+}
+
+bool sdl3::SDL_WarpMouseGlobal(float x, float y)
+{
+    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call to pos (%f,%f)", __func__, x, y);
+
+    /* Should we support this? */
+    sdl3::SDL_WarpMouseInWindow(nullptr, x, y);
+    return true;
 }
 
 void SDL_WarpMouse(Uint16 x, Uint16 y)
@@ -168,19 +239,39 @@ SDL_bool relativeMode = SDL_FALSE;
 
 int SDL_SetRelativeMouseMode(SDL_bool enabled)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call with %d", __func__, enabled);
+    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call with enabled %d", __func__, enabled);
     relativeMode = enabled;
     return 0;
 }
 
-int SDL_CaptureMouse(SDL_bool enabled)
+bool SDL_SetWindowRelativeMouseMode(SDL_Window *window, bool enabled)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call with %d", __func__, enabled);
+    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call with enabled %d", __func__, enabled);
+    relativeMode = enabled;
+    return true;
+}
+
+int sdl2::SDL_CaptureMouse(SDL_bool enabled)
+{
+    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call with enabled %d", __func__, enabled);
     /* We should disable capture anyway */
     return 0;
 }
 
+bool sdl3::SDL_CaptureMouse(bool enabled)
+{
+    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call with enabled %d", __func__, enabled);
+    /* We should disable capture anyway */
+    return true;
+}
+
 SDL_bool SDL_GetRelativeMouseMode(void)
+{
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    return relativeMode;
+}
+
+bool SDL_GetWindowRelativeMouseMode(SDL_Window *window)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
     return relativeMode;
@@ -207,9 +298,10 @@ SDL_Cursor *SDL_CreateSystemCursor(sdl2::SDL_SystemCursor id)
     return reinterpret_cast<SDL_Cursor*>(1);
 }
 
-void SDL_SetCursor(SDL_Cursor * cursor)
+bool SDL_SetCursor(SDL_Cursor * cursor)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE);
+    return true;
 }
 
 SDL_Cursor *SDL_GetCursor(void)
@@ -231,7 +323,12 @@ void SDL_FreeCursor(SDL_Cursor * cursor)
     LOGTRACE(LCF_SDL | LCF_MOUSE);
 }
 
-int SDL_ShowCursor(int toggle)
+void SDL_DestroyCursor(SDL_Cursor *cursor)
+{
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
+}
+
+int sdl2::SDL_ShowCursor(int toggle)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call with %d", __func__, toggle);
 
@@ -240,6 +337,28 @@ int SDL_ShowCursor(int toggle)
     if (toggle != -1)
         showCursor = toggle;
     return showCursor;
+}
+
+static bool sdl3_cursor_visible = true;
+
+bool sdl3::SDL_ShowCursor(void)
+{
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    sdl3_cursor_visible = true;
+    return true;
+}
+
+bool SDL_HideCursor(void)
+{
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    sdl3_cursor_visible = false;
+    return true;
+}
+
+bool SDL_CursorVisible(void)
+{
+    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    return sdl3_cursor_visible;
 }
 
 static SDL_Window* pointer_grab_sdl_window = nullptr;

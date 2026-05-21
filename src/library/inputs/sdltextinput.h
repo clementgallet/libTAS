@@ -21,20 +21,42 @@
 #define LIBTAS_SDLTEXTINPUT_H_INCL
 
 #include "../external/SDL2.h"
+#include "../external/SDL3.h"
 
 #include "hook.h"
 
 namespace libtas {
 
 /**
- *  \brief Start accepting Unicode text input events.
- *         This function will show the on-screen keyboard if supported.
+ * Start accepting Unicode text input events in a window.
  *
- *  \sa SDL_StopTextInput()
- *  \sa SDL_SetTextInputRect()
- *  \sa SDL_HasScreenKeyboardSupport()
+ * This function will enable text input (SDL_EVENT_TEXT_INPUT and
+ * SDL_EVENT_TEXT_EDITING events) in the specified window. Please use this
+ * function paired with SDL_StopTextInput().
+ *
+ * Text input events are not received by default.
+ *
+ * On some platforms using this function shows the screen keyboard and/or
+ * activates an IME, which can prevent some key press events from being passed
+ * through.
+ *
+ * \param window the window to enable text input.
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_SetTextInputArea
+ * \sa SDL_StartTextInputWithProperties
+ * \sa SDL_StopTextInput
+ * \sa SDL_TextInputActive
  */
-OVERRIDE void SDL_StartTextInput(void);
+OVERRIDE bool SDL_StartTextInput(SDL_Window *window);
+
+/* SDL2 version that can be fitted by SDL3 function above */
+// OVERRIDE void SDL_StartTextInput(void)
 
 /**
  *  \brief Return whether or not Unicode text input events are enabled.
@@ -45,13 +67,39 @@ OVERRIDE void SDL_StartTextInput(void);
 OVERRIDE SDL_bool SDL_IsTextInputActive(void);
 
 /**
- *  \brief Stop receiving any text input events.
- *         This function will hide the on-screen keyboard if supported.
+ * Check whether or not Unicode text input events are enabled for a window.
  *
- *  \sa SDL_StartTextInput()
- *  \sa SDL_HasScreenKeyboardSupport()
+ * \param window the window to check.
+ * \returns true if text input events are enabled else false.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_StartTextInput
  */
-OVERRIDE void SDL_StopTextInput(void);
+OVERRIDE bool SDL_TextInputActive(SDL_Window *window);
+
+/**
+ * Stop receiving any text input events in a window.
+ *
+ * If SDL_StartTextInput() showed the screen keyboard, this function will hide
+ * it.
+ *
+ * \param window the window to disable text input.
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_StartTextInput
+ */
+OVERRIDE bool SDL_StopTextInput(SDL_Window *window);
+
+/* SDL2 version that can be fitted by SDL3 function above */
+// OVERRIDE void SDL_StopTextInput(void);
 
 /**
  *  \brief Set the rectangle used to type Unicode text inputs.
@@ -60,6 +108,29 @@ OVERRIDE void SDL_StopTextInput(void);
  *  \sa SDL_StartTextInput()
  */
 OVERRIDE void SDL_SetTextInputRect(const sdl2::SDL_Rect *rect);
+
+/**
+ * Set the area used to type Unicode text input.
+ *
+ * Native input methods may place a window with word suggestions near the
+ * cursor, without covering the text being entered.
+ *
+ * \param window the window for which to set the text input area.
+ * \param rect the SDL_Rect representing the text input area, in window
+ *             coordinates, or NULL to clear it.
+ * \param cursor the offset of the current cursor location relative to
+ *               `rect->x`, in window coordinates.
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_GetTextInputArea
+ * \sa SDL_StartTextInput
+ */
+OVERRIDE bool SDL_SetTextInputArea(SDL_Window *window, const sdl3::SDL_Rect *rect, int cursor);
 
 /**
  * Enable/Disable UNICODE translation of keyboard input.

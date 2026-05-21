@@ -24,17 +24,53 @@
 
 #include "hook.h"
 #include "../external/SDL1.h"
-
 #include "../external/SDL2.h"
+#include "../external/SDL3.h"
 
 namespace libtas {
 
-//typedef SDL_Cursor int;   /* Implementation dependent */
+/**
+ * Return whether a mouse is currently connected.
+ *
+ * \returns true if a mouse is connected, false otherwise.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_GetMice
+ */
+OVERRIDE bool SDL_HasMouse(void);
+
+/**
+ * Get a list of currently connected mice.
+ *
+ * Note that this will include any device or virtual driver that includes
+ * mouse functionality, including some game controllers, KVM switches, etc.
+ * You should wait for input from a device before you consider it actively in
+ * use.
+ *
+ * \param count a pointer filled in with the number of mice returned, may be
+ *              NULL.
+ * \returns a 0 terminated array of mouse instance IDs or NULL on failure;
+ *          call SDL_GetError() for more information. This should be freed
+ *          with SDL_free() when it is no longer needed.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_GetMouseNameForID
+ * \sa SDL_HasMouse
+ */
+OVERRIDE sdl3::SDL_MouseID * SDL_GetMice(int *count);
 
 /**
  *  \brief Get the window which currently has mouse focus.
  */
 OVERRIDE SDL_Window *SDL_GetMouseFocus(void);
+
+/* Both SDL2 and SDL3 functions have the same name but a different signature */
 
 /**
  *  \brief Retrieve the current state of the mouse.
@@ -44,7 +80,41 @@ OVERRIDE SDL_Window *SDL_GetMouseFocus(void);
  *  mouse cursor position relative to the focus window for the currently
  *  selected mouse.  You can pass NULL for either x or y.
  */
-OVERRIDE Uint32 SDL_GetMouseState(int *x, int *y);
+Uint32 sdl2::SDL_GetMouseState(int *x, int *y);
+
+/**
+ * Query SDL's cache for the synchronous mouse button state and the
+ * window-relative SDL-cursor position.
+ *
+ * This function returns the cached synchronous state as SDL understands it
+ * from the last pump of the event queue.
+ *
+ * To query the platform for immediate asynchronous state, use
+ * SDL_GetGlobalMouseState.
+ *
+ * Passing non-NULL pointers to `x` or `y` will write the destination with
+ * respective x or y coordinates relative to the focused window.
+ *
+ * In Relative Mode, the SDL-cursor's position usually contradicts the
+ * platform-cursor's position as manually calculated from
+ * SDL_GetGlobalMouseState() and SDL_GetWindowPosition.
+ *
+ * \param x a pointer to receive the SDL-cursor's x-position from the focused
+ *          window's top left corner, can be NULL if unused.
+ * \param y a pointer to receive the SDL-cursor's y-position from the focused
+ *          window's top left corner, can be NULL if unused.
+ * \returns a 32-bit bitmask of the button state that can be bitwise-compared
+ *          against the SDL_BUTTON_MASK(X) macro.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_GetGlobalMouseState
+ * \sa SDL_GetRelativeMouseState
+ */
+
+sdl3::SDL_MouseButtonFlags sdl3::SDL_GetMouseState(float *x, float *y);
 
 /**
  *  \brief Get the current state of the mouse, in relation to the desktop
@@ -69,7 +139,44 @@ OVERRIDE Uint32 SDL_GetMouseState(int *x, int *y);
  *
  *  \sa SDL_GetMouseState
  */
-OVERRIDE Uint32 SDL_GetGlobalMouseState(int *x, int *y);
+Uint32 sdl2::SDL_GetGlobalMouseState(int *x, int *y);
+
+/**
+ * Query the platform for the asynchronous mouse button state and the
+ * desktop-relative platform-cursor position.
+ *
+ * This function immediately queries the platform for the most recent
+ * asynchronous state, more costly than retrieving SDL's cached state in
+ * SDL_GetMouseState().
+ *
+ * Passing non-NULL pointers to `x` or `y` will write the destination with
+ * respective x or y coordinates relative to the desktop.
+ *
+ * In Relative Mode, the platform-cursor's position usually contradicts the
+ * SDL-cursor's position as manually calculated from SDL_GetMouseState() and
+ * SDL_GetWindowPosition.
+ *
+ * This function can be useful if you need to track the mouse outside of a
+ * specific window and SDL_CaptureMouse() doesn't fit your needs. For example,
+ * it could be useful if you need to track the mouse while dragging a window,
+ * where coordinates relative to a window might not be in sync at all times.
+ *
+ * \param x a pointer to receive the platform-cursor's x-position from the
+ *          desktop's top left corner, can be NULL if unused.
+ * \param y a pointer to receive the platform-cursor's y-position from the
+ *          desktop's top left corner, can be NULL if unused.
+ * \returns a 32-bit bitmask of the button state that can be bitwise-compared
+ *          against the SDL_BUTTON_MASK(X) macro.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_CaptureMouse
+ * \sa SDL_GetMouseState
+ * \sa SDL_GetGlobalMouseState
+ */
+sdl3::SDL_MouseButtonFlags sdl3::SDL_GetGlobalMouseState(float *x, float *y);
 
 /**
  *  \brief Retrieve the relative state of the mouse.
@@ -78,7 +185,42 @@ OVERRIDE Uint32 SDL_GetGlobalMouseState(int *x, int *y);
  *  be tested using the SDL_BUTTON(X) macros, and x and y are set to the
  *  mouse deltas since the last call to SDL_GetRelativeMouseState().
  */
-OVERRIDE Uint32 SDL_GetRelativeMouseState(int *x, int *y);
+Uint32 sdl2::SDL_GetRelativeMouseState(int *x, int *y);
+
+/**
+ * Query SDL's cache for the synchronous mouse button state and accumulated
+ * mouse delta since last call.
+ *
+ * This function returns the cached synchronous state as SDL understands it
+ * from the last pump of the event queue.
+ *
+ * To query the platform for immediate asynchronous state, use
+ * SDL_GetGlobalMouseState.
+ *
+ * Passing non-NULL pointers to `x` or `y` will write the destination with
+ * respective x or y deltas accumulated since the last call to this function
+ * (or since event initialization).
+ *
+ * This function is useful for reducing overhead by processing relative mouse
+ * inputs in one go per-frame instead of individually per-event, at the
+ * expense of losing the order between events within the frame (e.g. quickly
+ * pressing and releasing a button within the same frame).
+ *
+ * \param x a pointer to receive the x mouse delta accumulated since last
+ *          call, can be NULL if unused.
+ * \param y a pointer to receive the y mouse delta accumulated since last
+ *          call, can be NULL if unused.
+ * \returns a 32-bit bitmask of the button state that can be bitwise-compared
+ *          against the SDL_BUTTON_MASK(X) macro.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_GetMouseState
+ * \sa SDL_GetGlobalMouseState
+ */
+sdl3::SDL_MouseButtonFlags sdl3::SDL_GetRelativeMouseState(float *x, float *y);
 
 /**
  *  \brief Moves the mouse to the given position within the window.
@@ -89,7 +231,30 @@ OVERRIDE Uint32 SDL_GetRelativeMouseState(int *x, int *y);
  *
  *  \note This function generates a mouse motion event
  */
-OVERRIDE void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y);
+void sdl2::SDL_WarpMouseInWindow(SDL_Window * window, int x, int y);
+
+/**
+ * Move the mouse cursor to the given position within the window.
+ *
+ * This function generates a mouse motion event if relative mode is not
+ * enabled. If relative mode is enabled, you can force mouse events for the
+ * warp by setting the SDL_HINT_MOUSE_RELATIVE_WARP_MOTION hint.
+ *
+ * Note that this function will appear to succeed, but not actually move the
+ * mouse when used over Microsoft Remote Desktop.
+ *
+ * \param window the window to move the mouse into, or NULL for the current
+ *               mouse focus.
+ * \param x the x coordinate within the window.
+ * \param y the y coordinate within the window.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_WarpMouseGlobal
+ */
+void sdl3::SDL_WarpMouseInWindow(SDL_Window *window, float x, float y);
 
 /**
  *  \brief Moves the mouse to the given position in global screen space.
@@ -100,7 +265,31 @@ OVERRIDE void SDL_WarpMouseInWindow(SDL_Window * window, int x, int y);
  *
  *  \note This function generates a mouse motion event
  */
-OVERRIDE int SDL_WarpMouseGlobal(int x, int y);
+int sdl2::SDL_WarpMouseGlobal(int x, int y);
+
+/**
+ * Move the mouse to the given position in global screen space.
+ *
+ * This function generates a mouse motion event.
+ *
+ * A failure of this function usually means that it is unsupported by a
+ * platform.
+ *
+ * Note that this function will appear to succeed, but not actually move the
+ * mouse when used over Microsoft Remote Desktop.
+ *
+ * \param x the x coordinate.
+ * \param y the y coordinate.
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_WarpMouseInWindow
+ */
+bool sdl3::SDL_WarpMouseGlobal(float x, float y);
 
 /**
  * Set the position of the mouse cursor (generates a mouse motion event)
@@ -124,6 +313,34 @@ OVERRIDE void SDL_WarpMouse(Uint16 x, Uint16 y);
  *  \sa SDL_GetRelativeMouseMode()
  */
 OVERRIDE int SDL_SetRelativeMouseMode(SDL_bool enabled);
+
+/**
+ * Set relative mouse mode for a window.
+ *
+ * While the window has focus and relative mouse mode is enabled, the cursor
+ * is hidden, the mouse position is constrained to the window, and SDL will
+ * report continuous relative mouse motion even if the mouse is at the edge of
+ * the window.
+ *
+ * If you'd like to keep the mouse position fixed while in relative mode you
+ * can use SDL_SetWindowMouseRect(). If you'd like the cursor to be at a
+ * specific location when relative mode ends, you should use
+ * SDL_WarpMouseInWindow() before disabling relative mode.
+ *
+ * This function will flush any pending mouse motion for this window.
+ *
+ * \param window the window to change.
+ * \param enabled true to enable relative mode, false to disable.
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_GetWindowRelativeMouseMode
+ */
+OVERRIDE bool SDL_SetWindowRelativeMouseMode(SDL_Window *window, bool enabled);
 
 /**
  *  \brief Capture the mouse, to track input outside an SDL window.
@@ -154,7 +371,55 @@ OVERRIDE int SDL_SetRelativeMouseMode(SDL_bool enabled);
  *
  *  \return 0 on success, or -1 if not supported.
  */
-OVERRIDE int SDL_CaptureMouse(SDL_bool enabled);
+int sdl2::SDL_CaptureMouse(SDL_bool enabled);
+
+/**
+ * Capture the mouse and to track input outside an SDL window.
+ *
+ * Capturing enables your app to obtain mouse events globally, instead of just
+ * within your window. Not all video targets support this function. When
+ * capturing is enabled, the current window will get all mouse events, but
+ * unlike relative mode, no change is made to the cursor and it is not
+ * restrained to your window.
+ *
+ * This function may also deny mouse input to other windows--both those in
+ * your application and others on the system--so you should use this function
+ * sparingly, and in small bursts. For example, you might want to track the
+ * mouse while the user is dragging something, until the user releases a mouse
+ * button. It is not recommended that you capture the mouse for long periods
+ * of time, such as the entire time your app is running. For that, you should
+ * probably use SDL_SetWindowRelativeMouseMode() or SDL_SetWindowMouseGrab(),
+ * depending on your goals.
+ *
+ * While captured, mouse events still report coordinates relative to the
+ * current (foreground) window, but those coordinates may be outside the
+ * bounds of the window (including negative values). Capturing is only allowed
+ * for the foreground window. If the window loses focus while capturing, the
+ * capture will be disabled automatically.
+ *
+ * While capturing is enabled, the current window will have the
+ * `SDL_WINDOW_MOUSE_CAPTURE` flag set.
+ *
+ * Please note that SDL will attempt to "auto capture" the mouse while the
+ * user is pressing a button; this is to try and make mouse behavior more
+ * consistent between platforms, and deal with the common case of a user
+ * dragging the mouse outside of the window. This means that if you are
+ * calling SDL_CaptureMouse() only to deal with this situation, you do not
+ * have to (although it is safe to do so). If this causes problems for your
+ * app, you can disable auto capture by setting the
+ * `SDL_HINT_MOUSE_AUTO_CAPTURE` hint to zero.
+ *
+ * \param enabled true to enable capturing, false to disable.
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_GetGlobalMouseState
+ */
+bool sdl3::SDL_CaptureMouse(bool enabled);
 
 /**
  *  \brief Query whether relative mouse mode is enabled.
@@ -162,6 +427,20 @@ OVERRIDE int SDL_CaptureMouse(SDL_bool enabled);
  *  \sa SDL_SetRelativeMouseMode()
  */
 OVERRIDE SDL_bool SDL_GetRelativeMouseMode(void);
+
+/**
+ * Query whether relative mouse mode is enabled for a window.
+ *
+ * \param window the window to query.
+ * \returns true if relative mode is enabled for a window or false otherwise.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_SetWindowRelativeMouseMode
+ */
+OVERRIDE bool SDL_GetWindowRelativeMouseMode(SDL_Window *window);
 
 /**
  *  \brief Create a cursor, using the specified bitmap data and
@@ -205,7 +484,7 @@ OVERRIDE SDL_Cursor *SDL_CreateSystemCursor(sdl2::SDL_SystemCursor id);
 /**
  *  \brief Set the active cursor.
  */
-OVERRIDE void SDL_SetCursor(SDL_Cursor * cursor);
+OVERRIDE bool SDL_SetCursor(SDL_Cursor * cursor);
 
 /**
  *  \brief Return the active cursor.
@@ -225,6 +504,24 @@ OVERRIDE SDL_Cursor *SDL_GetDefaultCursor(void);
 OVERRIDE void SDL_FreeCursor(SDL_Cursor * cursor);
 
 /**
+ * Free a previously-created cursor.
+ *
+ * Use this function to free cursor resources created with SDL_CreateCursor(),
+ * SDL_CreateColorCursor() or SDL_CreateSystemCursor().
+ *
+ * \param cursor the cursor to free.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_CreateColorCursor
+ * \sa SDL_CreateCursor
+ * \sa SDL_CreateSystemCursor
+ */
+OVERRIDE void SDL_DestroyCursor(SDL_Cursor *cursor);
+
+/**
  *  \brief Toggle whether or not the cursor is shown.
  *
  *  \param toggle 1 to show the cursor, 0 to hide it, -1 to query the current
@@ -232,7 +529,52 @@ OVERRIDE void SDL_FreeCursor(SDL_Cursor * cursor);
  *
  *  \return 1 if the cursor is shown, or 0 if the cursor is hidden.
  */
-OVERRIDE int SDL_ShowCursor(int toggle);
+int sdl2::SDL_ShowCursor(int toggle);
+
+/**
+ * Show the cursor.
+ *
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_CursorVisible
+ * \sa SDL_HideCursor
+ */
+bool sdl3::SDL_ShowCursor(void);
+
+/**
+ * Hide the cursor.
+ *
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_CursorVisible
+ * \sa SDL_ShowCursor
+ */
+OVERRIDE bool SDL_HideCursor(void);
+
+/**
+ * Return whether the cursor is currently being shown.
+ *
+ * \returns `true` if the cursor is being shown, or `false` if the cursor is
+ *          hidden.
+ *
+ * \threadsafety This function should only be called on the main thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_HideCursor
+ * \sa SDL_ShowCursor
+ */
+OVERRIDE bool SDL_CursorVisible(void);
 
 /** 
  * Set a window's input grab mode.

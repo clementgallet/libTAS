@@ -21,15 +21,18 @@
 
 #include "logging.h"
 #include "../external/SDL1.h"
+#include "../external/SDL2.h"
+#include "../external/SDL3.h"
 
 namespace libtas {
 
 static bool isTextInputActive = true;
 
-void SDL_StartTextInput(void)
+/* Override */ bool SDL_StartTextInput(SDL_Window *window)
 {
     LOGTRACE(LCF_SDL | LCF_KEYBOARD);
     isTextInputActive = true;
+    return true;
 }
 
 SDL_bool SDL_IsTextInputActive(void)
@@ -38,15 +41,28 @@ SDL_bool SDL_IsTextInputActive(void)
     return isTextInputActive?SDL_TRUE:SDL_FALSE;
 }
 
-void SDL_StopTextInput(void)
+bool SDL_TextInputActive(SDL_Window *window)
+{
+    LOGTRACE(LCF_SDL | LCF_KEYBOARD);
+    return isTextInputActive;
+}
+
+bool SDL_StopTextInput(SDL_Window *window)
 {
     LOGTRACE(LCF_SDL | LCF_KEYBOARD);
     isTextInputActive = false;
+    return true;
 }
 
 void SDL_SetTextInputRect(const sdl2::SDL_Rect *rect)
 {
     LOGTRACE(LCF_SDL | LCF_KEYBOARD);
+}
+
+bool SDL_SetTextInputArea(SDL_Window *window, const sdl3::SDL_Rect *rect, int cursor)
+{
+    LOGTRACE(LCF_SDL | LCF_KEYBOARD);
+    return true;
 }
 
 /* SDL 1 */
