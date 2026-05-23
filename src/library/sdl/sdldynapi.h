@@ -40,6 +40,7 @@ namespace index_sdl2 {
 #include "../../external/SDL2_dynapi_procs.h"
 #undef SDL_DYNAPI_PROC_NO_VARARGS
 #undef SDL_DYNAPI_PROC
+        SDL_EnumCount
     };
 }
 
@@ -49,6 +50,7 @@ namespace index_sdl3 {
 // As opposed to SDL2, in SDL3, we need SDL_DYNAPI_PROC_NO_VARARGS to be not defined!
 #include "../../external/SDL3_dynapi_procs.h"
 #undef SDL_DYNAPI_PROC
+        SDL_EnumCount
     };
 }
 

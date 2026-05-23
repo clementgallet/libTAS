@@ -30,7 +30,7 @@
 namespace libtas {
 
 static Uint32 sdl_apiver = 0;
-static void** orig_sdl_table = nullptr;
+static void* orig_sdl_table[index_sdl3::SDL_EnumCount] = {};
 
 int getSDLApiver()
 {
@@ -51,8 +51,9 @@ void** getOrigSDLFuncLoc(int index_sdl2, int index_sdl3)
         return &orig_sdl_table[index_sdl3];
     }
     else {
-        LOG(LL_ERROR, LCF_SDL, "SDL API version is not set!");
-        return nullptr;
+        /* If SDL_DYNAPI_entry was not called, it means that it is either SDL1,
+         * or very early SDL2. In either case, we use SDL2 indexing. */
+        return &orig_sdl_table[index_sdl2];
     }
 }
 
@@ -124,7 +125,10 @@ void setDynapiAddr(uint64_t addr)
     /* Now save original pointers while replacing them with our hooks. */
     void **entries = static_cast<void **>(table);
 
-    orig_sdl_table = reinterpret_cast<void**>(malloc(tablesize));
+    if (tablesize > (sizeof(orig_sdl_table) / sizeof(orig_sdl_table[0]))) {
+        LOG(LL_WARN, LCF_SDL | LCF_HOOK, "   The game loaded more functions that intended. SDL3_dynapi_procs.h probably needs to be updated.");
+        tablesize = (sizeof(orig_sdl_table) / sizeof(orig_sdl_table[0]));
+    }
     memcpy(orig_sdl_table, table, tablesize);
 
     /* TODO: Check SDL version, and try loading the system SDL instead of the
