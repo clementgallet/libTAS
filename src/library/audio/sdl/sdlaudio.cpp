@@ -141,7 +141,7 @@ static AudioBuffer::SampleFormat sdlFormatToFormat(SDL_AudioFormat sdlFormat)
         case SDL_AUDIO_F32:
             return AudioBuffer::SAMPLE_FMT_FLT;
         default:
-            LOG(LL_DEBUG, LCF_SDL | LCF_SOUND, "Unsupported audio format");
+            LOG(LL_DEBUG, LCF_SDL | LCF_SOUND, "Unsupported audio format: %x", sdlFormat);
             return AudioBuffer::SAMPLE_FMT_UNKNOWN;
     }
 }
@@ -215,14 +215,14 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
 
     /* Store the specs into the sdl device*/
     sdl_devices[id].channels = obtained->channels;
-    sdl_devices[id].format = obtained->format;
+    sdl_devices[id].format = static_cast<SDL_AudioFormat>(obtained->format);
     sdl_devices[id].freq = obtained->freq;
 
     /* Create a source to hold the buffers */
     std::shared_ptr<AudioSource> sdl_source = audiocontext.createSource();
 
     sdl_source->channels = obtained->channels;
-    sdl_source->format = sdlFormatToFormat(obtained->format);
+    sdl_source->format = sdlFormatToFormat(static_cast<SDL_AudioFormat>(obtained->format));
     sdl_source->frequency = obtained->freq;
 
     sdl_device_sources[id].push_back(sdl_source.get());
@@ -286,7 +286,7 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
     obtained->silence = (obtained->format==SDL_AUDIO_U8)?0x80:0x00;
 
     /* Keep a copy of the audio format */
-    audioFormat = obtained->format;
+    audioFormat = static_cast<SDL_AudioFormat>(obtained->format);
 
     return id;
 }

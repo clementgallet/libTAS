@@ -439,7 +439,7 @@ namespace sdl2 {
     typedef struct SDL_AudioSpec
     {
         int freq;                   /**< DSP frequency -- samples per second */
-        SDL_AudioFormat format;     /**< Audio data format */
+        Uint16 format;              /**< Audio data format */
         Uint8 channels;             /**< Number of channels: 1 mono, 2 stereo */
         Uint8 silence;              /**< Audio buffer silence value (calculated) */
         Uint16 samples;             /**< Audio buffer size in sample FRAMES (total samples divided by channel count) */
