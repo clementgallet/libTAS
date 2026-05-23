@@ -56,7 +56,7 @@ static SDL_AudioFormat audioFormat;
 /* All SDL devices. From SDL implementation, there is a limit of 16 devices */
 #define MAX_SDL_DEVICES 16
 static SdlDevice sdl_devices[MAX_SDL_DEVICES];
-static std::vector<std::shared_ptr<AudioSource>> sdl_device_sources[MAX_SDL_DEVICES];
+static std::vector<AudioSource*> sdl_device_sources[MAX_SDL_DEVICES];
 
 static const char* dummy_sdl_device_name = "libTAS device";
 static std::string curDriver;
@@ -181,6 +181,8 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
         return -1;
     }
 
+    sdl_devices[id].id = id;
+
     if (!obtained) {
         obtained = &_obtained;
     }
@@ -223,7 +225,7 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
     sdl_source->format = sdlFormatToFormat(obtained->format);
     sdl_source->frequency = obtained->freq;
 
-    sdl_device_sources[id].push_back(sdl_source);
+    sdl_device_sources[id].push_back(sdl_source.get());
 
     if (sdl_source->format == AudioBuffer::SAMPLE_FMT_UNKNOWN) {
         LOG(LL_DEBUG, LCF_SDL | LCF_SOUND, "Unsupported audio format");
@@ -395,6 +397,7 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
     }
 
     if (sample_frames) {
+        *sample_frames = 512;
         LOG(LL_DEBUG, LCF_SDL | LCF_SOUND, "Game wants to set the buffer size to %d frames", *sample_frames);
     }
 
@@ -443,14 +446,35 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
     if (devid == 0)
         return 0;
 
-    sdl2::SDL_AudioSpec specs_sdl2;
-    memset(&specs_sdl2, 0, sizeof(sdl2::SDL_AudioSpec));
+    if (devid == SDL_AUDIO_DEVICE_DEFAULT_RECORDING)
+        return 0;
 
-    specs_sdl2.freq = spec->freq;
-    specs_sdl2.format = static_cast<SDL_AudioFormat>(spec->format);
-    specs_sdl2.channels = spec->channels;
+    if (devid == SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK)
+        devid = 2;
+
+    sdl2::SDL_AudioSpec specs_sdl2 = {};
+    // memset(&specs_sdl2, 0, sizeof(sdl2::SDL_AudioSpec));
+
+    if (spec) {
+        specs_sdl2.freq = spec->freq;
+        specs_sdl2.format = static_cast<SDL_AudioFormat>(spec->format);
+        specs_sdl2.channels = spec->channels;
+    }
+    else {
+        specs_sdl2.freq = Global::shared_config.audio_frequency;
+        switch (Global::shared_config.audio_bitdepth) {
+            case 8:
+                specs_sdl2.format = SDL_AUDIO_U8;
+                break;
+            case 16:
+                specs_sdl2.format = SDL_AUDIO_S16LE;
+                break;
+        }
+        specs_sdl2.channels = Global::shared_config.audio_channels;
+    }
 
     sdl2::SDL_AudioDeviceID id = open_audio_device(&specs_sdl2, nullptr, devid);
+
     return (id > 0)? id : 0;
 }
 
@@ -682,7 +706,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
             return false;
         }
 
-        auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(streams[i]));
+        AudioSource* source = reinterpret_cast<AudioSource*>(streams[i]);
 
         if (source->state != AudioSource::SOURCE_INITIAL) {
             return false;
@@ -704,7 +728,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
     if (!stream) {
         return false;
     }
-    auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(stream));
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
 
     if (source->state != AudioSource::SOURCE_INITIAL) {
         return false;
@@ -723,7 +747,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
         if (!streams[i]) {
             continue;
         }
-        auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(streams[i]));
+        AudioSource* source = reinterpret_cast<AudioSource*>(streams[i]);
         source->state = AudioSource::SOURCE_INITIAL;
 
         /* Remove source from all devices */
@@ -731,7 +755,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
             if (sdl_devices[d].id != 0) {
                 auto& sources = sdl_device_sources[d];
                 sources.erase(std::remove_if(sources.begin(), sources.end(),
-                    [&source](const std::shared_ptr<AudioSource>& s) { return s->id == source->id; }),
+                    [&source](const AudioSource* s) { return s->id == source->id; }),
                     sources.end());
             }
         }
@@ -745,7 +769,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
     if (!stream) {
         return;
     }
-    auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(stream));
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     source->state = AudioSource::SOURCE_INITIAL;
 
     /* Remove source from all devices */
@@ -753,7 +777,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
         if (sdl_devices[d].id != 0) {
             auto& sources = sdl_device_sources[d];
             sources.erase(std::remove_if(sources.begin(), sources.end(),
-                [&source](const std::shared_ptr<AudioSource>& s) { return s->id == source->id; }),
+                [&source](const AudioSource* s) { return s->id == source->id; }),
                 sources.end());
         }
     }
@@ -762,7 +786,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 /* Get the device associated with a stream. This will be used on several functions. */
 static int getDeviceFromStream(SDL_AudioStream *stream)
 {
-    auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(stream));
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     for (int d = 1; d < MAX_SDL_DEVICES; d++) {
         if (sdl_devices[d].id != 0) {
             for (const auto& sdl_source : sdl_device_sources[d]) {
@@ -795,6 +819,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
     source->format = sdlFormatToFormat(src_spec->format);
     source->channels = src_spec->channels;
     source->frequency = src_spec->freq;
+    source->state = AudioSource::SOURCE_INITIAL;
 
     return reinterpret_cast<SDL_AudioStream*>(source.get());
 }
@@ -803,7 +828,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
 
-    auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(stream));
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     if (src_spec) {
         src_spec->format = formatToSdlFormat(source->format);
         src_spec->channels = source->channels;
@@ -816,7 +841,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
 
-    auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(stream));
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     if (src_spec && source) {
         source->format = sdlFormatToFormat(src_spec->format);
         source->channels = src_spec->channels;
@@ -829,7 +854,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
 
-    auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(stream));
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     return source->pitch;
 }
 
@@ -837,7 +862,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
 
-    auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(stream));
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     source->pitch = ratio;
     return true;
 }
@@ -846,7 +871,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
 
-    auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(stream));
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     return source->volume;
 }
 
@@ -854,7 +879,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
 
-    auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(stream));
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     source->volume = gain;
     return true;
 }
@@ -886,7 +911,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 /* Override */ bool SDL_PutAudioStreamData(SDL_AudioStream *stream, const void *buf, int len)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_SOUND, "%s called with %d bytes", __func__, len);
-    auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(stream));
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
 
     AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
@@ -911,7 +936,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 /* Override */ int SDL_GetAudioStreamData(SDL_AudioStream *stream, void *buf, int len)
 {
     LOG(LL_TRACE, LCF_SDL | LCF_SOUND | LCF_TODO, "%s called with %d bytes", __func__, len);
-    auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(stream));
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
 
     std::lock_guard<std::mutex> lock(AudioContext::get().mutex);
 
@@ -940,7 +965,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
     LOGTRACE(LCF_SDL | LCF_SOUND | LCF_TODO);
 
     /* TODO: For now, we just return the number of available unconverted bytes */
-    auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(stream));
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     if (!source)
         return -1;
 
@@ -952,7 +977,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
 
-    auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(stream));
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     if (!source)
         return -1;
 
@@ -970,7 +995,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 {
     LOGTRACE(LCF_SDL | LCF_SOUND);
 
-    auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(stream));
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     if (!source)
         return -1;
 
@@ -1022,7 +1047,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
     LOGTRACE(LCF_SDL | LCF_SOUND);
 
     /* Only check this stream status */
-    auto source = std::shared_ptr<AudioSource>(reinterpret_cast<AudioSource*>(stream));
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     if (!source)
         return false;
 
@@ -1055,6 +1080,39 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
     if (ThreadManager::getThreadId() == AudioContext::get().audio_thread)
         return;
     mutex.unlock();
+}
+
+/* Override */ bool SDL_SetAudioStreamGetCallback(SDL_AudioStream *stream, SDL_AudioStreamCallback callback, void *userdata)
+{
+    LOGTRACE(LCF_SDL | LCF_SOUND | LCF_TODO);
+    return true;
+}
+
+/* Override */ bool SDL_SetAudioStreamPutCallback(SDL_AudioStream *stream, SDL_AudioStreamCallback callback, void *userdata)
+{
+    LOGTRACE(LCF_SDL | LCF_SOUND | LCF_TODO);
+    return true;
+}
+
+/* Override */ void SDL_DestroyAudioStream(SDL_AudioStream *stream)
+{
+    LOGTRACE(LCF_SDL | LCF_SOUND);
+
+    AudioSource* source = reinterpret_cast<AudioSource*>(stream);
+    if (!source)
+        return;
+
+    /* Remove source from all devices */
+    for (int d = 1; d < MAX_SDL_DEVICES; d++) {
+        if (sdl_devices[d].id != 0) {
+            auto& sources = sdl_device_sources[d];
+            sources.erase(std::remove_if(sources.begin(), sources.end(),
+                [&source](const AudioSource* s) { return s->id == source->id; }),
+                sources.end());
+        }
+    }
+
+    AudioContext::get().deleteSource(source->id);
 }
 
 /* Override */ void SDL_CloseAudio(void)

@@ -28,175 +28,578 @@
 
 namespace libtas {
 
-/* Class storing an audio source, whose role is to control the playback
- * of an audio buffer or a queue of audio buffers.
- * It is also in charge of eventually resample the buffer(s) and mix them
- * with an extern sample buffer.
+/**
+ * @class AudioSource
+ * @brief Controller for audio playback from one or more audio buffers.
+ *
+ * AudioSource manages the playback of audio data from one or more AudioBuffer objects.
+ * It provides multiple playback modes (static, streaming, callback-based), handles
+ * per-source volume and pitch control, manages buffer queuing, and coordinates
+ * resampling from source format to output format.
+ *
+ * Audio data flows through AudioSource as follows:
+ * 1. Buffers are queued via queueBuffer()
+ * 2. Playback state is controlled (play, pause, stop, rewind)
+ * 3. During mixing, mixWith() reads from the queue and resamples as needed
+ * 4. Processed buffers can be retrieved via reuseBuffer() for reuse
+ *
+ * The source maintains its own buffer queue, playback position, and resampling context.
+ * Multiple sources are mixed together by AudioContext.
+ *
+ * @see AudioBuffer for audio data representation
+ * @see AudioContext for source lifecycle and mixing coordination
+ * @see AudioConverter for resampling
  */
 class AudioSource
 {
     public:
+        /**
+         * @brief Constructs a new AudioSource.
+         *
+         * Initializes the source with default parameters. Call init() to set up
+         * the source for use.
+         */
         AudioSource();
 
-        /* Identifier of the buffer */
+        /**
+         * @brief Unique identifier for this source.
+         *
+         * Used by AudioContext and audio driver code to reference this source
+         * across the system. Assigned by AudioContext when source is created.
+         */
         int id;
 
-        /* Format, channels and frequency of the audio buffers contained in this source. */
+        /**
+         * @brief Audio format of buffers queued in this source.
+         *
+         * All buffers queued to this source must have matching format.
+         * Cannot be changed while source is playing. Set via init() or
+         * by directly configuring the source before queuing buffers.
+         *
+         * @see AudioBuffer::SampleFormat, channels, frequency, init()
+         */
         AudioBuffer::SampleFormat format;
+
+        /**
+         * @brief Number of audio channels in queued buffers.
+         *
+         * All buffers queued to this source must have matching channel count.
+         * Typical values: 1 (mono), 2 (stereo).
+         * Cannot be changed while source is playing.
+         *
+         * @see format, frequency, init()
+         */
         int channels;
+
+        /**
+         * @brief Sample rate of queued buffers in Hz.
+         *
+         * All buffers queued to this source must have matching frequency.
+         * Cannot be changed while source is playing. If source frequency differs
+         * from output frequency, automatic resampling is performed during mixing.
+         *
+         * @see format, channels, init()
+         */
         int frequency;
 
-        /* Position inside the buffer, in samples */
+        /**
+         * @brief Current playback position within the buffer queue in samples.
+         *
+         * Indicates where in the currently playing buffer(s) playback has advanced.
+         * Measured in samples from the start of the first buffer in the queue.
+         * Set via setPosition(), read via getPosition().
+         *
+         * @see setPosition(), getPosition(), samples_frac
+         */
         int position;
 
-        /* Because we might read a non-integer number of samples,
-         * we must keep track of the fractional part
+        /**
+         * @brief Fractional part of the playback position.
+         *
+         * When pitch != 1.0, the number of samples read per output sample
+         * may not be an integer. This variable tracks the fractional part
+         * of the position to maintain accuracy across multiple mixing operations.
+         *
+         * Example: if pitch=1.5, reading 100 samples moves position by 150.5,
+         * so position advances by 150 and samples_frac accumulates 0.5.
+         *
+         * @see position, pitch
          */
         int64_t samples_frac;
 
-        /* Volume of the source.
-         * Can be larger than 1 but output volume will be clamped to one */
+        /**
+         * @brief Playback volume for this source.
+         *
+         * Multiplier applied to samples from this source before mixing.
+         * Values greater than 1.0 amplify the signal. Output is typically
+         * clamped to prevent overflow.
+         *
+         * Range: [0.0, +inf), typical 0.0 to 1.0
+         * Default: 1.0
+         *
+         * @see volume, AudioContext::outVolume for master volume
+         */
         float volume;
 
-        /* Is it a static source (we got the entire buffer at once)
-         * or a streaming source (we continuously get buffers)
+        /**
+         * @brief Enumeration of audio source types.
+         *
+         * Defines how buffers are queued and played back.
          */
         enum SourceType {
+            /**
+             * @brief Source type not yet determined.
+             *
+             * Initial state before configuration.
+             */
             SOURCE_UNDETERMINED,
 
-            /* Source does only store one audio buffer, and stops at the end
-            * of it, or loop back.
-            */
+            /**
+             * @brief Static source with single buffer.
+             *
+             * Contains one audio buffer. Playback stops at the end, or loops
+             * if looping is enabled. Used by OpenAL-style sources, typically for
+             * sound effects and short audio. The audio driver provides the entire
+             * buffer at once during setup.
+             *
+             * @see looping, SOURCE_STREAMING
+             */
             SOURCE_STATIC,
 
-            /* Source stores a queue of buffers and read the next one when the
-            * current one is finish reading.
-            * The game can pull buffers from the queue that have been read
-            * entirely, and push more buffers
-            */
+            /**
+             * @brief Streaming source with queue of buffers.
+             *
+             * Contains a queue of buffers. When current buffer finishes,
+             * playback moves to next buffer. Fully-read buffers can be dequeued
+             * via reuseBuffer() and new buffers queued via queueBuffer().
+             * Source stops when queue is empty.
+             *
+             * Used by OpenAL, usually for music.
+             *
+             * @see SOURCE_STREAMING_CONTINUOUS
+             */
             SOURCE_STREAMING,
 
-            /* Same as streaming, but the source does not stop when reaching
-            * the end, it keeps waiting for new data. If set, it can call a 
-            * callback that may push more buffers to the source.
-            */
+            /**
+             * @brief Continuous streaming source.
+             *
+             * Like SOURCE_STREAMING, but does not stop when queue is empty.
+             * Instead, waits for new data to be pushed. Can call a callback
+             * function to allow the audio driver to push more buffers.
+             *
+             * Used by SDL and ALSA.
+             *
+             * @see SOURCE_STREAMING, SOURCE_CALLBACK
+             */
             SOURCE_STREAMING_CONTINUOUS,
 
-            /* Source stores only one audio buffer. When it is finished reading,
-            * it calls a callback function that refills the audio buffer
-            */
+            /**
+             * @brief Callback-based source.
+             *
+             * Contains one buffer. When playback reaches the end, the callback
+             * function is invoked to allow the audio driver to refill the buffer.
+             * 
+             * Used by SDL and cubeb.
+             *
+             * @see callback
+             */
             SOURCE_CALLBACK,
         };
+
+        /**
+         * @brief Type of this audio source.
+         *
+         * Determines how buffers are managed and played back.
+         *
+         * @see SourceType, init()
+         */
         SourceType source;
 
-        /* Is the audio buffer looping? */
+        /**
+         * @brief Whether this source loops at the end.
+         *
+         * If true, playback loops back to the beginning when reaching the end.
+         * Only meaningful for SOURCE_STATIC sources. For SOURCE_STREAMING and
+         * SOURCE_STREAMING_CONTINUOUS, behavior depends on buffer availability.
+         *
+         * @see loop_point_beg, loop_point_end in AudioBuffer
+         */
         bool looping;
 
-        /* Pitch multiplier of the played audio */
+        /**
+         * @brief Pitch/tempo multiplier for this source.
+         *
+         * Multiplier applied to the playback rate. Values > 1.0 play faster
+         * (higher pitch), values < 1.0 play slower (lower pitch).
+         *
+         * Implementation: affects how many input samples are read per output sample.
+         * A pitch of 2.0 reads twice as many samples per output sample, effectively
+         * doubling playback speed.
+         *
+         * Range: (0.0, +inf), typical 0.5 to 2.0
+         * Default: 1.0
+         *
+         * Note: Resampling is required to produce correct output.
+         *
+         * @see audioConverter, samples_frac
+         */
         float pitch;
 
-        /* State of the source */
+        /**
+         * @brief Enumeration of audio source playback states.
+         *
+         * Defines the current playback state of the source.
+         */
         enum SourceState {
+            /**
+             * @brief Source has been created but not configured.
+             *
+             * Initial state. Transition to PREPARED after configuration completed
+             */
             SOURCE_INITIAL,
+
+            /**
+             * @brief Source is ready to play but not currently playing.
+             *
+             * Mostly used by ALSA.
+             * Can transition to PLAYING by calling play or starting playback.
+             */
             SOURCE_PREPARED,
+
+            /**
+             * @brief Source is actively playing.
+             *
+             * Buffers are being read and mixed into the output.
+             * Position advances with each audio frame.
+             *
+             * @see mixWith()
+             */
             SOURCE_PLAYING,
+
+            /**
+             * @brief Source has stopped and will not play further.
+             *
+             * Playback reached the end without looping, or was explicitly stopped.
+             * Position is retained for potential resume or seeking.
+             */
             SOURCE_STOPPED,
+
+            /**
+             * @brief Source is paused and will resume from current position.
+             *
+             * Playback is temporarily suspended. Position is retained.
+             * Can resume from the same position by transitioning back to PLAYING.
+             */
             SOURCE_PAUSED,
+
+            /**
+             * @brief Buffer underrun condition.
+             *
+             * More audio was requested than is available. Source has insufficient
+             * data to fill the requested output. State typically transitions to
+             * STOPPED or PLAYING depending on recovery.
+             */
             SOURCE_UNDERRUN,
         };
+
+        /**
+         * @brief Current playback state of this source.
+         *
+         * Indicates the current state of playback. Control playback state
+         * through appropriate methods like init(), rewind(), etc.
+         *
+         * @see SourceState
+         */
         SourceState state;
 
-        /* In case of callback type, callback function.
-         * We send as an argument a pointer to the buffer to refill.
+        /**
+         * @brief Callback function for refilling buffer in SOURCE_CALLBACK mode.
+         *
+         * In SOURCE_CALLBACK mode, when the source finishes reading the buffer,
+         * this callback is invoked to allow the audio driver to refill the buffer
+         * with new audio data. The callback receives a reference to the buffer to fill.
+         *
+         * Function signature: void callback(AudioBuffer& buf)
+         *
+         * @see callback_data, SOURCE_CALLBACK
          */
         std::function<void(AudioBuffer&)> callback;
 
-        /* Callback data avaible to the callback function */
+        /**
+         * @brief User data pointer passed to callback function.
+         *
+         * Opaque pointer available to the callback function via callback_data.
+         * Can store any state needed by the callback.
+         *
+         * @see callback
+         */
         void* callback_data;
 
-        /* Returns the ratio of bytes per frame for the audio source */
+        /**
+         * @brief Returns the number of bytes per audio frame.
+         *
+         * Computed as: (bitDepth / 8) * channels
+         * This is the size of one audio frame across all channels.
+         *
+         * Example: stereo 16-bit audio returns 4 bytes per frame.
+         *
+         * @return Bytes per audio frame, or 0 if format is invalid
+         *
+         * @see format, channels, frequency
+         */
         int frameToByteRatio();
 
-        /* Helper function to convert ticks into a number of samples
-         * in the audio buffer
+        /**
+         * @brief Converts a time duration to a number of audio samples.
+         *
+         * Given a time duration as a timespec structure and a sample frequency,
+         * calculates the number of audio samples (frames) that would be read
+         * during that time period.
+         *
+         * Useful for converting timing information into sample-based offsets.
+         *
+         * @param[in] ticks Time duration as timespec (seconds + nanoseconds)
+         * @param[in] frequency Sample rate in Hz
+         *
+         * @return Number of samples for the given duration at the given frequency
+         *
+         * @see position, mixWith()
          */
         int ticksToSamples(struct timespec ticks, int frequency);
 
-        /* Init parameters */
+        /**
+         * @brief Initializes the source for use.
+         *
+         * Sets up the source with default configuration values (format, channels,
+         * frequency, source type, etc.) and clears buffers. Automatically called 
+         * on source creation, but can be called again when reusing a source.
+         *
+         * @see format, channels, frequency, source
+         */
         void init();
 
-        /* Rewind source to the beginning of the first buffer */
+        /**
+         * @brief Rewinds playback to the beginning of the first buffer.
+         *
+         * Resets the playback position to the start of the buffer queue.
+         * Does not change playback state; typically used before resuming playback
+         * or when seeking to the beginning.
+         *
+         * @see position, setPosition()
+         */
         void rewind();
 
-        /* Some parameters have changed, so we must set a new resample context */
+        /**
+         * @brief Marks source parameters as changed, requiring resampler reinitialization.
+         *
+         * Signals that audio parameters (frequency, channels, or format) may have
+         * changed. The resampler will reinitialize on the next mixing operation.
+         * Use this after modifying format, channels, or frequency.
+         *
+         * @see format, channels, frequency, audioConverter
+         */
         void dirty();
 
-        /* Returns the number of buffers in its queue */
+        /**
+         * @brief Returns the number of buffers currently queued.
+         *
+         * @return The number of AudioBuffer objects in the queue
+         *
+         * @see nbQueueProcessed(), queueSize(), buffer()
+         */
         int nbQueue() const;
 
-        /* Returns the number of buffers in its queue
-         * that are read until the end.
+        /**
+         * @brief Returns the number of queued buffers that have been fully processed.
+         *
+         * Processed buffers are those that have been completely read through and
+         * can be safely dequeued and reused. This is useful for the audio driver
+         * to know when buffers are available for recycling.
+         *
+         * @return Number of buffers in queue that have been fully read
+         *
+         * @see reuseBuffer(), nbQueue()
          */
         int nbQueueProcessed() const;
 
-        /* Return the buffer at the specified index */
+        /**
+         * @brief Retrieves a buffer from the queue by index.
+         *
+         * @param[in] index Index into the buffer queue (0 = first buffer)
+         *
+         * @return Shared pointer to the buffer at the given index, or nullptr if index is invalid
+         *
+         * @see nbQueue(), queueBuffer()
+         */
         const std::shared_ptr<AudioBuffer> buffer(int index) const;
 
-        /* Returns the sum of the sizes of each queued buffer (in samples) */
+        /**
+         * @brief Returns the total size of all queued buffers in samples.
+         *
+         * Sums the sample size (number of frames) of all buffers currently in
+         * the queue. Useful for understanding available playback time remaining.
+         *
+         * @return Total number of samples across all queued buffers
+         *
+         * @see nbQueue(), getPosition()
+         */
         int queueSize() const;
 
-        /* Get the position of playback inside a queue of buffers (in samples).
-         * The position is relate to the beginning of the first buffer in queue.
+        /**
+         * @brief Gets the current playback position within the buffer queue.
+         *
+         * Returns the position relative to the beginning of the first buffer.
+         * Measured in audio samples (frames).
+         *
+         * @return Current playback position in samples
+         *
+         * @see setPosition(), position
          */
         int getPosition() const;
 
-        /* Set the position of playback inside a queue of buffers (in samples).
-         * The position is relate to the beginning of the first buffer in queue.
+        /**
+         * @brief Sets the playback position within the buffer queue.
          *
-         * If pos is greater than the size of the buffer queue,
-         * the source is stopped.
+         * Seeks to a new position relative to the beginning of the queue.
          *
-         * Argument pos is expressed in samples
+         * @param[in] pos New playback position in samples, relative to queue start
+         *
+         * @pre pos >= 0
+         *
+         * @see getPosition(), position, queueSize()
          */
         void setPosition(int pos);
 
-        /* Push the buffer with the given ID to the queue, only if the buffer specs match the source specs.
+        /**
+         * @brief Adds a buffer to the playback queue.
+         *
+         * Queues an audio buffer for playback, but only if its format, channels,
+         * and frequency match the source configuration. Used for streaming sources
+         * to push new data as it becomes available.
+         *
+         * Returns error code indicating success or reason for failure.
+         *
+         * @param[in] buffer Shared pointer to the AudioBuffer to queue
+         *
+         * @return 0 on success, or error code if buffer specs don't match source specs
+         *
+         * @see unqueueBuffer(), reuseBuffer(), clearBuffers()
          */
         int queueBuffer(std::shared_ptr<AudioBuffer> buffer);
 
-        /* Remove the first buffer in the queue and returns its ID.
-         * If the queue is empty, returns -1.
+        /**
+         * @brief Removes and returns the first buffer from the queue.
+         *
+         * Dequeues the first (oldest) buffer in the queue regardless of whether
+         * it has been fully processed.
+         *
+         * @return The ID of the dequeued buffer, or -1 if queue is empty
+         *
+         * @see queueBuffer(), reuseBuffer()
          */
         int unqueueBuffer();
 
-        /* Remove and return the first buffer in the queue if it's been fully processed.
-         * Otherwise, returns nullptr.
+        /**
+         * @brief Retrieves and removes a fully processed buffer from the queue.
+         *
+         * Removes the first buffer only if playback has read through it entirely.
+         * Useful for the audio subsystem to recover buffers that are no longer
+         * needed, allowing reuse or deallocation.
+         *
+         * @return Shared pointer to a processed buffer, or nullptr if the first
+         *         buffer has not been fully read or the queue is empty
+         *
+         * @see unqueueBuffer(), queueBuffer(), AudioContext::reuseBufferFromSourceOrCreate()
          */
         std::shared_ptr<AudioBuffer> reuseBuffer();
 
-        /* Clear the buffer queue, and reset position */
+        /**
+         * @brief Clears all queued buffers and resets playback position.
+         *
+         * Removes all buffers from the queue and resets position to 0.
+         * Useful when stopping playback and needing to clean up.
+         *
+         * @see clearBuffers, queueBuffer()
+         */
         void clearBuffers();
 
-        /* Check if reading a number of ticks will reach the end of the source */
+        /**
+         * @brief Checks if playback will reach the end during a given time interval.
+         *
+         * Predicts whether the source will finish playing (reach the end of the
+         * buffer queue) if the given number of ticks are played. Used for predicting
+         * overrun during mixing, and waiting a bit to give the game a chance to push
+         * back audio data. 
+         *
+         * @param[in] ticks Time duration to check
+         *
+         * @return true if source will end during this time period, false otherwise
+         *
+         * @see position, queueSize(), ticksToSamples()
+         */
         bool willEnd(struct timespec ticks) const;
 
-        /* Mix the buffer with an external buffer of the given format.
-         * The number of samples to mix correspond to the number of ticks given.
-         * The function returns the number of samples written in the output buffer.
+        /**
+         * @brief Mixes this source's audio into an external output buffer.
+         *
+         * Reads audio from the queued buffers, applies resampling if needed,
+         * applies per-source volume, and mixes into the provided output buffer.
+         * Advances the playback position based on the duration specified.
+         *
+         * This is the core mixing operation that AudioContext calls for each
+         * active source during each frame.
+         *
+         * Process:
+         * 1. Determine samples to read based on ticks and output frequency
+         * 2. Read samples from current buffer position
+         * 3. Resample from source format to output format if needed
+         * 4. Apply per-source volume
+         * 5. Mix into output buffer (add to existing values)
+         * 6. Update position, handling buffer queue transitions
+         *
+         * @param[in] ticks Duration to mix (in timespec format)
+         * @param[out] outSamples Output buffer to mix into (must be pre-allocated)
+         * @param[in] outBytes Size of output buffer in bytes
+         * @param[in] outBitDepth Bit depth of output format
+         * @param[in] outNbChannels Number of channels in output
+         * @param[in] outFrequency Sample rate of output
+         * @param[in] outVolume Master volume to apply
+         *
+         * @return Number of samples written to output buffer
+         *
+         * @note Output buffer is modified in-place (mixed with existing data, not replaced)
+         *
+         * @see AudioContext::mixAllSources(), volume, pitch, audioConverter
          */
         int mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume);
 
     private:
-        /* A queue of buffers to play */
+        /**
+         * @brief Queue of audio buffers to be played sequentially.
+         * @internal
+         */
         std::vector<std::shared_ptr<AudioBuffer>> buffer_queue;
 
-        /* Indicate the current position in the buffer queue */
+        /**
+         * @brief Index of the currently playing buffer in the queue.
+         * @internal
+         */
         int queue_index;
 
-        /* Object for resampling audio */
+        /**
+         * @brief Audio converter for resampling from source to output format.
+         * @internal
+         * Created lazily on first use. Resamples source audio if source frequency
+         * or format differs from output frequency or format.
+         */
         std::unique_ptr<AudioConverter> audioConverter;
 
-        /* Temporary array of mixed samples */
+        /**
+         * @brief Temporary buffer for mixed source samples.
+         * @internal
+         * Stores resampled samples before mixing into the final output buffer.
+         * Used to apply per-source processing before final mixing.
+         */
         std::vector<uint8_t> mixedSamples;
 
 

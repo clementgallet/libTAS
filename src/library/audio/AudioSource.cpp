@@ -184,7 +184,7 @@ int AudioSource::queueBuffer(std::shared_ptr<AudioBuffer> buffer)
     frequency = buffer->frequency;
 
     buffer_queue.push_back(buffer);
-    return buffer->id;
+    return 0;
 }
 
 int AudioSource::unqueueBuffer()

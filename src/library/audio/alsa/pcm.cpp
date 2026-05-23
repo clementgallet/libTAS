@@ -589,7 +589,7 @@ snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_ufr
 
     /* We try to reuse a buffer that has been processed from the source */
     /* The buffer is already filled with the source specs. */
-    std::shared_ptr<AudioBuffer> ab = audiocontext.reuseBufferFromSourceOrCreate(source);
+    std::shared_ptr<AudioBuffer> ab = audiocontext.reuseBufferFromSourceOrCreate(source.get());
 
     /* Filling buffer */
     ab->sampleSize = size;
@@ -642,7 +642,7 @@ int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd
     auto source = audiocontext.getSource(sourceId);
 
     /* We try to reuse a buffer that has been processed from the source */
-    std::shared_ptr<AudioBuffer> mmap_ab = audiocontext.reuseBufferFromSourceOrCreate(source);
+    std::shared_ptr<AudioBuffer> mmap_ab = audiocontext.reuseBufferFromSourceOrCreate(source.get());
 
     /* Configuring the buffer */
     mmap_ab->sampleSize = *frames;

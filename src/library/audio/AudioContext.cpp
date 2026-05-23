@@ -123,7 +123,7 @@ std::shared_ptr<AudioBuffer> AudioContext::createBuffer(void)
     return newab;
 }
 
-std::shared_ptr<AudioBuffer> AudioContext::reuseBufferFromSourceOrCreate(std::shared_ptr<AudioSource> source)
+std::shared_ptr<AudioBuffer> AudioContext::reuseBufferFromSourceOrCreate(AudioSource* source)
 {
     auto buffer = source->reuseBuffer();
     if (buffer)

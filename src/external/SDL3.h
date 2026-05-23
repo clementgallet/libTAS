@@ -1746,6 +1746,12 @@ typedef enum SDL_TextureAddressMode
     SDL_TEXTURE_ADDRESS_WRAP    /**< The texture is repeated (tiled) */
 } SDL_TextureAddressMode;
 
+enum
+{
+    SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK  = 0xFFFFFFFFu,
+    SDL_AUDIO_DEVICE_DEFAULT_RECORDING = 0xFFFFFFFEu
+};
+
 typedef struct SDL_AudioSpec
 {
     SDL_AudioFormat format;     /**< Audio data format */
