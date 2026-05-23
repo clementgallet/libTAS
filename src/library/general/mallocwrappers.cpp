@@ -20,6 +20,7 @@
 #include "mallocwrappers.h"
 
 #include "logging.h"
+#include "GlobalState.h"
 
 #include <cstdlib>
 
@@ -27,6 +28,12 @@ namespace libtas {
 
 void *malloc (size_t size) __THROW
 {
+    /* Some custom implementation of malloc can call a function that we hook, 
+     * and our function ultimately calls malloc, which creates a deadlock.
+     * Example: Antichamber (Unreal) uses tcmalloc, and has the following softlock:
+     * - malloc() -> libtas::getpid() -> backtrace_symbols() -> malloc()
+     * Marking the call as native can mitigate the deadlock. */
+    GlobalNative gn;
     return calloc(1, size);
 }
 
