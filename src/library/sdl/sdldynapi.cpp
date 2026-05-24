@@ -125,9 +125,9 @@ void setDynapiAddr(uint64_t addr)
     /* Now save original pointers while replacing them with our hooks. */
     void **entries = static_cast<void **>(table);
 
-    if (tablesize > (sizeof(orig_sdl_table) / sizeof(orig_sdl_table[0]))) {
+    if (tablesize > sizeof(orig_sdl_table)) {
         LOG(LL_WARN, LCF_SDL | LCF_HOOK, "   The game loaded more functions that intended. SDL3_dynapi_procs.h probably needs to be updated.");
-        tablesize = (sizeof(orig_sdl_table) / sizeof(orig_sdl_table[0]));
+        tablesize = sizeof(orig_sdl_table);
     }
     memcpy(orig_sdl_table, table, tablesize);
 

@@ -71,7 +71,7 @@ static bool windowFullscreen = false;
     frameBoundary([] () {orig::SDL_GL_SwapBuffers();}, renderHUD_GL);
 }
 
-/* Override */ void SDL_GL_SwapWindow(SDL_Window* window)
+/* Override */ void sdl2::SDL_GL_SwapWindow(SDL_Window* window)
 {
     if (GlobalState::isNative())
         return ORIG_SDL2_CALL(SDL_GL_SwapWindow, (window));
@@ -177,7 +177,7 @@ bool SDL_GL_DestroyContext(SDL_GLContext context)
     return swapInterval;
 }
 
-/* Override */ SDL_Window* SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
+/* Override */ SDL_Window* sdl2::SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: %x", __func__,  title?title:"", x, y, w, h, flags);
 
     ThreadManager::setMainThread();
@@ -544,7 +544,7 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
     return ret;
 }
 
-/* Override */ bool SDL_SetWindowPosition(SDL_Window*, int x, int y)
+/* Override */ void sdl2::SDL_SetWindowPosition(SDL_Window*, int x, int y)
 {
     LOGTRACE(LCF_SDL | LCF_WINDOW);
     /* Preventing the game to change the window position, but still push the event */
@@ -563,8 +563,6 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
     event.type = sdl2::SDL_WINDOWEVENT;
     event.window.event = sdl2::SDL_WINDOWEVENT_EXPOSED;
     sdlEventQueue.insert(&event);
-
-    return true;
 }
 
 /* Override */ bool sdl3::SDL_SetWindowPosition(SDL_Window *window, int x, int y)
