@@ -78,7 +78,7 @@ void add_lib(const char* library);
  * symbols that are not from libtas.so, otherwise only return
  * symbols that are from libtas.so.
  */
-void *find_sym(const char* name, bool original = false);
+void *find_sym(const char* name);
 
 OVERRIDE void *dlopen(const char *file, int mode) __THROW;
 OVERRIDE void *dlsym(void *handle, const char *name) __THROW;

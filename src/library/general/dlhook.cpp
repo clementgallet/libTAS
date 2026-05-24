@@ -287,24 +287,34 @@ __attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
     return result;
 }
 
-void *find_sym(const char *name, bool original) {
+void *find_sym(const char *name) {
+    GlobalNative gn;
+
+    char* libtaspath = getenv("LIBTAS_LIBRARY_PATH");
+    if (libtaspath == nullptr) {
+        LOG(LL_ERROR, LCF_HOOK, "   LIBTAS_LIBRARY_PATH is not set, guess libtas.so path");
+        return nullptr;
+    }
+    std::string libtasstr = libtaspath;
+
+    void *libtaslib = dlopen(libtaspath, RTLD_LAZY | RTLD_NOLOAD);
+    if (libtaslib == nullptr) {
+        LOG(LL_ERROR, LCF_HOOK, "   Could not find already loaded libtas.so!");
+        return nullptr;
+    }
+
     dlerror(); // Clear pending errors
-    void *addr = orig::dlsym(RTLD_DEFAULT, name);
+    void *addr = orig::dlsym(libtaslib, name);
     if (dlerror() == nullptr) {
         Dl_info info;
         int res = dladdr(addr, &info);
         if (res != 0) {
             std::string libpath = info.dli_fname;
-            const char* libtaspath = nullptr;
-            NATIVECALL(libtaspath = getenv("LIBTAS_LIBRARY_PATH"));
             bool fromLibtas = false;
-            if (libtaspath != nullptr) {
-                std::string libtasstr = libtaspath;
-                fromLibtas = libpath.length() >= libtasstr.length() &&
-                    libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0;
-            }
-            if (original == fromLibtas) {
-                addr = nullptr;
+            fromLibtas = libpath.length() >= libtasstr.length() &&
+                libpath.compare(libpath.length()-libtasstr.length(), libtasstr.length(), libtasstr) == 0;
+            if (!fromLibtas) {
+                return nullptr;
             }
         }
     }
