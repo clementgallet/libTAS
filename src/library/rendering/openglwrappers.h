@@ -104,7 +104,6 @@ OVERRIDE void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLi
 void myglCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
 
 /* Framebuffer attachment optimization hooks */
-OVERRIDE void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
 void myglFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
 
 // OVERRIDE void glDisable(GLenum cap);
