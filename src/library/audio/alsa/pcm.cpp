@@ -642,7 +642,7 @@ int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd
     auto source = audiocontext.getSource(sourceId);
 
     /* We try to reuse a buffer that has been processed from the source */
-    std::shared_ptr<AudioBuffer> mmap_ab = audiocontext.reuseBufferFromSourceOrCreate(source.get());
+    mmap_ab = audiocontext.reuseBufferFromSourceOrCreate(source.get());
 
     /* Configuring the buffer */
     mmap_ab->sampleSize = *frames;
