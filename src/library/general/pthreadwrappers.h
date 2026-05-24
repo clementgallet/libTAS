@@ -110,12 +110,6 @@ OVERRIDE int pthread_cancel (pthread_t th);
    cancelled.  */
 OVERRIDE void pthread_testcancel (void);
 
-/* Wait for SEM being posted.
-
-   This function is a cancellation point and therefore not marked with
-   __THROW.  */
-OVERRIDE int sem_wait (sem_t *sem);
-
 /* Similar to `sem_wait' but wait only until ABSTIME.
 
    This function is a cancellation point and therefore not marked with
@@ -124,9 +118,6 @@ OVERRIDE int sem_timedwait (sem_t *sem, const struct timespec *abstime);
 
 /* Test whether SEM is posted.  */
 OVERRIDE int sem_trywait (sem_t *sem) __THROW;
-
-/* Post SEM.  */
-OVERRIDE int sem_post (sem_t *sem) __THROW;
 
 OVERRIDE int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize) __THROW;
 

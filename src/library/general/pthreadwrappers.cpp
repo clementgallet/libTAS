@@ -534,16 +534,6 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     RETURN_NATIVE(pthread_testcancel, (), "libpthread.so");
 }
 
-/* Override */ int sem_wait (sem_t *sem)
-{
-    LINK_NAMESPACE_VERSION(sem_wait, "pthread", "GLIBC_2.1");
-    if (GlobalState::isNative())
-        return orig::sem_wait(sem);
-
-    LOG(LL_TRACE, LCF_WAIT, "sem_wait call with %p", sem);
-    return orig::sem_wait(sem);
-}
-
 /* Override */ int sem_timedwait (sem_t * sem, const struct timespec *abstime)
 {
     RETURN_IF_NATIVE(sem_timedwait, (sem, abstime), "libpthread.so");
@@ -581,16 +571,6 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 
     LOGTRACE(LCF_WAIT | LCF_TODO);
     return orig::sem_trywait(sem);
-}
-
-/* Override */ int sem_post (sem_t *sem) __THROW
-{
-    LINK_NAMESPACE_VERSION(sem_post, "pthread", "GLIBC_2.1");
-    if (GlobalState::isNative())
-        return orig::sem_post(sem);
-
-    LOG(LL_TRACE, LCF_WAIT, "%s called with sem %p", __func__, sem);
-    return orig::sem_post(sem);
 }
 
 int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksize) __THROW
