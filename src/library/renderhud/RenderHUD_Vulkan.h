@@ -38,18 +38,17 @@ class RenderHUD_Vulkan : public RenderHUD_Base_MacOS
 
         void init();
 
-        /* Destroy context */
+        /**
+         * @brief Cleans up Vulkan HUD resources.
+         */
         static void fini();
 
         void newFrame();
 
         void render();
         
-        /* Does the backend supports rendering the game inside an ImGui window? */
         bool supportsGameWindow() {return true;}
 
-        /* Does the backend supports extending the window size to use it as
-         * a working area when game window is detached? */
         bool supportsLargerViewport() {return false;}
 
         bool invertedOrigin() {return false;}

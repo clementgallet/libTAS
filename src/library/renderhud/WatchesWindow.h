@@ -24,12 +24,29 @@
 
 namespace libtas {
 
+/**
+ * @namespace WatchesWindow
+ * @brief Helper namespace for memory watch in the HUD.
+ */
 namespace WatchesWindow
 {
+    /**
+     * @brief Adds a new watch string to the window.
+     *
+     * @param[in] watch String to show
+     */
     void insert(std::string watch);
 
+    /**
+     * @brief Clears all watch strings.
+     */
     void reset();
 
+    /**
+     * @brief Draws the watch window.
+     *
+     * @param[in,out] p_open Controls whether the watch window is visible
+     */
     void draw(bool* p_open);
 }
 

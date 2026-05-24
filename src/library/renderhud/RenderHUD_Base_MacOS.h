@@ -25,9 +25,13 @@
 #include <stdint.h>
 
 namespace libtas {
-/* This class provide a method to create a surface from
- * a text, using Core Text API. It returns a standard
- * 32-bit surface using the ARGB mask, encapsulated in a SurfaceARGB object.
+/**
+ * @class RenderHUD_Base_MacOS
+ * @brief macOS-specific base class for HUD rendering backends.
+ *
+ * Provides macOS platform integration for HUD rendering, including text
+ * surface creation using Core Text APIs. Subclasses may extend this class to
+ * implement renderer-specific HUD behavior on macOS.
  */
 class RenderHUD_Base_MacOS : public RenderHUD
 {

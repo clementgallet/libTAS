@@ -24,9 +24,25 @@
 
 namespace libtas {
 
+/**
+ * @namespace FileDebug
+ * @brief Helper namespace for file-processing HUD debug output.
+ */
 namespace FileDebug
 {
+    /**
+     * @brief Updates file debug state for the current frame.
+     *
+     * @param[in] framecount Current frame index
+     */
     void update(uint64_t framecount);
+    
+    /**
+     * @brief Draws the file debug window.
+     *
+     * @param[in] framecount Current frame index
+     * @param[in,out] p_open Controls whether the file debug window is visible
+     */
     void draw(uint64_t framecount, bool* p_open);
 }
 

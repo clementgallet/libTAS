@@ -29,9 +29,17 @@ struct SDL_Texture;
 
 namespace libtas {
 
+/**
+ * @class ScreenCapture_SDL3_Renderer
+ * @brief SDL3 renderer-based screen capture implementation.
+ *
+ * Captures frames produced by the SDL3 rendering pipeline.
+ */
 class ScreenCapture_SDL3_Renderer : public ScreenCapture_Impl {
 
-/* Initiate the internal variables and buffers, and get the screen dimensions
+public:
+
+    /* Initiate the internal variables and buffers, and get the screen dimensions
  * @return 0 if successful or -1 if an error occured
  */
 int init();

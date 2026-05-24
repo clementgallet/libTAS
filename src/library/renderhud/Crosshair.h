@@ -24,8 +24,19 @@
 
 namespace libtas {
 
+/**
+ * @namespace Crosshair
+ * @brief Helper namespace for rendering an input-driven crosshair overlay.
+ *
+ * Draws the HUD crosshair based on the current pointer and input state.
+ */
 namespace Crosshair
 {
+    /**
+     * @brief Draws the crosshair overlay.
+     *
+     * @param[in] ai Current input state used to position the crosshair
+     */
     void draw(const AllInputsFlat& ai);
 }
 

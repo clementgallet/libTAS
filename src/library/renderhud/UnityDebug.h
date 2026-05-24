@@ -28,6 +28,10 @@
 
 namespace libtas {
 
+/**
+ * @namespace UnityDebug
+ * @brief Helper namespace for Unity-specific HUD debugging visualizations.
+ */
 namespace UnityDebug
 {
     // From ImPlot
@@ -50,10 +54,27 @@ namespace UnityDebug
         void AddPoint(float x, float y, int tid);
     };
 
+    /**
+     * @brief Updates Unity debug state for the current frame.
+     *
+     * @param[in] framecount Current frame index
+     */
     void update(uint64_t framecount);
 
+    /**
+     * @brief Updates preload progress for Unity debug display.
+     *
+     * @param[in] added_count Number of items added to preload
+     * @param[in] processed_count Number of items processed so far
+     */
     void update_preload(int added_count, int processed_count);
 
+    /**
+     * @brief Draws the Unity debug window.
+     *
+     * @param[in] framecount Current frame index
+     * @param[in,out] p_open Controls whether the Unity debug window is visible
+     */
     void draw(uint64_t framecount, bool* p_open);
 }
 

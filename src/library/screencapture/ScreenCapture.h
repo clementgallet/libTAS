@@ -27,57 +27,135 @@
 
 namespace libtas {
 
+/**
+ * @class ScreenCapture
+ * @brief Facade for the screen capture subsystem.
+ *
+ * This class provides a static interface to the active screen capture backend.
+ * It delegates actual capture operations to a concrete ScreenCapture_Impl
+ * implementation selected at runtime.
+ *
+ * The static API manages lifecycle, screen dimensions, and the capture flow:
+ * initialization, screen copy, pixel extraction, and optional restoration of
+ * the screen state.
+ *
+ * @note This interface is used internally by the screen capture subsystem and
+ *       its driver implementations.
+ */
 class ScreenCapture {
 
 public:
-    /* Initiate the internal variables and buffers, and get the screen dimensions
-     * @return 0 if successful or -1 if an error occured
+    /**
+     * @brief Initializes the screen capture subsystem.
+     *
+     * Creates the selected backend implementation, allocates internal buffers,
+     * and detects the current screen dimensions.
+     *
+     * @return 0 on success, -1 on error
      */
     static int init();
 
-    /* Create the screen buffer/surface/texture */
-    // virtual void initScreenSurface() {}
-
-    /* Called when screen is closed */
+    /**
+     * @brief Shuts down the screen capture subsystem.
+     *
+     * Cleans up allocated buffers and releases the backend implementation.
+     */
     static void fini();
 
-    /* Destroy the screen buffer/surface/texture */
-    // virtual void destroyScreenSurface() {}
-
-    /* Called when the screen has been resized */
+    /**
+     * @brief Resizes the capture buffers to match the new screen dimensions.
+     *
+     * Called when the window or rendering target changes size.
+     *
+     * @param[in] w New width in pixels
+     * @param[in] h New height in pixels
+     */
     static void resize(int w, int h);
 
+    /**
+     * @brief Returns whether screen capture has been initialized.
+     *
+     * @return true if init() completed successfully and a backend is available
+     */
     static bool isInited();
 
-    /* Get the current dimensions of the screen */
+    /**
+     * @brief Retrieves the current screen dimensions.
+     *
+     * @param[out] w Width in pixels
+     * @param[out] h Height in pixels
+     */
     static void getDimensions(int& w, int& h);
 
-    /* Get the size of the pixel array */
+    /**
+     * @brief Returns the number of bytes in the current pixel buffer.
+     *
+     * @return Size of the pixel array in bytes
+     */
     static int getSize();
 
-    /* Get the pixel format as an string used by nut muxer. */
+    /**
+     * @brief Returns the pixel format identifier used by the video muxer.
+     *
+     * The returned string is the format name expected by the NUT muxer.
+     *
+     * @return Null-terminated pixel format string
+     */
     static const char* getPixelFormat();
 
-    /* Copy the current screen to the screen buffer/surface/texture.
-     * This surface is optimized for rendering, so it may be stored on GPU. */
+    /**
+     * @brief Copies the current screen contents into the internal capture surface.
+     *
+     * The capture surface may be GPU-backed or platform-specific. This method
+     * prepares the frame for later pixel extraction.
+     *
+     * @return Number of bytes captured on success, or -1 on failure
+     */
     static int copyScreenToSurface();
 
-    /* Transfer pixels from the screen buffer/surface/texture into an array, pointed by `pixels`
-     * Returns the size of the array. */
+    /**
+     * @brief Extracts pixels from the capture surface into a CPU-accessible buffer.
+     *
+     * The pixel buffer is returned through the provided pointer and may be
+     * reused until the next capture operation.
+     *
+     * @param[out] pixels Output pointer that receives the pixel buffer address
+     * @param[in] draw Whether the surface should be drawn before extraction
+     *
+     * @return Size of the pixel buffer in bytes
+     */
     static int getPixelsFromSurface(uint8_t **pixels, bool draw);
 
-    /* Copy back the stored screen buffer/surface/texture into the screen. */
+    /**
+     * @brief Restores the stored capture surface back into the screen.
+     *
+     * This is used when the capture backend modifies the screen contents and
+     * the original frame must be restored before the next render.
+     *
+     * @return 0 on success, or -1 on failure
+     */
     static int copySurfaceToScreen();
 
-    /* Restore the state of the screen (backbuffer usually), because some methods
-     * of rendering reuse the backbuffer from the previous frame.
-     * It is equivalent to `copySurfaceToScreen()` in most cases. */
+    /**
+     * @brief Restores the original screen state after capture.
+     *
+     * Equivalent to copySurfaceToScreen() in most backends, but may perform
+     * additional restoration steps when needed.
+     */
     static void restoreScreenState();
 
-    /* Return an opaque identifier of the screen texture that was rendered to */
+    /**
+     * @brief Returns an opaque identifier for the current render target.
+     *
+     * Useful for backends that render into a texture or GPU surface.
+     *
+     * @return Opaque texture or surface identifier, or 0 when unsupported
+     */
     static uint64_t screenTexture();
 
-    /* Clear the screen */
+    /**
+     * @brief Clears the current capture target.
+     */
     static void clearScreen();
 
     /* width and height before screen capture has been implemented */

@@ -24,8 +24,18 @@
 
 namespace libtas {
 
+/**
+ * @namespace AudioDebug
+ * @brief Helper namespace for audio-related HUD debugging output.
+ */
 namespace AudioDebug
 {
+    /**
+     * @brief Draws the audio debug overlay.
+     *
+     * @param[in] framecount Current frame index
+     * @param[in,out] p_open Controls whether the audio debug window is visible
+     */
     void draw(uint64_t framecount, bool* p_open);
 
 }

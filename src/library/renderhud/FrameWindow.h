@@ -25,10 +25,26 @@
 
 namespace libtas {
 
+/**
+ * @namespace FrameWindow
+ * @brief Helper namespace for displaying frame counts.
+ */
 namespace FrameWindow
 {
+    /**
+     * @brief Sets an optional marker text shown in the frame window.
+     *
+     * @param[in] text Marker text to display
+     */
     void setMarkerText(std::string text);
 
+    /**
+     * @brief Draws the framecount and non-draw count window.
+     *
+     * @param[in] framecount Rendered frame index
+     * @param[in] nondraw_framecount Number of frames without drawing activity
+     * @param[in,out] p_open Controls whether the frame window is visible
+     */
     void draw(uint64_t framecount, uint64_t nondraw_framecount, bool* p_open);
 }
 

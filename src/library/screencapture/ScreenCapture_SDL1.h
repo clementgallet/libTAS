@@ -31,6 +31,12 @@ namespace sdl1 {
 class SDL_Surface;
 }
 
+/**
+ * @class ScreenCapture_SDL1
+ * @brief SDL1-based screen capture implementation.
+ *
+ * Captures the screen via SDL 1.x surface APIs.
+ */
 class ScreenCapture_SDL1 : public ScreenCapture_Impl {
 
 public:

@@ -36,18 +36,27 @@ class RenderHUD_SDL2_renderer : public RenderHUD_Base_MacOS
 #endif
 {
     public:
+        /**
+         * @class RenderHUD_SDL2_renderer
+         * @brief SDL2 renderer-based HUD backend.
+         *
+         * Implements HUD rendering using the SDL2 rendering API.
+         */
         ~RenderHUD_SDL2_renderer();
+
+        /**
+         * @brief Sets the SDL2 renderer used by the HUD backend.
+         *
+         * @param[in] r SDL_Renderer pointer to use for rendering
+         */
         void setRenderer(SDL_Renderer* r);
 
         void newFrame();
 
         void render();
 
-        /* Does the backend supports rendering the game inside an ImGui window? */
         bool supportsGameWindow() {return true;}
 
-        /* Does the backend supports extending the window size to use it as
-         * a working area when game window is detached? */
         bool supportsLargerViewport() {return false;}
 
     private:

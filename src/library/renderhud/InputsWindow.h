@@ -25,10 +25,27 @@
 
 namespace libtas {
 
+/**
+ * @namespace InputsWindow
+ * @brief Helper namespace for rendering current and preview input state.
+ */
 namespace InputsWindow
 {
+    /**
+     * @brief Draws the inputs debug window.
+     *
+     * @param[in] ai Current input state
+     * @param[in] preview_ai Preview input state for HUD display
+     * @param[in,out] p_open Controls whether the inputs window is visible
+     */
     void draw(const AllInputsFlat& ai, const AllInputsFlat& preview_ai, bool* p_open);
     
+    /**
+     * @brief Formats input state for textual display.
+     *
+     * @param[in] ai Current input state
+     * @return String representation of the inputs
+     */
     std::string formatInputs(const AllInputsFlat& ai);
 
 }

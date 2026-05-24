@@ -27,6 +27,12 @@
 
 namespace libtas {
 
+/**
+ * @class ScreenCapture_VDPAU
+ * @brief VDPAU-based screen capture implementation.
+ *
+ * Captures GPU-rendered frames using the VDPAU API.
+ */
 class ScreenCapture_VDPAU : public ScreenCapture_Impl {
 
 public:

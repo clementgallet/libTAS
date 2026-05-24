@@ -31,6 +31,12 @@ namespace sdl2 {
 }
 struct SDL_Texture;
 
+/**
+ * @class ScreenCapture_SDL2_Surface
+ * @brief SDL2 surface-based screen capture implementation.
+ *
+ * Captures the screen by reading from SDL2 surfaces.
+ */
 class ScreenCapture_SDL2_Surface : public ScreenCapture_Impl {
 
 public:

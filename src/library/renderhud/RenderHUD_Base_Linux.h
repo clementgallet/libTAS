@@ -23,7 +23,14 @@
 #define LIBTAS_RENDERHUD_BASE_LINUX_H_INCL
 
 namespace libtas {
-/* Specific methods for Linux */
+/**
+ * @class RenderHUD_Base_Linux
+ * @brief Linux-specific base class for HUD rendering backends.
+ *
+ * Provides Linux platform integration for HUD implementations. This class is
+ * a common ancestor for Linux-specific HUD backends and can be extended by
+ * renderer-specific subclasses.
+ */
 class RenderHUD_Base_Linux : public RenderHUD
 {
     public:

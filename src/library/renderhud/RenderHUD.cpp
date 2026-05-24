@@ -342,11 +342,6 @@ bool RenderHUD::renderGameWindow()
     return show_game_window;    
 }
 
-void RenderHUD::detachGameWindow()
-{
-    show_game_window = true;
-}
-
 void RenderHUD::scaleMouseInputs(MouseInputs* mi)
 {
     if (!Global::shared_config.mouse_support)

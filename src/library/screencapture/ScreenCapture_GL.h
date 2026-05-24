@@ -27,6 +27,12 @@
 
 namespace libtas {
 
+/**
+ * @class ScreenCapture_GL
+ * @brief OpenGL-based screen capture implementation.
+ *
+ * Captures the rendered frame using OpenGL framebuffer and texture resources.
+ */
 class ScreenCapture_GL : public ScreenCapture_Impl {
 public:
     /* Initiate the internal variables and buffers, and get the screen dimensions

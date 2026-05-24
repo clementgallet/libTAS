@@ -27,6 +27,13 @@
 
 namespace libtas {
 
+/**
+ * @namespace LuaDraw
+ * @brief Helper namespace for rendering Lua-driven overlay primitives.
+ *
+ * Provides shape abstractions and rendering helpers for Lua-generated HUD
+ * drawing commands.
+ */
 namespace LuaDraw
 {
 
@@ -36,6 +43,10 @@ struct LuaShape
     virtual bool isInbound() = 0;
 };
 
+/**
+ * @struct LuaText
+ * @brief Represents a text shape drawn by Lua scripts.
+ */
 struct LuaText : public LuaShape
 {
     std::string text;
@@ -52,6 +63,10 @@ struct LuaText : public LuaShape
     bool isInbound() override {return true;}
 };
 
+/**
+ * @struct LuaWindow
+ * @brief Represents a Lua-drawn window overlay.
+ */
 struct LuaWindow : public LuaShape
 {
     std::string id;
@@ -62,6 +77,10 @@ struct LuaWindow : public LuaShape
     bool isInbound() override {return true;}
 };
 
+/**
+ * @struct LuaPixel
+ * @brief Represents a single pixel drawn by Lua scripts.
+ */
 struct LuaPixel : public LuaShape
 {
     float x;
@@ -71,6 +90,10 @@ struct LuaPixel : public LuaShape
     bool isInbound() override;
 };
 
+/**
+ * @struct LuaRect
+ * @brief Represents a rectangle shape drawn by Lua scripts.
+ */
 struct LuaRect : public LuaShape
 {
     float x;
@@ -84,6 +107,10 @@ struct LuaRect : public LuaShape
     bool isInbound() override;
 };
 
+/**
+ * @struct LuaLine
+ * @brief Represents a line shape drawn by Lua scripts.
+ */
 struct LuaLine : public LuaShape
 {
     float x0;
@@ -95,6 +122,10 @@ struct LuaLine : public LuaShape
     bool isInbound() override;
 };
 
+/**
+ * @struct LuaQuad
+ * @brief Represents a quadrilateral shape drawn by Lua scripts.
+ */
 struct LuaQuad : public LuaShape
 {
     float x0;
@@ -112,6 +143,10 @@ struct LuaQuad : public LuaShape
     bool isInbound() override;
 };
 
+/**
+ * @struct LuaEllipse
+ * @brief Represents an ellipse shape drawn by Lua scripts.
+ */
 struct LuaEllipse : public LuaShape
 {
     float center_x;
@@ -125,15 +160,36 @@ struct LuaEllipse : public LuaShape
     bool isInbound() override;
 };
 
-/* Process incoming data from libTAS program */
+/**
+ * @brief Processes an incoming Lua drawing message.
+ *
+ * @param[in] message Message identifier received from libTAS
+ */
 void processSocket(int message);
 
-/* Clear all lua drawings */
+/**
+ * @brief Clears all Lua drawing primitives.
+ */
 void reset();
 
+/**
+ * @brief Renders the current Lua drawing buffer.
+ *
+ * @param[in] draw_list ImGui draw list to render into
+ * @param[in] offset Offset applied to drawn shapes
+ * @param[in] scale Scale applied to drawn shapes
+ */
 void draw(ImDrawList* draw_list, ImVec2 offset, float scale);
 
-/* Check if lua shape is inbound */
+/**
+ * @brief Tests whether a Lua shape lies within a given bounding box.
+ *
+ * @param[in] min_x Minimum x coordinate
+ * @param[in] min_y Minimum y coordinate
+ * @param[in] max_x Maximum x coordinate
+ * @param[in] max_y Maximum y coordinate
+ * @return true if the shape is inbound to the box
+ */
 bool isInbound(float min_x, float min_y, float max_x, float max_y);
 
 }

@@ -27,13 +27,54 @@
 
 namespace libtas {
 
+/**
+ * @namespace ProfilerDebug
+ * @brief Helper namespace for rendering profiling data in the HUD.
+ *
+ * Provides functions for converting profiler timestamps into screen
+ * positions and drawing frame and node timing overlays.
+ */
 namespace ProfilerDebug
 {
+    /**
+     * @brief Converts profiler timing values into on-screen positions.
+     *
+     * @param[in] startTime Start time of the profiler node
+     * @param[in] lengthTime Duration of the profiler node
+     * @param[in] available_size Available width in the HUD graph
+     * @param[out] lengthTimeMs Duration in milliseconds
+     * @param[out] leftPos Left position in the HUD graph
+     * @param[out] lengthPos Width position in the HUD graph
+     */
     void nodeToPos(const TimeHolder& startTime, const TimeHolder& lengthTime, float available_size, float& lengthTimeMs, float& leftPos, float& lengthPos);
     
+    /**
+     * @brief Renders a frame timing bar in the profiler overlay.
+     *
+     * @param[in] f Frame index
+     * @param[in] frame_start Start time of the frame
+     * @param[in] frame_end End time of the frame
+     * @param[in] available_start Start position for rendering
+     * @param[in] available_size Available width for rendering
+     */
     void renderFrame(int f, const TimeHolder& frame_start, const TimeHolder& frame_end, float available_start, float available_size);
+
+    /**
+     * @brief Renders a profiler node entry in the HUD profiler view.
+     *
+     * @param[in] nodeId Node identifier
+     * @param[in] database Profiler database containing node timing data
+     * @param[in] available_start Start position for rendering
+     * @param[in] available_size Available width for rendering
+     */
     void renderNode(int nodeId, const Profiler::Database* database, float available_start, float available_size);
 
+    /**
+     * @brief Draws the profiler debug window.
+     *
+     * @param[in] framecount Current frame index
+     * @param[in,out] p_open Controls whether the profiler window is visible
+     */
     void draw(uint64_t framecount, bool* p_open);
 }
 

@@ -34,60 +34,136 @@
 #include <stdint.h>
 
 namespace libtas {
-/* This class handles the display of some text and shapes over the game screen (HUD).
+/**
+ * @class RenderHUD
+ * @brief Core HUD subsystem interface for overlay rendering.
  *
- * Because games have different methods of rendering, this class
- * should be derived for each rendering method. The subclass must
- * define the renderSurface() function
+ * RenderHUD manages the composition and display of overlay elements such as
+ * text, shapes, and pointer scaling. The class is designed to support multiple
+ * rendering backends through subclassing, allowing each rendering method to
+ * implement its own presentation and text rendering mechanism.
  *
- * Also, OS have different ways of creating a text surface from a string,
- * so this class must be derived for each OS to define the renderText() method.
+ * The subsystem is responsible for:
+ * - managing HUD layout and update logic
+ * - deciding when to render or idle
+ * - supporting detached game windows and input scaling
  *
- * This class is also responsible on formatting and positioning the
- * different elements of the HUD.
+ * Concrete implementations provide backend-specific rendering behavior by
+ * overriding virtual methods such as newFrame(), render(), and optional
+ * viewport support queries.
  */
 class RenderHUD
 {
     public:
-        /* Called at the beginning of a new frame */
+        /**
+         * @brief Prepares the HUD state for a new frame.
+         *
+         * Called once at the beginning of each frame boundary before HUD elements
+         * are drawn. Subclasses may override to reset per-frame state.
+         */
         virtual void newFrame();
 
-        /* Add all hud elements for rendering */
+        /**
+         * @brief Collects HUD elements for the current frame.
+         *
+         * Builds the list of HUD content to render from the current input state
+         * and frame counters.
+         *
+         * @param[in] framecount Number of frames since startup
+         * @param[in] nondraw_framecount Number of non-draw frames
+         * @param[in] ai Current input state
+         * @param[in] preview_ai Preview input state used for HUD display
+         */
         void drawAll(uint64_t framecount, uint64_t nondraw_framecount, const AllInputsFlat& ai, const AllInputsFlat& preview_ai);
         
-        /* Called at the end of a frame to render the hud */
+        /**
+         * @brief Renders the HUD overlay.
+         *
+         * Called at the end of the frame after HUD elements have been collected.
+         * Subclasses implement the actual rendering commands for their backend.
+         */
         virtual void render() {}
 
-        /* Called at the end of a frame if we decide to not render the hud */
+        /**
+         * @brief Finalizes HUD rendering for the current frame without actually drawing
+         *
+         * Called at the end of the frame to skip drawing the HUD. This is usually
+         * done for non-draw frames, or when we want the HUD elements to guess their
+         * size. Either this of render() must be called for each newFrame() call.
+         * Resets internal flags and prepares for the next frame.
+         */
         void endFrame();
 
-        /* Called to notify that the current frame had user interaction, and
-         * we must not idle */
+        /**
+         * @brief Notifies the HUD that user input occurred.
+         *
+         * This prevents the subsystem from entering idle mode immediately after
+         * user interaction.
+         */
         static void userInputs();
 
-        /* Indicate if we need to render or idle */
+        /**
+         * @brief Returns whether HUD content should be rendered this frame.
+         *
+         * The result depends on whether the system is idle or active.
+         *
+         * @return true if HUD rendering is required, false if idle mode is active
+         */
         bool doRender();
         
-        /* Does the backend supports rendering the game inside an ImGui window? */
+        /**
+         * @brief Indicates whether the backend supports an ImGui game window.
+         *
+         * Backends that can render the game inside an ImGui panel should return
+         * true. Default implementation returns false.
+         *
+         * @return true if game window rendering is supported
+         */
         virtual bool supportsGameWindow() {return false;}
 
-        /* Does the backend supports extending the window size to use it as
-         * a working area when game window is detached? */
+        /**
+         * @brief Indicates whether the backend supports a larger detached viewport.
+         *
+         * Some backends can use extra window space when the game view is detached.
+         * Default implementation returns false.
+         *
+         * @return true if larger viewport support is available
+         */
         virtual bool supportsLargerViewport() {return false;}
 
+        /**
+         * @brief Sets whether the surrounding window is resizable.
+         *
+         * @param[in] resizable true if the window should be resizable
+         */
         void setWindowResizable(bool resizable);
 
-        /* Returns if the game is rendered inside an ImGui window */
+        /**
+         * @brief Returns whether the game is currently rendered inside an ImGui window.
+         *
+         * @return true when the game is embedded in an ImGui window
+         */
         bool renderGameWindow();
         
-        /* Where is the origin point? */
+        /**
+         * @brief Indicates whether the HUD origin is inverted.
+         *
+         * Some rendering backends use a flipped coordinate origin. Default
+         * implementation returns false.
+         *
+         * @return true if the origin is inverted vertically
+         */
         virtual bool invertedOrigin() {return false;}
         
-        /* Detach the game window */
-        static void detachGameWindow();
-
-        /* Offset and scale the pointer coordinates in case the game window is
-         * detached */
+        /**
+         * @brief Adjusts mouse input coordinates for detached window scaling.
+         *
+         * Applies the current detached game window offset and scale to pointer
+         * coordinates so input remains consistent when the game window is moved
+         * or resized.
+         *
+         * @param[in,out] mi Mouse input structure to scale
+         */
         void scaleMouseInputs(MouseInputs* mi);
 
     protected:

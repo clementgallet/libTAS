@@ -58,14 +58,6 @@ void RenderHUD_GL::newFrame()
     RenderHUD::newFrame();
 }
 
-void RenderHUD_GL::endFrame()
-{
-    if (!ImGui::GetCurrentContext())
-        return;
-
-    RenderHUD::endFrame();
-}
-
 void RenderHUD_GL::render()
 {
     if (ImGui::GetCurrentContext()) {    

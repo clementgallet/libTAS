@@ -22,12 +22,27 @@
 
 namespace libtas {
 
+/**
+ * @namespace MessageWindow
+ * @brief Helper namespace for transient HUD messages.
+ */
 namespace MessageWindow
 {
+    /**
+     * @brief Draws the current message window.
+     */
     void draw();
     
+    /**
+     * @brief Inserts a new brief message to be displayed.
+     *
+     * @param[in] message Message text to display
+     */
     void insert(const char* message);
 
+    /**
+     * @brief Clears any pending messages.
+     */
     void clear();
 
 }

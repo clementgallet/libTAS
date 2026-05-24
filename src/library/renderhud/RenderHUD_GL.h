@@ -34,25 +34,32 @@ class RenderHUD_GL : public RenderHUD_Base_MacOS
 #endif
 {
     public:
+        /**
+         * @class RenderHUD_GL
+         * @brief OpenGL-based HUD rendering backend.
+         *
+         * Implements HUD rendering using OpenGL and optionally OpenGL ES.
+         */
         ~RenderHUD_GL();
 
-        /* Destroy context */
+        /**
+         * @brief Cleans up OpenGL HUD resources.
+         */
         static void fini();
 
-        /* Switch renderer to OpenGL ES */
+        /**
+         * @brief Indicates whether OpenGL or OpenGL ES is used by the game.
+         *
+         * @param[in] stateGLES true to enable OpenGL ES mode
+         */
         void setGLES(bool stateGLES) {isGLES = stateGLES;}
 
         void newFrame();
 
-        void endFrame();
-
         void render();
 
-        /* Does the backend supports rendering the game inside an ImGui window? */
         bool supportsGameWindow() {return true;}
 
-        /* Does the backend supports extending the window size to use it as
-         * a working area when game window is detached? */
         bool supportsLargerViewport() {return true;}
 
         bool invertedOrigin() {return true;}

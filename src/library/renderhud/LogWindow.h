@@ -22,12 +22,31 @@
 
 namespace libtas {
 
+/**
+ * @namespace LogWindow
+ * @brief Helper namespace for the HUD log console.
+ */
 namespace LogWindow
 {
+    /**
+     * @brief Clears all stored log messages.
+     */
     void clear();
 
+    /**
+     * @brief Appends a log message to the HUD log buffer.
+     *
+     * @param[in] beg Pointer to the start of the message text
+     * @param[in] end Pointer to the end of the message text
+     * @param[in] newline true to append a newline after the message
+     */
     void addLog(const char* beg, const char* end, bool newline);
 
+    /**
+     * @brief Draws the log window overlay.
+     *
+     * @param[in,out] p_open Controls whether the log window is visible
+     */
     void draw(bool* p_open);
 
 }

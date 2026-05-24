@@ -27,6 +27,12 @@
 
 namespace libtas {
 
+/**
+ * @class ScreenCapture_Vulkan
+ * @brief Vulkan-based screen capture implementation.
+ *
+ * Captures frames rendered through the Vulkan backend.
+ */
 class ScreenCapture_Vulkan : public ScreenCapture_Impl {
 
 public:

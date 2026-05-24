@@ -26,6 +26,12 @@
 
 namespace libtas {
 
+/**
+ * @class ScreenCapture_XShm
+ * @brief X11 SHM-based screen capture implementation.
+ *
+ * Captures the screen using X shared memory for faster pixel transfer.
+ */
 class ScreenCapture_XShm : public ScreenCapture_Impl {
 
 public:
