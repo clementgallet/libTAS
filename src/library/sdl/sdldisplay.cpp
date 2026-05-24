@@ -191,13 +191,12 @@ namespace libtas {
     else {
         /* We must get one real display mode to have a correct data parameter */
         ret = ORIG_SDL2_CALL(SDL_GetDesktopDisplayMode, (displayIndex, mode));
-    }
 
-    if (GlobalState::isNative() || !Global::shared_config.screen_width) {
         mode->format = sdl2::SDL_PIXELFORMAT_RGB888;
         mode->w = Global::shared_config.screen_width;
         mode->h = Global::shared_config.screen_height;
     }
+
     mode->refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
     LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns mode format: %d, w: %d, h: %d, refresh rate: %d, data: %p", mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
 
@@ -209,22 +208,22 @@ const sdl3::SDL_DisplayMode * sdl3::SDL_GetCurrentDisplayMode(SDL_DisplayID disp
     LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayID);
 
     const sdl3::SDL_DisplayMode* mode;
+    static sdl3::SDL_DisplayMode new_mode;
 
     if (GlobalState::isNative() || !Global::shared_config.screen_width) {
         mode = ORIG_SDL3_CALL(SDL_GetCurrentDisplayMode, (displayID));
+        new_mode = *mode;
     }
     else {
         /* We must get one real display mode to have a correct data parameter */
         mode = ORIG_SDL3_CALL(SDL_GetDesktopDisplayMode, (displayID));
-    }
 
-    static sdl3::SDL_DisplayMode new_mode = *mode;
-
-    if (GlobalState::isNative() || !Global::shared_config.screen_width) {
+        new_mode = *mode;
         new_mode.format = sdl3::SDL_PIXELFORMAT_RGB24;
         new_mode.w = Global::shared_config.screen_width;
         new_mode.h = Global::shared_config.screen_height;
     }
+
     new_mode.refresh_rate = Global::shared_config.initial_framerate_num / Global::shared_config.initial_framerate_den;
     new_mode.refresh_rate_numerator = Global::shared_config.initial_framerate_num;
     new_mode.refresh_rate_denominator = Global::shared_config.initial_framerate_den;
