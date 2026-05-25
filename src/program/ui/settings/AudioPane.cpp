@@ -59,18 +59,22 @@ void AudioPane::initLayout()
     freqChoice->addItem(tr("32000 Hz"), 32000);
     freqChoice->addItem(tr("44100 Hz"), 44100);
     freqChoice->addItem(tr("48000 Hz"), 48000);
+    freqChoice->addItem(tr("Auto"), 0);
 
     formatLayout->addRow(new QLabel(tr("Sample rate:")), freqChoice);
 
     depthChoice = new QComboBox();
     depthChoice->addItem(tr("8 bit"), 8);
     depthChoice->addItem(tr("16 bit"), 16);
+    depthChoice->addItem(tr("32 bit"), 32);
+    depthChoice->addItem(tr("Auto"), 0);
 
     formatLayout->addRow(new QLabel(tr("Bit depth:")), depthChoice);
 
     channelChoice = new QComboBox();
     channelChoice->addItem(tr("Mono"), 1);
     channelChoice->addItem(tr("Stereo"), 2);
+    channelChoice->addItem(tr("Auto"), 0);
 
     formatLayout->addRow(new QLabel(tr("Channels:")), channelChoice);
 

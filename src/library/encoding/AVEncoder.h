@@ -71,6 +71,7 @@ class AVEncoder {
         uint8_t* pixels = nullptr;
 
         int startup_video_frames = 0;
+        int startup_audio_frames = 0;
         std::vector<uint8_t> startup_audio_bytes;
 
         /* remainder of the number of video frames to send */

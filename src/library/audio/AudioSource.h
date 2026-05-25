@@ -24,7 +24,6 @@
 #include <memory>
 #include <functional>
 #include "AudioConverter.h"
-#include "AudioBuffer.h"
 
 namespace libtas {
 
@@ -519,9 +518,23 @@ class AudioSource
          * Removes all buffers from the queue and resets position to 0.
          * Useful when stopping playback and needing to clean up.
          *
-         * @see clearBuffers, queueBuffer()
+         * @see queueBuffer()
          */
         void clearBuffers();
+
+        /**
+         * @brief Checks if source will output some samples.
+         *
+         * Checks if source is playing, and audio samples are ready to be mixed out.
+         * buffer queue) if the given number of ticks are played. Used for predicting
+         * overrun during mixing, and waiting a bit to give the game a chance to push
+         * back audio data. 
+         *
+         * @return true if source will output samples, false otherwise
+         *
+         * @see position, queueSize(), state
+         */
+        bool willOutput() const;
 
         /**
          * @brief Checks if playback will reach the end during a given time interval.
@@ -558,12 +571,12 @@ class AudioSource
          * 6. Update position, handling buffer queue transitions
          *
          * @param[in] ticks Duration to mix (in timespec format)
-         * @param[out] outSamples Output buffer to mix into (must be pre-allocated)
-         * @param[in] outBytes Size of output buffer in bytes
-         * @param[in] outBitDepth Bit depth of output format
-         * @param[in] outNbChannels Number of channels in output
-         * @param[in] outFrequency Sample rate of output
-         * @param[in] outVolume Master volume to apply
+         * @param[out] samples_data_out Output buffer to mix into (must be pre-allocated)
+         * @param[in] samples_byte_size_out Size of output buffer in bytes
+         * @param[in] format_out Format of output
+         * @param[in] channels_out Number of channels in output
+         * @param[in] frequency_out Sample rate of output
+         * @param[in] volume_out Master volume to apply
          *
          * @return Number of samples written to output buffer
          *
@@ -571,7 +584,7 @@ class AudioSource
          *
          * @see AudioContext::mixAllSources(), volume, pitch, audioConverter
          */
-        int mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume);
+        int mixWith( struct timespec ticks, uint8_t* samples_data_out, int samples_byte_size_out, AudioBuffer::SampleFormat format_out, int channels_out, int frequency_out, float volume_out);
 
     private:
         /**
@@ -592,7 +605,7 @@ class AudioSource
          * Created lazily on first use. Resamples source audio if source frequency
          * or format differs from output frequency or format.
          */
-        std::unique_ptr<AudioConverter> audioConverter;
+        std::unique_ptr<AudioConverter> audio_converter;
 
         /**
          * @brief Temporary buffer for mixed source samples.
@@ -600,7 +613,7 @@ class AudioSource
          * Stores resampled samples before mixing into the final output buffer.
          * Used to apply per-source processing before final mixing.
          */
-        std::vector<uint8_t> mixedSamples;
+        std::vector<uint8_t> mixed_samples;
 
 
 };

@@ -115,7 +115,7 @@ public:
      *
      * @see play(), close()
      */
-	static bool init(AudioContext& ac);
+	static APStatus init(const AudioContext& ac);
 
     /**
      * @brief Plays the current audio frame to the audio device.
@@ -141,7 +141,7 @@ public:
      *
      * @see init(), AudioContext::outSamples, AudioContext::outBytes
      */
-	static bool play(AudioContext& ac);
+	static bool play(const AudioContext& ac);
 
     /**
      * @brief Closes and cleans up the ALSA audio connection.

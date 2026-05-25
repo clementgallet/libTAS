@@ -54,7 +54,7 @@ int AudioSource::ticksToSamples(struct timespec ticks, int frequency)
 AudioSource::AudioSource(void)
 {
 #ifdef __unix__
-    audioConverter = std::unique_ptr<AudioConverter>(new AudioConverterSwr());
+    audio_converter = std::unique_ptr<AudioConverter>(new AudioConverterSwr());
 #elif defined(__APPLE__) && defined(__MACH__)
     audioConverter = std::unique_ptr<AudioConverter>(new AudioConverterCoreAudio());
 #endif
@@ -85,7 +85,7 @@ void AudioSource::rewind(void)
 
 void AudioSource::dirty(void)
 {
-    audioConverter->dirty();
+    audio_converter->dirty();
 }
 
 int AudioSource::frameToByteRatio()
@@ -219,6 +219,17 @@ void AudioSource::clearBuffers()
     samples_frac = 0;
 }
 
+bool AudioSource::willOutput() const
+{
+    if (state != SOURCE_PLAYING)
+        return false;
+
+    if (buffer_queue.empty())
+        return false;
+
+    return true;
+}
+
 bool AudioSource::willEnd(struct timespec ticks) const
 {
     if (state != SOURCE_PLAYING)
@@ -244,187 +255,156 @@ bool AudioSource::willEnd(struct timespec ticks) const
 }
 
 
-int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outBytes, int outBitDepth, int outNbChannels, int outFrequency, float outVolume)
+int AudioSource::mixWith( struct timespec ticks, uint8_t* samples_data_out, int samples_byte_size_out, AudioBuffer::SampleFormat format_out, int channels_out, int frequency_out, float volume_out)
 {
-    if (state != SOURCE_PLAYING)
-        return -1;
-
-    if (buffer_queue.empty())
+    if (!willOutput())
         return -1;
 
     LOG(LL_DEBUG, LCF_SOUND, "Start mixing source %d", id);
 
-    bool skipMixing = (!audioConverter->isAvailable()) || 
+    bool skip_mixing = (!audio_converter->isAvailable()) || 
                         (!Global::shared_config.av_dumping && 
                             (Global::shared_config.audio_mute ||
                                 (Global::shared_config.fastforward && 
                                     (Global::shared_config.fastforward_mode & SharedConfig::FF_MIXING))));
 
-    std::shared_ptr<AudioBuffer> curBuf = buffer_queue[queue_index];
+    std::shared_ptr<AudioBuffer> current_buffer = buffer_queue[queue_index];
 
-    if (curBuf->frequency <= 0) {
-        LOG(LL_ERROR, LCF_SOUND, "Invalid buffer frequency %d for source %d", curBuf->frequency, id);
+    if (current_buffer->frequency <= 0) {
+        LOG(LL_ERROR, LCF_SOUND, "Invalid buffer frequency %d for source %d", current_buffer->frequency, id);
         return -1;
     }
 
-    if (!skipMixing) {
+    if (!skip_mixing) {
         /* Check if audio converter is initialized.
          * If not, set parameters and init it */
-        if (! audioConverter->isInited()) {
-            /* Get the sample format */
-            AudioBuffer::SampleFormat outFormat = AudioBuffer::SAMPLE_FMT_U8;
-            switch (outBitDepth) {
-                case 8:
-                    outFormat = AudioBuffer::SAMPLE_FMT_U8;
-                    break;
-                case 16:
-                    outFormat = AudioBuffer::SAMPLE_FMT_S16;
-                    break;
-                default:
-                    LOG(LL_ERROR, LCF_SOUND, "Unknown audio format");
-                    break;
-            }
-
-            audioConverter->init(curBuf->format, curBuf->channels, static_cast<int>(curBuf->frequency*pitch), outFormat, outNbChannels, outFrequency);
+        if (! audio_converter->isInited()) {
+            audio_converter->init(current_buffer->format, current_buffer->channels, static_cast<int>(current_buffer->frequency*pitch), format_out, channels_out, frequency_out);
         }
     }
 
-    /* Mixing source volume and master volume.
-     * Taken from openAL doc:
-     * "The implementation is free to clamp the total gain (effective gain
-     * per-source multiplied by the listener gain) to one to prevent overflow."
-     *
-     * TODO: This is where we can support panning.
-     */
-    float resultVolume = volume * outVolume * Global::shared_config.audio_gain;
-    if (resultVolume > 1.0f)
-        resultVolume = 1.0f;
-
-    int lvas = (int)(resultVolume * 65536.0f);
-    int rvas = (int)(resultVolume * 65536.0f);
-
     /* Number of samples to advance in the buffer. */
-    int inNbSamples = ticksToSamples(ticks, static_cast<int>(curBuf->frequency*pitch));
+    int samples_size_in = ticksToSamples(ticks, static_cast<int>(current_buffer->frequency*pitch));
 
-    int oldPosition = position;
-    int newPosition = position + inNbSamples;
+    int position_old = position;
+    int position_new = position + samples_size_in;
 
-    uint8_t* begSamples;
-    int availableSamples = curBuf->getSamples(begSamples, inNbSamples, oldPosition, (source == SOURCE_STATIC) && looping);
+    uint8_t* buffer_samples;
+    int available_samples = current_buffer->getSamples(buffer_samples, samples_size_in, position_old, (source == SOURCE_STATIC) && looping);
 
-    if (availableSamples == inNbSamples) {
+    if (available_samples == samples_size_in) {
         /* We did not reach the end of the buffer, easy case */
 
-        position = newPosition;
-        LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d in read in range %d - %d", curBuf->id, oldPosition, position);
-        if (!skipMixing) {
-            audioConverter->queueSamples(begSamples, inNbSamples);
+        position = position_new;
+        LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d in read in range %d - %d", current_buffer->id, position_old, position);
+        if (!skip_mixing) {
+            audio_converter->queueSamples(buffer_samples, samples_size_in);
         }
     }
     else {
         /* We reached the end of the buffer */
-        LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d is read from %d to its end %d", curBuf->id, oldPosition, curBuf->sampleSize);
-        if (!skipMixing) {
-            if (availableSamples > 0)
-                audioConverter->queueSamples(begSamples, availableSamples);
+        LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d is read from %d to its end %d", current_buffer->id, position_old, current_buffer->sampleSize);
+        if (!skip_mixing) {
+            if (available_samples > 0)
+                audio_converter->queueSamples(buffer_samples, available_samples);
         }
 
-        int remainingSamples = inNbSamples - availableSamples;
+        int remaining_samples = samples_size_in - available_samples;
         if (source == SOURCE_CALLBACK) {
             /* We refill our buffer using the callback function,
              * until we got enough bytes for this frame
              */
-            while (remainingSamples > 0) {
+            while (remaining_samples > 0) {
                 /* Before doing the callback, we must fake that the timer has
                  * advanced by the number of samples already read
                  */
-                int64_t extraTicks = static_cast<int64_t>(1000000000) * (-remainingSamples);
-                extraTicks /= curBuf->frequency;
+                int64_t extra_ticks = static_cast<int64_t>(1000000000) * (-remaining_samples);
+                extra_ticks /= current_buffer->frequency;
                 DeterministicTimer& detTimer = DeterministicTimer::get();
-                detTimer.fakeAdvanceTimer({static_cast<time_t>(extraTicks / 1000000000), static_cast<long>(extraTicks % 1000000000)});
-                callback(*curBuf);
+                detTimer.fakeAdvanceTimer({static_cast<time_t>(extra_ticks / 1000000000), static_cast<long>(extra_ticks % 1000000000)});
+                callback(*current_buffer);
                 detTimer.fakeAdvanceTimer({0, 0});
-                availableSamples = curBuf->getSamples(begSamples, remainingSamples, 0, false);
-                if (!skipMixing) {
-                    audioConverter->queueSamples(begSamples, availableSamples);
+                available_samples = current_buffer->getSamples(buffer_samples, remaining_samples, 0, false);
+                if (!skip_mixing) {
+                    audio_converter->queueSamples(buffer_samples, available_samples);
                 }
 
-                LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d is read again from 0 to %d", curBuf->id, availableSamples);
-                if (remainingSamples == availableSamples)
-                    position = availableSamples;
-                remainingSamples -= availableSamples;
+                LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d is read again from 0 to %d", current_buffer->id, available_samples);
+                if (remaining_samples == available_samples)
+                    position = available_samples;
+                remaining_samples -= available_samples;
             }
         }
         else {
             int queue_size = buffer_queue.size();
-            int finalIndex = queue_index;
-            int finalPos = oldPosition + availableSamples;
+            int final_index = queue_index;
+            int final_pos = position_old + available_samples;
 
             /* Our for loop conditions are different if we are looping or not */
             if (looping) {
-                for (int i=(queue_index+1)%queue_size; remainingSamples>0; i=(i+1)%queue_size) {
+                for (int i=(queue_index+1)%queue_size; remaining_samples>0; i=(i+1)%queue_size) {
                     std::shared_ptr<AudioBuffer> loopbuf = buffer_queue[i];
-                    availableSamples = loopbuf->getSamples(begSamples, remainingSamples, loopbuf->loop_point_beg, (source == SOURCE_STATIC) && looping);
-                    LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d in read in range %d - %d", loopbuf->id, loopbuf->loop_point_beg, availableSamples);
+                    available_samples = loopbuf->getSamples(buffer_samples, remaining_samples, loopbuf->loop_point_beg, (source == SOURCE_STATIC) && looping);
+                    LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d in read in range %d - %d", loopbuf->id, loopbuf->loop_point_beg, available_samples);
 
-                    if (!skipMixing) {
-                        audioConverter->queueSamples(begSamples, availableSamples);
+                    if (!skip_mixing) {
+                        audio_converter->queueSamples(buffer_samples, available_samples);
                     }
 
-                    finalIndex = i;
-                    finalPos = loopbuf->loop_point_beg + availableSamples;
-                    remainingSamples -= availableSamples;
+                    final_index = i;
+                    final_pos = loopbuf->loop_point_beg + available_samples;
+                    remaining_samples -= available_samples;
                 }
             }
             else {
-                for (int i=queue_index+1; (remainingSamples>0) && (i<queue_size); i++) {
+                for (int i=queue_index+1; (remaining_samples>0) && (i<queue_size); i++) {
                     std::shared_ptr<AudioBuffer> loopbuf = buffer_queue[i];
-                    availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0, false);
-                    LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d in read in range 0 - %d", loopbuf->id, availableSamples);
+                    available_samples = loopbuf->getSamples(buffer_samples, remaining_samples, 0, false);
+                    LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d in read in range 0 - %d", loopbuf->id, available_samples);
 
-                    if (!skipMixing) {
-                        audioConverter->queueSamples(begSamples, availableSamples);
+                    if (!skip_mixing) {
+                        audio_converter->queueSamples(buffer_samples, available_samples);
                     }
 
-                    finalIndex = i;
-                    finalPos = availableSamples;
-                    remainingSamples -= availableSamples;
+                    final_index = i;
+                    final_pos = available_samples;
+                    remaining_samples -= available_samples;
                 }
             }
 
-            if (remainingSamples > 0) {
+            if (remaining_samples > 0) {
                 /* We reached the end of the buffer queue */
                 LOG(LL_DEBUG, LCF_SOUND, "  End of the queue reached");
                 if (source == SOURCE_STREAMING_CONTINUOUS) {
                     /* Update the position in the buffer */
-                    queue_index = finalIndex;
-                    position = finalPos;
+                    queue_index = final_index;
+                    position = final_pos;
                     
                     /* The callback may push more buffers */
                     if (callback) {
                         LOG(LL_DEBUG, LCF_SOUND, "  Callback");
-                        callback(*curBuf); // buffer argument unused
+                        callback(*current_buffer); // buffer argument unused
                         
                         int queue_size = buffer_queue.size();
-                        for (int i=queue_index+1; (remainingSamples>0) && (i<queue_size); i++) {
+                        for (int i=queue_index+1; (remaining_samples>0) && (i<queue_size); i++) {
                             std::shared_ptr<AudioBuffer> loopbuf = buffer_queue[i];
-                            availableSamples = loopbuf->getSamples(begSamples, remainingSamples, 0, false);
-                            LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d in read in range 0 - %d", loopbuf->id, availableSamples);
+                            available_samples = loopbuf->getSamples(buffer_samples, remaining_samples, 0, false);
+                            LOG(LL_DEBUG, LCF_SOUND, "  Buffer %d in read in range 0 - %d", loopbuf->id, available_samples);
 
-                            if (!skipMixing) {
-                                audioConverter->queueSamples(begSamples, availableSamples);
+                            if (!skip_mixing) {
+                                audio_converter->queueSamples(buffer_samples, available_samples);
                             }
 
-                            finalIndex = i;
-                            finalPos = availableSamples;
-                            remainingSamples -= availableSamples;
+                            final_index = i;
+                            final_pos = available_samples;
+                            remaining_samples -= available_samples;
                         }
 
-                        queue_index = finalIndex;
-                        position = finalPos;
+                        queue_index = final_index;
+                        position = final_pos;
                     }
                     
-                    if (remainingSamples > 0) {
+                    if (remaining_samples > 0) {
                         state = SOURCE_UNDERRUN;
                     }
                 }
@@ -437,74 +417,126 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* outSamples, int outByt
             }
             else {
                 /* Update the position in the buffer */
-                queue_index = finalIndex;
-                position = finalPos;
+                queue_index = final_index;
+                position = final_pos;
             }
         }
     }
     
-    int convOutSamples = 0;
+    int converter_samples_size = 0;
 
-    if (!skipMixing) {
+    if (!skip_mixing) {
         /* Allocate the mixed audio array */
-        int outNbSamples = outBytes / (outNbChannels * outBitDepth / 8);
-        mixedSamples.resize(outBytes);
+        int samples_size_out = samples_byte_size_out / (channels_out * AudioBuffer::formatToBitDepth(format_out) / 8);
+        mixed_samples.resize(samples_byte_size_out);
 
         /* Get the converter samples */
-        convOutSamples = audioConverter->getSamples(mixedSamples.data(), outNbSamples);
+        converter_samples_size = audio_converter->getSamples(mixed_samples.data(), samples_size_out);
 
         #define clamptofullsignedrange(x,lo,hi) ((static_cast<unsigned int>((x)-(lo))<=static_cast<unsigned int>((hi)-(lo)))?(x):(((x)<0)?(lo):(hi)))
 
-        int nbSaturate = 0;
+        int saturate_count = 0;
+
+        /* Mixing source volume and master volume.
+         * Taken from openAL doc:
+         * "The implementation is free to clamp the total gain (effective gain
+         * per-source multiplied by the listener gain) to one to prevent overflow."
+         */
+        float result_volume = volume * volume_out * Global::shared_config.audio_gain;
+        if (result_volume > 1.0f)
+            result_volume = 1.0f;
+
+        int result_volume_16bit = (int)(result_volume * 65536.0f);
 
         /* Add mixed source to the output buffer */
-        if (outBitDepth == 8) {
-            for (int s=0; s<convOutSamples*outNbChannels; s+=outNbChannels) {
-                int myL = mixedSamples[s];
-                int otherL = outSamples[s];
-                int sumL = otherL + ((myL * lvas) >> 16) - 256;
-                outSamples[s] = clamptofullsignedrange(sumL, 0, UINT8_MAX);
-                nbSaturate += (sumL < 0) || (sumL > UINT8_MAX);
+        if (format_out == AudioBuffer::SAMPLE_FMT_U8) {
+            for (int s=0; s<converter_samples_size*channels_out; s+=channels_out) {
+                int my_left = mixed_samples[s];
+                int other_left = samples_data_out[s];
+                int sum_left = other_left + ((my_left * result_volume_16bit) >> 16) - 256;
+                samples_data_out[s] = clamptofullsignedrange(sum_left, 0, UINT8_MAX);
+                saturate_count += (sum_left < 0) || (sum_left > UINT8_MAX);
 
-                if (outNbChannels == 2) {
-                    int myR = mixedSamples[s+1];
-                    int otherR = outSamples[s+1];
-                    int sumR = otherR + ((myR * rvas) >> 16) - 256;
-                    outSamples[s+1] = clamptofullsignedrange(sumR, 0, UINT8_MAX);
-                    nbSaturate += (sumR < 0) || (sumR > UINT8_MAX);
+                if (channels_out == 2) {
+                    int my_right = mixed_samples[s+1];
+                    int other_right = samples_data_out[s+1];
+                    int sum_right = other_right + ((my_right * result_volume_16bit) >> 16) - 256;
+                    samples_data_out[s+1] = clamptofullsignedrange(sum_right, 0, UINT8_MAX);
+                    saturate_count += (sum_right < 0) || (sum_right > UINT8_MAX);
                 }
             }
         }
 
-        if (outBitDepth == 16) {
-            int16_t* mixedSamples16 = reinterpret_cast<int16_t*>(mixedSamples.data());
-            int16_t* outSamples16 = reinterpret_cast<int16_t*>(outSamples);
-            for (int s=0; s<convOutSamples*outNbChannels; s+=outNbChannels) {
-                int myL = mixedSamples16[s];
-                int otherL = outSamples16[s];
-                int sumL = otherL + ((myL * lvas) >> 16);
-                outSamples16[s] = clamptofullsignedrange(sumL, INT16_MIN, INT16_MAX);
-                nbSaturate += (sumL < INT16_MIN) || (sumL > INT16_MAX);
+        else if (format_out == AudioBuffer::SAMPLE_FMT_S16) {
+            int16_t* mixed_samples_16 = reinterpret_cast<int16_t*>(mixed_samples.data());
+            int16_t* samples_data_16 = reinterpret_cast<int16_t*>(samples_data_out);
+            for (int s=0; s<converter_samples_size*channels_out; s+=channels_out) {
+                int my_left = mixed_samples_16[s];
+                int other_left = samples_data_16[s];
+                int sum_left = other_left + ((my_left * result_volume_16bit) >> 16);
+                samples_data_16[s] = clamptofullsignedrange(sum_left, INT16_MIN, INT16_MAX);
+                saturate_count += (sum_left < INT16_MIN) || (sum_left > INT16_MAX);
 
-                if (outNbChannels == 2) {
-                    int myR = mixedSamples16[s+1];
-                    int otherR = outSamples16[s+1];
-                    int sumR = otherR + ((myR * rvas) >> 16);
-                    outSamples16[s+1] = clamptofullsignedrange(sumR, INT16_MIN, INT16_MAX);
-                    nbSaturate += (sumR < INT16_MIN) || (sumR > INT16_MAX);
+                if (channels_out == 2) {
+                    int my_right = mixed_samples_16[s+1];
+                    int other_right = samples_data_16[s+1];
+                    int sum_right = other_right + ((my_right * result_volume_16bit) >> 16);
+                    samples_data_16[s+1] = clamptofullsignedrange(sum_right, INT16_MIN, INT16_MAX);
+                    saturate_count += (sum_right < INT16_MIN) || (sum_right > INT16_MAX);
                 }
             }
+        }
+
+        else if (format_out == AudioBuffer::SAMPLE_FMT_FLT) {
+            float* mixed_samples_flt = reinterpret_cast<float*>(mixed_samples.data());
+            float* samples_data_flt = reinterpret_cast<float*>(samples_data_out);
+            for (int s=0; s<converter_samples_size*channels_out; s+=channels_out) {
+                float my_left = mixed_samples_flt[s];
+                float other_left = samples_data_flt[s];
+                float sum_left = other_left + my_left * result_volume;
+                if (sum_left > 1.0f) {
+                    samples_data_flt[s] = 1.0f;
+                    saturate_count++;
+                }
+                else if (sum_left < -1.0f) {
+                    samples_data_flt[s] = -1.0f;
+                    saturate_count++;
+                }
+                else
+                    samples_data_flt[s] = sum_left;
+
+                if (channels_out == 2) {
+                    float my_right = mixed_samples_flt[s+1];
+                    float other_right = samples_data_flt[s+1];
+                    float sum_right = other_right + my_right * result_volume;
+
+                    if (sum_right > 1.0f) {
+                        samples_data_flt[s+1] = 1.0f;
+                        saturate_count++;
+                    }
+                    else if (sum_right < -1.0f) {
+                        samples_data_flt[s+1] = -1.0f;
+                        saturate_count++;
+                    }
+                    else
+                        samples_data_flt[s+1] = sum_right;
+                }
+            }
+        }
+
+        else {
+            LOG(LL_ERROR, LCF_SOUND, "Unsupported format %d during mixing", format_out);        
         }
         
-        if (nbSaturate > 0)
-            LOG(LL_WARN, LCF_SOUND, "Saturation during mixing for %d samples", nbSaturate);        
+        if (saturate_count > 0)
+            LOG(LL_WARN, LCF_SOUND, "Saturation during mixing for %d samples", saturate_count);        
     }
 
     /* Reset the audio converter if the source has stopped */
     if (state == SOURCE_STOPPED)
         dirty();
 
-    return convOutSamples;
+    return converter_samples_size;
 }
 
 }

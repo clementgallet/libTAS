@@ -20,6 +20,8 @@
 #ifndef LIBTAS_AUDIOCONTEXT_H_INCL
 #define LIBTAS_AUDIOCONTEXT_H_INCL
 
+#include "AudioBuffer.h" // SampleFormat
+
 #include <vector>
 #include <memory>
 #include <list>
@@ -80,16 +82,23 @@ class AudioContext
          * Range: [0.0, +inf), typical 0.0 to 1.0
          * Default: 1.0
          */
-        float outVolume;
+        float volume;
 
         /**
-         * @brief Output audio bit depth in bits per sample.
+         * @brief Output audio format.
          *
-         * Specifies the bit depth of the mixed audio sent to the audio player.
+         * Specifies the audio format of the mixed audio sent to the audio player.
          * Typical values: 8 or 16 bits. Must match the configured output format
          * on the audio device.
          */
-        int outBitDepth;
+        AudioBuffer::SampleFormat format;
+
+        /**
+         * @brief Default output audio format.
+         *
+         * Holds the default audio format when audio drivers request it.
+         */
+        static AudioBuffer::SampleFormat default_format;
 
         /**
          * @brief Number of audio channels in the output.
@@ -97,18 +106,25 @@ class AudioContext
          * Typical values: 1 (mono), 2 (stereo).
          * Defines the channel configuration for the mixed output stream.
          */
-        int outNbChannels;
+        int channels;
+
+        /**
+         * @brief Default number of audio channels in the output.
+         *
+         * Holds the default number of channels when audio drivers request it.
+         */
+        static int default_channels;
 
         /**
          * @brief Size of one output sample frame in bytes.
          *
-         * Computed as: (outBitDepth / 8) * outNbChannels
-         * Example: stereo 16-bit output has alignSize = 4 bytes
+         * Computed as: (bitdepth / 8) * channels
+         * Example: stereo 16-bit output has bytes_per_sample = 4 bytes
          * Automatically computed by init().
          *
-         * @see outBitDepth, outNbChannels
+         * @see bitdepth, channels
          */
-        int outAlignSize;
+        int bytes_per_sample;
 
         /**
          * @brief Output sample rate in Hz (samples per second).
@@ -116,18 +132,25 @@ class AudioContext
          * Typical values: 22050, 44100, 48000
          * Frequency at which the mixed audio is sent to the audio device.
          */
-        int outFrequency;
+        int frequency;
+
+        /**
+         * @brief Default output sample rate in Hz (samples per second).
+         *
+         * Holds the default frequency when audio drivers request it.
+         */
+        static int default_frequency;
 
         /**
          * @brief Buffer containing the current frame's mixed audio samples.
          *
          * Filled by mixAllSources() during each audio frame.
          * Sent to the audio player by the AudioPlayer implementations.
-         * Size is outBytes bytes per frame.
+         * Size is samples_byte_size bytes per frame.
          *
-         * @see mixAllSources(), outBytes
+         * @see mixAllSources(), samples_byte_size
          */
-        std::vector<uint8_t> outSamples;
+        std::vector<uint8_t> samples_data;
 
         /**
          * @brief Number of samples in the mixed output for the current frame.
@@ -135,19 +158,19 @@ class AudioContext
          * Specifies how many individual samples (frames) are in the outSamples buffer.
          * Computed during mixAllSources().
          *
-         * @see outSamples, outBytes
+         * @see samples_data, samples_byte_size
          */
-        int outNbSamples;
+        int samples_size;
 
         /**
          * @brief Size of the mixed output buffer in bytes for the current frame.
          *
-         * Computed as: outNbSamples * outAlignSize
-         * Specifies the total byte size of outSamples buffer.
+         * Computed as: samples_size * bytes_per_sample
+         * Specifies the total byte size of samples_data buffer.
          *
-         * @see outSamples, outNbSamples, outAlignSize
+         * @see samples_data, samples_count, bytes_per_sample
          */
-        int outBytes;
+        int samples_byte_size;
 
         /**
          * @brief Whether this context is a loopback device.
@@ -158,7 +181,7 @@ class AudioContext
          * true = loopback device (audio not sent to hardware)
          * false = normal device (audio sent to audio hardware)
          */
-        bool isLoopback;
+        bool is_loopback;
 
         /**
          * @brief Whether audio playback is paused.
@@ -172,15 +195,52 @@ class AudioContext
         bool paused;
 
         /**
+         * @brief Initializes the AudioContext with specific values.
+         *
+         * Sets the context parameters (output format, channels, frequency) to the provided values.
+         * Use 0 for any parameter to keep the current value.
+         *
+         * @param[in] new_format The new audio format to set
+         * @param[in] new_channels The new number of audio channels to set
+         * @param[in] new_frequency The new audio frequency to set
+         *
+         * @see bitdepth, channels, frequency, bytes_per_sample
+         */
+        void initValues(AudioBuffer::SampleFormat new_format, int new_channels, int new_frequency);
+
+        /**
          * @brief Initializes the AudioContext from configuration.
          *
          * Reads audio settings from the application configuration and sets up
-         * the context parameters (output format, channels, frequency, etc.).
+         * the context parameters (output format, channels, frequency).
          * This should be called once at startup before creating sources or buffers.
          *
-         * @see outBitDepth, outNbChannels, outFrequency, outAlignSize
+         * @see bitdepth, channels, frequency, bytes_per_sample
          */
         void init(void);
+
+        /**
+         * @brief Initializes the AudioContext from configuration or default values
+         *
+         * If configuration uses auto (0) values, we set the parameters to default
+         * values. Used when we need to mix some audio samples, and the audio driver
+         * did not configure output audio parameters.
+         *
+         * @see bitdepth, channels, frequency, bytes_per_sample
+         */
+        void initDefaults(void);
+
+        /**
+         * @brief Returns if the AudioContext parameters were set.
+         *
+         * Audio parameters may be set from the user configuration or may be auto, 
+         * in which case they will be set by the default driver.
+         *
+         * @return true if the context parameters are initialized, false otherwise
+         *
+         * @see bitdepth, channels, frequency
+         */
+        bool isInited(void) const;
 
         /**
          * @brief Creates a new empty audio buffer.

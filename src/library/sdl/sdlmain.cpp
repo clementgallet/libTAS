@@ -20,6 +20,7 @@
 #include "sdlmain.h"
 #include "sdlversion.h"
 #include "sdldynapi.h"
+#include "audio/sdl/sdlaudio.h"
 
 #include "logging.h"
 #include "hook.h"
@@ -87,7 +88,8 @@ static Uint32 init_flags = 0;
 
     if (flags & sdl2::SDL_INIT_AUDIO) {
         LOG(LL_DEBUG, LCF_SDL, "    SDL_AUDIO fake enabled.");
-        // sdl2::SDL_AudioInit(nullptr);
+        /* Initialize audio driver parameters */
+        SDL_AudioInit(nullptr);
         Global::game_info.audio = sdl_flag;
     }
 

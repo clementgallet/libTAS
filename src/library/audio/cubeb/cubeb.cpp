@@ -63,9 +63,13 @@ int cubeb_get_min_latency(cubeb * context, cubeb_stream_params * params, uint32_
 int cubeb_get_preferred_sample_rate(cubeb * context, uint32_t * rate)
 {
     LOGTRACE(LCF_SOUND);
-    if (rate)
+    if (rate) {
         *rate = Global::shared_config.audio_frequency;
-    return CUBEB_OK;    
+        if (*rate == 0)
+            *rate = AudioContext::default_frequency;
+
+    }
+    return CUBEB_OK;
 }
 
 void cubeb_destroy(cubeb * context)
@@ -122,6 +126,7 @@ int cubeb_stream_init(cubeb * context,
     auto source = audiocontext.createSource();
     *stream = reinterpret_cast<cubeb_stream*>(source->id);
 
+    /* This will also set the source parameters based on the buffer parameters */
     source->queueBuffer(buffer);
 
     source->source = AudioSource::SOURCE_CALLBACK;
@@ -131,6 +136,9 @@ int cubeb_stream_init(cubeb * context,
             LOG(LL_WARN, LCF_SOUND, "   Buffer not filled completely (%d / %d)", samples, ab.sampleSize);
     });
     
+    /* If some audio output parameters are set to auto, fill them with these values */
+    audiocontext.initValues(buffer->format, buffer->channels, buffer->frequency);
+
     /* We simulate an empty buffer by setting the position at the end */
     source->position = buffer->sampleSize;
     return CUBEB_OK;

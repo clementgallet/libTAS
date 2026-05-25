@@ -77,11 +77,11 @@ bool AudioPlayerCoreAudio::init(AudioContext& ac)
     AudioStreamBasicDescription strdesc = {0};
     strdesc.mFormatID = kAudioFormatLinearPCM;
     strdesc.mFormatFlags = kLinearPCMFormatFlagIsPacked;
-    strdesc.mChannelsPerFrame = ac.outNbChannels;
-    strdesc.mSampleRate = ac.outFrequency;
+    strdesc.mChannelsPerFrame = ac.channels;
+    strdesc.mSampleRate = ac.frequency;
     strdesc.mFramesPerPacket = 1;
 
-    switch (ac.outBitDepth) {
+    switch (ac.bitdepth) {
         case 8:
             strdesc.mBitsPerChannel = 8;
             break;
@@ -90,7 +90,7 @@ bool AudioPlayerCoreAudio::init(AudioContext& ac)
             strdesc.mFormatFlags |= kLinearPCMFormatFlagIsSignedInteger;
             break;
         default:
-            LOG(LL_ERROR, LCF_SOUND, "Unsupported audio format %d", ac.outBitDepth);
+            LOG(LL_ERROR, LCF_SOUND, "Unsupported audio format %d", ac.bitdepth);
             return false;
     }
     
@@ -98,7 +98,7 @@ bool AudioPlayerCoreAudio::init(AudioContext& ac)
     strdesc.mBytesPerPacket = strdesc.mBytesPerFrame * strdesc.mFramesPerPacket;
 
     /* Setup cyclic buffer */
-    int buffer_size = (2*ac.outFrequency*Global::shared_config.initial_framerate_den/Global::shared_config.initial_framerate_num);
+    int buffer_size = (2*ac.frequency*Global::shared_config.initial_framerate_den/Global::shared_config.initial_framerate_num);
 
     cyclicBuffer.data.resize(2*buffer_size*strdesc.mBytesPerFrame);
     cyclicBuffer.beg = 0;
@@ -181,18 +181,18 @@ bool AudioPlayerCoreAudio::play(AudioContext& ac)
     LOG(LL_DEBUG, LCF_SOUND, "Play an audio frame");
     
     /* Write into circular buffer */
-    int bytestoWrite = std::min(ac.outBytes, cyclicBuffer.cap - cyclicBuffer.size);
-    if ((cyclicBuffer.cap - cyclicBuffer.size) < ac.outBytes)
+    int bytestoWrite = std::min(ac.samples_byte_size, cyclicBuffer.cap - cyclicBuffer.size);
+    if ((cyclicBuffer.cap - cyclicBuffer.size) < ac.samples_byte_size)
         LOG(LL_WARN, LCF_SOUND, "Not enough space in circular buffer to write");
 
     /* Write until buffer end */
     size_t sizeEnd = std::min(bytestoWrite, cyclicBuffer.cap - cyclicBuffer.end);
-    memcpy(cyclicBuffer.data.data() + cyclicBuffer.end, ac.outSamples.data(), sizeEnd);
+    memcpy(cyclicBuffer.data.data() + cyclicBuffer.end, ac.samples_data.data(), sizeEnd);
     
     /* Write at buffer beginning */
     size_t sizeBeg = bytestoWrite - sizeEnd;
     if (sizeBeg > 0) {
-        memcpy(cyclicBuffer.data.data(), ac.outSamples.data() + sizeEnd, sizeBeg);
+        memcpy(cyclicBuffer.data.data(), ac.samples_data.data() + sizeEnd, sizeBeg);
         cyclicBuffer.end = sizeBeg;
     }
     else

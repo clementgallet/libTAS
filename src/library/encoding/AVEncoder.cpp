@@ -121,10 +121,16 @@ void AVEncoder::initMuxer() {
 
     /* Initialize the muxer with either framerate or video framerate */
     AudioContext& audiocontext = AudioContext::get();
+
+    if (!audiocontext.isInited()) {
+        LOG(LL_WARN, LCF_SOUND, "Some audio parameters were set to auto. However, we need to start encoding now, so we cannot wait for the game to initialize the audio parameters. Default audio parameters will be chosen.");
+        audiocontext.initDefaults();
+    }
+
     if (Global::shared_config.video_framerate)
-        nutMuxer = new NutMuxer(width, height, Global::shared_config.video_framerate, 1, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
+        nutMuxer = new NutMuxer(width, height, Global::shared_config.video_framerate, 1, pixfmt, audiocontext.frequency, audiocontext.bytes_per_sample, audiocontext.channels, ffmpeg_pipe);
     else
-        nutMuxer = new NutMuxer(width, height, Global::shared_config.initial_framerate_num, Global::shared_config.initial_framerate_den, pixfmt, audiocontext.outFrequency, audiocontext.outAlignSize, audiocontext.outNbChannels, ffmpeg_pipe);
+        nutMuxer = new NutMuxer(width, height, Global::shared_config.initial_framerate_num, Global::shared_config.initial_framerate_den, pixfmt, audiocontext.frequency, audiocontext.bytes_per_sample, audiocontext.channels, ffmpeg_pipe);
 }
 
 void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
@@ -149,6 +155,13 @@ void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
             initMuxer();
 
             /* Encode audio samples that we skipped */
+            if (startup_audio_frames > 0) {
+                std::vector<uint8_t> empty_samples(audiocontext.samples_byte_size, AudioBuffer::formatToSilenceByte(audiocontext.format));
+                for (int i=0; i<startup_audio_frames; i++) {
+                    nutMuxer->writeAudioFrame(empty_samples.data(), audiocontext.samples_byte_size);
+                }
+            }
+
             nutMuxer->writeAudioFrame(startup_audio_bytes.data(), startup_audio_bytes.size());
 
             /* Encode startup frames that we skipped */
@@ -162,8 +175,14 @@ void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
         }
         else {
             startup_video_frames++;
-            /* Store audio samples that we skipped */
-            startup_audio_bytes.insert(startup_audio_bytes.end(), audiocontext.outSamples.data(), audiocontext.outSamples.data() + audiocontext.outBytes);
+
+            /* Store audio samples that we skipped, or keep track of skipped audio frames */
+            if (audiocontext.isInited()) {
+                startup_audio_bytes.insert(startup_audio_bytes.end(), audiocontext.samples_data.data(), audiocontext.samples_data.data() + audiocontext.samples_byte_size);
+            }
+            else {
+                startup_audio_frames++;
+            }
             return;
         }
     }
@@ -171,7 +190,7 @@ void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
     /*** Audio ***/
     LOG(LL_DEBUG, LCF_DUMP, "Encode an audio frame");
 
-    nutMuxer->writeAudioFrame(audiocontext.outSamples.data(), audiocontext.outBytes);
+    nutMuxer->writeAudioFrame(audiocontext.samples_data.data(), audiocontext.samples_byte_size);
 
     /*** Video ***/
 

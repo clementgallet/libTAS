@@ -225,6 +225,9 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
     sdl_source->format = sdlFormatToFormat(static_cast<SDL_AudioFormat>(obtained->format));
     sdl_source->frequency = obtained->freq;
 
+    /* If some audio output parameters are set to auto, fill them with these values */
+    audiocontext.initValues(sdl_source->format, sdl_source->channels, sdl_source->frequency);
+
     sdl_device_sources[id].push_back(sdl_source.get());
 
     if (sdl_source->format == AudioBuffer::SAMPLE_FMT_UNKNOWN) {
@@ -247,6 +250,7 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
         buffer->channels = sdl_source->channels;
         buffer->format = sdl_source->format;
 
+        buffer->update();
         buffer->size = obtained->samples * buffer->alignSize;
         buffer->update(); // Yes, a second time, to fill sampleSize based on size.
         buffer->samples.resize(buffer->size);
@@ -432,7 +436,7 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
                    int iscapture, const sdl2::SDL_AudioSpec *desired,
                    sdl2::SDL_AudioSpec *obtained, int allowed_changes)
 {
-    LOG(LL_DEBUG, LCF_SDL | LCF_SOUND, "%s called for device %s", __func__, device?device:"NULL");
+    LOG(LL_TRACE, LCF_SDL | LCF_SOUND, "%s called for device %s", __func__, device?device:"NULL");
     if (iscapture != 0)
         return 0;
 
@@ -442,7 +446,7 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
 
 /* Override */ sdl3::SDL_AudioDeviceID sdl3::SDL_OpenAudioDevice(SDL_AudioDeviceID devid, const SDL_AudioSpec *spec)
 {
-    LOG(LL_DEBUG, LCF_SDL | LCF_SOUND, "%s called for device %d", __func__, devid);
+    LOG(LL_TRACE, LCF_SDL | LCF_SOUND, "%s called for device %d", __func__, devid);
     if (devid == 0)
         return 0;
 
@@ -595,7 +599,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
     /* We don't support per-device gain. Returning the global audio context gain.*/
     std::lock_guard<std::mutex> lock(AudioContext::get().mutex);
     AudioContext& audiocontext = AudioContext::get();
-    return audiocontext.outVolume;
+    return audiocontext.volume;
 }
 
 /* Override */ bool SDL_SetAudioDeviceGain(sdl3::SDL_AudioDeviceID devid, float gain)
@@ -607,7 +611,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
     /* We don't support per-device gain. Setting the global audio context gain.*/
     std::lock_guard<std::mutex> lock(AudioContext::get().mutex);
     AudioContext& audiocontext = AudioContext::get();
-    audiocontext.outVolume = gain;
+    audiocontext.volume = gain;
     return true;
 }
 

@@ -238,7 +238,9 @@ void NutMuxer::writeAudioHeader()
 
 	writeVarU(1, header_packet.data); // stream_id
 	writeVarU(1, header_packet.data); // stream_class = audio
-	if ((avparams.samplesize / avparams.channels) == 2)
+	if ((avparams.samplesize / avparams.channels) == 4)
+		writeBytes("PFD\x20", 4, header_packet.data); // fourcc = little-endian signed interleaved 32-bit float
+	else if ((avparams.samplesize / avparams.channels) == 2)
 		writeBytes("PSD\x10", 4, header_packet.data); // fourcc = little-endian signed interleaved 16-bit
 	else if ((avparams.samplesize / avparams.channels) == 1)
 		writeBytes("PUD\x08", 4, header_packet.data); // fourcc = little-endian unsigned interleaved 8-bit

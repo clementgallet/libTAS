@@ -99,14 +99,6 @@ class AudioBuffer
          */
         int id;
 
-        /**
-         * @brief Fills the entire buffer with silence.
-         *
-         * Zeroes out all audio samples in the buffer. The silence value used
-         * depends on the format (0x00 for unsigned formats, 0x80 for signed).
-         */
-        void makeSilent();
-
         /*** Primary parameters ***/
 
         /**
@@ -154,6 +146,22 @@ class AudioBuffer
          * @see format, alignSize, bitDepth
          */
         static int formatToBitDepth(SampleFormat f);
+
+        /**
+         * @brief Returns which byte correspond to silence for a given format
+         *
+         * The silence value depends on the signedness of the format (0x00 for
+         * unsigned formats, 0x80 for signed).
+         */
+        static int formatToSilenceByte(SampleFormat f);
+
+        /**
+         * @brief Fills the entire buffer with silence.
+         *
+         * Zeroes out all audio samples in the buffer. The silence value used
+         * depends on the format (0x00 for unsigned formats, 0x80 for signed).
+         */
+        void makeSilent();
 
         /**
          * @brief Number of audio channels in this buffer.

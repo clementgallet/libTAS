@@ -41,18 +41,21 @@ AudioBuffer::AudioBuffer(void)
     loop_point_end = 0;
 }
 
-void AudioBuffer::makeSilent() {
+int AudioBuffer::formatToSilenceByte(SampleFormat format)
+{
     if (format == SAMPLE_FMT_U8) {
-        memset(samples.data(), 0x80, size);
+        return 0x80;
     }
-    else {
-        memset(samples.data(), 0, size);
-    }
+    return 0;
 }
 
-int AudioBuffer::formatToBitDepth(SampleFormat f)
+void AudioBuffer::makeSilent() {
+    memset(samples.data(), formatToSilenceByte(format), size);
+}
+
+int AudioBuffer::formatToBitDepth(SampleFormat format)
 {
-    switch (f) {
+    switch (format) {
         case SAMPLE_FMT_U8:
             return 8;
         case SAMPLE_FMT_S16:

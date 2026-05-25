@@ -741,7 +741,8 @@ int snd_pcm_hw_params_set_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, sn
     LOG(LL_TRACE, LCF_SOUND, "%s call with format %d", __func__, val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = AudioContext::get().getSource(sourceId);
+    AudioContext& audiocontext = AudioContext::get();
+    auto source = audiocontext.getSource(sourceId);
 
     switch(val) {
         case SND_PCM_FORMAT_U8:
@@ -760,6 +761,9 @@ int snd_pcm_hw_params_set_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, sn
             LOG(LL_ERROR, LCF_SOUND, "    Unsupported audio format");
             return -1;
     }
+
+    /* If format audio parameter is set to auto, fill it with this value */
+    audiocontext.initValues(source->format, 0, 0);
 
     return 0;
 }
@@ -812,8 +816,12 @@ int snd_pcm_hw_params_set_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, 
     LOG(LL_TRACE, LCF_SOUND, "%s call with channels %d", __func__, val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = AudioContext::get().getSource(sourceId);
+    AudioContext& audiocontext = AudioContext::get();
+    auto source = audiocontext.getSource(sourceId);
     source->channels = val;
+
+    /* If channel audio parameter is set to auto, fill it with this value */
+    audiocontext.initValues(AudioBuffer::SAMPLE_FMT_UNKNOWN, source->channels, 0);
 
     return 0;
 }
@@ -825,12 +833,16 @@ int snd_pcm_hw_params_set_channels_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *par
     LOG(LL_TRACE, LCF_SOUND, "%s call with channels %d", __func__, *val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = AudioContext::get().getSource(sourceId);
+    AudioContext& audiocontext = AudioContext::get();
+    auto source = audiocontext.getSource(sourceId);
     if (*val < 1)
         *val = 1;
     else if (*val > 2)
         *val = 2;
     source->channels = *val;
+
+    /* If channel audio parameter is set to auto, fill it with this value */
+    audiocontext.initValues(AudioBuffer::SAMPLE_FMT_UNKNOWN, source->channels, 0);
 
     return 0;
 }
@@ -842,8 +854,12 @@ int snd_pcm_hw_params_set_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsi
     LOG(LL_TRACE, LCF_SOUND, "%s call with rate %d and dir %d", __func__, val, dir);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = AudioContext::get().getSource(sourceId);
+    AudioContext& audiocontext = AudioContext::get();
+    auto source = audiocontext.getSource(sourceId);
     source->frequency = val;
+
+    /* If frequency audio parameter is set to auto, fill it with this value */
+    audiocontext.initValues(AudioBuffer::SAMPLE_FMT_UNKNOWN, 0, source->frequency);
 
     return 0;
 }
@@ -855,8 +871,12 @@ int snd_pcm_hw_params_set_rate_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params,
     LOG(LL_TRACE, LCF_SOUND, "%s call with rate %d", __func__, *val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = AudioContext::get().getSource(sourceId);
+    AudioContext& audiocontext = AudioContext::get();
+    auto source = audiocontext.getSource(sourceId);
     source->frequency = *val;
+
+    /* If frequency audio parameter is set to auto, fill it with this value */
+    audiocontext.initValues(AudioBuffer::SAMPLE_FMT_UNKNOWN, 0, source->frequency);
 
     return 0;
 }
@@ -1180,7 +1200,8 @@ int snd_pcm_set_params(snd_pcm_t *pcm, snd_pcm_format_t format, snd_pcm_access_t
     LOGTRACE(LCF_SOUND);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
-    auto source = AudioContext::get().getSource(sourceId);
+    AudioContext& audiocontext = AudioContext::get();
+    auto source = audiocontext.getSource(sourceId);
 
     switch(format) {
         case SND_PCM_FORMAT_U8:
@@ -1207,6 +1228,10 @@ int snd_pcm_set_params(snd_pcm_t *pcm, snd_pcm_format_t format, snd_pcm_access_t
 
     source->channels = channels;
     source->frequency = rate;
+
+
+    /* If audio parameters are set to auto, fill them with these values */
+    audiocontext.initValues(source->format, source->channels, source->frequency);
 
     /* Special case for 0, return the default value */
     if ((latency != 0) && (rate != 0)) {

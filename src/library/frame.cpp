@@ -189,7 +189,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 
     /* Mix audio, except if the game opened a loopback context */
     AudioContext& audiocontext = AudioContext::get();
-    if (! audiocontext.isLoopback) {
+    if (! audiocontext.is_loopback) {
         PROFILE_SCOPE("Audio Mix", PROFILER_INFO_FRAME);
         audiocontext.mixAllSources(timeIncrement);
     }

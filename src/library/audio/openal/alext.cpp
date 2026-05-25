@@ -65,8 +65,8 @@ void myalcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffer, ALCsizei samples
 {
     LOGTRACE(LCF_SOUND | LCF_TODO);
     AudioContext& audiocontext = AudioContext::get();
-    audiocontext.mixAllSources(samples*audiocontext.outAlignSize);
-    memcpy(buffer, audiocontext.outSamples.data(), audiocontext.outBytes);
+    audiocontext.mixAllSources(samples*audiocontext.bytes_per_sample);
+    memcpy(buffer, audiocontext.samples_data.data(), audiocontext.samples_byte_size);
 }
 
 const ALCchar* myalcGetStringiSOFT(ALCdevice *device, ALCenum paramName, ALCsizei index)

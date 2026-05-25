@@ -1233,7 +1233,7 @@ void alListenerf(ALenum param, ALfloat value)
     CHECK_USE_ALSOFT_FUNCTION(alListenerf, param, value)
 
     if (param == AL_GAIN)
-        AudioContext::get().outVolume = value;
+        AudioContext::get().volume = value;
 }
 
 void alListener3f(ALenum param, ALfloat v1, ALfloat v2, ALfloat v3)
@@ -1299,7 +1299,7 @@ void alGetListenerf(ALenum param, ALfloat *value)
             // alSetError(AL_INVALID_VALUE);
             return;
         }
-        *value = AudioContext::get().outVolume;
+        *value = AudioContext::get().volume;
     }
 }
 
