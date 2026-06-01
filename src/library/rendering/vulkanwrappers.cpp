@@ -19,6 +19,7 @@
 
 #include "vulkanwrappers.h"
 
+#include "vulkanloader.h"
 #include "hook.h"
 #include "logging.h"
 #include "renderhud/RenderHUD_Vulkan.h"
@@ -29,32 +30,24 @@
 
 #include <string.h>
 
-#define STORE_SYMBOL(str) \
-    if (!strcmp(symbol, #str)) { \
-        orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
-        LOG(LL_DEBUG, LCF_HOOK | LCF_VULKAN,"  store real function in %p", real_pointer); \
-        return real_pointer; \
-    }
-
-#define STORE_RETURN_SYMBOL(str) \
-    if (!strcmp(symbol, #str)) { \
-        if (real_pointer == reinterpret_cast<void*>(libtas::str)) { \
+#define RETURN_SYMBOL_DETAILED(FUNC, NEW_FUNC) \
+    if (! NEW_FUNC) { \
+        LOG(LL_WARN, LCF_HOOK | LCF_VULKAN,"  Trying to hook Vulkan function %s that we didn't define", symbol); \
+    } \
+    if (!strcmp(symbol, "vk" #FUNC)) { \
+        if (real_pointer == reinterpret_cast<void*>(NEW_FUNC)) { \
             LOG(LL_WARN, LCF_HOOK | LCF_VULKAN,"  Vulkan proc function failed at finding the real function %s, using the standard symbol loading method instead", symbol); \
-            LINK_NAMESPACE(str, "vulkan"); \
+            link_function((void**)&vkProcs.FUNC, symbol, "libvulkan.so"); \
         } \
         else { \
-            orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
+            vkProcs.FUNC = reinterpret_cast<decltype(&vk##FUNC)>(real_pointer); \
         } \
-        LOG(LL_DEBUG, LCF_HOOK | LCF_VULKAN,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(libtas::str), orig::str); \
-        return reinterpret_cast<void*>(libtas::str); \
+        LOG(LL_DEBUG, LCF_VULKAN,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(NEW_FUNC), vkProcs.FUNC); \
+        return reinterpret_cast<void*>(NEW_FUNC); \
     }
 
-#define STORE_RETURN_SYMBOL_CUSTOM(str) \
-    if (!strcmp(reinterpret_cast<const char*>(symbol), #str)) { \
-        orig::str = reinterpret_cast<decltype(orig::str)>(real_pointer); \
-        LOG(LL_DEBUG, LCF_HOOK | LCF_VULKAN,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(my##str), real_pointer); \
-        return reinterpret_cast<void*>(my##str); \
-    }
+#define STORE_RETURN_SYMBOL(FUNC) RETURN_SYMBOL_DETAILED(FUNC, libtas::vk##FUNC)
+#define STORE_RETURN_SYMBOL_CUSTOM(FUNC) RETURN_SYMBOL_DETAILED(FUNC, myvk##FUNC)
 
 namespace libtas {
 
@@ -85,151 +78,56 @@ uint32_t vk::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags propert
     return 0;
 }
 
-/* For some reason, those functions must not be declared by their original name.
- * This does not matter much, because linking is done with a specific ProcAddr function anyway.
- * So, I'm prefixing them with `my` */
-namespace orig { \
-    decltype(&myvkCreateDevice) vkCreateDevice; \
-    decltype(&myvkDestroyDevice) vkDestroyDevice; \
-}
-
-DEFINE_ORIG_POINTER(vkCreateInstance)
-DEFINE_ORIG_POINTER(vkCreateSwapchainKHR)
-DEFINE_ORIG_POINTER(vkQueuePresentKHR)
-DEFINE_ORIG_POINTER(vkGetInstanceProcAddr)
-DEFINE_ORIG_POINTER(vkGetDeviceProcAddr)
-DEFINE_ORIG_POINTER(vkAcquireNextImageKHR)
-DEFINE_ORIG_POINTER(vkGetPhysicalDeviceMemoryProperties)
-DEFINE_ORIG_POINTER(vkCreateImage)
-DEFINE_ORIG_POINTER(vkGetImageMemoryRequirements)
-DEFINE_ORIG_POINTER(vkAllocateMemory)
-DEFINE_ORIG_POINTER(vkBindImageMemory)
-DEFINE_ORIG_POINTER(vkCreateCommandPool)
-DEFINE_ORIG_POINTER(vkCreateDescriptorPool)
-DEFINE_ORIG_POINTER(vkDestroyDescriptorPool)
-DEFINE_ORIG_POINTER(vkCreateRenderPass)
-DEFINE_ORIG_POINTER(vkCmdBeginRenderPass)
-DEFINE_ORIG_POINTER(vkCmdEndRenderPass)
-DEFINE_ORIG_POINTER(vkGetDeviceQueue)
-DEFINE_ORIG_POINTER(vkQueueSubmit)
-DEFINE_ORIG_POINTER(vkUnmapMemory)
-DEFINE_ORIG_POINTER(vkFreeMemory)
-DEFINE_ORIG_POINTER(vkDestroyImage)
-DEFINE_ORIG_POINTER(vkAllocateCommandBuffers)
-DEFINE_ORIG_POINTER(vkBeginCommandBuffer)
-DEFINE_ORIG_POINTER(vkCmdPipelineBarrier)
-DEFINE_ORIG_POINTER(vkCmdBlitImage)
-DEFINE_ORIG_POINTER(vkCmdCopyImage)
-DEFINE_ORIG_POINTER(vkEndCommandBuffer)
-DEFINE_ORIG_POINTER(vkQueueWaitIdle)
-DEFINE_ORIG_POINTER(vkFreeCommandBuffers)
-DEFINE_ORIG_POINTER(vkGetImageSubresourceLayout)
-DEFINE_ORIG_POINTER(vkMapMemory)
-DEFINE_ORIG_POINTER(vkGetSwapchainImagesKHR)
-DEFINE_ORIG_POINTER(vkCreateImageView)
-DEFINE_ORIG_POINTER(vkCreateSampler)
-DEFINE_ORIG_POINTER(vkCreateFramebuffer)
-DEFINE_ORIG_POINTER(vkCreateFence)
-DEFINE_ORIG_POINTER(vkCreateSemaphore)
-DEFINE_ORIG_POINTER(vkDestroyRenderPass)
-DEFINE_ORIG_POINTER(vkDestroySemaphore)
-DEFINE_ORIG_POINTER(vkDestroyFence)
-DEFINE_ORIG_POINTER(vkDestroyCommandPool)
-DEFINE_ORIG_POINTER(vkDestroyImageView)
-DEFINE_ORIG_POINTER(vkDestroySampler)
-DEFINE_ORIG_POINTER(vkDestroyFramebuffer)
-DEFINE_ORIG_POINTER(vkDestroySwapchainKHR)
-DEFINE_ORIG_POINTER(vkCmdClearColorImage)
-
-
 #define VKFUNCSKIPDRAW(NAME, DECL, ARGS) \
-DEFINE_ORIG_POINTER(NAME)\
-void NAME DECL\
+void vk##NAME DECL\
 {\
+    LINK_VK_POINTER(NAME);\
     LOGTRACE(LCF_VULKAN);\
     if (!Global::skipping_draw)\
-        return orig::NAME ARGS;\
+        return vkProcs.NAME ARGS;\
 }
 
-VKFUNCSKIPDRAW(vkCmdDraw, (VkCommandBuffer commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance), (commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance))
-VKFUNCSKIPDRAW(vkCmdDrawIndirect, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride), (commandBuffer, buffer, offset, drawCount, stride))
-VKFUNCSKIPDRAW(vkCmdDrawIndirectCount, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride), (commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride))
-VKFUNCSKIPDRAW(vkCmdDrawIndexed, (VkCommandBuffer commandBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance), (commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance))
-VKFUNCSKIPDRAW(vkCmdDrawIndexedIndirect, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride), (commandBuffer, buffer, offset, drawCount, stride))
-VKFUNCSKIPDRAW(vkCmdDrawIndexedIndirectCount, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride), (commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride))
+VKFUNCSKIPDRAW(CmdDraw, (VkCommandBuffer commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance), (commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance))
+VKFUNCSKIPDRAW(CmdDrawIndirect, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride), (commandBuffer, buffer, offset, drawCount, stride))
+VKFUNCSKIPDRAW(CmdDrawIndirectCount, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride), (commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride))
+VKFUNCSKIPDRAW(CmdDrawIndexed, (VkCommandBuffer commandBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance), (commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance))
+VKFUNCSKIPDRAW(CmdDrawIndexedIndirect, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride), (commandBuffer, buffer, offset, drawCount, stride))
+VKFUNCSKIPDRAW(CmdDrawIndexedIndirectCount, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride), (commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride))
 
 /* If the game uses the vkGetInstanceProcAddr functions to access to a function
  * that we hook, we must return our function and store the original pointers
  * so that we can call the real function.
  */
-static void* store_orig_and_return_my_symbol(const char* symbol, void* real_pointer) {
+static void* return_my_symbol(const char* symbol, void* real_pointer) {
 
     if (!real_pointer || !symbol)
         return real_pointer;
 
-    STORE_RETURN_SYMBOL(vkCreateInstance)
-    STORE_RETURN_SYMBOL(vkCreateSwapchainKHR)
-    STORE_RETURN_SYMBOL(vkAcquireNextImageKHR)
-    STORE_RETURN_SYMBOL(vkQueuePresentKHR)
-    STORE_SYMBOL(vkCreateImageView)
-    STORE_SYMBOL(vkCreateSampler)
-    STORE_SYMBOL(vkCreateFramebuffer)    
-    STORE_RETURN_SYMBOL_CUSTOM(vkCreateDevice)
-    STORE_RETURN_SYMBOL_CUSTOM(vkDestroyDevice)
-    STORE_RETURN_SYMBOL(vkGetDeviceProcAddr)
-    STORE_SYMBOL(vkGetPhysicalDeviceMemoryProperties)
-    STORE_SYMBOL(vkCreateImage)
-    STORE_SYMBOL(vkGetImageMemoryRequirements)
-    STORE_SYMBOL(vkAllocateMemory)
-    STORE_SYMBOL(vkBindImageMemory)
-    STORE_SYMBOL(vkCreateCommandPool)
-    STORE_SYMBOL(vkCreateDescriptorPool)
-    STORE_SYMBOL(vkDestroyDescriptorPool)
-    STORE_SYMBOL(vkCreateRenderPass)
-    STORE_RETURN_SYMBOL(vkGetDeviceQueue)
-    STORE_RETURN_SYMBOL(vkDestroySwapchainKHR)
-    STORE_SYMBOL(vkCmdBeginRenderPass)
-    STORE_SYMBOL(vkQueueSubmit)
-    STORE_SYMBOL(vkUnmapMemory)
-    STORE_SYMBOL(vkFreeMemory)
-    STORE_SYMBOL(vkDestroyImage)
-    STORE_SYMBOL(vkAllocateCommandBuffers)
-    STORE_SYMBOL(vkBeginCommandBuffer)
-    STORE_SYMBOL(vkCmdEndRenderPass)
-    STORE_SYMBOL(vkCmdPipelineBarrier)
-    STORE_SYMBOL(vkCmdBlitImage)
-    STORE_SYMBOL(vkCmdCopyImage)
-    STORE_SYMBOL(vkEndCommandBuffer)
-    STORE_SYMBOL(vkQueueWaitIdle)
-    STORE_SYMBOL(vkFreeCommandBuffers)
-    STORE_SYMBOL(vkGetImageSubresourceLayout)
-    STORE_SYMBOL(vkMapMemory)
-    STORE_SYMBOL(vkGetSwapchainImagesKHR)
-    STORE_SYMBOL(vkCreateFence)
-    STORE_SYMBOL(vkCreateSemaphore)
-    STORE_SYMBOL(vkDestroyRenderPass)
-    STORE_SYMBOL(vkDestroySemaphore)
-    STORE_SYMBOL(vkDestroyFence)
-    STORE_SYMBOL(vkFreeCommandBuffers)
-    STORE_SYMBOL(vkDestroyCommandPool)
-    STORE_SYMBOL(vkDestroyImageView)
-    STORE_SYMBOL(vkDestroySampler)
-    STORE_SYMBOL(vkDestroyFramebuffer)
-    STORE_SYMBOL(vkCmdClearColorImage)
-    STORE_RETURN_SYMBOL(vkCmdDraw)
-    STORE_RETURN_SYMBOL(vkCmdDrawIndirect)
-    STORE_RETURN_SYMBOL(vkCmdDrawIndexed)
-    STORE_RETURN_SYMBOL(vkCmdDrawIndexedIndirect)
+    STORE_RETURN_SYMBOL(CreateInstance)
+    STORE_RETURN_SYMBOL(CreateSwapchainKHR)
+    STORE_RETURN_SYMBOL(AcquireNextImageKHR)
+    STORE_RETURN_SYMBOL(QueuePresentKHR)
+    STORE_RETURN_SYMBOL_CUSTOM(CreateDevice)
+    STORE_RETURN_SYMBOL_CUSTOM(DestroyDevice)
+    STORE_RETURN_SYMBOL(GetDeviceProcAddr)
+    STORE_RETURN_SYMBOL(GetDeviceQueue)
+    STORE_RETURN_SYMBOL(DestroySwapchainKHR)
+    STORE_RETURN_SYMBOL(CmdDraw)
+    STORE_RETURN_SYMBOL(CmdDrawIndirect)
+    STORE_RETURN_SYMBOL(CmdDrawIndirectCount)
+    STORE_RETURN_SYMBOL(CmdDrawIndexed)
+    STORE_RETURN_SYMBOL(CmdDrawIndexedIndirect)
+    STORE_RETURN_SYMBOL(CmdDrawIndexedIndirectCount)
 
     return real_pointer;
 }
 
 VkResult vkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance)
 {
-    LINK_NAMESPACE(vkCreateInstance, "vulkan");
+    LINK_VK_POINTER(CreateInstance);
 
     if (GlobalState::isNative())
-        return orig::vkCreateInstance(pCreateInfo, pAllocator, pInstance);
+        return vkProcs.CreateInstance(pCreateInfo, pAllocator, pInstance);
 
     LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
@@ -238,7 +136,7 @@ VkResult vkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAlloc
     // const char* layer = "VK_LAYER_KHRONOS_validation";
     // createInfo.ppEnabledLayerNames = &layer;
     
-    VkResult res = orig::vkCreateInstance(&createInfo, pAllocator, pInstance);
+    VkResult res = vkProcs.CreateInstance(&createInfo, pAllocator, pInstance);
 
     if (res == VK_SUCCESS) {
         /* Store the instance */
@@ -252,52 +150,49 @@ VkResult vkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAlloc
 PFN_vkVoidFunction vkGetInstanceProcAddr(VkInstance instance, const char* pName)
 {
     LOG(LL_TRACE, LCF_HOOK | LCF_VULKAN, "%s call with symbol %s", __func__, pName);
-    LINK_NAMESPACE(vkGetInstanceProcAddr, "vulkan");
+    LINK_VK_POINTER(GetInstanceProcAddr);
 
-    if (!orig::vkGetInstanceProcAddr) return nullptr;
+    if (!vkProcs.GetInstanceProcAddr) return nullptr;
 
-    return reinterpret_cast<void(*)()>(store_orig_and_return_my_symbol(pName, reinterpret_cast<void*>(orig::vkGetInstanceProcAddr(instance, pName))));
+    return reinterpret_cast<PFN_vkVoidFunction>(return_my_symbol(pName, reinterpret_cast<void*>(vkProcs.GetInstanceProcAddr(instance, pName))));
 }
 
 PFN_vkVoidFunction vkGetDeviceProcAddr(VkDevice device, const char* pName)
 {
     LOG(LL_TRACE, LCF_HOOK | LCF_VULKAN, "%s call with symbol %s", __func__, pName);
+    LINK_VK_POINTER(GetDeviceProcAddr);
 
-    if (!orig::vkGetDeviceProcAddr) return nullptr;
+    if (!vkProcs.GetDeviceProcAddr) return nullptr;
 
-    return reinterpret_cast<void(*)()>(store_orig_and_return_my_symbol(pName, reinterpret_cast<void*>(orig::vkGetDeviceProcAddr(device, pName))));
+    return reinterpret_cast<PFN_vkVoidFunction>(return_my_symbol(pName, reinterpret_cast<void*>(vkProcs.GetDeviceProcAddr(device, pName))));
 }
 
-#define GETPROCADDR(symbol) \
-if (!orig::symbol) { \
-    if (orig::vkGetDeviceProcAddr) { \
-        orig::symbol = reinterpret_cast<decltype(orig::symbol)>(orig::vkGetDeviceProcAddr(vk::context.device, #symbol)); \
-    } \
-    else { \
-        orig::symbol = reinterpret_cast<decltype(orig::symbol)>(orig::vkGetInstanceProcAddr(vk::context.instance, #symbol)); \
-    } \
+/* Function to pass to our function pointer loader */
+static PFN_vkVoidFunction vkGetProcAddr(const char *proc)
+{
+    if (vkProcs.GetDeviceProcAddr) {
+        return vkProcs.GetDeviceProcAddr(vk::context.device, proc);
+    }
+    return vkProcs.GetInstanceProcAddr(vk::context.instance, proc);
 }
 
 VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInfo* pCreateInfo,
                                 const VkAllocationCallbacks* pAllocator, VkDevice* pDevice)
 {
     if (GlobalState::isNative())
-        return orig::vkCreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice);
+        return vkProcs.CreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice);
 
     LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
     /* Store physical device */
     vk::context.physicalDevice = physicalDevice;
 
-    /* Get memory properties of physical device */
-    orig::vkGetPhysicalDeviceMemoryProperties(physicalDevice, &vk::context.deviceMemoryProperties);
-
     VkResult res;
     /* The device creation must be performed natively, so that it can import
      * the correct vkGetDeviceProcAddr function with dlsym(), without being
      * messed up by libtas.
      */
-    NATIVECALL(res = orig::vkCreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice));
+    NATIVECALL(res = vkProcs.CreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice));
 
     if (res == VK_SUCCESS) {
         /* Store the device */
@@ -308,48 +203,11 @@ VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateI
         Global::game_info.tosend = true;
         
         /* Get the address of all functions that we will be using */
-        GETPROCADDR(vkCreateImageView)
-        GETPROCADDR(vkCreateSampler)
-        GETPROCADDR(vkCreateFramebuffer)    
-        GETPROCADDR(vkGetPhysicalDeviceMemoryProperties)
-        GETPROCADDR(vkCreateImage)
-        GETPROCADDR(vkGetImageMemoryRequirements)
-        GETPROCADDR(vkAllocateMemory)
-        GETPROCADDR(vkBindImageMemory)
-        GETPROCADDR(vkCreateCommandPool)
-        GETPROCADDR(vkCreateDescriptorPool)
-        GETPROCADDR(vkDestroyDescriptorPool)
-        GETPROCADDR(vkCreateRenderPass)
-        GETPROCADDR(vkDestroySwapchainKHR)
-        GETPROCADDR(vkCmdBeginRenderPass)
-        GETPROCADDR(vkQueueSubmit)
-        GETPROCADDR(vkUnmapMemory)
-        GETPROCADDR(vkFreeMemory)
-        GETPROCADDR(vkDestroyImage)
-        GETPROCADDR(vkAllocateCommandBuffers)
-        GETPROCADDR(vkBeginCommandBuffer)
-        GETPROCADDR(vkCmdEndRenderPass)
-        GETPROCADDR(vkCmdPipelineBarrier)
-        GETPROCADDR(vkCmdBlitImage)
-        GETPROCADDR(vkCmdCopyImage)
-        GETPROCADDR(vkEndCommandBuffer)
-        GETPROCADDR(vkQueueWaitIdle)
-        GETPROCADDR(vkFreeCommandBuffers)
-        GETPROCADDR(vkGetImageSubresourceLayout)
-        GETPROCADDR(vkMapMemory)
-        GETPROCADDR(vkGetSwapchainImagesKHR)
-        GETPROCADDR(vkCreateFence)
-        GETPROCADDR(vkCreateSemaphore)
-        GETPROCADDR(vkDestroyRenderPass)
-        GETPROCADDR(vkDestroySemaphore)
-        GETPROCADDR(vkDestroyFence)
-        GETPROCADDR(vkFreeCommandBuffers)
-        GETPROCADDR(vkDestroyCommandPool)
-        GETPROCADDR(vkDestroyImageView)
-        GETPROCADDR(vkDestroySampler)
-        GETPROCADDR(vkDestroyFramebuffer)
-        GETPROCADDR(vkCmdClearColorImage)
-        
+        vk_load_procs(vkGetProcAddr);
+
+        /* Get memory properties of physical device */
+        vkProcs.GetPhysicalDeviceMemoryProperties(physicalDevice, &vk::context.deviceMemoryProperties);
+
         /* Create the descriptor pool that will create descriptor sets for the
          * font texture and game window texture */
         {
@@ -363,7 +221,7 @@ VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateI
             pool_info.maxSets = 2;
             pool_info.poolSizeCount = 1;
             pool_info.pPoolSizes = pool_sizes;
-            VkResult err = orig::vkCreateDescriptorPool(vk::context.device, &pool_info, vk::context.allocator, &vk::context.descriptorPool);
+            VkResult err = vkProcs.CreateDescriptorPool(vk::context.device, &pool_info, vk::context.allocator, &vk::context.descriptorPool);
             VKCHECKERROR(err);
         }
     }
@@ -374,32 +232,32 @@ VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateI
 void myvkDestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
 {
     if (GlobalState::isNative())
-        return orig::vkDestroyDevice(device, pAllocator);
+        return vkProcs.DestroyDevice(device, pAllocator);
 
     LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
     if (vk::context.descriptorPool) {
-        orig::vkDestroyDescriptorPool(device, vk::context.descriptorPool, pAllocator);
+        vkProcs.DestroyDescriptorPool(device, vk::context.descriptorPool, pAllocator);
         vk::context.descriptorPool = VK_NULL_HANDLE;
     }
 
     /* Stop the screen capture */
     ScreenCapture::fini();
 
-    return orig::vkDestroyDevice(device, pAllocator);
+    return vkProcs.DestroyDevice(device, pAllocator);
 }
 
 void vkGetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex, VkQueue* pQueue)
 {
     if (GlobalState::isNative())
-        return orig::vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
+        return vkProcs.GetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
 
     LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
     /* Store the queue family */
     vk::context.queueFamily = queueFamilyIndex;
 
-    orig::vkGetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
+    vkProcs.GetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
 
     if (pQueue) {
         vk::context.graphicsQueue = *pQueue;
@@ -415,30 +273,30 @@ static void destroySwapchain()
         Vulkan_Frame* fd = &vk::context.frames[i];
         Vulkan_FrameSemaphores* fsd = &vk::context.frameSemaphores[i];
 
-        orig::vkDestroySemaphore(vk::context.device, fsd->imageAcquiredSemaphore, vk::context.allocator);
-        orig::vkDestroySemaphore(vk::context.device, fsd->screenCompleteSemaphore, vk::context.allocator);
-        orig::vkDestroySemaphore(vk::context.device, fsd->clearCompleteSemaphore, vk::context.allocator);
-        orig::vkDestroySemaphore(vk::context.device, fsd->osdCompleteSemaphore, vk::context.allocator);
+        vkProcs.DestroySemaphore(vk::context.device, fsd->imageAcquiredSemaphore, vk::context.allocator);
+        vkProcs.DestroySemaphore(vk::context.device, fsd->screenCompleteSemaphore, vk::context.allocator);
+        vkProcs.DestroySemaphore(vk::context.device, fsd->clearCompleteSemaphore, vk::context.allocator);
+        vkProcs.DestroySemaphore(vk::context.device, fsd->osdCompleteSemaphore, vk::context.allocator);
         fsd->imageAcquiredSemaphore = fsd->screenCompleteSemaphore = fsd->clearCompleteSemaphore = fsd->osdCompleteSemaphore = VK_NULL_HANDLE;
 
-        orig::vkDestroyFence(vk::context.device, fd->fence, vk::context.allocator);
-        orig::vkFreeCommandBuffers(vk::context.device, fd->commandPool, 1, &fd->screenCommandBuffer);
-        orig::vkFreeCommandBuffers(vk::context.device, fd->commandPool, 1, &fd->clearCommandBuffer);
-        orig::vkFreeCommandBuffers(vk::context.device, fd->commandPool, 1, &fd->osdCommandBuffer);
-        orig::vkDestroyCommandPool(vk::context.device, fd->commandPool, vk::context.allocator);
+        vkProcs.DestroyFence(vk::context.device, fd->fence, vk::context.allocator);
+        vkProcs.FreeCommandBuffers(vk::context.device, fd->commandPool, 1, &fd->screenCommandBuffer);
+        vkProcs.FreeCommandBuffers(vk::context.device, fd->commandPool, 1, &fd->clearCommandBuffer);
+        vkProcs.FreeCommandBuffers(vk::context.device, fd->commandPool, 1, &fd->osdCommandBuffer);
+        vkProcs.DestroyCommandPool(vk::context.device, fd->commandPool, vk::context.allocator);
         fd->fence = VK_NULL_HANDLE;
         fd->screenCommandBuffer = VK_NULL_HANDLE;
         fd->clearCommandBuffer = VK_NULL_HANDLE;
         fd->osdCommandBuffer = VK_NULL_HANDLE;
         fd->commandPool = VK_NULL_HANDLE;
 
-        orig::vkDestroyFramebuffer(vk::context.device, fd->framebuffer, vk::context.allocator);
-        orig::vkDestroyImageView(vk::context.device, fd->backbufferView, vk::context.allocator);
+        vkProcs.DestroyFramebuffer(vk::context.device, fd->framebuffer, vk::context.allocator);
+        vkProcs.DestroyImageView(vk::context.device, fd->backbufferView, vk::context.allocator);
         fd->framebuffer = VK_NULL_HANDLE;
         fd->backbufferView = VK_NULL_HANDLE;
     }
     
-    orig::vkDestroyRenderPass(vk::context.device, vk::context.renderPass, vk::context.allocator);
+    vkProcs.DestroyRenderPass(vk::context.device, vk::context.renderPass, vk::context.allocator);
     vk::context.renderPass = VK_NULL_HANDLE;
     vk::context.imageCount = 0;
     vk::context.frameIndex = 0;
@@ -450,7 +308,7 @@ static void destroySwapchain()
 VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain)
 {
     if (GlobalState::isNative())
-        return orig::vkCreateSwapchainKHR(device, pCreateInfo, pAllocator, pSwapchain);
+        return vkProcs.CreateSwapchainKHR(device, pCreateInfo, pAllocator, pSwapchain);
 
     LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
@@ -462,30 +320,30 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
     /* Save the color format */
     vk::context.colorFormat = pCreateInfo->imageFormat;
 
-    VkResult res = orig::vkCreateSwapchainKHR(device, &newCreateInfo, pAllocator, pSwapchain);
+    VkResult res = vkProcs.CreateSwapchainKHR(device, &newCreateInfo, pAllocator, pSwapchain);
     if (res != VK_SUCCESS) {
         VKCHECKERROR(res);
         return res;
     }
     
     uint32_t imageCount = 0;
-    VkResult err = orig::vkGetSwapchainImagesKHR(device, *pSwapchain, &imageCount, nullptr);
+    VkResult err = vkProcs.GetSwapchainImagesKHR(device, *pSwapchain, &imageCount, nullptr);
     if (err != VK_SUCCESS || imageCount == 0) {
         if (err == VK_SUCCESS) {
             err = VK_ERROR_INITIALIZATION_FAILED;
         }
         LOG(LL_ERROR, LCF_WINDOW | LCF_VULKAN, "Failed to query swapchain image count: %d", err);
-        orig::vkDestroySwapchainKHR(device, *pSwapchain, pAllocator);
+        vkProcs.DestroySwapchainKHR(device, *pSwapchain, pAllocator);
         *pSwapchain = VK_NULL_HANDLE;
         return err;
     }
 
     std::vector<VkImage> swapchainImgs;
     swapchainImgs.resize(imageCount);
-    err = orig::vkGetSwapchainImagesKHR(device, *pSwapchain, &imageCount, swapchainImgs.data());
+    err = vkProcs.GetSwapchainImagesKHR(device, *pSwapchain, &imageCount, swapchainImgs.data());
     if (err != VK_SUCCESS) {
         LOG(LL_ERROR, LCF_WINDOW | LCF_VULKAN, "Failed to query swapchain images: %d", err);
-        orig::vkDestroySwapchainKHR(device, *pSwapchain, pAllocator);
+        vkProcs.DestroySwapchainKHR(device, *pSwapchain, pAllocator);
         *pSwapchain = VK_NULL_HANDLE;
         return err;
     }
@@ -541,7 +399,7 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
         info.pSubpasses = &subpass;
         info.dependencyCount = 1;
         info.pDependencies = &dependency;
-        err = orig::vkCreateRenderPass(vk::context.device, &info, vk::context.allocator, &vk::context.renderPass);
+        err = vkProcs.CreateRenderPass(vk::context.device, &info, vk::context.allocator, &vk::context.renderPass);
         VKCHECKERROR(err);
     }
     
@@ -556,7 +414,7 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
             info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
             info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
             info.queueFamilyIndex = vk::context.queueFamily;
-            err = orig::vkCreateCommandPool(vk::context.device, &info, vk::context.allocator, &fd->commandPool);
+            err = vkProcs.CreateCommandPool(vk::context.device, &info, vk::context.allocator, &fd->commandPool);
             VKCHECKERROR(err);            
         }
         {
@@ -565,7 +423,7 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
             info.commandPool = fd->commandPool;
             info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
             info.commandBufferCount = 1;
-            err = orig::vkAllocateCommandBuffers(vk::context.device, &info, &fd->screenCommandBuffer);
+            err = vkProcs.AllocateCommandBuffers(vk::context.device, &info, &fd->screenCommandBuffer);
             VKCHECKERROR(err);
         }
         {
@@ -574,7 +432,7 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
             info.commandPool = fd->commandPool;
             info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
             info.commandBufferCount = 1;
-            err = orig::vkAllocateCommandBuffers(vk::context.device, &info, &fd->clearCommandBuffer);
+            err = vkProcs.AllocateCommandBuffers(vk::context.device, &info, &fd->clearCommandBuffer);
             VKCHECKERROR(err);
         }
         {
@@ -583,26 +441,26 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
             info.commandPool = fd->commandPool;
             info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
             info.commandBufferCount = 1;
-            err = orig::vkAllocateCommandBuffers(vk::context.device, &info, &fd->osdCommandBuffer);
+            err = vkProcs.AllocateCommandBuffers(vk::context.device, &info, &fd->osdCommandBuffer);
             VKCHECKERROR(err);
         }
         {
             VkFenceCreateInfo info = {};
             info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
             info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-            err = orig::vkCreateFence(vk::context.device, &info, vk::context.allocator, &fd->fence);
+            err = vkProcs.CreateFence(vk::context.device, &info, vk::context.allocator, &fd->fence);
             VKCHECKERROR(err);
         }
         {
             VkSemaphoreCreateInfo info = {};
             info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-            err = orig::vkCreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->imageAcquiredSemaphore);
+            err = vkProcs.CreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->imageAcquiredSemaphore);
             VKCHECKERROR(err);
-            err = orig::vkCreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->screenCompleteSemaphore);
+            err = vkProcs.CreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->screenCompleteSemaphore);
             VKCHECKERROR(err);
-            err = orig::vkCreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->clearCompleteSemaphore);
+            err = vkProcs.CreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->clearCompleteSemaphore);
             VKCHECKERROR(err);
-            err = orig::vkCreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->osdCompleteSemaphore);
+            err = vkProcs.CreateSemaphore(vk::context.device, &info, vk::context.allocator, &fsd->osdCompleteSemaphore);
             VKCHECKERROR(err);
         }
         
@@ -619,7 +477,7 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
             VkImageSubresourceRange image_range = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
             info.subresourceRange = image_range;
             info.image = fd->backbuffer;
-            err = orig::vkCreateImageView(vk::context.device, &info, vk::context.allocator, &fd->backbufferView);
+            err = vkProcs.CreateImageView(vk::context.device, &info, vk::context.allocator, &fd->backbufferView);
             VKCHECKERROR(err);
         }
         
@@ -635,7 +493,7 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
             info.height = vk::context.height;
             info.layers = 1;
             attachment[0] = fd->backbufferView;
-            VkResult err = orig::vkCreateFramebuffer(device, &info, vk::context.allocator, &fd->framebuffer);
+            VkResult err = vkProcs.CreateFramebuffer(device, &info, vk::context.allocator, &fd->framebuffer);
             VKCHECKERROR(err);
         }
     }
@@ -646,7 +504,7 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
 void vkDestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAllocationCallbacks* pAllocator)
 {
     if (GlobalState::isNative())
-        return orig::vkDestroySwapchainKHR(device, swapchain, pAllocator);
+        return vkProcs.DestroySwapchainKHR(device, swapchain, pAllocator);
 
     LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
@@ -655,13 +513,13 @@ void vkDestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAl
         vk::context.swapchain = VK_NULL_HANDLE;
     }
 
-    return orig::vkDestroySwapchainKHR(device, swapchain, pAllocator);
+    return vkProcs.DestroySwapchainKHR(device, swapchain, pAllocator);
 }
 
 VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* pImageIndex)
 {
     if (GlobalState::isNative())
-        return orig::vkAcquireNextImageKHR(device, swapchain, timeout, semaphore, fence, pImageIndex);
+        return vkProcs.AcquireNextImageKHR(device, swapchain, timeout, semaphore, fence, pImageIndex);
 
     LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
@@ -689,7 +547,7 @@ VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64
             return VK_ERROR_INITIALIZATION_FAILED;
         }
 
-        VkResult submitRes = orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &info, fence);
+        VkResult submitRes = vkProcs.QueueSubmit(vk::context.graphicsQueue, 1, &info, fence);
         if (submitRes != VK_SUCCESS) {
             VKCHECKERROR(submitRes);
             return submitRes;
@@ -703,7 +561,7 @@ VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64
         return VK_SUCCESS;
     }
 
-    VkResult res = orig::vkAcquireNextImageKHR(device, swapchain, timeout, semaphore, fence, pImageIndex);
+    VkResult res = vkProcs.AcquireNextImageKHR(device, swapchain, timeout, semaphore, fence, pImageIndex);
     if (res != VK_SUCCESS) {
         return res;
     }
@@ -721,7 +579,7 @@ VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64
 VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
 {
     if (GlobalState::isNative())
-        return orig::vkQueuePresentKHR(queue, pPresentInfo);
+        return vkProcs.QueuePresentKHR(queue, pPresentInfo);
 
     LOGTRACE(LCF_WINDOW | LCF_VULKAN);
 
@@ -756,7 +614,7 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
         info.pWaitSemaphores = pPresentInfo->pWaitSemaphores;
         info.pWaitDstStageMask = &stageFlags;
         info.signalSemaphoreCount = 0;
-        VkResult submitRes = orig::vkQueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
+        VkResult submitRes = vkProcs.QueueSubmit(queue, 1, &info, VK_NULL_HANDLE);
         if (submitRes != VK_SUCCESS) {
             VKCHECKERROR(submitRes);
             return submitRes;
@@ -784,7 +642,7 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
          * acquire other images when presenting again. */
         pi.pImageIndices = &vk::context.frameIndex;
         // LOG(LL_DEBUG, LCF_WINDOW | LCF_VULKAN, "    vkQueuePresentKHR wait on semaphore %llx", vk::context.currentSemaphore);
-        ret = orig::vkQueuePresentKHR(queue, &pi);
+        ret = vkProcs.QueuePresentKHR(queue, &pi);
         
         if (ret == VK_ERROR_OUT_OF_DATE_KHR || ret == VK_SUBOPTIMAL_KHR) {
             vk::context.swapchainRebuild = true;
@@ -793,7 +651,7 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
         }
         
         /* TODO: Use fence to delay waiting on queue */
-        orig::vkQueueWaitIdle(vk::context.graphicsQueue);
+        vkProcs.QueueWaitIdle(vk::context.graphicsQueue);
 
     }, renderHUD);
 

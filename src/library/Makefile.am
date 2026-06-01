@@ -125,6 +125,7 @@ libtas_so_SOURCES = \
     rendering/openglloader.cpp \
     rendering/openglwrappers.cpp \
     rendering/vdpauwrappers.cpp \
+    rendering/vulkanloader.cpp \
     rendering/vulkanwrappers.cpp \
     screencapture/ScreenCapture_GL.cpp \
     screencapture/ScreenCapture_SDL1.cpp \

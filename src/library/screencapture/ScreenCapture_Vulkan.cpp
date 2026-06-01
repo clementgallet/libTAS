@@ -22,35 +22,12 @@
 #include "logging.h"
 #include "global.h"
 #include "GlobalState.h"
+#include "rendering/vulkanloader.h"
 #include "rendering/vulkanwrappers.h"
 #include "../external/imgui/imgui.h"
 #include "../external/imgui/imgui_impl_vulkan.h" // ImGui_ImplVulkan_AddTexture
 
 namespace libtas {
-
-DECLARE_ORIG_POINTER(vkCreateImage)
-DECLARE_ORIG_POINTER(vkGetImageMemoryRequirements)
-DECLARE_ORIG_POINTER(vkAllocateMemory)
-DECLARE_ORIG_POINTER(vkBindImageMemory)
-DECLARE_ORIG_POINTER(vkUnmapMemory)
-DECLARE_ORIG_POINTER(vkFreeMemory)
-DECLARE_ORIG_POINTER(vkDestroyImage)
-DECLARE_ORIG_POINTER(vkAllocateCommandBuffers)
-DECLARE_ORIG_POINTER(vkBeginCommandBuffer)
-DECLARE_ORIG_POINTER(vkCmdPipelineBarrier)
-DECLARE_ORIG_POINTER(vkCmdBlitImage)
-DECLARE_ORIG_POINTER(vkCmdCopyImage)
-DECLARE_ORIG_POINTER(vkEndCommandBuffer)
-DECLARE_ORIG_POINTER(vkQueueSubmit)
-DECLARE_ORIG_POINTER(vkFreeCommandBuffers)
-DECLARE_ORIG_POINTER(vkGetImageSubresourceLayout)
-DECLARE_ORIG_POINTER(vkMapMemory)
-DECLARE_ORIG_POINTER(vkAcquireNextImageKHR)
-DECLARE_ORIG_POINTER(vkCreateImageView)
-DECLARE_ORIG_POINTER(vkCreateSampler)
-DECLARE_ORIG_POINTER(vkDestroyImageView)
-DECLARE_ORIG_POINTER(vkDestroySampler)
-DECLARE_ORIG_POINTER(vkCmdClearColorImage)
 
 int ScreenCapture_Vulkan::init()
 {
@@ -121,13 +98,13 @@ void ScreenCapture_Vulkan::initScreenSurface()
     imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     
     /* Create the image */
-    if ((res = orig::vkCreateImage(vk::context.device, &imageInfo, vk::context.allocator, &vkScreenImage)) != VK_SUCCESS) {
+    if ((res = vkProcs.CreateImage(vk::context.device, &imageInfo, vk::context.allocator, &vkScreenImage)) != VK_SUCCESS) {
         LOG(LL_ERROR, LCF_VULKAN, "vkCreateImage failed with error %d", res);
     }
     
     /* Create memory to back up the image */
     VkMemoryRequirements memRequirements;
-    orig::vkGetImageMemoryRequirements(vk::context.device, vkScreenImage, &memRequirements);
+    vkProcs.GetImageMemoryRequirements(vk::context.device, vkScreenImage, &memRequirements);
 
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -135,11 +112,11 @@ void ScreenCapture_Vulkan::initScreenSurface()
     // Memory must be host visible to copy from
     allocInfo.memoryTypeIndex = vk::getMemoryTypeIndex(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-    if ((res = orig::vkAllocateMemory(vk::context.device, &allocInfo, vk::context.allocator, &vkScreenImageMemory)) != VK_SUCCESS) {
+    if ((res = vkProcs.AllocateMemory(vk::context.device, &allocInfo, vk::context.allocator, &vkScreenImageMemory)) != VK_SUCCESS) {
         LOG(LL_ERROR, LCF_VULKAN, "vkAllocateMemory failed with error %d", res);
     }
 
-    orig::vkBindImageMemory(vk::context.device, vkScreenImage, vkScreenImageMemory, 0);
+    vkProcs.BindImageMemory(vk::context.device, vkScreenImage, vkScreenImageMemory, 0);
     
     /* From Dear ImGui Display example page 
      * <https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples#example-for-vulkan-users> */
@@ -154,7 +131,7 @@ void ScreenCapture_Vulkan::initScreenSurface()
         info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         info.subresourceRange.levelCount = 1;
         info.subresourceRange.layerCount = 1;
-        res = orig::vkCreateImageView(vk::context.device, &info, vk::context.allocator, &vkScreenImageView);
+        res = vkProcs.CreateImageView(vk::context.device, &info, vk::context.allocator, &vkScreenImageView);
         if (res != VK_SUCCESS) {
             LOG(LL_ERROR, LCF_VULKAN, "vkCreateImageView failed with error %d", res);
         }
@@ -173,7 +150,7 @@ void ScreenCapture_Vulkan::initScreenSurface()
         sampler_info.minLod = -1000;
         sampler_info.maxLod = 1000;
         sampler_info.maxAnisotropy = 1.0f;
-        res = orig::vkCreateSampler(vk::context.device, &sampler_info, vk::context.allocator, &vkScreenSampler);
+        res = vkProcs.CreateSampler(vk::context.device, &sampler_info, vk::context.allocator, &vkScreenSampler);
         if (res != VK_SUCCESS) {
             LOG(LL_ERROR, LCF_VULKAN, "vkCreateSampler failed with error %d", res);
         }
@@ -194,19 +171,19 @@ void ScreenCapture_Vulkan::destroyScreenSurface()
         vkScreenDescriptorSet = VK_NULL_HANDLE;
     }
     if (vkScreenSampler != VK_NULL_HANDLE) {
-        orig::vkDestroySampler(vk::context.device, vkScreenSampler, nullptr);
+        vkProcs.DestroySampler(vk::context.device, vkScreenSampler, nullptr);
         vkScreenSampler = VK_NULL_HANDLE;
     }
     if (vkScreenImageView != VK_NULL_HANDLE) {
-        orig::vkDestroyImageView(vk::context.device, vkScreenImageView, nullptr);
+        vkProcs.DestroyImageView(vk::context.device, vkScreenImageView, nullptr);
         vkScreenImageView = VK_NULL_HANDLE;
     }    
     if (vkScreenImageMemory != VK_NULL_HANDLE) {
-        orig::vkFreeMemory(vk::context.device, vkScreenImageMemory, nullptr);
+        vkProcs.FreeMemory(vk::context.device, vkScreenImageMemory, nullptr);
         vkScreenImageMemory = VK_NULL_HANDLE;
     }
     if (vkScreenImage != VK_NULL_HANDLE) {
-        orig::vkDestroyImage(vk::context.device, vkScreenImage, nullptr);
+        vkProcs.DestroyImage(vk::context.device, vkScreenImage, nullptr);
         vkScreenImage = VK_NULL_HANDLE;
     }
 }
@@ -266,7 +243,7 @@ int ScreenCapture_Vulkan::copyScreenToSurface()
     VkCommandBufferBeginInfo cmdBufInfo{};
     cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    if ((res = orig::vkBeginCommandBuffer(cmdBuffer, &cmdBufInfo)) != VK_SUCCESS) {
+    if ((res = vkProcs.BeginCommandBuffer(cmdBuffer, &cmdBufInfo)) != VK_SUCCESS) {
         LOG(LL_ERROR, LCF_VULKAN, "vkBeginCommandBuffer failed with error %d", res);
     }
     
@@ -286,7 +263,7 @@ int ScreenCapture_Vulkan::copyScreenToSurface()
     dstBarrier.srcAccessMask = 0;
     dstBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
-    orig::vkCmdPipelineBarrier(cmdBuffer,
+    vkProcs.CmdPipelineBarrier(cmdBuffer,
         VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
         0,
         0, nullptr,
@@ -309,7 +286,7 @@ int ScreenCapture_Vulkan::copyScreenToSurface()
     srcBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
     srcBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
-    orig::vkCmdPipelineBarrier(cmdBuffer,
+    vkProcs.CmdPipelineBarrier(cmdBuffer,
         VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
         0,
         0, nullptr,
@@ -327,7 +304,7 @@ int ScreenCapture_Vulkan::copyScreenToSurface()
 	imageCopyRegion.extent.depth = 1;
 
 	/* Issue the copy command */
-	orig::vkCmdCopyImage(
+	vkProcs.CmdCopyImage(
 		cmdBuffer,
 		backbuffer, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
 		vkScreenImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -341,7 +318,7 @@ int ScreenCapture_Vulkan::copyScreenToSurface()
     dstBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     dstBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
 
-    orig::vkCmdPipelineBarrier(cmdBuffer,
+    vkProcs.CmdPipelineBarrier(cmdBuffer,
         VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
         0,
         0, nullptr,
@@ -356,7 +333,7 @@ int ScreenCapture_Vulkan::copyScreenToSurface()
     srcBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
     srcBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
 
-    orig::vkCmdPipelineBarrier(cmdBuffer,
+    vkProcs.CmdPipelineBarrier(cmdBuffer,
         VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
         0,
         0, nullptr,
@@ -365,7 +342,7 @@ int ScreenCapture_Vulkan::copyScreenToSurface()
     );
 
     /* Flush the command buffer */
-    if ((res = orig::vkEndCommandBuffer(cmdBuffer)) != VK_SUCCESS) {
+    if ((res = vkProcs.EndCommandBuffer(cmdBuffer)) != VK_SUCCESS) {
         LOG(LL_ERROR, LCF_VULKAN, "vkEndCommandBuffer failed with error %d", res);
     }
 
@@ -389,7 +366,7 @@ int ScreenCapture_Vulkan::copyScreenToSurface()
 
     // LOG(LL_DEBUG, LCF_VULKAN, "    vkQueueSubmit wait on %llx and signal %llx and semindex %d", submitInfo.pWaitSemaphores[0], submitInfo.pSignalSemaphores[0], vk::context.semaphoreIndex);
 
-    if ((res = orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE)) != VK_SUCCESS) {
+    if ((res = vkProcs.QueueSubmit(vk::context.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE)) != VK_SUCCESS) {
         LOG(LL_ERROR, LCF_VULKAN, "vkEndCommandBuffer failed with error %d", res);
     }
 
@@ -414,11 +391,11 @@ int ScreenCapture_Vulkan::getPixelsFromSurface(uint8_t **pixels, bool draw)
     /* Get layout of the image (including row pitch) */
 	VkImageSubresource subResource { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0 };
 	VkSubresourceLayout subResourceLayout;
-	orig::vkGetImageSubresourceLayout(vk::context.device, vkScreenImage, &subResource, &subResourceLayout);
+	vkProcs.GetImageSubresourceLayout(vk::context.device, vkScreenImage, &subResource, &subResourceLayout);
 
 	/* Map image memory so we can start copying from it */
 	const char* data;
-    if ((res = orig::vkMapMemory(vk::context.device, vkScreenImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&data)) != VK_SUCCESS) {
+    if ((res = vkProcs.MapMemory(vk::context.device, vkScreenImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&data)) != VK_SUCCESS) {
         LOG(LL_ERROR, LCF_VULKAN, "vkEndCommandBuffer failed with error %d", res);
     }
     
@@ -436,7 +413,7 @@ int ScreenCapture_Vulkan::getPixelsFromSurface(uint8_t **pixels, bool draw)
     if (h != height)
         LOG(LL_ERROR, LCF_VULKAN, "Mismatch between Vulkan internal image height (%d) and registered height (%d)", h, height);
     
-    orig::vkUnmapMemory(vk::context.device, vkScreenImageMemory);
+    vkProcs.UnmapMemory(vk::context.device, vkScreenImageMemory);
     
     return size;
 }
@@ -444,7 +421,7 @@ int ScreenCapture_Vulkan::getPixelsFromSurface(uint8_t **pixels, bool draw)
 static void acquireImage()
 {
     /* Acquire an image from the swapchain */
-    VkResult res = orig::vkAcquireNextImageKHR(vk::context.device, vk::context.swapchain, UINT64_MAX, vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore, VK_NULL_HANDLE, &vk::context.frameIndex);
+    VkResult res = vkProcs.AcquireNextImageKHR(vk::context.device, vk::context.swapchain, UINT64_MAX, vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore, VK_NULL_HANDLE, &vk::context.frameIndex);
     if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR) {
         LOG(LL_WARN, LCF_VULKAN, "vkAcquireNextImageKHR failed with error %d", res);
         vk::context.swapchainRebuild = true;
@@ -463,7 +440,7 @@ static void beginCommand(VkCommandBuffer cmdBuffer)
     VkCommandBufferBeginInfo cmdBufInfo{};
     cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    if ((res = orig::vkBeginCommandBuffer(cmdBuffer, &cmdBufInfo)) != VK_SUCCESS) {
+    if ((res = vkProcs.BeginCommandBuffer(cmdBuffer, &cmdBufInfo)) != VK_SUCCESS) {
         LOG(LL_ERROR, LCF_VULKAN, "vkBeginCommandBuffer failed with error %d", res);
     }
 }
@@ -473,7 +450,7 @@ static void EndCommandAndSubmitQueue(VkCommandBuffer cmdBuffer, VkSemaphore* sem
     VkResult res;
 
     /* Flush the command buffer */
-    if ((res = orig::vkEndCommandBuffer(cmdBuffer)) != VK_SUCCESS) {
+    if ((res = vkProcs.EndCommandBuffer(cmdBuffer)) != VK_SUCCESS) {
         LOG(LL_ERROR, LCF_VULKAN, "vkEndCommandBuffer failed with error %d", res);
     }
     
@@ -490,7 +467,7 @@ static void EndCommandAndSubmitQueue(VkCommandBuffer cmdBuffer, VkSemaphore* sem
     
     // LOG(LL_DEBUG, LCF_VULKAN, "    vkQueueSubmit wait on %llx and signal %llx and semindex %d", submitInfo.pWaitSemaphores[0], submitInfo.pSignalSemaphores[0], vk::context.semaphoreIndex);
     
-    if ((res = orig::vkQueueSubmit(vk::context.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE)) != VK_SUCCESS) {
+    if ((res = vkProcs.QueueSubmit(vk::context.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE)) != VK_SUCCESS) {
         LOG(LL_ERROR, LCF_VULKAN, "vkEndCommandBuffer failed with error %d", res);
     }
     
@@ -528,7 +505,7 @@ int ScreenCapture_Vulkan::copySurfaceToScreen()
     dstBarrier.srcAccessMask = 0;
     dstBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     
-    orig::vkCmdPipelineBarrier(cmdBuffer,
+    vkProcs.CmdPipelineBarrier(cmdBuffer,
         VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
         0,
         0, nullptr,
@@ -551,7 +528,7 @@ int ScreenCapture_Vulkan::copySurfaceToScreen()
     srcBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
     srcBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
     
-    orig::vkCmdPipelineBarrier(cmdBuffer,
+    vkProcs.CmdPipelineBarrier(cmdBuffer,
         VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
         0,
         0, nullptr,
@@ -570,7 +547,7 @@ int ScreenCapture_Vulkan::copySurfaceToScreen()
     imageCopyRegion.extent.depth = 1;
     
     /* Issue the copy command */
-    orig::vkCmdCopyImage(
+    vkProcs.CmdCopyImage(
         cmdBuffer,
         vkScreenImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
         backbuffer, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -584,7 +561,7 @@ int ScreenCapture_Vulkan::copySurfaceToScreen()
     dstBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     dstBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
     
-    orig::vkCmdPipelineBarrier(cmdBuffer,
+    vkProcs.CmdPipelineBarrier(cmdBuffer,
         VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
         0,
         0, nullptr,
@@ -598,7 +575,7 @@ int ScreenCapture_Vulkan::copySurfaceToScreen()
     srcBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
     srcBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
     
-    orig::vkCmdPipelineBarrier(cmdBuffer,
+    vkProcs.CmdPipelineBarrier(cmdBuffer,
         VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
         0,
         0, nullptr,
@@ -647,7 +624,7 @@ void ScreenCapture_Vulkan::clearScreen()
     dstBarrier.srcAccessMask = 0;
     dstBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     
-    orig::vkCmdPipelineBarrier(cmdBuffer,
+    vkProcs.CmdPipelineBarrier(cmdBuffer,
         VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
         0,
         0, nullptr,
@@ -664,7 +641,7 @@ void ScreenCapture_Vulkan::clearScreen()
     imageRange.levelCount = 1;
     imageRange.layerCount = 1;
 
-    orig::vkCmdClearColorImage(cmdBuffer, backbuffer, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &imageRange);
+    vkProcs.CmdClearColorImage(cmdBuffer, backbuffer, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &imageRange);
 
     /* Transition destination image to general layout, which is the required layout for mapping the image memory later on */
     dstBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -673,7 +650,7 @@ void ScreenCapture_Vulkan::clearScreen()
     dstBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     dstBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
     
-    orig::vkCmdPipelineBarrier(cmdBuffer,
+    vkProcs.CmdPipelineBarrier(cmdBuffer,
         VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
         0,
         0, nullptr,
