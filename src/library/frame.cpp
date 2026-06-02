@@ -164,8 +164,10 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
     /* Reset the busy loop detector */
     BusyLoopDetection::reset();
 
-    /* Initialize Screen Capture on the first real screen draw */
-    ScreenCapture::init();
+    /* Initialize Screen Capture on the first real screen draw, because games may initialize only 
+     * part of the rendering context, and then sleep which can trigger a frame boundary. */
+    if (draw)
+        ScreenCapture::init();
 
     /* Wait for events to be processed by the game */
 #ifdef __unix__
