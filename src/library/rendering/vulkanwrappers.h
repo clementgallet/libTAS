@@ -91,6 +91,8 @@ OVERRIDE PFN_vkVoidFunction vkGetInstanceProcAddr(VkInstance instance, const cha
 
 OVERRIDE PFN_vkVoidFunction vkGetDeviceProcAddr(VkDevice device, const char* pName);
 
+PFN_vkVoidFunction vkGetProcAddr(const char *proc);
+
 OVERRIDE VkResult vkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInfo* pCreateInfo,
                                 const VkAllocationCallbacks* pAllocator, VkDevice* pDevice);
 

@@ -40,15 +40,7 @@ void vk_load_procs(VKGetProcAddressProc proc)
     
 #define VK_PROC(FUNC) \
     if (!vkProcs.FUNC) \
-        vkProcs.FUNC = reinterpret_cast<decltype(&vk##FUNC)>(proc("vk" #FUNC)); \
-    if (!vkProcs.FUNC) { \
-        GlobalNative gn; \
-        void* handle = dlopen("libvulkan.so.1", RTLD_LAZY | RTLD_DEEPBIND); \
-        if (handle != NULL) { \
-            vkProcs.FUNC = reinterpret_cast<decltype(&vk##FUNC)>(dlsym(handle, "vk" #FUNC)); \
-            dlclose(handle); \
-        } \
-    }
+        vkProcs.FUNC = reinterpret_cast<decltype(&vk##FUNC)>(proc("vk" #FUNC));
 
 /* We don't load the different Get*ProcAddr functions, because if they were not loaded already, it means
  * that the game is linking directly to each vk function. In that case, those functions will not work. */

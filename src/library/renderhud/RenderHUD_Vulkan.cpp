@@ -40,7 +40,7 @@ RenderHUD_Vulkan::~RenderHUD_Vulkan() {
 
 void RenderHUD_Vulkan::init() {
     
-    bool ret = ImGui_ImplVulkan_LoadFunctions(0, [](const char* function_name, void*) { return vkProcs.GetInstanceProcAddr(vk::context.instance, function_name); });
+    bool ret = ImGui_ImplVulkan_LoadFunctions(0, [](const char* function_name, void*) { return vkGetProcAddr(function_name); });
     if (!ret) {
         LOG(LL_ERROR, LCF_VULKAN, "ImGui_ImplVulkan_LoadFunctions failed");
     }

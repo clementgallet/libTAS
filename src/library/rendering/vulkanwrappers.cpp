@@ -174,7 +174,7 @@ PFN_vkVoidFunction vkGetDeviceProcAddr(VkDevice device, const char* pName)
 }
 
 /* Function to pass to our function pointer loader */
-static PFN_vkVoidFunction vkGetProcAddr(const char *proc)
+PFN_vkVoidFunction vkGetProcAddr(const char *proc)
 {
     PFN_vkVoidFunction func = nullptr;
 
@@ -183,6 +183,15 @@ static PFN_vkVoidFunction vkGetProcAddr(const char *proc)
     }
     if (!func && vkProcs.GetInstanceProcAddr) {
         func = vkProcs.GetInstanceProcAddr(vk::context.instance, proc);
+    }
+
+    if (!func) {
+        GlobalNative gn;
+        void* handle = dlopen("libvulkan.so.1", RTLD_LAZY | RTLD_DEEPBIND);
+        if (handle != NULL) {
+            func = reinterpret_cast<PFN_vkVoidFunction>(dlsym(handle, proc));
+            dlclose(handle);
+        }
     }
     return func;
 }
