@@ -548,8 +548,8 @@ bool ImGui_ImplXlib_Init(Display* display, Window window)
     // Setup XIM
 #ifdef X_HAVE_UTF8_STRING
     XSetLocaleModifiers("");
-    bd->IM = XOpenIM(display, NULL, NULL, NULL);
-    bd->IC = XCreateIC(bd->IM, XNClientWindow, window, XNFocusWindow, window, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, NULL);
+    // bd->IM = XOpenIM(display, NULL, NULL, NULL);
+    // bd->IC = XCreateIC(bd->IM, XNClientWindow, window, XNFocusWindow, window, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, NULL);
 #endif
 
     // Load mouse cursors
