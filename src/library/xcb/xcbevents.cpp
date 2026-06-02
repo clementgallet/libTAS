@@ -28,6 +28,7 @@
 #include "xlib/XlibGameWindow.h"
 #include "global.h"
 #include "GlobalState.h"
+#include "checkpoint/ThreadSync.h"
 
 #include <cstdlib>
 
@@ -42,6 +43,8 @@ DEFINE_ORIG_POINTER(xcb_poll_for_event)
 DEFINE_ORIG_POINTER(xcb_send_event_checked)
 DEFINE_ORIG_POINTER(xcb_send_event)
 DEFINE_ORIG_POINTER(xcb_flush)
+DEFINE_ORIG_POINTER(xcb_poll_for_special_event)
+DEFINE_ORIG_POINTER(xcb_wait_for_special_event)
 #ifdef LIBTAS_HAS_XCB_RANDR
 DEFINE_ORIG_POINTER(xcb_randr_get_screen_info_unchecked)
 DEFINE_ORIG_POINTER(xcb_randr_get_screen_info_reply)
@@ -391,6 +394,44 @@ int xcb_flush(xcb_connection_t *c)
     LINK_NAMESPACE_GLOBAL(xcb_flush);
     return orig::xcb_flush(c);
     // return 1; // Success
+}
+
+xcb_generic_event_t *xcb_poll_for_special_event(xcb_connection_t *c, xcb_special_event_t *se)
+{
+    LINK_NAMESPACE_GLOBAL(xcb_poll_for_special_event);
+    if (GlobalState::isNative()) {
+        return orig::xcb_poll_for_special_event(c, se);
+    }
+
+    LOGTRACE(LCF_EVENTS);
+
+    WrapperLock wrapperLock;
+    return orig::xcb_poll_for_special_event(c, se);
+}
+
+xcb_generic_event_t *xcb_wait_for_special_event(xcb_connection_t *c, xcb_special_event_t *se)
+{
+    LINK_NAMESPACE_GLOBAL(xcb_wait_for_special_event);
+    if (GlobalState::isNative()) {
+        return orig::xcb_wait_for_special_event(c, se);
+    }
+
+    LOGTRACE(LCF_EVENTS);
+    LINK_NAMESPACE_GLOBAL(xcb_poll_for_special_event);
+
+    while (!Global::is_exiting) {
+        {
+            WrapperLock wrapperLock;
+            xcb_generic_event_t *event = orig::xcb_poll_for_special_event(c, se);
+            if (event) {
+                return event;
+            }
+        }
+        struct timespec st = {0, 1000*1000};
+        NATIVECALL(nanosleep(&st, NULL)); // Wait 1 ms before trying again
+        pushNativeXcbEvents(c);
+    }
+    return nullptr;
 }
 
 }

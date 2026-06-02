@@ -55,6 +55,16 @@ xcb_send_event (xcb_connection_t *c,
 
 OVERRIDE int xcb_flush(xcb_connection_t *c);
 
+/**
+ * @brief Returns the next event from a special queue
+ */
+OVERRIDE xcb_generic_event_t *xcb_poll_for_special_event(xcb_connection_t *c,
+                                                xcb_special_event_t *se);
+/**
+ * @brief Returns the next event from a special queue, blocking until one arrives
+ */
+OVERRIDE xcb_generic_event_t *xcb_wait_for_special_event(xcb_connection_t *c,
+                                                xcb_special_event_t *se);
 
 }
 
