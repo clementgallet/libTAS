@@ -91,7 +91,7 @@ typedef void *SDL_FileDialogType;
 // SDL_FlashOperation defined as enum
 // SDL_FlipMode: skip
 typedef void *SDL_Folder;
-typedef void *SDL_FunctionPointer;
+typedef void (*SDL_FunctionPointer)(void);
 typedef void *SDL_GPUBlitInfo;
 typedef void *SDL_GPUBuffer;
 typedef void *SDL_GPUBufferBinding;

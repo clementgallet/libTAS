@@ -148,6 +148,7 @@ libtas_so_SOURCES = \
     sdl/sdltime.cpp \
     sdl/sdltimer.cpp \
     sdl/sdlversion.cpp \
+    sdl/sdlvulkan.cpp \
     sdl/sdlwindows.cpp \
     steam/CCallback.cpp \
     steam/CCallbackManager.cpp \
