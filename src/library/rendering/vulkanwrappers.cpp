@@ -29,6 +29,7 @@
 #include "GlobalState.h"
 
 #include <string.h>
+#include <dlfcn.h>
 
 #define RETURN_SYMBOL_DETAILED(FUNC, NEW_FUNC) \
     if (! NEW_FUNC) { \
@@ -37,7 +38,12 @@
     if (!strcmp(symbol, "vk" #FUNC)) { \
         if (real_pointer == reinterpret_cast<void*>(NEW_FUNC)) { \
             LOG(LL_WARN, LCF_HOOK | LCF_VULKAN,"  Vulkan proc function failed at finding the real function %s, using the standard symbol loading method instead", symbol); \
-            link_function((void**)&vkProcs.FUNC, symbol, "libvulkan.so"); \
+            GlobalNative gn; \
+            void* handle = dlopen("libvulkan.so.1", RTLD_LAZY | RTLD_DEEPBIND); \
+            if (handle != NULL) { \
+                vkProcs.FUNC = reinterpret_cast<decltype(&vk##FUNC)>(dlsym(handle, symbol)); \
+                dlclose(handle); \
+            } \
         } \
         else { \
             vkProcs.FUNC = reinterpret_cast<decltype(&vk##FUNC)>(real_pointer); \
@@ -89,10 +95,10 @@ void vk##NAME DECL\
 
 VKFUNCSKIPDRAW(CmdDraw, (VkCommandBuffer commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance), (commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance))
 VKFUNCSKIPDRAW(CmdDrawIndirect, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride), (commandBuffer, buffer, offset, drawCount, stride))
-VKFUNCSKIPDRAW(CmdDrawIndirectCount, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride), (commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride))
+// VKFUNCSKIPDRAW(CmdDrawIndirectCount, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride), (commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride))
 VKFUNCSKIPDRAW(CmdDrawIndexed, (VkCommandBuffer commandBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance), (commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance))
 VKFUNCSKIPDRAW(CmdDrawIndexedIndirect, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride), (commandBuffer, buffer, offset, drawCount, stride))
-VKFUNCSKIPDRAW(CmdDrawIndexedIndirectCount, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride), (commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride))
+// VKFUNCSKIPDRAW(CmdDrawIndexedIndirectCount, (VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride), (commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride))
 
 /* If the game uses the vkGetInstanceProcAddr functions to access to a function
  * that we hook, we must return our function and store the original pointers
@@ -107,17 +113,17 @@ static void* return_my_symbol(const char* symbol, void* real_pointer) {
     STORE_RETURN_SYMBOL(CreateSwapchainKHR)
     STORE_RETURN_SYMBOL(AcquireNextImageKHR)
     STORE_RETURN_SYMBOL(QueuePresentKHR)
-    STORE_RETURN_SYMBOL_CUSTOM(CreateDevice)
-    STORE_RETURN_SYMBOL_CUSTOM(DestroyDevice)
+    STORE_RETURN_SYMBOL(CreateDevice)
+    STORE_RETURN_SYMBOL(DestroyDevice)
     STORE_RETURN_SYMBOL(GetDeviceProcAddr)
     STORE_RETURN_SYMBOL(GetDeviceQueue)
     STORE_RETURN_SYMBOL(DestroySwapchainKHR)
     STORE_RETURN_SYMBOL(CmdDraw)
     STORE_RETURN_SYMBOL(CmdDrawIndirect)
-    STORE_RETURN_SYMBOL(CmdDrawIndirectCount)
+    // STORE_RETURN_SYMBOL(CmdDrawIndirectCount)
     STORE_RETURN_SYMBOL(CmdDrawIndexed)
     STORE_RETURN_SYMBOL(CmdDrawIndexedIndirect)
-    STORE_RETURN_SYMBOL(CmdDrawIndexedIndirectCount)
+    // STORE_RETURN_SYMBOL(CmdDrawIndexedIndirectCount)
 
     return real_pointer;
 }
@@ -170,15 +176,22 @@ PFN_vkVoidFunction vkGetDeviceProcAddr(VkDevice device, const char* pName)
 /* Function to pass to our function pointer loader */
 static PFN_vkVoidFunction vkGetProcAddr(const char *proc)
 {
+    PFN_vkVoidFunction func = nullptr;
+
     if (vkProcs.GetDeviceProcAddr) {
-        return vkProcs.GetDeviceProcAddr(vk::context.device, proc);
+        func = vkProcs.GetDeviceProcAddr(vk::context.device, proc);
     }
-    return vkProcs.GetInstanceProcAddr(vk::context.instance, proc);
+    if (!func && vkProcs.GetInstanceProcAddr) {
+        func = vkProcs.GetInstanceProcAddr(vk::context.instance, proc);
+    }
+    return func;
 }
 
-VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInfo* pCreateInfo,
+VkResult vkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInfo* pCreateInfo,
                                 const VkAllocationCallbacks* pAllocator, VkDevice* pDevice)
 {
+    LINK_VK_POINTER(CreateDevice);
+
     if (GlobalState::isNative())
         return vkProcs.CreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice);
 
@@ -229,7 +242,7 @@ VkResult myvkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateI
     return res;
 }
 
-void myvkDestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
+void vkDestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
 {
     if (GlobalState::isNative())
         return vkProcs.DestroyDevice(device, pAllocator);

@@ -34,6 +34,7 @@
 #include "UnityHacks.h"
 #include "fileio/SaveFileList.h"
 #include "fileio/SaveFile.h"
+#include "rendering/vulkanloader.h"
 #include "../external/elfhacks.h"
 #include "../dyld_func_lookup_helper/dyld_func_lookup_helper.h"
 
@@ -415,8 +416,15 @@ void *dlsym(void *handle, const char *name) __THROW {
      */
 
     void *addr = find_sym(name);
+    void *orig_addr = orig::dlsym(handle, name);
     if (addr == nullptr) {
-        addr = orig::dlsym(handle, name);
+        addr = orig_addr;
+    }
+    else {
+        /* We store the original pointer now, in case we may not be able to get it later */
+        if (orig_addr) {
+            vk_store_proc(name, orig_addr);
+        }
     }
 
 #ifdef __linux__

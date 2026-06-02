@@ -3,6 +3,7 @@
 ### Changed
 
 * Include all SDL2 needed definitions
+* Try to support games calling vk functions directly
 
 ### Fixed
 

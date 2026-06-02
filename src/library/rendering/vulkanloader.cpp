@@ -20,17 +20,16 @@
 #include "vulkanloader.h"
 
 #include "hook.h"
+#include "logging.h"
+#include "GlobalState.h"
 
 #include "../external/vulkan_core.h"
+
+#include <dlfcn.h>
 
 namespace libtas {
 
 struct VKProcs vkProcs;
-
-#define GET_VK_POINTER(FUNC) \
-    vkProcs.FUNC = reinterpret_cast<decltype(&vk##FUNC)>(proc("vk" #FUNC)); \
-    if (!vkProcs.FUNC) \
-        link_function((void**)&vkProcs.FUNC, "vk" #FUNC, "libvulkan.so");
 
 void vk_load_procs(VKGetProcAddressProc proc)
 {
@@ -39,50 +38,37 @@ void vk_load_procs(VKGetProcAddressProc proc)
         return;
     old_proc = proc;
     
-    GET_VK_POINTER(CreateSwapchainKHR)
-    GET_VK_POINTER(QueuePresentKHR)
-    GET_VK_POINTER(AcquireNextImageKHR)
-    GET_VK_POINTER(GetPhysicalDeviceMemoryProperties)
-    GET_VK_POINTER(CreateImage)
-    GET_VK_POINTER(GetImageMemoryRequirements)
-    GET_VK_POINTER(AllocateMemory)
-    GET_VK_POINTER(BindImageMemory)
-    GET_VK_POINTER(CreateCommandPool)
-    GET_VK_POINTER(CreateDescriptorPool)
-    GET_VK_POINTER(DestroyDescriptorPool)
-    GET_VK_POINTER(CreateRenderPass)
-    GET_VK_POINTER(CmdBeginRenderPass)
-    GET_VK_POINTER(CmdEndRenderPass)
-    GET_VK_POINTER(GetDeviceQueue)
-    GET_VK_POINTER(QueueSubmit)
-    GET_VK_POINTER(UnmapMemory)
-    GET_VK_POINTER(FreeMemory)
-    GET_VK_POINTER(DestroyImage)
-    GET_VK_POINTER(AllocateCommandBuffers)
-    GET_VK_POINTER(BeginCommandBuffer)
-    GET_VK_POINTER(CmdPipelineBarrier)
-    GET_VK_POINTER(CmdBlitImage)
-    GET_VK_POINTER(CmdCopyImage)
-    GET_VK_POINTER(EndCommandBuffer)
-    GET_VK_POINTER(QueueWaitIdle)
-    GET_VK_POINTER(FreeCommandBuffers)
-    GET_VK_POINTER(GetImageSubresourceLayout)
-    GET_VK_POINTER(MapMemory)
-    GET_VK_POINTER(GetSwapchainImagesKHR)
-    GET_VK_POINTER(CreateImageView)
-    GET_VK_POINTER(CreateSampler)
-    GET_VK_POINTER(CreateFramebuffer)
-    GET_VK_POINTER(CreateFence)
-    GET_VK_POINTER(CreateSemaphore)
-    GET_VK_POINTER(DestroyRenderPass)
-    GET_VK_POINTER(DestroySemaphore)
-    GET_VK_POINTER(DestroyFence)
-    GET_VK_POINTER(DestroyCommandPool)
-    GET_VK_POINTER(DestroyImageView)
-    GET_VK_POINTER(DestroySampler)
-    GET_VK_POINTER(DestroyFramebuffer)
-    GET_VK_POINTER(DestroySwapchainKHR)
-    GET_VK_POINTER(CmdClearColorImage)
+#define VK_PROC(FUNC) \
+    if (!vkProcs.FUNC) \
+        vkProcs.FUNC = reinterpret_cast<decltype(&vk##FUNC)>(proc("vk" #FUNC)); \
+    if (!vkProcs.FUNC) { \
+        GlobalNative gn; \
+        void* handle = dlopen("libvulkan.so.1", RTLD_LAZY | RTLD_DEEPBIND); \
+        if (handle != NULL) { \
+            vkProcs.FUNC = reinterpret_cast<decltype(&vk##FUNC)>(dlsym(handle, "vk" #FUNC)); \
+            dlclose(handle); \
+        } \
+    }
+
+/* We don't load the different Get*ProcAddr functions, because if they were not loaded already, it means
+ * that the game is linking directly to each vk function. In that case, those functions will not work. */
+#define VK_SKIP_PROC_ADDR_PROCS
+#include "vulkanprocs.h"
+#undef VK_SKIP_PROC_ADDR_PROCS
+#undef VK_PROC
+}
+
+void vk_store_proc(const char *name, void* proc)
+{
+#define VK_PROC(FUNC) \
+    if (!strcmp(name, "vk" #FUNC)) { \
+        vkProcs.FUNC = reinterpret_cast<decltype(&vk##FUNC)>(proc); \
+        LOG(LL_DEBUG, LCF_VULKAN,"  Storing Vulkan function %s at address %p", "vk" #FUNC, proc); \
+        return; \
+    }
+
+#include "vulkanprocs.h"
+#undef VK_PROC
 }
 
 }

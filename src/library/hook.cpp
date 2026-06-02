@@ -46,7 +46,15 @@ void* link_function(void** function, const char* source, const char* library, co
         NATIVECALL(*function = dlsym(RTLD_NEXT, source));
 
     if (*function != nullptr) {
+        /* Gather from which library was the function imported */
+        Dl_info info;
+        int res = dladdr(*function, &info);
+        if (res != 0) {
+            LOG(LL_DEBUG, LCF_HOOK, "Imported symbol %s function : %p (from %s)", source, *function, info.dli_fname);
+        }
+        else {
         LOG(LL_DEBUG, LCF_HOOK, "Imported symbol %s function : %p", source, *function);
+        }
         return *function;
     }
 
