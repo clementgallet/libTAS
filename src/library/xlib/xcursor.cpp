@@ -21,15 +21,41 @@
 
 #include "hook.h"
 #include "logging.h"
+#include "GlobalState.h"
 
 namespace libtas {
 
-OVERRIDE Cursor XcursorLibraryLoadCursor (Display *dpy, const char *file)
+/* Override */ int XDefineCursor(Display* d, Window w, Cursor c)
+{
+    RETURN_IF_NATIVE(XDefineCursor, (d, w, c), nullptr);
+    LOGTRACE(LCF_MOUSE);
+    return 0; // Not sure what to return
+}
+
+/* Override */ int XUndefineCursor(Display* d, Window w)
+{
+    RETURN_IF_NATIVE(XUndefineCursor, (d, w), nullptr);
+    LOGTRACE(LCF_MOUSE);
+    return 0; // Not sure what to return
+}
+
+/* Override */ Cursor XcursorLibraryLoadCursor (Display *dpy, const char *file)
 {
     LOGTRACE(LCF_WINDOW | LCF_MOUSE);
     /* Ruffle calls this, but it crashes when called multiple times (due to
      * savestates). Because we already noop XDefineCursor, we can return 0 here */
     return 0;    
+}
+
+/* Override */ int XFreeCursor(Display *dpy, Cursor cursor)
+{
+    LOGTRACE(LCF_WINDOW | LCF_MOUSE);
+    /* When preventing cursor loading, we return an identifier of 0. So we
+     * skip calling this function for this particular value. */
+    if (cursor == 0)
+        return 0;
+
+    RETURN_NATIVE(XFreeCursor, (dpy, cursor), nullptr);
 }
 
 }

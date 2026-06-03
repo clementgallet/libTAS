@@ -135,20 +135,6 @@ DEFINE_ORIG_POINTER(XQueryPointer)
     return 0; // Not sure what to return
 }
 
-/* Override */ int XDefineCursor(Display* d, Window w, Cursor c)
-{
-    RETURN_IF_NATIVE(XDefineCursor, (d, w, c), nullptr);
-    LOGTRACE(LCF_MOUSE);
-    return 0; // Not sure what to return
-}
-
-/* Override */ int XUndefineCursor(Display* d, Window w)
-{
-    RETURN_IF_NATIVE(XUndefineCursor, (d, w), nullptr);
-    LOGTRACE(LCF_MOUSE);
-    return 0; // Not sure what to return
-}
-
 /* Override */ int XWarpPointer( Display* d, Window src_w, Window dest_w,
     int src_x, int src_y, unsigned int src_width, unsigned int src_height,
     int dest_x, int dest_y)

@@ -7,6 +7,8 @@
 
 ### Fixed
 
+* Skip freeing cursors that were not loaded
+
 ## [1.4.8] - 2026-05-14
 ### Added
 

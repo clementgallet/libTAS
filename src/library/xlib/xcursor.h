@@ -26,7 +26,20 @@
 
 namespace libtas {
 
+OVERRIDE int XDefineCursor(
+    Display*        /* display */,
+    Window      /* w */,
+    Cursor      /* cursor */
+);
+
+OVERRIDE int XUndefineCursor(
+    Display*        /* display */,
+    Window      /* w */
+);
+
 OVERRIDE Cursor XcursorLibraryLoadCursor (Display *dpy, const char *file);
+
+OVERRIDE int XFreeCursor(Display *dpy, Cursor cursor);
 
 }
 
