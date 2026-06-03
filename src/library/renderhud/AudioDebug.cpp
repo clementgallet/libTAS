@@ -100,6 +100,8 @@ void AudioDebug::draw(uint64_t framecount, bool* p_open = nullptr)
     msPerUnit = std::scalbn(1.0, std::ilogb(msPerUnit));
 
     int stepFrame = msPerUnit * 16;
+    if (stepFrame < 1)
+        stepFrame = 1;
 
     ImGui::SetNextWindowScroll(ImVec2(consumedMS / msPerUnit, 0.0f));
     ImGui::SetNextWindowContentSize(ImVec2((consumedMS + nonConsumedMS) / msPerUnit + ImGui::GetContentRegionAvail().x, 0.0f));

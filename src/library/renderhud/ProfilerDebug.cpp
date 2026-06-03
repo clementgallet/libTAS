@@ -99,8 +99,8 @@ void ProfilerDebug::renderNode(int nodeId, const Profiler::Database* database, f
 
     ImGui::SetCursorPosX(available_start + leftPos);
 
-    char buffer_name[16];
-    snprintf(buffer_name, sizeof(buffer_name), "%d", nodeId);
+    std::string buffer_name = info.label;
+    buffer_name.append("##").append(std::to_string(nodeId));
 
     float hue = info.type * 0.13f;
     float sat_delta = info.depth * -0.2f;
@@ -113,7 +113,7 @@ void ProfilerDebug::renderNode(int nodeId, const Profiler::Database* database, f
     ImGui::ColorConvertHSVtoRGB(hue, 0.8f + sat_delta, 0.8f, r, g, b);
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(r, g, b, 1.0f));
 
-    ImGui::Button(info.label.c_str(), ImVec2(lengthPos, 0.0f));
+    ImGui::Button(buffer_name.c_str(), ImVec2(lengthPos, 0.0f));
     if (ImGui::BeginItemTooltip())
     {
         ImGui::Text("%s in %f ms", info.label.c_str(), lengthTimeMs);
