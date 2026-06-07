@@ -179,6 +179,10 @@ public:
     virtual bool MustCompleteNextFrame(PreloadManagerOperation* po);
     virtual bool GetAllowParallelExecution(PreloadManagerOperation* po);
     virtual char* GetDebugName(PreloadManagerOperation* po);
+    // int status; // at offset 0x50
+    // time_t queued_timestamp; // at offset 0x58
+    // suseconds_t integrate_time_sliced_duration; // at offset 0x60
+    // suseconds_t perform_duration; // at offset 0x68
 };
 
 class U6_PreloadManagerOperation
@@ -952,6 +956,26 @@ static bool Helper_PreloadManager_GetAllowParallelExecution(PreloadManagerOperat
     return true;
 }
 
+/* Operation status goes from 0 (queued) -> 1 (active) -> 2 (done) */
+static bool Helper_PreloadManagerOperation_GetStatus(PreloadManagerOperation* o)
+{
+    if (!o)
+        return 1;
+
+    int status = -1;
+    if (GetUnityVersionMaj() == 6000)
+        status = *(int *)(o + 0x40);
+    else if ((GetUnityVersionMaj() >= 2017) && (GetUnityVersionMaj() <= 2020))
+        status = *(int *)(o + 0x50);
+    else if (GetUnityVersionMaj() == 5)
+        status = *(int *)(o + 0x2c);
+    if (status < 0 || status > 2) {
+        LOG(LL_WARN, LCF_HACKS | LCF_FILEIO, "    Invalid status for PreloadManagerOperation");
+        status = 1;
+    }
+    return status;
+}
+
 /* This helper function waits until the pending queue is empty (after the last
  * operation was processed, this is important!), or if the Preload thread is
  * currently waiting on a non-parallel operation */
@@ -959,19 +983,35 @@ static void Helper_PreloadManager_WaitForQueueToProcess(PreloadManager* m, Prelo
 {
     /* Special case for when the preload thread is not running, hence it cannot
      * process operations. */
-    if (!is_preload_thread_running)
+    if (!is_preload_thread_running) {
+        LOG(LL_DEBUG, LCF_HACKS | LCF_FILEIO, "    preload thread is not running");
         return;
+    }
 
     int i;
     for (i=0; i < 4000; i++) {
         /* If possible, we rely on these two functions to be hooked */
         if (orig::U6_PreloadManager_PrepareProcessingPreloadOperation && orig::U6_PreloadManager_ProcessSingleOperation) {
-            if (pending_queue_size == 0)
+            if (pending_queue_size == 0) {
+                LOG(LL_DEBUG, LCF_HACKS | LCF_FILEIO, "    preload operation was completed");
                 break;
+            }
 
             /* Check if the pending operation is non-parallel */
-            if (is_current_pending_operation_non_parallel)
-                break;
+            if (is_current_pending_operation_non_parallel) {
+                /* If the current non-parallel operation is the one we just pushed, we still have to wait for the 
+                 * operation to be processed.*/
+                if (pending_queue_size == 1) {
+                    if (Helper_PreloadManagerOperation_GetStatus(o) == 1) {
+                        LOG(LL_DEBUG, LCF_HACKS | LCF_FILEIO, "    non-parallel operation was completed");
+                        break;
+                    }
+                }
+                else {
+                    LOG(LL_DEBUG, LCF_HACKS | LCF_FILEIO, "    another non-parallel operation is being processed, this one won't be processed yet, so we can resume");
+                    break;
+                }
+            }
         }
         else {
             /* This sucks, we must rely on internals to get what we want... */
@@ -980,7 +1020,7 @@ static void Helper_PreloadManager_WaitForQueueToProcess(PreloadManager* m, Prelo
                 if (o) {
                     /* Operation status goes from 0 (queued) -> 1 (active) -> 2 (done) */
                     /* Check if the operation was pushed (status == 1) */
-                    pending_queue_empty = (1 == *(int *)(o + 0x40));
+                    pending_queue_empty = (1 == Helper_PreloadManagerOperation_GetStatus(o));
                     // pending_queue_empty = (1 == *(int *)(o + 0x48));
                 }
                 else
@@ -1024,7 +1064,7 @@ static void Helper_PreloadManager_WaitForQueueToProcess(PreloadManager* m, Prelo
         if (GetUnityVersionMaj() == 6000) {
             if (o) {
                 LOG(LL_WARN, LCF_HACKS | LCF_FILEIO, "    operation status: queued");
-                int operation_status = *(int *)(o + 0x40);
+                int operation_status = Helper_PreloadManagerOperation_GetStatus(o);
                 switch (operation_status) {
                     case 0:
                         LOG(LL_WARN, LCF_HACKS | LCF_FILEIO, "    operation status: queued");
