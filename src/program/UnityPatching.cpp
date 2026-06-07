@@ -461,6 +461,11 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN18BaseUnityAnalytics22UpdateConfigFromServerEv",
     },
     {
+        PHYSX_CM_FANOUTTASK_REMOVEREFERENCE,
+        "physx::Cm::FanoutTask::removeReference",
+        "_ZN5physx2Cm10FanoutTask15removeReferenceEv",
+    },
+    {
         UNITY_FUNCS_LEN,
         "",
         "",
