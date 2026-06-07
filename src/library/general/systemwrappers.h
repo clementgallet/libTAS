@@ -37,6 +37,14 @@ OVERRIDE pid_t fork(void) __THROWNL;
 
 /* Get index of currently used CPU.  */
 OVERRIDE int sched_getcpu (void) __THROW;
+
+/* Get the CPU affinity for a task */
+OVERRIDE int sched_getaffinity (pid_t pid, size_t cpusetsize, cpu_set_t *cpuset) __THROW;
+
+/* Get the value of the system variable NAME.  */
+OVERRIDE long int sysconf (int name) __THROW;
+
+
 }
 
 #endif

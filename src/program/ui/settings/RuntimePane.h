@@ -28,6 +28,7 @@ class QCheckBox;
 class ToolTipComboBox;
 class ToolTipCheckBox;
 class ToolTipGroupBox;
+class ToolTipSpinBox;
 class QGroupBox;
 
 class RuntimePane : public QWidget {
@@ -51,7 +52,7 @@ private:
     QGroupBox* timingBox;
     
     ToolTipComboBox* localeChoice;
-
+    ToolTipSpinBox *cpuBox;
     ToolTipCheckBox* writingBox;
     ToolTipCheckBox* steamBox;
     ToolTipCheckBox* downloadsBox;

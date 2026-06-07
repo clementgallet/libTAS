@@ -21,6 +21,7 @@
 #include "tooltip/ToolTipComboBox.h"
 #include "tooltip/ToolTipCheckBox.h"
 #include "tooltip/ToolTipGroupBox.h"
+#include "tooltip/ToolTipSpinBox.h"
 
 #include "Context.h"
 
@@ -62,7 +63,12 @@ void RuntimePane::initLayout()
     localeChoice->addItem(tr("Italian"), SharedConfig::LOCALE_ITALIAN);
     localeChoice->addItem(tr("Native"), SharedConfig::LOCALE_NATIVE);
 
+    cpuBox = new ToolTipSpinBox();
+    cpuBox->setRange(0, 1024);
+    cpuBox->setValue(0);
+
     localeLayout->addRow(new QLabel(tr("Force locale:")), localeChoice);
+    localeLayout->addRow(new QLabel(tr("CPU cores:")), cpuBox);
 
     writingBox = new ToolTipCheckBox(tr("Prevent writing to disk"));
     steamBox = new ToolTipCheckBox(tr("Virtual Steam client"));
@@ -171,6 +177,7 @@ void RuntimePane::initSignals()
 {
     connect(localeChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &RuntimePane::saveConfig);
 
+    connect(cpuBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &RuntimePane::saveConfig);
     connect(writingBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
     connect(steamBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
     connect(downloadsBox, &QAbstractButton::clicked, this, &RuntimePane::saveConfig);
@@ -207,6 +214,9 @@ void RuntimePane::initToolTips()
     localeChoice->setTitle("Force Locale");
     localeChoice->setDescription("When set to anything except 'Native', "
     "libTAS will report to the game as if the system's locale is of the given country.");
+
+    cpuBox->setTitle("CPU Cores");
+    cpuBox->setDescription("Set how many CPU cores the game is seeing. 0 for native.");
 
     writingBox->setDescription("Prevent the game from writing files on disk, "
     "but write in memory instead. May cause issues in some games.");
@@ -334,6 +344,7 @@ void RuntimePane::loadConfig()
     if (index >= 0)
         localeChoice->setCurrentIndex(index);
 
+    cpuBox->setValue(context->config.sc.cpu_cores);
     writingBox->setChecked(context->config.sc.prevent_savefiles);
     steamBox->setChecked(context->config.sc.virtual_steam);
     downloadsBox->setChecked(context->config.allow_downloads);
@@ -374,6 +385,7 @@ void RuntimePane::loadConfig()
 void RuntimePane::saveConfig()
 {    
     context->config.sc.locale = localeChoice->currentData().toInt();
+    context->config.sc.cpu_cores = cpuBox->value();
 
     context->config.sc.prevent_savefiles = writingBox->isChecked();
     context->config.sc.virtual_steam = steamBox->isChecked();

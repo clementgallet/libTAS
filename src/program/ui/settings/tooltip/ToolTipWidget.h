@@ -7,7 +7,7 @@
 #include "BalloonTip.h"
 
 #include <optional>
-#include <QString>
+#include <QtCore/QString>
 
 constexpr int TOOLTIP_DELAY = 300;
 

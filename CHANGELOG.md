@@ -1,5 +1,8 @@
 ## [Unreleased]
 ### Added
+
+* Can tweak the number of cpu cores seen by the game
+
 ### Changed
 
 * Include all SDL2 needed definitions

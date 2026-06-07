@@ -105,4 +105,42 @@ DEFINE_ORIG_POINTER(sched_getaffinity)
     RETURN_NATIVE(sched_getcpu, (), nullptr);
 }
 
+/* Override */ int sched_getaffinity (pid_t pid, size_t cpusetsize, cpu_set_t *cpuset) __THROW
+{
+    LOGTRACE(LCF_SYSTEM);
+    RETURN_IF_NATIVE(sched_getaffinity, (pid, cpusetsize, cpuset), nullptr);
+
+    pid_t current_pid;
+    NATIVECALL(current_pid = getpid());
+    if (Global::shared_config.cpu_cores == 0 || (pid != 0 && pid != current_pid))
+        RETURN_NATIVE(sched_getaffinity, (pid, cpusetsize, cpuset), nullptr);
+
+    if (cpusetsize != sizeof(cpu_set_t)) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    CPU_ZERO(cpuset);
+    for (int i = 0; i < Global::shared_config.cpu_cores; i++) {
+        CPU_SET(i, cpuset);
+    }
+
+    return 0;
+}
+
+/* Override */ long int sysconf (int name) __THROW
+{
+    LOGTRACE(LCF_SYSTEM);
+    RETURN_IF_NATIVE(sysconf, (name), nullptr);
+
+    if (name == _SC_NPROCESSORS_ONLN || name == _SC_NPROCESSORS_CONF) {
+        if (Global::shared_config.cpu_cores > 0) {
+            LOG(LL_DEBUG, LCF_SYSTEM, "sysconf called with name %s, returning %d", name == _SC_NPROCESSORS_ONLN ? "_SC_NPROCESSORS_ONLN" : "_SC_NPROCESSORS_CONF", Global::shared_config.cpu_cores);
+            return Global::shared_config.cpu_cores;
+        }
+    }
+
+    RETURN_NATIVE(sysconf, (name), nullptr);
+}
+
 }

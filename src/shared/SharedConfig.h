@@ -183,6 +183,9 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
 
     int locale = LOCALE_ENGLISH;
 
+    /* Number of CPU cores the game sees. 0 for native. */
+    int cpu_cores = 0;
+
     /* An enum indicating which wait are we doing */
     enum AsyncType
     {
