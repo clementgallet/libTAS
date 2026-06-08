@@ -130,7 +130,7 @@ VdpStatus VdpPresentationQueueDisplay(VdpPresentationQueue presentation_queue, V
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD renderHUD;
-    frameBoundary([&] () {orig::VdpPresentationQueueDisplay(presentation_queue, surface, clip_width, clip_height, earliest_presentation_time);}, renderHUD);
+    frameBoundary([&] () {NATIVECALL(orig::VdpPresentationQueueDisplay(presentation_queue, surface, clip_width, clip_height, earliest_presentation_time));}, renderHUD);
 
     return VDP_STATUS_OK;
 }

@@ -364,7 +364,7 @@ int ScreenCapture_Vulkan::copyScreenToSurface()
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = &vk::context.frameSemaphores[vk::context.semaphoreIndex].screenCompleteSemaphore;
 
-    // LOG(LL_DEBUG, LCF_VULKAN, "    vkQueueSubmit wait on %llx and signal %llx and semindex %d", submitInfo.pWaitSemaphores[0], submitInfo.pSignalSemaphores[0], vk::context.semaphoreIndex);
+    LOG(LL_DEBUG, LCF_VULKAN, "vkQueueSubmit wait on %llx and signal %llx and semindex %d", submitInfo.pWaitSemaphores[0], submitInfo.pSignalSemaphores[0], vk::context.semaphoreIndex);
 
     if ((res = vkProcs.QueueSubmit(vk::context.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE)) != VK_SUCCESS) {
         LOG(LL_ERROR, LCF_VULKAN, "vkEndCommandBuffer failed with error %d", res);
@@ -421,21 +421,26 @@ int ScreenCapture_Vulkan::getPixelsFromSurface(uint8_t **pixels, bool draw)
 static void acquireImage()
 {
     /* Acquire an image from the swapchain */
+    LOG(LL_DEBUG, LCF_VULKAN, "vkAcquireNextImageKHR signals %llx and semindex %d", vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore, vk::context.semaphoreIndex);
     VkResult res = vkProcs.AcquireNextImageKHR(vk::context.device, vk::context.swapchain, UINT64_MAX, vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore, VK_NULL_HANDLE, &vk::context.frameIndex);
     if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR) {
         LOG(LL_WARN, LCF_VULKAN, "vkAcquireNextImageKHR failed with error %d", res);
         vk::context.swapchainRebuild = true;
         return;
     }
-    
-    // LOG(LL_DEBUG, LCF_VULKAN, "vkAcquireNextImageKHR signals %llx and returns image index %d", vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore, vk::context.frameIndex);
+
+    LOG(LL_DEBUG, LCF_VULKAN, "    returns image index %d", vk::context.frameIndex);
 
     vk::context.currentSemaphore = vk::context.frameSemaphores[vk::context.semaphoreIndex].imageAcquiredSemaphore;
 }
 
-static void beginCommand(VkCommandBuffer cmdBuffer)
+static void beginCommand(VkCommandPool cmdPool, VkCommandBuffer cmdBuffer)
 {
     VkResult res;
+
+    if ((res = vkProcs.ResetCommandPool(vk::context.device, cmdPool, 0)) != VK_SUCCESS) {
+        LOG(LL_ERROR, LCF_VULKAN, "vkResetCommandPool failed with error %d", res);
+    }
 
     VkCommandBufferBeginInfo cmdBufInfo{};
     cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -465,7 +470,7 @@ static void EndCommandAndSubmitQueue(VkCommandBuffer cmdBuffer, VkSemaphore* sem
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = sem;
     
-    // LOG(LL_DEBUG, LCF_VULKAN, "    vkQueueSubmit wait on %llx and signal %llx and semindex %d", submitInfo.pWaitSemaphores[0], submitInfo.pSignalSemaphores[0], vk::context.semaphoreIndex);
+    LOG(LL_DEBUG, LCF_VULKAN, "vkQueueSubmit wait on %llx and signal %llx and semindex %d", submitInfo.pWaitSemaphores[0], submitInfo.pSignalSemaphores[0], vk::context.semaphoreIndex);
     
     if ((res = vkProcs.QueueSubmit(vk::context.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE)) != VK_SUCCESS) {
         LOG(LL_ERROR, LCF_VULKAN, "vkEndCommandBuffer failed with error %d", res);
@@ -482,12 +487,13 @@ int ScreenCapture_Vulkan::copySurfaceToScreen()
 
     acquireImage();
 
+    VkCommandPool cmdPool = vk::context.frames[vk::context.frameIndex].commandPool;
     VkCommandBuffer cmdBuffer = vk::context.frames[vk::context.frameIndex].screenCommandBuffer;
     VkImage backbuffer = vk::context.frames[vk::context.frameIndex].backbuffer;
 
     if (vk::context.swapchainRebuild) return -1;
 
-    beginCommand(cmdBuffer);
+    beginCommand(cmdPool, cmdBuffer);
         
     /* Transition destination image to transfer destination layout */
     VkImageMemoryBarrier dstBarrier{};
@@ -603,10 +609,11 @@ void ScreenCapture_Vulkan::clearScreen()
 
     if (vk::context.swapchainRebuild) return;
 
+    VkCommandPool cmdPool = vk::context.frames[vk::context.frameIndex].commandPool;
     VkCommandBuffer cmdBuffer = vk::context.frames[vk::context.frameIndex].clearCommandBuffer;
     VkImage backbuffer = vk::context.frames[vk::context.frameIndex].backbuffer;
 
-    beginCommand(cmdBuffer);
+    beginCommand(cmdPool, cmdBuffer);
 
     /* Transition destination image to transfer destination layout */
     VkImageMemoryBarrier dstBarrier{};

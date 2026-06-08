@@ -85,12 +85,12 @@ SDL_Renderer *sdl3::SDL_CreateRenderer(SDL_Window *window, const char *name)
     if (Global::game_info.video & GameInfo::SDL3_RENDERER) {
         static RenderHUD_SDL3_renderer renderHUD;
         renderHUD.setRenderer(renderer);
-        frameBoundary([&] () {ORIG_SDL3_CALL(SDL_RenderPresent, (renderer));}, renderHUD);
+        frameBoundary([&] () {NATIVECALL(ORIG_SDL3_CALL(SDL_RenderPresent, (renderer)));}, renderHUD);
     }
     else {
         static RenderHUD_SDL2_renderer renderHUD;
         renderHUD.setRenderer(renderer);
-        frameBoundary([&] () {ORIG_SDL2_CALL(SDL_RenderPresent, (renderer));}, renderHUD);
+        frameBoundary([&] () {NATIVECALL(ORIG_SDL2_CALL(SDL_RenderPresent, (renderer)));}, renderHUD);
     }
 }
 

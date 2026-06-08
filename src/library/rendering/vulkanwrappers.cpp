@@ -594,6 +594,7 @@ VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64
         return VK_ERROR_INITIALIZATION_FAILED;
     }
 
+    LOG(LL_DEBUG, LCF_WINDOW | LCF_VULKAN, "    return image index %d", *pImageIndex);
     vk::context.frameIndex = *pImageIndex;
     return res;
 }
@@ -663,8 +664,8 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
         /* Present the queue with the stored image index, because we will 
          * acquire other images when presenting again. */
         pi.pImageIndices = &vk::context.frameIndex;
-        // LOG(LL_DEBUG, LCF_WINDOW | LCF_VULKAN, "    vkQueuePresentKHR wait on semaphore %llx", vk::context.currentSemaphore);
-        ret = vkProcs.QueuePresentKHR(queue, &pi);
+        LOG(LL_DEBUG, LCF_WINDOW | LCF_VULKAN, "    vkQueuePresentKHR wait on semaphore %llx", vk::context.currentSemaphore);
+        NATIVECALL(ret = vkProcs.QueuePresentKHR(queue, &pi));
         
         if (ret == VK_ERROR_OUT_OF_DATE_KHR || ret == VK_SUBOPTIMAL_KHR) {
             vk::context.swapchainRebuild = true;
@@ -674,6 +675,11 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
         
         /* TODO: Use fence to delay waiting on queue */
         vkProcs.QueueWaitIdle(vk::context.graphicsQueue);
+        vkProcs.DeviceWaitIdle(vk::context.device);
+
+        /* Update semaphore index */
+        LOG(LL_DEBUG, LCF_VULKAN, "Update semaphore index %d -> %d", vk::context.semaphoreIndex, (vk::context.semaphoreIndex + 1) % vk::context.imageCount);
+        vk::context.semaphoreIndex = (vk::context.semaphoreIndex + 1) % vk::context.imageCount;
 
     }, renderHUD);
 

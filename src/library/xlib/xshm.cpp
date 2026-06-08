@@ -78,7 +78,7 @@ OVERRIDE Bool XShmPutImage(
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD renderHUD;
-    frameBoundary([&] () {orig::XShmPutImage(dpy, d, gc, image, src_x, src_y, dst_x, dst_y, src_width, src_height, send_event);}, renderHUD);
+    frameBoundary([&] () {NATIVECALL(orig::XShmPutImage(dpy, d, gc, image, src_x, src_y, dst_x, dst_y, src_width, src_height, send_event));}, renderHUD);
 
     return True;
     // return orig::XShmPutImage(dpy, d, gc, image, src_x, src_y, dst_x, dst_y, src_width, src_height, send_event);

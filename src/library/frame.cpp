@@ -201,7 +201,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
         detTimer.flushDelay();
 
         if (draw)
-            NATIVECALL(draw());
+            draw();
 
         /* Still push native events so that the game can exit properly */
         if ((Global::game_info.video & GameInfo::SDL1) || (Global::game_info.video & GameInfo::SDL2)) {
@@ -339,10 +339,9 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
 
     /* Actual draw command */
     if (!Global::skipping_draw && draw) {
-        GlobalNoLog gnl;
         perfTimer.switchTimer(PerfTimer::RenderTimer);
         PROFILE_SCOPE("Draw", PROFILER_INFO_FRAME);
-        NATIVECALL(draw());
+        draw();
         perfTimer.switchTimer(PerfTimer::FrameTimer);
     }
 
@@ -381,7 +380,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
                     ScreenCapture::copySurfaceToScreen();
                 hud.drawAll(framecount, nondraw_framecount, Inputs::ai, preview_ai);
                 hud.render();
-                NATIVECALL(draw());
+                draw();
                 /* End of FIXME */
 
                 /* Now the real redraw */
@@ -399,7 +398,7 @@ void frameBoundary(std::function<void()> draw, RenderHUD& hud)
                 ScreenCapture::copyScreenToSurface();
                 
                 /* Draw is mandatory to release the acquired image */
-                NATIVECALL(draw());
+                draw();
             }
         }
 
@@ -585,8 +584,7 @@ static void screen_redraw(std::function<void()> draw, RenderHUD& hud, const AllI
             hud.drawAll(framecount, nondraw_framecount, Inputs::ai, preview_ai);
             hud.render();
             
-            GlobalNoLog gnl;
-            NATIVECALL(draw());
+            draw();
         }
     }
 }
@@ -735,8 +733,8 @@ static void receive_messages(std::function<void()> draw, RenderHUD& hud)
                     saving_msg += std::to_string(slot);
                     MessageWindow::insert(saving_msg.c_str());
                     // Force redraw because screen refresh won't happen during savestate
-                    screen_redraw(draw, hud, preview_ai, true);
-                    screen_redraw(draw, hud, preview_ai, true);
+                    // screen_redraw(draw, hud, preview_ai, true);
+                    // screen_redraw(draw, hud, preview_ai, true);
                 }
 
                 status = SaveStateManager::checkpoint(slot);

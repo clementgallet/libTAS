@@ -315,7 +315,7 @@ void glXSwapBuffers( Display *dpy, XID drawable )
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_GL renderHUD;
-    frameBoundary([&] () {glProcs.XSwapBuffers(dpy, drawable);}, renderHUD);
+    frameBoundary([&] () {NATIVECALL(glProcs.XSwapBuffers(dpy, drawable));}, renderHUD);
 }
 
 static int swapInterval = 0;

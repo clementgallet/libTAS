@@ -85,7 +85,8 @@ void RenderHUD_Vulkan::newFrame()
     RenderHUD::newFrame();
     
     /* Update semaphore index */
-    vk::context.semaphoreIndex = (vk::context.semaphoreIndex + 1) % vk::context.imageCount;
+    // LOG(LL_DEBUG, LCF_VULKAN, "Update semaphore index %d -> %d", vk::context.semaphoreIndex, (vk::context.semaphoreIndex + 1) % vk::context.imageCount);
+    // vk::context.semaphoreIndex = (vk::context.semaphoreIndex + 1) % vk::context.imageCount;
 }
 
 void RenderHUD_Vulkan::render()
@@ -140,7 +141,7 @@ void RenderHUD_Vulkan::render()
         err = vkProcs.EndCommandBuffer(fd->osdCommandBuffer);
         VKCHECKERROR(err);
 
-        // LOG(LL_DEBUG, LCF_VULKAN, "    vkQueueSubmit wait on %llx and signal %llx and semindex %d", info.pWaitSemaphores[0], info.pSignalSemaphores[0], vk::context.semaphoreIndex);
+        LOG(LL_DEBUG, LCF_VULKAN, "vkQueueSubmit wait on %llx and signal %llx and semindex %d", info.pWaitSemaphores[0], info.pSignalSemaphores[0], vk::context.semaphoreIndex);
 
         err = vkProcs.QueueSubmit(vk::context.graphicsQueue, 1, &info, VK_NULL_HANDLE);
         VKCHECKERROR(err);

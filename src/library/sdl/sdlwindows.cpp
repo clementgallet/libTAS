@@ -68,7 +68,7 @@ static bool windowFullscreen = false;
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_GL renderHUD_GL;
-    frameBoundary([] () {orig::SDL_GL_SwapBuffers();}, renderHUD_GL);
+    frameBoundary([] () {NATIVECALL(orig::SDL_GL_SwapBuffers());}, renderHUD_GL);
 }
 
 /* Override */ void sdl2::SDL_GL_SwapWindow(SDL_Window* window)
@@ -80,7 +80,7 @@ static bool windowFullscreen = false;
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_GL renderHUD_GL;
-    frameBoundary([&] () {ORIG_SDL2_CALL(SDL_GL_SwapWindow, (window));}, renderHUD_GL);
+    frameBoundary([&] () {NATIVECALL(ORIG_SDL2_CALL(SDL_GL_SwapWindow, (window)));}, renderHUD_GL);
 }
 
 /* Override */ bool sdl3::SDL_GL_SwapWindow(SDL_Window *window)
@@ -92,7 +92,7 @@ static bool windowFullscreen = false;
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_GL renderHUD_GL;
-    frameBoundary([&] () {ORIG_SDL3_CALL(SDL_GL_SwapWindow, (window));}, renderHUD_GL);
+    frameBoundary([&] () {NATIVECALL(ORIG_SDL3_CALL(SDL_GL_SwapWindow, (window)));}, renderHUD_GL);
     return true;
 }
 
@@ -735,7 +735,7 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD renderHUD;
-    frameBoundary([&] () {orig::SDL_Flip(screen);}, renderHUD);
+    frameBoundary([&] () {NATIVECALL(orig::SDL_Flip(screen));}, renderHUD);
 
     return 0;
 }
@@ -752,7 +752,7 @@ OVERRIDE void SDL_UpdateRects(sdl1::SDL_Surface *screen, int numrects, sdl1::SDL
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD renderHUD;
-    frameBoundary([&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, renderHUD);
+    frameBoundary([&] () {NATIVECALL(orig::SDL_UpdateRect(screen, 0, 0, 0, 0));}, renderHUD);
 }
 
 /* Override */ void SDL_UpdateRect(sdl1::SDL_Surface *screen, Sint32 x, Sint32 y, Uint32 w, Uint32 h)
@@ -766,7 +766,7 @@ OVERRIDE void SDL_UpdateRects(sdl1::SDL_Surface *screen, int numrects, sdl1::SDL
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD renderHUD;
-    frameBoundary([&] () {orig::SDL_UpdateRect(screen, 0, 0, 0, 0);}, renderHUD);
+    frameBoundary([&] () {NATIVECALL(orig::SDL_UpdateRect(screen, 0, 0, 0, 0));}, renderHUD);
 }
 
 /* Override */ sdl1::SDL_GrabMode SDL_WM_GrabInput(sdl1::SDL_GrabMode mode)
@@ -825,7 +825,7 @@ OVERRIDE void SDL_UpdateRects(sdl1::SDL_Surface *screen, int numrects, sdl1::SDL
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD renderHUD;
-    frameBoundary([&] () {ORIG_SDL2_CALL(SDL_UpdateWindowSurface, (window));}, renderHUD);
+    frameBoundary([&] () {NATIVECALL(ORIG_SDL2_CALL(SDL_UpdateWindowSurface, (window)));}, renderHUD);
 
     return 0;
 }
@@ -841,7 +841,7 @@ OVERRIDE void SDL_UpdateRects(sdl1::SDL_Surface *screen, int numrects, sdl1::SDL
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD renderHUD;
-    frameBoundary([&] () {ORIG_SDL2_CALL(SDL_UpdateWindowSurface, (window));}, renderHUD);
+    frameBoundary([&] () {NATIVECALL(ORIG_SDL2_CALL(SDL_UpdateWindowSurface, (window)));}, renderHUD);
 
     return 0;
 }
