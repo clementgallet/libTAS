@@ -420,11 +420,9 @@ void *dlsym(void *handle, const char *name) __THROW {
     if (addr == nullptr) {
         addr = orig_addr;
     }
-    else {
-        /* We store the original pointer now, in case we may not be able to get it later */
-        if (orig_addr) {
-            vk_store_proc(name, orig_addr);
-        }
+    /* We store the original pointer now, in case we may not be able to get it later */
+    if (orig_addr) {
+        vk_store_proc(name, orig_addr);
     }
 
 #ifdef __linux__

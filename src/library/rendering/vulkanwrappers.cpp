@@ -209,12 +209,7 @@ VkResult vkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInf
     /* Store physical device */
     vk::context.physicalDevice = physicalDevice;
 
-    VkResult res;
-    /* The device creation must be performed natively, so that it can import
-     * the correct vkGetDeviceProcAddr function with dlsym(), without being
-     * messed up by libtas.
-     */
-    NATIVECALL(res = vkProcs.CreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice));
+    VkResult res = vkProcs.CreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice);
 
     if (res == VK_SUCCESS) {
         /* Store the device */
