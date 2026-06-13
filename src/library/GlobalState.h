@@ -36,6 +36,8 @@
 #ifndef LIBTAS_GLOBALSTATE_H_INCLUDED
 #define LIBTAS_GLOBALSTATE_H_INCLUDED
 
+#include "../shared/lcf.h"
+
 namespace libtas {
 
 class GlobalState
@@ -59,6 +61,10 @@ class GlobalState
         static void setNoLog(bool state);
         /* Check the NOLOG flag */
         static bool isNoLog(void);
+
+        /* Holds the number of indentations for log messages. This is used to
+         * make log messages more readable, by indenting them when we are in a nested call. */
+        static thread_local int log_indent_level;
 
     private:
 
@@ -107,6 +113,13 @@ public:
 };
 
 #define NOLOGCALL(expr) do{GlobalNoLog gnl; expr;} while (false)
+
+class GlobalIndent
+{
+public:
+    GlobalIndent();
+    ~GlobalIndent();
+};
 
 }
 

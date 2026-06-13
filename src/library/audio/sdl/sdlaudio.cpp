@@ -64,13 +64,13 @@ static std::recursive_mutex mutex;
 
 /* Override */ int SDL_GetNumAudioDrivers(void)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     return 1;
 }
 
 /* Override */ const char *SDL_GetAudioDriver(int index)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if (index == 0)
         return dummy_sdl_driver_name;
     return NULL;
@@ -78,7 +78,7 @@ static std::recursive_mutex mutex;
 
 /* Override */ sdl3::SDL_AudioDeviceID * SDL_GetAudioPlaybackDevices(int *count)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if (count)
         *count = 1;
 
@@ -90,7 +90,7 @@ static std::recursive_mutex mutex;
 
 char * SDL_AudioDriverName(char *namebuf, int maxlen)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     strncpy(namebuf, dummy_sdl_driver_name, maxlen);
     /* I don't know if we are in charge of returning a
      * null-terminated string
@@ -104,11 +104,11 @@ char * SDL_AudioDriverName(char *namebuf, int maxlen)
 /* Override */ int SDL_AudioInit(const char *driver_name)
 {
     if (driver_name == NULL) {
-        LOG(LL_TRACE, LCF_SDL | LCF_SOUND, "Init SDL Audio with default driver");
+        LOGTRACE(LCF_SDL | LCF_SOUND, "Init SDL Audio with default driver");
         curDriver = dummy_sdl_device_name;
     }
     else {
-        LOG(LL_TRACE, LCF_SDL | LCF_SOUND, "Init SDL Audio with driver %s", driver_name);
+        LOGTRACE(LCF_SDL | LCF_SOUND, "Init SDL Audio with driver %s", driver_name);
         curDriver = driver_name;
     }
     return 0;
@@ -116,12 +116,12 @@ char * SDL_AudioDriverName(char *namebuf, int maxlen)
 
 /* Override */ void SDL_AudioQuit(void)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 }
 
 /* Override */ const char *SDL_GetCurrentAudioDriver(void)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if (! curDriver.empty()) {
         return curDriver.c_str();
     }
@@ -297,7 +297,7 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
 
 /* Override */ int SDL_OpenAudio(sdl2::SDL_AudioSpec * desired, sdl2::SDL_AudioSpec * obtained)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     /* SDL1 has only one device which is id 1 */    
     if (sdl_devices[1].id != 0) {
@@ -327,7 +327,7 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
 
 /* Override */ int SDL_GetNumAudioDevices(int iscapture)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if (iscapture != 0)
         return 0;
     return 1;
@@ -335,7 +335,7 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
 
 /* Override */ const char *sdl2::SDL_GetAudioDeviceName(int index, int iscapture)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if (iscapture != 0)
         return NULL;
     if (index == 0)
@@ -345,13 +345,13 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
 
 /* Override */ const char * sdl3::SDL_GetAudioDeviceName(SDL_AudioDeviceID devid)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     return dummy_sdl_device_name;
 }
 
 /* Override */ int SDL_GetAudioDeviceSpec(int index, int iscapture, sdl2::SDL_AudioSpec *spec)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if (iscapture != 0)
         return -1;
     if (!spec)
@@ -375,7 +375,7 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
 
 /* Override */ bool SDL_GetAudioDeviceFormat(sdl3::SDL_AudioDeviceID devid, sdl3::SDL_AudioSpec *spec, int *sample_frames)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if (devid >= MAX_SDL_DEVICES)
         return false;
     if (!spec)
@@ -410,7 +410,7 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
 
 /* Override */ int SDL_GetDefaultAudioInfo(char **name, sdl2::SDL_AudioSpec *spec, int iscapture)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if (iscapture != 0)
         return -1;
     if (!spec)
@@ -436,7 +436,7 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
                    int iscapture, const sdl2::SDL_AudioSpec *desired,
                    sdl2::SDL_AudioSpec *obtained, int allowed_changes)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_SOUND, "%s called for device %s", __func__, device?device:"NULL");
+    LOGTRACE(LCF_SDL | LCF_SOUND, "%s called for device %s", __func__, device?device:"NULL");
     if (iscapture != 0)
         return 0;
 
@@ -446,7 +446,7 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
 
 /* Override */ sdl3::SDL_AudioDeviceID sdl3::SDL_OpenAudioDevice(SDL_AudioDeviceID devid, const SDL_AudioSpec *spec)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_SOUND, "%s called for device %d", __func__, devid);
+    LOGTRACE(LCF_SDL | LCF_SOUND, "%s called for device %d", __func__, devid);
     if (devid == 0)
         return 0;
 
@@ -484,13 +484,13 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
 
 /* Override */ sdl2::SDL_AudioStatus SDL_GetAudioStatus(void)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     return SDL_GetAudioDeviceStatus(1);
 }
 
 /* Override */ sdl2::SDL_AudioStatus SDL_GetAudioDeviceStatus(sdl2::SDL_AudioDeviceID dev)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     if ((dev <= 1) || (dev > MAX_SDL_DEVICES) || (sdl_devices[dev].id == 0))
         return sdl2::SDL_AUDIO_STOPPED;
@@ -517,13 +517,13 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
 
 /* Override */ void SDL_PauseAudio(int pause_on)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     sdl2::SDL_PauseAudioDevice(1, pause_on);
 }
 
 /* Override */ void sdl2::SDL_PauseAudioDevice(sdl2::SDL_AudioDeviceID dev, int pause_on)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if ((dev <= 1) || (dev > MAX_SDL_DEVICES) || (sdl_devices[dev].id == 0))
         return;
 
@@ -535,7 +535,7 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
 
 bool sdl3::SDL_PauseAudioDevice(SDL_AudioDeviceID devid)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if ((devid <= 1) || (devid > MAX_SDL_DEVICES) || (sdl_devices[devid].id == 0))
         return false;
 
@@ -548,7 +548,7 @@ bool sdl3::SDL_PauseAudioDevice(SDL_AudioDeviceID devid)
 
 bool SDL_ResumeAudioDevice(sdl3::SDL_AudioDeviceID devid)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if ((devid <= 1) || (devid > MAX_SDL_DEVICES) || (sdl_devices[devid].id == 0))
         return false;
 
@@ -561,7 +561,7 @@ bool SDL_ResumeAudioDevice(sdl3::SDL_AudioDeviceID devid)
 
 bool SDL_AudioDevicePaused(sdl3::SDL_AudioDeviceID devid)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if ((devid <= 1) || (devid > MAX_SDL_DEVICES) || (sdl_devices[devid].id == 0))
         return false;
 
@@ -574,7 +574,7 @@ bool SDL_AudioDevicePaused(sdl3::SDL_AudioDeviceID devid)
 
 void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     int SDLver = get_sdlversion();
 
@@ -592,7 +592,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 
 /* Override */ float SDL_GetAudioDeviceGain(sdl3::SDL_AudioDeviceID devid)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if ((devid <= 1) || (devid > MAX_SDL_DEVICES) || (sdl_devices[devid].id == 0))
         return -1.0f;
 
@@ -604,7 +604,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 
 /* Override */ bool SDL_SetAudioDeviceGain(sdl3::SDL_AudioDeviceID devid, float gain)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if ((devid <= 1) || (devid > MAX_SDL_DEVICES) || (sdl_devices[devid].id == 0))
         return false;
 
@@ -617,7 +617,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 
 /* Override */ int SDL_QueueAudio(sdl2::SDL_AudioDeviceID dev, const void *data, Uint32 len)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_SOUND, "%s call with %d bytes of data", __func__, len);
+    LOGTRACE(LCF_SDL | LCF_SOUND, "%s call with %d bytes of data", __func__, len);
 
     if ((dev <= 1) || (dev > MAX_SDL_DEVICES) || (sdl_devices[dev].id == 0))
         return -1;
@@ -653,7 +653,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 
 /* Override */ Uint32 SDL_GetQueuedAudioSize(sdl2::SDL_AudioDeviceID dev)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     if ((dev <= 1) || (dev > MAX_SDL_DEVICES) || (sdl_devices[dev].id == 0))
         return -1;
@@ -675,7 +675,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 
 /* Override */ void SDL_ClearQueuedAudio(sdl2::SDL_AudioDeviceID dev)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     if ((dev <= 1) || (dev > MAX_SDL_DEVICES) || (sdl_devices[dev].id == 0))
         return;
@@ -698,7 +698,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 
 /* Override */ bool SDL_BindAudioStreams(sdl3::SDL_AudioDeviceID devid, SDL_AudioStream * const *streams, int num_streams)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     if ((devid <= 1) || (devid > MAX_SDL_DEVICES) || (sdl_devices[devid].id == 0))
         return false;
@@ -724,7 +724,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 
 /* Override */ bool SDL_BindAudioStream(sdl3::SDL_AudioDeviceID devid, SDL_AudioStream *stream)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     if ((devid <= 1) || (devid > MAX_SDL_DEVICES) || (sdl_devices[devid].id == 0))
         return false;
@@ -745,7 +745,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 
 /* Override */ void SDL_UnbindAudioStreams(SDL_AudioStream * const *streams, int num_streams)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     for (int i = 0; i < num_streams; i++) {
         if (!streams[i]) {
@@ -768,7 +768,7 @@ void SDL_MixAudio(Uint8 * dst, const Uint8 * src, Uint32 len, int volume)
 
 /* Override */ void SDL_UnbindAudioStream(SDL_AudioStream *stream)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     if (!stream) {
         return;
@@ -806,7 +806,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ sdl3::SDL_AudioDeviceID SDL_GetAudioStreamDevice(SDL_AudioStream *stream)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     if (!stream) {
         return 0;
@@ -817,7 +817,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ SDL_AudioStream * SDL_CreateAudioStream(const sdl3::SDL_AudioSpec *src_spec, const sdl3::SDL_AudioSpec *dst_spec)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_SOUND, "%s call with input format %d, input channels %d and input freq %d", __func__, src_spec->format, src_spec->channels, src_spec->freq);
+    LOGTRACE(LCF_SDL | LCF_SOUND, "%s call with input format %d, input channels %d and input freq %d", __func__, src_spec->format, src_spec->channels, src_spec->freq);
     auto source = AudioContext::get().createSource();
 
     source->format = sdlFormatToFormat(src_spec->format);
@@ -830,7 +830,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ bool SDL_GetAudioStreamFormat(SDL_AudioStream *stream, sdl3::SDL_AudioSpec *src_spec, sdl3::SDL_AudioSpec *dst_spec)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     if (src_spec) {
@@ -843,7 +843,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ bool SDL_SetAudioStreamFormat(SDL_AudioStream *stream, const sdl3::SDL_AudioSpec *src_spec, const sdl3::SDL_AudioSpec *dst_spec)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     if (src_spec && source) {
@@ -856,7 +856,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ float SDL_GetAudioStreamFrequencyRatio(SDL_AudioStream *stream)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     return source->pitch;
@@ -864,7 +864,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ bool SDL_SetAudioStreamFrequencyRatio(SDL_AudioStream *stream, float ratio)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     source->pitch = ratio;
@@ -873,7 +873,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ float SDL_GetAudioStreamGain(SDL_AudioStream *stream)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     return source->volume;
@@ -881,7 +881,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ bool SDL_SetAudioStreamGain(SDL_AudioStream *stream, float gain)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     source->volume = gain;
@@ -890,31 +890,31 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ int * SDL_GetAudioStreamInputChannelMap(SDL_AudioStream *stream, int *count)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     return nullptr;
 }
 
 /* Override */ int * SDL_GetAudioStreamOutputChannelMap(SDL_AudioStream *stream, int *count)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     return nullptr;
 }
 
 /* Override */ bool SDL_SetAudioStreamInputChannelMap(SDL_AudioStream *stream, const int *chmap, int count)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND | LCF_TODO);
     return true;
 }
 
 /* Override */ bool SDL_SetAudioStreamOutputChannelMap(SDL_AudioStream *stream, const int *chmap, int count)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND | LCF_TODO);
     return true;
 }
 
 /* Override */ bool SDL_PutAudioStreamData(SDL_AudioStream *stream, const void *buf, int len)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_SOUND, "%s called with %d bytes", __func__, len);
+    LOGTRACE(LCF_SDL | LCF_SOUND, "%s called with %d bytes", __func__, len);
     AudioSource* source = reinterpret_cast<AudioSource*>(stream);
 
     AudioContext& audiocontext = AudioContext::get();
@@ -939,7 +939,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ int SDL_GetAudioStreamData(SDL_AudioStream *stream, void *buf, int len)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_SOUND | LCF_TODO, "%s called with %d bytes", __func__, len);
+    LOGTRACE(LCF_SDL | LCF_SOUND | LCF_TODO, "%s called with %d bytes", __func__, len);
     AudioSource* source = reinterpret_cast<AudioSource*>(stream);
 
     std::lock_guard<std::mutex> lock(AudioContext::get().mutex);
@@ -966,7 +966,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ int SDL_GetAudioStreamAvailable(SDL_AudioStream *stream)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND | LCF_TODO);
 
     /* TODO: For now, we just return the number of available unconverted bytes */
     AudioSource* source = reinterpret_cast<AudioSource*>(stream);
@@ -979,7 +979,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ int SDL_GetAudioStreamQueued(SDL_AudioStream *stream)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     if (!source)
@@ -991,13 +991,13 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ bool SDL_FlushAudioStream(SDL_AudioStream *stream)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     return true;
 }
 
 /* Override */ bool SDL_ClearAudioStream(SDL_AudioStream *stream)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     if (!source)
@@ -1010,7 +1010,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ bool SDL_PauseAudioStreamDevice(SDL_AudioStream *stream)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     if (!stream)
         return -1;
@@ -1029,7 +1029,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ bool SDL_ResumeAudioStreamDevice(SDL_AudioStream *stream)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     if (!stream)
         return -1;
@@ -1048,7 +1048,7 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ bool SDL_AudioStreamDevicePaused(SDL_AudioStream *stream)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     /* Only check this stream status */
     AudioSource* source = reinterpret_cast<AudioSource*>(stream);
@@ -1060,13 +1060,13 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ void SDL_LockAudio(void)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     return SDL_LockAudioDevice(1);
 }
 
 /* Override */ void SDL_LockAudioDevice(sdl2::SDL_AudioDeviceID dev)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if (ThreadManager::getThreadId() == AudioContext::get().audio_thread)
         return;
     mutex.lock();
@@ -1074,13 +1074,13 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ void SDL_UnlockAudio(void)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     return SDL_UnlockAudioDevice(1);
 }
 
 /* Override */ void SDL_UnlockAudioDevice(sdl2::SDL_AudioDeviceID dev)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     if (ThreadManager::getThreadId() == AudioContext::get().audio_thread)
         return;
     mutex.unlock();
@@ -1088,19 +1088,19 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ bool SDL_SetAudioStreamGetCallback(SDL_AudioStream *stream, SDL_AudioStreamCallback callback, void *userdata)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND | LCF_TODO);
     return true;
 }
 
 /* Override */ bool SDL_SetAudioStreamPutCallback(SDL_AudioStream *stream, SDL_AudioStreamCallback callback, void *userdata)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND | LCF_TODO);
     return true;
 }
 
 /* Override */ void SDL_DestroyAudioStream(SDL_AudioStream *stream)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
     AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     if (!source)
@@ -1121,13 +1121,13 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 
 /* Override */ void SDL_CloseAudio(void)
 {
-    LOGTRACE(LCF_SDL | LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     return SDL_CloseAudioDevice(1);
 }
 
 /* Override */ void SDL_CloseAudioDevice(sdl2::SDL_AudioDeviceID dev)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_SOUND, "%s called with dev %d", __func__, dev);
+    LOGTRACE(LCF_SDL | LCF_SOUND, "%s called with dev %d", __func__, dev);
 
     if (dev <= 1 || dev > MAX_SDL_DEVICES)
         return;

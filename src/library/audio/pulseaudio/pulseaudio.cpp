@@ -33,14 +33,14 @@ namespace libtas {
 pa_mainloop* pa_mainloop_new(void)
 {
     RETURN_IF_NATIVE(pa_mainloop_new, (), "libpulse.so.0");
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return nullptr;
 }
 
 pa_threaded_mainloop* pa_threaded_mainloop_new(void)
 {
     RETURN_IF_NATIVE(pa_threaded_mainloop_new, (), "libpulse.so.0");
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return nullptr;
 }
 

@@ -43,7 +43,7 @@ DEFINE_ORIG_POINTER(SteamInternal_SteamAPI_Init)
 
 HSteamUser SteamAPI_GetHSteamUser()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamAPI_GetHSteamUser, "steam_api");
         return orig::SteamAPI_GetHSteamUser();
@@ -54,7 +54,7 @@ HSteamUser SteamAPI_GetHSteamUser()
 
 HSteamPipe SteamAPI_GetHSteamPipe()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamAPI_GetHSteamPipe, "steam_api");
         return orig::SteamAPI_GetHSteamPipe();
@@ -65,7 +65,7 @@ HSteamPipe SteamAPI_GetHSteamPipe()
 
 CSteamAPIContext* SteamInternal_ContextInit( CSteamAPIContextInitData *data )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamInternal_ContextInit, "steam_api");
         return orig::SteamInternal_ContextInit(data);
@@ -86,7 +86,7 @@ CSteamAPIContext* SteamInternal_ContextInit( CSteamAPIContextInitData *data )
 
 void * SteamInternal_CreateInterface( const char *ver )
 {
-    LOG(LL_TRACE, LCF_STEAM, "%s called with %s", __func__, ver);
+    LOGTRACE(LCF_STEAM, "%s called with %s", __func__, ver);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamInternal_CreateInterface, "steam_api");
         return orig::SteamInternal_CreateInterface(ver);
@@ -138,7 +138,7 @@ void * SteamInternal_CreateInterface( const char *ver )
 
 void * SteamInternal_FindOrCreateUserInterface(HSteamUser steam_user, const char *version)
 {
-    LOG(LL_TRACE, LCF_STEAM, "%s called with version %s", __func__, version);
+    LOGTRACE(LCF_STEAM, "%s called with version %s", __func__, version);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamInternal_FindOrCreateUserInterface, "steam_api");
         return orig::SteamInternal_FindOrCreateUserInterface(steam_user, version);
@@ -190,7 +190,7 @@ void * SteamInternal_FindOrCreateUserInterface(HSteamUser steam_user, const char
 
 void * SteamInternal_FindOrCreateGameServerInterface(HSteamUser steam_user, const char *version)
 {
-    LOG(LL_TRACE, LCF_STEAM, "%s called with version %s", __func__, version);
+    LOGTRACE(LCF_STEAM, "%s called with version %s", __func__, version);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamInternal_FindOrCreateGameServerInterface, "steam_api");
         return orig::SteamInternal_FindOrCreateGameServerInterface(steam_user, version);
@@ -242,7 +242,7 @@ void * SteamInternal_FindOrCreateGameServerInterface(HSteamUser steam_user, cons
 
 int SteamInternal_SteamAPI_Init( const char *pszVersion, char** error )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (Global::shared_config.virtual_steam) {
         return 0; // k_ESteamAPIInitResult_OK
     }

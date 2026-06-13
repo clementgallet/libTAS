@@ -29,7 +29,7 @@
 namespace libtas {
 
 /* Override */ int SDL_Init(Uint32 flags){
-    LOGTRACE(LCF_SDL);
+    LOGTRACE_SIMPLE(LCF_SDL);
 
     /* In both SDL1 and SDL2, SDL_Init() calls SDL_InitSubSystem(),
      * but in SDL2, SDL_Init() can actually never be called by the game,
@@ -55,7 +55,7 @@ namespace libtas {
 static Uint32 init_flags = 0;
 
 /* Override */ int SDL_InitSubSystem(Uint32 flags){
-    LOGTRACE(LCF_SDL);
+    LOGTRACE_SIMPLE(LCF_SDL);
 
     /* Get which sdl version we are using. */
     int SDLver = get_sdlversion();
@@ -139,7 +139,7 @@ static Uint32 init_flags = 0;
 
 Uint32 SDL_WasInit(Uint32 flags)
 {
-    LOG(LL_TRACE, LCF_SDL, "%s with flags %d", __func__, flags);
+    LOGTRACE(LCF_SDL, "%s with flags %d", __func__, flags);
 
     if (flags == 0)
         return init_flags;
@@ -149,7 +149,7 @@ Uint32 SDL_WasInit(Uint32 flags)
 
 /* Override */ void SDL_Quit()
 {
-    LOGTRACE(LCF_SDL);
+    LOGTRACE_SIMPLE(LCF_SDL);
     return ORIG_SDL23_CALL(SDL_Quit, ());
 }
 

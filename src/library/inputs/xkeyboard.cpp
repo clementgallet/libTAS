@@ -32,7 +32,7 @@ namespace libtas {
 
 /* Override */ int XQueryKeymap( Display* display, char keymap[32])
 {
-    LOGTRACE(LCF_KEYBOARD);
+    LOGTRACE_SIMPLE(LCF_KEYBOARD);
 
     memset(keymap, 0, 32);
     GlobalNoLog gnl; // Avoid logging on XkbKeycodeToKeysym
@@ -55,25 +55,25 @@ namespace libtas {
 
 /* Override */ int XGrabKey(Display*, int, unsigned int, Window, Bool, int, int)
 {
-    LOGTRACE(LCF_KEYBOARD);
+    LOGTRACE_SIMPLE(LCF_KEYBOARD);
     return GrabSuccess;
 }
 
 /* Override */ int XGrabKeyboard(Display*, Window, Bool, int, int, Time)
 {
-    LOGTRACE(LCF_KEYBOARD);
+    LOGTRACE_SIMPLE(LCF_KEYBOARD);
     return GrabSuccess;
 }
 
 /* Override */ int XUngrabKey(Display*, int, unsigned int, Window)
 {
-    LOGTRACE(LCF_KEYBOARD);
+    LOGTRACE_SIMPLE(LCF_KEYBOARD);
     return 0;
 }
 
 /* Override */ int XUngrabKeyboard(Display*, Time)
 {
-    LOGTRACE(LCF_KEYBOARD);
+    LOGTRACE_SIMPLE(LCF_KEYBOARD);
     return 0;
 }
 
@@ -81,7 +81,7 @@ namespace libtas {
 {
     RETURN_IF_NATIVE(XGetInputFocus, (display, focus_return, revert_to_return), nullptr);
 
-    LOGTRACE(LCF_KEYBOARD);
+    LOGTRACE_SIMPLE(LCF_KEYBOARD);
     /* Returing the game Xlib window */
     if (focus_return && XlibGameWindow::get()) {
         *focus_return = XlibGameWindow::get();
@@ -91,7 +91,7 @@ namespace libtas {
 
 /* Override */ int XSetInputFocus(Display* display, Window focus, int revert_to, Time time)
 {
-    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with window %d", __func__, focus);
+    LOGTRACE(LCF_KEYBOARD, "%s called with window %d", __func__, focus);
     return 0;
 }
 

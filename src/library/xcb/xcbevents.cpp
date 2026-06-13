@@ -145,7 +145,7 @@ xcb_generic_event_t *xcb_wait_for_event(xcb_connection_t *c)
         return orig::xcb_wait_for_event(c);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(xcb_wait_for_event);
@@ -186,7 +186,7 @@ xcb_generic_event_t *xcb_poll_for_event(xcb_connection_t *c)
         return orig::xcb_poll_for_event(c);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(xcb_poll_for_event);
@@ -220,7 +220,7 @@ xcb_send_event_checked (xcb_connection_t *c,
     if (GlobalState::isNative())
         return orig::xcb_send_event_checked(c, propagate, destination, event_mask, event);
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     const xcb_generic_event_t* ev = reinterpret_cast<const xcb_generic_event_t*> (event);
     xcb_void_cookie_t cookie{0};
@@ -302,7 +302,7 @@ xcb_send_event (xcb_connection_t *c,
     if (GlobalState::isNative())
         return orig::xcb_send_event(c, propagate, destination, event_mask, event);
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     const xcb_generic_event_t* ev = reinterpret_cast<const xcb_generic_event_t*> (event);
     xcb_void_cookie_t cookie{0};
@@ -378,7 +378,7 @@ int xcb_flush(xcb_connection_t *c)
         return orig::xcb_flush(c);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(xcb_flush);
@@ -403,7 +403,7 @@ xcb_generic_event_t *xcb_poll_for_special_event(xcb_connection_t *c, xcb_special
         return orig::xcb_poll_for_special_event(c, se);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     WrapperLock wrapperLock;
     return orig::xcb_poll_for_special_event(c, se);
@@ -416,7 +416,7 @@ xcb_generic_event_t *xcb_wait_for_special_event(xcb_connection_t *c, xcb_special
         return orig::xcb_wait_for_special_event(c, se);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
     LINK_NAMESPACE_GLOBAL(xcb_poll_for_special_event);
 
     while (!Global::is_exiting) {

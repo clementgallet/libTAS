@@ -33,7 +33,7 @@ static const char* alsa_driver = "alsa";
 
 int fluid_settings_getstr_default(fluid_settings_t *settings, const char *name, char **def)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s called with name %s", __func__, name);
+    LOGTRACE(LCF_SOUND, "%s called with name %s", __func__, name);
 
     if (strcmp(name, "audio.driver") == 0) {
         *def = const_cast<char*>(alsa_driver);
@@ -46,7 +46,7 @@ int fluid_settings_getstr_default(fluid_settings_t *settings, const char *name, 
 
 int fluid_settings_setstr(fluid_settings_t *settings, const char *name, const char *str)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s called with name %s", __func__, name);
+    LOGTRACE(LCF_SOUND, "%s called with name %s", __func__, name);
 
     LINK_NAMESPACE(fluid_settings_setstr, "fluidsynth");
 
@@ -64,7 +64,7 @@ int fluid_settings_setstr(fluid_settings_t *settings, const char *name, const ch
 
 fluid_settings_t* new_fluid_settings(void)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     /* Before creating the settings, we unregister every audio drivers except ALSA */
     LINK_NAMESPACE(fluid_audio_driver_register, "fluidsynth");

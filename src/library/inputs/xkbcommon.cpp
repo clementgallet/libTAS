@@ -33,7 +33,7 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
 
 /* Override */ int xkb_state_key_get_utf8(struct xkb_state *state, xkb_keycode_t key, char *buffer, size_t size)
 {
-    LOGTRACE(LCF_KEYBOARD);
+    LOGTRACE_SIMPLE(LCF_KEYBOARD);
     if (buffer && (size > 0)) {
         char c = '\0';
         if (key < 130) {
@@ -57,7 +57,7 @@ static const char* Xlib_default_char_shifted = "\0\0\0\0\0\0\0\0\0\0!@#$%^&*()_+
 
 /* Override */ xkb_keysym_t xkb_state_key_get_one_sym(struct xkb_state *state, xkb_keycode_t key)
 {
-    LOGTRACE(LCF_KEYBOARD);
+    LOGTRACE_SIMPLE(LCF_KEYBOARD);
     GlobalNoLog gnl; // Avoid logging on XkbKeycodeToKeysym
 
     /* Get shift modifier */

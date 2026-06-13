@@ -35,13 +35,13 @@ DEFINE_ORIG_POINTER(SDL_WarpMouse)
 
 bool SDL_HasMouse(void)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     return Global::shared_config.mouse_support;
 }
 
 sdl3::SDL_MouseID * SDL_GetMice(int *count)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     if (count != NULL)
         *count = Global::shared_config.mouse_support?1:0;
 
@@ -55,13 +55,13 @@ sdl3::SDL_MouseID * SDL_GetMice(int *count)
 
 SDL_Window *SDL_GetMouseFocus(void)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     return sdl::gameSDLWindow;
 }
 
 Uint32 sdl2::SDL_GetMouseState(int *x, int *y)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
 
     if (x != NULL)
         *x = Inputs::game_ai.pointer.x;
@@ -74,7 +74,7 @@ Uint32 sdl2::SDL_GetMouseState(int *x, int *y)
 
 sdl3::SDL_MouseButtonFlags sdl3::SDL_GetMouseState(float *x, float *y)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
 
     if (x != NULL)
         *x = (float)Inputs::game_ai.pointer.x;
@@ -87,7 +87,7 @@ sdl3::SDL_MouseButtonFlags sdl3::SDL_GetMouseState(float *x, float *y)
 
 Uint32 sdl2::SDL_GetGlobalMouseState(int *x, int *y)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     /* We don't support global mouse state. We consider that the window
      * is located at the bottom left of the screen and just output the
      * same result as SDL_GetMouseState().
@@ -98,7 +98,7 @@ Uint32 sdl2::SDL_GetGlobalMouseState(int *x, int *y)
 
 sdl3::SDL_MouseButtonFlags sdl3::SDL_GetGlobalMouseState(float *x, float *y)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     /* We don't support global mouse state. We consider that the window
      * is located at the bottom left of the screen and just output the
      * same result as SDL_GetMouseState().
@@ -109,7 +109,7 @@ sdl3::SDL_MouseButtonFlags sdl3::SDL_GetGlobalMouseState(float *x, float *y)
 
 Uint32 sdl2::SDL_GetRelativeMouseState(int *x, int *y)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
 
     static bool first = true;
     static int oldx = 0;
@@ -150,7 +150,7 @@ sdl3::SDL_MouseButtonFlags sdl3::SDL_GetRelativeMouseState(float *x, float *y)
 
 void sdl2::SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
+    LOGTRACE(LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
 
     /* We have to generate an MOUSEMOTION event. */
     sdl2::SDL_Event event2;
@@ -190,7 +190,7 @@ void sdl3::SDL_WarpMouseInWindow(SDL_Window *window, float x, float y)
 
 int sdl2::SDL_WarpMouseGlobal(int x, int y)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
+    LOGTRACE(LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
 
     /* Should we support this? */
     sdl2::SDL_WarpMouseInWindow(nullptr, x, y);
@@ -199,7 +199,7 @@ int sdl2::SDL_WarpMouseGlobal(int x, int y)
 
 bool sdl3::SDL_WarpMouseGlobal(float x, float y)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call to pos (%f,%f)", __func__, x, y);
+    LOGTRACE(LCF_SDL | LCF_MOUSE, "%s call to pos (%f,%f)", __func__, x, y);
 
     /* Should we support this? */
     sdl3::SDL_WarpMouseInWindow(nullptr, x, y);
@@ -208,7 +208,7 @@ bool sdl3::SDL_WarpMouseGlobal(float x, float y)
 
 void SDL_WarpMouse(Uint16 x, Uint16 y)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
+    LOGTRACE(LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
 
     /* We have to generate an MOUSEMOTION event. */
     sdl1::SDL_Event event1;
@@ -239,98 +239,98 @@ SDL_bool relativeMode = SDL_FALSE;
 
 int SDL_SetRelativeMouseMode(SDL_bool enabled)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call with enabled %d", __func__, enabled);
+    LOGTRACE(LCF_SDL | LCF_MOUSE, "%s call with enabled %d", __func__, enabled);
     relativeMode = enabled;
     return 0;
 }
 
 bool SDL_SetWindowRelativeMouseMode(SDL_Window *window, bool enabled)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call with enabled %d", __func__, enabled);
+    LOGTRACE(LCF_SDL | LCF_MOUSE, "%s call with enabled %d", __func__, enabled);
     relativeMode = enabled;
     return true;
 }
 
 int sdl2::SDL_CaptureMouse(SDL_bool enabled)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call with enabled %d", __func__, enabled);
+    LOGTRACE(LCF_SDL | LCF_MOUSE, "%s call with enabled %d", __func__, enabled);
     /* We should disable capture anyway */
     return 0;
 }
 
 bool sdl3::SDL_CaptureMouse(bool enabled)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call with enabled %d", __func__, enabled);
+    LOGTRACE(LCF_SDL | LCF_MOUSE, "%s call with enabled %d", __func__, enabled);
     /* We should disable capture anyway */
     return true;
 }
 
 SDL_bool SDL_GetRelativeMouseMode(void)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     return relativeMode;
 }
 
 bool SDL_GetWindowRelativeMouseMode(SDL_Window *window)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     return relativeMode;
 }
 
 SDL_Cursor *SDL_CreateCursor(const Uint8 * data, const Uint8 * mask, int w, int h, int hot_x, int hot_y)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     /* Return some non-null value */
     return reinterpret_cast<SDL_Cursor*>(1);
 }
 
 SDL_Cursor *SDL_CreateColorCursor(sdl2::SDL_Surface *surface, int hot_x, int hot_y)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     /* Return some non-null value */
     return reinterpret_cast<SDL_Cursor*>(1);
 }
 
 SDL_Cursor *SDL_CreateSystemCursor(sdl2::SDL_SystemCursor id)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     /* Return some non-null value */
     return reinterpret_cast<SDL_Cursor*>(1);
 }
 
 bool SDL_SetCursor(SDL_Cursor * cursor)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     return true;
 }
 
 SDL_Cursor *SDL_GetCursor(void)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     /* Return some non-null value */
     return reinterpret_cast<SDL_Cursor*>(1);
 }
 
 SDL_Cursor *SDL_GetDefaultCursor(void)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     /* Return some non-null value */
     return reinterpret_cast<SDL_Cursor*>(1);
 }
 
 void SDL_FreeCursor(SDL_Cursor * cursor)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
 }
 
 void SDL_DestroyCursor(SDL_Cursor *cursor)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
 }
 
 int sdl2::SDL_ShowCursor(int toggle)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_MOUSE, "%s call with %d", __func__, toggle);
+    LOGTRACE(LCF_SDL | LCF_MOUSE, "%s call with %d", __func__, toggle);
 
     /* We keep the state of the cursor, but we keep it shown. */
     static int showCursor = 1;
@@ -343,21 +343,21 @@ static bool sdl3_cursor_visible = true;
 
 bool sdl3::SDL_ShowCursor(void)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     sdl3_cursor_visible = true;
     return true;
 }
 
 bool SDL_HideCursor(void)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     sdl3_cursor_visible = false;
     return true;
 }
 
 bool SDL_CursorVisible(void)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     return sdl3_cursor_visible;
 }
 
@@ -365,7 +365,7 @@ static SDL_Window* pointer_grab_sdl_window = nullptr;
 
 void SDL_SetWindowGrab(SDL_Window * window, SDL_bool grabbed)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
 
     if (grabbed) {
         pointer_grab_sdl_window = window;
@@ -405,7 +405,7 @@ void SDL_SetWindowGrab(SDL_Window * window, SDL_bool grabbed)
 
 void SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
 
     if (grabbed) {
         pointer_grab_sdl_window = window;
@@ -445,19 +445,19 @@ void SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed)
 
 SDL_bool SDL_GetWindowGrab(SDL_Window * window)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     return (window == pointer_grab_sdl_window) ? SDL_TRUE : SDL_FALSE;
 }
 
 SDL_bool SDL_GetWindowMouseGrab(SDL_Window * window)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     return (window == pointer_grab_sdl_window) ? SDL_TRUE : SDL_FALSE;
 }
 
 SDL_Window* SDL_GetGrabbedWindow(void)
 {
-    LOGTRACE(LCF_SDL | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
     return pointer_grab_sdl_window;
 }
 

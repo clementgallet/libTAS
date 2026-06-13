@@ -34,13 +34,13 @@
 
 #define RETURN_SYMBOL(str) \
     if (!strcmp(symbol, #str)) { \
-        LOG(LL_TRACE, LCF_OGL,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(libtas::str), real_pointer); \
+        LOGTRACE(LCF_OGL,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(libtas::str), real_pointer); \
         return reinterpret_cast<void*>(libtas::str); \
     }
 
 #define RETURN_SYMBOL_CUSTOM(str) \
     if (!strcmp(symbol, #str)) { \
-        LOG(LL_TRACE, LCF_OGL,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(my##str), real_pointer); \
+        LOGTRACE(LCF_OGL,"  return my symbol %p, real function in %p", reinterpret_cast<void*>(my##str), real_pointer); \
         return reinterpret_cast<void*>(my##str); \
     }
 
@@ -142,7 +142,7 @@ static void* store_orig_and_return_my_symbol(const char* symbol, void* real_poin
 
 void(*eglGetProcAddress (const char *procName))()
 {
-    LOG(LL_TRACE, LCF_OGL, "%s call with symbol %s", __func__, procName);
+    LOGTRACE(LCF_OGL, "%s call with symbol %s", __func__, procName);
     LINK_NAMESPACE(eglGetProcAddress, "EGL");
 
     if (!orig::eglGetProcAddress) return nullptr;
@@ -160,7 +160,7 @@ EGLBoolean eglMakeCurrent( EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
     if (GlobalState::isNative())
         return ret;
 
-    LOGTRACE(LCF_WINDOW | LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_OGL);
 
     if (draw && XlibGameWindow::get()) {
         Global::game_info.video |= GameInfo::EGL | GameInfo::OPENGL;
@@ -174,7 +174,7 @@ static EGLenum bindAPI = EGL_OPENGL_ES_API;
 
 EGLBoolean eglBindAPI(EGLenum api)
 {
-    LOG(LL_TRACE, LCF_OGL, "%s call with API %d", __func__, api);
+    LOGTRACE(LCF_OGL, "%s call with API %d", __func__, api);
     LINK_NAMESPACE(eglBindAPI, "EGL");
 
     bindAPI = api;
@@ -189,7 +189,7 @@ EGLBoolean eglSwapBuffers( EGLDisplay dpy, EGLSurface surface )
     if (GlobalState::isNative())
         return orig::eglSwapBuffers(dpy, surface);
 
-    LOGTRACE(LCF_WINDOW | LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_OGL);
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_GL renderHUD;
@@ -203,7 +203,7 @@ static int swapInterval = 0;
 
 EGLBoolean eglSwapInterval (EGLDisplay dpy, EGLint interval)
 {
-    LOG(LL_TRACE, LCF_OGL, "%s call with interval %d", __func__, interval);
+    LOGTRACE(LCF_OGL, "%s call with interval %d", __func__, interval);
     LINK_NAMESPACE(eglSwapInterval, "EGL");
 
     swapInterval = interval;
@@ -217,7 +217,7 @@ EGLBoolean eglSwapInterval (EGLDisplay dpy, EGLint interval)
 
 EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint *attrib_list)
 {
-    LOGTRACE(LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_OGL);
     LINK_NAMESPACE(eglCreateContext, "EGL");
 
     if (!attrib_list) {

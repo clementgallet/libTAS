@@ -74,7 +74,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
             constexpr size_t padding_len = -sizeof(xcb_query_extension_request_t) & 3;
             const char* name = reinterpret_cast<const char*>(vector[1].iov_len == padding_len ? vector[2].iov_base : vector[1].iov_base);
 
-            LOG(LL_TRACE, LCF_WINDOW, "XCB_QUERY_EXTENSION raw request with name %.*s", req->name_len, name);
+            LOGTRACE(LCF_WINDOW, "XCB_QUERY_EXTENSION raw request with name %.*s", req->name_len, name);
 
             /* If the extension is XInputExtension, we need to gather its opcode */
             if (0 == strncmp("XInputExtension", name, req->name_len)) {
@@ -96,7 +96,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
         case XCB_CREATE_WINDOW:
         {
             const auto* req = static_cast<const xcb_create_window_request_t*>(vector->iov_base);
-            LOG(LL_TRACE, LCF_WINDOW, "XCB_CREATE_WINDOW raw request with id %d and dimensions %d x %d", req->wid, req->width, req->height);
+            LOGTRACE(LCF_WINDOW, "XCB_CREATE_WINDOW raw request with id %d and dimensions %d x %d", req->wid, req->width, req->height);
 
             constexpr size_t padding_len = -sizeof(xcb_create_window_request_t) & 3;
             const uint32_t* values = reinterpret_cast<const uint32_t*>(vector[1].iov_len == padding_len ? vector[2].iov_base : vector[1].iov_base);
@@ -146,7 +146,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
         case XCB_DESTROY_WINDOW:
         {
             const auto* req = static_cast<const xcb_destroy_window_request_t*>(vector->iov_base);
-            LOG(LL_TRACE, LCF_WINDOW, "XCB_DESTROY_WINDOW raw request with window %d", req->window);
+            LOGTRACE(LCF_WINDOW, "XCB_DESTROY_WINDOW raw request with window %d", req->window);
 
             /* If current game window, switch to another one on the list */
             XlibGameWindow::pop(req->window);
@@ -158,7 +158,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
         case XCB_MAP_WINDOW:
         {
             const auto* req = static_cast<const xcb_map_window_request_t*>(vector->iov_base);
-            LOG(LL_TRACE, LCF_WINDOW, "XCB_MAP_WINDOW raw request called with window %d", req->window);
+            LOGTRACE(LCF_WINDOW, "XCB_MAP_WINDOW raw request called with window %d", req->window);
 
             send_request(vector);
 
@@ -171,7 +171,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
         case XCB_UNMAP_WINDOW:
         {
             const auto* req = static_cast<const xcb_unmap_window_request_t*>(vector->iov_base);
-            LOG(LL_TRACE, LCF_WINDOW, "XCB_UNMAP_WINDOW raw request called with window %d", req->window);
+            LOGTRACE(LCF_WINDOW, "XCB_UNMAP_WINDOW raw request called with window %d", req->window);
             send_request(vector);
             break;
         }
@@ -179,7 +179,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
         case XCB_CONFIGURE_WINDOW:
         {
             const auto* req = static_cast<const xcb_configure_window_request_t*>(vector->iov_base);
-            LOG(LL_TRACE, LCF_WINDOW, "XCB_CONFIGURE_WINDOW raw request called with window %d", req->window);
+            LOGTRACE(LCF_WINDOW, "XCB_CONFIGURE_WINDOW raw request called with window %d", req->window);
 
             constexpr size_t padding_len = -sizeof(xcb_configure_window_request_t) & 3;
             const uint32_t* value_list = reinterpret_cast<const uint32_t*>(vector[1].iov_len == padding_len ? vector[2].iov_base : vector[1].iov_base);
@@ -250,7 +250,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
         case XCB_CHANGE_PROPERTY:
         {
             const auto* req = static_cast<const xcb_change_property_request_t*>(vector->iov_base);
-            LOG(LL_TRACE, LCF_WINDOW, "XCB_CHANGE_PROPERTY raw request called with window %d", req->window);
+            LOGTRACE(LCF_WINDOW, "XCB_CHANGE_PROPERTY raw request called with window %d", req->window);
 
             constexpr size_t padding_len = -sizeof(xcb_change_property_request_t) & 3;
             const Atom* value_list = reinterpret_cast<const Atom*>(vector[1].iov_len == padding_len ? vector[2].iov_base : vector[1].iov_base);
@@ -342,7 +342,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
         case XCB_SEND_EVENT:
         {
             const auto* req = static_cast<const xcb_send_event_request_t*>(vector->iov_base);
-            LOG(LL_TRACE, LCF_EVENTS, "XCB_SEND_EVENT raw request call");
+            LOGTRACE(LCF_EVENTS, "XCB_SEND_EVENT raw request call");
 
             const auto* ev = reinterpret_cast<const xcb_generic_event_t*>(req->event);
 
@@ -414,44 +414,44 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
 
         case XCB_QUERY_KEYMAP:
         {
-            LOG(LL_TRACE, LCF_KEYBOARD, "XCB_QUERY_KEYMAP raw request call");
+            LOGTRACE(LCF_KEYBOARD, "XCB_QUERY_KEYMAP raw request call");
             break;
         }
 
         case XCB_GRAB_KEYBOARD:
         {
-            LOG(LL_TRACE, LCF_KEYBOARD, "XCB_GRAB_KEYBOARD raw request call");
+            LOGTRACE(LCF_KEYBOARD, "XCB_GRAB_KEYBOARD raw request call");
             break;
         }
 
         case XCB_UNGRAB_KEYBOARD:
         {
-            LOG(LL_TRACE, LCF_KEYBOARD, "XCB_UNGRAB_KEYBOARD raw request call");
+            LOGTRACE(LCF_KEYBOARD, "XCB_UNGRAB_KEYBOARD raw request call");
             break;
         }
 
         case XCB_GRAB_KEY:
         {
-            LOG(LL_TRACE, LCF_KEYBOARD, "XCB_GRAB_KEY raw request call");
+            LOGTRACE(LCF_KEYBOARD, "XCB_GRAB_KEY raw request call");
             break;
         }
 
         case XCB_UNGRAB_KEY:
         {
-            LOG(LL_TRACE, LCF_KEYBOARD, "XCB_UNGRAB_KEY raw request call");
+            LOGTRACE(LCF_KEYBOARD, "XCB_UNGRAB_KEY raw request call");
             break;
         }
 
         case XCB_QUERY_POINTER:
         {
-            LOG(LL_TRACE, LCF_MOUSE, "XCB_QUERY_POINTER raw request call");
+            LOGTRACE(LCF_MOUSE, "XCB_QUERY_POINTER raw request call");
             break;
         }
 
         case XCB_WARP_POINTER:
         {
             const auto* req = static_cast<const xcb_warp_pointer_request_t*>(vector->iov_base);
-            LOG(LL_TRACE, LCF_MOUSE, "XCB_WARP_POINTER raw request called with dest_w %d and dest_x %d and dest_y %d", req->dst_window, req->dst_x, req->dst_y);
+            LOGTRACE(LCF_MOUSE, "XCB_WARP_POINTER raw request called with dest_w %d and dest_x %d and dest_y %d", req->dst_window, req->dst_x, req->dst_y);
 
             /* Does this generate a XCB_MOTION_NOTIFY event? */
             if (XlibGameWindow::get()) {
@@ -516,13 +516,13 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
 
         case XCB_GRAB_POINTER:
         {
-            LOG(LL_TRACE, LCF_MOUSE, "XCB_GRAB_POINTER raw request call");
+            LOGTRACE(LCF_MOUSE, "XCB_GRAB_POINTER raw request call");
             break;
         }
 
         case XCB_UNGRAB_POINTER:
         {
-            LOG(LL_TRACE, LCF_MOUSE, "XCB_UNGRAB_POINTER raw request call");
+            LOGTRACE(LCF_MOUSE, "XCB_UNGRAB_POINTER raw request call");
             break;
         }
 
@@ -536,7 +536,7 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
                     case XCB_INPUT_XI_SELECT_EVENTS:
                     {
                         const auto* req = static_cast<const xcb_input_xi_select_events_request_t*>(vector->iov_base);
-                        LOG(LL_TRACE, LCF_WINDOW, "XCB_INPUT_XI_SELECT_EVENTS raw request call");
+                        LOGTRACE(LCF_WINDOW, "XCB_INPUT_XI_SELECT_EVENTS raw request call");
 
                         /* Only check if not using SDL */
                         if (req->num_mask) {
@@ -625,14 +625,14 @@ static void handleRawRequest(xcb_connection_t* c, struct iovec* vector, std::fun
 
                     case XCB_INPUT_XI_GET_SELECTED_EVENTS:
                     {
-                        LOG(LL_TRACE, LCF_WINDOW, "XCB_INPUT_XI_GET_SELECTED_EVENTS raw request call");
+                        LOGTRACE(LCF_WINDOW, "XCB_INPUT_XI_GET_SELECTED_EVENTS raw request call");
                         send_request(vector);
                         return;
                     }
 
                     case XCB_INPUT_XI_QUERY_DEVICE:
                     {
-                        LOG(LL_TRACE, LCF_WINDOW, "XCB_INPUT_XI_QUERY_DEVICE raw request call");
+                        LOGTRACE(LCF_WINDOW, "XCB_INPUT_XI_QUERY_DEVICE raw request call");
                         return;
                     }
                 }

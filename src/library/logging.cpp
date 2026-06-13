@@ -111,7 +111,11 @@ void debuglogfull(LogLevel ll, LogCategoryFlag lcf, const char* file, int line, 
     else
         tid = ThreadManager::getThreadTid();
 
-    snprintf(s + size, maxsize-size-1, "[f:%" PRIu64 " t:%d%s] ", framecount, tid, Global::is_fork?"F":(ThreadManager::isMainThread()?"M":""));
+    snprintf(s + size, maxsize-size-1, "[f:%" PRIu64 " t:%d%s] ", framecount, tid, Global::is_fork?"F":(ThreadManager::isMainThread()?"M":" "));
+
+    for (int i = 0; i < GlobalState::log_indent_level; i++) {
+        strncat(s, "| ", maxsize-size-1);
+    }
 
     /* We append the string in multiple parts to the log window twice, to
      * not show the color characters */

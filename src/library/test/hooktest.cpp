@@ -30,7 +30,7 @@ DEFINE_ORIG_POINTER(libtasTestFunc3)
 
 /* Override */ int libtasTestFunc1()
 {
-    LOGTRACE(LCF_HOOK);
+    LOGTRACE_SIMPLE(LCF_HOOK);
     LINK_NAMESPACE_GLOBAL(libtasTestFunc1);
     if (!orig::libtasTestFunc1) {
         LOG(LL_ERROR, LCF_HOOK, "   Couldn't get original function");
@@ -46,7 +46,7 @@ DEFINE_ORIG_POINTER(libtasTestFunc3)
 
 /* Override */ int libtasTestFunc2()
 {
-    LOGTRACE(LCF_HOOK);
+    LOGTRACE_SIMPLE(LCF_HOOK);
     LINK_NAMESPACE(libtasTestFunc2, "hooklib2");
     if (!orig::libtasTestFunc2) {
         LOG(LL_ERROR, LCF_HOOK, "   Couldn't get original function");
@@ -62,7 +62,7 @@ DEFINE_ORIG_POINTER(libtasTestFunc3)
 
 /* Override */ int libtasTestFunc3()
 {
-    LOGTRACE(LCF_HOOK);
+    LOGTRACE_SIMPLE(LCF_HOOK);
     LINK_NAMESPACE(libtasTestFunc3, "hooklib3");
     if (!orig::libtasTestFunc3) {
         LOG(LL_ERROR, LCF_HOOK, "   Couldn't get original function");

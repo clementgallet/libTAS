@@ -26,85 +26,85 @@ namespace libtas {
 
 unsigned int ISteamUtils::GetSecondsSinceAppActive()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0;
 }
 
 unsigned int ISteamUtils::GetSecondsSinceComputerActive()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0;
 }
 
 EUniverse ISteamUtils::GetConnectedUniverse()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 1; // k_EUniversePublic
 }
 
 unsigned int ISteamUtils::GetServerRealTime()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0;
 }
 
 const char *ISteamUtils::GetIPCountry()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return "US";
 }
 
 bool ISteamUtils::GetImageSize( int iImage, unsigned int *pnWidth, unsigned int *pnHeight )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamUtils::GetImageRGBA( int iImage, uint8_t *pubDest, int nDestBufferSize )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamUtils::GetCSERIPPort( unsigned int *unIP, uint16_t *usPort )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 	// return the amount of battery power left in the current system in % [0..100], 255 for being on AC power
 uint8_t ISteamUtils::GetCurrentBatteryPower()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 255;
 }
 
 unsigned int ISteamUtils::GetAppID()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 1234;
 }
 
 void ISteamUtils::SetOverlayNotificationPosition( ENotificationPosition eNotificationPosition )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 }
 
 bool ISteamUtils::IsAPICallCompleted( SteamAPICall_t hSteamAPICall, bool *pbFailed )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return CCallbackManager::ApiCallResultIsOutputAvailable(hSteamAPICall, pbFailed);
 }
 
 ESteamAPICallFailure ISteamUtils::GetAPICallFailureReason( SteamAPICall_t hSteamAPICall )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0;
 }
 
 bool ISteamUtils::GetAPICallResult( SteamAPICall_t hSteamAPICall, void *pCallback, int cubCallback, int iCallbackExpected, bool *pbFailed )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (iCallbackExpected < 0 || iCallbackExpected >= STEAM_CALLBACK_TYPE_MAX)
         return false;
 
@@ -113,29 +113,29 @@ bool ISteamUtils::GetAPICallResult( SteamAPICall_t hSteamAPICall, void *pCallbac
 
 void ISteamUtils::RunFrame()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 }
 
 unsigned int ISteamUtils::GetIPCCallCount()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0;
 }
 
 void ISteamUtils::SetWarningMessageHook( SteamAPIWarningMessageHook_t pFunction )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 }
 
 bool ISteamUtils::IsOverlayEnabled()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return true;
 }
 
 bool ISteamUtils::BOverlayNeedsPresent()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 

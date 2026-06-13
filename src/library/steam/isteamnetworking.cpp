@@ -25,133 +25,133 @@ namespace libtas {
 
 bool ISteamNetworking::SendP2PPacket( CSteamID steamIDRemote, const void *pubData, uint32_t cubData, EP2PSend eP2PSendType, int nChannel )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return true;
 }
 
 bool ISteamNetworking::IsP2PPacketAvailable( uint32_t *pcubMsgSize, int nChannel )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamNetworking::ReadP2PPacket( void *pubDest, uint32_t cubDest, uint32_t *pcubMsgSize, CSteamID *psteamIDRemote, int nChannel )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamNetworking::AcceptP2PSessionWithUser( CSteamID steamIDRemote )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamNetworking::CloseP2PSessionWithUser( CSteamID steamIDRemote )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return true;
 }
 
 bool ISteamNetworking::CloseP2PChannelWithUser( CSteamID steamIDRemote, int nChannel )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return true;
 }
 
 bool ISteamNetworking::GetP2PSessionState( CSteamID steamIDRemote, P2PSessionState_t *pConnectionState )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamNetworking::AllowP2PPacketRelay( bool bAllow )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return true;
 }
 
 SNetListenSocket_t ISteamNetworking::CreateListenSocket( int nVirtualP2PPort, uint32_t nIP, uint16_t nPort, bool bAllowUseOfPacketRelay )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return 0;
 }
 
 SNetSocket_t ISteamNetworking::CreateP2PConnectionSocket( CSteamID steamIDTarget, int nVirtualPort, int nTimeoutSec, bool bAllowUseOfPacketRelay )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return 0;
 }
 
 SNetSocket_t ISteamNetworking::CreateConnectionSocket( uint32_t nIP, uint16_t nPort, int nTimeoutSec )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return 0;
 }
 
 bool ISteamNetworking::DestroySocket( SNetSocket_t hSocket, bool bNotifyRemoteEnd )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return true;
 }
 
 bool ISteamNetworking::DestroyListenSocket( SNetListenSocket_t hSocket, bool bNotifyRemoteEnd )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return true;
 }
 
 bool ISteamNetworking::SendDataOnSocket( SNetSocket_t hSocket, void *pubData, uint32_t cubData, bool bReliable )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamNetworking::IsDataAvailableOnSocket( SNetSocket_t hSocket, uint32_t *pcubMsgSize )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamNetworking::RetrieveDataFromSocket( SNetSocket_t hSocket, void *pubDest, uint32_t cubDest, uint32_t *pcubMsgSize )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamNetworking::IsDataAvailable( SNetListenSocket_t hListenSocket, uint32_t *pcubMsgSize, SNetSocket_t *phSocket )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamNetworking::RetrieveData( SNetListenSocket_t hListenSocket, void *pubDest, uint32_t cubDest, uint32_t *pcubMsgSize, SNetSocket_t *phSocket )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamNetworking::GetSocketInfo( SNetSocket_t hSocket, CSteamID *pSteamIDRemote, int *peSocketStatus, uint32_t *punIPRemote, uint16_t *punPortRemote )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamNetworking::GetListenSocketInfo( SNetListenSocket_t hListenSocket, uint32_t *pnIP, uint16_t *pnPort )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 ESNetSocketConnectionType ISteamNetworking::GetSocketConnectionType( SNetSocket_t hSocket )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return 0;
 }
 
 int ISteamNetworking::GetMaxPacketSize( SNetSocket_t hSocket )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return 4096;
 }
 

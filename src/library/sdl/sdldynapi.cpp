@@ -81,7 +81,7 @@ void setSDLFullscreenAddr(uint64_t addr)
 }
 
 /* Override */ Sint32 SDL_DYNAPI_entry(Uint32 apiver, void *table, Uint32 tablesize) {
-    LOGTRACE(LCF_SDL | LCF_HOOK);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_HOOK);
 
     sdl_apiver = apiver;
     if ((apiver != 1) && (apiver != 2)) {

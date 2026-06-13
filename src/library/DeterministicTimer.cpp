@@ -100,8 +100,6 @@ struct timespec DeterministicTimer::getTicks(SharedConfig::TimeCallType type)
         return returnTicks;
     }
 
-    LOGTRACE(LCF_TIMEGET);
-
     bool mainT = ThreadManager::isMainThread();
 
     /* Check for busy loops */
@@ -278,7 +276,7 @@ void DeterministicTimer::exitFrameBoundary()
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_UNCONTROLLED_TIME)
         return NonDeterministicTimer::get().exitFrameBoundary();
 
-    LOGTRACE(LCF_TIMEGET);
+    LOG(LL_DEBUG, LCF_TIMESET, "%s call", __func__);
 
     /* Reset the counts of each time get function */
     for (int i = 0; i < SharedConfig::TIMETYPE_NUMTRACKEDTYPES; i++) {
@@ -340,7 +338,7 @@ TimeHolder DeterministicTimer::enterFrameBoundary()
         return NonDeterministicTimer::get().enterFrameBoundary();
 
     frame_mutex.lock();
-    LOGTRACE(LCF_TIMEGET);
+    LOG(LL_DEBUG, LCF_TIMESET, "%s call", __func__);
 
     insideFrameBoundary = true;
     fakeAdvanceTimer({0, 0});

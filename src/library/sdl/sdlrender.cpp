@@ -33,7 +33,7 @@ namespace libtas {
 
 SDL_Renderer *sdl2::SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
 
     if (flags & sdl2::SDL_RENDERER_SOFTWARE)
         LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "  flag SDL_RENDERER_SOFTWARE");
@@ -53,7 +53,7 @@ SDL_Renderer *sdl2::SDL_CreateRenderer(SDL_Window * window, int index, Uint32 fl
 
 SDL_Renderer *sdl3::SDL_CreateRenderer(SDL_Window *window, const char *name)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
 
     SDL_Renderer* renderer = ORIG_SDL3_CALL(SDL_CreateRenderer, (window, name));
 
@@ -64,7 +64,7 @@ SDL_Renderer *sdl3::SDL_CreateRenderer(SDL_Window *window, const char *name)
 
 /* Override */ void SDL_DestroyRenderer(SDL_Renderer * renderer)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
 
     ScreenCapture::fini();
 
@@ -79,7 +79,7 @@ SDL_Renderer *sdl3::SDL_CreateRenderer(SDL_Window *window, const char *name)
     if (GlobalState::isNative())
         return ORIG_SDL23_CALL(SDL_RenderPresent, (renderer));
 
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
     if (Global::game_info.video & GameInfo::SDL3_RENDERER) {
@@ -99,7 +99,7 @@ static int logical_h = 0;
 
 int SDL_RenderSetLogicalSize(SDL_Renderer * renderer, int w, int h)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s called with new size: %d x %d", __func__, w, h);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s called with new size: %d x %d", __func__, w, h);
 
     /* Don't let the game have logical size that differs from screen size,
      * so we resize the window instead.
@@ -117,7 +117,7 @@ static sdl3::SDL_RendererLogicalPresentation logical_mode = sdl3::SDL_LOGICAL_PR
 
 bool SDL_SetRenderLogicalPresentation(SDL_Renderer *renderer, int w, int h, sdl3::SDL_RendererLogicalPresentation mode)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s called with new size: %d x %d", __func__, w, h);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s called with new size: %d x %d", __func__, w, h);
 
     /* Don't let the game have logical size that differs from screen size,
      * so we resize the window instead.
@@ -133,7 +133,7 @@ bool SDL_SetRenderLogicalPresentation(SDL_Renderer *renderer, int w, int h, sdl3
 
 void SDL_RenderGetLogicalSize(SDL_Renderer * renderer, int *w, int *h)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
 
     /* Set the stored values of logical size */
     if (w) {
@@ -146,7 +146,7 @@ void SDL_RenderGetLogicalSize(SDL_Renderer * renderer, int *w, int *h)
 
 bool SDL_GetRenderLogicalPresentation(SDL_Renderer *renderer, int *w, int *h, sdl3::SDL_RendererLogicalPresentation *mode)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
 
     /* Set the stored values of logical size and presentation mode */
     if (w) {
@@ -164,29 +164,26 @@ bool SDL_GetRenderLogicalPresentation(SDL_Renderer *renderer, int *w, int *h, sd
 
 int SDL_RenderSetViewport(SDL_Renderer * renderer, const sdl2::SDL_Rect * rect)
 {
-    if (rect)
-        LOG(LL_TRACE, LCF_SDL | LCF_WINDOW | LCF_TODO, "%s called with new size: %d x %d", __func__, rect->w, rect->h);
-    else
-        LOG(LL_TRACE, LCF_SDL | LCF_WINDOW | LCF_TODO, "%s called with native size", __func__);
+    LOGTRACE(LCF_SDL | LCF_WINDOW | LCF_TODO, "%s called with new size: %d x %d", __func__, rect?rect->w:0, rect?rect->h:0);
 
     return ORIG_SDL2_CALL(SDL_RenderSetViewport, (renderer, rect));
 }
 
 void SDL_RenderGetViewport(SDL_Renderer * renderer, sdl2::SDL_Rect * rect)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW | LCF_TODO);
     return ORIG_SDL2_CALL(SDL_RenderGetViewport, (renderer, rect));
 }
 
 int SDL_RenderSetScale(SDL_Renderer * renderer, float scaleX, float scaleY)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW | LCF_TODO, "%s called with new scaleX: %d and scaleY: %d", __func__, scaleX, scaleY);
+    LOGTRACE(LCF_SDL | LCF_WINDOW | LCF_TODO, "%s called with new scaleX: %f and scaleY: %f", __func__, scaleX, scaleY);
     return ORIG_SDL2_CALL(SDL_RenderSetScale, (renderer, scaleX, scaleY));
 }
 
 void SDL_RenderGetScale(SDL_Renderer * renderer, float *scaleX, float *scaleY)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW | LCF_TODO);
     return ORIG_SDL2_CALL(SDL_RenderGetScale, (renderer, scaleX, scaleY));
 }
 

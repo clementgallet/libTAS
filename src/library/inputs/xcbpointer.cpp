@@ -34,21 +34,21 @@ namespace libtas {
 
 /* Override */ xcb_query_pointer_cookie_t xcb_query_pointer (xcb_connection_t *c, xcb_window_t window)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
     xcb_query_pointer_cookie_t pointer_cookie = {0};
     return pointer_cookie;
 }
 
 /* Override */ xcb_query_pointer_cookie_t xcb_query_pointer_unchecked (xcb_connection_t *c, xcb_window_t window)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
     xcb_query_pointer_cookie_t pointer_cookie = {0};
     return pointer_cookie;
 }
 
 /* Override */ xcb_query_pointer_reply_t *xcb_query_pointer_reply (xcb_connection_t *c, xcb_query_pointer_cookie_t cookie, xcb_generic_error_t **e)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
     auto* reply = static_cast<xcb_query_pointer_reply_t*>(malloc(sizeof(xcb_query_pointer_reply_t)));
     reply->response_type = XCB_QUERY_POINTER;
     reply->sequence = 0;
@@ -76,7 +76,7 @@ xcb_warp_pointer_checked (xcb_connection_t *c,
 {
     RETURN_IF_NATIVE(xcb_warp_pointer_checked, (c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y), nullptr);
 
-    LOG(LL_TRACE, LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dst_window, dst_x, dst_y);
+    LOGTRACE(LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dst_window, dst_x, dst_y);
 
     /* Does this generate a XCB_MOTION_NOTIFY event? */
     if (XlibGameWindow::get()) {
@@ -152,7 +152,7 @@ xcb_warp_pointer (xcb_connection_t *c,
 {
     RETURN_IF_NATIVE(xcb_warp_pointer, (c, src_window, dst_window, src_x, src_y, src_width, src_height, dst_x, dst_y), nullptr);
     
-    LOG(LL_TRACE, LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dst_window, dst_x, dst_y);
+    LOGTRACE(LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dst_window, dst_x, dst_y);
 
     /* Does this generate a XCB_MOTION_NOTIFY event? */
     if (XlibGameWindow::get()) {
@@ -226,7 +226,7 @@ xcb_grab_pointer (xcb_connection_t *c,
                   xcb_cursor_t      cursor,
                   xcb_timestamp_t   time)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
     xcb_grab_pointer_cookie_t pointer_grab_cookie = {0};
     return pointer_grab_cookie;
 }
@@ -242,7 +242,7 @@ xcb_grab_pointer_unchecked (xcb_connection_t *c,
                             xcb_cursor_t      cursor,
                             xcb_timestamp_t   time)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
     xcb_grab_pointer_cookie_t pointer_grab_cookie = {0};
     return pointer_grab_cookie;
 }
@@ -252,7 +252,7 @@ xcb_grab_pointer_reply (xcb_connection_t           *c,
                         xcb_grab_pointer_cookie_t   cookie  /**< */,
                         xcb_generic_error_t       **e)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
     auto* reply = static_cast<xcb_grab_pointer_reply_t*>(malloc(sizeof(xcb_grab_pointer_reply_t)));
     reply->response_type = XCB_GRAB_POINTER;
     reply->sequence = 0;
@@ -265,7 +265,7 @@ xcb_grab_pointer_reply (xcb_connection_t           *c,
 xcb_ungrab_pointer_checked (xcb_connection_t *c,
                             xcb_timestamp_t   time)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
     xcb_void_cookie_t mouse_ungrab_cookie = {0};
     return mouse_ungrab_cookie;
 }
@@ -274,7 +274,7 @@ xcb_ungrab_pointer_checked (xcb_connection_t *c,
 xcb_ungrab_pointer (xcb_connection_t *c,
                     xcb_timestamp_t   time)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
     xcb_void_cookie_t mouse_ungrab_cookie = {0};
     return mouse_ungrab_cookie;
 }

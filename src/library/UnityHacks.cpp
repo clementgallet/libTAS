@@ -183,6 +183,8 @@ public:
     // time_t queued_timestamp; // at offset 0x58
     // suseconds_t integrate_time_sliced_duration; // at offset 0x60
     // suseconds_t perform_duration; // at offset 0x68
+
+    // 2021: 0x48: status, 0x50: queued_timestamp, 0x58: integrate_time_sliced_duration, 0x60: perform_duration
 };
 
 class U6_PreloadManagerOperation
@@ -307,7 +309,7 @@ static int unity_version_int[3] = {0, 0, 0};
 
 static void UnityVersion_UnityVersion(UnityVersion* u, const char* s)
 {
-    LOG(LL_TRACE, LCF_HACKS, "UnityVersion_UnityVersion called with version %s", s);
+    LOGTRACE(LCF_HACKS, "UnityVersion_UnityVersion called with version %s", s);
     if (unity_version_int[0] == 0) {
         unity_version = strdup(s);
         
@@ -315,7 +317,7 @@ static void UnityVersion_UnityVersion(UnityVersion* u, const char* s)
         
         for (int i=0; (i < 3) && (t != nullptr); i++) {
             unity_version_int[i] = atoi(t);
-            LOG(LL_TRACE, LCF_HACKS, "Version %d", unity_version_int[i]);
+            LOGTRACE(LCF_HACKS, "Version %d", unity_version_int[i]);
             t = strtok(nullptr, ".");
         }
     }
@@ -343,7 +345,7 @@ static int GetUnityVersionMaj()
 
 static long U4_JobScheduler_FetchNextJob(JobScheduler* t, int* x)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     ThreadInfo* thread = ThreadManager::getCurrentThread();
     thread->unityThread = true;
     
@@ -357,19 +359,19 @@ static long U4_JobScheduler_FetchNextJob(JobScheduler* t, int* x)
 
 static void U4_JobScheduler_ProcessJob(JobScheduler* t, JobInfo* x, int y)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U4_JobScheduler_ProcessJob(t, x, y);
 }
 
 static void U4_JobScheduler_WaitForGroup(JobScheduler* t, int x)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U4_JobScheduler_WaitForGroup(t, x);
 }
 
 static void U4_JobScheduler_AwakeIdleWorkerThreads(JobScheduler* t, int x)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U4_JobScheduler_AwakeIdleWorkerThreads(t, x);
 }
 
@@ -382,7 +384,7 @@ struct U4_Job
 
 static void* U4_ExecJob(void* arg)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     ThreadInfo* th = ThreadManager::getCurrentThread();
     th->unityJobCount++;
     
@@ -395,7 +397,7 @@ static void* U4_ExecJob(void* arg)
 
 static int U4_JobScheduler_SubmitJob(JobScheduler* t, int x, void* (*y)(void*), void* z, void* volatile* a)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     U4_Job *j = new U4_Job;
     j->func = y;
     j->arg = z;
@@ -404,43 +406,43 @@ static int U4_JobScheduler_SubmitJob(JobScheduler* t, int x, void* (*y)(void*), 
 
 static void U5_BackgroundJobQueue_ExecuteMainThreadJobs(BackgroundJobQueue *t)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U5_BackgroundJobQueue_ExecuteMainThreadJobs(t);
 }
 
 static void U5_BackgroundJobQueue_ScheduleJob(BackgroundJobQueue* t, void (*x)(void*), void* y)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U5_BackgroundJobQueue_ScheduleJob(t, x, y);
 }
 
 static void U5_BackgroundJobQueue_ScheduleMainThreadJob(BackgroundJobQueue* t, void (*x)(void*), void* y)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U5_BackgroundJobQueue_ScheduleMainThreadJob(t, x, y);
 }
 
 static JobGroup* U5_JobQueue_CreateJobBatch(JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int id, JobGroup* a)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U5_JobQueue_CreateJobBatch(t, func, arg, z, id, a);
 }
 
 static long U5_JobQueue_EnqueueAll(JobQueue* t, JobGroup* x, JobGroup* y)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U5_JobQueue_EnqueueAll(t, x, y);
 }
 
 static long U5_JobQueue_EnqueueAllInternal(JobQueue* t, JobGroup* x, JobGroup* y, AtomicQueue* z, int* a)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U5_JobQueue_EnqueueAllInternal(t, x, y, z, a);
 }
 
 static long U5_JobQueue_Exec(JobQueue* t, JobInfo* x, long long y, int z)
 {
-    LOG(LL_TRACE, LCF_HACKS, "U5_JobQueue_Exec called with JobInfo %p", x);
+    LOGTRACE(LCF_HACKS, "U5_JobQueue_Exec called with JobInfo %p", x);
     PROFILE_SCOPE("Job", PROFILER_INFO_UNITY);
     long executed = orig::U5_JobQueue_Exec(t, x, y, z);
     if (executed) {
@@ -453,7 +455,7 @@ static long U5_JobQueue_Exec(JobQueue* t, JobInfo* x, long long y, int z)
 
 static long U5_JobQueue_ExecuteJobFromQueue(JobQueue* t)
 {
-    // LOGTRACE(LCF_HACKS);
+    // LOGTRACE_SIMPLE(LCF_HACKS);
     // if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS)
     //     return 0;
     
@@ -462,25 +464,25 @@ static long U5_JobQueue_ExecuteJobFromQueue(JobQueue* t)
 
 static bool U5_JobQueue_ExecuteOneJob(JobQueue *t)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U5_JobQueue_ExecuteOneJob(t);
 }
 
 static long U5_JobQueue_MainEnqueueAll(JobQueue* t, JobGroup* x, JobGroup* y)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U5_JobQueue_MainEnqueueAll(t, x, y);
 }
 
 static long U5_JobQueue_Pop(JobQueue* t, JobGroupID x)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U5_JobQueue_Pop(t, x);
 }
 
 static long U5_JobQueue_ProcessJobs(JobQueue* t, void* x)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     
     ThreadInfo* thread = ThreadManager::getCurrentThread();
     thread->unityThread = true;
@@ -504,7 +506,7 @@ static long U5_JobQueue_ProcessJobs(JobQueue* t, void* x)
 
 static void U5_JobQueue_ScheduleJob(JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int a, int b)
 {
-    LOG(LL_TRACE, LCF_HACKS, "U5_JobQueue_ScheduleJob called with func %p, arg %p, JobGroup %p, JobGroup tag %d and priority %d", func, arg, z, a, b);
+    LOGTRACE(LCF_HACKS, "U5_JobQueue_ScheduleJob called with func %p, arg %p, JobGroup %p, JobGroup tag %d and priority %d", func, arg, z, a, b);
     return orig::U5_JobQueue_ScheduleJob(t, func, arg, z, a, b);
 }
 
@@ -513,7 +515,7 @@ static thread_local bool skip_job_wait = false;
 
 static JobGroupID U5_JobQueue_ScheduleGroup(JobQueue *t, JobGroup* x, int y)
 {
-    LOG(LL_TRACE, LCF_HACKS, "U5_JobQueue_ScheduleGroup called with JobGroup %p and priority %d", x, y);
+    LOGTRACE(LCF_HACKS, "U5_JobQueue_ScheduleGroup called with JobGroup %p and priority %d", x, y);
 
     /* Return value is 16 bytes (accross registers RDX:RAX), so we need to use
      * a 16-byte struct to recover it. */
@@ -551,7 +553,7 @@ static JobGroupID U5_JobQueue_ScheduleGroup(JobQueue *t, JobGroup* x, int y)
 
 static JobGroupID U5_JobQueue_ScheduleJobMultipleDependencies(JobQueue *t, void* func, void* arg, JobGroupID* x, int y)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     /* Return value is 16 bytes (accross registers RDX:RAX), so we need to use
      * a 16-byte struct to recover it. */
     JobGroupID j = orig::U5_JobQueue_ScheduleJobMultipleDependencies(t, func, arg, x, y);
@@ -586,49 +588,49 @@ static JobGroupID U5_JobQueue_ScheduleJobMultipleDependencies(JobQueue *t, void*
 
 static void U5_JobQueue_ScheduleGroups(JobQueue *t, JobGroup* x, JobGroup* y)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U5_JobQueue_ScheduleGroups(t, x, y);
 }
 
 static void U5_JobQueue_WaitForJobGroup(JobQueue* t, JobGroup* x, int y, bool z)
 {
-    LOG(LL_TRACE, LCF_HACKS, "U5_JobQueue_WaitForJobGroup called with JobGroup %p, JobGroup tag %d and steal mode %d", x, y, z);
+    LOGTRACE(LCF_HACKS, "U5_JobQueue_WaitForJobGroup called with JobGroup %p, JobGroup tag %d and steal mode %d", x, y, z);
     return orig::U5_JobQueue_WaitForJobGroup(t, x, y, z);
 }
 
 static void U5_JobQueue_WaitForJobGroupID(JobQueue* t, JobGroup* x, int y)
 {
-    LOG(LL_TRACE, LCF_HACKS, "U5_JobQueue_WaitForJobGroupID called with JobGroup %p, JobGroup tag %d", x, y);
+    LOGTRACE(LCF_HACKS, "U5_JobQueue_WaitForJobGroupID called with JobGroup %p, JobGroup tag %d", x, y);
     return orig::U5_JobQueue_WaitForJobGroupID(t, x, y);
 }
 
 static bool U5_JobQueue_HasJobGroupIDCompleted(JobQueue* t, JobGroup* x, int y)
 {
-    LOG(LL_TRACE, LCF_HACKS, "U5_JobQueue_WaitForJobGroupID called with JobGroup %p, JobGroup tag %d", x, y);
+    LOGTRACE(LCF_HACKS, "U5_JobQueue_WaitForJobGroupID called with JobGroup %p, JobGroup tag %d", x, y);
     return orig::U5_JobQueue_HasJobGroupIDCompleted(t, x, y);
 }
 
 static void U2K_BackgroundJobQueue_ScheduleJobInternal(BackgroundJobQueue *t, void (*x)(void*), void* y, BackgroundJobQueue_JobFence* z, JobQueue_JobQueuePriority a)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U2K_BackgroundJobQueue_ScheduleJobInternal(t, x, y, z, a);
 }
 
 static void U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal(BackgroundJobQueue *t, void (*x)(void*), void* y)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal(t, x, y);
 }
 
 static void U2K_JobQueue_CompleteAllJobs(JobQueue *t)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U2K_JobQueue_CompleteAllJobs(t);
 }
 
 static long U2K_JobQueue_Exec(JobQueue *t, JobInfo* x, long long y, int z, bool a)
 {
-    LOG(LL_TRACE, LCF_HACKS, "U2K_JobQueue_Exec called with JobInfo %p and sync %d", x, a);
+    LOGTRACE(LCF_HACKS, "U2K_JobQueue_Exec called with JobInfo %p and sync %d", x, a);
     PROFILE_SCOPE("Job", PROFILER_INFO_UNITY);
     long executed = orig::U2K_JobQueue_Exec(t, x, y, z, a);
     if (executed) {
@@ -640,7 +642,7 @@ static long U2K_JobQueue_Exec(JobQueue *t, JobInfo* x, long long y, int z, bool 
 
 static long U2K_JobQueue_ExecuteJobFromQueue(JobQueue *t, bool x)
 {
-    LOG(LL_TRACE, LCF_HACKS, "U2K_JobQueue_ExecuteJobFromQueue called with sync %d", x);
+    LOGTRACE(LCF_HACKS, "U2K_JobQueue_ExecuteJobFromQueue called with sync %d", x);
     if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS)
         return 0;
         
@@ -649,7 +651,7 @@ static long U2K_JobQueue_ExecuteJobFromQueue(JobQueue *t, bool x)
 
 static long U2K_JobQueue_ProcessJobs(JobQueue_ThreadInfo* x, void* y)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     ThreadInfo* thread = ThreadManager::getCurrentThread();
     thread->unityThread = true;
 
@@ -658,7 +660,7 @@ static long U2K_JobQueue_ProcessJobs(JobQueue_ThreadInfo* x, void* y)
 
 static void U2K_JobQueue_ScheduleDependencies(JobQueue *t, JobGroupID *x, JobInfo *y, JobInfo *z, bool a)
 {
-    LOG(LL_TRACE, LCF_HACKS, "U2K_JobQueue_ScheduleDependencies called with sync %d", a);
+    LOGTRACE(LCF_HACKS, "U2K_JobQueue_ScheduleDependencies called with sync %d", a);
     if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS) {
         /* We enforce the worker steal flag, to be able to execute jobs from other threads */
         return orig::U2K_JobQueue_ScheduleDependencies(t, x, y, z, true);
@@ -669,13 +671,13 @@ static void U2K_JobQueue_ScheduleDependencies(JobQueue *t, JobGroupID *x, JobInf
 
 static long U2K_JobQueue_ScheduleJobMultipleDependencies(JobQueue *t, void (*x)(void*), void* y, JobGroupID* z, int a, MemLabelId b)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U2K_JobQueue_ScheduleJobMultipleDependencies(t, x, y, z, a, b);
 }
 
 static JobGroupID U2K_JobQueue_ScheduleGroupInternal(JobQueue *t, JobGroup *x, int y, bool z)
 {
-    LOG(LL_TRACE, LCF_HACKS, "U2K_JobQueue_ScheduleGroupInternal called with JobGroup %p, priority %d and sync %d", x, y, z);
+    LOGTRACE(LCF_HACKS, "U2K_JobQueue_ScheduleGroupInternal called with JobGroup %p, priority %d and sync %d", x, y, z);
 
     /* Return value is 16 bytes (accross registers RDX:RAX), so we need to use
      * a 16-byte struct to recover it. */
@@ -690,56 +692,56 @@ static JobGroupID U2K_JobQueue_ScheduleGroupInternal(JobQueue *t, JobGroup *x, i
 
 static void U2K_JobQueue_WaitForJobGroupID(JobQueue* /* or ujob_control_t* */ t , JobGroup* /* or ujob_handle_t */ x, int y, bool z)
 {
-    LOG(LL_TRACE, LCF_HACKS, "U2K_JobQueue_WaitForJobGroupID called with JobGroup %p, JobGroup tag %d and steal mode %d", x, y, z);
+    LOGTRACE(LCF_HACKS, "U2K_JobQueue_WaitForJobGroupID called with JobGroup %p, JobGroup tag %d and steal mode %d", x, y, z);
     return orig::U2K_JobQueue_WaitForJobGroupID(t, x, y, z);
 }
 
 static int U6_job_completed(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z, ujob_handle_t a)
 {
-    // LOG(LL_TRACE, LCF_HACKS, "U6_job_completed called with job %p and handle %p", z, a);
+    // LOGTRACE(LCF_HACKS, "U6_job_completed called with job %p and handle %p", z, a);
     int ret = orig::U6_job_completed(x, y, z, a);
     return ret;
 }
 
 static void U6_JobQueue_ScheduleGroups(JobQueue *t, JobBatchHandles* x, int y)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U6_JobQueue_ScheduleGroups(t, x, y);
 }
 
 static int U6_JobsUtility_CUSTOM_CreateJobReflectionData(ScriptingBackendNativeObjectPtrOpaque* x, ScriptingBackendNativeObjectPtrOpaque* y, ScriptingBackendNativeObjectPtrOpaque* z, ScriptingBackendNativeObjectPtrOpaque* a, ScriptingBackendNativeObjectPtrOpaque* b)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U6_JobsUtility_CUSTOM_CreateJobReflectionData(x, y, z, a, b);
 }
 
 static int U6_JobsUtility_CUSTOM_Schedule(JobScheduleParameters* x, JobFence* y)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U6_JobsUtility_CUSTOM_Schedule(x, y);
 }
 
 static bool U6_lane_guts(ujob_control_t* x, ujob_lane_t* y, int z, int a, ujob_dependency_chain const* b)
 {
-    // LOGTRACE(LCF_HACKS);
+    // LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U6_lane_guts(x, y, z, a, b);
 }
 
 static long U6_ScheduleBatchJob(void* x, ujob_handle_t y)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U6_ScheduleBatchJob(x, y);
 }
 
 static void U6_ujobs_add_to_lane_and_wake_one_thread(ujob_control_t* x, ujob_job_t* y, ujob_lane_t* z)
 {
-    // LOGTRACE(LCF_HACKS);
+    // LOGTRACE_SIMPLE(LCF_HACKS);
     orig::U6_ujobs_add_to_lane_and_wake_one_thread(x, y, z);
 }
 
 static void U6_ujob_execute_job(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z, ujob_handle_t a, unsigned int b)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     ThreadInfo* th = ThreadManager::getCurrentThread();
     th->unityJobCount++;
     PROFILE_SCOPE("Job", PROFILER_INFO_UNITY);
@@ -748,13 +750,13 @@ static void U6_ujob_execute_job(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z
 
 static void U6_ujob_participate(ujob_control_t* x, ujob_handle_t y, ujob_job_t** z, int* a, ujob_dependency_chain const* b)
 {
-    // LOGTRACE(LCF_HACKS);
+    // LOGTRACE_SIMPLE(LCF_HACKS);
     orig::U6_ujob_participate(x, y, z, a, b);
 }
 
 static unsigned long U6_ujob_schedule_job_internal(ujob_control_t* x, ujob_handle_t y, unsigned int z)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     unsigned long ret = orig::U6_ujob_schedule_job_internal(x, y, z);
     
     if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS) {
@@ -810,7 +812,7 @@ static void job_callback_completed(void* arg)
  */ 
 static ujob_handle_t U6_ujob_schedule_parallel_for_internal(ujob_control_t* x, JobsCallbackFunctions* y, void* job_callback_arg, WorkStealingRange* a, unsigned int count, unsigned long c, ujob_handle_t const* d, long e)
 {
-    LOG(LL_TRACE, LCF_HACKS, "U6_ujob_schedule_parallel_for_internal called with callback args %p , steal mode %d, count %d, ujob_handle_t %p", job_callback_arg, a?(*a):0, count, d);
+    LOGTRACE(LCF_HACKS, "U6_ujob_schedule_parallel_for_internal called with callback args %p , steal mode %d, count %d, ujob_handle_t %p", job_callback_arg, a?(*a):0, count, d);
 
     if (!(Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS))
         return orig::U6_ujob_schedule_parallel_for_internal(x, y, job_callback_arg, a, count, c, d, e);
@@ -852,13 +854,13 @@ static ujob_handle_t U6_ujob_schedule_parallel_for_internal(ujob_control_t* x, J
 
 static void U6_ujob_wait_for(ujob_control_t *x, ujob_handle_t y, int z)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     return orig::U6_ujob_wait_for(x, y, z);
 }
 
 static void U6_worker_thread_routine(void* x)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     ThreadInfo* thread = ThreadManager::getCurrentThread();
     thread->unityThread = true;
     return orig::U6_worker_thread_routine(x);
@@ -945,7 +947,7 @@ static bool Helper_PreloadManager_GetAllowParallelExecution(PreloadManagerOperat
 {
     if (GetUnityVersionMaj() == 6000)
         return (reinterpret_cast<U6_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
-    if ((GetUnityVersionMaj() >= 2017) && (GetUnityVersionMaj() <= 2020))
+    if ((GetUnityVersionMaj() >= 2017) && (GetUnityVersionMaj() <= 2021))
         return (reinterpret_cast<U2018_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
     if (GetUnityVersionMaj() == 5)
         return (reinterpret_cast<U5_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
@@ -967,6 +969,8 @@ static bool Helper_PreloadManagerOperation_GetStatus(PreloadManagerOperation* o)
         status = *(int *)(o + 0x40);
     else if ((GetUnityVersionMaj() >= 2017) && (GetUnityVersionMaj() <= 2020))
         status = *(int *)(o + 0x50);
+    else if (GetUnityVersionMaj() == 2021)
+        status = *(int *)(o + 0x48);
     else if (GetUnityVersionMaj() == 5)
         status = *(int *)(o + 0x2c);
     if (status < 0 || status > 2) {
@@ -1095,7 +1099,7 @@ static void Helper_PreloadManager_WaitForQueueToProcess(PreloadManager* m, Prelo
 
 static void U6_PreloadManager_AddToQueue(PreloadManager* m, PreloadManagerOperation* o)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     
     orig::U6_PreloadManager_AddToQueue(m, o);
     added_count++;
@@ -1126,7 +1130,7 @@ static void U6_PreloadManager_AddToQueue(PreloadManager* m, PreloadManagerOperat
 
 static PreloadManagerOperation* U6_PreloadManager_PrepareProcessingPreloadOperation(PreloadManager* m)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     PreloadManagerOperation* current_pending_operation = orig::U6_PreloadManager_PrepareProcessingPreloadOperation(m);
     
     if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_LOADS) {
@@ -1144,7 +1148,7 @@ static PreloadManagerOperation* U6_PreloadManager_PrepareProcessingPreloadOperat
 
 static void U6_PreloadManager_ProcessSingleOperation(PreloadManager* m)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     PROFILE_SCOPE("Operation", PROFILER_INFO_UNITY);
     orig::U6_PreloadManager_ProcessSingleOperation(m);
     pending_queue_size--;
@@ -1152,7 +1156,7 @@ static void U6_PreloadManager_ProcessSingleOperation(PreloadManager* m)
 
 static void U6_PreloadManager_UpdatePreloading(PreloadManager* m)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
 
     orig::U6_PreloadManager_UpdatePreloading(m);
 
@@ -1163,7 +1167,7 @@ static void U6_PreloadManager_UpdatePreloading(PreloadManager* m)
 
 static long U4_PreloadManager_UpdatePreloadingSingleStep(PreloadManager* m, bool i)
 {
-    LOG(LL_TRACE, LCF_HACKS | LCF_FILEIO, "U4_PreloadManager_UpdatePreloadingSingleStep called with bool %d", i);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO, "U4_PreloadManager_UpdatePreloadingSingleStep called with bool %d", i);
 
     long ret = orig::U4_PreloadManager_UpdatePreloadingSingleStep(m, i);
     
@@ -1181,7 +1185,7 @@ static long U4_PreloadManager_UpdatePreloadingSingleStep(PreloadManager* m, bool
 
 static long U6_PreloadManager_UpdatePreloadingSingleStep(PreloadManager* m, PreloadManager_UpdatePreloadingFlags f, int i)
 {
-    LOG(LL_TRACE, LCF_HACKS | LCF_FILEIO, "U6_PreloadManager_UpdatePreloadingSingleStep called with flags %lx and int %d", f, i);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO, "U6_PreloadManager_UpdatePreloadingSingleStep called with flags %lx and int %d", f, i);
 
     bool was_pending_queue_size = pending_queue_size;
     bool was_preload_thread_running = is_preload_thread_running;
@@ -1211,26 +1215,26 @@ static long U6_PreloadManager_UpdatePreloadingSingleStep(PreloadManager* m, Prel
 
 static void U6_PreloadManager_WaitForAllAsyncOperationsToComplete(PreloadManager* m)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_PreloadManager_WaitForAllAsyncOperationsToComplete(m);
 }
 
 static long U6_PreloadManager_Run(void* p)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     is_preload_thread_running = true;
     return orig::U6_PreloadManager_Run(p);
 }
 
 static PreloadManagerOperation* U2K_PreloadManager_PeekIntegrateQueue(PreloadManager* m)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     return orig::U2K_PreloadManager_PeekIntegrateQueue(m);
 }
 
 static bool U2K_PreloadManager_IsLoadingOrQueued(PreloadManager* m)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     return orig::U2K_PreloadManager_IsLoadingOrQueued(m);
 }
 
@@ -1240,14 +1244,14 @@ static bool async_read_complete = true;
 
 static void U5_AsyncReadManagerThreaded_WaitDone(AsyncReadManagerThreaded *t, AsyncReadCommand *c)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     return orig::U5_AsyncReadManagerThreaded_WaitDone(t, c);
 }
 
 static void U6_AsyncReadManagerThreaded_Request(AsyncReadManagerThreaded *t, AsyncReadCommand *c)
 {
     char* filepath = *(char**)c;
-    LOG(LL_TRACE, LCF_HACKS | LCF_FILEIO, "U6_AsyncReadManagerThreaded_Request called with file %s", filepath);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO, "U6_AsyncReadManagerThreaded_Request called with file %s", filepath);
 
     if (!(Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_READS))
         return orig::U6_AsyncReadManagerThreaded_Request(t, c);
@@ -1290,7 +1294,7 @@ static void U6_AsyncReadManagerThreaded_Request(AsyncReadManagerThreaded *t, Asy
 static void U2K_AsyncReadManagerThreaded_SyncRequest(AsyncReadManagerThreaded *t, AsyncReadCommand *c)
 {
     char* filepath = *(char**)c;
-    LOG(LL_TRACE, LCF_HACKS | LCF_FILEIO, "U2K_AsyncReadManagerThreaded_SyncRequest called with file %s", filepath);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO, "U2K_AsyncReadManagerThreaded_SyncRequest called with file %s", filepath);
     
     return orig::U2K_AsyncReadManagerThreaded_SyncRequest(t, c);
 }
@@ -1299,7 +1303,7 @@ static void U2K_AsyncReadManagerThreaded_SyncRequest(AsyncReadManagerThreaded *t
 
 static void U6_AsyncReadManagerManaged_OpenCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     
     orig::U6_AsyncReadManagerManaged_OpenCompleteCallback(c, s);
     
@@ -1312,7 +1316,7 @@ static void U6_AsyncReadManagerManaged_OpenCompleteCallback(AsyncReadCommand *c,
 
 static void U6_AsyncReadManagerManaged_ReadCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
 
     orig::U6_AsyncReadManagerManaged_ReadCompleteCallback(c, s);
 
@@ -1325,7 +1329,7 @@ static void U6_AsyncReadManagerManaged_ReadCompleteCallback(AsyncReadCommand *c,
 
 static void U6_AsyncReadManagerManaged_CloseCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
 
     orig::U6_AsyncReadManagerManaged_CloseCompleteCallback(c, s);
 
@@ -1338,7 +1342,7 @@ static void U6_AsyncReadManagerManaged_CloseCompleteCallback(AsyncReadCommand *c
 
 static void U6_AsyncReadManagerManaged_CloseCachedFileCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
 
     orig::U6_AsyncReadManagerManaged_CloseCachedFileCompleteCallback(c, s);
 
@@ -1351,7 +1355,7 @@ static void U6_AsyncReadManagerManaged_CloseCachedFileCompleteCallback(AsyncRead
 
 static void U6_SignalCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     
     orig::U6_SignalCallback(c, s);
 
@@ -1364,7 +1368,7 @@ static void U6_SignalCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
 
 static void U6_AsyncUploadManager_AsyncReadCallbackStatic(AsyncReadCommand *c, AsyncReadCommand_Status s)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
 
     if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_READS) {
         std::unique_lock<std::mutex> lock(async_read_mutex);
@@ -1379,75 +1383,75 @@ static void U6_AsyncUploadManager_AsyncReadCallbackStatic(AsyncReadCommand *c, A
 
 static void U6_AsyncUploadManager_AsyncReadSuccess(AsyncUploadManager *t, AsyncReadCommand *c)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_AsyncUploadManager_AsyncReadSuccess(t, c);
 }
 
 static Int128 U6_AsyncUploadManager_QueueUploadAsset(AsyncUploadManager *t, char const* x, VFS_FileSize y, unsigned int z, unsigned int a, AsyncUploadHandler* b, AssetContext *c, unsigned char* d, FileReadFlags e)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_AsyncUploadManager_QueueUploadAsset(t, x, y, z, a, b, c, d, e);
 }
 
 static void U6_AsyncUploadManager_AsyncResourceUpload(AsyncUploadManager *t, GfxDevice *x, int y, AsyncUploadManagerSettings *z)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_AsyncUploadManager_AsyncResourceUpload(t, x, y, z);
 }
 
 static void U6_AsyncUploadManager_ScheduleAsyncCommandsInternal(AsyncUploadManager *t)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_AsyncUploadManager_ScheduleAsyncCommandsInternal(t);
 }
 
 static void U6_AsyncUploadManager_CloseFile(AsyncUploadManager *t, char* s)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_AsyncUploadManager_CloseFile(t, s);
 }
 
 static void U6_SyncReadRequest(AsyncReadCommand* c)
 {
     char* filepath = *(char**)c;
-    LOG(LL_TRACE, LCF_HACKS | LCF_FILEIO, "U6_SyncReadRequest called with file %s", filepath);
+    LOGTRACE(LCF_HACKS | LCF_FILEIO, "U6_SyncReadRequest called with file %s", filepath);
     
     return orig::U6_SyncReadRequest(c);
 }
 
 static void U6_ArchiveStorageConverter_ArchiveStorageConverter(ArchiveStorageConverter* c, IArchiveStorageConverterListener* l, bool b)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_ArchiveStorageConverter_ArchiveStorageConverter(c, l, b);
 }
 
 static int U6_ArchiveStorageConverter_ProcessAccumulatedData(ArchiveStorageConverter* c)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_ArchiveStorageConverter_ProcessAccumulatedData(c);
 }
 
 static int U6_AssetBundleLoadFromStreamAsyncOperation_FeedStream(AssetBundleLoadFromStreamAsyncOperation *o, void const* x, unsigned long y)
 {
-    LOGTRACE(LCF_HACKS | LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     return orig::U6_AssetBundleLoadFromStreamAsyncOperation_FeedStream(o, x, y);
 }
 
 static int U6_LoadFMODSound(SoundHandle_Instance** si, char const* s, unsigned int f, SampleClip* c, unsigned int i, VFS_FileSize fs, FMOD_CREATESOUNDEXINFO* in)
 {
-    LOG(LL_TRACE, LCF_HACKS | LCF_SOUND, "U6_LoadFMODSound called with file %s and flags %x", s, f);
+    LOGTRACE(LCF_HACKS | LCF_SOUND, "U6_LoadFMODSound called with file %s and flags %x", s, f);
     return orig::U6_LoadFMODSound(si, s, f, c, i, fs, in);
 }
 
 static void U5_BaseUnityAnalytics_UpdateConfigFromServer(void* a)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     // return orig::U5_BaseUnityAnalytics_UpdateConfigFromServer(a);
 }
 
 static void physx_Cm_FanoutTask_RemoveReference(FanoutTask* ft)
 {
-    LOGTRACE(LCF_HACKS);
+    LOGTRACE_SIMPLE(LCF_HACKS);
     skip_job_wait = true;
     orig::physx_Cm_FanoutTask_RemoveReference(ft);
     skip_job_wait = false;

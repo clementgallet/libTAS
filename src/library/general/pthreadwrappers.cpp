@@ -112,7 +112,7 @@ static void *pthread_native_start(void *arg)
         return orig::pthread_create(tid_p, attr, pthread_native_start, thread);
     }
 
-    LOG(LL_TRACE, LCF_THREAD, "Thread is created with routine %p", (void*)start_routine);
+    LOGTRACE(LCF_THREAD, "Thread is created with routine %p", (void*)start_routine);
 
     WrapperLock wrapperLock;
     ThreadSync::incrementUninitializedThreadCount();
@@ -180,7 +180,7 @@ static void *pthread_native_start(void *arg)
 {
     RETURN_IF_NATIVE(pthread_exit, (retval), "libpthread.so");
 
-    LOG(LL_TRACE, LCF_THREAD, "Thread has exited.");
+    LOGTRACE(LCF_THREAD, "Thread has exited.");
 
     ThreadManager::threadExit(retval);
     RETURN_NATIVE(pthread_exit, (retval), nullptr);
@@ -192,7 +192,7 @@ static void *pthread_native_start(void *arg)
 
     ThreadSync::waitForThreadsToFinishInitialization();
 
-    LOG(LL_TRACE, LCF_THREAD, "Joining thread id %p tid %d", pthread_id, ThreadManager::getThreadTid(pthread_id));
+    LOGTRACE(LCF_THREAD, "Joining thread id %p tid %d", pthread_id, ThreadManager::getThreadTid(pthread_id));
 
     const ThreadInfo* thread = ThreadManager::getThread(pthread_id);
     
@@ -229,7 +229,7 @@ static void *pthread_native_start(void *arg)
     WrapperLock wrapperLock;
     ThreadSync::waitForThreadsToFinishInitialization();
 
-    LOG(LL_TRACE, LCF_THREAD, "Detaching thread id %p tid %d", pthread_id, ThreadManager::getThreadTid(pthread_id));
+    LOGTRACE(LCF_THREAD, "Detaching thread id %p tid %d", pthread_id, ThreadManager::getThreadTid(pthread_id));
     ThreadInfo* thread = ThreadManager::getThread(pthread_id);
 
     if (!thread) {
@@ -251,7 +251,7 @@ static void *pthread_native_start(void *arg)
     WrapperLock wrapperLock;
     ThreadSync::waitForThreadsToFinishInitialization();
 
-    LOG(LL_TRACE, LCF_THREAD, "Try to join thread %d", ThreadManager::getThreadTid(pthread_id));
+    LOGTRACE(LCF_THREAD, "Try to join thread %d", ThreadManager::getThreadTid(pthread_id));
     ThreadInfo* thread = ThreadManager::getThread(pthread_id);
 
     if (!thread) {
@@ -287,7 +287,7 @@ static void *pthread_native_start(void *arg)
     WrapperLock wrapperLock;
     ThreadSync::waitForThreadsToFinishInitialization();
 
-    LOG(LL_TRACE, LCF_THREAD | LCF_TODO, "Try to join thread in %d.%09d sec", abstime->tv_sec, abstime->tv_nsec);
+    LOGTRACE(LCF_THREAD | LCF_TODO, "Try to join thread in %d.%09d sec", abstime->tv_sec, abstime->tv_nsec);
 
     if (abstime->tv_sec < 0 || abstime->tv_nsec >= 1000000000) {
         return EINVAL;
@@ -336,7 +336,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (GlobalState::isNative())
         return orig::pthread_cond_init(cond, cond_attr);
 
-    LOG(LL_TRACE, LCF_WAIT, "%s call with cond %p", __func__, static_cast<void*>(cond));
+    LOGTRACE(LCF_WAIT, "%s call with cond %p", __func__, static_cast<void*>(cond));
 
     /* Store the clock if one is set for `pthread_cond_timedwait()` */
     if (cond_attr) {        
@@ -361,7 +361,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
         ThreadSync::detSignal(false);
     }
 
-    LOG(LL_TRACE, LCF_WAIT | LCF_TODO, "%s call with cond %p and mutex %p", __func__, static_cast<void*>(cond), static_cast<void*>(mutex));
+    LOGTRACE(LCF_WAIT | LCF_TODO, "%s call with cond %p and mutex %p", __func__, static_cast<void*>(cond), static_cast<void*>(mutex));
     return orig::pthread_cond_wait(cond, mutex);
 }
 
@@ -371,7 +371,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (GlobalState::isNative())
         return orig::pthread_cond_timedwait(cond, mutex, abstime);
 
-    LOG(LL_TRACE, LCF_WAIT | LCF_TODO, "%s call with cond %p and mutex %p and timeout %d.%09d sec", __func__, static_cast<void*>(cond), static_cast<void*>(mutex), abstime->tv_sec, abstime->tv_nsec);
+    LOGTRACE(LCF_WAIT | LCF_TODO, "%s call with cond %p and mutex %p and timeout %d.%09d sec", __func__, static_cast<void*>(cond), static_cast<void*>(mutex), abstime->tv_sec, abstime->tv_nsec);
 
     /* Convert the abstime variable because pthread_cond_timedwait() is using
      * the real system time. */
@@ -492,7 +492,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (GlobalState::isNative())
         return orig::pthread_cond_signal(cond);
 
-    LOG(LL_TRACE, LCF_WAIT | LCF_TODO, "%s call with cond %p", __func__, static_cast<void*>(cond));
+    LOGTRACE(LCF_WAIT | LCF_TODO, "%s call with cond %p", __func__, static_cast<void*>(cond));
     return orig::pthread_cond_signal(cond);
 }
 
@@ -502,35 +502,35 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (GlobalState::isNative())
         return orig::pthread_cond_broadcast(cond);
 
-    LOG(LL_TRACE, LCF_WAIT | LCF_TODO, "%s call with cond %p", __func__, static_cast<void*>(cond));
+    LOGTRACE(LCF_WAIT | LCF_TODO, "%s call with cond %p", __func__, static_cast<void*>(cond));
     return orig::pthread_cond_broadcast(cond);
 }
 
 /* Override */ int pthread_setcancelstate (int state, int *oldstate)
 {
     RETURN_IF_NATIVE(pthread_setcancelstate, (state, oldstate), "libpthread.so");
-    LOGTRACE(LCF_THREAD | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_THREAD | LCF_TODO);
     RETURN_NATIVE(pthread_setcancelstate, (state, oldstate), "libpthread.so");
 }
 
 /* Override */ int pthread_setcanceltype (int type, int *oldtype)
 {
     RETURN_IF_NATIVE(pthread_setcanceltype, (type, oldtype), "libpthread.so");
-    LOGTRACE(LCF_THREAD | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_THREAD | LCF_TODO);
     RETURN_NATIVE(pthread_setcanceltype, (type, oldtype), "libpthread.so");
 }
 
 /* Override */ int pthread_cancel (pthread_t pthread_id)
 {
     RETURN_IF_NATIVE(pthread_cancel, (pthread_id), "libpthread.so");
-    LOG(LL_TRACE, LCF_THREAD | LCF_TODO, "Cancel thread %d", ThreadManager::getThreadTid(pthread_id));
+    LOGTRACE(LCF_THREAD | LCF_TODO, "Cancel thread %d", ThreadManager::getThreadTid(pthread_id));
     RETURN_NATIVE(pthread_cancel, (pthread_id), "libpthread.so");
 }
 
 /* Override */ void pthread_testcancel (void)
 {
     RETURN_IF_NATIVE(pthread_testcancel, (), "libpthread.so");
-    LOGTRACE(LCF_THREAD | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_THREAD | LCF_TODO);
     RETURN_NATIVE(pthread_testcancel, (), "libpthread.so");
 }
 
@@ -538,7 +538,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
 {
     RETURN_IF_NATIVE(sem_timedwait, (sem, abstime), "libpthread.so");
 
-    LOG(LL_TRACE, LCF_WAIT | LCF_TODO, "%s call with sem %p and timeout %d.%09d sec", __func__, static_cast<void*>(sem), abstime->tv_sec, abstime->tv_nsec);
+    LOGTRACE(LCF_WAIT | LCF_TODO, "%s call with sem %p and timeout %d.%09d sec", __func__, static_cast<void*>(sem), abstime->tv_sec, abstime->tv_nsec);
 
     /* Convert the abstime variable because sem_timedwait() is using
      * the real system time. */
@@ -569,7 +569,7 @@ static std::map<pthread_cond_t*, clockid_t>& getCondClock() {
     if (GlobalState::isNative())
         return orig::sem_trywait(sem);
 
-    LOGTRACE(LCF_WAIT | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_WAIT | LCF_TODO);
     return orig::sem_trywait(sem);
 }
 
@@ -577,7 +577,7 @@ int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksiz
 {
     RETURN_IF_NATIVE(pthread_attr_setstack, (attr, stackaddr, stacksize), "libpthread.so");
 
-    LOG(LL_TRACE, LCF_THREAD, "%s called with addr %p and size %d", __func__, stackaddr, stacksize);
+    LOGTRACE(LCF_THREAD, "%s called with addr %p and size %d", __func__, stackaddr, stacksize);
     // int ret = orig::pthread_attr_setstack(attr, stackaddr, stacksize);
     // LOG(LL_DEBUG, LCF_THREAD, "  returns %d", ret);
     // return ret;
@@ -586,7 +586,7 @@ int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, size_t stacksiz
 
 int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) __THROW
 {
-    LOG(LL_TRACE, LCF_THREAD | LCF_WAIT, "%s called with clock %d", __func__, clock_id);
+    LOGTRACE(LCF_THREAD | LCF_WAIT, "%s called with clock %d", __func__, clock_id);
     RETURN_NATIVE(pthread_condattr_setclock, (attr, clock_id), "libpthread.so");    
 }
 
@@ -598,7 +598,7 @@ int pthread_setname_np (pthread_t target_thread, const char *name) __THROW
     if (GlobalState::isNative())
         return orig::pthread_setname_np(target_thread, name);
     
-    LOG(LL_TRACE, LCF_THREAD, "%s called with target_thread %p and name %s", __func__, target_thread, name);
+    LOGTRACE(LCF_THREAD, "%s called with target_thread %p and name %s", __func__, target_thread, name);
 
     /* Save name for debugging */
     ThreadInfo* thread = ThreadManager::getThread(target_thread);
@@ -614,7 +614,7 @@ int pthread_setname_np (const char *name)
     if (GlobalState::isNative())
         return orig::pthread_setname_np(name);
 
-    LOG(LL_TRACE, LCF_THREAD, "%s called with name %s", __func__, name);
+    LOGTRACE(LCF_THREAD, "%s called with name %s", __func__, name);
 
     /* Save name for debugging */
     ThreadInfo* thread = ThreadManager::getCurrentThread();
@@ -724,7 +724,7 @@ static void pthread_workqueue_workloop_func(uint64_t *workloop_id, void **events
 
 int _pthread_workqueue_init_with_workloop(pthread_workqueue_function2_t queue_func, pthread_workqueue_function_kevent_t kevent_func, pthread_workqueue_function_workloop_t workloop_func, int offset, int flags)
 {
-    LOGTRACE(LCF_THREAD);
+    LOGTRACE_SIMPLE(LCF_THREAD);
 
     /* Save orig workqueue functions */
     orig::queue_func = queue_func;

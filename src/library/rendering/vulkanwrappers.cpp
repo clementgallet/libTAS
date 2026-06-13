@@ -88,7 +88,7 @@ uint32_t vk::getMemoryTypeIndex(uint32_t typeBits, VkMemoryPropertyFlags propert
 void vk##NAME DECL\
 {\
     LINK_VK_POINTER(NAME);\
-    LOGTRACE(LCF_VULKAN);\
+    LOGTRACE_SIMPLE(LCF_VULKAN);\
     if (!Global::skipping_draw)\
         return vkProcs.NAME ARGS;\
 }
@@ -135,7 +135,7 @@ VkResult vkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAlloc
     if (GlobalState::isNative())
         return vkProcs.CreateInstance(pCreateInfo, pAllocator, pInstance);
 
-    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_VULKAN);
 
     VkInstanceCreateInfo createInfo = *pCreateInfo;
     // createInfo.enabledLayerCount = 1;
@@ -155,7 +155,7 @@ VkResult vkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAlloc
 
 PFN_vkVoidFunction vkGetInstanceProcAddr(VkInstance instance, const char* pName)
 {
-    LOG(LL_TRACE, LCF_HOOK | LCF_VULKAN, "%s call with symbol %s", __func__, pName);
+    LOGTRACE(LCF_HOOK | LCF_VULKAN, "%s call with symbol %s", __func__, pName);
     LINK_VK_POINTER(GetInstanceProcAddr);
 
     if (!vkProcs.GetInstanceProcAddr) return nullptr;
@@ -165,7 +165,7 @@ PFN_vkVoidFunction vkGetInstanceProcAddr(VkInstance instance, const char* pName)
 
 PFN_vkVoidFunction vkGetDeviceProcAddr(VkDevice device, const char* pName)
 {
-    LOG(LL_TRACE, LCF_HOOK | LCF_VULKAN, "%s call with symbol %s", __func__, pName);
+    LOGTRACE(LCF_HOOK | LCF_VULKAN, "%s call with symbol %s", __func__, pName);
     LINK_VK_POINTER(GetDeviceProcAddr);
 
     if (!vkProcs.GetDeviceProcAddr) return nullptr;
@@ -204,7 +204,7 @@ VkResult vkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInf
     if (GlobalState::isNative())
         return vkProcs.CreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice);
 
-    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_VULKAN);
 
     /* Store physical device */
     vk::context.physicalDevice = physicalDevice;
@@ -251,7 +251,7 @@ void vkDestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
     if (GlobalState::isNative())
         return vkProcs.DestroyDevice(device, pAllocator);
 
-    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_VULKAN);
 
     if (vk::context.descriptorPool) {
         vkProcs.DestroyDescriptorPool(device, vk::context.descriptorPool, pAllocator);
@@ -269,7 +269,7 @@ void vkGetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queue
     if (GlobalState::isNative())
         return vkProcs.GetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
 
-    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_VULKAN);
 
     /* Store the queue family */
     vk::context.queueFamily = queueFamilyIndex;
@@ -327,7 +327,7 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
     if (GlobalState::isNative())
         return vkProcs.CreateSwapchainKHR(device, pCreateInfo, pAllocator, pSwapchain);
 
-    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_VULKAN);
 
     /* We must add support for transfering the swapchain image from/to another image,
      * for encoding and hud. */
@@ -523,7 +523,7 @@ void vkDestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAl
     if (GlobalState::isNative())
         return vkProcs.DestroySwapchainKHR(device, swapchain, pAllocator);
 
-    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_VULKAN);
 
     if (vk::context.swapchain == swapchain) {
         destroySwapchain();
@@ -538,7 +538,7 @@ VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64
     if (GlobalState::isNative())
         return vkProcs.AcquireNextImageKHR(device, swapchain, timeout, semaphore, fence, pImageIndex);
 
-    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_VULKAN);
 
     if (Global::skipping_draw) {
         /* We don't acquire an image, so that we don't need to call vkQueuePresentKHR()
@@ -599,7 +599,7 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
     if (GlobalState::isNative())
         return vkProcs.QueuePresentKHR(queue, pPresentInfo);
 
-    LOGTRACE(LCF_WINDOW | LCF_VULKAN);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_VULKAN);
 
     /* Store the graphic queue */
     vk::context.graphicsQueue = queue;

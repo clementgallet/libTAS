@@ -32,7 +32,7 @@ namespace libtas {
 
 int cubeb_init(cubeb ** context, char const * context_name, char const * backend_name)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return CUBEB_OK;
 }
 
@@ -40,13 +40,13 @@ static const char* dummy_backend = "libtas";
 
 char const * cubeb_get_backend_id(cubeb * context)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return dummy_backend;
 }
 
 int cubeb_get_max_channel_count(cubeb * context, uint32_t * max_channels)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     if (max_channels)
         *max_channels = 2;
     return CUBEB_OK;
@@ -54,7 +54,7 @@ int cubeb_get_max_channel_count(cubeb * context, uint32_t * max_channels)
 
 int cubeb_get_min_latency(cubeb * context, cubeb_stream_params * params, uint32_t * latency_frames)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     if (latency_frames)
         *latency_frames = Global::shared_config.audio_frequency; // Not sure what to put here.
     return CUBEB_OK;    
@@ -62,7 +62,7 @@ int cubeb_get_min_latency(cubeb * context, cubeb_stream_params * params, uint32_
 
 int cubeb_get_preferred_sample_rate(cubeb * context, uint32_t * rate)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     if (rate) {
         *rate = Global::shared_config.audio_frequency;
         if (*rate == 0)
@@ -74,7 +74,7 @@ int cubeb_get_preferred_sample_rate(cubeb * context, uint32_t * rate)
 
 void cubeb_destroy(cubeb * context)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 }
 
 int cubeb_stream_init(cubeb * context,
@@ -89,7 +89,7 @@ int cubeb_stream_init(cubeb * context,
                       cubeb_state_callback state_callback,
                       void * user_ptr)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
@@ -146,7 +146,7 @@ int cubeb_stream_init(cubeb * context,
 
 void cubeb_stream_destroy(cubeb_stream * stream)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     int sourceId = reinterpret_cast<intptr_t>(stream);
@@ -155,7 +155,7 @@ void cubeb_stream_destroy(cubeb_stream * stream)
 
 int cubeb_stream_start(cubeb_stream * stream)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     int sourceId = reinterpret_cast<intptr_t>(stream);
@@ -170,7 +170,7 @@ int cubeb_stream_start(cubeb_stream * stream)
 
 int cubeb_stream_stop(cubeb_stream * stream)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     int sourceId = reinterpret_cast<intptr_t>(stream);
@@ -185,13 +185,13 @@ int cubeb_stream_stop(cubeb_stream * stream)
 
 int cubeb_stream_reset_default_device(cubeb_stream * stream)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return CUBEB_OK;
 }
 
 int cubeb_stream_get_position(cubeb_stream * stream, uint64_t * position)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     if (position) {
         AudioContext& audiocontext = AudioContext::get();
         std::lock_guard<std::mutex> lock(audiocontext.mutex);
@@ -206,7 +206,7 @@ int cubeb_stream_get_position(cubeb_stream * stream, uint64_t * position)
 
 int cubeb_stream_get_latency(cubeb_stream * stream, uint32_t * latency)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     if (latency) {
         AudioContext& audiocontext = AudioContext::get();
         std::lock_guard<std::mutex> lock(audiocontext.mutex);
@@ -220,13 +220,13 @@ int cubeb_stream_get_latency(cubeb_stream * stream, uint32_t * latency)
 
 int cubeb_stream_get_input_latency(cubeb_stream * stream, uint32_t * latency)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return CUBEB_ERROR;
 }
 
 int cubeb_stream_set_volume(cubeb_stream * stream, float volume)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
     int sourceId = reinterpret_cast<intptr_t>(stream);
@@ -239,49 +239,49 @@ int cubeb_stream_set_volume(cubeb_stream * stream, float volume)
 
 int cubeb_stream_get_current_device(cubeb_stream * stm, cubeb_device ** const device)
 {
-    LOGTRACE(LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SOUND | LCF_TODO);
     return CUBEB_ERROR_NOT_SUPPORTED;
 }
 
 int cubeb_stream_device_destroy(cubeb_stream * stream, cubeb_device * devices)
 {
-    LOGTRACE(LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SOUND | LCF_TODO);
     return CUBEB_ERROR_NOT_SUPPORTED;
 }
 
 int cubeb_stream_register_device_changed_callback(cubeb_stream * stream, cubeb_device_changed_callback device_changed_callback)
 {
-    LOGTRACE(LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SOUND | LCF_TODO);
     return CUBEB_ERROR_NOT_SUPPORTED;
 }
 
 void * cubeb_stream_user_ptr(cubeb_stream * stream)
 {
-    LOGTRACE(LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SOUND | LCF_TODO);
     return nullptr;
 }
 
 int cubeb_enumerate_devices(cubeb * context, cubeb_device_type devtype, cubeb_device_collection * collection)
 {
-    LOGTRACE(LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SOUND | LCF_TODO);
     return CUBEB_ERROR_NOT_SUPPORTED;
 }
 
 int cubeb_device_collection_destroy(cubeb * context, cubeb_device_collection * collection)
 {
-    LOGTRACE(LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SOUND | LCF_TODO);
     return CUBEB_ERROR_NOT_SUPPORTED;
 }
 
 int cubeb_register_device_collection_changed(cubeb * context, cubeb_device_type devtype, cubeb_device_collection_changed_callback callback, void * user_ptr)
 {
-    LOGTRACE(LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SOUND | LCF_TODO);
     return CUBEB_ERROR_NOT_SUPPORTED;
 }
 
 int cubeb_set_log_callback(cubeb_log_level log_level, cubeb_log_callback log_callback)
 {
-    LOGTRACE(LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SOUND | LCF_TODO);
     return CUBEB_ERROR_NOT_SUPPORTED;
 }
 

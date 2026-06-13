@@ -33,7 +33,7 @@ xcb_connection_t* x11::gameConnections[GAMECONNECTIONNUM] = {};
 
 xcb_connection_t *xcb_connect(const char *displayname, int *screenp)
 {
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
     LINK_NAMESPACE_GLOBAL(xcb_connect);
 
     xcb_connection_t* c;
@@ -66,7 +66,7 @@ xcb_connection_t *xcb_connect(const char *displayname, int *screenp)
 
 void xcb_disconnect(xcb_connection_t *c)
 {
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
     LINK_NAMESPACE_GLOBAL(xcb_disconnect);
 
     for (int i=0; i<GAMECONNECTIONNUM; i++) {

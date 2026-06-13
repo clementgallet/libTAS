@@ -42,8 +42,7 @@ static long __stdcall __attribute__((noinline)) LdrGetProcedureAddress(void *mod
 long __stdcall LdrGetProcedureAddress(void *module, const winstring *name,
                                             unsigned long ord, void **address)
 {
-    if (name) LOG(LL_TRACE, LCF_HOOK | LCF_WINE, "%s called with function %s", __func__, name->Buffer);
-    else LOG(LL_TRACE, LCF_HOOK | LCF_WINE, "%s called with ordinal %lu", __func__, ord);
+    LOGTRACE(LCF_HOOK | LCF_WINE, "%s called with function %s or ordinal %lu", __func__, name?name->Buffer:"<unnamed>", ord);
     return orig::LdrGetProcedureAddress(module, name, ord, address);
 }
 

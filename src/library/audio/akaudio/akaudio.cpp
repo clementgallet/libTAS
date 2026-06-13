@@ -30,7 +30,7 @@ DEFINE_ORIG_POINTER(CSharp_AkPlatformInitSettings_eAudioAPI_set)
 
 AkPlatformInitSettings* CSharp_AkInitializationSettings_platformSettings_get(AkContext *context)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     LINK_NAMESPACE(CSharp_AkInitializationSettings_platformSettings_get, "AkSoundEngine");
     AkPlatformInitSettings* settings = orig::CSharp_AkInitializationSettings_platformSettings_get(context);
 

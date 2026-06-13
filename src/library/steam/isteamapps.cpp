@@ -27,73 +27,73 @@ namespace libtas {
 
 bool ISteamApps::BIsSubscribed()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return true;
 }
 
 bool ISteamApps::BIsLowViolence()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamApps::BIsCybercafe()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamApps::BIsVACBanned()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 const char *ISteamApps::GetCurrentGameLanguage()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return "english";
 }
 
 const char *ISteamApps::GetAvailableGameLanguages()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return "english";
 }
 
 bool ISteamApps::BIsSubscribedApp( AppId_t appID )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return true;
 }
 
 bool ISteamApps::BIsDlcInstalled( AppId_t appID )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return true;
 }
 
 unsigned int ISteamApps::GetEarliestPurchaseUnixTime( AppId_t nAppID )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0;
 }
 
 bool ISteamApps::BIsSubscribedFromFreeWeekend()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 int ISteamApps::GetDLCCount()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0;
 }
 
 bool ISteamApps::BGetDLCDataByIndex( int iDLC, AppId_t *pAppID, bool *pbAvailable, char *pchName, int cchNameBufferSize )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 
     if (pAppID)
         *pAppID = 0;
@@ -108,22 +108,22 @@ bool ISteamApps::BGetDLCDataByIndex( int iDLC, AppId_t *pAppID, bool *pbAvailabl
 
 void ISteamApps::InstallDLC( AppId_t nAppID )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 }
 
 void ISteamApps::UninstallDLC( AppId_t nAppID )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 }
 
 void ISteamApps::RequestAppProofOfPurchaseKey( AppId_t nAppID )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 }
 
 bool ISteamApps::GetCurrentBetaName( char *pchName, int cchNameBufferSize )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (pchName == nullptr || cchNameBufferSize <= 0)
         return false;
 
@@ -134,13 +134,13 @@ bool ISteamApps::GetCurrentBetaName( char *pchName, int cchNameBufferSize )
 
 bool ISteamApps::MarkContentCorrupt( bool bMissingFilesOnly )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return true;
 }
 
 unsigned int ISteamApps::GetInstalledDepots( AppId_t appID, DepotId_t *pvecDepots, unsigned int cMaxDepots )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (pvecDepots && cMaxDepots > 0) {
         std::memset(pvecDepots, 0, sizeof(*pvecDepots) * cMaxDepots);
     }
@@ -149,7 +149,7 @@ unsigned int ISteamApps::GetInstalledDepots( AppId_t appID, DepotId_t *pvecDepot
 
 unsigned int ISteamApps::GetAppInstallDir( AppId_t appID, char *pchFolder, unsigned int cchFolderBufferSize )
 {
-    LOGTRACE(LCF_STEAM | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (pchFolder && cchFolderBufferSize > 0) {
         pchFolder[0] = '\0';
     }
@@ -158,25 +158,25 @@ unsigned int ISteamApps::GetAppInstallDir( AppId_t appID, char *pchFolder, unsig
 
 bool ISteamApps::BIsAppInstalled( AppId_t appID )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return true;
 }
 
 CSteamID ISteamApps::GetAppOwner()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 1;
 }
 
 const char *ISteamApps::GetLaunchQueryParam( const char *pchKey )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return "";
 }
 
 bool ISteamApps::GetDlcDownloadProgress( AppId_t nAppID, uint64_t *punBytesDownloaded, uint64_t *punBytesTotal )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (punBytesDownloaded)
         *punBytesDownloaded = 0;
     if (punBytesTotal) {
@@ -187,18 +187,18 @@ bool ISteamApps::GetDlcDownloadProgress( AppId_t nAppID, uint64_t *punBytesDownl
 
 int ISteamApps::GetAppBuildId()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0;
 }
 
 void ISteamApps::RequestAllProofOfPurchaseKeys()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 }
 
 SteamAPICall_t ISteamApps::GetFileDetails( const char* pszFileName )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 1;
 }
 

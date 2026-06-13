@@ -25,6 +25,7 @@ namespace libtas {
 thread_local int GlobalState::native = 0;
 thread_local int GlobalState::owncode = 0;
 thread_local int GlobalState::nolog = 0;
+thread_local int GlobalState::log_indent_level = 0;
 
 #if defined(__APPLE__) && defined(__MACH__)
 static int native_init = 0;
@@ -145,6 +146,16 @@ GlobalNoLog::GlobalNoLog()
 GlobalNoLog::~GlobalNoLog()
 {
     GlobalState::setNoLog(false);
+}
+
+GlobalIndent::GlobalIndent()
+{
+    GlobalState::log_indent_level++;
+}
+
+GlobalIndent::~GlobalIndent()
+{
+    GlobalState::log_indent_level--;
 }
 
 }

@@ -61,7 +61,7 @@ Bool XQueryExtension(Display* display, const char* name, int* major_opcode_retur
     if (GlobalState::isNative())
         return orig::XQueryExtension(display, name, major_opcode_return, first_event_return, first_error_return);
 
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with name %s", __func__, name);
+    LOGTRACE(LCF_WINDOW, "%s called with name %s", __func__, name);
     Bool ret = orig::XQueryExtension(display, name, major_opcode_return, first_event_return, first_error_return);
 
     /* Gather Xi opcode */
@@ -74,7 +74,7 @@ Bool XQueryExtension(Display* display, const char* name, int* major_opcode_retur
 
 Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int klass, Visual *visual, unsigned long valuemask, XSetWindowAttributes *attributes)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s call with dimensions %d x %d", __func__, width, height);
+    LOGTRACE(LCF_WINDOW, "%s call with dimensions %d x %d", __func__, width, height);
     LINK_NAMESPACE_GLOBAL(XCreateWindow);
 
     Window w = orig::XCreateWindow(display, parent, x, y, width, height, border_width, depth, klass, visual, valuemask, attributes);
@@ -108,7 +108,7 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
 
 Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, unsigned long border, unsigned long background)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s call with dimensions %d x %d", __func__, width, height);
+    LOGTRACE(LCF_WINDOW, "%s call with dimensions %d x %d", __func__, width, height);
     LINK_NAMESPACE_GLOBAL(XCreateSimpleWindow);
 
     Window w = orig::XCreateSimpleWindow(display, parent, x, y, width, height, border_width, border, background);
@@ -125,7 +125,7 @@ Window XCreateSimpleWindow(Display *display, Window parent, int x, int y, unsign
 
 int XDestroyWindow(Display *display, Window w)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, w);
 
     XlibGameWindow::pop(w);
 
@@ -134,7 +134,7 @@ int XDestroyWindow(Display *display, Window w)
 
 int XMapWindow(Display *display, Window w)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, w);
     LINK_NAMESPACE_GLOBAL(XMapWindow);
 
     int ret = orig::XMapWindow(display, w);
@@ -147,13 +147,13 @@ int XMapWindow(Display *display, Window w)
 
 int XUnmapWindow(Display *display, Window w)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, w);
     RETURN_NATIVE(XUnmapWindow, (display, w), nullptr);
 }
 
 int XMapRaised(Display *display, Window w)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, w);
     LINK_NAMESPACE_GLOBAL(XMapRaised);
 
     int ret = orig::XMapRaised(display, w);
@@ -166,7 +166,7 @@ int XMapRaised(Display *display, Window w)
 
 int XStoreName(Display *display, Window w, const char *window_name)
 {
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
     LINK_NAMESPACE_GLOBAL(XStoreName);
 
     if (XlibGameWindow::get() == w) {
@@ -179,7 +179,7 @@ int XStoreName(Display *display, Window w, const char *window_name)
 
 void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s call with name %s and format %d", __func__, text_prop->value, text_prop->format);
+    LOGTRACE(LCF_WINDOW, "%s call with name %s and format %d", __func__, text_prop->value, text_prop->format);
     LINK_NAMESPACE_GLOBAL(XSetWMName);
 
     if (XlibGameWindow::get() == w) {
@@ -204,7 +204,7 @@ void XSetWMName(Display *display, Window w, XTextProperty *text_prop)
 int XSelectInput(Display *display, Window w, long event_mask)
 {
     RETURN_IF_NATIVE(XSelectInput, (display, w, event_mask), nullptr);
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, w);
 
     /* Add the mask in our event queue */
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
@@ -220,7 +220,7 @@ int XSelectInput(Display *display, Window w, long event_mask)
 
 int XMoveWindow(Display* display, Window w, int x, int y)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d to coords %d %d", __func__, w, x, y);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d to coords %d %d", __func__, w, x, y);
     /* Save the new window coords, and
      * prevent the game to change top-level window position */
     XlibGameWindow::setCoords(w, x, y);
@@ -235,7 +235,7 @@ int XResizeWindow(Display* display, Window w, unsigned int width, unsigned int h
 {
     RETURN_IF_NATIVE(XResizeWindow, (display, w, width, height), nullptr);
 
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d, new size: %d x %d", __func__, w, width, height);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d, new size: %d x %d", __func__, w, width, height);
     ScreenCapture::resize(width, height);
     RETURN_NATIVE(XResizeWindow, (display, w, width, height), nullptr);
 }
@@ -244,7 +244,7 @@ int XMoveResizeWindow(Display* display, Window w, int x, int y, unsigned int wid
 {
     RETURN_IF_NATIVE(XMoveResizeWindow, (display, w, x, y, width, height), nullptr);
 
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d, new position: %d - %d, new size: %d x %d", __func__, w, x, y, width, height);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d, new position: %d - %d, new size: %d x %d", __func__, w, x, y, width, height);
 
     if (XlibGameWindow::get() == w) {
         ScreenCapture::resize(width, height);
@@ -267,7 +267,7 @@ int XConfigureWindow(Display* display, Window w, unsigned int value_mask, XWindo
     if (GlobalState::isNative())
         return orig::XConfigureWindow(display, w, value_mask, values);
 
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, w);
     if ((value_mask & CWWidth) && (value_mask & CWHeight)) {
         LOG(LL_DEBUG, LCF_WINDOW, "    New size: %d x %d", values->width, values->height);
     }
@@ -296,7 +296,7 @@ int XGetWindowProperty(Display *display, Window w, Atom property, long long_offs
     if (GlobalState::isNative())
         return orig::XGetWindowProperty(display, w, property, long_offset, long_length, del, req_type, actual_type_return, actual_format_return, nitems_return, bytes_after_return, prop_return);
 
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, w);
 
     int ret = orig::XGetWindowProperty(display, w, property, long_offset, long_length, del, req_type, actual_type_return, actual_format_return, nitems_return, bytes_after_return, prop_return);
     if (ret != Success) {
@@ -332,7 +332,7 @@ int XChangeProperty(Display* display, Window w, Atom property, Atom type, int fo
     if (GlobalState::isNative())
         return orig::XChangeProperty(display, w, property, type, format, mode, data, nelements);
 
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, w);
 
     /* Prevent games from intercepting ClientMessage focus events */
     if (property == x11_atom(_NET_WM_STATE)) {
@@ -417,7 +417,7 @@ int XSetWMHints(Display* display, Window w, XWMHints* wm_hints)
 {
     RETURN_IF_NATIVE(XSetWMHints, (display, w, wm_hints), nullptr);
 
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, w);
 
     if ((XlibGameWindow::get() == w) && (wm_hints->input == False)) {
         LOG(LL_DEBUG, LCF_WINDOW, "   switch input hint to True");
@@ -431,7 +431,7 @@ Bool XTranslateCoordinates(Display* display, Window src_w, Window dest_w, int sr
 {
     RETURN_IF_NATIVE(XTranslateCoordinates, (display, src_w, dest_w, src_x, src_y, dest_x_return, dest_y_return, child_return), nullptr);
 
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with src_w %d, dest_w %d, src_x %d, src_y %d", __func__, src_w, dest_w, src_x, src_y);
+    LOGTRACE(LCF_WINDOW, "%s called with src_w %d, dest_w %d, src_x %d, src_y %d", __func__, src_w, dest_w, src_x, src_y);
 
     if (dest_w == DefaultRootWindow(display)) {
         int x, y;
@@ -450,7 +450,7 @@ Status XGetWindowAttributes(Display* display, Window w, XWindowAttributes* windo
     if (GlobalState::isNative())
         return orig::XGetWindowAttributes(display, w, window_attributes_return);
 
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, w);
     Status ret = orig::XGetWindowAttributes(display, w, window_attributes_return);
     if (ret == 0)
         return ret;
@@ -467,7 +467,7 @@ Status XGetWindowAttributes(Display* display, Window w, XWindowAttributes* windo
 int XChangeWindowAttributes(Display *display, Window w, unsigned long valuemask, XSetWindowAttributes *attributes)
 {
     RETURN_IF_NATIVE(XChangeWindowAttributes, (display, w, valuemask, attributes), nullptr);
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, w);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, w);
 
     /* Add the mask in our event queue */
     if (valuemask & CWEventMask) {

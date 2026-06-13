@@ -25,151 +25,151 @@ namespace libtas {
 
 HTTPRequestHandle ISteamHTTP::CreateHTTPRequest( EHTTPMethod eHTTPRequestMethod, const char *pchAbsoluteURL )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0;
 }
 
 bool ISteamHTTP::SetHTTPRequestContextValue( HTTPRequestHandle hRequest, uint64_t ulContextValue )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestNetworkActivityTimeout( HTTPRequestHandle hRequest, uint32_t unTimeoutSeconds )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestHeaderValue( HTTPRequestHandle hRequest, const char *pchHeaderName, const char *pchHeaderValue )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestGetOrPostParameter( HTTPRequestHandle hRequest, const char *pchParamName, const char *pchParamValue )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::SendHTTPRequest( HTTPRequestHandle hRequest, SteamAPICall_t *pCallHandle )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::SendHTTPRequestAndStreamResponse( HTTPRequestHandle hRequest, SteamAPICall_t *pCallHandle )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::DeferHTTPRequest( HTTPRequestHandle hRequest )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::PrioritizeHTTPRequest( HTTPRequestHandle hRequest )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::GetHTTPResponseHeaderSize( HTTPRequestHandle hRequest, const char *pchHeaderName, uint32_t *unResponseHeaderSize )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::GetHTTPResponseHeaderValue( HTTPRequestHandle hRequest, const char *pchHeaderName, uint8_t *pHeaderValueBuffer, uint32_t unBufferSize )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::GetHTTPResponseBodySize( HTTPRequestHandle hRequest, uint32_t *unBodySize )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false;
 }
 
 bool ISteamHTTP::GetHTTPResponseBodyData( HTTPRequestHandle hRequest, uint8_t *pBodyDataBuffer, uint32_t unBufferSize )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::GetHTTPStreamingResponseBodyData( HTTPRequestHandle hRequest, uint32_t cOffset, uint8_t *pBodyDataBuffer, uint32_t unBufferSize )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::ReleaseHTTPRequest( HTTPRequestHandle hRequest )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::GetHTTPDownloadProgressPct( HTTPRequestHandle hRequest, float *pflPercentOut )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestRawPostBody( HTTPRequestHandle hRequest, const char *pchContentType, uint8_t *pubBody, uint32_t unBodyLen )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 HTTPCookieContainerHandle ISteamHTTP::CreateCookieContainer( bool bAllowResponsesToModify )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0;
 }
 
 bool ISteamHTTP::ReleaseCookieContainer( HTTPCookieContainerHandle hCookieContainer )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::SetCookie( HTTPCookieContainerHandle hCookieContainer, const char *pchHost, const char *pchUrl, const char *pchCookie )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestCookieContainer( HTTPRequestHandle hRequest, HTTPCookieContainerHandle hCookieContainer )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestUserAgentInfo( HTTPRequestHandle hRequest, const char *pchUserAgentInfo )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestRequiresVerifiedCertificate( HTTPRequestHandle hRequest, bool bRequireVerifiedCertificate )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::SetHTTPRequestAbsoluteTimeoutMS( HTTPRequestHandle hRequest, uint32_t unMilliseconds )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 bool ISteamHTTP::GetHTTPRequestWasTimedOut( HTTPRequestHandle hRequest, bool *pbWasTimedOut )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 

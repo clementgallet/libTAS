@@ -63,7 +63,7 @@ xcb_create_window_checked (xcb_connection_t *c,
                            uint32_t          value_mask,
                            const void       *value_list)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s call with id %d and dimensions %d x %d", __func__, wid, width, height);
+    LOGTRACE(LCF_WINDOW, "%s call with id %d and dimensions %d x %d", __func__, wid, width, height);
     LINK_NAMESPACE_GLOBAL(xcb_create_window_checked);
     xcb_void_cookie_t ret = orig::xcb_create_window_checked(c, depth, wid, parent, x, y, width, height, border_width, _class, visual, value_mask, value_list);
 
@@ -129,7 +129,7 @@ xcb_create_window (xcb_connection_t *c,
                    uint32_t          value_mask,
                    const void       *value_list)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s call with id %d and dimensions %d x %d", __func__, wid, width, height);
+    LOGTRACE(LCF_WINDOW, "%s call with id %d and dimensions %d x %d", __func__, wid, width, height);
     LINK_NAMESPACE_GLOBAL(xcb_create_window);
     xcb_void_cookie_t ret = orig::xcb_create_window(c, depth, wid, parent, x, y, width, height, border_width, _class, visual, value_mask, value_list);
 
@@ -189,7 +189,7 @@ xcb_create_window_aux_checked (xcb_connection_t                     *c,
                                uint32_t                              value_mask,
                                const xcb_create_window_value_list_t *value_list)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s call with id %d and dimensions %d x %d", __func__, wid, width, height);
+    LOGTRACE(LCF_WINDOW, "%s call with id %d and dimensions %d x %d", __func__, wid, width, height);
     LINK_NAMESPACE_GLOBAL(xcb_create_window_aux_checked);
     xcb_void_cookie_t ret = orig::xcb_create_window_aux_checked(c, depth, wid, parent, x, y, width, height, border_width, _class, visual, value_mask, value_list);
 
@@ -222,7 +222,7 @@ xcb_create_window_aux (xcb_connection_t                     *c,
                        uint32_t                              value_mask,
                        const xcb_create_window_value_list_t *value_list)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s call with id %d and dimensions %d x %d", __func__, wid, width, height);
+    LOGTRACE(LCF_WINDOW, "%s call with id %d and dimensions %d x %d", __func__, wid, width, height);
     LINK_NAMESPACE_GLOBAL(xcb_create_window_aux);
     xcb_void_cookie_t ret = orig::xcb_create_window_aux(c, depth, wid, parent, x, y, width, height, border_width, _class, visual, value_mask, value_list);
 
@@ -242,7 +242,7 @@ xcb_create_window_aux (xcb_connection_t                     *c,
 
 xcb_void_cookie_t xcb_destroy_window_checked (xcb_connection_t *c, xcb_window_t window)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, window);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, window);
     LINK_NAMESPACE_GLOBAL(xcb_destroy_window_checked);
 
     /* If current game window, switch to another one on the list */
@@ -253,7 +253,7 @@ xcb_void_cookie_t xcb_destroy_window_checked (xcb_connection_t *c, xcb_window_t 
 
 xcb_void_cookie_t xcb_destroy_window (xcb_connection_t *c, xcb_window_t window)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, window);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, window);
     LINK_NAMESPACE_GLOBAL(xcb_destroy_window);
 
     /* If current game window, switch to another one on the list */
@@ -264,7 +264,7 @@ xcb_void_cookie_t xcb_destroy_window (xcb_connection_t *c, xcb_window_t window)
 
 xcb_void_cookie_t xcb_map_window_checked (xcb_connection_t *c, xcb_window_t window)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, window);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, window);
     LINK_NAMESPACE_GLOBAL(xcb_map_window_checked);
     xcb_void_cookie_t ret = orig::xcb_map_window_checked(c, window);
 
@@ -276,7 +276,7 @@ xcb_void_cookie_t xcb_map_window_checked (xcb_connection_t *c, xcb_window_t wind
 
 xcb_void_cookie_t xcb_map_window (xcb_connection_t *c, xcb_window_t window)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, window);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, window);
     LINK_NAMESPACE_GLOBAL(xcb_map_window);
     xcb_void_cookie_t ret = orig::xcb_map_window(c, window);
 
@@ -288,7 +288,7 @@ xcb_void_cookie_t xcb_map_window (xcb_connection_t *c, xcb_window_t window)
 
 xcb_void_cookie_t xcb_unmap_window_checked (xcb_connection_t *c, xcb_window_t window)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, window);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, window);
     LINK_NAMESPACE_GLOBAL(xcb_unmap_window_checked);
     xcb_void_cookie_t ret = orig::xcb_unmap_window_checked(c, window);
     return ret;
@@ -296,7 +296,7 @@ xcb_void_cookie_t xcb_unmap_window_checked (xcb_connection_t *c, xcb_window_t wi
 
 xcb_void_cookie_t xcb_unmap_window (xcb_connection_t *c, xcb_window_t window)
 {
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, window);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, window);
     LINK_NAMESPACE_GLOBAL(xcb_unmap_window);
     xcb_void_cookie_t ret = orig::xcb_unmap_window(c, window);
     return ret;
@@ -308,7 +308,7 @@ xcb_void_cookie_t xcb_configure_window_checked (xcb_connection_t *c, xcb_window_
     if (GlobalState::isNative())
         return orig::xcb_configure_window_checked(c, window, value_mask, value_list);
 
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, window);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, window);
 
     /* Disable window movement and get new size */
     uint32_t new_width = 0, new_height = 0;
@@ -358,7 +358,7 @@ xcb_void_cookie_t xcb_configure_window (xcb_connection_t *c, xcb_window_t window
     if (GlobalState::isNative())
         return orig::xcb_configure_window(c, window, value_mask, value_list);
 
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with window %d", __func__, window);
+    LOGTRACE(LCF_WINDOW, "%s called with window %d", __func__, window);
 
     /* Disable window movement and get new size */
     uint32_t new_width = 0, new_height = 0;

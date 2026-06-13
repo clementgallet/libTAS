@@ -32,7 +32,7 @@ DEFINE_ORIG_POINTER(socket)
 
 /* Override */ int socket (int domain, int type, int protocol) __THROW
 {
-    LOGTRACE(LCF_SOCKET);
+    LOGTRACE_SIMPLE(LCF_SOCKET);
     LINK_NAMESPACE_GLOBAL(socket);
 
     /* Passthrough socket call if this is a native call (e.g. ALSA init) or our own code (e.g. X connections) */

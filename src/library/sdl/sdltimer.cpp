@@ -27,13 +27,13 @@ namespace libtas {
 
 /* Override */ sdl2::SDL_TimerID SDL_AddTimer(Uint32 interval, sdl2::SDL_NewTimerCallback callback, void *param)
 {
-    LOG(LL_TRACE, LCF_TIMERS | LCF_SDL | LCF_TODO, "Add SDL Timer with call after %d ms", interval);
+    LOGTRACE(LCF_TIMERS | LCF_SDL | LCF_TODO, "Add SDL Timer with call after %d ms", interval);
     return ORIG_SDL2_CALL(SDL_AddTimer, (interval, callback, param));
 }
 
 /* Override */ SDL_bool SDL_RemoveTimer(sdl2::SDL_TimerID id)
 {
-    LOG(LL_TRACE, LCF_TIMERS | LCF_SDL | LCF_TODO, "Remove SDL Timer.");
+    LOGTRACE(LCF_TIMERS | LCF_SDL | LCF_TODO, "Remove SDL Timer.");
     return ORIG_SDL2_CALL(SDL_RemoveTimer, (id));
 }
 

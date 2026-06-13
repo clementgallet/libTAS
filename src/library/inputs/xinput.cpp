@@ -34,7 +34,7 @@ int XISelectEvents(Display* dpy, Window win, XIEventMask *masks, int num_masks)
 {
     RETURN_IF_NATIVE(XISelectEvents, (dpy, win, masks, num_masks), "libXi.so.6");
 
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
 
     /* Only check if not using SDL */
     if (masks) {
@@ -74,14 +74,14 @@ XIEventMask *XIGetSelectedEvents( Display *display, Window win, int *num_masks_r
 {
     RETURN_IF_NATIVE(XIGetSelectedEvents, (display, win, num_masks_return), "libXi.so.6");
 
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
 
     RETURN_NATIVE(XIGetSelectedEvents, (display, win, num_masks_return), "libXi.so.6");
 }
 
 XIDeviceInfo* XIQueryDevice(Display* dpy, int deviceid, int* ndevices_return)
 {
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
     
     int device_count = 0;
     switch (deviceid) {
@@ -191,7 +191,7 @@ XIDeviceInfo* XIQueryDevice(Display* dpy, int deviceid, int* ndevices_return)
 
 void XIFreeDeviceInfo( XIDeviceInfo *info)
 {
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
     
     if (!info)
         return;
@@ -226,13 +226,13 @@ void XIFreeDeviceInfo( XIDeviceInfo *info)
 
 int XIGrabTouchBegin(Display *display, int deviceid, Window grab_window, Bool owner_events, XIEventMask *mask, int num_modifiers, XIGrabModifiers *modifiers_inout)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
     return 0;
 }
 
 int XIUngrabTouchBegin( Display *display, int deviceid, Window grab_window, int num_modifiers, XIGrabModifiers *modifiers)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
     return 0;
 }
 

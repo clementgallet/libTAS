@@ -37,19 +37,19 @@ static ALCcontext dummyContext = -1;
 
 ALCboolean myalcSetThreadContext(ALCcontext *context)
 {
-    LOGTRACE(LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SOUND | LCF_TODO);
     return ALC_TRUE;
 }
 
 ALCcontext* myalcGetThreadContext(void)
 {
-    LOGTRACE(LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SOUND | LCF_TODO);
     return &dummyContext;
 }
 
 ALCdevice* myalcLoopbackOpenDeviceSOFT(const ALCchar *deviceName)
 {
-    LOGTRACE(LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SOUND | LCF_TODO);
     Global::game_info.audio |= GameInfo::OPENAL;
     Global::game_info.tosend = true;
     return &dummyDevice;
@@ -57,13 +57,13 @@ ALCdevice* myalcLoopbackOpenDeviceSOFT(const ALCchar *deviceName)
 
 ALCboolean myalcIsRenderFormatSupportedSOFT(ALCdevice *device, ALCsizei freq, ALCenum channels, ALCenum type)
 {
-    LOG(LL_TRACE, LCF_SOUND | LCF_TODO, " call with freq %d, channels %d and type %d", __func__, freq, channels, type);
+    LOGTRACE(LCF_SOUND | LCF_TODO, " call with freq %d, channels %d and type %d", __func__, freq, channels, type);
     return ALC_TRUE;
 }
 
 void myalcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffer, ALCsizei samples)
 {
-    LOGTRACE(LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SOUND | LCF_TODO);
     AudioContext& audiocontext = AudioContext::get();
     audiocontext.mixAllSources(samples*audiocontext.bytes_per_sample);
     memcpy(buffer, audiocontext.samples_data.data(), audiocontext.samples_byte_size);
@@ -71,31 +71,31 @@ void myalcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffer, ALCsizei samples
 
 const ALCchar* myalcGetStringiSOFT(ALCdevice *device, ALCenum paramName, ALCsizei index)
 {
-    LOGTRACE(LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SOUND | LCF_TODO);
     return "";
 }
 
 ALCboolean myalcResetDeviceSOFT(ALCdevice *device, const ALCint *attribs)
 {
-    LOGTRACE(LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SOUND | LCF_TODO);
     return ALC_TRUE;
 }
 
 void myalcDevicePauseSOFT(ALCdevice *device)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     AudioContext::get().paused = true;
 }
 
 void myalcDeviceResumeSOFT(ALCdevice *device)
 {
-    LOGTRACE(LCF_SOUND | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SOUND | LCF_TODO);
     AudioContext::get().paused = false;
 }
 
 void myalBufferSubDataSOFT(ALuint buffer, ALenum format, const ALvoid *data, ALsizei offset, ALsizei length)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s call - copy buffer sub data of format %d, length %d and offset %d into buffer %d", __func__, format, length, offset, buffer);
+    LOGTRACE(LCF_SOUND, "%s call - copy buffer sub data of format %d, length %d and offset %d into buffer %d", __func__, format, length, offset, buffer);
 
     AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
@@ -179,7 +179,7 @@ void myalBufferSubDataSOFT(ALuint buffer, ALenum format, const ALvoid *data, ALs
 
 void myalBufferDataStatic(ALint bid, ALenum format, const ALvoid* data, ALsizei size, ALsizei freq)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s call - copy buffer data of format %d, size %d and frequency %d into buffer %d", __func__, format, size, freq, bid);
+    LOGTRACE(LCF_SOUND, "%s call - copy buffer data of format %d, size %d and frequency %d into buffer %d", __func__, format, size, freq, bid);
     /* This function is OSX/iOS only, we do not need to implement it */
 }
 

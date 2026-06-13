@@ -34,7 +34,7 @@ Display* x11::gameDisplays[GAMEDISPLAYNUM] = {};
 
 Display *XOpenDisplay(const char *display_name)
 {
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
     LINK_NAMESPACE_GLOBAL(XOpenDisplay);
 
     Display* display;
@@ -67,7 +67,7 @@ Display *XOpenDisplay(const char *display_name)
 
 int XCloseDisplay(Display *display)
 {
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
 
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i] == display) {
@@ -84,7 +84,7 @@ int XCloseDisplay(Display *display)
 
 int XDisplayHeight(Display* display, int screen_number)
 {
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
 
     if (Global::shared_config.screen_height) {
         return Global::shared_config.screen_height;
@@ -95,7 +95,7 @@ int XDisplayHeight(Display* display, int screen_number)
 
 int XDisplayWidth(Display* display, int screen_number)
 {
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
 
     if (Global::shared_config.screen_width) {
         return Global::shared_config.screen_width;

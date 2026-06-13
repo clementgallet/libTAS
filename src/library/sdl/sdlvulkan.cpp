@@ -31,7 +31,7 @@ namespace libtas {
     if (GlobalState::isNative())
         return ORIG_SDL3_CALL(SDL_Vulkan_GetVkGetInstanceProcAddr, ());
 
-    LOGTRACE(LCF_SDL | LCF_VULKAN);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_VULKAN);
 
     return reinterpret_cast<sdl3::SDL_FunctionPointer>(&vkGetInstanceProcAddr);
 }

@@ -46,10 +46,8 @@ FILE *fopen (const char *filename, const char *modes)
     if (GlobalState::isNative())
         return orig::fopen(filename, modes);
 
-    if (filename && modes)
-        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename, modes);
-    else {
-        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename?filename:"<NULL>", modes?modes:"<NULL>");
+    LOGTRACE(LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename?filename:"<NULL>", modes?modes:"<NULL>");
+    if (!filename) {
         return orig::fopen(filename, modes);
     }
 
@@ -117,10 +115,9 @@ FILE *fopen64 (const char *filename, const char *modes)
     if (GlobalState::isNative())
         return orig::fopen64(filename, modes);
 
-    if (filename && modes)
-        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename, modes);
-    else {
-        LOG(LL_TRACE, LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename?filename:"<NULL>", modes?modes:"<NULL>");
+    LOGTRACE(LCF_FILEIO, "%s call with filename %s and mode %s", __func__, filename?filename:"<NULL>", modes?modes:"<NULL>");
+
+    if (!filename) {
         return orig::fopen64(filename, modes);
     }
 
@@ -188,7 +185,7 @@ int fclose (FILE *stream)
     if (GlobalState::isNative())
         return orig::fclose(stream);
 
-    LOGTRACE(LCF_FILEIO);
+    LOGTRACE_SIMPLE(LCF_FILEIO);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::fclose(stream);
@@ -214,6 +211,8 @@ int fileno (FILE *stream) __THROW
     if (GlobalState::isNative())
         return orig::fileno(stream);
 
+    LOGTRACE_SIMPLE(LCF_FILEIO);
+
     /* If the stream is a savefile, we need to look into the savefile to get the
      * fd, because our custom SaveFileStream does not have a native associated fd */
     const SaveFile* sf = SaveFileList::getSaveFile(stream);
@@ -221,8 +220,6 @@ int fileno (FILE *stream) __THROW
         LOG(LL_DEBUG, LCF_FILEIO, "Our custom savefile stream for %s does not have a valid fd. Subsequent operations may fail.", sf->filename.c_str());
         return sf->fd;
     }
-
-    LOGTRACE(LCF_FILEIO);
 
     return orig::fileno(stream);
 }

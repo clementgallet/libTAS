@@ -166,7 +166,7 @@ __attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
         return nullptr;
     }
 
-    LOG(LL_TRACE, LCF_HOOK, "%s call with file %s", __func__, (file!=nullptr)?file:"<NULL>");
+    LOGTRACE(LCF_HOOK, "%s call with file %s", __func__, (file!=nullptr)?file:"<NULL>");
     void *result = nullptr;
 
 #if defined(__APPLE__) && defined(__MACH__)
@@ -358,7 +358,7 @@ void *dlsym(void *handle, const char *name) __THROW {
         return ret;
     }
 
-    LOG(LL_TRACE, LCF_HOOK, "%s call with function %s %s", __func__, name, safe?"(safe)":"");
+    LOGTRACE(LCF_HOOK, "%s call with function %s %s", __func__, name, safe?"(safe)":"");
 
     /* Special cases when dlsym is called with dl* functions (yes, it happens...). */
     if (strcmp(name, "dlopen") == 0) {

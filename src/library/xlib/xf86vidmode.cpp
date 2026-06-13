@@ -29,7 +29,7 @@ namespace libtas {
 
 Bool XF86VidModeGetModeLine(Display* dpy, int screen, int* dotclock, XF86VidModeModeLine* modeline)
 {
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
 
     if (Global::shared_config.screen_width) {
         /* Fill the settings, using my monitor as reference, it
@@ -56,7 +56,7 @@ Bool XF86VidModeGetModeLine(Display* dpy, int screen, int* dotclock, XF86VidMode
 
 Bool XF86VidModeGetAllModeLines(Display *dpy, int screen, int *modecount_return, XF86VidModeModeInfo ***modesinfo)
 {
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
 
     if (Global::shared_config.screen_width) {
         /* If I understand correctly the doc, each individual XF86VidModeModeInfo

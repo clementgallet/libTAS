@@ -169,7 +169,7 @@ int XNextEvent(Display *display, XEvent *event_return)
         return orig::XNextEvent(display, event_return);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XNextEvent);
@@ -204,7 +204,7 @@ int XPeekEvent(Display *display, XEvent *event_return)
         return orig::XPeekEvent(display, event_return);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XPeekEvent);
@@ -239,7 +239,7 @@ int XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_retu
         return orig::XWindowEvent(display, w, event_mask, event_return);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XWindowEvent);
@@ -274,7 +274,7 @@ Bool XCheckWindowEvent(Display *display, Window w, long event_mask, XEvent *even
         return orig::XCheckWindowEvent(display, w, event_mask, event_return);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XCheckWindowEvent);
@@ -298,7 +298,7 @@ int XMaskEvent(Display *display, long event_mask, XEvent *event_return)
         return orig::XMaskEvent(display, event_mask, event_return);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XMaskEvent);
@@ -333,7 +333,7 @@ Bool XCheckMaskEvent(Display *display, long event_mask, XEvent *event_return)
         return orig::XCheckMaskEvent(display, event_mask, event_return);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XCheckMaskEvent);
@@ -361,7 +361,7 @@ Bool XCheckTypedEvent(Display *display, int event_type, XEvent *event_return)
         return orig::XCheckTypedEvent(display, event_type, event_return);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XCheckTypedEvent);
@@ -389,7 +389,7 @@ Bool XCheckTypedWindowEvent(Display *display, Window w, int event_type, XEvent *
         return orig::XCheckTypedWindowEvent(display, w, event_type, event_return);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XCheckTypedWindowEvent);
@@ -417,7 +417,7 @@ int XEventsQueued(Display* display, int mode)
         return orig::XEventsQueued(display, mode);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XEventsQueued);
@@ -445,7 +445,7 @@ int XPending(Display *display)
         return orig::XPending(display);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XPending);
@@ -472,7 +472,7 @@ int XIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Display *
         return orig::XIfEvent(display, event_return, predicate, arg);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XIfEvent);
@@ -511,7 +511,7 @@ Bool XCheckIfEvent(Display *display, XEvent *event_return, Bool (*predicate)(Dis
         return orig::XCheckIfEvent(display, event_return, predicate, arg);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XCheckIfEvent);
@@ -537,7 +537,7 @@ int XSendEvent(Display *display, Window w, Bool propagate, long event_mask, XEve
     if (GlobalState::isNative())
         return orig::XSendEvent(display, w, propagate, event_mask, event_send);
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     /* Detect and disable several window state changes */
     if (event_send->type == ClientMessage) {
@@ -602,7 +602,7 @@ Bool XFilterEvent(XEvent *event, Window w)
         return orig::XFilterEvent(event, w);
     }
     
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
     /* This is used when using composition, but we don't support it.
      * In the meanwhile, we disable it completely. Users that want to input
      * special characters can map in libTAS a key to that character.
@@ -617,7 +617,7 @@ int XFlush(Display *display)
         return orig::XFlush(display);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XFlush);
@@ -636,7 +636,7 @@ int XSync(Display *display, Bool discard)
         return orig::XSync(display, discard);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return orig::XSync(display, discard);
@@ -654,7 +654,7 @@ Bool XGetEventData(Display* dpy, XGenericEventCookie* cookie)
         return orig::XGetEventData(dpy, cookie);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XGetEventData);
@@ -678,7 +678,7 @@ void XFreeEventData(Display* dpy, XGenericEventCookie* cookie)
         return orig::XFreeEventData(dpy, cookie);
     }
 
-    LOGTRACE(LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         LINK_NAMESPACE_GLOBAL(XFreeEventData);

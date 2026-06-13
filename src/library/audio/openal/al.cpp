@@ -143,7 +143,7 @@ ALenum alGetError(ALvoid)
         alError = orig::alGetError();
     }
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call, returning %d", __func__, alError);
+    LOGTRACE(LCF_SOUND, "%s call, returning %d", __func__, alError);
     ALenum err = alError;
     alError = AL_NO_ERROR;
     return err;
@@ -157,7 +157,7 @@ ALenum alGetError(ALvoid)
 
 ALboolean alIsExtensionPresent(const ALchar *extname)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s call with extname %s", __func__, extname);
+    LOGTRACE(LCF_SOUND, "%s call with extname %s", __func__, extname);
     CHECK_USE_ALSOFT_FUNCTION(alIsExtensionPresent, extname)
 
     if (strcmp(extname, ALC_EXT_EFX_NAME) == 0) {
@@ -180,7 +180,7 @@ ALboolean alIsExtensionPresent(const ALchar *extname)
 
 void* alGetProcAddress(const ALchar *fname)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s call with name %s", __func__, fname);
+    LOGTRACE(LCF_SOUND, "%s call with name %s", __func__, fname);
     CHECK_USE_ALSOFT_FUNCTION(alGetProcAddress, fname)
 
     CHECK_RETURN_MY_FUNCTION(alGenEffects)
@@ -227,7 +227,7 @@ void* alGetProcAddress(const ALchar *fname)
 
 void alGenBuffers(ALsizei n, ALuint *buffers)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s call - generate %d buffers", __func__, n);
+    LOGTRACE(LCF_SOUND, "%s call - generate %d buffers", __func__, n);
     CHECK_USE_ALSOFT_FUNCTION(alGenBuffers, n, buffers)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -242,7 +242,7 @@ void alGenBuffers(ALsizei n, ALuint *buffers)
 
 void alDeleteBuffers(ALsizei n, ALuint *buffers)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s call - delete %d buffers", __func__, n);
+    LOGTRACE(LCF_SOUND, "%s call - delete %d buffers", __func__, n);
     CHECK_USE_ALSOFT_FUNCTION(alDeleteBuffers, n, buffers)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -261,7 +261,7 @@ void alDeleteBuffers(ALsizei n, ALuint *buffers)
 
 ALboolean alIsBuffer(ALuint buffer)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alIsBuffer, buffer)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -271,7 +271,7 @@ ALboolean alIsBuffer(ALuint buffer)
 
 void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size, ALsizei freq)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s call - copy buffer data of format %d, size %d and frequency %d into buffer %d", __func__, format, size, freq, buffer);
+    LOGTRACE(LCF_SOUND, "%s call - copy buffer data of format %d, size %d and frequency %d into buffer %d", __func__, format, size, freq, buffer);
     CHECK_USE_ALSOFT_FUNCTION(alBufferData, buffer, format, data, size, freq)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -352,7 +352,7 @@ void alBufferData(ALuint buffer, ALenum format, const ALvoid *data, ALsizei size
 
 void alBufferf(ALuint buffer, ALenum param, ALfloat value)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alBufferf, buffer, param, value)
 
     LOG(LL_DEBUG, LCF_SOUND, "Operation not supported");
@@ -360,7 +360,7 @@ void alBufferf(ALuint buffer, ALenum param, ALfloat value)
 
 void alBuffer3f(ALuint buffer, ALenum param, ALfloat value1, ALfloat value2, ALfloat value3)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alBuffer3f, buffer, param, value1, value2, value3)
 
     LOG(LL_DEBUG, LCF_SOUND, "Operation not supported");
@@ -368,7 +368,7 @@ void alBuffer3f(ALuint buffer, ALenum param, ALfloat value1, ALfloat value2, ALf
 
 void alBufferfv(ALuint buffer, ALenum param, const ALfloat *values)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alBufferfv, buffer, param, values)
 
     LOG(LL_DEBUG, LCF_SOUND, "Operation not supported");
@@ -376,7 +376,7 @@ void alBufferfv(ALuint buffer, ALenum param, const ALfloat *values)
 
 void alBufferi(ALuint buffer, ALenum param, ALint value)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alBufferi, buffer, param, value)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -402,7 +402,7 @@ void alBufferi(ALuint buffer, ALenum param, ALint value)
 
 void alBuffer3i(ALuint buffer, ALenum param, ALint value1, ALint value2, ALint value3)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alBuffer3i, buffer, param, value1, value2, value3)
 
     LOG(LL_DEBUG, LCF_SOUND, "Operation not supported");
@@ -410,7 +410,7 @@ void alBuffer3i(ALuint buffer, ALenum param, ALint value1, ALint value2, ALint v
 
 void alBufferiv(ALuint buffer, ALenum param, const ALint *values)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alBufferiv, buffer, param, values)
 
     if (values == nullptr) {
@@ -444,7 +444,7 @@ void alBufferiv(ALuint buffer, ALenum param, const ALint *values)
 
 void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alGetBufferi, buffer, pname, value)
 
     if (value == nullptr) {
@@ -488,7 +488,7 @@ void alGetBufferi(ALuint buffer, ALenum pname, ALint *value)
 
 void alGetBufferiv(ALuint buffer, ALenum pname, ALint *values)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alGetBufferiv, buffer, pname, values)
 
     if (values == nullptr) {
@@ -535,7 +535,7 @@ void alGetBufferiv(ALuint buffer, ALenum pname, ALint *values)
 
 void alGenSources(ALsizei n, ALuint *sources)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s call - generate %d sources", __func__, n);
+    LOGTRACE(LCF_SOUND, "%s call - generate %d sources", __func__, n);
     CHECK_USE_ALSOFT_FUNCTION(alGenSources, n, sources)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -554,7 +554,7 @@ void alGenSources(ALsizei n, ALuint *sources)
 
 void alDeleteSources(ALsizei n, ALuint *sources)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s call - delete %d sources", __func__, n);
+    LOGTRACE(LCF_SOUND, "%s call - delete %d sources", __func__, n);
     CHECK_USE_ALSOFT_FUNCTION(alDeleteSources, n, sources)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -577,7 +577,7 @@ void alDeleteSources(ALsizei n, ALuint *sources)
 
 ALboolean alIsSource(ALuint source)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alIsSource, source)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -587,7 +587,7 @@ ALboolean alIsSource(ALuint source)
 
 void alSourcef(ALuint source, ALenum param, ALfloat value)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s called with source %d", __func__, source);
+    LOGTRACE(LCF_SOUND, "%s called with source %d", __func__, source);
     CHECK_USE_ALSOFT_FUNCTION(alSourcef, source, param, value)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -679,7 +679,7 @@ void alSourcef(ALuint source, ALenum param, ALfloat value)
 
 void alSource3f(ALuint source, ALenum param, ALfloat v1, ALfloat v2, ALfloat v3)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s called with source %d", __func__, source);
+    LOGTRACE(LCF_SOUND, "%s called with source %d", __func__, source);
     CHECK_USE_ALSOFT_FUNCTION(alSource3f, source, param, v1, v2, v3)
 
     switch(param) {
@@ -697,7 +697,7 @@ void alSource3f(ALuint source, ALenum param, ALfloat v1, ALfloat v2, ALfloat v3)
 
 void alSourcefv(ALuint source, ALenum param, ALfloat *values)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s called with source %d", __func__, source);
+    LOGTRACE(LCF_SOUND, "%s called with source %d", __func__, source);
     CHECK_USE_ALSOFT_FUNCTION(alSourcefv, source, param, values)
 
     if (values == nullptr) {
@@ -717,7 +717,7 @@ void alSourcefv(ALuint source, ALenum param, ALfloat *values)
 
 void alSourcei(ALuint source, ALenum param, ALint value)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s called with source %d", __func__, source);
+    LOGTRACE(LCF_SOUND, "%s called with source %d", __func__, source);
     CHECK_USE_ALSOFT_FUNCTION(alSourcei, source, param, value)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -820,7 +820,7 @@ void alSourcei(ALuint source, ALenum param, ALint value)
 
 void alSource3i(ALuint source, ALenum param, ALint v1, ALint v2, ALint v3)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s called with source %d", __func__, source);
+    LOGTRACE(LCF_SOUND, "%s called with source %d", __func__, source);
     CHECK_USE_ALSOFT_FUNCTION(alSource3i, source, param, v1, v2, v3)
 
     switch(param) {
@@ -833,7 +833,7 @@ void alSource3i(ALuint source, ALenum param, ALint v1, ALint v2, ALint v3)
 
 void alSourceiv(ALuint source, ALenum param, ALint *values)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s called with source %d", __func__, source);
+    LOGTRACE(LCF_SOUND, "%s called with source %d", __func__, source);
     CHECK_USE_ALSOFT_FUNCTION(alSourceiv, source, param, values)
 
     if (values == nullptr) {
@@ -845,7 +845,7 @@ void alSourceiv(ALuint source, ALenum param, ALint *values)
 
 void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alGetSourcef, source, param, value)
 
     if (value == nullptr) {
@@ -909,7 +909,7 @@ void alGetSourcef(ALuint source, ALenum param, ALfloat *value)
 
 void alGetSource3f(ALuint source, ALenum param, ALfloat *v1, ALfloat *v2, ALfloat *v3)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alGetSource3f, source, param, v1, v2, v3)
 
     LOG(LL_DEBUG, LCF_SOUND, "Operation not supported");
@@ -917,7 +917,7 @@ void alGetSource3f(ALuint source, ALenum param, ALfloat *v1, ALfloat *v2, ALfloa
 
 void alGetSourcefv(ALuint source, ALenum param, ALfloat *values)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alGetSourcefv, source, param, values)
 
     alGetSourcef(source, param, values);
@@ -925,7 +925,7 @@ void alGetSourcefv(ALuint source, ALenum param, ALfloat *values)
 
 void alGetSourcei(ALuint source, ALenum param, ALint *value)
 {
-    LOG(LL_TRACE, LCF_SOUND, "%s call for source %d", __func__, source);
+    LOGTRACE(LCF_SOUND, "%s call for source %d", __func__, source);
     CHECK_USE_ALSOFT_FUNCTION(alGetSourcei, source, param, value)
 
     if (value == nullptr) {
@@ -1039,7 +1039,7 @@ void alGetSourcei(ALuint source, ALenum param, ALint *value)
 
 void alGetSource3i(ALuint source, ALenum param, ALint *v1, ALint *v2, ALint *v3)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alGetSource3i, source, param, v1, v2, v3)
 
     LOG(LL_DEBUG, LCF_SOUND, "Operation not supported");
@@ -1047,7 +1047,7 @@ void alGetSource3i(ALuint source, ALenum param, ALint *v1, ALint *v2, ALint *v3)
 
 void alGetSourceiv(ALuint source, ALenum param, ALint *values)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alGetSourceiv, source, param, values)
 
     alGetSourcei(source, param, values);
@@ -1055,7 +1055,7 @@ void alGetSourceiv(ALuint source, ALenum param, ALint *values)
 
 void alSourcePlay(ALuint source)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alSourcePlay, source)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -1073,7 +1073,7 @@ void alSourcePlay(ALuint source)
 
 void alSourcePlayv(ALsizei n, ALuint *sources)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alSourcePlayv, n, sources)
 
     for (int i=0; i<n; i++)
@@ -1082,7 +1082,7 @@ void alSourcePlayv(ALsizei n, ALuint *sources)
 
 void alSourcePause(ALuint source)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alSourcePause, source)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -1100,7 +1100,7 @@ void alSourcePause(ALuint source)
 
 void alSourcePausev(ALsizei n, ALuint *sources)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alSourcePausev, n, sources)
 
     for (int i=0; i<n; i++)
@@ -1109,7 +1109,7 @@ void alSourcePausev(ALsizei n, ALuint *sources)
 
 void alSourceStop(ALuint source)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alSourceStop, source)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -1128,7 +1128,7 @@ void alSourceStop(ALuint source)
 
 void alSourceStopv(ALsizei n, ALuint *sources)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alSourceStopv, n, sources)
 
     for (int i=0; i<n; i++)
@@ -1137,7 +1137,7 @@ void alSourceStopv(ALsizei n, ALuint *sources)
 
 void alSourceRewind(ALuint source)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alSourceRewind, source)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -1156,7 +1156,7 @@ void alSourceRewind(ALuint source)
 
 void alSourceRewindv(ALsizei n, ALuint *sources)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alSourceRewindv, n, sources)
 
     for (int i=0; i<n; i++)
@@ -1165,7 +1165,7 @@ void alSourceRewindv(ALsizei n, ALuint *sources)
 
 void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 {
-    LOG(LL_TRACE, LCF_SOUND, "Pushing %d buffers in the queue of source ", n, source);
+    LOGTRACE(LCF_SOUND, "Pushing %d buffers in the queue of source ", n, source);
     CHECK_USE_ALSOFT_FUNCTION(alSourceQueueBuffers, source, n, buffers)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -1194,7 +1194,7 @@ void alSourceQueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 
 void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alSourceUnqueueBuffers, source, n, buffers)
 
     AudioContext& audiocontext = AudioContext::get();
@@ -1229,7 +1229,7 @@ void alSourceUnqueueBuffers(ALuint source, ALsizei n, ALuint* buffers)
 
 void alListenerf(ALenum param, ALfloat value)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alListenerf, param, value)
 
     if (param == AL_GAIN)
@@ -1238,7 +1238,7 @@ void alListenerf(ALenum param, ALfloat value)
 
 void alListener3f(ALenum param, ALfloat v1, ALfloat v2, ALfloat v3)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alListener3f, param, v1, v2, v3)
 
     switch(param) {
@@ -1254,7 +1254,7 @@ void alListener3f(ALenum param, ALfloat v1, ALfloat v2, ALfloat v3)
 
 void alListenerfv(ALenum param, ALfloat *values)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alListenerfv, param, values)
 
     switch(param) {
@@ -1267,7 +1267,7 @@ void alListenerfv(ALenum param, ALfloat *values)
 
 void alListeneri(ALenum param, ALint value)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alListeneri, param, value)
 
     LOG(LL_DEBUG, LCF_SOUND, "Operation not supported");
@@ -1275,7 +1275,7 @@ void alListeneri(ALenum param, ALint value)
 
 void alListener3i(ALenum param, ALint v1, ALint v2, ALint v3)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alListener3i, param, v1, v2, v3)
 
     LOG(LL_DEBUG, LCF_SOUND, "Operation not supported");
@@ -1283,7 +1283,7 @@ void alListener3i(ALenum param, ALint v1, ALint v2, ALint v3)
 
 void alListeneriv(ALenum param, ALint *values)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alListeneriv, param, values)
 
     LOG(LL_DEBUG, LCF_SOUND, "Operation not supported");
@@ -1291,7 +1291,7 @@ void alListeneriv(ALenum param, ALint *values)
 
 void alGetListenerf(ALenum param, ALfloat *value)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alGetListenerf, param, value)
 
     if (param == AL_GAIN) {
@@ -1305,7 +1305,7 @@ void alGetListenerf(ALenum param, ALfloat *value)
 
 void alGetListener3f(ALenum param, ALfloat *v1, ALfloat *v2, ALfloat *v3)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alGetListener3f, param, v1, v2, v3)
 
     LOG(LL_DEBUG, LCF_SOUND, "Operation not supported");
@@ -1313,7 +1313,7 @@ void alGetListener3f(ALenum param, ALfloat *v1, ALfloat *v2, ALfloat *v3)
 
 void alGetListenerfv(ALenum param, ALfloat *values)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alGetListenerfv, param, values)
 
     if (param == AL_GAIN)
@@ -1324,7 +1324,7 @@ void alGetListenerfv(ALenum param, ALfloat *values)
 
 void alGetListeneri(ALenum param, ALint *value)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alGetListeneri, param, value)
 
     LOG(LL_DEBUG, LCF_SOUND, "Operation not supported");
@@ -1332,7 +1332,7 @@ void alGetListeneri(ALenum param, ALint *value)
 
 void alGetListener3i(ALenum param, ALint *v1, ALint *v2, ALint *v3)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alGetListener3i, param, v1, v2, v3)
 
     LOG(LL_DEBUG, LCF_SOUND, "Operation not supported");
@@ -1340,7 +1340,7 @@ void alGetListener3i(ALenum param, ALint *v1, ALint *v2, ALint *v3)
 
 void alGetListeneriv(ALenum param, ALint *values)
 {
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     CHECK_USE_ALSOFT_FUNCTION(alGetListeneriv, param, values)
 
     LOG(LL_DEBUG, LCF_SOUND, "Operation not supported");

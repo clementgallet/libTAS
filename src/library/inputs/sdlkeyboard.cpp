@@ -33,13 +33,13 @@ static Uint8 SDL1_keyboard[sdl1::SDLK_LAST] = {0};
 
 /* Override */ bool SDL_HasKeyboard(void)
 {
-    LOGTRACE(LCF_SDL | LCF_KEYBOARD);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_KEYBOARD);
     return true;
 }
 
 /* Override */ sdl3::SDL_KeyboardID * SDL_GetKeyboards(int *count)
 {
-    LOGTRACE(LCF_SDL | LCF_KEYBOARD);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_KEYBOARD);
 
     if (count)
         *count = 1;
@@ -53,7 +53,7 @@ static Uint8 SDL1_keyboard[sdl1::SDLK_LAST] = {0};
 
 /* Override */ const Uint8* SDL_GetKeyboardState( int* numkeys)
 {
-    LOGTRACE(LCF_SDL | LCF_KEYBOARD);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_KEYBOARD);
 
     if (numkeys)
         *numkeys = sdl2::SDL_NUM_SCANCODES;
@@ -64,7 +64,7 @@ static Uint8 SDL1_keyboard[sdl1::SDLK_LAST] = {0};
 
 /* Override */ Uint8* SDL_GetKeyState( int* numkeys)
 {
-    LOGTRACE(LCF_SDL | LCF_KEYBOARD);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_KEYBOARD);
 
     if (numkeys)
         *numkeys = sdl1::SDLK_LAST;
@@ -75,19 +75,19 @@ static Uint8 SDL1_keyboard[sdl1::SDLK_LAST] = {0};
 
 /* Override */ SDL_Window* SDL_GetKeyboardFocus(void)
 {
-    LOGTRACE(LCF_SDL | LCF_KEYBOARD);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_KEYBOARD);
     return sdl::gameSDLWindow;
 }
 
 /* Override */ sdl2::SDL_Keymod SDL_GetModState(void)
 {
-    LOGTRACE(LCF_SDL | LCF_KEYBOARD);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_KEYBOARD);
     return xkeyboardToSDLMod(Inputs::game_ai.keyboard);
 }
 
 /* Override */ void SDL_SetModState(sdl2::SDL_Keymod modstate)
 {
-    LOGTRACE(LCF_SDL | LCF_KEYBOARD | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_KEYBOARD | LCF_TODO);
 }
 
 }

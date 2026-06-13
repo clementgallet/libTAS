@@ -59,7 +59,7 @@ static int signalMaskBit(int sig)
 
 /* Override */ sighandler_t signal (int sig, sighandler_t handler) __THROW
 {
-    LOGTRACE(LCF_SIGNAL);
+    LOGTRACE_SIMPLE(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(signal);
 
     /* Our checkpoint code uses signals, so we must prevent the game from
@@ -99,7 +99,7 @@ static int signalMaskBit(int sig)
     
 /* Override */ int sigblock (int mask) __THROW
 {
-    LOGTRACE(LCF_SIGNAL);
+    LOGTRACE_SIMPLE(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigblock);
 
     static const int bannedMask = signalMaskBit(SaveStateManager::sigSuspend()) | signalMaskBit(SaveStateManager::sigCheckpoint());
@@ -124,7 +124,7 @@ static int signalMaskBit(int sig)
 
 /* Override */ int sigsetmask (int mask) __THROW
 {
-    LOGTRACE(LCF_SIGNAL);
+    LOGTRACE_SIMPLE(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigsetmask);
 
     static const int bannedMask = signalMaskBit(SaveStateManager::sigSuspend()) | signalMaskBit(SaveStateManager::sigCheckpoint());
@@ -150,7 +150,7 @@ static int signalMaskBit(int sig)
 
 /* Override */ int siggetmask (void) __THROW
 {
-    LOGTRACE(LCF_SIGNAL);
+    LOGTRACE_SIMPLE(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(siggetmask);
 
     int oldmask = orig::siggetmask();
@@ -166,7 +166,7 @@ static int signalMaskBit(int sig)
 
 /* Override */ int sigprocmask (int how, const sigset_t *set, sigset_t *oset) __THROW
 {
-    LOGTRACE(LCF_SIGNAL);
+    LOGTRACE_SIMPLE(LCF_SIGNAL);
     LINK_NAMESPACE_GLOBAL(sigprocmask);
 
     if (GlobalState::isNative())
@@ -216,7 +216,7 @@ static int signalMaskBit(int sig)
 
 /* Override */ int sigsuspend (const sigset_t *set)
 {
-    LOGTRACE(LCF_SIGNAL | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SIGNAL | LCF_TODO);
     LINK_NAMESPACE_GLOBAL(sigsuspend);
 
     sigset_t tmp;
@@ -239,7 +239,7 @@ static int signalMaskBit(int sig)
         return orig::sigaction(sig, act, oact);
     }
 
-    LOGTRACE(LCF_SIGNAL);
+    LOGTRACE_SIMPLE(LCF_SIGNAL);
 
     /* Our checkpoint code uses signals, so we must prevent the game from
      * signaling threads at the same time.
@@ -308,26 +308,26 @@ static int signalMaskBit(int sig)
 
 /* Override */ int sigpending (sigset_t *set) __THROW
 {
-    LOGTRACE(LCF_SIGNAL | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SIGNAL | LCF_TODO);
     RETURN_NATIVE(sigpending, (set), nullptr);
 }
 
 /* Override */ int sigwait (const sigset_t *set, int *sig)
 {
-    LOGTRACE(LCF_SIGNAL | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SIGNAL | LCF_TODO);
     RETURN_NATIVE(sigwait, (set, sig), nullptr);
 }
 
 /* Override */ int sigwaitinfo (const sigset_t *set, siginfo_t *info)
 {
-    LOGTRACE(LCF_SIGNAL | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SIGNAL | LCF_TODO);
     RETURN_NATIVE(sigwaitinfo, (set, info), nullptr);
 }
 
 /* Override */ int sigtimedwait (const sigset_t *set,
     siginfo_t *info, const struct timespec *timeout)
 {
-    LOGTRACE(LCF_SIGNAL | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SIGNAL | LCF_TODO);
     RETURN_NATIVE(sigtimedwait, (set, info, timeout), nullptr);
 }
 
@@ -337,7 +337,7 @@ static int signalMaskBit(int sig)
     if (GlobalState::isNative())
         return orig::sigaltstack(ss, oss);
 
-    LOGTRACE(LCF_SIGNAL);
+    LOGTRACE_SIMPLE(LCF_SIGNAL);
 
     if (ss) {
         LOG(LL_DEBUG, LCF_SIGNAL, "    Setting altstack with base address %p and size %d", ss->ss_sp, ss->ss_size);
@@ -355,7 +355,7 @@ static int signalMaskBit(int sig)
 /* Override */ int pthread_sigmask (int how, const sigset_t *newmask,
     sigset_t *oldmask) __THROW
 {
-    LOGTRACE(LCF_SIGNAL | LCF_THREAD);
+    LOGTRACE_SIMPLE(LCF_SIGNAL | LCF_THREAD);
     LINK_NAMESPACE_GLOBAL(pthread_sigmask);
 
     /* This is a bit of a workaround. We still want native threads
@@ -477,7 +477,7 @@ static int signalMaskBit(int sig)
     if (GlobalState::isNative())
         return orig::pthread_kill(threadid, signo);
 
-    LOG(LL_TRACE, LCF_SIGNAL | LCF_THREAD, "%s called with thread %p and signo %d", __func__, threadid, signo);
+    LOGTRACE(LCF_SIGNAL | LCF_THREAD, "%s called with thread %p and signo %d", __func__, threadid, signo);
 
     /* Our checkpoint code uses signals, so we must prevent the game from
      * signaling threads at the same time.
@@ -492,7 +492,7 @@ static int signalMaskBit(int sig)
 /* Override */ int pthread_sigqueue (pthread_t threadid, int signo,
                  const union sigval value) __THROW
 {
-    LOGTRACE(LCF_SIGNAL | LCF_THREAD);
+    LOGTRACE_SIMPLE(LCF_SIGNAL | LCF_THREAD);
     RETURN_NATIVE(pthread_sigqueue, (threadid, signo, value), nullptr);
 }
 

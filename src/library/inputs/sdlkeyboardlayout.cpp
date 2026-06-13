@@ -334,7 +334,7 @@ unsigned char GetScanFromKey1(sdl1::SDLKey key){
 
 /* Override */ sdl2::SDL_Keycode sdl2::SDL_GetKeyFromScancode(sdl2::SDL_Scancode scancode)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_KEYBOARD, "%s called with scancode %d", __func__, (int)scancode);
+    LOGTRACE(LCF_SDL | LCF_KEYBOARD, "%s called with scancode %d", __func__, (int)scancode);
     sdl2::SDL_Keycode keycode = SDL2_default_keymap[scancode];
     LOG(LL_DEBUG, LCF_SDL | LCF_KEYBOARD, "   returning %d", keycode);
     return keycode;
@@ -342,7 +342,7 @@ unsigned char GetScanFromKey1(sdl1::SDLKey key){
 
 /* Override */ sdl2::SDL_Scancode sdl2::SDL_GetScancodeFromKey(sdl2::SDL_Keycode key)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_KEYBOARD, "%s called with key %d", __func__, key);
+    LOGTRACE(LCF_SDL | LCF_KEYBOARD, "%s called with key %d", __func__, key);
     sdl2::SDL_Scancode scancode = GetScanFromKey(key);
     LOG(LL_DEBUG, LCF_SDL | LCF_KEYBOARD, "   returning %d", scancode);
     return scancode;
@@ -350,7 +350,7 @@ unsigned char GetScanFromKey1(sdl1::SDLKey key){
 
 sdl3::SDL_Keycode sdl3::SDL_GetKeyFromScancode(sdl3::SDL_Scancode scancode, sdl3::SDL_Keymod modstate, bool key_event)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_KEYBOARD, "%s called with scancode %d, modstate %d, key_event %d", __func__, (int)scancode, modstate, key_event);
+    LOGTRACE(LCF_SDL | LCF_KEYBOARD, "%s called with scancode %d, modstate %d, key_event %d", __func__, (int)scancode, modstate, key_event);
     /* TODO: Implement proper key code retrieval based on modifier state and key event flag */
     sdl3::SDL_Keycode keycode = SDL2_default_keymap[scancode];
     LOG(LL_DEBUG, LCF_SDL | LCF_KEYBOARD, "   returning %d", keycode);
@@ -359,7 +359,7 @@ sdl3::SDL_Keycode sdl3::SDL_GetKeyFromScancode(sdl3::SDL_Scancode scancode, sdl3
 
 sdl3::SDL_Scancode sdl3::SDL_GetScancodeFromKey(sdl3::SDL_Keycode key, sdl3::SDL_Keymod *modstate)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_KEYBOARD, "%s called with key %d", __func__, key);
+    LOGTRACE(LCF_SDL | LCF_KEYBOARD, "%s called with key %d", __func__, key);
     sdl3::SDL_Scancode scancode = static_cast<sdl3::SDL_Scancode>(GetScanFromKey(static_cast<sdl2::SDL_Keycode>(key)));
     if (modstate) {
         *modstate = 0; // Initialize modifier state

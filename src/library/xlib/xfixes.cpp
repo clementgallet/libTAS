@@ -26,13 +26,13 @@ namespace libtas {
 
 PointerBarrier XFixesCreatePointerBarrier(Display *dpy, Window w, int x1, int y1, int x2, int y2, int directions, int num_devices, int *devices)
 {
-    LOGTRACE(LCF_WINDOW | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_MOUSE);
     return 1;
 }
 
 void XFixesDestroyPointerBarrier(Display *dpy, PointerBarrier b)
 {
-    LOGTRACE(LCF_WINDOW | LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_MOUSE);
 }
 
 }

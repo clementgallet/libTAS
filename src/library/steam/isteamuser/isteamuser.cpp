@@ -43,7 +43,7 @@ static const char *steamuser_version = NULL;
 
 void SteamSetUserDataFolder(std::string path)
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     strncpy(steamuserdir, path.c_str(), sizeof(steamuserdir)-1);
     steamuserdir[sizeof(steamuserdir)-1] = '\0';
 }
@@ -96,7 +96,7 @@ void SteamUser_set_version(const char *version)
 
 struct ISteamUser *SteamUser(void)
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamUser, "steam_api");
@@ -119,25 +119,25 @@ struct ISteamUser *SteamUser(void)
 
 HSteamUser ISteamUser_GetHSteamUser()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return 1;
 }
 
 bool ISteamUser_BLoggedOn()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return false; // Required for N++ to pass the splash screen
 }
 
 CSteamID ISteamUser_GetSteamID()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return 1;
 }
 
 int ISteamUser_InitiateGameConnection( void *pAuthBlob, int cbMaxAuthBlob, CSteamID steamIDGameServer, unsigned int unIPServer, uint16_t usPortServer, bool bSecure )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 
     if(!pAuthBlob || cbMaxAuthBlob < 1)
         return 0;
@@ -148,17 +148,17 @@ int ISteamUser_InitiateGameConnection( void *pAuthBlob, int cbMaxAuthBlob, CStea
 
 void ISteamUser_TerminateGameConnection( unsigned int unIPServer, uint16_t usPortServer )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 }
 
 void ISteamUser_TrackAppUsageEvent( CGameID gameID, int eAppUsageEvent, const char *pchExtraInfo )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 }
 
 bool ISteamUser_GetUserDataFolder( char *pchBuffer, int cubBuffer )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (pchBuffer == nullptr || cubBuffer <= 0)
         return false;
 
@@ -170,41 +170,41 @@ bool ISteamUser_GetUserDataFolder( char *pchBuffer, int cubBuffer )
 
 void ISteamUser_StartVoiceRecording()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 }
 
 void ISteamUser_StopVoiceRecording()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 }
 
 EVoiceResult ISteamUser_GetAvailableVoice( unsigned int *pcbCompressed, unsigned int *pcbUncompressed_Deprecated, unsigned int nUncompressedVoiceDesiredSampleRate_Deprecated)
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return 3; //k_EVoiceResultNoData
 }
 
 EVoiceResult ISteamUser_GetVoice( bool bWantCompressed, void *pDestBuffer, unsigned int cbDestBufferSize, unsigned int *nBytesWritten, bool bWantUncompressed_Deprecated, void *pUncompressedDestBuffer_Deprecated, unsigned int cbUncompressedDestBufferSize_Deprecated, unsigned int *nUncompressBytesWritten_Deprecated, unsigned int nUncompressedVoiceDesiredSampleRate_Deprecated)
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return 3; //k_EVoiceResultNoData
 }
 
 EVoiceResult ISteamUser_DecompressVoice( const void *pCompressed, unsigned int cbCompressed, void *pDestBuffer, unsigned int cbDestBufferSize, unsigned int *nBytesWritten, unsigned int nDesiredSampleRate )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return 3; //k_EVoiceResultNoData
 }
 
 unsigned int ISteamUser_GetVoiceOptimalSampleRate()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return 44100;
 }
 
 HAuthTicket ISteamUser_GetAuthSessionTicket( void *pTicket, int cbMaxTicket, unsigned int *pcbTicket )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     // if (pcbTicket)
     //     *pcbTicket = 8;
     return 1;
@@ -212,7 +212,7 @@ HAuthTicket ISteamUser_GetAuthSessionTicket( void *pTicket, int cbMaxTicket, uns
 
 HAuthTicket ISteamUser_GetAuthTicketForWebApi( const char *pchIdentity )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     // if (pcbTicket)
     //     *pcbTicket = 8;
     return 1;
@@ -220,18 +220,18 @@ HAuthTicket ISteamUser_GetAuthTicketForWebApi( const char *pchIdentity )
     
 EBeginAuthSessionResult ISteamUser_BeginAuthSession( const void *pAuthTicket, int cbAuthTicket, CSteamID steamID )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return 0; //k_EBeginAuthSessionResultOK;
 }
 
 void ISteamUser_EndAuthSession( CSteamID steamID )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 }
 
 void ISteamUser_CancelAuthTicket( HAuthTicket hAuthTicket )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 }
 
 }

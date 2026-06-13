@@ -69,7 +69,7 @@ static char* mutable_config_locale()
 
 /* Override */ char *setlocale (int category, const char *locale) __THROW
 {
-    LOG(LL_TRACE, LCF_LOCALE, "%s called with category %d and locale %s", __func__, category, locale?locale:"<NULL>");
+    LOGTRACE(LCF_LOCALE, "%s called with category %d and locale %s", __func__, category, locale?locale:"<NULL>");
     char* mylocale = mutable_config_locale();
     if (mylocale[0] == '\0') {
         /* Return native locale */
@@ -83,7 +83,7 @@ char *getenv (const char *name) __THROW
 {
     RETURN_IF_NATIVE(getenv, (name), nullptr);
 
-    LOG(LL_TRACE, LCF_LOCALE, "%s called with name %s", __func__, name);
+    LOGTRACE(LCF_LOCALE, "%s called with name %s", __func__, name);
     if (0 == strncmp(name, "LANG", 4)) {
         char* mylocale = mutable_config_locale();
         if (mylocale[0] != '\0') {

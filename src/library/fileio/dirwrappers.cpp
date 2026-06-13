@@ -63,7 +63,7 @@ DIR *opendir (const char *name)
     if (GlobalState::isNative())
         return d;
 
-    LOG(LL_TRACE, LCF_FILEIO, "%s call with dir %s", __func__, name);
+    LOGTRACE(LCF_FILEIO, "%s call with dir %s", __func__, name);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return d;
@@ -102,7 +102,7 @@ DIR *fdopendir (int fd)
     if (GlobalState::isNative())
         return d;
 
-    LOG(LL_TRACE, LCF_FILEIO, "%s call with fd %d", __func__, fd);
+    LOGTRACE(LCF_FILEIO, "%s call with fd %d", __func__, fd);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return d;
@@ -154,7 +154,7 @@ int closedir (DIR *dirp)
     if (GlobalState::isNative())
         return ret;
 
-    LOG(LL_TRACE, LCF_FILEIO, "%s call", __func__);
+    LOGTRACE(LCF_FILEIO, "%s call", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return ret;
@@ -185,7 +185,7 @@ struct dirent *readdir (DIR *dirp)
     if (GlobalState::isNative())
         return orig::readdir(dirp);
 
-    LOG(LL_TRACE, LCF_FILEIO, "%s call", __func__);
+    LOGTRACE(LCF_FILEIO, "%s call", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::readdir(dirp);
@@ -262,7 +262,7 @@ struct dirent64 *readdir64 (DIR *dirp)
     if (GlobalState::isNative())
         return orig::readdir64(dirp);
 
-    LOG(LL_TRACE, LCF_FILEIO, "%s call", __func__);
+    LOGTRACE(LCF_FILEIO, "%s call", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::readdir64(dirp);
@@ -337,7 +337,7 @@ int readdir_r (DIR *dirp, struct dirent *entry, struct dirent **result)
     if (GlobalState::isNative())
         return orig::readdir_r(dirp, entry, result);
 
-    LOG(LL_TRACE, LCF_FILEIO, "%s call", __func__);
+    LOGTRACE(LCF_FILEIO, "%s call", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::readdir_r(dirp, entry, result);
@@ -410,7 +410,7 @@ int readdir64_r (DIR *dirp, struct dirent64 *entry, struct dirent64 **result)
     if (GlobalState::isNative())
         return orig::readdir64_r(dirp, entry, result);
 
-    LOG(LL_TRACE, LCF_FILEIO, "%s call", __func__);
+    LOGTRACE(LCF_FILEIO, "%s call", __func__);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_FILEIO)
         return orig::readdir64_r(dirp, entry, result); 

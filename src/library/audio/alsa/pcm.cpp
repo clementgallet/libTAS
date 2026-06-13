@@ -50,7 +50,7 @@ int snd_pcm_open(snd_pcm_t **pcm, const char *name, snd_pcm_stream_t stream, int
 {
     RETURN_IF_NATIVE(snd_pcm_open, (pcm, name, stream, mode), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     if (Global::shared_config.audio_disabled)
         return -1;
@@ -92,7 +92,7 @@ int snd_pcm_open_lconf(snd_pcm_t **pcm, const char *name,
 {
     RETURN_IF_NATIVE(snd_pcm_open_lconf, (pcm, name, stream, mode, lconf), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return snd_pcm_open(pcm, name, stream, mode);
 }
 
@@ -102,7 +102,7 @@ int snd_pcm_open_fallback(snd_pcm_t **pcm, snd_config_t *root,
 {
     RETURN_IF_NATIVE(snd_pcm_open_fallback, (pcm, root, name, orig_name, stream, mode), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return snd_pcm_open(pcm, name, stream, mode);
 }
 
@@ -110,7 +110,7 @@ int snd_pcm_close(snd_pcm_t *pcm)
 {
     RETURN_IF_NATIVE(snd_pcm_close, (pcm), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     AudioContext& audiocontext = AudioContext::get();
     std::lock_guard<std::mutex> lock(audiocontext.mutex);
 
@@ -129,7 +129,7 @@ int snd_pcm_poll_descriptors_count(snd_pcm_t *pcm)
 {
     RETURN_IF_NATIVE(snd_pcm_poll_descriptors_count, (pcm), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return 1;
 }
 
@@ -137,7 +137,7 @@ int snd_pcm_poll_descriptors(snd_pcm_t *pcm, struct pollfd *pfds, unsigned int s
 {
     RETURN_IF_NATIVE(snd_pcm_poll_descriptors, (pcm, pfds, space), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     if (pfds) {
         /* Use a magic number to identify the fake ALSA fd, and use the last
@@ -153,7 +153,7 @@ int snd_pcm_poll_descriptors_revents(snd_pcm_t *pcm, struct pollfd *pfds, unsign
 {
     RETURN_IF_NATIVE(snd_pcm_poll_descriptors_revents, (pcm, pfds, nfds, revents), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     /* We don't handle audio capture anyway, so there's only one possible value */
     if (revents)
@@ -166,7 +166,7 @@ int snd_pcm_info(snd_pcm_t *pcm, snd_pcm_info_t *info)
 {
     RETURN_IF_NATIVE(snd_pcm_info, (pcm, info), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return 0;
 }
 
@@ -174,7 +174,7 @@ int snd_pcm_nonblock(snd_pcm_t *pcm, int nonblock)
 {
     RETURN_IF_NATIVE(snd_pcm_nonblock, (pcm, nonblock), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with %s mode", __func__, nonblock==0?"block":((nonblock==1)?"nonblock":"abort"));
+    LOGTRACE(LCF_SOUND, "%s call with %s mode", __func__, nonblock==0?"block":((nonblock==1)?"nonblock":"abort"));
     if (nonblock == 0) {
         block_mode = true;
     }
@@ -189,7 +189,7 @@ int snd_async_add_pcm_handler(snd_async_handler_t **handler, snd_pcm_t *pcm, snd
 {
     RETURN_IF_NATIVE(snd_async_add_pcm_handler, (handler, pcm, callback, private_data), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     AudioContext& audiocontext = AudioContext::get();
     int sourceId = reinterpret_cast<intptr_t>(pcm);
@@ -214,7 +214,7 @@ snd_pcm_t *snd_async_handler_get_pcm(snd_async_handler_t *handler)
 {
     RETURN_IF_NATIVE(snd_async_handler_get_pcm, (handler), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     return reinterpret_cast<snd_pcm_t *>(handler);
 }
@@ -223,7 +223,7 @@ void *snd_async_handler_get_callback_private(snd_async_handler_t *handler)
 {
     RETURN_IF_NATIVE(snd_async_handler_get_callback_private, (handler), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     AudioContext& audiocontext = AudioContext::get();
     int sourceId = reinterpret_cast<intptr_t>(handler);
@@ -236,7 +236,7 @@ int snd_async_del_handler(snd_async_handler_t *handler)
 {
     RETURN_IF_NATIVE(snd_async_del_handler, (handler), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     AudioContext& audiocontext = AudioContext::get();
     int sourceId = reinterpret_cast<intptr_t>(handler);
@@ -250,7 +250,7 @@ int snd_pcm_start(snd_pcm_t *pcm)
 {
     RETURN_IF_NATIVE(snd_pcm_start, (pcm), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = AudioContext::get().getSource(sourceId);
     source->state = AudioSource::SOURCE_PLAYING;
@@ -262,7 +262,7 @@ int snd_pcm_drop(snd_pcm_t *pcm)
 {
     RETURN_IF_NATIVE(snd_pcm_drop, (pcm), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = AudioContext::get().getSource(sourceId);
     source->setPosition(source->queueSize());
@@ -273,7 +273,7 @@ int snd_pcm_hw_params_can_pause(const snd_pcm_hw_params_t *params)
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_can_pause, (params), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return 1;
 }
 
@@ -281,7 +281,7 @@ int snd_pcm_pause(snd_pcm_t *pcm, int enable)
 {
     RETURN_IF_NATIVE(snd_pcm_pause, (pcm, enable), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = AudioContext::get().getSource(sourceId);
@@ -297,7 +297,7 @@ snd_pcm_state_t snd_pcm_state(snd_pcm_t *pcm)
 {
     RETURN_IF_NATIVE(snd_pcm_state, (pcm), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source =  AudioContext::get().getSource(sourceId);
@@ -323,7 +323,7 @@ int snd_pcm_resume(snd_pcm_t *pcm)
 {
     RETURN_IF_NATIVE(snd_pcm_resume, (pcm), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source =  AudioContext::get().getSource(sourceId);
     source->state = AudioSource::SOURCE_PLAYING;
@@ -335,7 +335,7 @@ int snd_pcm_wait(snd_pcm_t *pcm, int timeout)
 {
     RETURN_IF_NATIVE(snd_pcm_wait, (pcm, timeout), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s called with timeout %d", __func__, timeout);
+    LOGTRACE(LCF_SOUND, "%s called with timeout %d", __func__, timeout);
 
     /* Check for no more available samples */
     int delta_ms = -1;
@@ -381,7 +381,7 @@ int snd_pcm_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delayp)
 {
     RETURN_IF_NATIVE(snd_pcm_delay, (pcm, delayp), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     *delayp = get_latency(pcm);
     LOG(LL_DEBUG, LCF_SOUND, "   return %d", *delayp);
     return 0;
@@ -391,7 +391,7 @@ snd_pcm_sframes_t snd_pcm_avail(snd_pcm_t *pcm)
 {
     RETURN_IF_NATIVE(snd_pcm_avail, (pcm), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     snd_pcm_sframes_t avail = buffer_size - get_latency(pcm);
     if (avail<0)
         avail = 0;
@@ -403,7 +403,7 @@ snd_pcm_sframes_t snd_pcm_avail_update(snd_pcm_t *pcm)
 {
     RETURN_IF_NATIVE(snd_pcm_avail_update, (pcm), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     snd_pcm_sframes_t avail = buffer_size - get_latency(pcm);
     if (avail<0)
         avail = 0;
@@ -415,7 +415,7 @@ snd_pcm_sframes_t snd_pcm_rewind(snd_pcm_t *pcm, snd_pcm_uframes_t frames)
 {
     RETURN_IF_NATIVE(snd_pcm_rewind, (pcm, frames), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source =  AudioContext::get().getSource(sourceId);
     snd_pcm_uframes_t pos = source->getPosition();
@@ -430,7 +430,7 @@ int snd_pcm_recover(snd_pcm_t *pcm, int err, int silent)
 {
     RETURN_IF_NATIVE(snd_pcm_recover, (pcm, err, silent), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     if (err == -EPIPE) {
         int sourceId = reinterpret_cast<intptr_t>(pcm);
@@ -452,7 +452,7 @@ int snd_pcm_reset(snd_pcm_t *pcm)
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source =  AudioContext::get().getSource(sourceId);
     source->setPosition(source->queueSize());
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return 0;
 }
 
@@ -463,7 +463,7 @@ int snd_pcm_status(snd_pcm_t *pcm, snd_pcm_status_t *status)
     // int sourceId = reinterpret_cast<intptr_t>(pcm);
     // auto source = audiocontext.getSource(sourceId);
     // source->setPosition(source->queueSize());
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return 0;
 }
 
@@ -471,7 +471,7 @@ int snd_pcm_hw_params(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params, (pcm, params), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = AudioContext::get().getSource(sourceId);
@@ -486,7 +486,7 @@ int snd_pcm_hw_params_current(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_current, (pcm, params), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return 0;
 }
 
@@ -494,7 +494,7 @@ int snd_pcm_sw_params_current(snd_pcm_t *pcm, snd_pcm_sw_params_t *params)
 {
     RETURN_IF_NATIVE(snd_pcm_sw_params_current, (pcm, params), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return 0;
 }
 
@@ -502,7 +502,7 @@ int snd_pcm_sw_params(snd_pcm_t *pcm, snd_pcm_sw_params_t *params)
 {
     RETURN_IF_NATIVE(snd_pcm_sw_params, (pcm, params), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source =  AudioContext::get().getSource(sourceId);
@@ -517,7 +517,7 @@ int snd_pcm_prepare(snd_pcm_t *pcm)
 {
     RETURN_IF_NATIVE(snd_pcm_prepare, (pcm), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source =  AudioContext::get().getSource(sourceId);
     if ((source->state == AudioSource::SOURCE_INITIAL) ||
@@ -541,7 +541,7 @@ snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_ufr
 {
     RETURN_IF_NATIVE(snd_pcm_writei, (pcm, buffer, size), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "snd_pcm_writei call with %d frames and pcm %p", size, pcm);
+    LOGTRACE(LCF_SOUND, "snd_pcm_writei call with %d frames and pcm %p", size, pcm);
 
     /* Fill audio thread id */
     AudioContext& audiocontext = AudioContext::get();
@@ -606,7 +606,7 @@ snd_pcm_sframes_t snd_pcm_readi(snd_pcm_t *pcm, void *buffer, snd_pcm_uframes_t 
 {
     RETURN_IF_NATIVE(snd_pcm_readi, (pcm, buffer, size), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with %d bytes", __func__, size);
+    LOGTRACE(LCF_SOUND, "%s call with %d bytes", __func__, size);
     return static_cast<snd_pcm_sframes_t>(size);
 }
 
@@ -617,7 +617,7 @@ int snd_pcm_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd
 {
     RETURN_IF_NATIVE(snd_pcm_mmap_begin, (pcm, areas, offset, frames), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with %d frames", __func__, *frames);
+    LOGTRACE(LCF_SOUND, "%s call with %d frames", __func__, *frames);
 
     /* Getting the available samples, don't return more frames than that */
     snd_pcm_sframes_t avail = buffer_size - get_latency(pcm);
@@ -676,7 +676,7 @@ snd_pcm_sframes_t snd_pcm_mmap_commit(snd_pcm_t *pcm, snd_pcm_uframes_t offset, 
     /* We should unlock the audio mutex here, but we don't (see above comment) */
     // audiocontext.mutex.unlock();
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with frames %d", __func__, frames);
+    LOGTRACE(LCF_SOUND, "%s call with frames %d", __func__, frames);
     return frames;
 }
 
@@ -686,7 +686,7 @@ int snd_pcm_hw_params_any(snd_pcm_t *pcm, snd_pcm_hw_params_t *params)
     RETURN_IF_NATIVE(snd_pcm_hw_params_any, (pcm, params), nullptr);
 
     params = reinterpret_cast<snd_pcm_hw_params_t*>(pcm);
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return 0;
 }
 
@@ -694,7 +694,7 @@ size_t snd_pcm_hw_params_sizeof(void)
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_sizeof, (), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return 8;
 }
 
@@ -702,7 +702,7 @@ int snd_pcm_hw_params_malloc(snd_pcm_hw_params_t **ptr)
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_malloc, (ptr), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     *ptr = reinterpret_cast<snd_pcm_hw_params_t*>(1); // Set a non-null value
     return 0;
 }
@@ -711,14 +711,14 @@ void snd_pcm_hw_params_free(snd_pcm_hw_params_t *obj)
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_free, (obj), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 }
 
 void snd_pcm_hw_params_copy(snd_pcm_hw_params_t *dst, const snd_pcm_hw_params_t *src)
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_copy, (dst, src), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 }
 
 static snd_pcm_access_t current_access = SND_PCM_ACCESS_RW_INTERLEAVED;
@@ -726,7 +726,7 @@ int snd_pcm_hw_params_set_access(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, sn
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_access, (pcm, params, access), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with access %d", __func__, access);
+    LOGTRACE(LCF_SOUND, "%s call with access %d", __func__, access);
     if ((access != SND_PCM_ACCESS_RW_INTERLEAVED) && (access != SND_PCM_ACCESS_MMAP_INTERLEAVED)) {
         LOG(LL_ERROR, LCF_SOUND, "    Unsupported access %d", access);
     }
@@ -738,7 +738,7 @@ int snd_pcm_hw_params_set_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, sn
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_format, (pcm, params, val), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with format %d", __func__, val);
+    LOGTRACE(LCF_SOUND, "%s call with format %d", __func__, val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     AudioContext& audiocontext = AudioContext::get();
@@ -772,14 +772,14 @@ void snd_pcm_hw_params_get_format_mask(snd_pcm_hw_params_t *params, snd_pcm_form
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_format_mask, (params, mask), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 }
 
 int snd_pcm_hw_params_get_channels(const snd_pcm_hw_params_t *params, unsigned int *val)
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_channels, (params, val), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     /* We don't have the pcm parameter here, so using the last opened source */
     int sourceId = last_source;
@@ -793,7 +793,7 @@ int snd_pcm_hw_params_get_channels_min(const snd_pcm_hw_params_t *params, unsign
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_channels_min, (params, val), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     *val = 1;
     return 0;
@@ -803,7 +803,7 @@ int snd_pcm_hw_params_get_channels_max(const snd_pcm_hw_params_t *params, unsign
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_channels_max, (params, val), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     *val = 2;
     return 0;
@@ -813,7 +813,7 @@ int snd_pcm_hw_params_set_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, 
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_channels, (pcm, params, val), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with channels %d", __func__, val);
+    LOGTRACE(LCF_SOUND, "%s call with channels %d", __func__, val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     AudioContext& audiocontext = AudioContext::get();
@@ -830,7 +830,7 @@ int snd_pcm_hw_params_set_channels_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *par
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_channels_near, (pcm, params, val), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with channels %d", __func__, *val);
+    LOGTRACE(LCF_SOUND, "%s call with channels %d", __func__, *val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     AudioContext& audiocontext = AudioContext::get();
@@ -851,7 +851,7 @@ int snd_pcm_hw_params_set_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, unsi
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_rate, (pcm, params, val, dir), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with rate %d and dir %d", __func__, val, dir);
+    LOGTRACE(LCF_SOUND, "%s call with rate %d and dir %d", __func__, val, dir);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     AudioContext& audiocontext = AudioContext::get();
@@ -868,7 +868,7 @@ int snd_pcm_hw_params_set_rate_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *params,
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_rate_near, (pcm, params, val, dir), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with rate %d", __func__, *val);
+    LOGTRACE(LCF_SOUND, "%s call with rate %d", __func__, *val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     AudioContext& audiocontext = AudioContext::get();
@@ -885,7 +885,7 @@ int snd_pcm_hw_params_set_rate_resample(snd_pcm_t *pcm, snd_pcm_hw_params_t *par
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_rate_resample, (pcm, params, val), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with val %d", __func__, val);
+    LOGTRACE(LCF_SOUND, "%s call with val %d", __func__, val);
 
     /* Not sure what should we do here */
     return 0;
@@ -895,7 +895,7 @@ int snd_pcm_hw_params_get_rate(const snd_pcm_hw_params_t *params, unsigned int *
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_rate, (params, val, dir), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     /* We don't have the pcm parameter here, so using the last opened source */
     int sourceId = last_source;
@@ -912,7 +912,7 @@ int snd_pcm_hw_params_get_rate_min(const snd_pcm_hw_params_t *params, unsigned i
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_rate_min, (params, val, dir), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     *val = 11025;
     return 0;
 }
@@ -921,7 +921,7 @@ int snd_pcm_hw_params_get_rate_max(const snd_pcm_hw_params_t *params, unsigned i
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_rate_max, (params, val, dir), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     *val = 48000;
     return 0;
 }
@@ -933,7 +933,7 @@ int snd_pcm_hw_params_get_period_size(const snd_pcm_hw_params_t *params, snd_pcm
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_period_size, (params, frames, dir), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     if (periods <= 0) {
         errno = EINVAL;
@@ -949,7 +949,7 @@ int snd_pcm_hw_params_get_period_time_min(const snd_pcm_hw_params_t *params, uns
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_period_time_min, (params, val, dir), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     *val = 0;
 
     return 0;
@@ -959,7 +959,7 @@ int snd_pcm_hw_params_set_period_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_period_time_near, (pcm, params, val, dir), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with period time %d us and dir %d", __func__, *val, dir?*dir:-2);
+    LOGTRACE(LCF_SOUND, "%s call with period time %d us and dir %d", __func__, *val, dir?*dir:-2);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = AudioContext::get().getSource(sourceId);
@@ -990,7 +990,7 @@ int snd_pcm_hw_params_set_period_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_period_size_near, (pcm, params, val, dir), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with period size %d and dir %d", __func__, *val, dir?*dir:-2);
+    LOGTRACE(LCF_SOUND, "%s call with period size %d and dir %d", __func__, *val, dir?*dir:-2);
 
     if (*val == 0) {
         errno = EINVAL;
@@ -1015,7 +1015,7 @@ int snd_pcm_hw_params_set_periods_min(snd_pcm_t *pcm, snd_pcm_hw_params_t *param
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_periods_min, (pcm, params, val, dir), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with period %d and dir %d", __func__, *val, dir?*dir:-2);
+    LOGTRACE(LCF_SOUND, "%s call with period %d and dir %d", __func__, *val, dir?*dir:-2);
     periods = *val;
     return 0;
 }
@@ -1024,7 +1024,7 @@ int snd_pcm_hw_params_set_periods_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *para
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_periods_near, (pcm, params, val, dir), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with period %d and dir %d", __func__, *val, dir?*dir:-2);
+    LOGTRACE(LCF_SOUND, "%s call with period %d and dir %d", __func__, *val, dir?*dir:-2);
     periods = *val;
     return 0;
 }
@@ -1033,7 +1033,7 @@ int snd_pcm_hw_params_set_periods_first(snd_pcm_t *pcm, snd_pcm_hw_params_t *par
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_periods_first, (pcm, params, val, dir), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with period %d and dir %d", __func__, *val, dir?*dir:-2);
+    LOGTRACE(LCF_SOUND, "%s call with period %d and dir %d", __func__, *val, dir?*dir:-2);
     periods = *val;
     return 0;
 }
@@ -1042,7 +1042,7 @@ int snd_pcm_hw_params_get_periods(const snd_pcm_hw_params_t *params, unsigned in
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_periods, (params, val, dir), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     *val = periods;
     return 0;
 }
@@ -1051,7 +1051,7 @@ int snd_pcm_hw_params_get_buffer_size(const snd_pcm_hw_params_t *params, snd_pcm
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_buffer_size, (params, val), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     *val = buffer_size;
     return 0;
 }
@@ -1060,7 +1060,7 @@ int snd_pcm_hw_params_get_buffer_size_min(const snd_pcm_hw_params_t *params, snd
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_buffer_size_min, (params, val), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     *val = BUFFER_SIZE_MIN;
     return 0;
 }
@@ -1069,7 +1069,7 @@ int snd_pcm_hw_params_get_buffer_size_max(const snd_pcm_hw_params_t *params, snd
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_buffer_size_max, (params, val), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     *val = 4096;
     return 0;
 }
@@ -1078,7 +1078,7 @@ int snd_pcm_hw_params_get_buffer_time_max(const snd_pcm_hw_params_t *params, uns
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_buffer_time_max, (params, val, dir), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     /* We don't have the pcm parameter here, so using the last opened source */
     int sourceId = last_source;
@@ -1098,7 +1098,7 @@ int snd_pcm_hw_params_set_buffer_size_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_buffer_size_near, (pcm, params, val), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with buffer size %d", __func__, *val);
+    LOGTRACE(LCF_SOUND, "%s call with buffer size %d", __func__, *val);
     if (*val < BUFFER_SIZE_MIN) {
         LOG(LL_WARN, LCF_SOUND, "Buffer size is too low, raising to %d", BUFFER_SIZE_MIN);
         *val = BUFFER_SIZE_MIN;
@@ -1111,7 +1111,7 @@ int snd_pcm_hw_params_set_buffer_time_near(snd_pcm_t *pcm, snd_pcm_hw_params_t *
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_set_buffer_time_near, (pcm, params, val, dir), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with buffer time %d", __func__, *val);
+    LOGTRACE(LCF_SOUND, "%s call with buffer time %d", __func__, *val);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = AudioContext::get().getSource(sourceId);
@@ -1146,7 +1146,7 @@ int snd_pcm_hw_params_test_rate(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, uns
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_test_rate, (pcm, params, val, dir), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with val %d", __func__, val);
+    LOGTRACE(LCF_SOUND, "%s call with val %d", __func__, val);
     return 0;
 }
 
@@ -1154,7 +1154,7 @@ int snd_pcm_hw_params_test_format(snd_pcm_t *pcm, snd_pcm_hw_params_t *params, s
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_test_format, (pcm, params, val), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with val %d", __func__, val);
+    LOGTRACE(LCF_SOUND, "%s call with val %d", __func__, val);
     return 0;
 }
 
@@ -1162,7 +1162,7 @@ int snd_pcm_hw_params_test_channels(snd_pcm_t *pcm, snd_pcm_hw_params_t *params,
 {
     RETURN_IF_NATIVE(snd_pcm_hw_params_test_channels, (pcm, params, val), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with val %d", __func__, val);
+    LOGTRACE(LCF_SOUND, "%s call with val %d", __func__, val);
     return 0;
 }
 
@@ -1171,7 +1171,7 @@ int snd_pcm_hw_params_get_access(const snd_pcm_hw_params_t *params, snd_pcm_acce
     RETURN_IF_NATIVE(snd_pcm_hw_params_get_access, (params, access), nullptr);
 
     *access = current_access;
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return 0;
 }
 
@@ -1179,7 +1179,7 @@ int snd_pcm_get_params(snd_pcm_t *pcm, snd_pcm_uframes_t *bs, snd_pcm_uframes_t 
 {
     RETURN_IF_NATIVE(snd_pcm_get_params, (pcm, bs, ps), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     if (periods <= 0) {
         errno = EINVAL;
@@ -1197,7 +1197,7 @@ int snd_pcm_set_params(snd_pcm_t *pcm, snd_pcm_format_t format, snd_pcm_access_t
 {
     RETURN_IF_NATIVE(snd_pcm_set_params, (pcm, format, access, channels, rate, soft_resample, latency), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     AudioContext& audiocontext = AudioContext::get();
@@ -1245,7 +1245,7 @@ size_t snd_pcm_sw_params_sizeof(void)
 {
     RETURN_IF_NATIVE(snd_pcm_sw_params_sizeof, (), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     return 8;
 }
 
@@ -1254,7 +1254,7 @@ int snd_pcm_sw_params_set_start_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *p
 {
     RETURN_IF_NATIVE(snd_pcm_sw_params_set_start_threshold, (pcm, params, val), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with start threshold %d", __func__, val);
+    LOGTRACE(LCF_SOUND, "%s call with start threshold %d", __func__, val);
     return 0;
 }
 
@@ -1262,7 +1262,7 @@ int snd_pcm_sw_params_set_stop_threshold(snd_pcm_t *pcm, snd_pcm_sw_params_t *pa
 {
     RETURN_IF_NATIVE(snd_pcm_sw_params_set_stop_threshold, (pcm, params, val), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with stop threshold %d", __func__, val);
+    LOGTRACE(LCF_SOUND, "%s call with stop threshold %d", __func__, val);
     return 0;
 }
 
@@ -1270,7 +1270,7 @@ int snd_pcm_sw_params_set_avail_min(snd_pcm_t *pcm, snd_pcm_sw_params_t *params,
 {
     RETURN_IF_NATIVE(snd_pcm_sw_params_set_avail_min, (pcm, params, val), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with val %d", __func__, val);
+    LOGTRACE(LCF_SOUND, "%s call with val %d", __func__, val);
     avail_min = val;
     return 0;
 }
@@ -1279,7 +1279,7 @@ snd_pcm_chmap_query_t **snd_pcm_query_chmaps(snd_pcm_t *pcm)
 {
     RETURN_IF_NATIVE(snd_pcm_query_chmaps, (pcm), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     
     snd_pcm_chmap_query_t **queries = static_cast<snd_pcm_chmap_query_t **>(malloc(sizeof(snd_pcm_chmap_query_t *) * 2));
     snd_pcm_chmap_query_t *query = static_cast<snd_pcm_chmap_query_t *>(malloc(sizeof(snd_pcm_chmap_query_t)));
@@ -1300,7 +1300,7 @@ void snd_pcm_free_chmaps(snd_pcm_chmap_query_t **maps)
 {
     RETURN_IF_NATIVE(snd_pcm_free_chmaps, (maps), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 
     for (int i = 0; maps[i]; i++) {
         free(maps[i]);
@@ -1312,7 +1312,7 @@ snd_pcm_chmap_t *snd_pcm_get_chmap(snd_pcm_t *pcm)
 {
     RETURN_IF_NATIVE(snd_pcm_get_chmap, (pcm), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     int channels = 2; // TODO!!
     snd_pcm_chmap_t *map = static_cast<snd_pcm_chmap_t*>(malloc(sizeof(int) * (channels + 1)));
     map->channels = channels;
@@ -1326,7 +1326,7 @@ int snd_pcm_set_chmap(snd_pcm_t *pcm, const snd_pcm_chmap_t *map)
 {
     RETURN_IF_NATIVE(snd_pcm_set_chmap, (pcm, map), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s call with channels %d", __func__, map->channels);
+    LOGTRACE(LCF_SOUND, "%s call with channels %d", __func__, map->channels);
 
     /* We only support 1 or 2 channels */
     if (map->channels > 2)
@@ -1344,7 +1344,7 @@ int snd_pcm_format_mask_malloc(snd_pcm_format_mask_t **ptr)
 {
     RETURN_IF_NATIVE(snd_pcm_format_mask_malloc, (ptr), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     *ptr = reinterpret_cast<snd_pcm_format_mask_t*>(1); // Set a non-null value
     return 0;
 }
@@ -1353,14 +1353,14 @@ void snd_pcm_format_mask_free(snd_pcm_format_mask_t *obj)
 {
     RETURN_IF_NATIVE(snd_pcm_format_mask_free, (obj), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
 }
 
 int snd_pcm_format_mask_test(const snd_pcm_format_mask_t *mask, snd_pcm_format_t val)
 {
     RETURN_IF_NATIVE(snd_pcm_format_mask_test, (mask, val), nullptr);
 
-    LOGTRACE(LCF_SOUND);
+    LOGTRACE_SIMPLE(LCF_SOUND);
     if ((val == SND_PCM_FORMAT_U8) ||
         (val == SND_PCM_FORMAT_S16_LE) ||
         (val == SND_PCM_FORMAT_S32_LE) ||
@@ -1374,7 +1374,7 @@ snd_pcm_sframes_t snd_pcm_bytes_to_frames(snd_pcm_t *pcm, ssize_t bytes)
 {
     RETURN_IF_NATIVE(snd_pcm_bytes_to_frames, (pcm, bytes), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s called with bytes %d", __func__, bytes);
+    LOGTRACE(LCF_SOUND, "%s called with bytes %d", __func__, bytes);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = AudioContext::get().getSource(sourceId);
     return bytes / source->frameToByteRatio();
@@ -1384,7 +1384,7 @@ ssize_t snd_pcm_frames_to_bytes(snd_pcm_t *pcm, snd_pcm_sframes_t frames)
 {
     RETURN_IF_NATIVE(snd_pcm_frames_to_bytes, (pcm, frames), nullptr);
 
-    LOG(LL_TRACE, LCF_SOUND, "%s called with frames %d", __func__, frames);
+    LOGTRACE(LCF_SOUND, "%s called with frames %d", __func__, frames);
     int sourceId = reinterpret_cast<intptr_t>(pcm);
     auto source = AudioContext::get().getSource(sourceId);
     return source->frameToByteRatio() * frames;

@@ -40,7 +40,7 @@ DEFINE_ORIG_POINTER(XQueryPointer)
         int* win_x_return, int* win_y_return,
         unsigned int* mask_return)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
     if (!XlibGameWindow::get()) {
         LINK_NAMESPACE_GLOBAL(XQueryPointer);
         return orig::XQueryPointer(display, w, root_return, child_return,
@@ -68,7 +68,7 @@ DEFINE_ORIG_POINTER(XQueryPointer)
 /* Override */ int XGrabPointer(Display* display, Window w, Bool owner_events, unsigned int event_mask, int, int,
     Window confine_to, Cursor, Time)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
 
     pointer_grab_window = w;
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
@@ -106,7 +106,7 @@ DEFINE_ORIG_POINTER(XQueryPointer)
 
 /* Override */ int XUngrabPointer(Display* display, Time)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
     pointer_grab_window = None;
     
     std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
@@ -118,20 +118,20 @@ DEFINE_ORIG_POINTER(XQueryPointer)
 
 /* Override */ int XChangeActivePointerGrab(Display*, unsigned int, Cursor, Time)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
     return 0; // Not sure what to return
 }
 
 /* Override */ int XGrabButton(Display*, unsigned int, unsigned int, Window,
     Bool, unsigned int, int, int, Window, Cursor)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
     return GrabSuccess;
 }
 
 /* Override */ int XUngrabButton(Display*, unsigned int, unsigned int, Window)
 {
-    LOGTRACE(LCF_MOUSE);
+    LOGTRACE_SIMPLE(LCF_MOUSE);
     return 0; // Not sure what to return
 }
 
@@ -141,7 +141,7 @@ DEFINE_ORIG_POINTER(XQueryPointer)
 {
     RETURN_IF_NATIVE(XWarpPointer, (d, src_w, dest_w, src_x, src_y, src_width, src_height, dest_x, dest_y), nullptr);
 
-    LOG(LL_TRACE, LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dest_w, dest_x, dest_y);
+    LOGTRACE(LCF_MOUSE, "%s called with dest_w %d and dest_x %d and dest_y %d", __func__, dest_w, dest_x, dest_y);
 
     /* We have to generate an MotionNotify event. */
     if (XlibGameWindow::get()) {

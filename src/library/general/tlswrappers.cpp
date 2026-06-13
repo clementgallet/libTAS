@@ -64,7 +64,7 @@ int pthread_key_create (pthread_key_t *key, void (*destr_function) (void *)) __T
         return orig::pthread_key_create(key, destr_function);
     }
 
-    LOGTRACE(LCF_THREAD);
+    LOGTRACE_SIMPLE(LCF_THREAD);
     int ret = orig::pthread_key_create(key, destr_function);
 
     if (ret == 0) {
@@ -84,7 +84,7 @@ int pthread_key_delete (pthread_key_t key) __THROW
         return orig::pthread_key_delete(key);
     }
 
-    LOG(LL_TRACE, LCF_THREAD, "%s called on key %d", __func__, key);
+    LOGTRACE(LCF_THREAD, "%s called on key %d", __func__, key);
     int ret = orig::pthread_key_delete(key);
 
     if (ret == 0) {

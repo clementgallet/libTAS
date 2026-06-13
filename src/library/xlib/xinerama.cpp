@@ -29,7 +29,7 @@ namespace libtas {
 
 XineramaScreenInfo *XineramaQueryScreens(Display *dpy, int *number)
 {
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
 
     if (Global::shared_config.screen_width) {
         *number = 1;

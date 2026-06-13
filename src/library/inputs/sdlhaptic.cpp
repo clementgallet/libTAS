@@ -26,13 +26,13 @@ namespace libtas {
 
 int SDL_NumHaptics(void)
 {
-    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_JOYSTICK);
 	return 0;
 }
 
 sdl3::SDL_HapticID * SDL_GetHaptics(int *count)
 {
-    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_JOYSTICK);
     if (count) {
         *count = 0;
     }
@@ -45,60 +45,60 @@ sdl3::SDL_HapticID * SDL_GetHaptics(int *count)
 
 SDL_Haptic * SDL_HapticOpen(int device_index)
 {
-    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_JOYSTICK);
 	return NULL;
 }
 
 SDL_Haptic * SDL_OpenHaptic(sdl3::SDL_HapticID instance_id)
 {
-    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_JOYSTICK);
     return NULL;
 }
 
 int SDL_JoystickIsHaptic(SDL_Joystick * joystick)
 {
-    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_JOYSTICK);
 	return 0;
 }
 
 bool SDL_IsJoystickHaptic(SDL_Joystick *joystick)
 {
-    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_JOYSTICK);
     return false;
 }
 
 SDL_Haptic *SDL_HapticOpenFromJoystick(SDL_Joystick *joystick)
 {
-    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_JOYSTICK);
 	return NULL;
 }
 
 SDL_Haptic * SDL_OpenHapticFromJoystick(SDL_Joystick *joystick)
 {
-    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_JOYSTICK);
     return NULL;
 }
 
 bool SDL_IsMouseHaptic(void)
 {
-    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_JOYSTICK);
     return false;
 }
 
 SDL_Haptic * SDL_OpenHapticFromMouse(void)
 {
-    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_JOYSTICK);
     return NULL;
 }
 
 void SDL_HapticClose(SDL_Haptic * haptic)
 {
-    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_JOYSTICK);
 }
 
 void SDL_CloseHaptic(SDL_Haptic *haptic)
 {
-    LOGTRACE(LCF_SDL | LCF_JOYSTICK);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_JOYSTICK);
 }
 
 }

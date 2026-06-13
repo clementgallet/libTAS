@@ -329,7 +329,7 @@ DEFINE_ORIG_POINTER(SteamInput)
 
 bool SteamAPI_Init()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (Global::shared_config.virtual_steam) {
         SteamGetInterfaceVersion();
         return true;
@@ -340,7 +340,7 @@ bool SteamAPI_Init()
 
 bool SteamAPI_InitSafe()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (Global::shared_config.virtual_steam) {
         SteamGetInterfaceVersion();
         return true;
@@ -351,7 +351,7 @@ bool SteamAPI_InitSafe()
 
 void SteamAPI_Shutdown()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (Global::shared_config.virtual_steam)
         return;
     
@@ -361,7 +361,7 @@ void SteamAPI_Shutdown()
 
 bool SteamAPI_IsSteamRunning()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (Global::shared_config.virtual_steam)
         return true;
     
@@ -371,7 +371,7 @@ bool SteamAPI_IsSteamRunning()
 
 bool SteamAPI_RestartAppIfNecessary( unsigned int unOwnAppID )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (Global::shared_config.virtual_steam)
         return false;
 
@@ -381,7 +381,7 @@ bool SteamAPI_RestartAppIfNecessary( unsigned int unOwnAppID )
 
 void SteamAPI_RunCallbacks()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (Global::shared_config.virtual_steam)
         return CCallbackManager::Run();
 
@@ -391,7 +391,7 @@ void SteamAPI_RunCallbacks()
 
 void SteamAPI_RegisterCallback( CCallbackBase *pCallback, enum steam_callback_type iCallback )
 {
-    LOG(LL_TRACE, LCF_STEAM, "%s called with type %d", __func__, iCallback);
+    LOGTRACE(LCF_STEAM, "%s called with type %d", __func__, iCallback);
     if (Global::shared_config.virtual_steam)
         return CCallbackManager::RegisterCallback(pCallback, iCallback);
 
@@ -401,7 +401,7 @@ void SteamAPI_RegisterCallback( CCallbackBase *pCallback, enum steam_callback_ty
 
 void SteamAPI_UnregisterCallback( CCallbackBase *pCallback )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (Global::shared_config.virtual_steam)
         return CCallbackManager::UnregisterCallback(pCallback);
 
@@ -411,7 +411,7 @@ void SteamAPI_UnregisterCallback( CCallbackBase *pCallback )
 
 void SteamAPI_RegisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAPICall )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (Global::shared_config.virtual_steam)
         return CCallbackManager::RegisterApiCallResult(pCallback, hAPICall);
 
@@ -421,7 +421,7 @@ void SteamAPI_RegisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAPIC
 
 void SteamAPI_UnregisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAPICall )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (Global::shared_config.virtual_steam)
         return CCallbackManager::UnregisterApiCallResult(pCallback, hAPICall);
         
@@ -431,7 +431,7 @@ void SteamAPI_UnregisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAP
 
 void SteamAPI_ManualDispatch_Init()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (Global::shared_config.virtual_steam)
         return;
         
@@ -441,7 +441,7 @@ void SteamAPI_ManualDispatch_Init()
 
 void SteamAPI_ManualDispatch_RunFrame( HSteamPipe hSteamPipe )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (Global::shared_config.virtual_steam)
         return;
         
@@ -451,7 +451,7 @@ void SteamAPI_ManualDispatch_RunFrame( HSteamPipe hSteamPipe )
 
 bool SteamAPI_ManualDispatch_GetNextCallback( HSteamPipe hSteamPipe, CallbackMsg_t *pCallbackMsg )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (Global::shared_config.virtual_steam)
         return false;
         
@@ -461,7 +461,7 @@ bool SteamAPI_ManualDispatch_GetNextCallback( HSteamPipe hSteamPipe, CallbackMsg
 
 void SteamAPI_ManualDispatch_FreeLastCallback( HSteamPipe hSteamPipe )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (Global::shared_config.virtual_steam)
         return;
         
@@ -471,7 +471,7 @@ void SteamAPI_ManualDispatch_FreeLastCallback( HSteamPipe hSteamPipe )
 
 bool SteamAPI_ManualDispatch_GetAPICallResult( HSteamPipe hSteamPipe, SteamAPICall_t hSteamAPICall, void *pCallback, int cubCallback, int iCallbackExpected, bool *pbFailed )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (pbFailed)
         *pbFailed = false;
 
@@ -488,7 +488,7 @@ bool SteamAPI_ManualDispatch_GetAPICallResult( HSteamPipe hSteamPipe, SteamAPICa
 
 ISteamController *SteamController()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamController, "steam_api");
         return orig::SteamController();
@@ -500,7 +500,7 @@ ISteamController *SteamController()
 
 ISteamUtils *SteamUtils()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamUtils, "steam_api");
         return orig::SteamUtils();
@@ -512,7 +512,7 @@ ISteamUtils *SteamUtils()
 
 ISteamApps *SteamApps()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamApps, "steam_api");
         return orig::SteamApps();
@@ -524,7 +524,7 @@ ISteamApps *SteamApps()
 
 ISteamFriends *SteamFriends()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamFriends, "steam_api");
         return orig::SteamFriends();
@@ -536,7 +536,7 @@ ISteamFriends *SteamFriends()
 
 ISteamScreenshots *SteamScreenshots()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamScreenshots, "steam_api");
         return orig::SteamScreenshots();
@@ -548,7 +548,7 @@ ISteamScreenshots *SteamScreenshots()
 
 ISteamUGC *SteamUGC()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamUGC, "steam_api");
         return orig::SteamUGC();
@@ -560,7 +560,7 @@ ISteamUGC *SteamUGC()
 
 ISteamMatchmaking *SteamMatchmaking()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamMatchmaking, "steam_api");
         return orig::SteamMatchmaking();
@@ -572,7 +572,7 @@ ISteamMatchmaking *SteamMatchmaking()
 
 ISteamNetworking *SteamNetworking()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamNetworking, "steam_api");
         return orig::SteamNetworking();
@@ -584,7 +584,7 @@ ISteamNetworking *SteamNetworking()
 
 ISteamMatchmakingServers *SteamMatchmakingServers()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamMatchmakingServers, "steam_api");
         return orig::SteamMatchmakingServers();
@@ -596,7 +596,7 @@ ISteamMatchmakingServers *SteamMatchmakingServers()
 
 ISteamHTTP *SteamHTTP()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamHTTP, "steam_api");
         return orig::SteamHTTP();
@@ -608,7 +608,7 @@ ISteamHTTP *SteamHTTP()
 
 ISteamAppList *SteamAppList()
 {
-    LOGTRACE(LCF_STEAM | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamAppList, "steam_api");
         return orig::SteamAppList();
@@ -619,7 +619,7 @@ ISteamAppList *SteamAppList()
 
 ISteamMusic *SteamMusic()
 {
-    LOGTRACE(LCF_STEAM | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamMusic, "steam_api");
         return orig::SteamMusic();
@@ -630,7 +630,7 @@ ISteamMusic *SteamMusic()
 
 ISteamMusicRemote *SteamMusicRemote()
 {
-    LOGTRACE(LCF_STEAM | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamMusicRemote, "steam_api");
         return orig::SteamMusicRemote();
@@ -641,7 +641,7 @@ ISteamMusicRemote *SteamMusicRemote()
 
 ISteamHTMLSurface *SteamHTMLSurface()
 {
-    LOGTRACE(LCF_STEAM | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamHTMLSurface, "steam_api");
         return orig::SteamHTMLSurface();
@@ -652,7 +652,7 @@ ISteamHTMLSurface *SteamHTMLSurface()
 
 ISteamInventory *SteamInventory()
 {
-    LOGTRACE(LCF_STEAM | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamInventory, "steam_api");
         return orig::SteamInventory();
@@ -663,7 +663,7 @@ ISteamInventory *SteamInventory()
 
 ISteamVideo *SteamVideo()
 {
-    LOGTRACE(LCF_STEAM | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamVideo, "steam_api");
         return orig::SteamVideo();
@@ -674,7 +674,7 @@ ISteamVideo *SteamVideo()
 
 ISteamParentalSettings *SteamParentalSettings()
 {
-    LOGTRACE(LCF_STEAM | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamParentalSettings, "steam_api");
         return orig::SteamParentalSettings();
@@ -685,7 +685,7 @@ ISteamParentalSettings *SteamParentalSettings()
 
 ISteamNetworkingUtils *SteamNetworkingUtils()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamNetworkingUtils, "steam_api");
         return orig::SteamNetworkingUtils();
@@ -697,7 +697,7 @@ ISteamNetworkingUtils *SteamNetworkingUtils()
 
 ISteamNetworkingSockets *SteamNetworkingSockets()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamNetworkingSockets, "steam_api");
         return orig::SteamNetworkingSockets();
@@ -709,7 +709,7 @@ ISteamNetworkingSockets *SteamNetworkingSockets()
 
 ISteamNetworkingMessages *SteamNetworkingMessages()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamNetworkingMessages, "steam_api");
         return orig::SteamNetworkingMessages();
@@ -721,7 +721,7 @@ ISteamNetworkingMessages *SteamNetworkingMessages()
 
 ISteamInput *SteamInput()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
         LINK_NAMESPACE(SteamInput, "steam_api");
         return orig::SteamInput();

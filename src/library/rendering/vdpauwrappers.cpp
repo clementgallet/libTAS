@@ -69,7 +69,7 @@ VdpStatus VdpPresentationQueueTargetCreateX11(VdpDevice device, Drawable drawabl
     if (GlobalState::isNative())
         return orig::VdpPresentationQueueTargetCreateX11(device, drawable, target);
 
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
 
     /* Set the game window to that window */
     XlibGameWindow::promote(drawable);
@@ -82,7 +82,7 @@ VdpStatus VdpPresentationQueueCreate(VdpDevice device, VdpPresentationQueueTarge
     if (GlobalState::isNative())
         return orig::VdpPresentationQueueCreate(device, presentation_queue_target, presentation_queue);
 
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
 
     ScreenCapture::fini();
 
@@ -99,7 +99,7 @@ VdpStatus VdpPresentationQueueDestroy(VdpPresentationQueue presentation_queue)
     if (GlobalState::isNative())
         return orig::VdpPresentationQueueDestroy(presentation_queue);
 
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
 
     ScreenCapture::fini();
 
@@ -111,7 +111,7 @@ VdpStatus VdpPresentationQueueDisplay(VdpPresentationQueue presentation_queue, V
     if (GlobalState::isNative())
         return orig::VdpPresentationQueueDisplay(presentation_queue, surface, clip_width, clip_height, earliest_presentation_time);
 
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with clip_width %d, clip_height %d and earliest_presentation_time %llu", __func__, clip_width, clip_height, earliest_presentation_time);
+    LOGTRACE(LCF_WINDOW, "%s called with clip_width %d, clip_height %d and earliest_presentation_time %llu", __func__, clip_width, clip_height, earliest_presentation_time);
 
     vdp::vdpSurface = surface;
 
@@ -140,7 +140,7 @@ VdpStatus VdpPresentationQueueBlockUntilSurfaceIdle(VdpPresentationQueue present
     if (GlobalState::isNative())
         return orig::VdpPresentationQueueBlockUntilSurfaceIdle(presentation_queue, surface, first_presentation_time);
 
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
 
     DeterministicTimer::get().fakeAdvanceTimerFrame();
     // VdpStatus status = orig::VdpPresentationQueueBlockUntilSurfaceIdle(presentation_queue, surface, first_presentation_time);
@@ -151,7 +151,7 @@ VdpStatus VdpPresentationQueueBlockUntilSurfaceIdle(VdpPresentationQueue present
 
 VdpStatus MyVdpGetProcAddress(VdpDevice device, VdpFuncId function_id, void **function_pointer)
 {
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
     VdpStatus status = orig::GetProcAddress(device, function_id, function_pointer);
     switch(function_id) {
         case VDP_FUNC_ID_PRESENTATION_QUEUE_TARGET_CREATE_X11:
@@ -182,7 +182,7 @@ VdpStatus MyVdpGetProcAddress(VdpDevice device, VdpFuncId function_id, void **fu
 
 /* Override */ int vdp_device_create_x11(Display *display, int screen, VdpDevice *device, VdpGetProcAddress **get_proc_address)
 {
-    LOGTRACE(LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_WINDOW);
     LINK_NAMESPACE(vdp_device_create_x11, "vdpau");
 
     int ret = orig::vdp_device_create_x11(display, screen, device, get_proc_address);

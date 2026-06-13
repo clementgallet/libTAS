@@ -28,7 +28,7 @@ namespace libtas {
 {
     struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_SDLGETTICKS);
     Uint32 msec = ts.tv_sec*1000 + ts.tv_nsec/1000000;
-    LOG(LL_TRACE, LCF_SDL | LCF_TIMEGET, "%s call - returning %d", __func__, msec);
+    LOGTRACE(LCF_SDL | LCF_TIMEGET, "%s call - returning %d", __func__, msec);
 
     return msec;
 }
@@ -37,7 +37,7 @@ namespace libtas {
 {
     struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_SDLGETTICKS);
     Uint64 msec = ts.tv_sec*1000ull + ts.tv_nsec/1000000ull;
-    LOG(LL_TRACE, LCF_SDL | LCF_TIMEGET, "%s call - returning %llu", __func__, msec);
+    LOGTRACE(LCF_SDL | LCF_TIMEGET, "%s call - returning %llu", __func__, msec);
 
     return msec;
 }
@@ -46,20 +46,20 @@ namespace libtas {
 {
     struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_SDLGETTICKS);
     Uint64 nsec = ts.tv_sec*1000000000ull + ts.tv_nsec;
-    LOG(LL_TRACE, LCF_SDL | LCF_TIMEGET, "%s call - returning %llu", __func__, nsec);
+    LOGTRACE(LCF_SDL | LCF_TIMEGET, "%s call - returning %llu", __func__, nsec);
 
     return nsec;
 }
 
 /* Override */ Uint64 SDL_GetPerformanceFrequency(void)
 {
-    LOGTRACE(LCF_SDL | LCF_TIMEGET);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_TIMEGET);
     return 1000000000;
 }
 
 /* Override */ Uint64 SDL_GetPerformanceCounter(void)
 {
-    LOGTRACE(LCF_SDL | LCF_TIMEGET);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_TIMEGET);
     struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_SDLGETPERFORMANCECOUNTER);
     Uint64 counter = ts.tv_nsec + ts.tv_sec * 1000000000ULL;
 

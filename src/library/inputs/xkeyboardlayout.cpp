@@ -155,7 +155,7 @@ static KeySym keycodeToKeysym(KeyCode keycode, bool shifted)
     
 /* Override */ KeySym XKeycodeToKeysym(Display* display, KeyCode keycode, int index)
 {
-    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, (int)keycode);
+    LOGTRACE(LCF_KEYBOARD, "%s called with keycode %d", __func__, (int)keycode);
     KeySym sym = keycodeToKeysym(keycode, index == 1);
     LOG(LL_DEBUG, LCF_KEYBOARD, "   returning %d", sym);
     return sym;
@@ -166,7 +166,7 @@ static KeySym keycodeToKeysym(KeyCode keycode, bool shifted)
     /* ImGui uses this function */
     RETURN_IF_NATIVE(XkbKeycodeToKeysym, (dpy, kc, group, level), nullptr);
 
-    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, (int)kc);
+    LOGTRACE(LCF_KEYBOARD, "%s called with keycode %d", __func__, (int)kc);
     KeySym sym = keycodeToKeysym(kc, level == 1);
     LOG(LL_DEBUG, LCF_KEYBOARD, "   returning %d", sym);
     return sym;
@@ -174,7 +174,7 @@ static KeySym keycodeToKeysym(KeyCode keycode, bool shifted)
 
 /* Override */ KeyCode XKeysymToKeycode( Display* display, KeySym keysym)
 {
-    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keysym %d", __func__, keysym);
+    LOGTRACE(LCF_KEYBOARD, "%s called with keysym %d", __func__, keysym);
     KeyCode kc = 0;
     for (int i=0; i<256; i++) {
         if (Xlib_default_keymap[i] == keysym) {
@@ -196,7 +196,7 @@ static KeySym keycodeToKeysym(KeyCode keycode, bool shifted)
     /* ImGui uses this function */
     RETURN_IF_NATIVE(XLookupString, (event_struct, buffer_return, bytes_buffer, keysym_return, status_in_out), nullptr);
 
-    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, event_struct->keycode);
+    LOGTRACE(LCF_KEYBOARD, "%s called with keycode %d", __func__, event_struct->keycode);
 
     KeyCode keycode = event_struct->keycode;
     if (keysym_return) {
@@ -223,7 +223,7 @@ static KeySym keycodeToKeysym(KeyCode keycode, bool shifted)
 
 /* Override */ int XmbLookupString(XIC ic, XKeyPressedEvent *event, char *buffer_return, int bytes_buffer, KeySym *keysym_return, Status *status_return)
 {
-    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
+    LOGTRACE(LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
     KeyCode keycode = event->keycode;
     KeySym keysym = keycodeToKeysym(keycode, event->state & ShiftMask);
 
@@ -260,7 +260,7 @@ static KeySym keycodeToKeysym(KeyCode keycode, bool shifted)
 
 /* Override */ int XwcLookupString(XIC ic, XKeyPressedEvent *event, wchar_t *buffer_return, int wchars_buffer, KeySym *keysym_return, Status *status_return)
 {
-    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
+    LOGTRACE(LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
     KeyCode keycode = event->keycode;
     KeySym keysym = keycodeToKeysym(keycode, event->state & ShiftMask);
 
@@ -300,7 +300,7 @@ static KeySym keycodeToKeysym(KeyCode keycode, bool shifted)
 {
     RETURN_IF_NATIVE(Xutf8LookupString, (ic, event, buffer_return, bytes_buffer, keysym_return, status_return), nullptr);
 
-    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
+    LOGTRACE(LCF_KEYBOARD, "%s called with keycode %d", __func__, event->keycode);
     KeyCode keycode = event->keycode;
     KeySym keysym = keycodeToKeysym(keycode, event->state & ShiftMask);
 
@@ -337,7 +337,7 @@ static KeySym keycodeToKeysym(KeyCode keycode, bool shifted)
 
 /* Override */ KeySym *XGetKeyboardMapping(Display *display, KeyCode first_keycode, int keycode_count, int *keysyms_per_keycode_return)
 {
-    LOG(LL_TRACE, LCF_KEYBOARD, "%s called with keycode_count %d", __func__, keycode_count);
+    LOGTRACE(LCF_KEYBOARD, "%s called with keycode_count %d", __func__, keycode_count);
     *keysyms_per_keycode_return = 2;
     KeySym *keysyms = static_cast<KeySym*>(malloc(keycode_count*(*keysyms_per_keycode_return)*sizeof(KeySym)));
     for (int c=0; c<keycode_count; c++) {

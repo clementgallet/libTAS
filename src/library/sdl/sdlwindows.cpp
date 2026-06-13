@@ -64,7 +64,7 @@ static bool windowFullscreen = false;
     if (GlobalState::isNative())
         return orig::SDL_GL_SwapBuffers();
 
-    LOGTRACE(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_OGL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_GL renderHUD_GL;
@@ -76,7 +76,7 @@ static bool windowFullscreen = false;
     if (GlobalState::isNative())
         return ORIG_SDL2_CALL(SDL_GL_SwapWindow, (window));
 
-    LOGTRACE(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_OGL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_GL renderHUD_GL;
@@ -88,7 +88,7 @@ static bool windowFullscreen = false;
     if (GlobalState::isNative())
         return ORIG_SDL3_CALL(SDL_GL_SwapWindow, (window));
 
-    LOGTRACE(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_OGL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_GL renderHUD_GL;
@@ -98,7 +98,7 @@ static bool windowFullscreen = false;
 
 void* SDL_GL_CreateContext(SDL_Window *window)
 {
-    LOGTRACE(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_OGL | LCF_WINDOW);
 
     void* context;
     NATIVECALL(context = ORIG_SDL23_CALL(SDL_GL_CreateContext, (window)));
@@ -126,7 +126,7 @@ void* SDL_GL_CreateContext(SDL_Window *window)
 
 void SDL_GL_DeleteContext(SDL_GLContext context)
 {
-    LOGTRACE(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_OGL | LCF_WINDOW);
 
     /* Delete texture and fbo in the OSD */
     RenderHUD_GL::fini();
@@ -140,7 +140,7 @@ void SDL_GL_DeleteContext(SDL_GLContext context)
 
 bool SDL_GL_DestroyContext(SDL_GLContext context)
 {
-    LOGTRACE(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_OGL | LCF_WINDOW);
 
     /* Delete texture and fbo in the OSD */
     RenderHUD_GL::fini();
@@ -154,7 +154,7 @@ bool SDL_GL_DestroyContext(SDL_GLContext context)
 
 /* Override */ int SDL_GL_SetSwapInterval(int interval)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_OGL | LCF_WINDOW, "%s call - setting to %d", __func__, interval);
+    LOGTRACE(LCF_SDL | LCF_OGL | LCF_WINDOW, "%s call - setting to %d", __func__, interval);
 
     /* We save the interval if the game wants it later */
     swapInterval = interval;
@@ -173,12 +173,12 @@ bool SDL_GL_DestroyContext(SDL_GLContext context)
 
 /* Override */ int SDL_GL_GetSwapInterval(void)
 {
-    LOGTRACE(LCF_SDL | LCF_OGL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_OGL | LCF_WINDOW);
     return swapInterval;
 }
 
 /* Override */ SDL_Window* sdl2::SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: %x", __func__,  title?title:"", x, y, w, h, flags);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: %x", __func__,  title?title:"", x, y, w, h, flags);
 
     ThreadManager::setMainThread();
 
@@ -347,7 +347,7 @@ SDL_Window * sdl3::SDL_CreateWindow(const char *title, int w, int h, SDL_WindowF
 
 /* Override */ void SDL_DestroyWindow(SDL_Window* window)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
 
     ORIG_SDL2_CALL(SDL_DestroyWindow, (window));
 
@@ -363,7 +363,7 @@ SDL_Window * sdl3::SDL_CreateWindow(const char *title, int w, int h, SDL_WindowF
 
 /* Override */ Uint32 SDL_GetWindowID(SDL_Window* window)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
     if (sdl::gameSDLWindow == window)
         return 1;
     return ORIG_SDL23_CALL(SDL_GetWindowID, (window));
@@ -371,14 +371,14 @@ SDL_Window * sdl3::SDL_CreateWindow(const char *title, int w, int h, SDL_WindowF
 
 /* Override */ SDL_Window* SDL_GetWindowFromID(Uint32 id)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
     if (id == 1)
         return sdl::gameSDLWindow;
     return ORIG_SDL23_CALL(SDL_GetWindowFromID, (id));
 }
 
 /* Override */ Uint32 sdl2::SDL_GetWindowFlags(SDL_Window* window){
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
     Uint32 flags = ORIG_SDL2_CALL(SDL_GetWindowFlags, (window));
     flags |= sdl2::SDL_WINDOW_INPUT_FOCUS | sdl2::SDL_WINDOW_MOUSE_FOCUS;
     if (windowFullscreen)
@@ -395,7 +395,7 @@ SDL_Window * sdl3::SDL_CreateWindow(const char *title, int w, int h, SDL_WindowF
 
 sdl3::SDL_WindowFlags sdl3::SDL_GetWindowFlags(SDL_Window *window)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
     Uint32 flags = ORIG_SDL3_CALL(SDL_GetWindowFlags, (window));
     flags |= sdl3::SDL_WINDOW_INPUT_FOCUS | sdl3::SDL_WINDOW_MOUSE_FOCUS;
     if (windowFullscreen)
@@ -411,7 +411,7 @@ sdl3::SDL_WindowFlags sdl3::SDL_GetWindowFlags(SDL_Window *window)
 
 /* Override */ void SDL_SetWindowTitle(SDL_Window * window, const char *title)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with title %s", __func__, title?title:"[null]");
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with title %s", __func__, title?title:"[null]");
 
     WindowTitle::setOriginalTitle(title);
     WindowTitle::setUpdateFunc([window] (const char* t) {ORIG_SDL23_CALL(SDL_SetWindowTitle, (window, t));});
@@ -419,7 +419,7 @@ sdl3::SDL_WindowFlags sdl3::SDL_GetWindowFlags(SDL_Window *window)
 
 /* Override */ void SDL_WM_SetCaption(const char *title, const char *icon)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with title %s", __func__, title?title:"[null]");
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with title %s", __func__, title?title:"[null]");
     LINK_NAMESPACE_SDL1(SDL_WM_SetCaption);
     WindowTitle::setOriginalTitle(title);
     WindowTitle::setUpdateFunc([icon] (const char* t) {orig::SDL_WM_SetCaption(t, icon);});
@@ -427,7 +427,7 @@ sdl3::SDL_WindowFlags sdl3::SDL_GetWindowFlags(SDL_Window *window)
 
 /* Override */ int sdl2::SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with flags %d", __func__, flags);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with flags %d", __func__, flags);
 
     windowFullscreen = (flags & sdl2::SDL_WINDOW_FULLSCREEN);
 
@@ -455,7 +455,7 @@ sdl3::SDL_WindowFlags sdl3::SDL_GetWindowFlags(SDL_Window *window)
 
 /* Override */ bool sdl3::SDL_SetWindowFullscreen(SDL_Window *window, bool fullscreen)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with fullscreen %d", __func__, fullscreen);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with fullscreen %d", __func__, fullscreen);
 
     windowFullscreen = fullscreen;
 
@@ -483,20 +483,20 @@ sdl3::SDL_WindowFlags sdl3::SDL_GetWindowFlags(SDL_Window *window)
 
 /* Override */ void SDL_SetWindowResizable(SDL_Window * window, SDL_bool resizable)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with resizable %d", __func__, resizable);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with resizable %d", __func__, resizable);
     /* Don't do anything */
 }
 
 /* Override */ void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with border %d", __func__, bordered);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with border %d", __func__, bordered);
     /* Don't do anything */
 }
 
 /* Override */ int SDL_CreateWindowAndRenderer(int width, int height,
         Uint32 window_flags, SDL_Window **window, SDL_Renderer **renderer)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
     LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "  size %d x %d", width, height);
 
     ThreadManager::setMainThread();
@@ -521,7 +521,7 @@ sdl3::SDL_WindowFlags sdl3::SDL_GetWindowFlags(SDL_Window *window)
 
 bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height, SDL_WindowFlags window_flags, SDL_Window **window, SDL_Renderer **renderer)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
     LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "  size %d x %d", width, height);
 
     ThreadManager::setMainThread();
@@ -546,7 +546,7 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
 
 /* Override */ void sdl2::SDL_SetWindowPosition(SDL_Window*, int x, int y)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
     /* Preventing the game to change the window position, but still push the event */
     struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
@@ -567,7 +567,7 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
 
 /* Override */ bool sdl3::SDL_SetWindowPosition(SDL_Window *window, int x, int y)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
     /* Preventing the game to change the window position, but still push the event */
     struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
@@ -588,7 +588,7 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
 
 /* Override */ bool SDL_GetWindowPosition(SDL_Window *, int *x, int *y)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
     /* Always simulate the game window being on top-left corner, so that games
      * using global mouse coords do not desync on different window positions.
      */
@@ -607,7 +607,7 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
         return ORIG_SDL2_CALL(SDL_SetWindowSize, (window, w, h));
     }
 
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with new size: %d x %d", __func__, w, h);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with new size: %d x %d", __func__, w, h);
 
     /* Ignored if game window is fullscreen */
     if (windowFullscreen)
@@ -624,7 +624,7 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
         return ORIG_SDL3_CALL(SDL_SetWindowSize, (window, w, h));
     }
 
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with new size: %d x %d", __func__, w, h);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with new size: %d x %d", __func__, w, h);
 
     /* Ignored if game window is fullscreen */
     if (windowFullscreen)
@@ -643,7 +643,7 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
         return ORIG_SDL2_CALL(SDL_GetWindowSize, (window, w, h));
     }
 
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
 
     if (!ScreenCapture::isInited())
         return ORIG_SDL2_CALL(SDL_GetWindowSize, (window, w, h));
@@ -663,7 +663,7 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
         return ORIG_SDL3_CALL(SDL_GetWindowSize, (window, w, h));
     }
 
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
 
     if (!ScreenCapture::isInited())
         return ORIG_SDL3_CALL(SDL_GetWindowSize, (window, w, h));
@@ -684,7 +684,7 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
 {
     LINK_NAMESPACE_SDL1(SDL_SetVideoMode);
 
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with size (%d,%d), bpp %d and flags %x", __func__, width, height, bpp, flags);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with size (%d,%d), bpp %d and flags %x", __func__, width, height, bpp, flags);
 
     ThreadManager::setMainThread();
 
@@ -720,7 +720,7 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
 
 /* Override */ int SDL_SetColorKey(sdl2::SDL_Surface *surface, int flag, Uint32 key)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with flag %d and key %d", __func__, flag, key);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with flag %d and key %d", __func__, flag, key);
     return ORIG_SDL2_CALL(SDL_SetColorKey, (surface, flag, key));
 }
 
@@ -731,7 +731,7 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
     if (GlobalState::isNative())
         return orig::SDL_Flip(screen);
 
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD renderHUD;
@@ -748,7 +748,7 @@ OVERRIDE void SDL_UpdateRects(sdl1::SDL_Surface *screen, int numrects, sdl1::SDL
     }
 
     LINK_NAMESPACE_SDL1(SDL_UpdateRect);
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with %d rects", __func__, numrects);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with %d rects", __func__, numrects);
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD renderHUD;
@@ -762,7 +762,7 @@ OVERRIDE void SDL_UpdateRects(sdl1::SDL_Surface *screen, int numrects, sdl1::SDL
     if (GlobalState::isNative())
         return orig::SDL_UpdateRect(screen, x, y, w, h);
 
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with pos (%d,%d) and size (%u,%u)", __func__, x, y, w, h);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with pos (%d,%d) and size (%u,%u)", __func__, x, y, w, h);
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD renderHUD;
@@ -771,7 +771,7 @@ OVERRIDE void SDL_UpdateRects(sdl1::SDL_Surface *screen, int numrects, sdl1::SDL
 
 /* Override */ sdl1::SDL_GrabMode SDL_WM_GrabInput(sdl1::SDL_GrabMode mode)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_KEYBOARD | LCF_MOUSE | LCF_WINDOW, "%s call with mode %d", __func__, mode);
+    LOGTRACE(LCF_SDL | LCF_KEYBOARD | LCF_MOUSE | LCF_WINDOW, "%s call with mode %d", __func__, mode);
     static sdl1::SDL_GrabMode fakeGrab = sdl1::SDL_GRAB_OFF;
     if (mode != sdl1::SDL_GRAB_QUERY)
         fakeGrab = mode;
@@ -781,7 +781,7 @@ OVERRIDE void SDL_UpdateRects(sdl1::SDL_Surface *screen, int numrects, sdl1::SDL
 
 /* Override */ int SDL_GL_SetAttribute(sdl2::SDL_GLattr attr, int value)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_OGL | LCF_WINDOW, "%s call with attr %d and value %d", __func__, attr, value);
+    LOGTRACE(LCF_SDL | LCF_OGL | LCF_WINDOW, "%s call with attr %d and value %d", __func__, attr, value);
 
     switch (attr) {
     case sdl2::SDL_GL_CONTEXT_MAJOR_VERSION:
@@ -820,7 +820,7 @@ OVERRIDE void SDL_UpdateRects(sdl1::SDL_Surface *screen, int numrects, sdl1::SDL
     if (GlobalState::isNative())
         return ORIG_SDL2_CALL(SDL_UpdateWindowSurface, (window));
 
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
     Global::game_info.video |= GameInfo::SDL2_SURFACE;
 
     /* Start the frame boundary and pass the function to draw */
@@ -836,7 +836,7 @@ OVERRIDE void SDL_UpdateRects(sdl1::SDL_Surface *screen, int numrects, sdl1::SDL
         return ORIG_SDL2_CALL(SDL_UpdateWindowSurfaceRects,(window, rects, numrects));
     }
 
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
     Global::game_info.video |= GameInfo::SDL2_SURFACE;
 
     /* Start the frame boundary and pass the function to draw */

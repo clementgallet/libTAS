@@ -34,7 +34,7 @@ void gl##NAME DECL\
 {\
     LINK_GL_POINTER(NAME);\
     if (GlobalState::isNative()) return glProcs.NAME ARGS;\
-    LOGTRACE(LCF_OGL);\
+    LOGTRACE_SIMPLE(LCF_OGL);\
     if (!Global::skipping_draw) { \
         PROFILE_SCOPE(#NAME, PROFILER_INFO_RENDERING); \
         return glProcs.NAME ARGS;\
@@ -44,7 +44,7 @@ void gl##NAME DECL\
 void my##gl##NAME DECL\
 {\
     if (GlobalState::isNative()) return glProcs.NAME ARGS;\
-    LOGTRACE(LCF_OGL);\
+    LOGTRACE_SIMPLE(LCF_OGL);\
     if (!Global::skipping_draw) { \
         PROFILE_SCOPE(#NAME, PROFILER_INFO_RENDERING); \
         return glProcs.NAME ARGS;\
@@ -127,7 +127,7 @@ GLFUNCSKIPDRAW(DrawArraysEXT, (GLenum mode, GLint first, GLsizei count), (mode, 
 
 void myglBlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)
 {
-    LOGTRACE(LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_OGL);
     if (!Global::skipping_draw) {
         /* Skip framebuffer blits (expensive post-processing ops) in fast mode */
         if (Global::shared_config.opengl_quality >= SharedConfig::OPENGL_QUALITY_FAST) {
@@ -145,7 +145,7 @@ void glTexParameterf(GLenum target, GLenum pname, GLfloat param)
 
 void myglTexParameterf(GLenum target, GLenum pname, GLfloat param)
 {
-    LOGTRACE(LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_OGL);
     if (Global::shared_config.opengl_quality >= SharedConfig::OPENGL_QUALITY_FAST) {
         switch (pname) {
             case GL_TEXTURE_MIN_FILTER:
@@ -177,7 +177,7 @@ void glTexParameteri(GLenum target, GLenum pname, GLfloat param)
 
 void myglTexParameteri(GLenum target, GLenum pname, GLint param)
 {
-    LOGTRACE(LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_OGL);
     if (Global::shared_config.opengl_quality >= SharedConfig::OPENGL_QUALITY_FAST) {
         switch (pname) {
             case GL_TEXTURE_MIN_FILTER:
@@ -210,7 +210,7 @@ void glEnable(GLenum cap)
 void myglEnable(GLenum cap)
 {
     if (GlobalState::isNative()) return glProcs.Enable(cap);
-    LOGTRACE(LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_OGL);
     if (Global::shared_config.opengl_quality >= SharedConfig::OPENGL_QUALITY_FAST) {
         switch (cap) {
             case GL_MULTISAMPLE:
@@ -253,7 +253,7 @@ void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 void myglViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     if (GlobalState::isNative()) return glProcs.Viewport(x, y, width, height);
-    LOG(LL_TRACE, LCF_OGL, "glViewport called with %d : %d", width, height);
+    LOGTRACE(LCF_OGL, "glViewport called with %d : %d", width, height);
     return glProcs.Viewport(x, y, width, height);
 }
 
@@ -266,7 +266,7 @@ void glGetIntegerv(GLenum pname, GLint *data)
 void myglGetIntegerv(GLenum pname, GLint *data)
 {
     if (GlobalState::isNative()) return glProcs.GetIntegerv(pname, data);
-    LOGTRACE(LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_OGL);
     if (Global::shared_config.opengl_soft)
     {
         // Unity 4.x uses GL_GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX to determine if there is enough memory for a texture
@@ -292,7 +292,7 @@ void glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x
 
 void myglCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
 {
-    LOGTRACE(LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_OGL);
     /* Skip texture copies in fast mode (reflection maps, shadow maps, etc.) */
     if (Global::shared_config.opengl_quality >= SharedConfig::OPENGL_QUALITY_FAST) {
         return;
@@ -308,7 +308,7 @@ void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffse
 
 void myglCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
 {
-    LOGTRACE(LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_OGL);
     /* Skip texture sub-copies in fast mode */
     if (Global::shared_config.opengl_quality >= SharedConfig::OPENGL_QUALITY_FAST) {
         return;
@@ -326,7 +326,7 @@ void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, 
 
 void myglFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
 {
-    LOGTRACE(LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_OGL);
     /* Skip secondary color attachments (post-processing effects) in fast mode */
     if (Global::shared_config.opengl_quality >= SharedConfig::OPENGL_QUALITY_FAST) {
         /* Keep color attachment 0 (main render target) and depth attachment */

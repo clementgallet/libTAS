@@ -21,6 +21,7 @@
 #define LIBTAS_LOGGING_H_INCL
 
 #include "../shared/lcf.h"
+#include "GlobalState.h"
 //#include "PerfTimer.h"
 
 #include <string>
@@ -36,13 +37,22 @@ namespace libtas {
 void debuglogfull(LogLevel ll, LogCategoryFlag lcf, const char* file, int line, ...);
 
 /* Main logging function */
-#define LOG(ll, lcf, ...) do {\
+#define LOG(ll, lcf, ...) \
+    do { \
 /*    PerfTimerCall ptc(lcf); */ \
     debuglogfull(ll, lcf, __FILE__, __LINE__, __VA_ARGS__);\
     } while (0)
 
 /* Trace logging for hooked functions where we only want to print the function name */
-#define LOGTRACE(lcf) LOG(LL_TRACE, lcf, "%s call.", __func__)
+#define LOGTRACE(lcf, ...) \
+    /* GlobalIndent gi; */ /* Uncommenting this causes a crash in a Unity game after big loading period... */ \
+    do { \
+/*    PerfTimerCall ptc(lcf); */ \
+    debuglogfull(LL_TRACE, lcf, __FILE__, __LINE__, __VA_ARGS__);\
+    } while (0)
+
+/* Trace logging for hooked functions where we only want to print the function name */
+#define LOGTRACE_SIMPLE(lcf) LOGTRACE(lcf, "%s call.", __func__)
 
 /* Macro of an assert */
 #define MYASSERT(term) if ((term)) {} \

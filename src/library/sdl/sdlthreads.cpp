@@ -26,18 +26,15 @@ namespace libtas {
 
 /* Override */ SDL_Thread* SDL_CreateThread(sdl2::SDL_ThreadFunction fn, const char *name, void *data)
 {
-    if (get_sdlversion() == 1)
-        /* SDL1 version prototype is SDL_CreateThread(int (SDLCALL *fn)(void *), void *data)
-         * So we can't print the thread name */
-        LOGTRACE(LCF_THREAD);
-    else
-        LOG(LL_TRACE, LCF_THREAD, "SDL Thread %s was created.", name);
+    /* SDL1 version prototype is SDL_CreateThread(int (SDLCALL *fn)(void *), void *data)
+     * So we can't print the thread name */
+    LOGTRACE(LCF_THREAD, "SDL Thread %s was created.", get_sdlversion() == 1 ? "unknown" : name);
     return ORIG_SDL2_CALL(SDL_CreateThread, (fn, name, data));
 }
 
 /* Override */ void SDL_WaitThread(SDL_Thread * thread, int *status)
 {
-    LOGTRACE(LCF_THREAD);
+    LOGTRACE_SIMPLE(LCF_THREAD);
     return ORIG_SDL2_CALL(SDL_WaitThread, (thread, status));
 }
 

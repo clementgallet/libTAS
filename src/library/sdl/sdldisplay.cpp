@@ -30,7 +30,7 @@ namespace libtas {
 
 /* Override */ int SDL_GetNumVideoDisplays(void)
 {
-    LOGTRACE(LCF_SDL | LCF_WINDOW);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
 
     int ret = ORIG_SDL2_CALL(SDL_GetNumVideoDisplays, ());
     LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns %d", ret);
@@ -40,7 +40,7 @@ namespace libtas {
 
 /* Override */ const char *SDL_GetDisplayName(int displayIndex)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
     const char* ret = ORIG_SDL23_CALL(SDL_GetDisplayName, (displayIndex));
     LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns %d", ret);
@@ -50,7 +50,7 @@ namespace libtas {
 
 /* Override */ int SDL_GetDisplayBounds(int displayIndex, sdl2::SDL_Rect * rect)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
     int ret = 0;
     if (GlobalState::isNative() || !Global::shared_config.screen_width) {
@@ -78,7 +78,7 @@ namespace libtas {
 
 /* Override */ int SDL_GetDisplayDPI(int displayIndex, float * ddpi, float * hdpi, float * vdpi)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
     int ret = ORIG_SDL2_CALL(SDL_GetDisplayDPI, (displayIndex, ddpi, hdpi, vdpi));
     LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns ddpi=%f, hdpi=%f, vdpi=%f", ddpi?*ddpi:0.0f, hdpi?*hdpi:0.0f, vdpi?*vdpi:0.0f);
@@ -88,7 +88,7 @@ namespace libtas {
 
 /* Override */ int SDL_GetDisplayUsableBounds(int displayIndex, sdl2::SDL_Rect * rect)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
     int ret = ORIG_SDL23_CALL(SDL_GetDisplayUsableBounds, (displayIndex, rect));
     if (rect) {
@@ -103,7 +103,7 @@ namespace libtas {
 
 /* Override */ int SDL_GetNumDisplayModes(int displayIndex)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
     int ret = 1;
 
@@ -117,7 +117,7 @@ namespace libtas {
 
 /* Override */ int SDL_GetDisplayMode(int displayIndex, int modeIndex, sdl2::SDL_DisplayMode * mode)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d and mode %d", __func__, displayIndex, modeIndex);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with index %d and mode %d", __func__, displayIndex, modeIndex);
 
     int ret = 0;
     if (GlobalState::isNative() || !Global::shared_config.screen_width) {
@@ -139,7 +139,7 @@ namespace libtas {
 
 /* Override */ int sdl2::SDL_GetDesktopDisplayMode(int displayIndex, sdl2::SDL_DisplayMode * mode)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
     int ret = ORIG_SDL2_CALL(SDL_GetDesktopDisplayMode, (displayIndex, mode));
 
@@ -157,7 +157,7 @@ namespace libtas {
 
 /* Override */ const sdl3::SDL_DisplayMode * sdl3::SDL_GetDesktopDisplayMode(SDL_DisplayID displayID)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayID);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayID);
 
     const sdl3::SDL_DisplayMode* mode = ORIG_SDL3_CALL(SDL_GetDesktopDisplayMode, (displayID));
 
@@ -182,7 +182,7 @@ namespace libtas {
 
 /* Override */ int sdl2::SDL_GetCurrentDisplayMode(int displayIndex, sdl2::SDL_DisplayMode * mode)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayIndex);
 
     int ret = 0;
     if (GlobalState::isNative() || !Global::shared_config.screen_width) {
@@ -205,7 +205,7 @@ namespace libtas {
 
 const sdl3::SDL_DisplayMode * sdl3::SDL_GetCurrentDisplayMode(SDL_DisplayID displayID)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayID);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with index %d", __func__, displayID);
 
     const sdl3::SDL_DisplayMode* mode;
     static sdl3::SDL_DisplayMode new_mode;
@@ -235,7 +235,7 @@ const sdl3::SDL_DisplayMode * sdl3::SDL_GetCurrentDisplayMode(SDL_DisplayID disp
 
 /* Override */ sdl2::SDL_DisplayMode *SDL_GetClosestDisplayMode(int displayIndex, const sdl2::SDL_DisplayMode * mode, sdl2::SDL_DisplayMode * closest)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with index %d and mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", __func__, displayIndex, mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with index %d and mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", __func__, displayIndex, mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
 
     sdl2::SDL_DisplayMode *dm = nullptr;
     if (GlobalState::isNative() || !Global::shared_config.screen_width) {
@@ -262,7 +262,7 @@ const sdl3::SDL_DisplayMode * sdl3::SDL_GetCurrentDisplayMode(SDL_DisplayID disp
 
 /* Override */ int SDL_GetWindowDisplayIndex(SDL_Window * window)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with window %d", __func__, (void*)window);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with window %d", __func__, (void*)window);
 
     int ret = 0;
     if (GlobalState::isNative() || !Global::shared_config.screen_width) {
@@ -275,7 +275,7 @@ const sdl3::SDL_DisplayMode * sdl3::SDL_GetCurrentDisplayMode(SDL_DisplayID disp
 
 /* Override */ int SDL_SetWindowDisplayMode(SDL_Window * window, const sdl2::SDL_DisplayMode* mode)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with window %d and mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", __func__, (void*)window, mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with window %d and mode format: %d, w: %d, h: %d, refresh rate: %d, data: %d", __func__, (void*)window, mode->format, mode->w, mode->h, mode->refresh_rate, mode->driverdata);
 
     int ret = ORIG_SDL2_CALL(SDL_SetWindowDisplayMode, (window, mode));
     LOG(LL_DEBUG, LCF_SDL | LCF_WINDOW, "   returns ret %d", ret);
@@ -285,7 +285,7 @@ const sdl3::SDL_DisplayMode * sdl3::SDL_GetCurrentDisplayMode(SDL_DisplayID disp
 
 /* Override */ int SDL_GetWindowDisplayMode(SDL_Window * window, sdl2::SDL_DisplayMode * mode)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_WINDOW, "%s call with window %d", __func__, (void*)window);
+    LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call with window %d", __func__, (void*)window);
 
     int ret = ORIG_SDL2_CALL(SDL_GetWindowDisplayMode, (window, mode));
 

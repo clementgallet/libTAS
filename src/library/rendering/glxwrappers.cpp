@@ -215,7 +215,7 @@ static void* store_orig_and_return_my_symbol(const GLubyte* symbol, void* real_p
 
 void(*glXGetProcAddress (const GLubyte *procName))()
 {
-    LOG(LL_TRACE, LCF_OGL, "%s call with symbol %s", __func__, procName);
+    LOGTRACE(LCF_OGL, "%s call with symbol %s", __func__, procName);
     LINK_NAMESPACE(glXGetProcAddress, "GL");
 
     if (!orig::glXGetProcAddress) return nullptr;
@@ -227,7 +227,7 @@ void(*glXGetProcAddress (const GLubyte *procName))()
 
 __GLXextFuncPtr glXGetProcAddressARB (const GLubyte *procName)
 {
-    LOG(LL_TRACE, LCF_OGL, "%s call with symbol %s", __func__, procName);
+    LOGTRACE(LCF_OGL, "%s call with symbol %s", __func__, procName);
     LINK_NAMESPACE(glXGetProcAddressARB, "GL");
 
     if (!orig::glXGetProcAddressARB) return nullptr;
@@ -239,7 +239,7 @@ __GLXextFuncPtr glXGetProcAddressARB (const GLubyte *procName)
 
 void* glXGetProcAddressEXT (const GLubyte *procName)
 {
-    LOG(LL_TRACE, LCF_OGL, "%s call with symbol %s", __func__, procName);
+    LOGTRACE(LCF_OGL, "%s call with symbol %s", __func__, procName);
     LINK_NAMESPACE(glXGetProcAddressEXT, "GL");
 
     if (!orig::glXGetProcAddressEXT) return nullptr;
@@ -262,7 +262,7 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx )
     if (GlobalState::isNative())
         return ret;
 
-    LOGTRACE(LCF_WINDOW | LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_OGL);
 
     if (drawable && XlibGameWindow::get()) {
         Global::game_info.video |= GameInfo::OPENGL;
@@ -292,7 +292,7 @@ Bool glXMakeContextCurrent( Display *dpy, GLXDrawable draw, GLXDrawable read, GL
     if (GlobalState::isNative())
         return ret;
 
-    LOGTRACE(LCF_WINDOW | LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_OGL);
 
     if (draw && XlibGameWindow::get()) {
         Global::game_info.video |= GameInfo::OPENGL;
@@ -311,7 +311,7 @@ void glXSwapBuffers( Display *dpy, XID drawable )
     if (GlobalState::isNative())
         return glProcs.XSwapBuffers(dpy, drawable);
 
-    LOGTRACE(LCF_WINDOW | LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_OGL);
 
     /* Start the frame boundary and pass the function to draw */
     static RenderHUD_GL renderHUD;
@@ -322,7 +322,7 @@ static int swapInterval = 0;
 
 void glXSwapIntervalEXT (Display *dpy, GLXDrawable drawable, int interval)
 {
-    LOG(LL_TRACE, LCF_OGL, "%s call with interval %d", __func__, interval);
+    LOGTRACE(LCF_OGL, "%s call with interval %d", __func__, interval);
     LINK_GL_POINTER(XSwapIntervalEXT);
 
     swapInterval = interval;
@@ -339,7 +339,7 @@ void glXSwapIntervalEXT (Display *dpy, GLXDrawable drawable, int interval)
 
 int glXSwapIntervalSGI (int interval)
 {
-    LOG(LL_TRACE, LCF_OGL, "%s call with interval %d", __func__, interval);
+    LOGTRACE(LCF_OGL, "%s call with interval %d", __func__, interval);
     LINK_GL_POINTER(XSwapIntervalSGI);
 
     swapInterval = interval;
@@ -371,7 +371,7 @@ int glXSwapIntervalSGI (int interval)
 
 int glXSwapIntervalMESA (unsigned int interval)
 {
-    LOG(LL_TRACE, LCF_OGL, "%s call with interval %d", __func__, interval);
+    LOGTRACE(LCF_OGL, "%s call with interval %d", __func__, interval);
     LINK_GL_POINTER(XSwapIntervalMESA);
 
     swapInterval = interval;
@@ -387,13 +387,13 @@ int glXSwapIntervalMESA (unsigned int interval)
 
 int glXGetSwapIntervalMESA(void)
 {
-    LOGTRACE(LCF_WINDOW | LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_OGL);
     return swapInterval;
 }
 
 const char* glXQueryExtensionsString(Display* dpy, int screen)
 {
-    LOGTRACE(LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_OGL);
 
     /* Unity has different behaviors depending on the GLX extensions present,
      * at least for GLX_SGI_swap_control. Returning an empty string works fine. */
@@ -414,7 +414,7 @@ GLX_SGIX_pbuffer GLX_SGIX_visual_select_group GLX_SGI_make_current_read";
     
 void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigned int * value)
 {
-    LOGTRACE(LCF_WINDOW | LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_OGL);
 
     if (attribute == GLX_SWAP_INTERVAL_EXT) {
         *value = swapInterval;
@@ -431,7 +431,7 @@ void glXQueryDrawable(Display * dpy,  GLXDrawable draw,  int attribute,  unsigne
 
 GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int *attrib_list)
 {
-    LOGTRACE(LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_OGL);
     LINK_GL_POINTER(XCreateContextAttribsARB);
     int i = 0;
     while (attrib_list[i] != 0) {
@@ -467,7 +467,7 @@ GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXCont
 
 void glXDestroyContext(Display * dpy,  GLXContext ctx)
 {
-    LOGTRACE(LCF_WINDOW | LCF_OGL);
+    LOGTRACE_SIMPLE(LCF_WINDOW | LCF_OGL);
     LINK_GL_POINTER(XDestroyContext);
     ScreenCapture::fini();
     return glProcs.XDestroyContext(dpy, ctx);

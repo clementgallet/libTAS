@@ -56,7 +56,7 @@ OVERRIDE Bool XShmPutImage(
     if (GlobalState::isNative())
         return orig::XShmPutImage(dpy, d, gc, image, src_x, src_y, dst_x, dst_y, src_width, src_height, send_event);
 
-    LOG(LL_TRACE, LCF_WINDOW, "%s called with drawable %d", __func__, d);
+    LOGTRACE(LCF_WINDOW, "%s called with drawable %d", __func__, d);
 
     /* Only handle the screen draw if no other rendering API is used */
     if ((Global::game_info.video & GameInfo::VDPAU) || (Global::game_info.video & GameInfo::OPENGL))

@@ -80,7 +80,7 @@ void transfer_sleep(const struct timespec &ts, struct timespec *rem)
         return;
     }
 
-    LOG(LL_TRACE, LCF_SDL | LCF_SLEEP, "%s call - sleep for %d ms", __func__, sleep);
+    LOGTRACE(LCF_SDL | LCF_SLEEP, "%s call - sleep for %d ms", __func__, sleep);
 
     transfer_sleep(ts, NULL);
 }
@@ -98,7 +98,7 @@ void transfer_sleep(const struct timespec &ts, struct timespec *rem)
         return;
     }
 
-    LOG(LL_TRACE, LCF_SDL | LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, ts.tv_sec, ts.tv_nsec);
+    LOGTRACE(LCF_SDL | LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, ts.tv_sec, ts.tv_nsec);
 
     transfer_sleep(ts, NULL);
 }
@@ -114,7 +114,7 @@ void transfer_sleep(const struct timespec &ts, struct timespec *rem)
     if (GlobalState::isNative())
         return orig::nanosleep(&ts, NULL);
 
-    LOG(LL_TRACE, LCF_SLEEP, "%s call - sleep for %d us", __func__, usec);
+    LOGTRACE(LCF_SLEEP, "%s call - sleep for %d us", __func__, usec);
 
      /* A bit hackish: Disable sleeps from nvidia driver */
     if (usec && ThreadManager::isMainThread()) {
@@ -143,7 +143,7 @@ void transfer_sleep(const struct timespec &ts, struct timespec *rem)
         return orig::nanosleep(requested_time, remaining);
     }
 
-    LOG(LL_TRACE, LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, requested_time->tv_sec, requested_time->tv_nsec);
+    LOGTRACE(LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, requested_time->tv_sec, requested_time->tv_nsec);
 
     transfer_sleep(*requested_time, remaining);
     return 0;
@@ -166,7 +166,7 @@ void transfer_sleep(const struct timespec &ts, struct timespec *rem)
         sleeptime -= curtime;
     }
     
-    LOG(LL_TRACE, LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, sleeptime.tv_sec, sleeptime.tv_nsec);
+    LOGTRACE(LCF_SLEEP, "%s call - sleep for %d.%09d sec", __func__, sleeptime.tv_sec, sleeptime.tv_nsec);
 
     transfer_sleep(sleeptime, rem);
     return 0;
@@ -176,7 +176,7 @@ void transfer_sleep(const struct timespec &ts, struct timespec *rem)
 {
     RETURN_IF_NATIVE(sched_yield, (), nullptr);
 
-    LOGTRACE(LCF_SLEEP);
+    LOGTRACE_SIMPLE(LCF_SLEEP);
 
     if (Global::shared_config.game_specific_timing & SharedConfig::GC_TIMING_CELESTE) {
         if (ThreadManager::isMainThread())

@@ -36,7 +36,7 @@ namespace libtas {
 
 /* Override */ time_t time(time_t* t) __THROW
 {
-    LOGTRACE(LCF_TIMEGET);
+    LOGTRACE_SIMPLE(LCF_TIMEGET);
     struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_TIME);
     LOG(LL_DEBUG, LCF_TIMEGET, "  returning %d", ts.tv_sec);
     if (t)
@@ -46,7 +46,7 @@ namespace libtas {
 
 /* Override */ int gettimeofday(struct timeval* tv, struct timezone* tz) __THROW
 {
-    LOGTRACE(LCF_TIMEGET);
+    LOGTRACE_SIMPLE(LCF_TIMEGET);
     struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_GETTIMEOFDAY);
     LOG(LL_DEBUG, LCF_TIMEGET, "  returning %d.%06d", ts.tv_sec, ts.tv_nsec/1000);
     if (tv) {
@@ -58,7 +58,7 @@ namespace libtas {
 
 /* Override */ clock_t clock (void) __THROW
 {
-    LOGTRACE(LCF_TIMEGET);
+    LOGTRACE_SIMPLE(LCF_TIMEGET);
     struct timespec ts = DeterministicTimer::get().getTicks(SharedConfig::TIMETYPE_CLOCK);
     clock_t clk = static_cast<clock_t>(ts.tv_sec) * CLOCKS_PER_SEC + (static_cast<clock_t>(ts.tv_nsec) * CLOCKS_PER_SEC) / 1000000000;
     LOG(LL_DEBUG, LCF_TIMEGET, "  returning %d", clk);
@@ -69,7 +69,7 @@ namespace libtas {
 {
     RETURN_IF_NATIVE(clock_gettime, (clock_id, tp), nullptr);
 
-    LOGTRACE(LCF_TIMEGET);
+    LOGTRACE_SIMPLE(LCF_TIMEGET);
 
     /* .NET coreclr computes several speed chekcs at startup.
      * Because we don't advance time, it causes a softlock.

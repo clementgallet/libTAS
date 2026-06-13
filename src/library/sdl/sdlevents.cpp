@@ -161,7 +161,7 @@ void pushNativeSDLEvents(void)
      */
     GlobalOwnCode toc;
 
-    NOLOGCALL(ORIG_SDL2_CALL(SDL_PumpEvents, ()));
+    // NOLOGCALL(ORIG_SDL2_CALL(SDL_PumpEvents, ()));
 
     /* We use SDL_PeepEvents() for gathering events from the SDL queue,
      * as it is the native function of getting events.
@@ -193,7 +193,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_PumpEvents(void)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
     
     /* Update the internal keyboard array */
     int SDLver = get_sdlversion();
@@ -212,7 +212,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ int SDL_PeepEvents(sdl2::SDL_Event* events2, int numevents, sdl2::SDL_eventaction action, Uint32 minType, Uint32 maxType)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL23_CALL(SDL_PeepEvents, (events2, numevents, action, minType, maxType));
@@ -306,7 +306,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ int SDL_PollEvent(sdl2::SDL_Event *event)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         int ret = ORIG_SDL23_CALL(SDL_PollEvent, (event));
@@ -316,7 +316,7 @@ void pushNativeSDLEvents(void)
     }
     
     /* From SDL2/3 code, this function calls SDL_PumpEvents at the beginning */
-    NOLOGCALL(ORIG_SDL2_CALL(SDL_PumpEvents, ()));
+    // NOLOGCALL(ORIG_SDL2_CALL(SDL_PumpEvents, ()));
 
     int SDLver = get_sdlversion();
     if (event) {
@@ -351,7 +351,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ SDL_bool SDL_HasEvent(Uint32 type)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL23_CALL(SDL_HasEvent, (type));
@@ -362,7 +362,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ SDL_bool SDL_HasEvents(Uint32 minType, Uint32 maxType)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL23_CALL(SDL_HasEvents, (minType, maxType));
@@ -385,7 +385,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_FlushEvent(Uint32 type)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL23_CALL(SDL_FlushEvent, (type));
@@ -396,7 +396,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_FlushEvents(Uint32 minType, Uint32 maxType)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL23_CALL(SDL_FlushEvents, (minType, maxType));
@@ -407,7 +407,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ int SDL_WaitEvent(sdl2::SDL_Event * event)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL23_CALL(SDL_WaitEvent, (event));
@@ -440,7 +440,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ int SDL_WaitEventTimeout(sdl2::SDL_Event * event, int timeout)
 {
-    LOG(LL_TRACE, LCF_SDL | LCF_EVENTS | LCF_TODO, "%s call with timeout %d", __func__, timeout);
+    LOGTRACE(LCF_SDL | LCF_EVENTS | LCF_TODO, "%s call with timeout %d", __func__, timeout);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL23_CALL(SDL_WaitEventTimeout, (event, timeout));
@@ -482,7 +482,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ int SDL_PushEvent(sdl2::SDL_Event * event)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (event == nullptr)
         return -1;
@@ -543,7 +543,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_SetEventFilter(sdl2::SDL_EventFilter filter, void *userdata)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL23_CALL(SDL_SetEventFilter, (filter, userdata));
@@ -560,7 +560,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ SDL_bool SDL_GetEventFilter(sdl2::SDL_EventFilter * filter, void **userdata)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (filter)
         *filter = nullptr;
@@ -593,7 +593,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_AddEventWatch(sdl2::SDL_EventFilter filter, void *userdata)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL23_CALL(SDL_AddEventWatch, (filter, userdata));
@@ -608,7 +608,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_DelEventWatch(sdl2::SDL_EventFilter filter, void *userdata)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL2_CALL(SDL_DelEventWatch, (filter, userdata));
@@ -619,7 +619,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_RemoveEventWatch(sdl3::SDL_EventFilter filter, void *userdata)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL3_CALL(SDL_RemoveEventWatch, (filter, userdata));
@@ -630,7 +630,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_FilterEvents(sdl2::SDL_EventFilter filter, void *userdata)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL23_CALL(SDL_FilterEvents, (filter, userdata));
@@ -645,7 +645,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ Uint8 SDL_EventState(Uint32 type, int state)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL2_CALL(SDL_EventState, (type, state));
@@ -667,7 +667,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ void SDL_SetEventEnabled(Uint32 type, bool enabled)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL3_CALL(SDL_SetEventEnabled, (type, enabled));
@@ -681,7 +681,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ bool SDL_EventEnabled(Uint32 type)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL3_CALL(SDL_EventEnabled, (type));
@@ -692,7 +692,7 @@ void pushNativeSDLEvents(void)
 
 /* Override */ Uint32 SDL_RegisterEvents(int numevents)
 {
-    LOGTRACE(LCF_SDL | LCF_EVENTS | LCF_TODO);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_EVENTS | LCF_TODO);
 
     if (Global::shared_config.debug_state & SharedConfig::DEBUG_NATIVE_EVENTS) {
         return ORIG_SDL2_CALL(SDL_RegisterEvents, (numevents));

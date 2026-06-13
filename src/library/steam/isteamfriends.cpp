@@ -33,7 +33,7 @@ std::string currentPersonaName;
 
 const char *ISteamFriends::GetPersonaName()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     if (currentPersonaName.empty())
         return "";
 
@@ -42,68 +42,68 @@ const char *ISteamFriends::GetPersonaName()
 
 SteamAPICall_t ISteamFriends::SetPersonaName( const char *pchPersonaName )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     currentPersonaName = pchPersonaName ? pchPersonaName : "";
     return 0;
 }
 
 EPersonaState ISteamFriends::GetPersonaState()
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0; // k_EPersonaStateOffline
 }
 
 int ISteamFriends::GetFriendCount( int iFriendFlags )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0;
 }
 
 CSteamID ISteamFriends::GetFriendByIndex( int iFriend, int iFriendFlags )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0;
 }
 
 EFriendRelationship ISteamFriends::GetFriendRelationship( CSteamID steamIDFriend )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0; // k_EFriendRelationshipNone
 }
 
 EPersonaState ISteamFriends::GetFriendPersonaState( CSteamID steamIDFriend )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0; // k_EPersonaStateOffline
 }
 
 const char *ISteamFriends::GetFriendPersonaName( CSteamID steamIDFriend )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return "";
 }
 
 bool ISteamFriends::GetFriendGamePlayed( CSteamID steamIDFriend, FriendGameInfo_t *pFriendGameInfo )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return false;
 }
 
 const char *ISteamFriends::GetFriendPersonaNameHistory( CSteamID steamIDFriend, int iPersonaName )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return "";
 }
 
 int ISteamFriends::GetFriendSteamLevel( CSteamID steamIDFriend )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
 	return 0;
 }
 
 const char *ISteamFriends::GetPlayerNickname( CSteamID steamIDPlayer )
 {
-    LOGTRACE(LCF_STEAM);
+    LOGTRACE_SIMPLE(LCF_STEAM);
     return nullptr;
 }
 
