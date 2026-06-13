@@ -176,6 +176,12 @@ void __attribute__((constructor)) init(void)
                 setDynapiAddr(addr);
                 break;
             }
+            case MSGN_SDL_FULLSCREEN_ADDR: {
+                uint64_t addr;
+                receiveData(&addr, sizeof(uint64_t));
+                setSDLFullscreenAddr(addr);
+                break;
+            }
             case MSGN_UNITY_ADDR: {
                 int func;
                 uint64_t addr;

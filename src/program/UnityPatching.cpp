@@ -985,6 +985,16 @@ bool UnityPatching::sendAddressesFromSymbols(std::string debugfile, uintptr_t ba
         sendMessage(MSGN_SDL_DYNAPI_ADDR);
         sendData(&sdl_addr, sizeof(uint64_t));
     }
+    else {
+        /* When Unity was compiled with SDL without dynamic API, SDL functions are not hooked.
+         * As a consequence, there is a softlock inside X11_SetWindowFullscreen */
+        uint64_t sdl_fullscreen_addr = getSymbolAddress("X11_SetWindowFullscreen", debugfile.c_str());
+        if (sdl_fullscreen_addr != 0) {
+            sdl_fullscreen_addr += base_address;
+            sendMessage(MSGN_SDL_FULLSCREEN_ADDR);
+            sendData(&sdl_fullscreen_addr, sizeof(uint64_t));
+        }
+    }
 
     for (int i=0; UNITY_SYMBOLS[i].id != UNITY_FUNCS_LEN; i++) {
         if (strlen(UNITY_SYMBOLS[i].symbol) == 0)

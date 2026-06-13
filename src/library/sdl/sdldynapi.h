@@ -32,6 +32,7 @@
 namespace libtas {
 
 void setDynapiAddr(uint64_t addr);
+void setSDLFullscreenAddr(uint64_t addr);
 
 namespace index_sdl2 {
     enum {

@@ -21,6 +21,7 @@
 
 #include "logging.h"
 #include "hook.h"
+#include "hookpatch.h"
 #include "GlobalState.h"
 #include "../external/elfhacks.h"
 
@@ -63,6 +64,20 @@ void setDynapiAddr(uint64_t addr)
 {
     LOG(LL_DEBUG, LCF_SDL | LCF_HOOK, "Received SDL_DYNAPI_entry address %llx", addr);
     orig_SDL_DYNAPI_entry = reinterpret_cast<decltype(&SDL_DYNAPI_entry)>(addr);
+}
+
+static void (*orig_X11_SetWindowFullscreen)(void* t, void *window, void *_display, int fullscreen);
+
+static void dummy_X11_SetWindowFullscreen(void* t, void *window, void *_display, int fullscreen)
+{
+    LOGTRACE(LCF_SDL | LCF_HOOK, "Dummy X11_SetWindowFullscreen called");
+    // NATIVECALL(orig_X11_SetWindowFullscreen(t, window, _display, fullscreen));
+}
+
+void setSDLFullscreenAddr(uint64_t addr)
+{
+    LOG(LL_DEBUG, LCF_SDL | LCF_HOOK, "Received X11_SetWindowFullscreen address %llx", addr);
+    hook_patch_addr(reinterpret_cast<void*>(addr), reinterpret_cast<void**>(&orig_X11_SetWindowFullscreen), reinterpret_cast<void*>(dummy_X11_SetWindowFullscreen)); \
 }
 
 /* Override */ Sint32 SDL_DYNAPI_entry(Uint32 apiver, void *table, Uint32 tablesize) {

@@ -382,6 +382,12 @@ enum {
      */
     MSGN_SDL_DYNAPI_ADDR,
 
+    /* Send the address of the X11_SetWindowFullscreen() function within the game
+     * executable if present
+     * Argument: uint64_t addr
+     */
+    MSGN_SDL_FULLSCREEN_ADDR,
+
     /* Send the address of a Unity function
      * within the UnityPlayer.so library file if present
      * Arguments: int, uint64_t addr
