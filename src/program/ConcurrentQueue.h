@@ -56,11 +56,15 @@ public:
         mutex_.unlock();
     }
 
-    void pop(T& item)
+    bool pop(T& item)
     {
         std::scoped_lock lock(mutex_);
+        if (queue_.empty()) {
+            return false;
+        }
         item = queue_.front();
         queue_.pop_front();
+        return true;
     }
 
     void push(const T& item)

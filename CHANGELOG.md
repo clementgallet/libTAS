@@ -12,6 +12,7 @@
 
 * Skip freeing cursors that were not loaded
 * Fix sound mixing for uncontrolled time
+* Fix concurrent access to action queue causing a crash in libTAS
 
 ## [1.4.8] - 2026-05-14
 ### Added
