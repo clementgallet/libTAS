@@ -11,6 +11,7 @@
 ### Fixed
 
 * Skip freeing cursors that were not loaded
+* Fix sound mixing for uncontrolled time
 
 ## [1.4.8] - 2026-05-14
 ### Added

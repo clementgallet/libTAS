@@ -103,9 +103,9 @@ TimeHolder NonDeterministicTimer::enterFrameBoundary()
     inFB = true;
 
     lastEnterTime = TimeHolder::now();
+    TimeHolder elapsedTicks = ticks - lastEnterTicks;
     lastEnterTicks = ticks;
 
-    TimeHolder elapsedTicks = ticks - lastEnterTicks;
     return elapsedTicks;
 }
 
