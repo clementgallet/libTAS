@@ -19,6 +19,7 @@
 
 #include "sdlkeyboardlayout.h"
 
+#include "sdl/sdldynapi.h"
 #include "logging.h"
 
 namespace libtas {
@@ -332,20 +333,21 @@ unsigned char GetScanFromKey1(sdl1::SDLKey key){
     return 0;
 }
 
+int SDL_GetKeyFromScancode(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3)
+{
+    const std::uintptr_t storage[] = {p1, p2, p3};
+
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_GetKeyFromScancode,
+                                            &sdl3::SDL_GetKeyFromScancode,
+                                            storage);
+}
+
 /* Override */ sdl2::SDL_Keycode sdl2::SDL_GetKeyFromScancode(sdl2::SDL_Scancode scancode)
 {
     LOGTRACE(LCF_SDL | LCF_KEYBOARD, "%s called with scancode %d", __func__, (int)scancode);
     sdl2::SDL_Keycode keycode = SDL2_default_keymap[scancode];
     LOG(LL_DEBUG, LCF_SDL | LCF_KEYBOARD, "   returning %d", keycode);
     return keycode;
-}
-
-/* Override */ sdl2::SDL_Scancode sdl2::SDL_GetScancodeFromKey(sdl2::SDL_Keycode key)
-{
-    LOGTRACE(LCF_SDL | LCF_KEYBOARD, "%s called with key %d", __func__, key);
-    sdl2::SDL_Scancode scancode = GetScanFromKey(key);
-    LOG(LL_DEBUG, LCF_SDL | LCF_KEYBOARD, "   returning %d", scancode);
-    return scancode;
 }
 
 sdl3::SDL_Keycode sdl3::SDL_GetKeyFromScancode(sdl3::SDL_Scancode scancode, sdl3::SDL_Keymod modstate, bool key_event)
@@ -355,6 +357,23 @@ sdl3::SDL_Keycode sdl3::SDL_GetKeyFromScancode(sdl3::SDL_Scancode scancode, sdl3
     sdl3::SDL_Keycode keycode = SDL2_default_keymap[scancode];
     LOG(LL_DEBUG, LCF_SDL | LCF_KEYBOARD, "   returning %d", keycode);
     return keycode;
+}
+
+int SDL_GetScancodeFromKey(std::uintptr_t p1, std::uintptr_t p2)
+{
+    const std::uintptr_t storage[] = {p1, p2};
+
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_GetScancodeFromKey,
+                                            &sdl3::SDL_GetScancodeFromKey,
+                                            storage);
+}
+
+/* Override */ sdl2::SDL_Scancode sdl2::SDL_GetScancodeFromKey(sdl2::SDL_Keycode key)
+{
+    LOGTRACE(LCF_SDL | LCF_KEYBOARD, "%s called with key %d", __func__, key);
+    sdl2::SDL_Scancode scancode = GetScanFromKey(key);
+    LOG(LL_DEBUG, LCF_SDL | LCF_KEYBOARD, "   returning %d", scancode);
+    return scancode;
 }
 
 sdl3::SDL_Scancode sdl3::SDL_GetScancodeFromKey(sdl3::SDL_Keycode key, sdl3::SDL_Keymod *modstate)

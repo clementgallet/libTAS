@@ -59,6 +59,15 @@ SDL_Window *SDL_GetMouseFocus(void)
     return sdl::gameSDLWindow;
 }
 
+Uint32 SDL_GetMouseState(std::uintptr_t p1, std::uintptr_t p2)
+{
+    const std::uintptr_t storage[] = {p1, p2};
+
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_GetMouseState,
+                                            &sdl3::SDL_GetMouseState,
+                                            storage);
+}
+
 Uint32 sdl2::SDL_GetMouseState(int *x, int *y)
 {
     LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
@@ -85,6 +94,15 @@ sdl3::SDL_MouseButtonFlags sdl3::SDL_GetMouseState(float *x, float *y)
     return SingleInput::toSDL2PointerMask(Inputs::game_ai.pointer.mask);
 }
 
+Uint32 SDL_GetGlobalMouseState(std::uintptr_t p1, std::uintptr_t p2)
+{
+    const std::uintptr_t storage[] = {p1, p2};
+
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_GetGlobalMouseState,
+                                            &sdl3::SDL_GetGlobalMouseState,
+                                            storage);
+}
+
 Uint32 sdl2::SDL_GetGlobalMouseState(int *x, int *y)
 {
     LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
@@ -105,6 +123,15 @@ sdl3::SDL_MouseButtonFlags sdl3::SDL_GetGlobalMouseState(float *x, float *y)
      * Hopefully games won't use this function anyway.
      */
     return sdl3::SDL_GetMouseState(x, y);
+}
+
+Uint32 SDL_GetRelativeMouseState(std::uintptr_t p1, std::uintptr_t p2)
+{
+    const std::uintptr_t storage[] = {p1, p2};
+
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_GetRelativeMouseState,
+                                            &sdl3::SDL_GetRelativeMouseState,
+                                            storage);
 }
 
 Uint32 sdl2::SDL_GetRelativeMouseState(int *x, int *y)
@@ -148,6 +175,15 @@ sdl3::SDL_MouseButtonFlags sdl3::SDL_GetRelativeMouseState(float *x, float *y)
     return ret;
 }
 
+void SDL_WarpMouseInWindow(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3)
+{
+    const std::uintptr_t storage[] = {p1, p2, p3};
+
+    invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_WarpMouseInWindow,
+                                     &sdl3::SDL_WarpMouseInWindow,
+                                     storage);
+}
+
 void sdl2::SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
 {
     LOGTRACE(LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
@@ -186,6 +222,15 @@ void sdl2::SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
 void sdl3::SDL_WarpMouseInWindow(SDL_Window *window, float x, float y)
 {
     return sdl2::SDL_WarpMouseInWindow(window, (int)x, (int)y);
+}
+
+int SDL_WarpMouseGlobal(std::uintptr_t p1, std::uintptr_t p2)
+{
+    const std::uintptr_t storage[] = {p1, p2};
+
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_WarpMouseGlobal,
+                                            &sdl3::SDL_WarpMouseGlobal,
+                                            storage);
 }
 
 int sdl2::SDL_WarpMouseGlobal(int x, int y)
@@ -249,6 +294,15 @@ bool SDL_SetWindowRelativeMouseMode(SDL_Window *window, bool enabled)
     LOGTRACE(LCF_SDL | LCF_MOUSE, "%s call with enabled %d", __func__, enabled);
     relativeMode = enabled;
     return true;
+}
+
+int SDL_CaptureMouse(std::uintptr_t p1)
+{
+    const std::uintptr_t storage[] = {p1};
+
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_CaptureMouse,
+                                            &sdl3::SDL_CaptureMouse,
+                                            storage);
 }
 
 int sdl2::SDL_CaptureMouse(SDL_bool enabled)

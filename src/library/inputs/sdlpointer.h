@@ -72,6 +72,8 @@ OVERRIDE SDL_Window *SDL_GetMouseFocus(void);
 
 /* Both SDL2 and SDL3 functions have the same name but a different signature */
 
+OVERRIDE Uint32 SDL_GetMouseState(std::uintptr_t p1, std::uintptr_t p2);
+
 /**
  *  \brief Retrieve the current state of the mouse.
  *
@@ -115,6 +117,8 @@ Uint32 sdl2::SDL_GetMouseState(int *x, int *y);
  */
 
 sdl3::SDL_MouseButtonFlags sdl3::SDL_GetMouseState(float *x, float *y);
+
+OVERRIDE Uint32 SDL_GetGlobalMouseState(std::uintptr_t p1, std::uintptr_t p2);
 
 /**
  *  \brief Get the current state of the mouse, in relation to the desktop
@@ -178,6 +182,8 @@ Uint32 sdl2::SDL_GetGlobalMouseState(int *x, int *y);
  */
 sdl3::SDL_MouseButtonFlags sdl3::SDL_GetGlobalMouseState(float *x, float *y);
 
+OVERRIDE Uint32 SDL_GetRelativeMouseState(std::uintptr_t p1, std::uintptr_t p2);
+
 /**
  *  \brief Retrieve the relative state of the mouse.
  *
@@ -222,6 +228,8 @@ Uint32 sdl2::SDL_GetRelativeMouseState(int *x, int *y);
  */
 sdl3::SDL_MouseButtonFlags sdl3::SDL_GetRelativeMouseState(float *x, float *y);
 
+OVERRIDE void SDL_WarpMouseInWindow(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3);
+
 /**
  *  \brief Moves the mouse to the given position within the window.
  *
@@ -255,6 +263,8 @@ void sdl2::SDL_WarpMouseInWindow(SDL_Window * window, int x, int y);
  * \sa SDL_WarpMouseGlobal
  */
 void sdl3::SDL_WarpMouseInWindow(SDL_Window *window, float x, float y);
+
+OVERRIDE int SDL_WarpMouseGlobal(std::uintptr_t p1, std::uintptr_t p2);
 
 /**
  *  \brief Moves the mouse to the given position in global screen space.
@@ -341,6 +351,8 @@ OVERRIDE int SDL_SetRelativeMouseMode(SDL_bool enabled);
  * \sa SDL_GetWindowRelativeMouseMode
  */
 OVERRIDE bool SDL_SetWindowRelativeMouseMode(SDL_Window *window, bool enabled);
+
+OVERRIDE int SDL_CaptureMouse(std::uintptr_t p1);
 
 /**
  *  \brief Capture the mouse, to track input outside an SDL window.

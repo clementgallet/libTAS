@@ -25,6 +25,8 @@
 #include "../external/SDL2.h"
 #include "../external/SDL3.h"
 
+#include <cstdint>
+
 namespace libtas {
 
 /**
@@ -151,6 +153,8 @@ OVERRIDE int SDL_OpenAudio(sdl2::SDL_AudioSpec * desired,
  */
 OVERRIDE int SDL_GetNumAudioDevices(int iscapture);
 
+OVERRIDE const char *SDL_GetAudioDeviceName(std::uintptr_t p1, std::uintptr_t p2);
+
 /**
  *  Get the human-readable name of a specific audio device.
  *  Must be a value between 0 and (number of audio devices-1).
@@ -275,6 +279,8 @@ OVERRIDE bool SDL_GetAudioDeviceFormat(sdl3::SDL_AudioDeviceID devid, sdl3::SDL_
  */
 OVERRIDE int SDL_GetDefaultAudioInfo(char **name, sdl2::SDL_AudioSpec *spec, int iscapture);
 
+OVERRIDE int SDL_OpenAudioDevice(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3, std::uintptr_t p4, std::uintptr_t p5);
+
 /**
  *  Open a specific audio device. Passing in a device name of NULL requests
  *  the most reasonable default (and is equivalent to calling SDL_OpenAudio()).
@@ -288,7 +294,7 @@ OVERRIDE int SDL_GetDefaultAudioInfo(char **name, sdl2::SDL_AudioSpec *spec, int
  *
  *  SDL_OpenAudio(), unlike this function, always acts on device ID 1.
  */
-OVERRIDE sdl2::SDL_AudioDeviceID SDL_OpenAudioDevice(const char
+sdl2::SDL_AudioDeviceID sdl2::SDL_OpenAudioDevice(const char
                                                               *device,
                                                               int iscapture,
                                                               const
@@ -391,6 +397,9 @@ OVERRIDE sdl2::SDL_AudioStatus SDL_GetAudioDeviceStatus(sdl2::SDL_AudioDeviceID 
  */
 /* @{ */
 OVERRIDE void SDL_PauseAudio(int pause_on);
+
+OVERRIDE bool SDL_PauseAudioDevice(std::uintptr_t p1, std::uintptr_t p2);
+
 void sdl2::SDL_PauseAudioDevice(sdl2::SDL_AudioDeviceID dev, int pause_on);
 /* @} *//* Pause audio functions */
 

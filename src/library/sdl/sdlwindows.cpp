@@ -177,6 +177,12 @@ bool SDL_GL_DestroyContext(SDL_GLContext context)
     return swapInterval;
 }
 
+SDL_Window* SDL_CreateWindow(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3, std::uintptr_t p4, std::uintptr_t p5, std::uintptr_t p6)
+{
+    const std::uintptr_t storage[] = {p1, p2, p3, p4, p5, p6};
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_CreateWindow, &sdl3::SDL_CreateWindow, storage);
+}
+
 /* Override */ SDL_Window* sdl2::SDL_CreateWindow(const char* title, int x, int y, int w, int h, Uint32 flags){
     LOGTRACE(LCF_SDL | LCF_WINDOW, "%s call - title: %s, pos: (%d,%d), size: (%d,%d), flags: %x", __func__,  title?title:"", x, y, w, h, flags);
 
@@ -377,6 +383,12 @@ SDL_Window * sdl3::SDL_CreateWindow(const char *title, int w, int h, SDL_WindowF
     return ORIG_SDL23_CALL(SDL_GetWindowFromID, (id));
 }
 
+Uint32 SDL_GetWindowFlags(std::uintptr_t p1)
+{
+    const std::uintptr_t storage[] = {p1};
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_GetWindowFlags, &sdl3::SDL_GetWindowFlags, storage);
+}
+
 /* Override */ Uint32 sdl2::SDL_GetWindowFlags(SDL_Window* window){
     LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
     Uint32 flags = ORIG_SDL2_CALL(SDL_GetWindowFlags, (window));
@@ -423,6 +435,12 @@ sdl3::SDL_WindowFlags sdl3::SDL_GetWindowFlags(SDL_Window *window)
     LINK_NAMESPACE_SDL1(SDL_WM_SetCaption);
     WindowTitle::setOriginalTitle(title);
     WindowTitle::setUpdateFunc([icon] (const char* t) {orig::SDL_WM_SetCaption(t, icon);});
+}
+
+int SDL_SetWindowFullscreen(std::uintptr_t p1, std::uintptr_t p2)
+{
+    const std::uintptr_t storage[] = {p1, p2};
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_SetWindowFullscreen, &sdl3::SDL_SetWindowFullscreen, storage);
 }
 
 /* Override */ int sdl2::SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags)
@@ -493,7 +511,13 @@ sdl3::SDL_WindowFlags sdl3::SDL_GetWindowFlags(SDL_Window *window)
     /* Don't do anything */
 }
 
-/* Override */ int SDL_CreateWindowAndRenderer(int width, int height,
+int SDL_CreateWindowAndRenderer(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3, std::uintptr_t p4, std::uintptr_t p5, std::uintptr_t p6)
+{
+    const std::uintptr_t storage[] = {p1, p2, p3, p4, p5, p6};
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_CreateWindowAndRenderer, &sdl3::SDL_CreateWindowAndRenderer, storage);
+}
+
+int sdl2::SDL_CreateWindowAndRenderer(int width, int height,
         Uint32 window_flags, SDL_Window **window, SDL_Renderer **renderer)
 {
     LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);
@@ -542,6 +566,12 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
     sdl::gameSDLWindow = *window;
 
     return ret;
+}
+
+bool SDL_SetWindowPosition(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3)
+{
+    const std::uintptr_t storage[] = {p1, p2, p3};
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_SetWindowPosition, &sdl3::SDL_SetWindowPosition, storage);
 }
 
 /* Override */ void sdl2::SDL_SetWindowPosition(SDL_Window*, int x, int y)
@@ -601,6 +631,12 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
     return true;
 }
 
+bool SDL_SetWindowSize(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3)
+{
+    const std::uintptr_t storage[] = {p1, p2, p3};
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_SetWindowSize, &sdl3::SDL_SetWindowSize, storage);
+}
+
 /* Override */ void sdl2::SDL_SetWindowSize(SDL_Window* window, int w, int h)
 {
     if (GlobalState::isNative()) {
@@ -635,6 +671,12 @@ bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height,
     ScreenCapture::resize(w, h);
 
     return true;
+}
+
+bool SDL_GetWindowSize(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3)
+{
+    const std::uintptr_t storage[] = {p1, p2, p3};
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_GetWindowSize, &sdl3::SDL_GetWindowSize, storage);
 }
 
 /* Override */ void sdl2::SDL_GetWindowSize(SDL_Window * window, int *w, int *h)

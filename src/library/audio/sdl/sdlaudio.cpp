@@ -333,6 +333,12 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
     return 1;
 }
 
+/* Override */ const char *SDL_GetAudioDeviceName(std::uintptr_t p1, std::uintptr_t p2)
+{
+    const std::uintptr_t storage[] = {p1, p2};
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_GetAudioDeviceName, &sdl3::SDL_GetAudioDeviceName, storage);
+}
+
 /* Override */ const char *sdl2::SDL_GetAudioDeviceName(int index, int iscapture)
 {
     LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
@@ -432,7 +438,14 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
     return 0;
 }
 
-/* Override */ sdl2::SDL_AudioDeviceID SDL_OpenAudioDevice(const char *device,
+/* Override */ int SDL_OpenAudioDevice(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3,
+                                             std::uintptr_t p4, std::uintptr_t p5)
+{
+    const std::uintptr_t storage[] = {p1, p2, p3, p4, p5};
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_OpenAudioDevice, &sdl3::SDL_OpenAudioDevice, storage);
+}
+
+/* Override */ sdl2::SDL_AudioDeviceID sdl2::SDL_OpenAudioDevice(const char *device,
                    int iscapture, const sdl2::SDL_AudioSpec *desired,
                    sdl2::SDL_AudioSpec *obtained, int allowed_changes)
 {
@@ -519,6 +532,12 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
 {
     LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
     sdl2::SDL_PauseAudioDevice(1, pause_on);
+}
+
+/* Override */ bool SDL_PauseAudioDevice(std::uintptr_t p1, std::uintptr_t p2)
+{
+    const std::uintptr_t storage[] = {p1, p2};
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_PauseAudioDevice, &sdl3::SDL_PauseAudioDevice, storage);
 }
 
 /* Override */ void sdl2::SDL_PauseAudioDevice(sdl2::SDL_AudioDeviceID dev, int pause_on)

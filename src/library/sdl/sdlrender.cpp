@@ -31,6 +31,12 @@
 
 namespace libtas {
 
+SDL_Renderer* SDL_CreateRenderer(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3)
+{
+    const std::uintptr_t storage[] = {p1, p2, p3};
+    return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_CreateRenderer, &sdl3::SDL_CreateRenderer, storage);
+}
+
 SDL_Renderer *sdl2::SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags)
 {
     LOGTRACE_SIMPLE(LCF_SDL | LCF_WINDOW);

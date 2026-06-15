@@ -27,9 +27,133 @@
 
 #include "sdl/sdlversion.h"
 
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <cstring>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace libtas {
+
+/* The SDL hook layer receives raw argument words from the trampoline, and we
+ * may need to forward them to both SDL2 and SDL3 entry points of the same
+ * symbol name but with different parameter types. Decode the storage back to
+ * the real C++ types before calling the appropriate implementation.
+ */
+template <typename T>
+constexpr std::size_t storage_words_for() noexcept
+{
+    return (sizeof(T) + sizeof(std::uintptr_t) - 1) / sizeof(std::uintptr_t);
+}
+
+template <typename T>
+T decode_storage(const std::uintptr_t* storage, std::size_t offset) noexcept
+{
+    static_assert(std::is_trivially_copyable_v<T>, "SDL argument type must be trivially copyable");
+
+    T value{};
+    std::array<std::uint8_t, sizeof(T)> bytes{};
+    std::size_t consumed = 0;
+
+    while (consumed < sizeof(T)) {
+        const std::size_t chunk = std::min(sizeof(std::uintptr_t), sizeof(T) - consumed);
+        std::memcpy(bytes.data() + consumed, storage + offset, chunk);
+        ++offset;
+        consumed += chunk;
+    }
+
+    std::memcpy(&value, bytes.data(), sizeof(T));
+    return value;
+}
+
+template <typename R, typename... Args, std::size_t... Is>
+R invoke_from_storage_impl(R (*fn)(Args...), const std::uintptr_t* storage, std::index_sequence<Is...>)
+{
+    std::array<std::size_t, sizeof...(Args)> offsets{};
+    std::size_t cursor = 0;
+
+    ((offsets[Is] = cursor, cursor += storage_words_for<Args>()), ...);
+
+    return fn(decode_storage<Args>(storage, offsets[Is])...);
+}
+
+template <typename R, typename... Args>
+R invoke_from_storage(R (*fn)(Args...), const std::uintptr_t* storage)
+{
+    return invoke_from_storage_impl(fn, storage, std::index_sequence_for<Args...>{});
+}
+
+template <typename... Args>
+bool invoke_from_storage(void (*fn)(Args...), const std::uintptr_t* storage)
+{
+    invoke_from_storage_impl(fn, storage, std::index_sequence_for<Args...>{});
+    return true;
+}
+
+template <typename T>
+using common_return_t = std::conditional_t<std::is_void_v<T>, bool, T>;
+
+template <typename R2, typename R3, bool HasVoidR2 = std::is_void_v<R2>, bool HasVoidR3 = std::is_void_v<R3>>
+struct common_storage_result;
+
+template <typename R2, typename R3>
+struct common_storage_result<R2, R3, false, false>
+{
+    using type = std::common_type_t<R2, R3>;
+};
+
+template <typename R2, typename R3>
+struct common_storage_result<R2, R3, true, false>
+{
+    using type = common_return_t<R3>;
+};
+
+template <typename R2, typename R3>
+struct common_storage_result<R2, R3, false, true>
+{
+    using type = common_return_t<R2>;
+};
+
+template <typename R2, typename R3>
+struct common_storage_result<R2, R3, true, true>
+{
+    using type = void;
+};
+
+template <typename R2, typename R3>
+using common_storage_result_t = typename common_storage_result<R2, R3>::type;
+
+/* Generic trampoline for SDL symbols that exist in both SDL2 and SDL3 with
+ * different parameter types. The raw storage words are decoded to the real
+ * C++ types for the selected SDL version at the call site.
+ */
+template <typename R2, typename... Args2, typename R3, typename... Args3>
+auto invoke_sdl2_or_sdl3_from_storage(R2 (*sdl2_fn)(Args2...),
+                                       R3 (*sdl3_fn)(Args3...),
+                                       const std::uintptr_t* storage)
+    -> std::enable_if_t<std::is_void_v<common_storage_result_t<R2, R3>>, void>
+{
+    if (get_sdlversion() == 3) {
+        invoke_from_storage(sdl3_fn, storage);
+        return;
+    }
+
+    invoke_from_storage(sdl2_fn, storage);
+}
+
+template <typename R2, typename... Args2, typename R3, typename... Args3>
+auto invoke_sdl2_or_sdl3_from_storage(R2 (*sdl2_fn)(Args2...),
+                                       R3 (*sdl3_fn)(Args3...),
+                                       const std::uintptr_t* storage)
+    -> std::enable_if_t<!std::is_void_v<common_storage_result_t<R2, R3>>, common_storage_result_t<R2, R3>>
+{
+    if (get_sdlversion() == 3)
+        return invoke_from_storage(sdl3_fn, storage);
+
+    return invoke_from_storage(sdl2_fn, storage);
+}
 
 void setDynapiAddr(uint64_t addr);
 void setSDLFullscreenAddr(uint64_t addr);

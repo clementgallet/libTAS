@@ -25,6 +25,8 @@
 #include "../external/SDL2.h"
 #include "../external/SDL3.h"
 
+#include <cstdint>
+
 namespace libtas {
 
 /**
@@ -41,6 +43,8 @@ namespace libtas {
  *  \sa SDL_GetRendererInfo()
  *  \sa SDL_DestroyRenderer()
  */
+
+OVERRIDE SDL_Renderer* SDL_CreateRenderer(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3);
 
 SDL_Renderer *sdl2::SDL_CreateRenderer(SDL_Window * window, int index, Uint32 flags);
 

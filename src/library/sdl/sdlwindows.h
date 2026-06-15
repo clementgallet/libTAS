@@ -25,6 +25,8 @@
 #include "../external/SDL2.h"
 #include "../external/SDL3.h"
 
+#include <cstdint>
+
 namespace libtas {
 
 namespace sdl {
@@ -57,6 +59,8 @@ void sdl2::SDL_GL_SwapWindow(SDL_Window* window);
  * \since This function is available since SDL 3.2.0.
  */
 bool sdl3::SDL_GL_SwapWindow(SDL_Window *window);
+
+OVERRIDE SDL_Window* SDL_CreateWindow(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3, std::uintptr_t p4, std::uintptr_t p5, std::uintptr_t p6);
 
 /**
  *  \brief Create a window with the specified position, dimensions, and flags.
@@ -183,6 +187,8 @@ OVERRIDE Uint32 SDL_GetWindowID(SDL_Window* window);
  */
 OVERRIDE SDL_Window* SDL_GetWindowFromID(Uint32 id);
 
+OVERRIDE Uint32 SDL_GetWindowFlags(std::uintptr_t p1);
+
 /**
  *  \brief Get the window flags.
  */
@@ -253,6 +259,8 @@ OVERRIDE void SDL_SetWindowBordered(SDL_Window * window, SDL_bool bordered);
  * \sa SDL_GetWindowFlags
  */
 OVERRIDE void SDL_SetWindowResizable(SDL_Window * window, SDL_bool resizable);
+
+OVERRIDE int SDL_SetWindowFullscreen(std::uintptr_t p1, std::uintptr_t p2);
 
 /**
  *  \brief Set a window's fullscreen state.
@@ -358,6 +366,8 @@ OVERRIDE int SDL_GL_GetSwapInterval(void);
  */
 OVERRIDE void SDL_DestroyWindow(SDL_Window* window);
 
+OVERRIDE int SDL_CreateWindowAndRenderer(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3, std::uintptr_t p4, std::uintptr_t p5, std::uintptr_t p6);
+
 /**
  *  \brief Create a window and default renderer
  *
@@ -369,9 +379,9 @@ OVERRIDE void SDL_DestroyWindow(SDL_Window* window);
  *
  *  \return 0 on success, or -1 on error
  */
-// OVERRIDE int SDL_CreateWindowAndRenderer(
-//                  int width, int height, Uint32 window_flags,
-//                  SDL_Window **window, SDL_Renderer **renderer);
+int sdl2::SDL_CreateWindowAndRenderer(
+                 int width, int height, Uint32 window_flags,
+                 SDL_Window **window, SDL_Renderer **renderer);
 
 /**
  * Create a window and default renderer.
@@ -394,6 +404,8 @@ OVERRIDE void SDL_DestroyWindow(SDL_Window* window);
  * \sa SDL_CreateWindow
  */
 bool sdl3::SDL_CreateWindowAndRenderer(const char *title, int width, int height, SDL_WindowFlags window_flags, SDL_Window **window, SDL_Renderer **renderer);
+
+OVERRIDE bool SDL_SetWindowPosition(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3);
 
 /**
  *  \brief Set the position of a window.
@@ -476,6 +488,8 @@ bool sdl3::SDL_SetWindowPosition(SDL_Window *window, int x, int y);
  */
 OVERRIDE bool SDL_GetWindowPosition(SDL_Window *window, int *x, int *y);
 
+OVERRIDE bool SDL_SetWindowSize(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3);
+
 /**
  *  \brief Set the size of a window's client area.
  *
@@ -532,6 +546,8 @@ void sdl2::SDL_SetWindowSize(SDL_Window* window, int w, int h);
  * \sa SDL_SyncWindow
  */
 bool sdl3::SDL_SetWindowSize(SDL_Window *window, int w, int h);
+
+OVERRIDE bool SDL_GetWindowSize(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3);
 
 /**
  * Get the size of a window's client area.

@@ -25,10 +25,14 @@
 #include "../external/SDL2.h"
 #include "../external/SDL3.h"
 
+#include <cstdint>
+
 namespace libtas {
 
 sdl2::SDL_Scancode GetScanFromKey(sdl2::SDL_Keycode keycode);
 unsigned char GetScanFromKey1(sdl1::SDLKey key);
+
+OVERRIDE int SDL_GetKeyFromScancode(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3);
 
 /**
  *  \brief Get the key code corresponding to the given scancode according
@@ -39,16 +43,6 @@ unsigned char GetScanFromKey1(sdl1::SDLKey key);
  *  \sa SDL_GetKeyName()
  */
 sdl2::SDL_Keycode sdl2::SDL_GetKeyFromScancode(SDL_Scancode scancode);
-
-/**
- *  \brief Get the scancode corresponding to the given key code according to the
- *         current keyboard layout.
- *
- *  See ::SDL_Scancode for details.
- *
- *  \sa SDL_GetScancodeName()
- */
-sdl2::SDL_Scancode sdl2::SDL_GetScancodeFromKey(sdl2::SDL_Keycode key);
 
 /**
  * Get the key code corresponding to the given scancode according to the
@@ -73,6 +67,18 @@ sdl2::SDL_Scancode sdl2::SDL_GetScancodeFromKey(sdl2::SDL_Keycode key);
  * \sa SDL_GetScancodeFromKey
  */
 sdl3::SDL_Keycode sdl3::SDL_GetKeyFromScancode(sdl3::SDL_Scancode scancode, sdl3::SDL_Keymod modstate, bool key_event);
+
+OVERRIDE int SDL_GetScancodeFromKey(std::uintptr_t p1, std::uintptr_t p2);
+
+/**
+ *  \brief Get the scancode corresponding to the given key code according to the
+ *         current keyboard layout.
+ *
+ *  See ::SDL_Scancode for details.
+ *
+ *  \sa SDL_GetScancodeName()
+ */
+sdl2::SDL_Scancode sdl2::SDL_GetScancodeFromKey(sdl2::SDL_Keycode key);
 
 /**
  * Get the scancode corresponding to the given key code according to the
