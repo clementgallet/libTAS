@@ -209,7 +209,49 @@ VkResult vkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInf
     /* Store physical device */
     vk::context.physicalDevice = physicalDevice;
 
-    VkResult res = vkProcs.CreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice);
+    /* Check if VK_EXT/KHR_swapchain_maintenance1 is available, and if so inject
+     * it into the device extensions so we can attach present fences. */
+    vk::context.hasSwapchainMaintenance1 = false;
+    vk::context.presentFence = VK_NULL_HANDLE;
+    std::vector<const char*> extensions;
+    bool foundSwapchainMaintenance1Ext = false;
+    bool foundSwapchainMaintenance1Khr = false;
+
+    LINK_VK_POINTER(EnumerateDeviceExtensionProperties);
+    if (vkProcs.EnumerateDeviceExtensionProperties) {
+        uint32_t extCount = 0;
+        vkProcs.EnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extCount, nullptr);
+        std::vector<VkExtensionProperties> available(extCount);
+        vkProcs.EnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extCount, available.data());
+        for (const auto& ext : available) {
+            if (strcmp(ext.extensionName, "VK_EXT_swapchain_maintenance1") == 0) foundSwapchainMaintenance1Ext = true;
+            if (strcmp(ext.extensionName, "VK_KHR_swapchain_maintenance1") == 0) foundSwapchainMaintenance1Khr = true;
+        }
+    }
+
+    VkDeviceCreateInfo patchedCreateInfo = *pCreateInfo;
+    if (foundSwapchainMaintenance1Ext || foundSwapchainMaintenance1Khr) {
+        const char* maintenance1Extension = foundSwapchainMaintenance1Ext
+            ? "VK_EXT_swapchain_maintenance1"
+            : "VK_KHR_swapchain_maintenance1";
+        LOG(LL_DEBUG, LCF_WINDOW | LCF_VULKAN, "Enabling %s", maintenance1Extension);
+        for (uint32_t i = 0; i < pCreateInfo->enabledExtensionCount; i++)
+            extensions.push_back(pCreateInfo->ppEnabledExtensionNames[i]);
+        /* Only add if game didn't already request them */
+        bool gameHasSwapchainMaintenance1 = false;
+        for (const char* ext : extensions) {
+            if (strcmp(ext, "VK_EXT_swapchain_maintenance1") == 0 || strcmp(ext, "VK_KHR_swapchain_maintenance1") == 0) {
+                gameHasSwapchainMaintenance1 = true;
+            }
+        }
+        if (!gameHasSwapchainMaintenance1)
+            extensions.push_back(maintenance1Extension);
+        patchedCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+        patchedCreateInfo.ppEnabledExtensionNames = extensions.data();
+        vk::context.hasSwapchainMaintenance1 = true;
+    }
+
+    VkResult res = vkProcs.CreateDevice(physicalDevice, &patchedCreateInfo, pAllocator, pDevice);
 
     if (res == VK_SUCCESS) {
         /* Store the device */
@@ -318,6 +360,10 @@ static void destroySwapchain()
     vk::context.imageCount = 0;
     vk::context.frameIndex = 0;
     vk::context.currentSemaphore = VK_NULL_HANDLE;
+    if (vk::context.presentFence != VK_NULL_HANDLE) {
+        vkProcs.DestroyFence(vk::context.device, vk::context.presentFence, vk::context.allocator);
+        vk::context.presentFence = VK_NULL_HANDLE;
+    }
     vk::context.frames.clear();
     vk::context.frameSemaphores.clear();
 }
@@ -374,6 +420,7 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
     vk::context.swapchainRebuild = false;
     vk::context.frameIndex = 0;
     vk::context.currentSemaphore = VK_NULL_HANDLE;
+    vk::context.presentFence = VK_NULL_HANDLE;
 
     /* Store the swapchain size */
     vk::context.width = newCreateInfo.imageExtent.width;
@@ -382,6 +429,16 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
     
     vk::context.frames.resize(vk::context.imageCount);
     vk::context.frameSemaphores.resize(vk::context.imageCount);
+
+    if (vk::context.hasSwapchainMaintenance1) {
+        VkFenceCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        VkResult fenceRes = vkProcs.CreateFence(vk::context.device, &info, vk::context.allocator, &vk::context.presentFence);
+        if (fenceRes != VK_SUCCESS) {
+            LOG(LL_WARN, LCF_WINDOW | LCF_VULKAN, "Could not create swapchain present fence: %d", fenceRes);
+            vk::context.presentFence = VK_NULL_HANDLE;
+        }
+    }
 
     /* Create render pass */
     {
@@ -659,6 +716,19 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
         /* Present the queue with the stored image index, because we will 
          * acquire other images when presenting again. */
         pi.pImageIndices = &vk::context.frameIndex;
+
+        /* Chain VkSwapchainPresentFenceInfoEXT so present signals our fence,
+         * which we can wait on before returning. */
+        VkSwapchainPresentFenceInfoEXT presentFenceInfo = {};
+        if (vk::context.hasSwapchainMaintenance1 && vk::context.presentFence != VK_NULL_HANDLE && pi.swapchainCount == 1) {
+            vkProcs.ResetFences(vk::context.device, 1, &vk::context.presentFence);
+            presentFenceInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_PRESENT_FENCE_INFO_EXT;
+            presentFenceInfo.pNext = pi.pNext;
+            presentFenceInfo.swapchainCount = pi.swapchainCount;
+            presentFenceInfo.pFences = &vk::context.presentFence;
+            pi.pNext = &presentFenceInfo;
+        }
+
         LOG(LL_DEBUG, LCF_WINDOW | LCF_VULKAN, "    vkQueuePresentKHR wait on semaphore %llx", vk::context.currentSemaphore);
         NATIVECALL(ret = vkProcs.QueuePresentKHR(queue, &pi));
         
@@ -668,9 +738,16 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
             return;
         }
         
+        /* Wait for the image to actually be presented on screen.
+         * If VK_EXT/KHR_swapchain_maintenance1 is available, wait on the
+         * present fence. Otherwise, fall back to queue/device idle. */
+        if (vk::context.hasSwapchainMaintenance1 && vk::context.presentFence != VK_NULL_HANDLE && pi.swapchainCount == 1) {
+            vkProcs.WaitForFences(vk::context.device, 1, &vk::context.presentFence, VK_TRUE, UINT64_MAX);
+        } else {
         /* TODO: Use fence to delay waiting on queue */
         vkProcs.QueueWaitIdle(vk::context.graphicsQueue);
         vkProcs.DeviceWaitIdle(vk::context.device);
+        }
 
         /* Update semaphore index */
         LOG(LL_DEBUG, LCF_VULKAN, "Update semaphore index %d -> %d", vk::context.semaphoreIndex, (vk::context.semaphoreIndex + 1) % vk::context.imageCount);

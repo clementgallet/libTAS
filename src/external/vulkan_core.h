@@ -11846,6 +11846,34 @@ typedef struct VkPhysicalDeviceRayQueryFeaturesKHR {
 } VkPhysicalDeviceRayQueryFeaturesKHR;
 
 
+// VK_EXT_swapchain_maintenance1 is a preprocessor guard. Do not pass it to API calls.
+#define VK_EXT_swapchain_maintenance1 1
+#define VK_EXT_SWAPCHAIN_MAINTENANCE_1_SPEC_VERSION 1
+#define VK_EXT_SWAPCHAIN_MAINTENANCE_1_EXTENSION_NAME "VK_EXT_swapchain_maintenance1"
+#define VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SWAPCHAIN_MAINTENANCE_1_FEATURES_EXT ((VkStructureType)1000275000)
+#define VK_STRUCTURE_TYPE_SWAPCHAIN_PRESENT_FENCE_INFO_EXT ((VkStructureType)1000275001)
+typedef struct VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT {
+    VkStructureType    sType;
+    void*              pNext;
+    VkBool32           swapchainMaintenance1;
+} VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT;
+
+typedef struct VkSwapchainPresentFenceInfoEXT {
+    VkStructureType    sType;
+    const void*        pNext;
+    uint32_t           swapchainCount;
+    const VkFence*     pFences;
+} VkSwapchainPresentFenceInfoEXT;
+
+
+#define VK_KHR_swapchain_maintenance1 1
+#define VK_KHR_SWAPCHAIN_MAINTENANCE_1_EXTENSION_NAME "VK_KHR_swapchain_maintenance1"
+#define VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SWAPCHAIN_MAINTENANCE_1_FEATURES_KHR VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SWAPCHAIN_MAINTENANCE_1_FEATURES_EXT
+#define VK_STRUCTURE_TYPE_SWAPCHAIN_PRESENT_FENCE_INFO_KHR VK_STRUCTURE_TYPE_SWAPCHAIN_PRESENT_FENCE_INFO_EXT
+typedef VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT VkPhysicalDeviceSwapchainMaintenance1FeaturesKHR;
+typedef VkSwapchainPresentFenceInfoEXT VkSwapchainPresentFenceInfoKHR;
+
+
 #ifdef __cplusplus
 }
 #endif
