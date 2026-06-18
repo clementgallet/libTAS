@@ -86,7 +86,7 @@ void ThreadSync::wrapperExecutionLockLock()
     while (1) {
         int retVal = pthread_mutex_trylock(&wrapperExecutionLock);
         if (retVal != 0 && retVal == EBUSY) {
-            struct timespec sleepTime = { 0, 100 * 1000 * 1000 };
+            struct timespec sleepTime = { 0, 1 * 1000 * 1000 };
             NATIVECALL(nanosleep(&sleepTime, NULL));
             continue;
         }
