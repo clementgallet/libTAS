@@ -73,6 +73,8 @@ struct Vulkan_Context
     std::vector<Vulkan_Frame> frames;
     std::vector<Vulkan_FrameSemaphores> frameSemaphores;
     bool                swapchainRebuild;
+    bool                hasSwapchainMaintenance1; // Whether VK_EXT/KHR_swapchain_maintenance1 is available and enabled
+    VkFence             presentFence;             // Fence signaled when current present operation is complete
 };
 
 /* Export several variables used for rendering */

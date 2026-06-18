@@ -31,6 +31,7 @@
 #include "frame.h"
 #include "global.h"
 #include "GlobalState.h"
+#include "checkpoint/ThreadSync.h"
 #include "renderhud/RenderHUD.h"
 #include "screencapture/ScreenCapture.h"
 #include "../external/X11/XInput2.h"
@@ -122,6 +123,7 @@ void pushNativeXlibEvents(Display *display)
 
     GlobalNative gn;
 
+    WrapperLock wrapperLock;
     XLockDisplay(display);
     int n = XPending(display);
     while (n > 0) {
