@@ -380,6 +380,33 @@ VkResult vkCreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* p
     VkSwapchainCreateInfoKHR newCreateInfo = *pCreateInfo;
     newCreateInfo.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
+    /* Prefer immediate mode for savestates, but only if the surface reports it
+     * as supported for this physical device. */
+    uint32_t presentModeCount = 0;
+    VkResult presentModesRes = vkProcs.GetPhysicalDeviceSurfacePresentModesKHR(
+        vk::context.physicalDevice, pCreateInfo->surface, &presentModeCount, nullptr);
+    if (presentModesRes == VK_SUCCESS && presentModeCount > 0) {
+        std::vector<VkPresentModeKHR> presentModes(presentModeCount);
+        presentModesRes = vkProcs.GetPhysicalDeviceSurfacePresentModesKHR(
+            vk::context.physicalDevice, pCreateInfo->surface, &presentModeCount, presentModes.data());
+        if (presentModesRes == VK_SUCCESS) {
+            for (uint32_t i = 0; i < presentModeCount; ++i) {
+                if (presentModes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+                    newCreateInfo.presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+                    break;
+                }
+            }
+        }
+    }
+    if (newCreateInfo.presentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+        LOG(LL_DEBUG, LCF_WINDOW | LCF_VULKAN, "Using VK_PRESENT_MODE_IMMEDIATE_KHR for swapchain");
+    }
+    else {
+        LOG(LL_DEBUG, LCF_WINDOW | LCF_VULKAN,
+            "VK_PRESENT_MODE_IMMEDIATE_KHR unsupported, keeping requested present mode %d",
+            newCreateInfo.presentMode);
+    }
+
     /* Save the color format */
     vk::context.colorFormat = pCreateInfo->imageFormat;
 
@@ -637,6 +664,7 @@ VkResult vkAcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64
 
     VkResult res = vkProcs.AcquireNextImageKHR(device, swapchain, timeout, semaphore, fence, pImageIndex);
     if (res != VK_SUCCESS) {
+        LOG(LL_DEBUG, LCF_WINDOW | LCF_VULKAN, "    return error %d", res);
         return res;
     }
     
@@ -737,16 +765,16 @@ VkResult vkQueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
             vk::context.currentSemaphore = VK_NULL_HANDLE;
             return;
         }
-        
+
         /* Wait for the image to actually be presented on screen.
          * If VK_EXT/KHR_swapchain_maintenance1 is available, wait on the
          * present fence. Otherwise, fall back to queue/device idle. */
         if (vk::context.hasSwapchainMaintenance1 && vk::context.presentFence != VK_NULL_HANDLE && pi.swapchainCount == 1) {
             vkProcs.WaitForFences(vk::context.device, 1, &vk::context.presentFence, VK_TRUE, UINT64_MAX);
         } else {
-        /* TODO: Use fence to delay waiting on queue */
-        vkProcs.QueueWaitIdle(vk::context.graphicsQueue);
-        vkProcs.DeviceWaitIdle(vk::context.device);
+            /* TODO: Use fence to delay waiting on queue */
+            vkProcs.QueueWaitIdle(vk::context.graphicsQueue);
+            vkProcs.DeviceWaitIdle(vk::context.device);
         }
 
         /* Update semaphore index */

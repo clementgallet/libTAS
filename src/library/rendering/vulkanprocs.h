@@ -24,6 +24,7 @@ VK_PROC(GetDeviceProcAddr)
 
 VK_PROC(CreateInstance)
 VK_PROC(EnumerateDeviceExtensionProperties)
+VK_PROC(GetPhysicalDeviceSurfacePresentModesKHR)
 VK_PROC(CreateDevice)
 VK_PROC(DestroyDevice)
 VK_PROC(CreateSwapchainKHR)
