@@ -289,6 +289,12 @@ __attribute__((noipa)) void *dlopen(const char *file, int mode) __THROW {
 }
 
 void *find_sym(const char *name) {
+
+    /* First try one of our own Vulkan functions, because they cannot be found using dlsym. */
+    void *addr = vk_find_my_proc(name);
+    if (addr)
+        return addr;
+
     GlobalNative gn;
 
     char* libtaspath = getenv("LIBTAS_LIBRARY_PATH");
@@ -305,7 +311,7 @@ void *find_sym(const char *name) {
     }
 
     dlerror(); // Clear pending errors
-    void *addr = orig::dlsym(libtaslib, name);
+    addr = orig::dlsym(libtaslib, name);
     if (dlerror() == nullptr) {
         Dl_info info;
         int res = dladdr(addr, &info);

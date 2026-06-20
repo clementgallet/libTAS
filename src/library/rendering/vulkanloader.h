@@ -39,6 +39,9 @@ typedef VKProc (*VKGetProcAddressProc)(const char *proc);
 void vk_load_procs(VKGetProcAddressProc proc);
 
 extern struct VKProcs vkProcs;
+extern struct VKProcs myvkProcs;
+
+void* vk_find_my_proc(const char *name);
 
 #define LINK_VK_POINTER(FUNC) \
     if (!vkProcs.FUNC) \

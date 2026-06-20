@@ -19,6 +19,8 @@
 
 #include "vulkanloader.h"
 
+#include "vulkanwrappers.h"
+
 #include "hook.h"
 #include "logging.h"
 #include "GlobalState.h"
@@ -30,6 +32,28 @@
 namespace libtas {
 
 struct VKProcs vkProcs;
+
+struct VKProcs myvkProcs;
+
+static void vk_init_my_procs()
+{
+    static const bool initialized = []() {
+        myvkProcs.CreateInstance = &vkCreateInstance;
+        myvkProcs.CreateDevice = &vkCreateDevice;
+        myvkProcs.DestroyDevice = &vkDestroyDevice;
+        myvkProcs.GetDeviceQueue = &vkGetDeviceQueue;
+        myvkProcs.CreateSwapchainKHR = &vkCreateSwapchainKHR;
+        myvkProcs.DestroySwapchainKHR = &vkDestroySwapchainKHR;
+        myvkProcs.AcquireNextImageKHR = &vkAcquireNextImageKHR;
+        myvkProcs.QueuePresentKHR = &vkQueuePresentKHR;
+        myvkProcs.CmdDraw = &vkCmdDraw;
+        myvkProcs.CmdDrawIndirect = &vkCmdDrawIndirect;
+        myvkProcs.CmdDrawIndexed = &vkCmdDrawIndexed;
+        myvkProcs.CmdDrawIndexedIndirect = &vkCmdDrawIndexedIndirect;
+        return true;
+    }();
+    (void) initialized;
+}
 
 void vk_load_procs(VKGetProcAddressProc proc)
 {
@@ -52,6 +76,10 @@ void vk_load_procs(VKGetProcAddressProc proc)
 
 void vk_store_proc(const char *name, void* proc)
 {
+    void *my_proc = vk_find_my_proc(name);
+    if (my_proc && (my_proc == proc))
+        return;
+
 #define VK_PROC(FUNC) \
     if (!strcmp(name, "vk" #FUNC)) { \
         vkProcs.FUNC = reinterpret_cast<decltype(&vk##FUNC)>(proc); \
@@ -61,6 +89,27 @@ void vk_store_proc(const char *name, void* proc)
 
 #include "vulkanprocs.h"
 #undef VK_PROC
+}
+
+void* vk_find_my_proc(const char *name)
+{
+    if (!name)
+        return nullptr;
+
+    /* Returning wrappers for vkGet*ProcAddr can recurse through loader lookups. */
+    if (!strcmp(name, "vkGetInstanceProcAddr") || !strcmp(name, "vkGetDeviceProcAddr"))
+        return nullptr;
+
+    vk_init_my_procs();
+
+#define VK_PROC(FUNC) \
+    if (!strcmp(name, "vk" #FUNC)) \
+        return reinterpret_cast<void*>(myvkProcs.FUNC);
+
+#include "vulkanprocs.h"
+#undef VK_PROC
+
+    return nullptr;
 }
 
 }
