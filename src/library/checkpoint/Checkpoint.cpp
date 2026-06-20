@@ -98,6 +98,32 @@ static inline off_t alignPageOffsetUp(off_t offset)
 
 namespace libtas {
 
+struct PagemapCache {
+    uint64_t entries[512];
+    off_t offset;
+    size_t count;
+};
+
+static inline off_t pagemapOffset(const void* addr)
+{
+    return static_cast<off_t>((reinterpret_cast<uintptr_t>(addr) / 4096) * sizeof(uint64_t));
+}
+
+static size_t loadPagemapWindow(int spmfd, PagemapCache& pagemap_cache, const void* addr, size_t remaining_pages)
+{
+    off_t offset = pagemapOffset(addr);
+    off_t cache_end = pagemap_cache.offset + static_cast<off_t>(pagemap_cache.count * sizeof(uint64_t));
+
+    if ((pagemap_cache.count == 0) || (offset < pagemap_cache.offset) || (offset >= cache_end)) {
+        pagemap_cache.offset = offset;
+        pagemap_cache.count = (remaining_pages < 512) ? remaining_pages : 512;
+        MYASSERT(-1 != lseek(spmfd, pagemap_cache.offset, SEEK_SET));
+        Utils::readAll(spmfd, pagemap_cache.entries, pagemap_cache.count * sizeof(uint64_t));
+    }
+
+    return static_cast<size_t>((offset - pagemap_cache.offset) / sizeof(uint64_t));
+}
+
 /* Savestate paths (for file storing)*/
 static char pagemappath[1024] = "\0";
 static char pagespath[1024] = "\0";
@@ -125,11 +151,11 @@ static _xstate ss_fpregset;
 
 static void readAllAreas();
 static int reallocateArea(Area *saved_area, Area *current_area);
-static void readAnArea(SaveStateLoading &saved_area, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state);
+static void readAnArea(SaveStateLoading &saved_area, int spmfd, PagemapCache &pagemap_cache, SaveStateLoading &parent_state, SaveStateLoading &base_state);
 static void readASavefile(SaveStateLoading &saved_state);
 
 static void writeAllAreas(bool base);
-static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state, bool base);
+static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, PagemapCache &pagemap_cache, SaveStateLoading &parent_state, SaveStateLoading &base_state, bool base);
 static size_t writeSaveFiles(SaveStateSaving &state);
 
 void Checkpoint::setSavestatePath(std::string path)
@@ -440,13 +466,15 @@ static void readAllAreas()
     /* Now that the memory layout matches the savestate, we load savestate into memory */
     saved_state.restart();
     saved_area = saved_state.getArea();
+
+    PagemapCache pagemap_cache = {{0}, 0, 0};
     
     /* If the loading savestate and the parent savestate are the same, pass the
     * same SaveStateLoading object to readAnArea because two SaveStateLoading objects
     * handling the same file descriptor will mess up the file offset. */
     bool same_state = (ss_index == parent_ss_index);
     while (saved_area.isStandard()) {
-        readAnArea(saved_state, spmfd, same_state?saved_state:parent_state, base_state);
+        readAnArea(saved_state, spmfd, pagemap_cache, same_state?saved_state:parent_state, base_state);
         saved_area = saved_state.nextArea();
     }
     
@@ -717,7 +745,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
     return 0;
 }
 
-static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state)
+static void readAnArea(SaveStateLoading &saved_state, int spmfd, PagemapCache &pagemap_cache, SaveStateLoading &parent_state, SaveStateLoading &base_state)
 {
     const Area& saved_area = saved_state.getArea();
 
@@ -736,19 +764,8 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
      * read protection.
      * So, I will call mprotect() on individual memory pages when needed */
 
-    MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(saved_area.addr) / (4096/8)), SEEK_SET));
-
     /* Number of pages in the area */
     size_t nb_pages = saved_area.size / 4096;
-
-    /* Index of the current area page */
-    size_t page_i = 0;
-
-    /* Chunk of pagemap values */
-    uint64_t pagemaps[512];
-
-    /* Current index in the pagemaps array */
-    int pagemap_i = 512;
 
     /* Stats to print */
     int pagecount_zero_or_file = 0;
@@ -800,22 +817,14 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, SaveStateLoadin
         }
     }
 
-    char* endAddr = static_cast<char*>(saved_area.endAddr);
-    for (char* curAddr = static_cast<char*>(saved_area.addr);
-    curAddr < endAddr;
-    curAddr += 4096, page_i++) {
-
-        /* We read pagemap flags in chunks to avoid too many read syscalls. */
-        if (pagemap_i >= 512) {
-            size_t remaining_pages = (nb_pages-page_i)>512?512:(nb_pages-page_i);
-            Utils::readAll(spmfd, pagemaps, remaining_pages*8);
-            pagemap_i = 0;
-        }
+    for (size_t page_i = 0; page_i < nb_pages; page_i++) {
+        char* curAddr = static_cast<char*>(saved_area.addr) + page_i * 4096;
+        size_t pagemap_i = loadPagemapWindow(spmfd, pagemap_cache, curAddr, nb_pages - page_i);
 
         char flag = saved_area.uncommitted ? Area::NO_PAGE : saved_state.getNextPageFlag();
 
         /* Gather the flag for the page map */
-        uint64_t page = pagemaps[pagemap_i++];
+        uint64_t page = pagemap_cache.entries[pagemap_i];
         bool soft_dirty = page & (0x1ull << 55);
         bool page_guard_region = page & (0x1ull << 58);
         bool page_file = page & (0x1ull << 61);
@@ -1249,6 +1258,8 @@ static void writeAllAreas(bool base)
     Area area;
     bool not_eof = memMapLayout.getNextArea(&area);
 
+    PagemapCache pagemap_cache = {{0}, 0, 0};
+
     /* Multiple shared areas can point to the same memory, so we detect and 
      * skip all those duplicate areas.
      * TODO: this code only covers the special case of consecutive areas to 
@@ -1263,7 +1274,7 @@ static void writeAllAreas(bool base)
             (area.size == previous_area.size)) {
             area.skip = true;    
         }
-        savestate_size += writeAnArea(state, area, spmfd, parent_state, base_state, base);
+        savestate_size += writeAnArea(state, area, spmfd, pagemap_cache, parent_state, base_state, base);
         previous_area = area;
         not_eof = memMapLayout.getNextArea(&area);
     }
@@ -1311,7 +1322,7 @@ static void writeAllAreas(bool base)
 }
 
 /* Write a memory area into the savestate. Returns the size of the area in bytes */
-static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveStateLoading &parent_state, SaveStateLoading &base_state, bool base)
+static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, PagemapCache &pagemap_cache, SaveStateLoading &parent_state, SaveStateLoading &base_state, bool base)
 {
     state.processArea(&area);
     size_t area_size = sizeof(area);
@@ -1322,20 +1333,8 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
 
     area.print("Save");
 
-    /* Seek at the beginning of the area pagemap */
-    MYASSERT(-1 != lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(area.addr) / (4096/8)), SEEK_SET));
-
     /* Number of pages in the area */
     size_t nb_pages = area.size / 4096;
-
-    /* Index of the current area page */
-    size_t page_i = 0;
-
-    /* Chunk of pagemap values */
-    uint64_t pagemaps[512];
-
-    /* Current index in the pagemaps array */
-    int pagemap_i = 512;
 
     /* Stats to print */
     int pagecount_unmapped = 0;
@@ -1394,18 +1393,12 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, SaveSta
         }
     }
 
-    char* endAddr = static_cast<char*>(area.endAddr);
-    for (char* curAddr = static_cast<char*>(area.addr); curAddr < endAddr; curAddr += 4096, page_i++) {
-
-        /* We read pagemap flags in chunks to avoid too many read syscalls. */
-        if (pagemap_i >= 512) {
-            size_t remaining_pages = (nb_pages-page_i)>512?512:(nb_pages-page_i);
-            Utils::readAll(spmfd, pagemaps, remaining_pages*8);
-            pagemap_i = 0;
-        }
+    for (size_t page_i = 0; page_i < nb_pages; page_i++) {
+        char* curAddr = static_cast<char*>(area.addr) + page_i * 4096;
+        size_t pagemap_i = loadPagemapWindow(spmfd, pagemap_cache, curAddr, nb_pages - page_i);
 
         /* Gather the flag for the current pagemap. */
-        uint64_t page = pagemaps[pagemap_i++];
+        uint64_t page = pagemap_cache.entries[pagemap_i];
         bool soft_dirty = page & (0x1ull << 55);
         bool page_guard_region = page & (0x1ull << 58);
         bool page_file = page & (0x1ull << 61);
