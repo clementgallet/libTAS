@@ -80,6 +80,9 @@ private:
     /* File descriptors */
     int pmfd, pfd, spmfd;
 
+    /* Current write offset in pages file */
+    off_t current_pages_offset = 0;
+
     /* Address and size of the memory segment that is queued to be saved */
     char* queued_addr;
     size_t queued_size;

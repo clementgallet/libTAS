@@ -56,6 +56,9 @@ SaveStateSaving::SaveStateSaving(int pagemapfd, int pagesfd, int selfpagemapfd)
     pfd = pagesfd;
     spmfd = selfpagemapfd;
 
+    current_pages_offset = lseek(pfd, 0, SEEK_CUR);
+    MYASSERT(current_pages_offset != -1)
+
     LZ4_initStream(&lz4s, sizeof(lz4s));
 }
 
@@ -89,8 +92,7 @@ void SaveStateSaving::flushPagemapWrites()
 void SaveStateSaving::processArea(Area* area)
 {
     /* Save the position of the first area page in the pages file */
-    area->page_offset = lseek(pfd, 0, SEEK_CUR);
-    MYASSERT(area->page_offset != -1)
+    area->page_offset = current_pages_offset;
 
     /* Write the area struct */
     if (Global::shared_config.savestate_settings & SharedConfig::SS_PRESENT)
@@ -189,7 +191,8 @@ size_t SaveStateSaving::flushSave()
 {
     if (queued_size > 0) {
         Utils::writeAll(pfd, queued_addr, queued_size);
-        int returned_size = queued_size;
+        size_t returned_size = queued_size;
+        current_pages_offset += static_cast<off_t>(returned_size);
         queued_size = 0;
         return returned_size;
     }
@@ -200,7 +203,8 @@ size_t SaveStateSaving::flushCompressedSave()
 {
     if (queued_compressed_size > 0) {
         Utils::writeAll(pfd, queued_compressed_base_addr, queued_compressed_size);
-        int returned_size = queued_compressed_size;
+        size_t returned_size = static_cast<size_t>(queued_compressed_size);
+        current_pages_offset += static_cast<off_t>(returned_size);
         queued_compressed_size = 0;
         return returned_size;        
     }
