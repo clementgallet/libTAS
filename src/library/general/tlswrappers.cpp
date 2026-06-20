@@ -23,6 +23,7 @@
 #include "GlobalState.h"
 
 #include <map>
+#include <mutex>
 
 namespace libtas {
 
@@ -38,12 +39,20 @@ static std::map<pthread_key_t, void(*)(void*)>& getPthreadKeys() {
     return *pthread_keys;
 }
 
+/* Mutex to protect the keys list */
+static std::mutex& getPthreadKeysMutex() {
+    static std::mutex* mutex = new std::mutex;
+    return *mutex;
+}
+
 void clear_pthread_keys()
 {
     LINK_NAMESPACE(pthread_getspecific, "pthread");
     LINK_NAMESPACE(pthread_setspecific, "pthread");
 
     std::map<pthread_key_t, void(*)(void*)>& pthread_keys = getPthreadKeys();
+    std::lock_guard<std::mutex> lock(getPthreadKeysMutex());
+
     for( const auto& pair : pthread_keys ) {
         void* value = orig::pthread_getspecific(pair.first);
         if (value) {
@@ -71,6 +80,7 @@ int pthread_key_create (pthread_key_t *key, void (*destr_function) (void *)) __T
         LOG(LL_DEBUG, LCF_THREAD, "   returning %d", *key);
 
         std::map<pthread_key_t, void(*)(void*)>& pthread_keys = getPthreadKeys();
+        std::lock_guard<std::mutex> lock(getPthreadKeysMutex());
         pthread_keys.insert(std::pair<pthread_key_t, void(*)(void*)>(*key, destr_function));
     }
 
@@ -89,6 +99,7 @@ int pthread_key_delete (pthread_key_t key) __THROW
 
     if (ret == 0) {
         std::map<pthread_key_t, void(*)(void*)>& pthread_keys = getPthreadKeys();
+        std::lock_guard<std::mutex> lock(getPthreadKeysMutex());
         auto it = pthread_keys.find(key);
         if (it != pthread_keys.end()) {
             pthread_keys.erase(it);
