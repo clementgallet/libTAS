@@ -36,59 +36,58 @@ QString Config::iniPath(const std::filesystem::path& gamepath) const {
 
 bool Config::applyCliSetting(const std::string& key, const std::string& value)
 {
-    /* Helper lambdas for type conversion */
-    auto toInt   = [&](int& dst)    { dst = std::stoi(value); };
-    auto toUInt  = [&](unsigned int& dst) { dst = static_cast<unsigned int>(std::stoul(value)); };
-    auto toInt64 = [&](int64_t& dst){ dst = std::stoll(value); };
-    auto toFloat = [&](float& dst)  { dst = std::stof(value); };
-    auto toBool  = [&](bool& dst)   { dst = (value == "true" || value == "1" || value == "yes"); };
+    const int intValue = std::stoi(value);
+    const unsigned int uintValue = static_cast<unsigned int>(std::stoul(value));
+    const int64_t int64Value = std::stoll(value);
+    const float floatValue = std::stof(value);
+    const bool boolValue = (value == "true" || value == "1" || value == "yes");
 
     /* SharedConfig fields – key names match QSettings keys in save()/load() */
-    if      (key == "speed_divisor")            toInt(sc.speed_divisor);
-    else if (key == "fastforward_mode")         toInt(sc.fastforward_mode);
-    else if (key == "fastforward_render")       toInt(sc.fastforward_render);
-    else if (key == "logging_status")           toInt(sc.logging_status);
-    else if (key == "logging_level")            { unsigned int v; toUInt(v); sc.logging_level = static_cast<LogLevel>(v); }
-    else if (key == "logging_include_flags")    { unsigned int v; toUInt(v); sc.logging_include_flags = v; }
-    else if (key == "logging_exclude_flags")    { unsigned int v; toUInt(v); sc.logging_exclude_flags = v; }
-    else if (key == "framerate_num")            toUInt(sc.initial_framerate_num);
-    else if (key == "framerate_den")            toUInt(sc.initial_framerate_den);
-    else if (key == "mouse_support")            toBool(sc.mouse_support);
-    else if (key == "mouse_mode_relative")      toBool(sc.mouse_mode_relative);
-    else if (key == "mouse_prevent_warp")       toBool(sc.mouse_prevent_warp);
-    else if (key == "nb_controllers")           toInt(sc.nb_controllers);
-    else if (key == "screen_width")             toInt(sc.screen_width);
-    else if (key == "screen_height")            toInt(sc.screen_height);
-    else if (key == "osd")                      toBool(sc.osd);
-    else if (key == "osd_encode")               toBool(sc.osd_encode);
-    else if (key == "prevent_savefiles")        toBool(sc.prevent_savefiles);
-    else if (key == "audio_bitdepth")           toInt(sc.audio_bitdepth);
-    else if (key == "audio_channels")           toInt(sc.audio_channels);
-    else if (key == "audio_frequency")          toInt(sc.audio_frequency);
-    else if (key == "audio_gain")               toFloat(sc.audio_gain);
-    else if (key == "audio_mute")               toBool(sc.audio_mute);
-    else if (key == "audio_disabled")           toBool(sc.audio_disabled);
-    else if (key == "openal_soft")              toBool(sc.openal_soft);
-    else if (key == "locale")                   toInt(sc.locale);
-    else if (key == "virtual_steam")            toBool(sc.virtual_steam);
-    else if (key == "opengl_soft")              toBool(sc.opengl_soft);
-    else if (key == "opengl_quality")           toInt(sc.opengl_quality);
-    else if (key == "async_events")             toInt(sc.async_events);
-    else if (key == "wait_timeout")             toInt(sc.wait_timeout);
-    else if (key == "sleep_handling")           toInt(sc.sleep_handling);
-    else if (key == "game_specific_timing")     toInt(sc.game_specific_timing);
-    else if (key == "game_specific_sync")       toInt(sc.game_specific_sync);
-    else if (key == "video_codec")              toInt(sc.video_codec);
-    else if (key == "video_bitrate")            toInt(sc.video_bitrate);
-    else if (key == "video_framerate")          toInt(sc.video_framerate);
-    else if (key == "audio_codec")              toInt(sc.audio_codec);
-    else if (key == "audio_bitrate")            toInt(sc.audio_bitrate);
-    else if (key == "savestate_settings")       toInt(sc.savestate_settings);
+    if      (key == "speed_divisor")            sc.speed_divisor = intValue;
+    else if (key == "fastforward_mode")         sc.fastforward_mode = intValue;
+    else if (key == "fastforward_render")       sc.fastforward_render = intValue;
+    else if (key == "logging_status")           sc.logging_status = intValue;
+    else if (key == "logging_level")            sc.logging_level = static_cast<LogLevel>(uintValue);
+    else if (key == "logging_include_flags")    sc.logging_include_flags = uintValue;
+    else if (key == "logging_exclude_flags")    sc.logging_exclude_flags = uintValue;
+    else if (key == "framerate_num")            sc.initial_framerate_num = uintValue;
+    else if (key == "framerate_den")            sc.initial_framerate_den = uintValue;
+    else if (key == "mouse_support")            sc.mouse_support = boolValue;
+    else if (key == "mouse_mode_relative")      sc.mouse_mode_relative = boolValue;
+    else if (key == "mouse_prevent_warp")       sc.mouse_prevent_warp = boolValue;
+    else if (key == "nb_controllers")           sc.nb_controllers = intValue;
+    else if (key == "screen_width")             sc.screen_width = intValue;
+    else if (key == "screen_height")            sc.screen_height = intValue;
+    else if (key == "osd")                      sc.osd = boolValue;
+    else if (key == "osd_encode")               sc.osd_encode = boolValue;
+    else if (key == "prevent_savefiles")        sc.prevent_savefiles = boolValue;
+    else if (key == "audio_bitdepth")           sc.audio_bitdepth = intValue;
+    else if (key == "audio_channels")           sc.audio_channels = intValue;
+    else if (key == "audio_frequency")          sc.audio_frequency = intValue;
+    else if (key == "audio_gain")               sc.audio_gain = floatValue;
+    else if (key == "audio_mute")               sc.audio_mute = boolValue;
+    else if (key == "audio_disabled")           sc.audio_disabled = boolValue;
+    else if (key == "openal_soft")              sc.openal_soft = boolValue;
+    else if (key == "locale")                   sc.locale = intValue;
+    else if (key == "virtual_steam")            sc.virtual_steam = boolValue;
+    else if (key == "opengl_soft")              sc.opengl_soft = boolValue;
+    else if (key == "opengl_quality")           sc.opengl_quality = intValue;
+    else if (key == "async_events")             sc.async_events = intValue;
+    else if (key == "wait_timeout")             sc.wait_timeout = intValue;
+    else if (key == "sleep_handling")           sc.sleep_handling = intValue;
+    else if (key == "game_specific_timing")     sc.game_specific_timing = intValue;
+    else if (key == "game_specific_sync")       sc.game_specific_sync = intValue;
+    else if (key == "video_codec")              sc.video_codec = intValue;
+    else if (key == "video_bitrate")            sc.video_bitrate = intValue;
+    else if (key == "video_framerate")          sc.video_framerate = intValue;
+    else if (key == "audio_codec")              sc.audio_codec = intValue;
+    else if (key == "audio_bitrate")            sc.audio_bitrate = intValue;
+    else if (key == "savestate_settings")       sc.savestate_settings = intValue;
     /* Initial time fields (come from movie, not from ini, so no existing key) */
-    else if (key == "initial_time_sec")         toInt64(sc.initial_time_sec);
-    else if (key == "initial_time_nsec")        toInt64(sc.initial_time_nsec);
-    else if (key == "initial_monotonic_time_sec")  toInt64(sc.initial_monotonic_time_sec);
-    else if (key == "initial_monotonic_time_nsec") toInt64(sc.initial_monotonic_time_nsec);
+    else if (key == "initial_time_sec")         sc.initial_time_sec = int64Value;
+    else if (key == "initial_time_nsec")        sc.initial_time_nsec = int64Value;
+    else if (key == "initial_monotonic_time_sec")  sc.initial_monotonic_time_sec = int64Value;
+    else if (key == "initial_monotonic_time_nsec") sc.initial_monotonic_time_nsec = int64Value;
     else return false;
 
     cli_overridden_keys.insert(key);
