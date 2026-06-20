@@ -26,6 +26,7 @@
 #include <string>
 #include <memory>
 #include <list>
+#include <unordered_set>
 #include <filesystem>
 
 /* Forward declaration */
@@ -158,9 +159,14 @@ public:
     /* Strace events, passed as [-e expr] */
     std::string strace_events;
 
-    /* Indicate if initial time was set using command-line argument. Will override the movie settings, used for batch processing */
-    bool initial_time_set_via_cli = false;
-    bool initial_monotonic_time_set_via_cli = false;
+    /* Indicate if a setting was set using command-line argument.
+     * Those settings will not be overwritten by movie or UI values,
+     * which is useful for batch processing. Keys match QSettings key names. */
+    std::unordered_set<std::string> cli_overridden_keys;
+
+    /* Apply a key=value setting from the command line. Returns false if the key
+     * is not recognised. On success, the key is added to cli_overridden_keys. */
+    bool applyCliSetting(const std::string& key, const std::string& value);
 
     /* Save the config into the config file */
     void save(const std::filesystem::path& gamepath);

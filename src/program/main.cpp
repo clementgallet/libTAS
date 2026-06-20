@@ -101,10 +101,7 @@ static void print_usage(void)
     std::cout << "      --libtas32-so-path  Path to libtas32.so (equivalent to setting LIBTAS32_SO_PATH)" << std::endl;
     std::cout << "  -i, --input-editor      Open Input Editor window at startup" << std::endl;
     std::cout << "  -L, --lua-console       Open Lua Console window at startup" << std::endl;
-    std::cout << "  -t, --system-time-sec   Set the system time option (sec)" << std::endl;
-    std::cout << "  -T, --system-time-nsec  Set the system time option (nsec)" << std::endl;
-    std::cout << "  -e, --elapsed-time-sec  Set the elapsed time option (sec)" << std::endl;
-    std::cout << "  -E, --elapsed-time-nsec Set the elapsed time option (nsec)" << std::endl;
+    std::cout << "  -s, --set KEY=VALUE     Override any config setting (KEY matches ini key names)" << std::endl;
     std::cout << "  -h, --help              Show this message" << std::endl;
 }
 
@@ -130,6 +127,7 @@ int main(int argc, char **argv)
     std::vector<std::filesystem::path> luafiles;
     bool test_mode = false;
     int recordingmode = SharedConfig::RECORDING_WRITE;
+    std::vector<std::pair<std::string,std::string>> pending_cli_settings;
 
     static struct option long_options[] =
     {
@@ -144,10 +142,7 @@ int main(int argc, char **argv)
         {"help", no_argument, nullptr, 'h'},
         {"input-editor", no_argument, nullptr, 'i'},
         {"lua-console", no_argument, nullptr, 'L'},
-        {"system-time-sec", required_argument, nullptr, 't'},
-        {"system-time-nsec", required_argument, nullptr, 'T'},
-        {"elapsed-time-sec", required_argument, nullptr, 'e'},
-        {"elapsed-time-nsec", required_argument, nullptr, 'E'},
+        {"set", required_argument, nullptr, 's'},
         {nullptr, 0, nullptr, 0}
     };
     int option_index = 0;
@@ -155,7 +150,7 @@ int main(int argc, char **argv)
     bool openLuaConsole = false;
 
     // std::string libname;
-    while ((c = getopt_long (argc, argv, "+r:w:d:l:nhiLt:T:e:E:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long (argc, argv, "+r:w:d:l:nhiLs:", long_options, &option_index)) != -1) {
         switch (c) {
             case 'r':
             case 'w':
@@ -208,22 +203,16 @@ int main(int argc, char **argv)
             case 'L':
                 openLuaConsole = true;
                 break;
-            case 'e':
-                context.config.sc.initial_monotonic_time_sec = atoll(optarg);
-                context.config.initial_monotonic_time_set_via_cli = true;
+            case 's': {
+                std::string arg = optarg;
+                auto eq = arg.find('=');
+                if (eq == std::string::npos) {
+                    std::cerr << "--set requires KEY=VALUE format" << std::endl;
+                    return 1;
+                }
+                pending_cli_settings.emplace_back(arg.substr(0, eq), arg.substr(eq + 1));
                 break;
-            case 'E':
-                context.config.sc.initial_monotonic_time_nsec = atoll(optarg);
-                context.config.initial_monotonic_time_set_via_cli = true;
-                break;
-            case 't':
-                context.config.sc.initial_time_sec = atoll(optarg);
-                context.config.initial_time_set_via_cli = true;
-                break;
-            case 'T':
-                context.config.sc.initial_time_nsec = atoll(optarg);
-                context.config.initial_time_set_via_cli = true;
-                break;
+            }
             default:
                 return 1;
         }
@@ -363,6 +352,15 @@ int main(int argc, char **argv)
 
     /* Now that we have the config dir, we load the game-specific config */
     context.config.load(context.gamepath);
+
+    /* Apply CLI settings after loading the config file so they take priority */
+    for (const auto& [key, value] : pending_cli_settings) {
+        if (!context.config.applyCliSetting(key, value)) {
+            std::cerr << "Unknown setting key: " << key << std::endl;
+            return 1;
+        }
+    }
+
     if (! gameargsoverride.empty()) {
         context.config.gameargs = gameargsoverride;
     }

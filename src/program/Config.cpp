@@ -34,6 +34,67 @@ QString Config::iniPath(const std::filesystem::path& gamepath) const {
     return QString(iniFile.c_str());
 }
 
+bool Config::applyCliSetting(const std::string& key, const std::string& value)
+{
+    /* Helper lambdas for type conversion */
+    auto toInt   = [&](int& dst)    { dst = std::stoi(value); };
+    auto toUInt  = [&](unsigned int& dst) { dst = static_cast<unsigned int>(std::stoul(value)); };
+    auto toInt64 = [&](int64_t& dst){ dst = std::stoll(value); };
+    auto toFloat = [&](float& dst)  { dst = std::stof(value); };
+    auto toBool  = [&](bool& dst)   { dst = (value == "true" || value == "1" || value == "yes"); };
+
+    /* SharedConfig fields – key names match QSettings keys in save()/load() */
+    if      (key == "speed_divisor")            toInt(sc.speed_divisor);
+    else if (key == "fastforward_mode")         toInt(sc.fastforward_mode);
+    else if (key == "fastforward_render")       toInt(sc.fastforward_render);
+    else if (key == "logging_status")           toInt(sc.logging_status);
+    else if (key == "logging_level")            { unsigned int v; toUInt(v); sc.logging_level = static_cast<LogLevel>(v); }
+    else if (key == "logging_include_flags")    { unsigned int v; toUInt(v); sc.logging_include_flags = v; }
+    else if (key == "logging_exclude_flags")    { unsigned int v; toUInt(v); sc.logging_exclude_flags = v; }
+    else if (key == "framerate_num")            toUInt(sc.initial_framerate_num);
+    else if (key == "framerate_den")            toUInt(sc.initial_framerate_den);
+    else if (key == "mouse_support")            toBool(sc.mouse_support);
+    else if (key == "mouse_mode_relative")      toBool(sc.mouse_mode_relative);
+    else if (key == "mouse_prevent_warp")       toBool(sc.mouse_prevent_warp);
+    else if (key == "nb_controllers")           toInt(sc.nb_controllers);
+    else if (key == "screen_width")             toInt(sc.screen_width);
+    else if (key == "screen_height")            toInt(sc.screen_height);
+    else if (key == "osd")                      toBool(sc.osd);
+    else if (key == "osd_encode")               toBool(sc.osd_encode);
+    else if (key == "prevent_savefiles")        toBool(sc.prevent_savefiles);
+    else if (key == "audio_bitdepth")           toInt(sc.audio_bitdepth);
+    else if (key == "audio_channels")           toInt(sc.audio_channels);
+    else if (key == "audio_frequency")          toInt(sc.audio_frequency);
+    else if (key == "audio_gain")               toFloat(sc.audio_gain);
+    else if (key == "audio_mute")               toBool(sc.audio_mute);
+    else if (key == "audio_disabled")           toBool(sc.audio_disabled);
+    else if (key == "openal_soft")              toBool(sc.openal_soft);
+    else if (key == "locale")                   toInt(sc.locale);
+    else if (key == "virtual_steam")            toBool(sc.virtual_steam);
+    else if (key == "opengl_soft")              toBool(sc.opengl_soft);
+    else if (key == "opengl_quality")           toInt(sc.opengl_quality);
+    else if (key == "async_events")             toInt(sc.async_events);
+    else if (key == "wait_timeout")             toInt(sc.wait_timeout);
+    else if (key == "sleep_handling")           toInt(sc.sleep_handling);
+    else if (key == "game_specific_timing")     toInt(sc.game_specific_timing);
+    else if (key == "game_specific_sync")       toInt(sc.game_specific_sync);
+    else if (key == "video_codec")              toInt(sc.video_codec);
+    else if (key == "video_bitrate")            toInt(sc.video_bitrate);
+    else if (key == "video_framerate")          toInt(sc.video_framerate);
+    else if (key == "audio_codec")              toInt(sc.audio_codec);
+    else if (key == "audio_bitrate")            toInt(sc.audio_bitrate);
+    else if (key == "savestate_settings")       toInt(sc.savestate_settings);
+    /* Initial time fields (come from movie, not from ini, so no existing key) */
+    else if (key == "initial_time_sec")         toInt64(sc.initial_time_sec);
+    else if (key == "initial_time_nsec")        toInt64(sc.initial_time_nsec);
+    else if (key == "initial_monotonic_time_sec")  toInt64(sc.initial_monotonic_time_sec);
+    else if (key == "initial_monotonic_time_nsec") toInt64(sc.initial_monotonic_time_nsec);
+    else return false;
+
+    cli_overridden_keys.insert(key);
+    return true;
+}
+
 void Config::save(const std::filesystem::path& gamepath) {
     /* Save only if game file exists */
     if (!std::filesystem::exists(gamepath))

@@ -49,14 +49,14 @@ void MovieFileHeader::load()
         context->config.sc.mouse_support = config.value("mouse_support").toBool();
 
         context->config.sc.nb_controllers = config.value("nb_controllers").toInt();
-        if (! context->config.initial_time_set_via_cli) {
+        if (! context->config.cli_overridden_keys.count("initial_time_sec"))
             context->config.sc.initial_time_sec = config.value("initial_time_sec").toLongLong();
+        if (! context->config.cli_overridden_keys.count("initial_time_nsec"))
             context->config.sc.initial_time_nsec = config.value("initial_time_nsec").toLongLong();
-        }
-        if (! context->config.initial_monotonic_time_set_via_cli) {
+        if (! context->config.cli_overridden_keys.count("initial_monotonic_time_sec"))
             context->config.sc.initial_monotonic_time_sec = config.value("initial_monotonic_time_sec").toLongLong();
+        if (! context->config.cli_overridden_keys.count("initial_monotonic_time_nsec"))
             context->config.sc.initial_monotonic_time_nsec = config.value("initial_monotonic_time_nsec").toLongLong();
-        }
         
         framerate_num = config.value("framerate_num").toUInt();
         framerate_den = config.value("framerate_den").toUInt();

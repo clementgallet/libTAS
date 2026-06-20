@@ -233,14 +233,14 @@ void MovieSettingsWindow::saveConfig()
     movie->header->framerate_den = framerateDen->value();
     context->config.auto_restart = autoRestart->currentData().toBool();
 
-    if (! context->config.initial_time_set_via_cli) {
+    if (! context->config.cli_overridden_keys.count("initial_time_sec"))
         context->config.sc.initial_time_sec = initialSec->value();
+    if (! context->config.cli_overridden_keys.count("initial_time_nsec"))
         context->config.sc.initial_time_nsec = initialNSec->value();
-    }
-    if (! context->config.initial_monotonic_time_set_via_cli) {
+    if (! context->config.cli_overridden_keys.count("initial_monotonic_time_sec"))
         context->config.sc.initial_monotonic_time_sec = initialMonotonicSec->value();
+    if (! context->config.cli_overridden_keys.count("initial_monotonic_time_nsec"))
         context->config.sc.initial_monotonic_time_nsec = initialMonotonicNSec->value();
-    }
 
     context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_TIME] = timeTrackingTime->value();
     context->config.sc.main_gettimes_threshold[SharedConfig::TIMETYPE_GETTIMEOFDAY] = timeTrackingGettimeofday->value();
