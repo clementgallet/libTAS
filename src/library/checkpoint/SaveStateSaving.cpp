@@ -44,6 +44,7 @@ namespace libtas {
 SaveStateSaving::SaveStateSaving(int pagemapfd, int pagesfd, int selfpagemapfd)
 {
     ss_pagemap_i = 0;
+    pm_writebuf_i = 0;
     queued_size = 0;
 
     queued_compressed_base_addr = static_cast<char*>(ReservedMemory::getAddr(ReservedMemory::COMPRESSED_ADDR));
@@ -56,6 +57,33 @@ SaveStateSaving::SaveStateSaving(int pagemapfd, int pagesfd, int selfpagemapfd)
     spmfd = selfpagemapfd;
 
     LZ4_initStream(&lz4s, sizeof(lz4s));
+}
+
+void SaveStateSaving::appendPagemapData(const void* data, size_t size)
+{
+    const char* src = static_cast<const char*>(data);
+    while (size > 0) {
+        size_t room = PAGEMAP_WRITEBUF - pm_writebuf_i;
+        if (room == 0) {
+            Utils::writeAll(pmfd, pm_writebuf, pm_writebuf_i);
+            pm_writebuf_i = 0;
+            room = PAGEMAP_WRITEBUF;
+        }
+
+        size_t to_copy = (size < room) ? size : room;
+        memcpy(pm_writebuf + pm_writebuf_i, src, to_copy);
+        pm_writebuf_i += to_copy;
+        src += to_copy;
+        size -= to_copy;
+    }
+}
+
+void SaveStateSaving::flushPagemapWrites()
+{
+    if (pm_writebuf_i > 0) {
+        Utils::writeAll(pmfd, pm_writebuf, pm_writebuf_i);
+        pm_writebuf_i = 0;
+    }
 }
 
 void SaveStateSaving::processArea(Area* area)
@@ -80,7 +108,7 @@ void SaveStateSaving::processArea(Area* area)
     //         area->hash = XXH3_64bits(area->addr, area->size);
     // }
 
-    Utils::writeAll(pmfd, area, sizeof(*area));
+    appendPagemapData(area, sizeof(*area));
     
     LZ4_resetStream_fast(&lz4s);
 }
@@ -89,7 +117,7 @@ void SaveStateSaving::savePageFlag(char flag)
 {
     /* We write a chunk of savestate pagemaps if it is full */
     if (ss_pagemap_i >= PAGEMAP_CHUNK) {
-        Utils::writeAll(pmfd, ss_pagemaps, PAGEMAP_CHUNK);
+        appendPagemapData(ss_pagemaps, PAGEMAP_CHUNK);
         ss_pagemap_i = 0;
     }
 
@@ -189,7 +217,8 @@ size_t SaveStateSaving::finishSave()
     returned_size += flushCompressedSave();
     
     /* Writing the last savestate pagemap chunk */
-    Utils::writeAll(pmfd, ss_pagemaps, ss_pagemap_i);
+    if (ss_pagemap_i > 0)
+        appendPagemapData(ss_pagemaps, ss_pagemap_i);
     ss_pagemap_i = 0;
     
     return returned_size;

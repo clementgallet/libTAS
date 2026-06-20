@@ -14,6 +14,7 @@
   and different arguments, implement a trampoline function
   that can forward arguments to the right function
 * Vulkan: switch to immediate present mode if available
+* Buffer writes to savestate page flag file
 
 ### Fixed
 

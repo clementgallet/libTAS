@@ -1281,6 +1281,10 @@ static void writeAllAreas(bool base)
 
     savestate_size += writeSaveFiles(state);
 
+    /* Area metadata and page flags are buffered in SaveStateSaving. Flush now
+     * so the EOF marker is written after all area entries. */
+    state.flushPagemapWrites();
+
     /* Add the last null (eof) area */
     area.addr = nullptr; // End of data
     area.size = 0; // End of data

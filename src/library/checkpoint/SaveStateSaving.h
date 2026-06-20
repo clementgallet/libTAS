@@ -46,6 +46,9 @@ public:
     /* Finish processing a memory area */
     size_t finishSave();
 
+    /* Flush buffered writes to the pagemap file */
+    void flushPagemapWrites();
+
 private:
 
     /* Flush the queue of noncompressed data, and returns the number of written bytes */
@@ -54,8 +57,12 @@ private:
     /* Flush the queue of compressed data, and returns the number of written bytes */
     size_t flushCompressedSave();
 
+    /* Append bytes to the pagemap write buffer */
+    void appendPagemapData(const void* data, size_t size);
+
     enum {
-        PAGEMAP_CHUNK = 4096
+        PAGEMAP_CHUNK = 4096,
+        PAGEMAP_WRITEBUF = 65536
     };
 
     /* Chunk of savestate pagemap values */
@@ -63,6 +70,10 @@ private:
 
     /* Current index in the savestate pagemap array */
     int ss_pagemap_i = 0;
+
+    /* Buffered writes to the pagemap metadata file */
+    char pm_writebuf[PAGEMAP_WRITEBUF];
+    size_t pm_writebuf_i = 0;
 
     LZ4_stream_t lz4s;
 
