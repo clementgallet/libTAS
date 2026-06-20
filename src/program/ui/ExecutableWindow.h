@@ -24,6 +24,7 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QGroupBox>
+#include <QtWidgets/QTableWidget>
 
 /* Forward declaration */
 struct Context;
@@ -49,11 +50,17 @@ private:
     QPushButton *browseProtonPath;
     QGroupBox *protonPathGroupBox;
 
+    QTableWidget *envVarsTable;
+    QPushButton *addEnvVarButton;
+    QPushButton *removeEnvVarButton;
+
 private slots:
     void slotOk();
     void slotBrowseRunPath();
     void slotBrowseLibPath();
     void slotBrowseProtonPath();
+    void slotAddEnvVar();
+    void slotRemoveEnvVar();
 };
 
 #endif

@@ -26,6 +26,8 @@
 #include <string>
 #include <memory>
 #include <list>
+#include <vector>
+#include <utility>
 #include <unordered_set>
 #include <filesystem>
 
@@ -72,6 +74,9 @@ public:
 
     /* Path of the libraries used by the game */
     std::filesystem::path libdir;
+
+    /* Per-game environment variable overrides (NAME, VALUE) */
+    std::vector<std::pair<std::string, std::string>> env_overrides;
 
     /* Path where the game needs to run */
     std::filesystem::path rundir;

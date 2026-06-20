@@ -172,6 +172,17 @@ void Config::save(const std::filesystem::path& gamepath) {
     settings.setValue("mouse_warp", mouse_warp);
     settings.setValue("use_proton", use_proton);
     settings.setValue("proton_path", proton_path.c_str());
+
+    settings.remove("env_overrides");
+    settings.beginWriteArray("env_overrides");
+    i = 0;
+    for (const auto& env_var : env_overrides) {
+        settings.setArrayIndex(i++);
+        settings.setValue("name", env_var.first.c_str());
+        settings.setValue("value", env_var.second.c_str());
+    }
+    settings.endArray();
+
     settings.setValue("editor_autoscroll", editor_autoscroll);
     settings.setValue("editor_rewind_seek", editor_rewind_seek);
     settings.setValue("editor_rewind_fastforward", editor_rewind_fastforward);
@@ -380,6 +391,18 @@ void Config::load(const std::filesystem::path& gamepath) {
     mouse_warp = settings.value("mouse_warp", mouse_warp).toBool();
     use_proton = settings.value("use_proton", use_proton).toBool();
     proton_path = settings.value("proton_path", "").toString().toStdString();
+
+    env_overrides.clear();
+    size = settings.beginReadArray("env_overrides");
+    for (int i = 0; i < size; ++i) {
+        settings.setArrayIndex(i);
+        std::string name = settings.value("name").toString().toStdString();
+        std::string value = settings.value("value").toString().toStdString();
+        if (!name.empty())
+            env_overrides.emplace_back(name, value);
+    }
+    settings.endArray();
+
     editor_autoscroll = settings.value("editor_autoscroll", editor_autoscroll).toBool();
     editor_rewind_seek = settings.value("editor_rewind_seek", editor_rewind_seek).toBool();
     editor_rewind_fastforward = settings.value("editor_rewind_fastforward", editor_rewind_fastforward).toBool();

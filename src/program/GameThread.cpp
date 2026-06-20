@@ -130,6 +130,12 @@ void GameThread::set_env_variables(Context *context, int gameArch)
         setenv("SDL_DYNAMIC_API", context->libtaspath.c_str(), 1);
         setenv("SDL3_DYNAMIC_API", context->libtaspath.c_str(), 1);
     }
+
+    /* Apply user-defined environment variables last so they override previous values. */
+    for (const auto& env_var : context->config.env_overrides) {
+        if (!env_var.first.empty())
+            setenv(env_var.first.c_str(), env_var.second.c_str(), 1);
+    }
 }
 
 std::list<std::string> GameThread::build_arg_list(Context *context, int gameArch)
