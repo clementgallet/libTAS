@@ -222,6 +222,11 @@ const static usymbol_t UNITY_SYMBOLS[] = {
     },
     {
         UNITY2K_JOBQUEUE_WAIT_JOB_GROUP,
+        "JobQueue::WaitForJobGroup",
+        "_ZN8JobQueue15WaitForJobGroupE10JobGroupID",
+    },
+    {
+        UNITY2K_JOBQUEUE_WAIT_JOB_GROUP_ID,
         "JobQueue::WaitForJobGroupID",
         "_ZN8JobQueue17WaitForJobGroupIDE10JobGroupIDNS_21JobQueueWorkStealModeE",
     },
@@ -461,6 +466,11 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN18BaseUnityAnalytics22UpdateConfigFromServerEv",
     },
     {
+        UNITY2K_CONNECTCLIENT_UPDATE,
+        "BaseUnityConnectClient::UpdateConfigFromServer",
+        "_ZN22BaseUnityConnectClient22UpdateConfigFromServerEv",
+    },
+    {
         PHYSX_CM_FANOUTTASK_REMOVEREFERENCE,
         "physx::Cm::FanoutTask::removeReference",
         "_ZN5physx2Cm10FanoutTask15removeReferenceEv",
@@ -693,12 +703,12 @@ const static usig_t UNITY_SIGNATURES_64[] = {
         "55 41 57 41 56 41 55 41 54 53 48 83 EC 18 41 89 CC 41 89 D5 49 89 F6 48 89 FB 48 89 F7"
     },
     {
-        UNITY2K_JOBQUEUE_WAIT_JOB_GROUP,
+        UNITY2K_JOBQUEUE_WAIT_JOB_GROUP_ID,
         // Signature for Unity 6
         "55 41 57 41 56 41 55 41 54 53 48 81 EC C8 00 00 00 49 89 F7 C7 44 24 2C 00 00 00 00"
     },
     {
-        UNITY2K_JOBQUEUE_WAIT_JOB_GROUP,
+        UNITY2K_JOBQUEUE_WAIT_JOB_GROUP_ID,
         // Signature for Unity 2020
         "55 41 57 41 56 41 55 41 54 53 48 83 EC 48 48 89 54 24 30 48 85 F6 0F 84"
     },

@@ -57,7 +57,8 @@ enum {
     UNITY2K_JOBQUEUE_SCHEDULE_DEPENDENCIES, // JobQueue::ScheduleDependencies(JobGroupID&, JobInfo*, JobInfo*, bool)
     UNITY2K_JOBQUEUE_SCHEDULE_JOB_MULTIPLE, // JobQueue::ScheduleJobMultipleDependencies(void (*)(void*), void*, JobGroupID*, int, MemLabelId)
     UNITY2K_JOBQUEUE_SCHEDULE_GROUP_INTERNAL, // JobQueue::ScheduleGroupInternal(JobGroup*, JobQueue::JobQueuePriority, bool)
-    UNITY2K_JOBQUEUE_WAIT_JOB_GROUP, // JobQueue::WaitForJobGroupID(JobGroupID, JobQueue::JobQueueWorkStealMode)
+    UNITY2K_JOBQUEUE_WAIT_JOB_GROUP, // JobQueue::WaitForJobGroup(JobGroupID)
+    UNITY2K_JOBQUEUE_WAIT_JOB_GROUP_ID, // JobQueue::WaitForJobGroupID(JobGroupID, JobQueue::JobQueueWorkStealMode)
     UNITY6_BATCH_JOB, // ScheduleBatchJob(void*, ujob_handle_t)
     UNITY6_JOB_COMPLETED, // job_completed(ujob_control_t*, ujob_lane_t*, ujob_job_t*, ujob_handle_t)
     UNITY6_JOB_REFLECTION, // JobsUtility_CUSTOM_CreateJobReflectionData(ScriptingBackendNativeObjectPtrOpaque*, ScriptingBackendNativeObjectPtrOpaque*, ScriptingBackendNativeObjectPtrOpaque*, ScriptingBackendNativeObjectPtrOpaque*, ScriptingBackendNativeObjectPtrOpaque*)
@@ -104,6 +105,7 @@ enum {
     UNITY6_ASSETBUNDLELOAD_FEEDSTREAM, // AssetBundleLoadFromStreamAsyncOperation::FeedStream(void const*, unsigned long)
     UNITY6_LOAD_FMOD_SOUND, // LoadFMODSound(SoundHandle::Instance**, char const*, unsigned int, SampleClip*, unsigned int, VFS::FileSize, FMOD_CREATESOUNDEXINFO*)
     UNITY5_ANALYTICS_UPDATE, // BaseUnityAnalytics::UpdateConfigFromServer()
+    UNITY2K_CONNECTCLIENT_UPDATE, // BaseUnityConnectClient::UpdateConfigFromServer()
     PHYSX_CM_FANOUTTASK_REMOVEREFERENCE, // physx::Cm::FanoutTask::removeReference()
     UNITY_FUNCS_LEN
 };

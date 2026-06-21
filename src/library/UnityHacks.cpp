@@ -250,6 +250,7 @@ namespace orig {
     void (*U2K_JobQueue_ScheduleDependencies)(JobQueue *t, JobGroupID *x, JobInfo *y, JobInfo *z, bool a) = nullptr;
     long (*U2K_JobQueue_ScheduleJobMultipleDependencies)(JobQueue *t, void (*x)(void*), void* y, JobGroupID* z, int a, MemLabelId b) = nullptr;
     JobGroupID (*U2K_JobQueue_ScheduleGroupInternal)(JobQueue *t, JobGroup* x, int y, bool z) = nullptr;
+    void (*U2K_JobQueue_WaitForJobGroup)(JobQueue *t, JobGroup *x, int y) = nullptr;
     void (*U2K_JobQueue_WaitForJobGroupID)(JobQueue *t, JobGroup *x, int y, bool a) = nullptr;
 
     int (*U6_job_completed)(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z, ujob_handle_t a) = nullptr;
@@ -299,6 +300,7 @@ namespace orig {
     int (*U6_LoadFMODSound)(SoundHandle_Instance** si, char const* s, unsigned int f, SampleClip* c, unsigned int i, VFS_FileSize fs, FMOD_CREATESOUNDEXINFO* in) = nullptr;
 
     void (*U5_BaseUnityAnalytics_UpdateConfigFromServer)(void* a) = nullptr;
+    void (*U2K_BaseUnityConnectClient_UpdateConfigFromServer)(void* a) = nullptr;
     void (*physx_Cm_FanoutTask_RemoveReference)(FanoutTask* ft) = nullptr;
 }
 
@@ -545,6 +547,8 @@ static JobGroupID U5_JobQueue_ScheduleGroup(JobQueue *t, JobGroup* x, int y)
                 orig::U5_JobQueue_WaitForJobGroup(t, j.group, j.tag, true);
             else if (orig::U5_JobQueue_WaitForJobGroupID)
                 orig::U5_JobQueue_WaitForJobGroupID(t, j.group, j.tag);
+            else if (orig::U2K_JobQueue_WaitForJobGroup)
+                orig::U2K_JobQueue_WaitForJobGroup(t, j.group, j.tag);
         }
     }
 
@@ -688,6 +692,12 @@ static JobGroupID U2K_JobQueue_ScheduleGroupInternal(JobQueue *t, JobGroup *x, i
     /* Immediatly wait for the job */
     // U2K_JobQueue_WaitForJobGroupID(t, j.group, j.tag, true);
     return j;
+}
+
+static void U2K_JobQueue_WaitForJobGroup(JobQueue* t , JobGroup* x, int y)
+{
+    LOGTRACE(LCF_HACKS, "U2K_JobQueue_WaitForJobGroup called with JobGroup %p, JobGroup tag %d", x, y);
+    return orig::U2K_JobQueue_WaitForJobGroup(t, x, y);
 }
 
 static void U2K_JobQueue_WaitForJobGroupID(JobQueue* /* or ujob_control_t* */ t , JobGroup* /* or ujob_handle_t */ x, int y, bool z)
@@ -974,7 +984,7 @@ static bool Helper_PreloadManagerOperation_GetStatus(PreloadManagerOperation* o)
     else if (GetUnityVersionMaj() == 5)
         status = *(int *)(o + 0x2c);
     if (status < 0 || status > 2) {
-        LOG(LL_WARN, LCF_HACKS | LCF_FILEIO, "    Invalid status for PreloadManagerOperation");
+        LOG(LL_WARN, LCF_HACKS | LCF_FILEIO, "    Invalid status for PreloadManagerOperation %d with version %d", status, GetUnityVersionMaj());
         status = 1;
     }
     return status;
@@ -1443,10 +1453,17 @@ static int U6_LoadFMODSound(SoundHandle_Instance** si, char const* s, unsigned i
     return orig::U6_LoadFMODSound(si, s, f, c, i, fs, in);
 }
 
+/* The next two functions cause a softlock, because they schedule a job that cannot be waited immediately. */
 static void U5_BaseUnityAnalytics_UpdateConfigFromServer(void* a)
 {
     LOGTRACE_SIMPLE(LCF_HACKS);
     // return orig::U5_BaseUnityAnalytics_UpdateConfigFromServer(a);
+}
+
+static void U2K_BaseUnityConnectClient_UpdateConfigFromServer(void* a)
+{
+    LOGTRACE_SIMPLE(LCF_HACKS);
+    // return orig::U2K_BaseUnityConnectClient_UpdateConfigFromServer(a);
 }
 
 static void physx_Cm_FanoutTask_RemoveReference(FanoutTask* ft)
@@ -1508,7 +1525,8 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY2K_JOBQUEUE_SCHEDULE_DEPENDENCIES, U2K_JobQueue_ScheduleDependencies)
         FUNC_CASE(UNITY2K_JOBQUEUE_SCHEDULE_JOB_MULTIPLE, U2K_JobQueue_ScheduleJobMultipleDependencies)
         FUNC_CASE(UNITY2K_JOBQUEUE_SCHEDULE_GROUP_INTERNAL, U2K_JobQueue_ScheduleGroupInternal)
-        FUNC_CASE(UNITY2K_JOBQUEUE_WAIT_JOB_GROUP, U2K_JobQueue_WaitForJobGroupID)
+        FUNC_CASE(UNITY2K_JOBQUEUE_WAIT_JOB_GROUP, U2K_JobQueue_WaitForJobGroup)
+        FUNC_CASE(UNITY2K_JOBQUEUE_WAIT_JOB_GROUP_ID, U2K_JobQueue_WaitForJobGroupID)
 
         FUNC_CASE(UNITY6_BATCH_JOB, U6_ScheduleBatchJob)
         FUNC_CASE(UNITY6_JOB_COMPLETED, U6_job_completed)
@@ -1557,6 +1575,7 @@ void UnityHacks::patch(int func, uint64_t addr)
 
         FUNC_CASE(UNITY6_LOAD_FMOD_SOUND, U6_LoadFMODSound)
         FUNC_CASE(UNITY5_ANALYTICS_UPDATE, U5_BaseUnityAnalytics_UpdateConfigFromServer)
+        FUNC_CASE(UNITY2K_CONNECTCLIENT_UPDATE, U2K_BaseUnityConnectClient_UpdateConfigFromServer)
         FUNC_CASE(PHYSX_CM_FANOUTTASK_REMOVEREFERENCE, physx_Cm_FanoutTask_RemoveReference)
         
     }
