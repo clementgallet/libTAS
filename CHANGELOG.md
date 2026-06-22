@@ -5,6 +5,7 @@
 * Vulkan: Use a fence to wait for each image to be presented (#741)
 * Add a command-line option to set any setting at startup
 * Add an option to set any environment variable on the game process
+* Add Unity VideoPlayback hooks
 
 ### Changed
 

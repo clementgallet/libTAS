@@ -104,6 +104,15 @@ typedef long FileReadFlags;
 typedef void GfxDevice;
 typedef void AsyncUploadManagerSettings;
 
+typedef void VideoPlayback;
+typedef void VideoPlaybackMgr;
+typedef void VideoPlaybackMgr_DecoderThread;
+typedef void VideoClipPlayback;
+typedef void Texture;
+typedef void AudioSource;
+typedef void VideoReferenceClock;
+typedef int VideoMediaFormat;
+
 typedef void ArchiveStorageConverter;
 typedef void IArchiveStorageConverterListener;
 typedef void AssetBundleLoadFromStreamAsyncOperation;
@@ -211,6 +220,20 @@ public:
     virtual char* GetDebugName(PreloadManagerOperation* po);
 };
 
+namespace core {
+    template<typename T>
+    class StringStorageDefault;
+
+    template<typename T, typename Storage>
+    class basic_string;
+}
+
+using CoreString = core::basic_string<char, core::StringStorageDefault<char>>;
+using VideoPlaybackErrorCallback = void (*)(void*, CoreString const&);
+using VideoPlaybackNotifyCallback = void (*)(void*);
+using VideoPlaybackSeekCallback = void (*)(void*);
+using VideoPlaybackClockCallback = void (*)(void*, double);
+
 namespace orig {
     void (*UnityVersion_UnityVersion)(UnityVersion* u, const char* s) = nullptr;
 
@@ -301,6 +324,61 @@ namespace orig {
 
     void (*U5_BaseUnityAnalytics_UpdateConfigFromServer)(void* a) = nullptr;
     void (*U2K_BaseUnityConnectClient_UpdateConfigFromServer)(void* a) = nullptr;
+
+    bool (*U2K_VideoPlayback_GetImageNoSeek)(VideoPlayback* t, Texture* texture, long* frame) = nullptr;
+    int (*U2K_VideoPlayback_GetPixelAspectRatioNumerator)(VideoPlayback* t) = nullptr;
+    int (*U2K_VideoPlayback_GetPixelAspectRatioDenominator)(VideoPlayback* t) = nullptr;
+    float (*U2K_VideoPlayback_GetPlaybackSpeed)(VideoPlayback* t) = nullptr;
+    void (*U2K_VideoPlayback_SetPlaybackSpeed)(VideoPlayback* t, float speed) = nullptr;
+    void (*U2K_VideoPlayback_StartPlayback)(VideoPlayback* t) = nullptr;
+    void (*U2K_VideoPlayback_PausePlayback)(VideoPlayback* t) = nullptr;
+    void (*U2K_VideoPlayback_StopPlayback)(VideoPlayback* t) = nullptr;
+    bool (*U2K_VideoPlayback_IsPlaybackActive)(VideoPlayback* t) = nullptr;
+    void (*U2K_VideoPlayback_SeekDouble)(VideoPlayback* t, double position, VideoPlaybackSeekCallback callback, void* userdata) = nullptr;
+    void (*U2K_VideoPlayback_SeekLong)(VideoPlayback* t, long position, VideoPlaybackSeekCallback callback, void* userdata) = nullptr;
+    void (*U2K_VideoPlayback_Step)(VideoPlayback* t) = nullptr;
+    void (*U2K_VideoPlayback_SetAudioTarget)(VideoPlayback* t, unsigned short track, bool enabled, AudioSource* source) = nullptr;
+    bool (*U2K_VideoPlayback_HasAudioSource)(VideoPlayback* t, unsigned short track) = nullptr;
+    bool (*U2K_VideoPlayback_IsAudioTrackEnabled)(VideoPlayback* t, unsigned short track) = nullptr;
+    bool (*U2K_VideoPlayback_SetupAudioSourceOutput)(VideoPlayback* t, unsigned short track, unsigned short source, unsigned int sample_frames) = nullptr;
+    unsigned int (*U2K_VideoPlayback_GetAudioSourceQueueFreeSampleFrameCount)(VideoPlayback* t, unsigned short track) = nullptr;
+    void (*U2K_VideoPlayback_ReleaseAudioSourceOutputs)(VideoPlayback* t) = nullptr;
+    void (*U2K_VideoPlayback_SetReferenceClock)(VideoPlayback* t, VideoReferenceClock* clock, VideoPlaybackClockCallback callback, void* userdata) = nullptr;
+    void (*U2K_VideoPlayback_SyncClock)(VideoPlayback* t) = nullptr;
+    void (*U2K_VideoPlayback_UpdatePlayback)(VideoPlayback* t) = nullptr;
+    void (*U2K_VideoPlayback_OnClockResyncCompleted)(VideoPlayback* t) = nullptr;
+    void (*U2K_VideoPlayback_ClearAudioSourceQueues)(VideoPlayback* t) = nullptr;
+    void (*U2K_VideoPlayback_OnClockSeekCompleted)(VideoPlayback* t) = nullptr;
+    void (*U2K_VideoPlayback_QueueAudioSourceSamples)(VideoPlayback* t, unsigned short track, float const* samples, unsigned int sample_frames) = nullptr;
+    bool (*U2K_VideoPlayback_CanSkipOnDrop)(VideoPlayback* t) = nullptr;
+    bool (*U2K_VideoPlayback_CanRelease)(VideoPlayback* t) = nullptr;
+    void (*U2K_VideoPlayback_MarkForRelease)(VideoPlayback* t) = nullptr;
+    void (*U2K_VideoPlayback_ConfigureAudioOutput)(VideoPlayback* t, unsigned short track) = nullptr;
+    void (*U2K_VideoPlayback_Callbacks_OnClockResyncCompleted)(void* userdata) = nullptr;
+    void (*U2K_VideoPlayback_Callbacks_OnClockSeekCompleted)(void* userdata) = nullptr;
+    void (*U2K_VideoPlaybackMgr_CleanupPlaybackJob)(VideoPlaybackMgr* t, VideoClipPlayback* playback) = nullptr;
+    void (*U2K_VideoPlaybackMgr_DestroyPlaybackJob)(VideoPlaybackMgr* t, VideoClipPlayback* playback) = nullptr;
+    bool (*U2K_VideoPlaybackMgr_IsPlaying)(VideoPlaybackMgr* t) = nullptr;
+    bool (*U2K_VideoPlaybackMgr_IsEmpty)(VideoPlaybackMgr* t) = nullptr;
+    bool (*U2K_VideoPlaybackMgr_IsSuspended)(VideoPlaybackMgr* t) = nullptr;
+    void (*U2K_VideoPlaybackMgr_Suspend)(VideoPlaybackMgr* t) = nullptr;
+    void (*U2K_VideoPlaybackMgr_Resume)(VideoPlaybackMgr* t) = nullptr;
+    void (*U2K_VideoPlaybackMgr_Update)(VideoPlaybackMgr* t) = nullptr;
+    void (*U2K_VideoPlaybackMgr_CreateDecoderThreads)(VideoPlaybackMgr* t, int decoder_threads) = nullptr;
+    void (*U2K_VideoPlaybackMgr_ReleaseDecoderThreads)(VideoPlaybackMgr* t, bool wait) = nullptr;
+    void (*U2K_VideoPlaybackMgr_DispatchMediaDecode)(VideoPlaybackMgr* t, VideoPlaybackMgr_DecoderThread* thread) = nullptr;
+    VideoPlayback* (*U2K_VideoPlaybackMgr_CreateVideoPlayback_Format)(VideoPlaybackMgr* t, CoreString const& path, VideoMediaFormat format, bool preload, VideoPlaybackErrorCallback error_callback, VideoPlaybackNotifyCallback ready_callback, VideoPlaybackNotifyCallback done_callback, void* userdata) = nullptr;
+    VideoPlayback* (*U2K_VideoPlaybackMgr_CreateVideoPlayback_Paths)(VideoPlaybackMgr* t, CoreString const& path, CoreString const& cache_path, unsigned long offset, unsigned long size, VideoMediaFormat format, bool preload, bool streaming, VideoPlaybackErrorCallback error_callback, VideoPlaybackNotifyCallback ready_callback, VideoPlaybackNotifyCallback done_callback, void* userdata) = nullptr;
+    void (*U2K_VideoPlaybackMgr_ReleaseVideoPlayback)(VideoPlaybackMgr* t, VideoPlayback* playback) = nullptr;
+    void (*U2K_VideoPlaybackMgr_DecoderThread_Start)(VideoPlaybackMgr_DecoderThread* t) = nullptr;
+    void (*U2K_VideoPlaybackMgr_DecoderThread_Wait)(VideoPlaybackMgr_DecoderThread* t) = nullptr;
+    void (*U2K_VideoPlaybackMgr_DecoderThread_Quit)(VideoPlaybackMgr_DecoderThread* t) = nullptr;
+    void (*U2K_VideoPlaybackMgr_DecoderThread_QuitAndWait)(VideoPlaybackMgr_DecoderThread* t) = nullptr;
+    void (*U2K_VideoPlaybackMgr_DecoderThread_SleepMS)(int milliseconds) = nullptr;
+    bool (*U2K_VideoPlaybackMgr_DecoderThread_IsRunning)(VideoPlaybackMgr_DecoderThread* t) = nullptr;
+    void (*U2K_VideoPlaybackMgr_DecoderThread_Run)(VideoPlaybackMgr_DecoderThread* t) = nullptr;
+    void* (*U2K_VideoPlaybackMgr_DecoderThread_StartThread)(void* userdata) = nullptr;
+
     void (*physx_Cm_FanoutTask_RemoveReference)(FanoutTask* ft) = nullptr;
 }
 
@@ -308,6 +386,21 @@ namespace orig {
 
 static char* unity_version;
 static int unity_version_int[3] = {0, 0, 0};
+
+/* Passthrough macros for simple hook functions */
+#define UNITY_PASSTHROUGH_VOID(NAME, ARGS, CALL) \
+static void NAME ARGS \
+{ \
+    LOGTRACE_SIMPLE(LCF_HACKS); \
+    orig::NAME CALL; \
+}
+
+#define UNITY_PASSTHROUGH_RET(RET, NAME, ARGS, CALL) \
+static RET NAME ARGS \
+{ \
+    LOGTRACE_SIMPLE(LCF_HACKS); \
+    return orig::NAME CALL; \
+}
 
 static void UnityVersion_UnityVersion(UnityVersion* u, const char* s)
 {
@@ -359,23 +452,11 @@ static long U4_JobScheduler_FetchNextJob(JobScheduler* t, int* x)
     return orig::U4_JobScheduler_FetchNextJob(t, x);
 }
 
-static void U4_JobScheduler_ProcessJob(JobScheduler* t, JobInfo* x, int y)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U4_JobScheduler_ProcessJob(t, x, y);
-}
+UNITY_PASSTHROUGH_VOID(U4_JobScheduler_ProcessJob, (JobScheduler* t, JobInfo* x, int y), (t, x, y))
 
-static void U4_JobScheduler_WaitForGroup(JobScheduler* t, int x)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U4_JobScheduler_WaitForGroup(t, x);
-}
+UNITY_PASSTHROUGH_VOID(U4_JobScheduler_WaitForGroup, (JobScheduler* t, int x), (t, x))
 
-static void U4_JobScheduler_AwakeIdleWorkerThreads(JobScheduler* t, int x)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U4_JobScheduler_AwakeIdleWorkerThreads(t, x);
-}
+UNITY_PASSTHROUGH_VOID(U4_JobScheduler_AwakeIdleWorkerThreads, (JobScheduler* t, int x), (t, x))
 
 /* We need to wrap the job, to know when it is executed */
 struct U4_Job
@@ -406,41 +487,17 @@ static int U4_JobScheduler_SubmitJob(JobScheduler* t, int x, void* (*y)(void*), 
     return orig::U4_JobScheduler_SubmitJob(t, x, &U4_ExecJob, reinterpret_cast<void*>(j), a);
 }
 
-static void U5_BackgroundJobQueue_ExecuteMainThreadJobs(BackgroundJobQueue *t)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U5_BackgroundJobQueue_ExecuteMainThreadJobs(t);
-}
+UNITY_PASSTHROUGH_VOID(U5_BackgroundJobQueue_ExecuteMainThreadJobs, (BackgroundJobQueue *t), (t))
 
-static void U5_BackgroundJobQueue_ScheduleJob(BackgroundJobQueue* t, void (*x)(void*), void* y)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U5_BackgroundJobQueue_ScheduleJob(t, x, y);
-}
+UNITY_PASSTHROUGH_VOID(U5_BackgroundJobQueue_ScheduleJob, (BackgroundJobQueue* t, void (*x)(void*), void* y), (t, x, y))
 
-static void U5_BackgroundJobQueue_ScheduleMainThreadJob(BackgroundJobQueue* t, void (*x)(void*), void* y)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U5_BackgroundJobQueue_ScheduleMainThreadJob(t, x, y);
-}
+UNITY_PASSTHROUGH_VOID(U5_BackgroundJobQueue_ScheduleMainThreadJob, (BackgroundJobQueue* t, void (*x)(void*), void* y), (t, x, y))
 
-static JobGroup* U5_JobQueue_CreateJobBatch(JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int id, JobGroup* a)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U5_JobQueue_CreateJobBatch(t, func, arg, z, id, a);
-}
+UNITY_PASSTHROUGH_RET(JobGroup*, U5_JobQueue_CreateJobBatch, (JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int id, JobGroup* a), (t, func, arg, z, id, a))
 
-static long U5_JobQueue_EnqueueAll(JobQueue* t, JobGroup* x, JobGroup* y)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U5_JobQueue_EnqueueAll(t, x, y);
-}
+UNITY_PASSTHROUGH_RET(long, U5_JobQueue_EnqueueAll, (JobQueue* t, JobGroup* x, JobGroup* y), (t, x, y))
 
-static long U5_JobQueue_EnqueueAllInternal(JobQueue* t, JobGroup* x, JobGroup* y, AtomicQueue* z, int* a)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U5_JobQueue_EnqueueAllInternal(t, x, y, z, a);
-}
+UNITY_PASSTHROUGH_RET(long, U5_JobQueue_EnqueueAllInternal, (JobQueue* t, JobGroup* x, JobGroup* y, AtomicQueue* z, int* a), (t, x, y, z, a))
 
 static long U5_JobQueue_Exec(JobQueue* t, JobInfo* x, long long y, int z)
 {
@@ -464,23 +521,11 @@ static long U5_JobQueue_ExecuteJobFromQueue(JobQueue* t)
     return orig::U5_JobQueue_ExecuteJobFromQueue(t);
 }
 
-static bool U5_JobQueue_ExecuteOneJob(JobQueue *t)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U5_JobQueue_ExecuteOneJob(t);
-}
+UNITY_PASSTHROUGH_RET(bool, U5_JobQueue_ExecuteOneJob, (JobQueue *t), (t))
 
-static long U5_JobQueue_MainEnqueueAll(JobQueue* t, JobGroup* x, JobGroup* y)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U5_JobQueue_MainEnqueueAll(t, x, y);
-}
+UNITY_PASSTHROUGH_RET(long, U5_JobQueue_MainEnqueueAll, (JobQueue* t, JobGroup* x, JobGroup* y), (t, x, y))
 
-static long U5_JobQueue_Pop(JobQueue* t, JobGroupID x)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U5_JobQueue_Pop(t, x);
-}
+UNITY_PASSTHROUGH_RET(long, U5_JobQueue_Pop, (JobQueue* t, JobGroupID x), (t, x))
 
 static long U5_JobQueue_ProcessJobs(JobQueue* t, void* x)
 {
@@ -644,23 +689,11 @@ static bool U5_JobQueue_HasJobGroupIDCompleted(JobQueue* t, JobGroup* x, int y)
     return orig::U5_JobQueue_HasJobGroupIDCompleted(t, x, y);
 }
 
-static void U2K_BackgroundJobQueue_ScheduleJobInternal(BackgroundJobQueue *t, void (*x)(void*), void* y, BackgroundJobQueue_JobFence* z, JobQueue_JobQueuePriority a)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U2K_BackgroundJobQueue_ScheduleJobInternal(t, x, y, z, a);
-}
+UNITY_PASSTHROUGH_VOID(U2K_BackgroundJobQueue_ScheduleJobInternal, (BackgroundJobQueue *t, void (*x)(void*), void* y, BackgroundJobQueue_JobFence* z, JobQueue_JobQueuePriority a), (t, x, y, z, a))
 
-static void U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal(BackgroundJobQueue *t, void (*x)(void*), void* y)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal(t, x, y);
-}
+UNITY_PASSTHROUGH_VOID(U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal, (BackgroundJobQueue *t, void (*x)(void*), void* y), (t, x, y))
 
-static void U2K_JobQueue_CompleteAllJobs(JobQueue *t)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U2K_JobQueue_CompleteAllJobs(t);
-}
+UNITY_PASSTHROUGH_VOID(U2K_JobQueue_CompleteAllJobs, (JobQueue *t), (t))
 
 static long U2K_JobQueue_Exec(JobQueue *t, JobInfo* x, long long y, int z, bool a)
 {
@@ -703,11 +736,7 @@ static void U2K_JobQueue_ScheduleDependencies(JobQueue *t, JobGroupID *x, JobInf
     return orig::U2K_JobQueue_ScheduleDependencies(t, x, y, z, a);
 }
 
-static long U2K_JobQueue_ScheduleJobMultipleDependencies(JobQueue *t, void (*x)(void*), void* y, JobGroupID* z, int a, MemLabelId b)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U2K_JobQueue_ScheduleJobMultipleDependencies(t, x, y, z, a, b);
-}
+UNITY_PASSTHROUGH_RET(long, U2K_JobQueue_ScheduleJobMultipleDependencies, (JobQueue *t, void (*x)(void*), void* y, JobGroupID* z, int a, MemLabelId b), (t, x, y, z, a, b))
 
 static JobGroupID U2K_JobQueue_ScheduleGroupInternal(JobQueue *t, JobGroup *x, int y, bool z)
 {
@@ -746,23 +775,11 @@ static int U6_job_completed(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z, uj
     return ret;
 }
 
-static void U6_JobQueue_ScheduleGroups(JobQueue *t, JobBatchHandles* x, int y)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U6_JobQueue_ScheduleGroups(t, x, y);
-}
+UNITY_PASSTHROUGH_VOID(U6_JobQueue_ScheduleGroups, (JobQueue *t, JobBatchHandles* x, int y), (t, x, y))
 
-static int U6_JobsUtility_CUSTOM_CreateJobReflectionData(ScriptingBackendNativeObjectPtrOpaque* x, ScriptingBackendNativeObjectPtrOpaque* y, ScriptingBackendNativeObjectPtrOpaque* z, ScriptingBackendNativeObjectPtrOpaque* a, ScriptingBackendNativeObjectPtrOpaque* b)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U6_JobsUtility_CUSTOM_CreateJobReflectionData(x, y, z, a, b);
-}
+UNITY_PASSTHROUGH_RET(int, U6_JobsUtility_CUSTOM_CreateJobReflectionData, (ScriptingBackendNativeObjectPtrOpaque* x, ScriptingBackendNativeObjectPtrOpaque* y, ScriptingBackendNativeObjectPtrOpaque* z, ScriptingBackendNativeObjectPtrOpaque* a, ScriptingBackendNativeObjectPtrOpaque* b), (x, y, z, a, b))
 
-static int U6_JobsUtility_CUSTOM_Schedule(JobScheduleParameters* x, JobFence* y)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U6_JobsUtility_CUSTOM_Schedule(x, y);
-}
+UNITY_PASSTHROUGH_RET(int, U6_JobsUtility_CUSTOM_Schedule, (JobScheduleParameters* x, JobFence* y), (x, y))
 
 static bool U6_lane_guts(ujob_control_t* x, ujob_lane_t* y, int z, int a, ujob_dependency_chain const* b)
 {
@@ -770,11 +787,7 @@ static bool U6_lane_guts(ujob_control_t* x, ujob_lane_t* y, int z, int a, ujob_d
     return orig::U6_lane_guts(x, y, z, a, b);
 }
 
-static long U6_ScheduleBatchJob(void* x, ujob_handle_t y)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U6_ScheduleBatchJob(x, y);
-}
+UNITY_PASSTHROUGH_RET(long, U6_ScheduleBatchJob, (void* x, ujob_handle_t y), (x, y))
 
 static void U6_ujobs_add_to_lane_and_wake_one_thread(ujob_control_t* x, ujob_job_t* y, ujob_lane_t* z)
 {
@@ -895,11 +908,7 @@ static ujob_handle_t U6_ujob_schedule_parallel_for_internal(ujob_control_t* x, J
     return ret;
 }
 
-static void U6_ujob_wait_for(ujob_control_t *x, ujob_handle_t y, int z)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U6_ujob_wait_for(x, y, z);
-}
+UNITY_PASSTHROUGH_VOID(U6_ujob_wait_for, (ujob_control_t *x, ujob_handle_t y, int z), (x, y, z))
 
 static void U6_worker_thread_routine(void* x)
 {
@@ -1245,11 +1254,7 @@ static long U6_PreloadManager_UpdatePreloadingSingleStep(PreloadManager* m, Prel
     return ret;
 }
 
-static void U6_PreloadManager_WaitForAllAsyncOperationsToComplete(PreloadManager* m)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-    return orig::U6_PreloadManager_WaitForAllAsyncOperationsToComplete(m);
-}
+UNITY_PASSTHROUGH_VOID(U6_PreloadManager_WaitForAllAsyncOperationsToComplete, (PreloadManager* m), (m))
 
 static long U6_PreloadManager_Run(void* p)
 {
@@ -1258,27 +1263,15 @@ static long U6_PreloadManager_Run(void* p)
     return orig::U6_PreloadManager_Run(p);
 }
 
-static PreloadManagerOperation* U2K_PreloadManager_PeekIntegrateQueue(PreloadManager* m)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-    return orig::U2K_PreloadManager_PeekIntegrateQueue(m);
-}
+UNITY_PASSTHROUGH_RET(PreloadManagerOperation*, U2K_PreloadManager_PeekIntegrateQueue, (PreloadManager* m), (m))
 
-static bool U2K_PreloadManager_IsLoadingOrQueued(PreloadManager* m)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-    return orig::U2K_PreloadManager_IsLoadingOrQueued(m);
-}
+UNITY_PASSTHROUGH_RET(bool, U2K_PreloadManager_IsLoadingOrQueued, (PreloadManager* m), (m))
 
 static std::mutex async_read_mutex;
 static std::condition_variable async_read_condition;
 static bool async_read_complete = true;
 
-static void U5_AsyncReadManagerThreaded_WaitDone(AsyncReadManagerThreaded *t, AsyncReadCommand *c)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-    return orig::U5_AsyncReadManagerThreaded_WaitDone(t, c);
-}
+UNITY_PASSTHROUGH_VOID(U5_AsyncReadManagerThreaded_WaitDone, (AsyncReadManagerThreaded *t, AsyncReadCommand *c), (t, c))
 
 static void U6_AsyncReadManagerThreaded_Request(AsyncReadManagerThreaded *t, AsyncReadCommand *c)
 {
@@ -1413,35 +1406,15 @@ static void U6_AsyncUploadManager_AsyncReadCallbackStatic(AsyncReadCommand *c, A
 
 /* End of callbacks */
 
-static void U6_AsyncUploadManager_AsyncReadSuccess(AsyncUploadManager *t, AsyncReadCommand *c)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-    return orig::U6_AsyncUploadManager_AsyncReadSuccess(t, c);
-}
+UNITY_PASSTHROUGH_VOID(U6_AsyncUploadManager_AsyncReadSuccess, (AsyncUploadManager *t, AsyncReadCommand *c), (t, c))
 
-static Int128 U6_AsyncUploadManager_QueueUploadAsset(AsyncUploadManager *t, char const* x, VFS_FileSize y, unsigned int z, unsigned int a, AsyncUploadHandler* b, AssetContext *c, unsigned char* d, FileReadFlags e)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-    return orig::U6_AsyncUploadManager_QueueUploadAsset(t, x, y, z, a, b, c, d, e);
-}
+UNITY_PASSTHROUGH_RET(Int128, U6_AsyncUploadManager_QueueUploadAsset, (AsyncUploadManager *t, char const* x, VFS_FileSize y, unsigned int z, unsigned int a, AsyncUploadHandler* b, AssetContext *c, unsigned char* d, FileReadFlags e), (t, x, y, z, a, b, c, d, e))
 
-static void U6_AsyncUploadManager_AsyncResourceUpload(AsyncUploadManager *t, GfxDevice *x, int y, AsyncUploadManagerSettings *z)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-    return orig::U6_AsyncUploadManager_AsyncResourceUpload(t, x, y, z);
-}
+UNITY_PASSTHROUGH_VOID(U6_AsyncUploadManager_AsyncResourceUpload, (AsyncUploadManager *t, GfxDevice *x, int y, AsyncUploadManagerSettings *z), (t, x, y, z))
 
-static void U6_AsyncUploadManager_ScheduleAsyncCommandsInternal(AsyncUploadManager *t)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-    return orig::U6_AsyncUploadManager_ScheduleAsyncCommandsInternal(t);
-}
+UNITY_PASSTHROUGH_VOID(U6_AsyncUploadManager_ScheduleAsyncCommandsInternal, (AsyncUploadManager *t), (t))
 
-static void U6_AsyncUploadManager_CloseFile(AsyncUploadManager *t, char* s)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-    return orig::U6_AsyncUploadManager_CloseFile(t, s);
-}
+UNITY_PASSTHROUGH_VOID(U6_AsyncUploadManager_CloseFile, (AsyncUploadManager *t, char* s), (t, s))
 
 static void U6_SyncReadRequest(AsyncReadCommand* c)
 {
@@ -1451,23 +1424,65 @@ static void U6_SyncReadRequest(AsyncReadCommand* c)
     return orig::U6_SyncReadRequest(c);
 }
 
-static void U6_ArchiveStorageConverter_ArchiveStorageConverter(ArchiveStorageConverter* c, IArchiveStorageConverterListener* l, bool b)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-    return orig::U6_ArchiveStorageConverter_ArchiveStorageConverter(c, l, b);
-}
+UNITY_PASSTHROUGH_VOID(U6_ArchiveStorageConverter_ArchiveStorageConverter, (ArchiveStorageConverter* c, IArchiveStorageConverterListener* l, bool b), (c, l, b))
 
-static int U6_ArchiveStorageConverter_ProcessAccumulatedData(ArchiveStorageConverter* c)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-    return orig::U6_ArchiveStorageConverter_ProcessAccumulatedData(c);
-}
+UNITY_PASSTHROUGH_RET(int, U6_ArchiveStorageConverter_ProcessAccumulatedData, (ArchiveStorageConverter* c), (c))
 
-static int U6_AssetBundleLoadFromStreamAsyncOperation_FeedStream(AssetBundleLoadFromStreamAsyncOperation *o, void const* x, unsigned long y)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-    return orig::U6_AssetBundleLoadFromStreamAsyncOperation_FeedStream(o, x, y);
-}
+UNITY_PASSTHROUGH_RET(int, U6_AssetBundleLoadFromStreamAsyncOperation_FeedStream, (AssetBundleLoadFromStreamAsyncOperation *o, void const* x, unsigned long y), (o, x, y))
+
+UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlayback_GetImageNoSeek, (VideoPlayback* t, Texture* texture, long* frame), (t, texture, frame))
+UNITY_PASSTHROUGH_RET(int, U2K_VideoPlayback_GetPixelAspectRatioNumerator, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_RET(int, U2K_VideoPlayback_GetPixelAspectRatioDenominator, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_RET(float, U2K_VideoPlayback_GetPlaybackSpeed, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_SetPlaybackSpeed, (VideoPlayback* t, float speed), (t, speed))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_StartPlayback, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_PausePlayback, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_StopPlayback, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlayback_IsPlaybackActive, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_SeekDouble, (VideoPlayback* t, double position, VideoPlaybackSeekCallback callback, void* userdata), (t, position, callback, userdata))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_SeekLong, (VideoPlayback* t, long position, VideoPlaybackSeekCallback callback, void* userdata), (t, position, callback, userdata))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_Step, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_SetAudioTarget, (VideoPlayback* t, unsigned short track, bool enabled, AudioSource* source), (t, track, enabled, source))
+UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlayback_HasAudioSource, (VideoPlayback* t, unsigned short track), (t, track))
+UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlayback_IsAudioTrackEnabled, (VideoPlayback* t, unsigned short track), (t, track))
+UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlayback_SetupAudioSourceOutput, (VideoPlayback* t, unsigned short track, unsigned short source, unsigned int sample_frames), (t, track, source, sample_frames))
+UNITY_PASSTHROUGH_RET(unsigned int, U2K_VideoPlayback_GetAudioSourceQueueFreeSampleFrameCount, (VideoPlayback* t, unsigned short track), (t, track))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_ReleaseAudioSourceOutputs, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_SetReferenceClock, (VideoPlayback* t, VideoReferenceClock* clock, VideoPlaybackClockCallback callback, void* userdata), (t, clock, callback, userdata))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_SyncClock, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_UpdatePlayback, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_OnClockResyncCompleted, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_ClearAudioSourceQueues, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_OnClockSeekCompleted, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_QueueAudioSourceSamples, (VideoPlayback* t, unsigned short track, float const* samples, unsigned int sample_frames), (t, track, samples, sample_frames))
+UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlayback_CanSkipOnDrop, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlayback_CanRelease, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_MarkForRelease, (VideoPlayback* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_ConfigureAudioOutput, (VideoPlayback* t, unsigned short track), (t, track))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_Callbacks_OnClockResyncCompleted, (void* userdata), (userdata))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_Callbacks_OnClockSeekCompleted, (void* userdata), (userdata))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_CleanupPlaybackJob, (VideoPlaybackMgr* t, VideoClipPlayback* playback), (t, playback))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_DestroyPlaybackJob, (VideoPlaybackMgr* t, VideoClipPlayback* playback), (t, playback))
+UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlaybackMgr_IsPlaying, (VideoPlaybackMgr* t), (t))
+UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlaybackMgr_IsEmpty, (VideoPlaybackMgr* t), (t))
+UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlaybackMgr_IsSuspended, (VideoPlaybackMgr* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_Suspend, (VideoPlaybackMgr* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_Resume, (VideoPlaybackMgr* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_Update, (VideoPlaybackMgr* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_CreateDecoderThreads, (VideoPlaybackMgr* t, int decoder_threads), (t, decoder_threads))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_ReleaseDecoderThreads, (VideoPlaybackMgr* t, bool wait), (t, wait))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_DispatchMediaDecode, (VideoPlaybackMgr* t, VideoPlaybackMgr_DecoderThread* thread), (t, thread))
+UNITY_PASSTHROUGH_RET(VideoPlayback*, U2K_VideoPlaybackMgr_CreateVideoPlayback_Format, (VideoPlaybackMgr* t, CoreString const& path, VideoMediaFormat format, bool preload, VideoPlaybackErrorCallback error_callback, VideoPlaybackNotifyCallback ready_callback, VideoPlaybackNotifyCallback done_callback, void* userdata), (t, path, format, preload, error_callback, ready_callback, done_callback, userdata))
+UNITY_PASSTHROUGH_RET(VideoPlayback*, U2K_VideoPlaybackMgr_CreateVideoPlayback_Paths, (VideoPlaybackMgr* t, CoreString const& path, CoreString const& cache_path, unsigned long offset, unsigned long size, VideoMediaFormat format, bool preload, bool streaming, VideoPlaybackErrorCallback error_callback, VideoPlaybackNotifyCallback ready_callback, VideoPlaybackNotifyCallback done_callback, void* userdata), (t, path, cache_path, offset, size, format, preload, streaming, error_callback, ready_callback, done_callback, userdata))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_ReleaseVideoPlayback, (VideoPlaybackMgr* t, VideoPlayback* playback), (t, playback))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_DecoderThread_Start, (VideoPlaybackMgr_DecoderThread* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_DecoderThread_Wait, (VideoPlaybackMgr_DecoderThread* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_DecoderThread_Quit, (VideoPlaybackMgr_DecoderThread* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_DecoderThread_QuitAndWait, (VideoPlaybackMgr_DecoderThread* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_DecoderThread_SleepMS, (int milliseconds), (milliseconds))
+UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlaybackMgr_DecoderThread_IsRunning, (VideoPlaybackMgr_DecoderThread* t), (t))
+UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_DecoderThread_Run, (VideoPlaybackMgr_DecoderThread* t), (t))
+UNITY_PASSTHROUGH_RET(void*, U2K_VideoPlaybackMgr_DecoderThread_StartThread, (void* userdata), (userdata))
 
 static int U6_LoadFMODSound(SoundHandle_Instance** si, char const* s, unsigned int f, SampleClip* c, unsigned int i, VFS_FileSize fs, FMOD_CREATESOUNDEXINFO* in)
 {
@@ -1594,6 +1609,60 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY6_ARCHIVESTORAGECONVERTER_CONSTRUCTOR, U6_ArchiveStorageConverter_ArchiveStorageConverter)
         FUNC_CASE(UNITY6_ARCHIVESTORAGECONVERTER_PROCESS_ACCUMULATED, U6_ArchiveStorageConverter_ProcessAccumulatedData)
         FUNC_CASE(UNITY6_ASSETBUNDLELOAD_FEEDSTREAM, U6_AssetBundleLoadFromStreamAsyncOperation_FeedStream)
+
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_GET_IMAGE_NO_SEEK, U2K_VideoPlayback_GetImageNoSeek)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_GET_PIXEL_ASPECT_RATIO_NUMERATOR, U2K_VideoPlayback_GetPixelAspectRatioNumerator)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_GET_PIXEL_ASPECT_RATIO_DENOMINATOR, U2K_VideoPlayback_GetPixelAspectRatioDenominator)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_GET_PLAYBACK_SPEED, U2K_VideoPlayback_GetPlaybackSpeed)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_SET_PLAYBACK_SPEED, U2K_VideoPlayback_SetPlaybackSpeed)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_START_PLAYBACK, U2K_VideoPlayback_StartPlayback)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_PAUSE_PLAYBACK, U2K_VideoPlayback_PausePlayback)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_STOP_PLAYBACK, U2K_VideoPlayback_StopPlayback)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_IS_PLAYBACK_ACTIVE, U2K_VideoPlayback_IsPlaybackActive)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_SEEK_DOUBLE, U2K_VideoPlayback_SeekDouble)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_SEEK_LONG, U2K_VideoPlayback_SeekLong)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_STEP, U2K_VideoPlayback_Step)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_SET_AUDIO_TARGET, U2K_VideoPlayback_SetAudioTarget)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_HAS_AUDIO_SOURCE, U2K_VideoPlayback_HasAudioSource)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_IS_AUDIO_TRACK_ENABLED, U2K_VideoPlayback_IsAudioTrackEnabled)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_SETUP_AUDIO_SOURCE_OUTPUT, U2K_VideoPlayback_SetupAudioSourceOutput)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_GET_AUDIO_SOURCE_QUEUE_FREE_SAMPLE_FRAME_COUNT, U2K_VideoPlayback_GetAudioSourceQueueFreeSampleFrameCount)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_RELEASE_AUDIO_SOURCE_OUTPUTS, U2K_VideoPlayback_ReleaseAudioSourceOutputs)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_SET_REFERENCE_CLOCK, U2K_VideoPlayback_SetReferenceClock)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_SYNC_CLOCK, U2K_VideoPlayback_SyncClock)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_UPDATE_PLAYBACK, U2K_VideoPlayback_UpdatePlayback)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_ON_CLOCK_RESYNC_COMPLETED, U2K_VideoPlayback_OnClockResyncCompleted)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_CLEAR_AUDIO_SOURCE_QUEUES, U2K_VideoPlayback_ClearAudioSourceQueues)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_ON_CLOCK_SEEK_COMPLETED, U2K_VideoPlayback_OnClockSeekCompleted)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_QUEUE_AUDIO_SOURCE_SAMPLES, U2K_VideoPlayback_QueueAudioSourceSamples)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_CAN_SKIP_ON_DROP, U2K_VideoPlayback_CanSkipOnDrop)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_CAN_RELEASE, U2K_VideoPlayback_CanRelease)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_MARK_FOR_RELEASE, U2K_VideoPlayback_MarkForRelease)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_CONFIGURE_AUDIO_OUTPUT, U2K_VideoPlayback_ConfigureAudioOutput)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_CALLBACKS_ON_CLOCK_RESYNC_COMPLETED, U2K_VideoPlayback_Callbacks_OnClockResyncCompleted)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_CALLBACKS_ON_CLOCK_SEEK_COMPLETED, U2K_VideoPlayback_Callbacks_OnClockSeekCompleted)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_CLEANUP_PLAYBACK_JOB, U2K_VideoPlaybackMgr_CleanupPlaybackJob)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_DESTROY_PLAYBACK_JOB, U2K_VideoPlaybackMgr_DestroyPlaybackJob)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_IS_PLAYING, U2K_VideoPlaybackMgr_IsPlaying)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_IS_EMPTY, U2K_VideoPlaybackMgr_IsEmpty)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_IS_SUSPENDED, U2K_VideoPlaybackMgr_IsSuspended)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_SUSPEND, U2K_VideoPlaybackMgr_Suspend)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_RESUME, U2K_VideoPlaybackMgr_Resume)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_UPDATE, U2K_VideoPlaybackMgr_Update)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_CREATE_DECODER_THREADS, U2K_VideoPlaybackMgr_CreateDecoderThreads)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_RELEASE_DECODER_THREADS, U2K_VideoPlaybackMgr_ReleaseDecoderThreads)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_DISPATCH_MEDIA_DECODE, U2K_VideoPlaybackMgr_DispatchMediaDecode)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_CREATE_VIDEO_PLAYBACK_FORMAT, U2K_VideoPlaybackMgr_CreateVideoPlayback_Format)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_CREATE_VIDEO_PLAYBACK_PATHS, U2K_VideoPlaybackMgr_CreateVideoPlayback_Paths)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_RELEASE_VIDEO_PLAYBACK, U2K_VideoPlaybackMgr_ReleaseVideoPlayback)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_START, U2K_VideoPlaybackMgr_DecoderThread_Start)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_WAIT, U2K_VideoPlaybackMgr_DecoderThread_Wait)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_QUIT, U2K_VideoPlaybackMgr_DecoderThread_Quit)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_QUIT_AND_WAIT, U2K_VideoPlaybackMgr_DecoderThread_QuitAndWait)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_SLEEP_MS, U2K_VideoPlaybackMgr_DecoderThread_SleepMS)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_IS_RUNNING, U2K_VideoPlaybackMgr_DecoderThread_IsRunning)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_RUN, U2K_VideoPlaybackMgr_DecoderThread_Run)
+        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_START_THREAD, U2K_VideoPlaybackMgr_DecoderThread_StartThread)
 
         FUNC_CASE(UNITY6_LOAD_FMOD_SOUND, U6_LoadFMODSound)
         FUNC_CASE(UNITY5_ANALYTICS_UPDATE, U5_BaseUnityAnalytics_UpdateConfigFromServer)
