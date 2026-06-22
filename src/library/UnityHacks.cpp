@@ -590,10 +590,40 @@ static JobGroupID U5_JobQueue_ScheduleJobMultipleDependencies(JobQueue *t, void*
     return j;
 }
 
-static void U5_JobQueue_ScheduleGroups(JobQueue *t, JobGroup* x, JobGroup* y)
+static void U5_JobQueue_ScheduleGroups(JobQueue *t, JobGroup* first_job, JobGroup* last_job)
 {
     LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U5_JobQueue_ScheduleGroups(t, x, y);
+
+    if (! (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS))
+        return orig::U5_JobQueue_ScheduleGroups(t, first_job, last_job);
+
+    /* For recent versions of Unity (2021 at least), all schedule functions ultimately call JobQueue::ScheduleGroupInternal.
+     * So if this function is hooked, we can return safely the original function. */
+    if (orig::U2K_JobQueue_ScheduleGroupInternal)
+        return orig::U5_JobQueue_ScheduleGroups(t, first_job, last_job);
+
+    /* x is a linked list of JobGroup objects. This function schedule all JobGroups from x to y, or x to NULL */
+    JobGroup* current_job = first_job;
+    while (current_job != nullptr) {
+        LOG(LL_DEBUG, LCF_HACKS, "    Scheduling JobGroup %p", current_job);
+        U5_JobQueue_ScheduleGroup(t, current_job, 0);
+
+        if (current_job == last_job) {
+            LOG(LL_DEBUG, LCF_HACKS, "    JobGroup %p is the last job in the list", current_job);
+            break;
+        }
+
+        uintptr_t next_job_addr = (**reinterpret_cast<uintptr_t**>(reinterpret_cast<uintptr_t>(current_job) + 0x30));
+        if (next_job_addr == 0) {
+            LOG(LL_DEBUG, LCF_HACKS, "    JobGroup %p is the last job in the list", current_job);
+            break;
+        }
+
+        JobGroup* next_job = *reinterpret_cast<JobGroup**>(next_job_addr + 8);
+        LOG(LL_DEBUG, LCF_HACKS, "    JobGroup %p next job is %p", current_job, next_job);
+
+        current_job = next_job;
+    }
 }
 
 static void U5_JobQueue_WaitForJobGroup(JobQueue* t, JobGroup* x, int y, bool z)
@@ -690,7 +720,10 @@ static JobGroupID U2K_JobQueue_ScheduleGroupInternal(JobQueue *t, JobGroup *x, i
     LOG(LL_DEBUG, LCF_HACKS, "    returns JobGroup %p and JobGroup tag %d", j.group, j.tag);
 
     /* Immediatly wait for the job */
-    // U2K_JobQueue_WaitForJobGroupID(t, j.group, j.tag, true);
+    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS) {
+        if (orig::U2K_JobQueue_WaitForJobGroupID)
+            orig::U2K_JobQueue_WaitForJobGroupID(t, j.group, j.tag, true);
+    }
     return j;
 }
 
