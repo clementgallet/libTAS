@@ -951,7 +951,7 @@ static bool is_preload_thread_running = false;
  * last activate operation was a non-parallel. We avoid as much as possible 
  * using struct internals, only relying on function calls */
 static std::atomic<int> pending_queue_size;
-static std::atomic<bool> is_current_pending_operation_non_parallel;
+static PreloadManagerOperation* current_pending_non_parallel_operation = nullptr;
 
 static bool Helper_PreloadManager_GetAllowParallelExecution(PreloadManagerOperation* o)
 {
@@ -1011,20 +1011,11 @@ static void Helper_PreloadManager_WaitForQueueToProcess(PreloadManager* m, Prelo
                 break;
             }
 
-            /* Check if the pending operation is non-parallel */
-            if (is_current_pending_operation_non_parallel) {
-                /* If the current non-parallel operation is the one we just pushed, we still have to wait for the 
-                 * operation to be processed.*/
-                if (pending_queue_size == 1) {
-                    if (Helper_PreloadManagerOperation_GetStatus(o) == 1) {
-                        LOG(LL_DEBUG, LCF_HACKS | LCF_FILEIO, "    non-parallel operation was completed");
-                        break;
-                    }
-                }
-                else {
-                    LOG(LL_DEBUG, LCF_HACKS | LCF_FILEIO, "    another non-parallel operation is being processed, this one won't be processed yet, so we can resume");
-                    break;
-                }
+            /* If there is still operations to process, check if we have a non-parallel operation that has been processed. */
+            if (current_pending_non_parallel_operation &&
+                (Helper_PreloadManagerOperation_GetStatus(current_pending_non_parallel_operation) == 1)) {
+                LOG(LL_DEBUG, LCF_HACKS | LCF_FILEIO, "    non-parallel operation was completed");
+                break;
             }
         }
         else {
@@ -1144,13 +1135,10 @@ static PreloadManagerOperation* U6_PreloadManager_PrepareProcessingPreloadOperat
     PreloadManagerOperation* current_pending_operation = orig::U6_PreloadManager_PrepareProcessingPreloadOperation(m);
     
     if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_LOADS) {
-        /* After the end of this function, we don't know for how long the 
-         * operation object will be alive. So we extract the information we want
-         * from the operation here */
-        if (current_pending_operation)
-            is_current_pending_operation_non_parallel = !Helper_PreloadManager_GetAllowParallelExecution(current_pending_operation);
-        else
-            is_current_pending_operation_non_parallel = false;
+        /* If non-parallel operation, we keep a reference to it, so that we can look if
+         * it has been processed yet or not */
+        if (current_pending_operation && !Helper_PreloadManager_GetAllowParallelExecution(current_pending_operation))
+            current_pending_non_parallel_operation = current_pending_operation;
     }
     
     return current_pending_operation;
@@ -1161,6 +1149,7 @@ static void U6_PreloadManager_ProcessSingleOperation(PreloadManager* m)
     LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     PROFILE_SCOPE("Operation", PROFILER_INFO_UNITY);
     orig::U6_PreloadManager_ProcessSingleOperation(m);
+    current_pending_non_parallel_operation = nullptr;
     pending_queue_size--;
 }
 
