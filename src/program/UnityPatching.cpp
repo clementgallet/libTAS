@@ -470,21 +470,50 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "BaseUnityConnectClient::UpdateConfigFromServer",
         "_ZN22BaseUnityConnectClient22UpdateConfigFromServerEv",
     },
-
     {
-        UNITY2K_VIDEOPLAYBACK_GET_IMAGE_NO_SEEK,
-        "VideoPlayback::GetImageNoSeek",
-        "_ZN13VideoPlayback14GetImageNoSeekEP7TexturePl",
+        UNITY2K_VIDEOPLAYER_SET_SOURCE,
+        "VideoPlayer::SetSource",
+        "_ZN11VideoPlayer9SetSourceENS_6SourceE",
     },
     {
-        UNITY2K_VIDEOPLAYBACK_GET_PIXEL_ASPECT_RATIO_NUMERATOR,
-        "VideoPlayback::GetPixelAspectRatioNumerator",
-        "_ZNK13VideoPlayback28GetPixelAspectRatioNumeratorEv",
+        UNITY2K_VIDEOPLAYER_SET_VIDEO_URL,
+        "VideoPlayer::SetVideoUrl",
+        "_ZN11VideoPlayer11SetVideoUrlERKN4core12basic_stringIcNS0_20StringStorageDefaultIcEEEE",
     },
     {
-        UNITY2K_VIDEOPLAYBACK_GET_PIXEL_ASPECT_RATIO_DENOMINATOR,
-        "VideoPlayback::GetPixelAspectRatioDenominator",
-        "_ZNK13VideoPlayback30GetPixelAspectRatioDenominatorEv",
+        UNITY2K_VIDEOPLAYER_SET_VIDEO_CLIP,
+        "VideoPlayer::SetVideoClip",
+        "_ZN11VideoPlayer12SetVideoClipEP9VideoClip",
+    },
+    {
+        UNITY2K_VIDEOPLAYER_PLAY,
+        "VideoPlayer::Play",
+        "_ZN11VideoPlayer4PlayEv",
+    },
+    {
+        UNITY2K_VIDEOPLAYER_PAUSE,
+        "VideoPlayer::Pause",
+        "_ZN11VideoPlayer5PauseEv",
+    },
+    {
+        UNITY2K_VIDEOPLAYER_PREPARE,
+        "VideoPlayer::Prepare",
+        "_ZN11VideoPlayer7PrepareEv",
+    },
+    {
+        UNITY2K_VIDEOPLAYER_ON_PREPARED,
+        "VideoPlayer::OnPrepared",
+        "_ZN11VideoPlayer10OnPreparedEv",
+    },
+    {
+        UNITY2K_VIDEOPLAYER_IS_PREPARED,
+        "VideoPlayer::IsPrepared",
+        "_ZNK11VideoPlayer10IsPreparedEv",
+    },
+    {
+        UNITY2K_VIDEOPLAYER_AWAKE_FROM_LOAD,
+        "VideoPlayer::AwakeFromLoad",
+        "_ZN11VideoPlayer13AwakeFromLoadE17AwakeFromLoadMode",
     },
     {
         UNITY2K_VIDEOPLAYBACK_GET_PLAYBACK_SPEED,
@@ -527,41 +556,6 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN13VideoPlayback4SeekElPFvPvES0_",
     },
     {
-        UNITY2K_VIDEOPLAYBACK_STEP,
-        "VideoPlayback::Step",
-        "_ZN13VideoPlayback4StepEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_SET_AUDIO_TARGET,
-        "VideoPlayback::SetAudioTarget",
-        "_ZN13VideoPlayback14SetAudioTargetEtbP11AudioSource",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_HAS_AUDIO_SOURCE,
-        "VideoPlayback::HasAudioSource",
-        "_ZNK13VideoPlayback14HasAudioSourceEt",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_IS_AUDIO_TRACK_ENABLED,
-        "VideoPlayback::IsAudioTrackEnabled",
-        "_ZNK13VideoPlayback19IsAudioTrackEnabledEt",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_SETUP_AUDIO_SOURCE_OUTPUT,
-        "VideoPlayback::SetupAudioSourceOutput",
-        "_ZN13VideoPlayback22SetupAudioSourceOutputEttj",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_GET_AUDIO_SOURCE_QUEUE_FREE_SAMPLE_FRAME_COUNT,
-        "VideoPlayback::GetAudioSourceQueueFreeSampleFrameCount",
-        "_ZNK13VideoPlayback39GetAudioSourceQueueFreeSampleFrameCountEt",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_RELEASE_AUDIO_SOURCE_OUTPUTS,
-        "VideoPlayback::ReleaseAudioSourceOutputs",
-        "_ZN13VideoPlayback25ReleaseAudioSourceOutputsEv",
-    },
-    {
         UNITY2K_VIDEOPLAYBACK_SET_REFERENCE_CLOCK,
         "VideoPlayback::SetReferenceClock",
         "_ZN13VideoPlayback17SetReferenceClockEP19VideoReferenceClockPFvPvdES2_",
@@ -577,90 +571,9 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN13VideoPlayback14UpdatePlaybackEv",
     },
     {
-        UNITY2K_VIDEOPLAYBACK_ON_CLOCK_RESYNC_COMPLETED,
-        "VideoPlayback::OnClockResyncCompleted",
-        "_ZN13VideoPlayback22OnClockResyncCompletedEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_CLEAR_AUDIO_SOURCE_QUEUES,
-        "VideoPlayback::ClearAudioSourceQueues",
-        "_ZN13VideoPlayback22ClearAudioSourceQueuesEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_ON_CLOCK_SEEK_COMPLETED,
-        "VideoPlayback::OnClockSeekCompleted",
-        "_ZN13VideoPlayback20OnClockSeekCompletedEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_QUEUE_AUDIO_SOURCE_SAMPLES,
-        "VideoPlayback::QueueAudioSourceSamples",
-        "_ZN13VideoPlayback23QueueAudioSourceSamplesEtPKfj",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_CAN_SKIP_ON_DROP,
-        "VideoPlayback::CanSkipOnDrop",
-        "_ZNK13VideoPlayback13CanSkipOnDropEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_CAN_RELEASE,
-        "VideoPlayback::CanRelease",
-        "_ZNK13VideoPlayback10CanReleaseEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_MARK_FOR_RELEASE,
-        "VideoPlayback::MarkForRelease",
-        "_ZN13VideoPlayback14MarkForReleaseEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_CONFIGURE_AUDIO_OUTPUT,
-        "VideoPlayback::ConfigureAudioOutput",
-        "_ZN13VideoPlayback20ConfigureAudioOutputEt",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_CALLBACKS_ON_CLOCK_RESYNC_COMPLETED,
-        "VideoPlayback::Callbacks::OnClockResyncCompleted",
-        "_ZN13VideoPlayback9Callbacks22OnClockResyncCompletedEPv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_CALLBACKS_ON_CLOCK_SEEK_COMPLETED,
-        "VideoPlayback::Callbacks::OnClockSeekCompleted",
-        "_ZN13VideoPlayback9Callbacks20OnClockSeekCompletedEPv",
-    },
-
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_CLEANUP_PLAYBACK_JOB,
-        "VideoPlaybackMgr::CleanupPlaybackJob",
-        "_ZN16VideoPlaybackMgr18CleanupPlaybackJobEP17VideoClipPlayback",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_DESTROY_PLAYBACK_JOB,
-        "VideoPlaybackMgr::DestroyPlaybackJob",
-        "_ZN16VideoPlaybackMgr18DestroyPlaybackJobEP17VideoClipPlayback",
-    },
-    {
         UNITY2K_VIDEOPLAYBACKMGR_IS_PLAYING,
         "VideoPlaybackMgr::IsPlaying",
         "_ZNK16VideoPlaybackMgr9IsPlayingEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_IS_EMPTY,
-        "VideoPlaybackMgr::IsEmpty",
-        "_ZNK16VideoPlaybackMgr7IsEmptyEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_IS_SUSPENDED,
-        "VideoPlaybackMgr::IsSuspended",
-        "_ZNK16VideoPlaybackMgr11IsSuspendedEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_SUSPEND,
-        "VideoPlaybackMgr::Suspend",
-        "_ZN16VideoPlaybackMgr7SuspendEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_RESUME,
-        "VideoPlaybackMgr::Resume",
-        "_ZN16VideoPlaybackMgr6ResumeEv",
     },
     {
         UNITY2K_VIDEOPLAYBACKMGR_UPDATE,
@@ -678,11 +591,6 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN16VideoPlaybackMgr21ReleaseDecoderThreadsEb",
     },
     {
-        UNITY2K_VIDEOPLAYBACKMGR_DISPATCH_MEDIA_DECODE,
-        "VideoPlaybackMgr::DispatchMediaDecode",
-        "_ZN16VideoPlaybackMgr19DispatchMediaDecodeEPNS_13DecoderThreadE",
-    },
-    {
         UNITY2K_VIDEOPLAYBACKMGR_CREATE_VIDEO_PLAYBACK_FORMAT,
         "VideoPlaybackMgr::CreateVideoPlayback",
         "_ZN16VideoPlaybackMgr19CreateVideoPlaybackERKN4core12basic_stringIcNS0_20StringStorageDefaultIcEEEE16VideoMediaFormatbPFvPvS6_EPFvS8_ESC_S8_",
@@ -693,35 +601,9 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN16VideoPlaybackMgr19CreateVideoPlaybackERKN4core12basic_stringIcNS0_20StringStorageDefaultIcEEEES6_mm16VideoMediaFormatbbPFvPvS6_EPFvS8_ESC_S8_",
     },
     {
-        UNITY2K_VIDEOPLAYBACKMGR_RELEASE_VIDEO_PLAYBACK,
-        "VideoPlaybackMgr::ReleaseVideoPlayback",
-        "_ZN16VideoPlaybackMgr20ReleaseVideoPlaybackEP13VideoPlayback",
-    },
-
-    {
         UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_START,
         "VideoPlaybackMgr::DecoderThread::Start",
         "_ZN16VideoPlaybackMgr13DecoderThread5StartEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_WAIT,
-        "VideoPlaybackMgr::DecoderThread::Wait",
-        "_ZN16VideoPlaybackMgr13DecoderThread4WaitEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_QUIT,
-        "VideoPlaybackMgr::DecoderThread::Quit",
-        "_ZN16VideoPlaybackMgr13DecoderThread4QuitEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_QUIT_AND_WAIT,
-        "VideoPlaybackMgr::DecoderThread::QuitAndWait",
-        "_ZN16VideoPlaybackMgr13DecoderThread11QuitAndWaitEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_SLEEP_MS,
-        "VideoPlaybackMgr::DecoderThread::SleepMS",
-        "_ZN16VideoPlaybackMgr13DecoderThread7SleepMSEi",
     },
     {
         UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_IS_RUNNING,
@@ -737,6 +619,46 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_START_THREAD,
         "VideoPlaybackMgr::DecoderThread::StartThread",
         "_ZN16VideoPlaybackMgr13DecoderThread11StartThreadEPv",
+    },
+    {
+        UNITY2K_VIDEOCLIPPLAYBACK_DECODER_IS_RUNNING,
+        "VideoClipPlayback::DecoderIsRunning",
+        "_ZNK17VideoClipPlayback16DecoderIsRunningEv",
+    },
+    {
+        UNITY2K_VIDEOCLIPPLAYBACK_UPDATE_PLAYBACK,
+        "VideoClipPlayback::UpdatePlayback",
+        "_ZN17VideoClipPlayback14UpdatePlaybackEv",
+    },
+    {
+        UNITY2K_VIDEOCLIPPLAYBACK_IS_PLAYING,
+        "VideoClipPlayback::IsPlaying",
+        "_ZNK17VideoClipPlayback9IsPlayingEv",
+    },
+    {
+        UNITY2K_VIDEOCLIPPLAYBACK_IS_READY,
+        "VideoClipPlayback::IsReady",
+        "_ZNK17VideoClipPlayback7IsReadyEv",
+    },
+    {
+        UNITY2K_VIDEOCLIPPLAYBACK_EXECUTE_DECODE,
+        "VideoClipPlayback::ExecuteDecode",
+        "_ZN17VideoClipPlayback13ExecuteDecodeEv",
+    },
+    {
+        UNITY2K_VIDEOCLIPPLAYBACK_PLAY,
+        "VideoClipPlayback::Play",
+        "_ZN17VideoClipPlayback4PlayEv",
+    },
+    {
+        UNITY2K_VIDEOCLIPPLAYBACK_PAUSE,
+        "VideoClipPlayback::Pause",
+        "_ZN17VideoClipPlayback5PauseEv",
+    },
+    {
+        UNITY2K_VIDEOCLIPPLAYBACK_GET_STATUS,
+        "VideoClipPlayback::GetStatus",
+        "_ZNK17VideoClipPlayback9GetStatusEv",
     },
     {
         PHYSX_CM_FANOUTTASK_REMOVEREFERENCE,

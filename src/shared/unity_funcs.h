@@ -106,9 +106,15 @@ enum {
     UNITY6_LOAD_FMOD_SOUND, // LoadFMODSound(SoundHandle::Instance**, char const*, unsigned int, SampleClip*, unsigned int, VFS::FileSize, FMOD_CREATESOUNDEXINFO*)
     UNITY5_ANALYTICS_UPDATE, // BaseUnityAnalytics::UpdateConfigFromServer()
     UNITY2K_CONNECTCLIENT_UPDATE, // BaseUnityConnectClient::UpdateConfigFromServer()
-    UNITY2K_VIDEOPLAYBACK_GET_IMAGE_NO_SEEK, // VideoPlayback::GetImageNoSeek(Texture*, long*)
-    UNITY2K_VIDEOPLAYBACK_GET_PIXEL_ASPECT_RATIO_NUMERATOR, // VideoPlayback::GetPixelAspectRatioNumerator() const
-    UNITY2K_VIDEOPLAYBACK_GET_PIXEL_ASPECT_RATIO_DENOMINATOR, // VideoPlayback::GetPixelAspectRatioDenominator() const
+    UNITY2K_VIDEOPLAYER_SET_SOURCE, // VideoPlayer::SetSource(VideoPlayer::Source)
+    UNITY2K_VIDEOPLAYER_SET_VIDEO_URL, // VideoPlayer::SetVideoUrl(core::basic_string<char, core::StringStorageDefault<char> > const&)
+    UNITY2K_VIDEOPLAYER_SET_VIDEO_CLIP, // VideoPlayer::SetVideoClip(VideoClip*)
+    UNITY2K_VIDEOPLAYER_PLAY, // VideoPlayer::Play()
+    UNITY2K_VIDEOPLAYER_PAUSE, // VideoPlayer::Pause()
+    UNITY2K_VIDEOPLAYER_PREPARE, // VideoPlayer::Prepare()
+    UNITY2K_VIDEOPLAYER_ON_PREPARED, // VideoPlayer::OnPrepared()
+    UNITY2K_VIDEOPLAYER_IS_PREPARED, // VideoPlayer::IsPrepared() const
+    UNITY2K_VIDEOPLAYER_AWAKE_FROM_LOAD, // VideoPlayer::AwakeFromLoad(AwakeFromLoadMode)
     UNITY2K_VIDEOPLAYBACK_GET_PLAYBACK_SPEED, // VideoPlayback::GetPlaybackSpeed() const
     UNITY2K_VIDEOPLAYBACK_SET_PLAYBACK_SPEED, // VideoPlayback::SetPlaybackSpeed(float)
     UNITY2K_VIDEOPLAYBACK_START_PLAYBACK, // VideoPlayback::StartPlayback()
@@ -117,48 +123,29 @@ enum {
     UNITY2K_VIDEOPLAYBACK_IS_PLAYBACK_ACTIVE, // VideoPlayback::IsPlaybackActive()
     UNITY2K_VIDEOPLAYBACK_SEEK_DOUBLE, // VideoPlayback::Seek(double, void (*)(void*), void*)
     UNITY2K_VIDEOPLAYBACK_SEEK_LONG, // VideoPlayback::Seek(long, void (*)(void*), void*)
-    UNITY2K_VIDEOPLAYBACK_STEP, // VideoPlayback::Step()
-    UNITY2K_VIDEOPLAYBACK_SET_AUDIO_TARGET, // VideoPlayback::SetAudioTarget(unsigned short, bool, AudioSource*)
-    UNITY2K_VIDEOPLAYBACK_HAS_AUDIO_SOURCE, // VideoPlayback::HasAudioSource(unsigned short) const
-    UNITY2K_VIDEOPLAYBACK_IS_AUDIO_TRACK_ENABLED, // VideoPlayback::IsAudioTrackEnabled(unsigned short) const
-    UNITY2K_VIDEOPLAYBACK_SETUP_AUDIO_SOURCE_OUTPUT, // VideoPlayback::SetupAudioSourceOutput(unsigned short, unsigned short, unsigned int)
-    UNITY2K_VIDEOPLAYBACK_GET_AUDIO_SOURCE_QUEUE_FREE_SAMPLE_FRAME_COUNT, // VideoPlayback::GetAudioSourceQueueFreeSampleFrameCount(unsigned short) const
-    UNITY2K_VIDEOPLAYBACK_RELEASE_AUDIO_SOURCE_OUTPUTS, // VideoPlayback::ReleaseAudioSourceOutputs()
     UNITY2K_VIDEOPLAYBACK_SET_REFERENCE_CLOCK, // VideoPlayback::SetReferenceClock(VideoReferenceClock*, void (*)(void*, double), void*)
     UNITY2K_VIDEOPLAYBACK_SYNC_CLOCK, // VideoPlayback::SyncClock()
     UNITY2K_VIDEOPLAYBACK_UPDATE_PLAYBACK, // VideoPlayback::UpdatePlayback()
-    UNITY2K_VIDEOPLAYBACK_ON_CLOCK_RESYNC_COMPLETED, // VideoPlayback::OnClockResyncCompleted()
-    UNITY2K_VIDEOPLAYBACK_CLEAR_AUDIO_SOURCE_QUEUES, // VideoPlayback::ClearAudioSourceQueues()
-    UNITY2K_VIDEOPLAYBACK_ON_CLOCK_SEEK_COMPLETED, // VideoPlayback::OnClockSeekCompleted()
-    UNITY2K_VIDEOPLAYBACK_QUEUE_AUDIO_SOURCE_SAMPLES, // VideoPlayback::QueueAudioSourceSamples(unsigned short, float const*, unsigned int)
-    UNITY2K_VIDEOPLAYBACK_CAN_SKIP_ON_DROP, // VideoPlayback::CanSkipOnDrop() const
-    UNITY2K_VIDEOPLAYBACK_CAN_RELEASE, // VideoPlayback::CanRelease() const
-    UNITY2K_VIDEOPLAYBACK_MARK_FOR_RELEASE, // VideoPlayback::MarkForRelease()
-    UNITY2K_VIDEOPLAYBACK_CONFIGURE_AUDIO_OUTPUT, // VideoPlayback::ConfigureAudioOutput(unsigned short)
-    UNITY2K_VIDEOPLAYBACK_CALLBACKS_ON_CLOCK_RESYNC_COMPLETED, // VideoPlayback::Callbacks::OnClockResyncCompleted(void*)
-    UNITY2K_VIDEOPLAYBACK_CALLBACKS_ON_CLOCK_SEEK_COMPLETED, // VideoPlayback::Callbacks::OnClockSeekCompleted(void*)
-    UNITY2K_VIDEOPLAYBACKMGR_CLEANUP_PLAYBACK_JOB, // VideoPlaybackMgr::CleanupPlaybackJob(VideoClipPlayback*)
-    UNITY2K_VIDEOPLAYBACKMGR_DESTROY_PLAYBACK_JOB, // VideoPlaybackMgr::DestroyPlaybackJob(VideoClipPlayback*)
     UNITY2K_VIDEOPLAYBACKMGR_IS_PLAYING, // VideoPlaybackMgr::IsPlaying() const
-    UNITY2K_VIDEOPLAYBACKMGR_IS_EMPTY, // VideoPlaybackMgr::IsEmpty() const
-    UNITY2K_VIDEOPLAYBACKMGR_IS_SUSPENDED, // VideoPlaybackMgr::IsSuspended() const
-    UNITY2K_VIDEOPLAYBACKMGR_SUSPEND, // VideoPlaybackMgr::Suspend()
-    UNITY2K_VIDEOPLAYBACKMGR_RESUME, // VideoPlaybackMgr::Resume()
     UNITY2K_VIDEOPLAYBACKMGR_UPDATE, // VideoPlaybackMgr::Update()
     UNITY2K_VIDEOPLAYBACKMGR_CREATE_DECODER_THREADS, // VideoPlaybackMgr::CreateDecoderThreads(int)
     UNITY2K_VIDEOPLAYBACKMGR_RELEASE_DECODER_THREADS, // VideoPlaybackMgr::ReleaseDecoderThreads(bool)
-    UNITY2K_VIDEOPLAYBACKMGR_DISPATCH_MEDIA_DECODE, // VideoPlaybackMgr::DispatchMediaDecode(VideoPlaybackMgr::DecoderThread*)
     UNITY2K_VIDEOPLAYBACKMGR_CREATE_VIDEO_PLAYBACK_FORMAT, // VideoPlaybackMgr::CreateVideoPlayback(core::basic_string<char, core::StringStorageDefault<char> > const&, VideoMediaFormat, bool, void (*)(void*, core::basic_string<char, core::StringStorageDefault<char> > const&), void (*)(void*), void (*)(void*), void*)
     UNITY2K_VIDEOPLAYBACKMGR_CREATE_VIDEO_PLAYBACK_PATHS, // VideoPlaybackMgr::CreateVideoPlayback(core::basic_string<char, core::StringStorageDefault<char> > const&, core::basic_string<char, core::StringStorageDefault<char> > const&, unsigned long, unsigned long, VideoMediaFormat, bool, bool, void (*)(void*, core::basic_string<char, core::StringStorageDefault<char> > const&), void (*)(void*), void (*)(void*), void*)
-    UNITY2K_VIDEOPLAYBACKMGR_RELEASE_VIDEO_PLAYBACK, // VideoPlaybackMgr::ReleaseVideoPlayback(VideoPlayback*)
     UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_START, // VideoPlaybackMgr::DecoderThread::Start()
-    UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_WAIT, // VideoPlaybackMgr::DecoderThread::Wait()
-    UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_QUIT, // VideoPlaybackMgr::DecoderThread::Quit()
-    UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_QUIT_AND_WAIT, // VideoPlaybackMgr::DecoderThread::QuitAndWait()
-    UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_SLEEP_MS, // VideoPlaybackMgr::DecoderThread::SleepMS(int)
     UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_IS_RUNNING, // VideoPlaybackMgr::DecoderThread::IsRunning()
     UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_RUN, // VideoPlaybackMgr::DecoderThread::Run()
     UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_START_THREAD, // VideoPlaybackMgr::DecoderThread::StartThread(void*)
+
+    UNITY2K_VIDEOCLIPPLAYBACK_DECODER_IS_RUNNING, // VideoClipPlayback::DecoderIsRunning()
+    UNITY2K_VIDEOCLIPPLAYBACK_UPDATE_PLAYBACK, // VideoClipPlayback::UpdatePlayback()
+    UNITY2K_VIDEOCLIPPLAYBACK_IS_PLAYING, // VideoClipPlayback::IsPlaying()
+    UNITY2K_VIDEOCLIPPLAYBACK_IS_READY, // VideoClipPlayback::IsReady()
+    UNITY2K_VIDEOCLIPPLAYBACK_EXECUTE_DECODE, // VideoClipPlayback::ExecuteDecode()
+    UNITY2K_VIDEOCLIPPLAYBACK_PLAY, // VideoClipPlayback::Play()
+    UNITY2K_VIDEOCLIPPLAYBACK_PAUSE, // VideoClipPlayback::Pause()
+    UNITY2K_VIDEOCLIPPLAYBACK_GET_STATUS, // VideoClipPlayback::GetStatus()
+
     PHYSX_CM_FANOUTTASK_REMOVEREFERENCE, // physx::Cm::FanoutTask::removeReference()
     UNITY_FUNCS_LEN
 };

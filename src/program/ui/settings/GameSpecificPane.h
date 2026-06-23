@@ -52,6 +52,7 @@ private:
     ToolTipCheckBox *syncUnityJobs;
     ToolTipCheckBox *syncUnityLoads;
     ToolTipCheckBox *syncUnityReads;
+    ToolTipCheckBox *syncUnityVideo;
 
 public slots:
     void loadConfig();

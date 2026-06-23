@@ -6,6 +6,7 @@
 * Add a command-line option to set any setting at startup
 * Add an option to set any environment variable on the game process
 * Add Unity VideoPlayback hooks
+* Add a settings to wait for unity video preparation before playing
 
 ### Changed
 

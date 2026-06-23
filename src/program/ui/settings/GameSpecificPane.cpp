@@ -52,6 +52,7 @@ void GameSpecificPane::initLayout()
     syncUnityJobs = new ToolTipCheckBox("Unity Jobs");
     syncUnityLoads = new ToolTipCheckBox("Unity Loads");
     syncUnityReads = new ToolTipCheckBox("Unity Reads");
+    syncUnityVideo = new ToolTipCheckBox("Unity Video");
 
     syncGroupBox = new QGroupBox(tr("Sync settings"));
     QVBoxLayout *syncLayout = new QVBoxLayout;
@@ -60,6 +61,7 @@ void GameSpecificPane::initLayout()
     syncLayout->addWidget(syncUnityJobs);
     syncLayout->addWidget(syncUnityLoads);
     syncLayout->addWidget(syncUnityReads);
+    syncLayout->addWidget(syncUnityVideo);
     syncGroupBox->setLayout(syncLayout);
 
     /* Create the main layout */
@@ -81,6 +83,7 @@ void GameSpecificPane::initSignals()
     connect(syncUnityJobs, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
     connect(syncUnityLoads, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
     connect(syncUnityReads, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
+    connect(syncUnityVideo, &QAbstractButton::clicked, this, &GameSpecificPane::saveConfig);
 }
 
 void GameSpecificPane::initToolTips()
@@ -115,6 +118,12 @@ void GameSpecificPane::initToolTips()
     syncUnityReads->setDescription("When an async read is performed, it tries to "
     "perform the read synchronously. Either by doing the read itself, or by "
     "scheduling and waiting for the read to be finished.");
+
+    syncUnityVideo->setTitle("Unity Video Sync");
+    syncUnityVideo->setDescription("When a video is played, it waits for the video "
+    "to be prepared before continuing. This is useful for games that use videos "
+    "to display cutscenes, as it prevents the game from continuing while the video "
+    "is still decoding.");
 }
 
 void GameSpecificPane::showEvent(QShowEvent *event)
@@ -131,6 +140,7 @@ void GameSpecificPane::loadConfig()
     syncUnityJobs->setChecked(context->config.sc.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS);
     syncUnityLoads->setChecked(context->config.sc.game_specific_sync & SharedConfig::GC_SYNC_UNITY_LOADS);
     syncUnityReads->setChecked(context->config.sc.game_specific_sync & SharedConfig::GC_SYNC_UNITY_READS);
+    syncUnityVideo->setChecked(context->config.sc.game_specific_sync & SharedConfig::GC_SYNC_UNITY_VIDEO);
 }
 
 void GameSpecificPane::saveConfig()
@@ -145,6 +155,7 @@ void GameSpecificPane::saveConfig()
     context->config.sc.game_specific_sync |= syncUnityJobs->isChecked()? SharedConfig::GC_SYNC_UNITY_JOBS : 0;
     context->config.sc.game_specific_sync |= syncUnityLoads->isChecked()? SharedConfig::GC_SYNC_UNITY_LOADS : 0;
     context->config.sc.game_specific_sync |= syncUnityReads->isChecked()? SharedConfig::GC_SYNC_UNITY_READS : 0;
+    context->config.sc.game_specific_sync |= syncUnityVideo->isChecked()? SharedConfig::GC_SYNC_UNITY_VIDEO : 0;
 
     context->config.sc_modified = true;
 }

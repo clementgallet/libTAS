@@ -243,6 +243,7 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
         GC_SYNC_UNITY_JOBS = 0x04,
         GC_SYNC_UNITY_LOADS = 0x08,
         GC_SYNC_UNITY_READS = 0x10,
+        GC_SYNC_UNITY_VIDEO = 0x20,
     };
 
     /* Game-specific timing settings */
