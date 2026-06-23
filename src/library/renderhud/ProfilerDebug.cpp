@@ -86,7 +86,7 @@ void ProfilerDebug::renderFrame(int f, const TimeHolder& frame_start, const Time
     ImGui::SameLine();
 }
 
-void ProfilerDebug::renderNode(int nodeId, const Profiler::Database* database, float available_start, float available_size)
+void ProfilerDebug::renderNode(int nodeId, const Profiler::Database* database, float available_start, float available_size, pid_t threadId)
 {
     const auto& info = database->nodes[nodeId];
 
@@ -100,7 +100,7 @@ void ProfilerDebug::renderNode(int nodeId, const Profiler::Database* database, f
     ImGui::SetCursorPosX(available_start + leftPos);
 
     std::string buffer_name = info.label;
-    buffer_name.append("##").append(std::to_string(nodeId));
+    buffer_name.append("##").append(std::to_string(nodeId)).append("_").append(std::to_string(threadId));
 
     float hue = info.type * 0.13f;
     float sat_delta = info.depth * -0.2f;
@@ -280,7 +280,7 @@ void ProfilerDebug::draw(uint64_t framecount, bool* p_open = nullptr)
                 ImGui::TableSetColumnIndex(1);
                 
                 for (int rootId : nodesOneDepth) {
-                    renderNode(rootId, thread->profilerDatabase, available_start, available_size);
+                    renderNode(rootId, thread->profilerDatabase, available_start, available_size, thread->real_tid);
                 }
 
                 if (!isNodeOpen)

@@ -66,8 +66,9 @@ namespace ProfilerDebug
      * @param[in] database Profiler database containing node timing data
      * @param[in] available_start Start position for rendering
      * @param[in] available_size Available width for rendering
+     * @param[in] threadId Thread identifier
      */
-    void renderNode(int nodeId, const Profiler::Database* database, float available_start, float available_size);
+    void renderNode(int nodeId, const Profiler::Database* database, float available_start, float available_size, pid_t threadId);
 
     /**
      * @brief Draws the profiler debug window.
