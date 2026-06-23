@@ -272,6 +272,11 @@ void ProfilerDebug::draw(uint64_t framecount, bool* p_open = nullptr)
                     
                     // We use the pthread id as a unique identifier for ImGui
                     isNodeOpen = ImGui::TreeNodeEx(reinterpret_cast<void*>(thread->pthread_id), nodeFlags, "%s", thread->name.c_str());
+                    if (ImGui::BeginItemTooltip())
+                    {
+                        ImGui::Text("tid %d", thread->real_tid);
+                        ImGui::EndTooltip();
+                    }
                     if (isNodeOpen) {
                         ImGui::TreePop();
                     }

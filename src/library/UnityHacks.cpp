@@ -434,7 +434,8 @@ static long U4_JobScheduler_FetchNextJob(JobScheduler* t, int* x)
     LOGTRACE_SIMPLE(LCF_HACKS);
     ThreadInfo* thread = ThreadManager::getCurrentThread();
     thread->unityThread = true;
-    
+    thread->name = "JobWorker";
+
     if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS) {
         /* Return 0 to prevent worker threads from executing a job */
         return 0;
@@ -524,6 +525,7 @@ static long U5_JobQueue_ProcessJobs(JobQueue* t, void* x)
     
     ThreadInfo* thread = ThreadManager::getCurrentThread();
     thread->unityThread = true;
+    thread->name = "JobWorker";
 
     // if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS) {
     //     /* Calling U5_JobQueue_ProcessJobs() in worker threads may call
@@ -712,6 +714,7 @@ static long U2K_JobQueue_ProcessJobs(JobQueue_ThreadInfo* x, void* y)
     LOGTRACE_SIMPLE(LCF_HACKS);
     ThreadInfo* thread = ThreadManager::getCurrentThread();
     thread->unityThread = true;
+    thread->name = "JobWorker";
 
     return orig::U2K_JobQueue_ProcessJobs(x, y);
 }
@@ -1251,6 +1254,11 @@ static long U6_PreloadManager_Run(void* p)
 {
     LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     is_preload_thread_running = true;
+
+    /* Fill the thread name because Unity may not set itself. */
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+    thread->name = "PreloadManager";
+
     return orig::U6_PreloadManager_Run(p);
 }
 
@@ -1482,6 +1490,17 @@ static int U2K_VideoClipPlayback_GetStatus(VideoPlayback* t)
     return ret;
 }
 
+static void U2K_VideoPlaybackMgr_DecoderThread_Run(VideoPlaybackMgr_DecoderThread* t)
+{
+    LOGTRACE(LCF_HACKS, "U2K_VideoPlaybackMgr_DecoderThread_Run called");
+
+    /* Fill the thread name because Unity may not set itself. */
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+    thread->name = "DecoderThread";
+
+    return orig::U2K_VideoPlaybackMgr_DecoderThread_Run(t);
+}
+
 static void U2K_VideoClipPlayback_ExecuteDecode(VideoPlayback* t)
 {
     LOGTRACE(LCF_HACKS, "U2K_VideoClipPlayback_ExecuteDecode called");
@@ -1513,7 +1532,6 @@ UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_CreateDecoderThreads, (VideoPlayback
 UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_ReleaseDecoderThreads, (VideoPlaybackMgr* t, bool wait), (t, wait))
 UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_DecoderThread_Start, (VideoPlaybackMgr_DecoderThread* t), (t))
 UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlaybackMgr_DecoderThread_IsRunning, (VideoPlaybackMgr_DecoderThread* t), (t))
-UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_DecoderThread_Run, (VideoPlaybackMgr_DecoderThread* t), (t))
 UNITY_PASSTHROUGH_RET(void*, U2K_VideoPlaybackMgr_DecoderThread_StartThread, (void* userdata), (userdata))
 
 UNITY_PASSTHROUGH_RET(bool, U2K_VideoClipPlayback_DecoderIsRunning, (VideoClipPlayback* t), (t))
