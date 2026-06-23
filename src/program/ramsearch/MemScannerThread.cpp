@@ -24,11 +24,11 @@
 #include "CompareOperations.h"
 
 #include <cstring>
-#include <sstream>
 #include <fstream>
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <filesystem>
 
 #define MEMORY_CHUNK_SIZE 1024*1024
 #define OUTPUT_CHUNK_SIZE 4096
@@ -42,21 +42,16 @@ MemScannerThread::MemScannerThread(MemScanner& ms, int br, int er, uintptr_t ba,
 MemScannerThread::~MemScannerThread()
 {
     if (!addresses_path.empty())
-        std::remove(addresses_path.c_str());
+        std::filesystem::remove(addresses_path);
     if (!values_path.empty())
-        std::remove(values_path.c_str());
+        std::filesystem::remove(values_path);
 }
 
 void MemScannerThread::create_output_files()
 {
     /* Create the files with names from the thread tid */
-    std::ostringstream ossa;
-    ossa << memscanner.memscan_path << "/addresses-" << std::this_thread::get_id() << ".tmp";    
-    addresses_path = ossa.str();
-
-    std::ostringstream ossv;
-    ossv << memscanner.memscan_path << "/memory-" << std::this_thread::get_id() << ".tmp";
-    values_path = ossv.str();
+    addresses_path = memscanner.memscan_path / ("addresses-" + std::to_string(std::hash<std::thread::id>{}(std::this_thread::get_id())) + ".tmp");
+    values_path = memscanner.memscan_path / ("memory-" + std::to_string(std::hash<std::thread::id>{}(std::this_thread::get_id())) + ".tmp");
 }
 
 void MemScannerThread::first_region_scan()
