@@ -36,6 +36,7 @@ libtas_so_SOURCES = \
     audio/cubeb/cubeb.cpp \
     audio/fluidsynth/fluidsynth.cpp \
     audio/fmod/fmod.cpp \
+    audio/fmod/fmodstudio.cpp \
     audio/openal/al.cpp \
     audio/openal/alc.cpp \
     audio/openal/alext.cpp \
