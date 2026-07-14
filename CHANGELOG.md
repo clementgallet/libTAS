@@ -8,6 +8,7 @@
 * Add Unity VideoPlayback hooks
 * Add a settings to wait for unity video preparation before playing
 * Add hooks to prevent custom savefile stream buffering
+* Add hook to SDL_CreateWindowWithProperties()
 
 ### Changed
 
