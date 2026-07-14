@@ -233,6 +233,7 @@ typedef void *XrSession;
 typedef void *XrSessionCreateInfo;
 typedef void *XrSwapchain;
 typedef void *XrSwapchainCreateInfo;
+typedef Uint32 SDL_NotificationID; /**< The identifier for a system notification. */
 
 // === Core SDL3 Structures and Enums ===
 
@@ -2261,6 +2262,39 @@ typedef struct SDL_DisplayMode
     SDL_DisplayModeData *internal;  /**< Private */
 
 } SDL_DisplayMode;
+
+typedef enum SDL_FormFactor {
+    SDL_FORMFACTOR_UNKNOWN = 0,
+    SDL_FORMFACTOR_DESKTOP,
+    SDL_FORMFACTOR_LAPTOP,
+    SDL_FORMFACTOR_PHONE,
+    SDL_FORMFACTOR_TABLET,
+    SDL_FORMFACTOR_CONSOLE,
+    SDL_FORMFACTOR_HANDHELD,
+    SDL_FORMFACTOR_WATCH,
+    SDL_FORMFACTOR_TV,
+    SDL_FORMFACTOR_HEADSET,
+    SDL_FORMFACTOR_CAR
+} SDL_FormFactor;
+
+typedef enum SDL_NotificationActionType
+{
+    SDL_NOTIFICATION_ACTION_TYPE_BUTTON = 1 /**< Adds a button to the notification that generates feedback when activated. */
+} SDL_NotificationActionType;
+
+typedef union SDL_NotificationAction
+{
+    SDL_NotificationActionType type;
+
+    struct
+    {
+        SDL_NotificationActionType type; /**< SDL_NOTIFICATION_ACTION_TYPE_BUTTON */
+        const char *action_id;           /**< The identifier string for the button. 'default' is a reserved identifier and must not be used. */
+        const char *action_label;        /**< The localized label for the button associated with the action, in UTF-8 encoding. */
+    } button;
+
+    Uint8 padding[128];
+} SDL_NotificationAction;
 
 // Type aliases
 typedef int SDL_errorcode;
