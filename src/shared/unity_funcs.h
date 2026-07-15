@@ -148,6 +148,7 @@ enum {
     UNITY2K_VIDEOCLIPPLAYBACK_GET_STATUS, // VideoClipPlayback::GetStatus()
 
     PHYSX_CM_FANOUTTASK_REMOVEREFERENCE, // physx::Cm::FanoutTask::removeReference()
+    SC_SIMULATION_UPDATE_SC_BODY, // ScSimulationControllerCallback::updateScBodyAndShapeSim()
     UNITY_FUNCS_LEN
 };
 

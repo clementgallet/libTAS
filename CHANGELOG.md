@@ -11,6 +11,7 @@
 * Add hook to SDL_CreateWindowWithProperties()
 * Implement SDL_OpenAudioDeviceStream()
 * Add hooks for Unity 2023
+* Hook another physX function to prevent a softlock
 
 ### Changed
 

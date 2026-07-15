@@ -671,6 +671,11 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN5physx2Cm10FanoutTask15removeReferenceEv",
     },
     {
+        SC_SIMULATION_UPDATE_SC_BODY,
+        "ScSimulationControllerCallback::updateScBodyAndShapeSim",
+        "_ZN30ScSimulationControllerCallback23updateScBodyAndShapeSimEPN5physx10PxBaseTaskE",
+    },
+    {
         UNITY_FUNCS_LEN,
         "",
         "",

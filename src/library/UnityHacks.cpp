@@ -135,6 +135,8 @@ typedef void SoundHandle_Instance;
 typedef void SampleClip;
 typedef void FMOD_CREATESOUNDEXINFO;
 typedef void FanoutTask;
+typedef void physx_PxBaseTask;
+typedef void ScSimulationControllerCallback;
 
 struct Int128 {
     long a;
@@ -382,6 +384,7 @@ namespace orig {
     int (*U2K_VideoClipPlayback_GetStatus)(VideoClipPlayback* t) = nullptr;
 
     void (*physx_Cm_FanoutTask_RemoveReference)(FanoutTask* ft) = nullptr;
+    void (*ScSimulationControllerCallback_updateScBodyAndShapeSim)(ScSimulationControllerCallback *t, physx_PxBaseTask *p) = nullptr;
 }
 
 #include <signal.h>
@@ -1622,6 +1625,14 @@ static void physx_Cm_FanoutTask_RemoveReference(FanoutTask* ft)
     skip_job_wait = false;
 }
 
+static void ScSimulationControllerCallback_updateScBodyAndShapeSim(ScSimulationControllerCallback *t, physx_PxBaseTask *p)
+{
+    LOGTRACE_SIMPLE(LCF_HACKS);
+    skip_job_wait = true;
+    orig::ScSimulationControllerCallback_updateScBodyAndShapeSim(t, p);
+    skip_job_wait = false;
+}
+
 #define FUNC_CASE(FUNC_ENUM, FUNC_SYMBOL) \
 case FUNC_ENUM: \
     hook_patch_addr(reinterpret_cast<void*>(address), reinterpret_cast<void**>(&orig::FUNC_SYMBOL), reinterpret_cast<void*>(FUNC_SYMBOL)); \
@@ -1768,6 +1779,7 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY2K_VIDEOCLIPPLAYBACK_GET_STATUS, U2K_VideoClipPlayback_GetStatus)
 
         FUNC_CASE(PHYSX_CM_FANOUTTASK_REMOVEREFERENCE, physx_Cm_FanoutTask_RemoveReference)
+        FUNC_CASE(SC_SIMULATION_UPDATE_SC_BODY, ScSimulationControllerCallback_updateScBodyAndShapeSim)
         
     }
 }
