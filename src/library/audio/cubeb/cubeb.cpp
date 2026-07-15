@@ -130,10 +130,10 @@ int cubeb_stream_init(cubeb * context,
     source->queueBuffer(buffer);
 
     source->source = AudioSource::SOURCE_CALLBACK;
-    source->callback = ([data_callback, stream, user_ptr](AudioBuffer& ab) {
-        int samples = data_callback(*stream, user_ptr, nullptr, ab.samples.data(), ab.sampleSize);
-        if (samples != ab.size)
-            LOG(LL_WARN, LCF_SOUND, "   Buffer not filled completely (%d / %d)", samples, ab.sampleSize);
+    source->callback = ([data_callback, stream, user_ptr](AudioBuffer* ab) {
+        int samples = data_callback(*stream, user_ptr, nullptr, ab->samples.data(), ab->sampleSize);
+        if (samples != ab->size)
+            LOG(LL_WARN, LCF_SOUND, "   Buffer not filled completely (%d / %d)", samples, ab->sampleSize);
     });
     
     /* If some audio output parameters are set to auto, fill them with these values */

@@ -258,12 +258,12 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
         sdl_source->source = AudioSource::SOURCE_CALLBACK;
         sdl2::SDL_AudioCallback audioCallback = obtained->callback;
         void* callbackArg = obtained->userdata;
-        sdl_source->callback = [audioCallback, callbackArg](AudioBuffer& ab){
+        sdl_source->callback = [audioCallback, callbackArg](AudioBuffer* ab){
             /* Emptying the audio buffer */
-            ab.makeSilent();
+            ab->makeSilent();
 
             mutex.lock();
-            audioCallback(callbackArg, ab.samples.data(), ab.size);
+            audioCallback(callbackArg, ab->samples.data(), ab->size);
             mutex.unlock();
         };
         
@@ -311,8 +311,7 @@ static int open_audio_device(const sdl2::SDL_AudioSpec * desired, sdl2::SDL_Audi
         id = open_audio_device(desired, obtained, 1);
     }
     else {
-        sdl2::SDL_AudioSpec _obtained;
-        memset(&_obtained, 0, sizeof(sdl2::SDL_AudioSpec));
+        sdl2::SDL_AudioSpec _obtained = {};
         id = open_audio_device(desired, &_obtained, 1);
         /* On successful open, copy calculated values into 'desired'. */
         if (id > 0) {
@@ -1121,21 +1120,122 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
 {
     LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
 
+    AudioContext& audiocontext = AudioContext::get();
     AudioSource* source = reinterpret_cast<AudioSource*>(stream);
     if (!source)
         return;
 
     /* Remove source from all devices */
+    int last_device_removed_source = 0;
     for (int d = 1; d < MAX_SDL_DEVICES; d++) {
         if (sdl_devices[d].id != 0) {
             auto& sources = sdl_device_sources[d];
             sources.erase(std::remove_if(sources.begin(), sources.end(),
-                [&source](const AudioSource* s) { return s->id == source->id; }),
+                [&source, &last_device_removed_source, d](const AudioSource* s) {
+                    if (s->id == source->id) {
+                        last_device_removed_source = d;
+                        return true;
+                    } return false; }),
                 sources.end());
         }
     }
 
-    AudioContext::get().deleteSource(source->id);
+    audiocontext.deleteSource(source->id);
+
+    /* If the device does not have any source left, it means that it was created
+     * with SDL_OpenAudioDeviceStream(), so it must be closed as well. */
+    if (last_device_removed_source && sdl_device_sources[last_device_removed_source].empty()) {
+        sdl_devices[last_device_removed_source].id = 0;
+    }
+}
+
+/* Override */ SDL_AudioStream * SDL_OpenAudioDeviceStream(sdl3::SDL_AudioDeviceID devid, const sdl3::SDL_AudioSpec *spec, SDL_AudioStreamCallback callback, void *userdata)
+{
+    LOGTRACE(LCF_SDL | LCF_SOUND, "%s called for device %d", __func__, devid);
+    if (devid == 0)
+        return nullptr;
+
+    if (devid == sdl3::SDL_AUDIO_DEVICE_DEFAULT_RECORDING)
+        return nullptr;
+
+    if (devid == sdl3::SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK)
+        devid = 2;
+
+    sdl2::SDL_AudioSpec specs_sdl2 = {};
+
+    if (spec) {
+        specs_sdl2.freq = spec->freq;
+        specs_sdl2.format = static_cast<SDL_AudioFormat>(spec->format);
+        specs_sdl2.channels = spec->channels;
+    }
+    else {
+        specs_sdl2.freq = Global::shared_config.audio_frequency;
+        switch (Global::shared_config.audio_bitdepth) {
+            case 8:
+                specs_sdl2.format = SDL_AUDIO_U8;
+                break;
+            case 16:
+                specs_sdl2.format = SDL_AUDIO_S16LE;
+                break;
+        }
+        specs_sdl2.channels = Global::shared_config.audio_channels;
+    }
+
+    sdl2::SDL_AudioSpec _obtained = {};
+    sdl2::SDL_AudioDeviceID id = open_audio_device(&specs_sdl2, &_obtained, devid);
+
+    if (id <= 0)
+        return nullptr;
+
+    AudioSource* sdl_source = sdl_device_sources[id][0];
+    sdl_source->state = AudioSource::SOURCE_PAUSED;
+
+    if (callback) {
+        /* We are using the callback mechanism.
+         * When the buffer is depleted, we are supposed to call the
+         * callback function so that it fills the buffer again.
+         * We will use a single AudioSource and a single AudioBuffer for this.
+         * When the source plays the buffer until the end,
+         * it calls the callback function to fill the buffer again.
+         */
+
+        AudioContext& audiocontext = AudioContext::get();
+        std::lock_guard<std::mutex> lock(audiocontext.mutex);
+
+        /* TODO: buffer sample size is set by the game using the SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES hint! */
+        int sample_size = _obtained.samples;
+
+        sdl_source->source = AudioSource::SOURCE_CALLBACK_QUEUE;
+        sdl_source->callback = [callback, userdata, sdl_source, sample_size](AudioBuffer* ab){
+            /* The callback may call SDL_PutAudioStreamData() or other functions that lock
+            * the mutex */
+            AudioContext::get().mutex.unlock();
+            callback(userdata, reinterpret_cast<SDL_AudioStream*>(sdl_source), sample_size, sample_size);
+            AudioContext::get().mutex.lock();
+        };
+       
+        /* Push an empty buffer just to indicate that the source can play samples */
+        auto buffer = audiocontext.createBuffer();
+
+        buffer->frequency = sdl_source->frequency;
+        buffer->channels = sdl_source->channels;
+        buffer->format = sdl_source->format;
+
+        buffer->update();
+        buffer->size = sample_size * buffer->alignSize;
+        buffer->update(); // Yes, a second time, to fill sampleSize based on size.
+        buffer->samples.resize(buffer->size);
+      
+        /* We simulate an empty buffer by setting the position at the end */
+        sdl_source->queueBuffer(buffer);
+        sdl_source->position = buffer->sampleSize;
+
+        /* Specify the thread that opens the audio, to optimize Lock/UnlockAudio
+         * and match its implementation */
+        audiocontext.audio_thread = ThreadManager::getThreadId();
+    }
+
+    return reinterpret_cast<SDL_AudioStream*>(sdl_source);
 }
 
 /* Override */ void SDL_CloseAudio(void)

@@ -203,6 +203,19 @@ class AudioSource
              * @see callback
              */
             SOURCE_CALLBACK,
+
+            /**
+             * @brief Callback-based source with queueing.
+             *
+             * When playback reaches the end, the callback function is invoked to
+             * allow the audio driver to push a buffer with more samples.
+             * 
+             * Used by SDL3.
+             *
+             * @see callback
+             */
+            SOURCE_CALLBACK_QUEUE,
+
         };
 
         /**
@@ -316,13 +329,16 @@ class AudioSource
          *
          * In SOURCE_CALLBACK mode, when the source finishes reading the buffer,
          * this callback is invoked to allow the audio driver to refill the buffer
-         * with new audio data. The callback receives a reference to the buffer to fill.
+         * with new audio data. The callback receives a pointer to the buffer to fill.
+         * 
+         * In SOURCE_CALLBACK_QUEUE mode, the callback is invoked to allow the audio driver
+         * to push a new buffer into the queue. The argument is ignored in this case.
          *
-         * Function signature: void callback(AudioBuffer& buf)
+         * Function signature: void callback(AudioBuffer* buf)
          *
-         * @see callback_data, SOURCE_CALLBACK
+         * @see callback_data, SOURCE_CALLBACK, SOURCE_CALLBACK_QUEUE
          */
-        std::function<void(AudioBuffer&)> callback;
+        std::function<void(AudioBuffer*)> callback;
 
         /**
          * @brief User data pointer passed to callback function.

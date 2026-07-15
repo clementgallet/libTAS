@@ -198,7 +198,7 @@ int snd_async_add_pcm_handler(snd_async_handler_t **handler, snd_pcm_t *pcm, snd
     snd_async_handler_t *h = reinterpret_cast<snd_async_handler_t *>(pcm);
     *handler = h;
     
-    source->callback = [h, callback, &audiocontext](AudioBuffer& ab){
+    source->callback = [h, callback, &audiocontext](AudioBuffer* ab){
         /* The callback may call pcm_writei() or other functions that lock
          * the mutex */
         audiocontext.mutex.unlock();

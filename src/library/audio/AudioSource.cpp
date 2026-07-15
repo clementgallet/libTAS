@@ -322,7 +322,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* samples_data_out, int 
                 extra_ticks /= current_buffer->frequency;
                 DeterministicTimer& detTimer = DeterministicTimer::get();
                 detTimer.fakeAdvanceTimer({static_cast<time_t>(extra_ticks / 1000000000), static_cast<long>(extra_ticks % 1000000000)});
-                callback(*current_buffer);
+                callback(current_buffer.get());
                 detTimer.fakeAdvanceTimer({0, 0});
                 available_samples = current_buffer->getSamples(buffer_samples, remaining_samples, 0, false);
                 if (!skip_mixing) {
@@ -336,6 +336,13 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* samples_data_out, int 
             }
         }
         else {
+            if ((source == SOURCE_CALLBACK_QUEUE) && callback) {
+                /* We call the callback now to allow the audio driver to push more buffers */
+                /* TODO: Call multiple times? */
+                LOG(LL_DEBUG, LCF_SOUND, "  Callback");
+                callback(nullptr); // buffer argument unused
+            }
+
             int queue_size = buffer_queue.size();
             int final_index = queue_index;
             int final_pos = position_old + available_samples;
@@ -383,7 +390,7 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* samples_data_out, int 
                     /* The callback may push more buffers */
                     if (callback) {
                         LOG(LL_DEBUG, LCF_SOUND, "  Callback");
-                        callback(*current_buffer); // buffer argument unused
+                        callback(nullptr); // buffer argument unused
                         
                         int queue_size = buffer_queue.size();
                         for (int i=queue_index+1; (remaining_samples>0) && (i<queue_size); i++) {
@@ -407,6 +414,12 @@ int AudioSource::mixWith( struct timespec ticks, uint8_t* samples_data_out, int 
                     if (remaining_samples > 0) {
                         state = SOURCE_UNDERRUN;
                     }
+                }
+                else if (source == SOURCE_CALLBACK_QUEUE) {
+                    /* Update the position in the buffer. The callback may push more buffers
+                     * later, so we keep the source playing. */
+                    queue_index = final_index;
+                    position = final_pos;
                 }
                 else {
                     queue_index = 0;

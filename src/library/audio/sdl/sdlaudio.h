@@ -1585,6 +1585,69 @@ OVERRIDE bool SDL_SetAudioStreamPutCallback(SDL_AudioStream *stream, SDL_AudioSt
 OVERRIDE void SDL_DestroyAudioStream(SDL_AudioStream *stream);
 
 /**
+ * Convenience function for straightforward audio init for the common case.
+ *
+ * If all your app intends to do is provide a single source of PCM audio, this
+ * function allows you to do all your audio setup in a single call.
+ *
+ * This is also intended to be a clean means to migrate apps from SDL2.
+ *
+ * This function will open an audio device, create a stream and bind it.
+ * Unlike other methods of setup, the audio device will be closed when this
+ * stream is destroyed, so the app can treat the returned SDL_AudioStream as
+ * the only object needed to manage audio playback.
+ *
+ * Also unlike other functions, the audio device begins paused. This is to map
+ * more closely to SDL2-style behavior, since there is no extra step here to
+ * bind a stream to begin audio flowing. The audio device should be resumed
+ * with `SDL_ResumeAudioStreamDevice(stream);`
+ *
+ * This function works with both playback and recording devices.
+ *
+ * The `spec` parameter represents the app's side of the audio stream. That
+ * is, for recording audio, this will be the output format, and for playing
+ * audio, this will be the input format. If spec is NULL, the system will
+ * choose the format, and the app can use SDL_GetAudioStreamFormat() to obtain
+ * this information later.
+ *
+ * If you don't care about opening a specific audio device, you can (and
+ * probably _should_), use SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK for playback and
+ * SDL_AUDIO_DEVICE_DEFAULT_RECORDING for recording.
+ *
+ * One can optionally provide a callback function; if NULL, the app is
+ * expected to queue audio data for playback (or unqueue audio data if
+ * capturing). Otherwise, the callback will begin to fire once the device is
+ * unpaused.
+ *
+ * Destroying the returned stream with SDL_DestroyAudioStream will also close
+ * the audio device associated with this stream.
+ *
+ * \param devid an audio device to open, or SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK
+ *              or SDL_AUDIO_DEVICE_DEFAULT_RECORDING.
+ * \param spec the audio stream's data format. Can be NULL.
+ * \param callback a callback where the app will provide new data for
+ *                 playback, or receive new data for recording. Can be NULL,
+ *                 in which case the app will need to call
+ *                 SDL_PutAudioStreamData or SDL_GetAudioStreamData as
+ *                 necessary.
+ * \param userdata app-controlled pointer passed to callback. Can be NULL.
+ *                 Ignored if callback is NULL.
+ * \returns an audio stream on success, ready to use, or NULL on failure; call
+ *          SDL_GetError() for more information. When done with this stream,
+ *          call SDL_DestroyAudioStream to free resources and close the
+ *          device.
+ *
+ * \threadsafety It is safe to call this function from any thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_GetAudioStreamDevice
+ * \sa SDL_ResumeAudioStreamDevice
+ */
+OVERRIDE SDL_AudioStream * SDL_OpenAudioDeviceStream(sdl3::SDL_AudioDeviceID devid, const sdl3::SDL_AudioSpec *spec, SDL_AudioStreamCallback callback, void *userdata);
+
+
+/**
  *  This function shuts down audio processing and closes the audio device.
  */
 OVERRIDE void SDL_CloseAudio(void);
