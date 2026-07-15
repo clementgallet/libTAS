@@ -80,7 +80,17 @@ typedef long ujob_handle_t;
 typedef void ujob_dependency_chain;
 typedef int WorkStealingRange;
 
-struct JobsCallbackFunctions {
+
+typedef void* JobsCallbackFunctions;
+
+struct U2K_JobsCallbackFunctions {
+    void (*execute)(void*, int);
+    int value1;
+    int value2;
+    void (*completed)(void*);
+};
+
+struct U6_JobsCallbackFunctions {
     void (*execute)(void*, int);
     void (*completed)(void*);
 };
@@ -288,6 +298,7 @@ namespace orig {
     long (*U6_ScheduleBatchJob)(void* x, ujob_handle_t y) = nullptr;
     void (*U6_ujob_execute_job)(ujob_control_t*, ujob_lane_t*, ujob_job_t*, ujob_handle_t, unsigned int) = nullptr;
     void (*U6_ujob_participate)(ujob_control_t* x, ujob_handle_t y, ujob_job_t* z, int* a, ujob_dependency_chain const* b) = nullptr;
+    unsigned long (*U2K_ujob_schedule_job_internal)(ujob_control_t* x, ujob_handle_t y) = nullptr;
     unsigned long (*U6_ujob_schedule_job_internal)(ujob_control_t* x, ujob_handle_t y, unsigned int z) = nullptr;
     ujob_handle_t (*U6_ujob_schedule_parallel_for_internal)(ujob_control_t* x, JobsCallbackFunctions* y, void* z, WorkStealingRange* a, unsigned int b, unsigned long c, ujob_handle_t const* d, long e) = nullptr;
     void (*U6_ujob_wait_for)(ujob_control_t *x, ujob_handle_t y, int z) = nullptr;
@@ -804,6 +815,21 @@ static void U6_ujob_participate(ujob_control_t* x, ujob_handle_t y, ujob_job_t**
     orig::U6_ujob_participate(x, y, z, a, b);
 }
 
+static unsigned long U2K_ujob_schedule_job_internal(ujob_control_t* x, ujob_handle_t y)
+{
+    LOGTRACE_SIMPLE(LCF_HACKS);
+    unsigned long ret = orig::U2K_ujob_schedule_job_internal(x, y);
+
+    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS) {
+        if (orig::U6_ujob_wait_for)
+            orig::U6_ujob_wait_for(x, y, 1);
+        else if (orig::U2K_JobQueue_WaitForJobGroupID)
+            orig::U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(y), 0, true);
+    }
+
+    return ret;
+}
+
 static unsigned long U6_ujob_schedule_job_internal(ujob_control_t* x, ujob_handle_t y, unsigned int z)
 {
     LOGTRACE_SIMPLE(LCF_HACKS);
@@ -823,7 +849,8 @@ static unsigned long U6_ujob_schedule_job_internal(ujob_control_t* x, ujob_handl
 
 struct callback_args_t {
     int count;
-    JobsCallbackFunctions funcs;
+    void (*execute)(void*, int);
+    void (*completed)(void*);
     void* arg;
     // std::mutex mutex;
     // std::condition_variable cv;
@@ -836,14 +863,14 @@ static void job_callback_execute(void* arg, int)
 
     /* Perform all iterations of the loop inside this job */
     for (int i = 0; i < args->count; i++)
-        args->funcs.execute(args->arg, i);
+        args->execute(args->arg, i);
 }
 
 static void job_callback_completed(void* arg)
 {
     callback_args_t* args = reinterpret_cast<callback_args_t*>(arg);
-    if (args->funcs.completed) {
-        args->funcs.completed(args->arg);
+    if (args->completed) {
+        args->completed(args->arg);
     }
 
     // std::unique_lock<std::mutex> lock(args->mutex);
@@ -868,7 +895,6 @@ static ujob_handle_t U6_ujob_schedule_parallel_for_internal(ujob_control_t* x, J
         return orig::U6_ujob_schedule_parallel_for_internal(x, y, job_callback_arg, a, count, c, d, e);
 
     ujob_handle_t ret = 0;
-    static JobsCallbackFunctions loop_callbacks = {&job_callback_execute, job_callback_completed};
     /* Instead of scheduling all the jobs in one call, we schedule one
      * individual job that will perform all the iterations in order. The job may still
      * run on a worker thread, but it should be fine for determinism.
@@ -878,26 +904,55 @@ static ujob_handle_t U6_ujob_schedule_parallel_for_internal(ujob_control_t* x, J
      * count. */
     callback_args_t* args = new callback_args_t;
     args->count = count;
-    args->funcs.execute = y->execute;
-    args->funcs.completed = y->completed;
+
+    /* Different Unity versions have different callback function structures */
+    if (GetUnityVersionMaj() == 2023) {
+        U2K_JobsCallbackFunctions* callbacks = reinterpret_cast<U2K_JobsCallbackFunctions*>(y);
+        args->execute = callbacks->execute;
+        args->completed = callbacks->completed;
+    }
+    else if (GetUnityVersionMaj() == 6000) {
+        U6_JobsCallbackFunctions* callbacks = reinterpret_cast<U6_JobsCallbackFunctions*>(y);
+        args->execute = callbacks->execute;
+        args->completed = callbacks->completed;
+    }
+    else {
+        // Unsupported Unity version
+        LOG(LL_WARN, LCF_HACKS, "    Unity version %d is not supported for job scheduling", GetUnityVersionMaj());
+        delete args;
+        return orig::U6_ujob_schedule_parallel_for_internal(x, y, job_callback_arg, a, count, c, d, e);
+    }
     args->arg = job_callback_arg;
-    // args->completed = false;
     
     // std::unique_lock<std::mutex> lock(args->mutex);
-    
-    ret = orig::U6_ujob_schedule_parallel_for_internal(x, &loop_callbacks, args, a, 1, c, d, e);
+
+    if (GetUnityVersionMaj() == 2023) {
+        static U2K_JobsCallbackFunctions loop_callbacks;
+        loop_callbacks.execute = &job_callback_execute;
+        loop_callbacks.completed = &job_callback_completed;
+        ret = orig::U6_ujob_schedule_parallel_for_internal(x, reinterpret_cast<JobsCallbackFunctions*>(&loop_callbacks), args, a, 1, c, d, e);
+    }
+    else if (GetUnityVersionMaj() == 6000) {
+        static U6_JobsCallbackFunctions loop_callbacks = {&job_callback_execute, job_callback_completed};
+        ret = orig::U6_ujob_schedule_parallel_for_internal(x, reinterpret_cast<JobsCallbackFunctions*>(&loop_callbacks), args, a, 1, c, d, e);
+    }
 
     /* Manually waiting on all jobs to execute */
     // args->cv.wait(lock, [&args] { return args->completed; });
 
-    if (orig::U6_ujob_wait_for)
-        orig::U6_ujob_wait_for(x, ret, 1);
-    else if (orig::U2K_JobQueue_WaitForJobGroupID)
-        orig::U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(ret), 0, true);
+    if (!skip_job_wait) {
+        if (orig::U6_ujob_wait_for)
+            orig::U6_ujob_wait_for(x, ret, 1);
+        else if (orig::U2K_JobQueue_WaitForJobGroupID)
+            orig::U2K_JobQueue_WaitForJobGroupID(reinterpret_cast<JobQueue*>(x), reinterpret_cast<JobGroup*>(ret), 0, true);
 
-    /* It should be safe to delete our custom callback argument here */
-    // delete args->loop_index;
-    delete args;
+        /* It should be safe to delete our custom callback argument here */
+        // delete args->loop_index;
+        delete args;
+    }
+    else {
+        /* Not sure we can delete our custom callback argument here, so for now we leak it. */
+    }
 
     return ret;
 }
@@ -991,7 +1046,7 @@ static PreloadManagerOperation* current_pending_non_parallel_operation = nullptr
 
 static bool Helper_PreloadManager_GetAllowParallelExecution(PreloadManagerOperation* o)
 {
-    if (GetUnityVersionMaj() == 6000)
+    if (GetUnityVersionMaj() >= 2023)
         return (reinterpret_cast<U6_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
     if ((GetUnityVersionMaj() >= 2017) && (GetUnityVersionMaj() <= 2021))
         return (reinterpret_cast<U2018_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
@@ -1015,7 +1070,7 @@ static bool Helper_PreloadManagerOperation_GetStatus(PreloadManagerOperation* o)
         status = *(int *)(o + 0x40);
     else if ((GetUnityVersionMaj() >= 2017) && (GetUnityVersionMaj() <= 2020))
         status = *(int *)(o + 0x50);
-    else if (GetUnityVersionMaj() == 2021)
+    else if ((GetUnityVersionMaj() >= 2021) && (GetUnityVersionMaj() <= 2023))
         status = *(int *)(o + 0x48);
     else if (GetUnityVersionMaj() == 5)
         status = *(int *)(o + 0x2c);
@@ -1630,6 +1685,7 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY6_UJOB_ADD, U6_ujobs_add_to_lane_and_wake_one_thread)
         FUNC_CASE(UNITY6_UJOB_EXECUTE, U6_ujob_execute_job)
         FUNC_CASE(UNITY6_UJOB_PARTICIPATE, U6_ujob_participate)
+        FUNC_CASE(UNITY2K_UJOB_SCHEDULE, U2K_ujob_schedule_job_internal)
         FUNC_CASE(UNITY6_UJOB_SCHEDULE, U6_ujob_schedule_job_internal)
         FUNC_CASE(UNITY6_UJOB_SCHEDULE_PARALLEL, U6_ujob_schedule_parallel_for_internal)
         FUNC_CASE(UNITY6_UJOB_WAIT, U6_ujob_wait_for)

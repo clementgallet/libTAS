@@ -10,6 +10,7 @@
 * Add hooks to prevent custom savefile stream buffering
 * Add hook to SDL_CreateWindowWithProperties()
 * Implement SDL_OpenAudioDeviceStream()
+* Add hooks for Unity 2023
 
 ### Changed
 

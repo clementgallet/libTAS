@@ -281,6 +281,11 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_Z16ujob_participateP14ujob_control_t13ujob_handle_tRP10ujob_job_tRjPK21ujob_dependency_chain",
     },
     {
+        UNITY2K_UJOB_SCHEDULE,
+        "ujob_schedule_job_internal",
+        "_ZL26ujob_schedule_job_internalP14ujob_control_t13ujob_handle_t",
+    },
+    {
         UNITY6_UJOB_SCHEDULE,
         "ujob_schedule_job_internal",
         "_ZL26ujob_schedule_job_internalP14ujob_control_t13ujob_handle_tj",
