@@ -93,6 +93,14 @@ void GameThread::set_env_variables(Context *context, int gameArch)
     /* Override timezone for determinism */
     setenv("TZ", "UTC0", 1);
 
+    /* Prevent glibc from initializing rseq for each thread. This is required starting from
+     * Linux 7.0.10, where rseq v2 checks that user-space variables were not modified,
+     * and raise a segfault if so. However, savestate code modifies the rseq variables,
+     * which causes a segfault when the game is resumed.
+     * This workaround may break in the future...
+     * Relevant kernel commit: <https://github.com/torvalds/linux/commit/82f572449cfe75f12ea985986da60e11f308f77d> */
+    setenv("GLIBC_TUNABLES", "glibc.pthread.rseq=0", 1);
+
     /* Set wine-specific env variables */
     if ((gameArch == BT_PE32) || (gameArch == BT_PE32P) || (gameArch == BT_NE)) {
 

@@ -34,6 +34,7 @@
 * Always set savefile streams as read/write
 * Add SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK and SDL_AUDIO_DEVICE_DEFAULT_RECORDING
   values for SDL_GetAudioDeviceFormat()
+* Fix savestate crash on new kernels (fix #745)
 
 ## [1.4.8] - 2026-05-14
 ### Added
