@@ -81,7 +81,6 @@ struct clone_args {
 namespace libtas {
 
 static sem_t semNotifyCkptThread;
-static sem_t semWaitForCkptThreadSignal;
 static pthread_mutex_t threadResumeLock = PTHREAD_MUTEX_INITIALIZER;
 static volatile bool restoreInProgress = false;
 static int numThreads;
@@ -158,13 +157,10 @@ int SaveStateManager::sigSuspend()
 
 void SaveStateManager::init()
 {
-    sem_init(&semNotifyCkptThread, 0, 0);
-    sem_init(&semWaitForCkptThreadSignal, 0, 0);
-
     ReservedMemory::init();
 
     state_dirty = static_cast<bool*>(ReservedMemory::getAddr(ReservedMemory::SS_SLOTS_ADDR));
-    memset(state_dirty, 0, 11*sizeof(bool));
+    memset(state_dirty, 0, ReservedMemory::SS_SLOTS_SIZE);
 
     /* Check for clone3 support */
 
@@ -446,11 +442,6 @@ int SaveStateManager::checkpoint(int slot)
 
     resumeThreads();
 
-    /* Wait for all other threads to finish being restored before resuming */
-    LOG(LL_DEBUG, LCF_CHECKPOINT, "Waiting for other threads to resume");
-    waitForAllRestored(current_thread);
-    LOG(LL_DEBUG, LCF_CHECKPOINT, "Resuming main thread");
-
     ThreadSync::releaseLocks();
 
     /* Mark the savestate as dirty in case of fork savestate */
@@ -539,15 +530,15 @@ int SaveStateManager::restore(int slot)
      * ThreadManager::checkpoint(). We don't even need to use getcontext/setcontext!
      */
 
-     /* If restore was not done, we return here */
-     LOG(LL_DEBUG, LCF_CHECKPOINT, "Restoring was not done, resuming threads");
+    /* If restore was not done, we return here */
+    LOG(LL_DEBUG, LCF_CHECKPOINT, "Restoring was not done, resuming threads");
 
-     /* Restoring the game alternate stack (if any) */
-     AltStack::restoreStack();
+    /* Restoring the game alternate stack (if any) */
+    AltStack::restoreStack();
 
 #ifdef __linux__
-     /* Restore the signal that refills the fake urandom pipe */
-     urandom_enable_handler();
+    /* Restore the signal that refills the fake urandom pipe */
+    urandom_enable_handler();
 #endif
 
 #ifdef __unix__
@@ -557,13 +548,11 @@ int SaveStateManager::restore(int slot)
     }
 #endif
 
-     resumeThreads();
+    resumeThreads();
 
-     waitForAllRestored(current_thread);
+    ThreadSync::releaseLocks();
 
-     ThreadSync::releaseLocks();
-
-     return ESTATE_UNKNOWN;
+    return ESTATE_UNKNOWN;
 }
 
 void SaveStateManager::terminateThreads()
@@ -604,6 +593,8 @@ void SaveStateManager::suspendThreads()
      * signalling
      */
     ThreadManager::lockList();
+
+    sem_init(&semNotifyCkptThread, 0, 0);
 
     bool needrescan = false;
     do {
@@ -733,6 +724,7 @@ void SaveStateManager::suspendThreads()
         sem_wait(&semNotifyCkptThread);
     }
 
+    sem_destroy(&semNotifyCkptThread);
     LOG(LL_DEBUG, LCF_CHECKPOINT, "%d threads were suspended", numThreads);
 }
 
@@ -740,7 +732,15 @@ void SaveStateManager::suspendThreads()
 void SaveStateManager::resumeThreads()
 {
     LOG(LL_DEBUG, LCF_CHECKPOINT, "Resuming all threads");
+    sem_init(&semNotifyCkptThread, 0, 0);
+
     MYASSERT(pthread_mutex_unlock(&threadResumeLock) == 0)
+
+    for (int i = 0; i < numThreads; i++) {
+        sem_wait(&semNotifyCkptThread);
+    }
+
+    sem_destroy(&semNotifyCkptThread);
     LOG(LL_DEBUG, LCF_CHECKPOINT, "All threads resumed");
 }
 
@@ -837,7 +837,7 @@ void SaveStateManager::stopThisThread(int signum)
         /* We successfully resumed the thread. We wait for all other
          * threads to restore before continuing
          */
-        waitForAllRestored(current_thread);
+        sem_post(&semNotifyCkptThread);
 
         LOG(LL_DEBUG, LCF_CHECKPOINT, "Thread returning to user code");
     }
@@ -961,24 +961,6 @@ int SaveStateManager::startNewThread(void *arg)
     
     /* Not reached */
     return 0;
-}
-
-void SaveStateManager::waitForAllRestored(ThreadInfo *thread)
-{
-    if (thread->state == ThreadInfo::ST_CKPNTHREAD) {
-        for (int i = 0; i < numThreads; i++) {
-            sem_wait(&semNotifyCkptThread);
-        }
-
-        /* If this was last of all, wake everyone up */
-        for (int i = 0; i < numThreads; i++) {
-            sem_post(&semWaitForCkptThreadSignal);
-        }
-    }
-    else {
-        sem_post(&semNotifyCkptThread);
-        sem_wait(&semWaitForCkptThreadSignal);
-    }
 }
 
 void SaveStateManager::printError(int err)

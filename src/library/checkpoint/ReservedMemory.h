@@ -34,7 +34,7 @@ namespace ReservedMemory {
     enum Sizes {
         COMPRESSED_SIZE = 4 * ONE_MB,
         STACK_SIZE = 5 * ONE_MB,
-        SS_SLOTS_SIZE = 11*sizeof(bool),
+        SS_SLOTS_SIZE = 16*sizeof(bool),
         SH_SIZE = sizeof(StateHeader),
     };
     enum Addresses {

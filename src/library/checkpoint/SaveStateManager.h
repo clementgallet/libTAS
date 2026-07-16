@@ -88,8 +88,6 @@ void createNewThreads();
 /* Function passed to clone() for new threads */
 __attribute__ ((visibility ("default"))) int startNewThread(void *arg);
 
-void waitForAllRestored(ThreadInfo *thread);
-
 /* Is currently loading a savestate? */
 bool isLoading();
 
