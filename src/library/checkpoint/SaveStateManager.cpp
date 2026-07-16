@@ -908,6 +908,13 @@ void SaveStateManager::createNewThreads()
                 cargs.stack_size = (reinterpret_cast<uintptr_t>(thread->saved_sp) - 128) - reinterpret_cast<uintptr_t>(thread->stack_addr);
                 cargs.set_tid = reinterpret_cast<uintptr_t>(&thread->translated_tid);
                 cargs.set_tid_size = 1;
+#ifdef __i386__
+                cargs.tls = reinterpret_cast<uintptr_t>(&thread->tlsInfo.gdtentrytls[0]);
+                clone_flags |= CLONE_SETTLS;
+#elif __x86_64__
+                cargs.tls = reinterpret_cast<uintptr_t>(thread->tlsInfo.fs);
+                clone_flags |= CLONE_SETTLS;
+#endif
                 cargs.exit_signal = 0;
                 
                 RUN_CLONE3_RESTORE_FN(returned_pid, cargs, sizeof(cargs), thread, startNewThread);
