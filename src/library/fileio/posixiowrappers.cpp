@@ -417,6 +417,9 @@ int close (int fd)
     if (ret != 1)
         return ret;
 
+    unref_jsdev(fd);
+    unref_evdev(fd);
+
     RETURN_NATIVE(close, (fd), nullptr);
 
     return 0;

@@ -161,8 +161,14 @@ int get_js_number(int fd)
 bool unref_jsdev(int fd)
 {
     for (int i=0; i<AllInputsFlat::MAXJOYS; i++)
-        if (jsdevfds[i].second != 0 && jsdevfds[i].first.first == fd)
-            return --jsdevfds[i].second == 0;
+        if (jsdevfds[i].second != 0 && jsdevfds[i].first.first == fd) {
+            if (--jsdevfds[i].second == 0) {
+                close(jsdevfds[i].first.second);
+                jsdevfds[i].first = { -1, -1 };
+                return false;
+            }
+            return true;
+        }
     return true;
 }
 

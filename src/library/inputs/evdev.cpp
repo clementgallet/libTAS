@@ -148,8 +148,14 @@ int get_ev_number(int fd)
 bool unref_evdev(int fd)
 {
     for (int i=0; i<AllInputsFlat::MAXJOYS; i++)
-        if (evdevfds[i].second != 0 && evdevfds[i].first.first == fd)
-            return --evdevfds[i].second == 0;
+        if (evdevfds[i].second != 0 && evdevfds[i].first.first == fd) {
+            if (--evdevfds[i].second == 0) {
+                close(evdevfds[i].first.second);
+                evdevfds[i].first = { -1, -1 };
+                return false;
+            }
+            return true;
+        }
     return true;
 }
 
