@@ -282,6 +282,9 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Are preventing the game from warping the cursor */
     bool mouse_prevent_warp = false;
 
+    /* Report window coordinates as (0,0) instead of the actual position */
+    bool mouse_ignore_window_coords = false;
+
     /* Display OSD main menu */
     bool osd;
 

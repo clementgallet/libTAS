@@ -20,6 +20,7 @@
 #include "config.h"
 #include "XlibGameWindow.h"
 
+#include "global.h"
 #include "logging.h"
 #include "screencapture/ScreenCapture.h"
 #include "global.h"
@@ -137,10 +138,12 @@ void XlibGameWindow::getCoords(Window w, int* x, int* y)
 {
     *x = 0;
     *y = 0;
-    auto it = gameXWindowCoords.find(w);
-    if (it != gameXWindowCoords.end()) {
-        *x = it->second.first;
-        *y = it->second.second;
+    if (!Global::shared_config.mouse_ignore_window_coords) {
+        auto it = gameXWindowCoords.find(w);
+        if (it != gameXWindowCoords.end()) {
+            *x = it->second.first;
+            *y = it->second.second;
+        }
     }
 }
 

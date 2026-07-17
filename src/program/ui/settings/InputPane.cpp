@@ -46,10 +46,12 @@ void InputPane::initLayout()
     mouseSupportBox = new ToolTipCheckBox(tr("Mouse support"));
     mouseWarpBox = new ToolTipCheckBox(tr("Warp mouse to center"));
     mouseGameWarpBox = new ToolTipCheckBox(tr("Prevent mouse warping"));
+    mouseIgnoreWindowCoordsBox = new ToolTipCheckBox(tr("Ignore window coordinates"));
 
     mouseLayout->addWidget(mouseSupportBox);
     mouseLayout->addWidget(mouseWarpBox);
     mouseLayout->addWidget(mouseGameWarpBox);
+    mouseLayout->addWidget(mouseIgnoreWindowCoordsBox);
 
     QGroupBox* joyBox = new QGroupBox(tr("Joystick"));
     QFormLayout* joyLayout = new QFormLayout;
@@ -79,6 +81,7 @@ void InputPane::initSignals()
     connect(mouseSupportBox, &QAbstractButton::clicked, this, &InputPane::saveConfig);
     connect(mouseWarpBox, &QAbstractButton::clicked, this, &InputPane::saveConfig);
     connect(mouseGameWarpBox, &QAbstractButton::clicked, this, &InputPane::saveConfig);
+    connect(mouseIgnoreWindowCoordsBox, &QAbstractButton::clicked, this, &InputPane::saveConfig);
     connect(joyChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &InputPane::saveConfig);
 }
 
@@ -89,6 +92,8 @@ void InputPane::initToolTips()
     mouseWarpBox->setDescription("Warp mouse to the center of the game window on each frame. "
     "This is useful in combination with relative mode, to ease mouse inputs.");
     mouseGameWarpBox->setDescription("Prevents games from warping the mouse cursor.");
+    mouseIgnoreWindowCoordsBox->setDescription("Always report the game window position as (0,0). "
+    "This fixes mouse input in some engines such as Godot.");
 }
 
 void InputPane::showEvent(QShowEvent *event)
@@ -101,6 +106,7 @@ void InputPane::loadConfig()
     mouseSupportBox->setChecked(context->config.sc.mouse_support);
     mouseWarpBox->setChecked(context->config.mouse_warp);
     mouseGameWarpBox->setChecked(context->config.sc.mouse_prevent_warp);
+    mouseIgnoreWindowCoordsBox->setChecked(context->config.sc.mouse_ignore_window_coords);
 
     int index = joyChoice->findData(context->config.sc.nb_controllers);
     if (index != -1) joyChoice->setCurrentIndex(index);
@@ -111,6 +117,7 @@ void InputPane::saveConfig()
     context->config.sc.mouse_support = mouseSupportBox->isChecked();
     context->config.mouse_warp = mouseWarpBox->isChecked();
     context->config.sc.mouse_prevent_warp = mouseGameWarpBox->isChecked();
+    context->config.sc.mouse_ignore_window_coords = mouseIgnoreWindowCoordsBox->isChecked();
 
     context->config.sc.nb_controllers = joyChoice->itemData(joyChoice->currentIndex()).toInt();
     context->config.sc_modified = true;
