@@ -357,7 +357,7 @@ static void generateControllerEvents(void)
                 /* We got a change in a controller axis value */
 
                 if (Global::game_info.joystick & GameInfo::SDL2) {
-                    if (genGC) {
+                    if (genGC || genJoy) {
                         sdl2::SDL_Event event2;
                         event2.type = sdl2::SDL_CONTROLLERAXISMOTION;
                         event2.caxis.timestamp = timestamp;
@@ -427,7 +427,7 @@ static void generateControllerEvents(void)
                 /* We got a change in a button state */
 
                 if (Global::game_info.joystick & GameInfo::SDL2) {
-                    if (genGC) {
+                    if (genGC || genJoy) {
                         /* SDL2 controller button */
                         sdl2::SDL_Event event2;
                         if ((buttons >> bi) & 0x1) {
