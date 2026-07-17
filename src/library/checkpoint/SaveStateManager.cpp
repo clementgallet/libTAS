@@ -898,7 +898,6 @@ void SaveStateManager::createNewThreads()
 
             if (has_clone3_set_tid) {
                 struct clone_args cargs;
-                cargs.flags = clone_flags;
                 cargs.child_tid = reinterpret_cast<uintptr_t>(thread->ptid);
                 cargs.parent_tid = reinterpret_cast<uintptr_t>(thread->ptid);
                 cargs.stack = reinterpret_cast<uintptr_t>(thread->stack_addr);
@@ -912,6 +911,7 @@ void SaveStateManager::createNewThreads()
                 cargs.tls = reinterpret_cast<uintptr_t>(thread->tlsInfo.fs);
                 clone_flags |= CLONE_SETTLS;
 #endif
+                cargs.flags = clone_flags;
                 cargs.exit_signal = 0;
                 
                 RUN_CLONE3_RESTORE_FN(returned_pid, cargs, sizeof(cargs), thread, startNewThread);
