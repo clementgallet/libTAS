@@ -668,13 +668,15 @@ void SaveStateManager::suspendThreads()
             case ThreadInfo::ST_TERMINATING:
                 if (ThreadManager::updateState(thread, ThreadInfo::ST_TERMINATED, ThreadInfo::ST_TERMINATING)) {
 
-                    /* Try to cancel the thread */
+                    /* Force the target thread into stopThisThread(), where it
+                     * will perform a direct thread exit on Linux. */
                     int ret;
-                    LOG(LL_DEBUG, LCF_CHECKPOINT, "Cancel thread %d", thread->real_tid);
-                    ret = pthread_cancel(thread->pthread_id);
+                    LOG(LL_DEBUG, LCF_CHECKPOINT, "Terminate thread %d", thread->real_tid);
+                    ret = pthread_kill(thread->pthread_id, sig_suspend_threads);
 
-                    if (ret < 0) {
-                        LOG(LL_ERROR, LCF_CHECKPOINT, "Signalled thread %d died", thread->real_tid);
+                    if (ret != 0) {
+                        MYASSERT(ret == ESRCH)
+                        LOG(LL_DEBUG, LCF_CHECKPOINT, "Thread %d has died since", thread->real_tid);
                         ThreadManager::threadIsDead(thread);
                         break;
                     }
@@ -689,18 +691,6 @@ void SaveStateManager::suspendThreads()
                         i++;
                         if (i > 1000)
                             break;
-                    }
-                    
-                    if (*thread->ptid != 0) {
-                        /* If we couldn't cancel the thread, try to signal it so that
-                        * it can call pthread_exit(). This is unsafe! */
-                        LOG(LL_DEBUG, LCF_CHECKPOINT, "Cancel failed, signaling thread %d to terminate", thread->real_tid);
-                        ret = pthread_kill(thread->pthread_id, sig_suspend_threads);
-                        
-                        while (*thread->ptid != 0) {
-                            LOG(LL_DEBUG, LCF_CHECKPOINT, "Wait for tid %d to become 0", *thread->ptid);                        
-                            usleep(1000);
-                        }
                     }
                 }
                 break;
@@ -751,7 +741,14 @@ void SaveStateManager::stopThisThread(int signum)
     ThreadInfo *current_thread = ThreadManager::getCurrentThread();
 
     if (current_thread->state == ThreadInfo::ST_TERMINATED) {
+        /* Thread termination requested during restore: do a raw per-thread
+         * exit to avoid C++ exception/cancellation unwinding in user code. */
+#ifdef __linux__
+        syscall(SYS_exit, 0);
+        __builtin_unreachable();
+#else
         pthread_exit(nullptr);
+#endif
     }
     
     if (current_thread->state == ThreadInfo::ST_CKPNTHREAD) {
