@@ -63,19 +63,7 @@
 #define NOMINMAX
 #endif
 
-// Vulkan includes
-#ifdef IMGUI_IMPL_VULKAN_USE_VOLK
-#ifdef IMGUI_IMPL_VULKAN_VOLK_FILENAME
-#include IMGUI_IMPL_VULKAN_VOLK_FILENAME
-#else
-#include <volk.h>
-#endif
-#else
-#include <vulkan/vulkan.h>
-#endif
-#if defined(VK_VERSION_1_3) || defined(VK_KHR_dynamic_rendering)
-#define IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING
-#endif
+#include "../vulkan_core.h"
 
 // Backend uses a small number of descriptors per font atlas + as many as additional calls done to ImGui_ImplVulkan_AddTexture().
 #define IMGUI_IMPL_VULKAN_MINIMUM_SAMPLED_IMAGE_POOL_SIZE   (8)     // Minimum per atlas
