@@ -283,7 +283,7 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     bool mouse_prevent_warp = false;
 
     /* Display OSD main menu */
-    bool osd;
+    bool osd = true;
 
     /* Display OSD in the video encode */
     bool osd_encode = false;

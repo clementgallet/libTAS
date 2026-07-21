@@ -38,7 +38,7 @@ namespace libtas {
 
 DEFINE_ORIG_POINTER(SteamUser)
 
-char steamuserdir[2048] = "/NOTVALID";
+static char steamuserdir[2048] = "/NOTVALID";
 static const char *steamuser_version = NULL;
 
 void SteamSetUserDataFolder(std::string path)

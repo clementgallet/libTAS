@@ -21,8 +21,11 @@
 
 namespace libtas {
 
-SharedConfig Global::shared_config;
-GameInfo Global::game_info;
+/* We use constinit to make sure these globals are initialized at compile time. If not, 
+ * the library constructor could be executed before those globals are initialized,
+ * resulting in overwriting the globals with their default values. */
+constinit SharedConfig Global::shared_config;
+constinit GameInfo Global::game_info;
 volatile bool Global::is_inited = false;
 volatile bool Global::is_exiting = false;
 volatile bool Global::is_fork = false;
