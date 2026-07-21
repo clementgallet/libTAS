@@ -20,7 +20,6 @@
 #include "config.h"
 #include "XlibGameWindow.h"
 
-#include "global.h"
 #include "logging.h"
 #include "screencapture/ScreenCapture.h"
 #include "global.h"
