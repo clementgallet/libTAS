@@ -405,6 +405,7 @@ namespace orig {
     int (*U2K_VideoClipPlayback_GetStatus)(VideoClipPlayback* t) = nullptr;
 
     void (*physx_Cm_FanoutTask_RemoveReference)(FanoutTask* ft) = nullptr;
+    void (*physx_Sc_Scene_CollideStep)(void* scene, physx_PxBaseTask* task) = nullptr;
     void (*ScSimulationControllerCallback_updateScBodyAndShapeSim)(ScSimulationControllerCallback *t, physx_PxBaseTask *p) = nullptr;
 }
 
@@ -649,7 +650,7 @@ static void U5_JobQueue_ScheduleJob(JobQueue *t, void (*func)(void*), void* arg,
 }
 
 /* For certain functions that will softlock if we attempt to wait for them, skip them */
-static thread_local bool skip_job_wait = false;
+static thread_local int skip_job_wait = 0;
 
 static JobGroupID U5_JobQueue_ScheduleGroup(JobQueue *t, JobGroup* x, int y)
 {
@@ -1724,17 +1725,25 @@ static void U2K_BaseUnityConnectClient_UpdateConfigFromServer(void* a)
 static void physx_Cm_FanoutTask_RemoveReference(FanoutTask* ft)
 {
     LOGTRACE_SIMPLE(LCF_HACKS);
-    skip_job_wait = true;
+    skip_job_wait++;
     orig::physx_Cm_FanoutTask_RemoveReference(ft);
-    skip_job_wait = false;
+    skip_job_wait--;
+}
+
+static void physx_Sc_Scene_CollideStep(void* scene, physx_PxBaseTask* task)
+{
+    LOGTRACE_SIMPLE(LCF_HACKS);
+    skip_job_wait++;
+    orig::physx_Sc_Scene_CollideStep(scene, task);
+    skip_job_wait--;
 }
 
 static void ScSimulationControllerCallback_updateScBodyAndShapeSim(ScSimulationControllerCallback *t, physx_PxBaseTask *p)
 {
     LOGTRACE_SIMPLE(LCF_HACKS);
-    skip_job_wait = true;
+    skip_job_wait++;
     orig::ScSimulationControllerCallback_updateScBodyAndShapeSim(t, p);
-    skip_job_wait = false;
+    skip_job_wait--;
 }
 
 #define FUNC_CASE(FUNC_ENUM, FUNC_SYMBOL) \
@@ -1885,8 +1894,8 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY2K_VIDEOCLIPPLAYBACK_GET_STATUS, U2K_VideoClipPlayback_GetStatus)
 
         FUNC_CASE(PHYSX_CM_FANOUTTASK_REMOVEREFERENCE, physx_Cm_FanoutTask_RemoveReference)
+        FUNC_CASE(PHYSX_SC_SCENE_COLLIDESTEP, physx_Sc_Scene_CollideStep)
         FUNC_CASE(SC_SIMULATION_UPDATE_SC_BODY, ScSimulationControllerCallback_updateScBodyAndShapeSim)
-        
     }
 }
 

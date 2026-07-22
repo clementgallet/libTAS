@@ -681,6 +681,11 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN5physx2Cm10FanoutTask15removeReferenceEv",
     },
     {
+        PHYSX_SC_SCENE_COLLIDESTEP,
+        "physx::Sc::Scene::collideStep",
+        "_ZN5physx2Sc5Scene11collideStepEPNS_10PxBaseTaskE",
+    },
+    {
         SC_SIMULATION_UPDATE_SC_BODY,
         "ScSimulationControllerCallback::updateScBodyAndShapeSim",
         "_ZN30ScSimulationControllerCallback23updateScBodyAndShapeSimEPN5physx10PxBaseTaskE",
