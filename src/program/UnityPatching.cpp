@@ -56,11 +56,6 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_Z17GetNumericVersionPKc",
     },
     {
-        UNITY4_JOBSCHEDULER_AWAKE,
-        "JobScheduler::AwakeIdleWorkerThreads",
-        "_ZN12JobScheduler22AwakeIdleWorkerThreadsEi",
-    },
-    {
         UNITY4_JOBSCHEDULER_FETCH,
         "JobScheduler::FetchNextJob",
         "_ZN12JobScheduler12FetchNextJobERi",
@@ -81,36 +76,6 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN12JobScheduler12WaitForGroupEi",
     },
     {
-        UNITY5_BACKGROUND_JOBQUEUE_EXECUTE,
-        "BackgroundJobQueue::ExecuteMainThreadJobs",
-        "_ZN18BackgroundJobQueue21ExecuteMainThreadJobsEv",
-    },
-    {
-        UNITY5_BACKGROUND_JOBQUEUE_SCHEDULE,
-        "BackgroundJobQueue::ScheduleJob",
-        "_ZN18BackgroundJobQueue11ScheduleJobEPFvPvES0_",
-    },
-    {
-        UNITY5_BACKGROUND_JOBQUEUE_SCHEDULE_MAIN,
-        "BackgroundJobQueue::ScheduleMainThreadJob",
-        "_ZN18BackgroundJobQueue21ScheduleMainThreadJobEPFvPvES0_",
-    },
-    {
-        UNITY5_JOBQUEUE_CREATE_JOB_BATCH,
-        "JobQueue::CreateJobBatch",
-        "_ZN8JobQueue14CreateJobBatchEPFvPvES0_10JobGroupIDP8JobGroup",
-    },
-    {
-        UNITY5_JOBQUEUE_ENQUEUEALL,
-        "JobQueue::EnqueueAll",
-        "_ZN8JobQueue10EnqueueAllEP8JobGroupS1_",
-    },
-    {
-        UNITY5_JOBQUEUE_ENQUEUEALL_INTERNAL,
-        "JobQueue::EnqueueAllInternal",
-        "_ZN8JobQueue18EnqueueAllInternalEP8JobGroupS1_P11AtomicQueuePi",
-    },
-    {
         UNITY5_JOBQUEUE_EXEC,
         "JobQueue::Exec",
         "_ZN8JobQueue4ExecEP7JobInfoxi",
@@ -124,16 +89,6 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         UNITY5_JOBQUEUE_EXECUTE_QUEUE,
         "JobQueue::ExecuteJobFromQueue",
         "_ZN8JobQueue19ExecuteJobFromQueueEv",
-    },
-    {
-        UNITY5_JOBQUEUE_MAIN_ENQUEUEALL,
-        "JobQueue::MainEnqueueAll",
-        "_ZN8JobQueue14MainEnqueueAllEP8JobGroupS1_",
-    },
-    {
-        UNITY5_JOBQUEUE_POP,
-        "JobQueue::Pop",
-        "_ZN8JobQueue3PopE10JobGroupID",
     },
     {
         UNITY5_JOBQUEUE_PROCESS,
@@ -176,31 +131,6 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN8JobQueue17WaitForJobGroupIDE10JobGroupID",
     },
     {
-        UNITY5_JOBQUEUE_HAS_JOB_COMPLETED,
-        "JobQueue::HasJobGroupCompleted",
-        "_ZN8JobQueue20HasJobGroupCompletedE10JobGroupID",
-    },
-    {
-        UNITY5_JOBQUEUE_HAS_JOB_ID_COMPLETED,
-        "JobQueue::HasJobGroupIDCompleted",
-        "_ZN8JobQueue22HasJobGroupIDCompletedE10JobGroupID",
-    },
-    {
-        UNITY2K_BACKGROUND_JOBQUEUE_SCHEDULE,
-        "BackgroundJobQueue::ScheduleJobInternal",
-        "_ZN18BackgroundJobQueue19ScheduleJobInternalEPFvPvES0_RKNS_8JobFenceEN8JobQueue16JobQueuePriorityE",
-    },
-    {
-        UNITY2K_BACKGROUND_JOBQUEUE_SCHEDULE_MAIN,
-        "BackgroundJobQueue::ScheduleMainThreadJobInternal",
-        "_ZN18BackgroundJobQueue29ScheduleMainThreadJobInternalEPFvPvES0_",
-    },
-    {
-        UNITY2K_JOBQUEUE_COMPLETE_ALL_JOBS,
-        "JobQueue::CompleteAllJobs",
-        "_ZN8JobQueue15CompleteAllJobsEv",
-    },
-    {
         UNITY2K_JOBQUEUE_EXEC,
         "JobQueue::Exec",
         "_ZN8JobQueue4ExecEP7JobInfoxib",
@@ -221,11 +151,6 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN8JobQueue20ScheduleDependenciesER10JobGroupIDP7JobInfoS3_b",
     },
     {
-        UNITY2K_JOBQUEUE_SCHEDULE_JOB_MULTIPLE,
-        "JobQueue::ScheduleJobMultipleDependencies",
-        "_ZN8JobQueue31ScheduleJobMultipleDependenciesEPFvPvES0_P10JobGroupIDi10MemLabelId",
-    },
-    {
         UNITY2K_JOBQUEUE_SCHEDULE_GROUP_INTERNAL,
         "JobQueue::ScheduleGroupInternal",
         "_ZN8JobQueue21ScheduleGroupInternalEP8JobGroupNS_16JobQueuePriorityEb",
@@ -241,54 +166,14 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN8JobQueue17WaitForJobGroupIDE10JobGroupIDNS_21JobQueueWorkStealModeE",
     },
     {
-        UNITY6_BATCH_JOB,
-        "ScheduleBatchJob",
-        "_ZL16ScheduleBatchJobPv13ujob_handle_t",
-    },
-    {
-        UNITY6_JOB_REFLECTION,
-        "JobsUtility_CUSTOM_CreateJobReflectionData",
-        "_Z42JobsUtility_CUSTOM_CreateJobReflectionDataP37ScriptingBackendNativeObjectPtrOpaqueS0_S0_S0_S0_",
-    },
-    {
-        UNITY6_JOB_SCHEDULE,
-        "JobsUtility_CUSTOM_Schedule",
-        "_Z27JobsUtility_CUSTOM_ScheduleR21JobScheduleParametersR8JobFence",
-    },
-    {
-        UNITY6_JOBQUEUE_SCHEDULE_GROUPS,
-        "JobQueue::ScheduleGroups",
-        "_ZN8JobQueue14ScheduleGroupsEP15JobBatchHandlesi",
-    },
-    {
-        UNITY6_LANE_GUTS,
-        "lane_guts",
-        "_ZL9lane_gutsP14ujob_control_tP11ujob_lane_tiiPK21ujob_dependency_chain",
-    },
-    {
         UNITY6_JOB_COMPLETED,
         "job_completed",
         "_ZL13job_completedP14ujob_control_tP11ujob_lane_tP10ujob_job_t13ujob_handle_t",
     },
     {
-        UNITY6_UJOB_ADD,
-        "ujobs_add_to_lane_and_wake_one_thread",
-        "_ZL37ujobs_add_to_lane_and_wake_one_threadP14ujob_control_tP10ujob_job_tP11ujob_lane_t",
-    },
-    {
         UNITY6_UJOB_EXECUTE,
         "ujob_execute_job",
         "_ZL16ujob_execute_jobP14ujob_control_tP11ujob_lane_tP10ujob_job_t13ujob_handle_tj",
-    },
-    {
-        UNITY6_UJOB_KICK,
-        "ujob_kick_jobs",
-        "_Z14ujob_kick_jobsP14ujob_control_t",
-    },
-    {
-        UNITY6_UJOB_PARTICIPATE,
-        "ujob_participate",
-        "_Z16ujob_participateP14ujob_control_t13ujob_handle_tRP10ujob_job_tRjPK21ujob_dependency_chain",
     },
     {
         UNITY2K_UJOB_SCHEDULE,
@@ -309,11 +194,6 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         UNITY6_UJOB_WAIT,
         "ujob_wait_for",
         "_Z13ujob_wait_forP14ujob_control_t13ujob_handle_ti",
-    },
-    {
-        UNITY6_UJOB_WAIT_ALL,
-        "ujob_wait_all",
-        "_Z13ujob_wait_allP14ujob_control_ti",
     },
     {
         UNITY6_WORKER_THREAD_ROUTINE,
@@ -366,16 +246,6 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN14PreloadManager3RunEPv",
     },
     {
-        UNITY2K_PRELOADMANAGER_PEEK,
-        "PreloadManager::PeekIntegrateQueue",
-        "_ZN14PreloadManager18PeekIntegrateQueueEv",
-    },
-    {
-        UNITY2K_PRELOADMANAGER_IS_LOADING,
-        "PreloadManager::IsLoadingOrQueued",
-        "_ZN14PreloadManager17IsLoadingOrQueuedEv",
-    },
-    {
         UNITY5_ASYNCREADMANAGER_WAIT_DONE,
         "AsyncReadManagerThreaded::WaitDone",
         "_ZN24AsyncReadManagerThreaded8WaitDoneEP16AsyncReadCommand",
@@ -391,84 +261,9 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN24AsyncReadManagerThreaded11SyncRequestEP16AsyncReadCommand",
     },
     {
-        UNITY6_ASYNCREADMANAGER_OPENCOMPLETE_CALLBACK,
-        "AsyncReadManagerManaged::OpenCompleteCallback",
-        "_ZN23AsyncReadManagerManagedL20OpenCompleteCallbackER16AsyncReadCommandNS0_6StatusE",
-    },
-    {
-        UNITY6_ASYNCREADMANAGER_READCOMPLETE_CALLBACK,
-        "AsyncReadManagerManaged::ReadCompleteCallback",
-        "_ZN23AsyncReadManagerManagedL20ReadCompleteCallbackER16AsyncReadCommandNS0_6StatusE",
-    },
-    {
-        UNITY6_ASYNCREADMANAGER_CLOSECOMPLETE_CALLBACK,
-        "AsyncReadManagerManaged::CloseCompleteCallback",
-        "_ZN23AsyncReadManagerManagedL21CloseCompleteCallbackER16AsyncReadCommandNS0_6StatusE",
-    },
-    {
-        UNITY6_ASYNCREADMANAGER_CLOSECACHEDCOMPLETE_CALLBACK,
-        "AsyncReadManagerManaged::CloseCachedFileCompleteCallback",
-        "_ZN23AsyncReadManagerManagedL31CloseCachedFileCompleteCallbackER16AsyncReadCommandNS0_6StatusE",
-    },
-    {
-        UNITY6_ASYNCUPLOADMANAGER_ASYNC_READ_SUCCESS,
-        "AsyncUploadManager::AsyncReadSuccess",
-        "_ZN18AsyncUploadManager16AsyncReadSuccessER12AsyncCommand",
-    },
-    {
-        UNITY6_ASYNCUPLOADMANAGER_QUEUE_UPLOAD,
-        "AsyncUploadManager::QueueUploadAsset",
-        "_ZN18AsyncUploadManager16QueueUploadAssetEPKcN3VFS8FileSizeEjjRK18AsyncUploadHandlerRK12AssetContextPh13FileReadFlags",
-    },
-    {
-        UNITY6_ASYNCUPLOADMANAGER_ASYNC_RESOURCE_UPLOAD,
-        "AsyncUploadManager::AsyncResourceUpload",
-        "_ZN18AsyncUploadManager19AsyncResourceUploadER9GfxDeviceiRK26AsyncUploadManagerSettings",
-    },
-    {
-        UNITY6_ASYNCUPLOADMANAGER_ASYNC_READ_CALLBACK,
-        "AsyncUploadManager::AsyncReadCallbackStatic",
-        "_ZN18AsyncUploadManager23AsyncReadCallbackStaticER16AsyncReadCommandNS0_6StatusE",
-    },
-    {
-        UNITY6_ASYNCUPLOADMANAGER_SCHEDULE,
-        "AsyncUploadManager::ScheduleAsyncCommandsInternal",
-        "_ZN18AsyncUploadManager29ScheduleAsyncCommandsInternalEv",
-    },
-    {
-        UNITY6_ASYNCUPLOADMANAGER_CLOSE,
-        "AsyncUploadManager::CloseFile",
-        "_ZN18AsyncUploadManager9CloseFileERKN4core12basic_stringIcNS0_20StringStorageDefaultIcEEEE",
-    },
-    {
-        UNITY6_SIGNAL_CALLBACK,
-        "SignalCallback",
-        "_ZL14SignalCallbackR16AsyncReadCommandNS_6StatusE",
-    },
-    {
         UNITY6_SYNC_READ,
         "SyncReadRequest",
         "_Z15SyncReadRequestP16AsyncReadCommand",
-    },
-    {
-        UNITY6_ARCHIVESTORAGECONVERTER_CONSTRUCTOR,
-        "ArchiveStorageConverter::ArchiveStorageConverter",
-        "_ZN23ArchiveStorageConverterC2EP32IArchiveStorageConverterListenerb",
-    },
-    {
-        UNITY6_ARCHIVESTORAGECONVERTER_PROCESS_ACCUMULATED,
-        "ArchiveStorageConverter::ProcessAccumulatedData",
-        "_ZN23ArchiveStorageConverter22ProcessAccumulatedDataEv",
-    },
-    {
-        UNITY6_ARCHIVESTORAGECONVERTER_PROCESS,
-        "ArchiveStorageConverter::ProcessData",
-        "_ZN23ArchiveStorageConverter11ProcessDataEPKvm",
-    },
-    {
-        UNITY6_ASSETBUNDLELOAD_FEEDSTREAM,
-        "AssetBundleLoadFromStreamAsyncOperation::FeedStream",
-        "_ZN39AssetBundleLoadFromStreamAsyncOperation10FeedStreamEPKvm",
     },
     {
         UNITY6_LOAD_FMOD_SOUND,
@@ -486,126 +281,6 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN22BaseUnityConnectClient22UpdateConfigFromServerEv",
     },
     {
-        UNITY2K_VIDEOPLAYER_SET_SOURCE,
-        "VideoPlayer::SetSource",
-        "_ZN11VideoPlayer9SetSourceENS_6SourceE",
-    },
-    {
-        UNITY2K_VIDEOPLAYER_SET_VIDEO_URL,
-        "VideoPlayer::SetVideoUrl",
-        "_ZN11VideoPlayer11SetVideoUrlERKN4core12basic_stringIcNS0_20StringStorageDefaultIcEEEE",
-    },
-    {
-        UNITY2K_VIDEOPLAYER_SET_VIDEO_CLIP,
-        "VideoPlayer::SetVideoClip",
-        "_ZN11VideoPlayer12SetVideoClipEP9VideoClip",
-    },
-    {
-        UNITY2K_VIDEOPLAYER_PLAY,
-        "VideoPlayer::Play",
-        "_ZN11VideoPlayer4PlayEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYER_PAUSE,
-        "VideoPlayer::Pause",
-        "_ZN11VideoPlayer5PauseEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYER_PREPARE,
-        "VideoPlayer::Prepare",
-        "_ZN11VideoPlayer7PrepareEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYER_ON_PREPARED,
-        "VideoPlayer::OnPrepared",
-        "_ZN11VideoPlayer10OnPreparedEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYER_IS_PREPARED,
-        "VideoPlayer::IsPrepared",
-        "_ZNK11VideoPlayer10IsPreparedEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYER_AWAKE_FROM_LOAD,
-        "VideoPlayer::AwakeFromLoad",
-        "_ZN11VideoPlayer13AwakeFromLoadE17AwakeFromLoadMode",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_GET_PLAYBACK_SPEED,
-        "VideoPlayback::GetPlaybackSpeed",
-        "_ZNK13VideoPlayback16GetPlaybackSpeedEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_SET_PLAYBACK_SPEED,
-        "VideoPlayback::SetPlaybackSpeed",
-        "_ZN13VideoPlayback16SetPlaybackSpeedEf",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_START_PLAYBACK,
-        "VideoPlayback::StartPlayback",
-        "_ZN13VideoPlayback13StartPlaybackEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_PAUSE_PLAYBACK,
-        "VideoPlayback::PausePlayback",
-        "_ZN13VideoPlayback13PausePlaybackEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_STOP_PLAYBACK,
-        "VideoPlayback::StopPlayback",
-        "_ZN13VideoPlayback12StopPlaybackEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_IS_PLAYBACK_ACTIVE,
-        "VideoPlayback::IsPlaybackActive",
-        "_ZN13VideoPlayback16IsPlaybackActiveEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_SEEK_DOUBLE,
-        "VideoPlayback::Seek",
-        "_ZN13VideoPlayback4SeekEdPFvPvES0_",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_SEEK_LONG,
-        "VideoPlayback::Seek",
-        "_ZN13VideoPlayback4SeekElPFvPvES0_",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_SET_REFERENCE_CLOCK,
-        "VideoPlayback::SetReferenceClock",
-        "_ZN13VideoPlayback17SetReferenceClockEP19VideoReferenceClockPFvPvdES2_",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_SYNC_CLOCK,
-        "VideoPlayback::SyncClock",
-        "_ZN13VideoPlayback9SyncClockEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACK_UPDATE_PLAYBACK,
-        "VideoPlayback::UpdatePlayback",
-        "_ZN13VideoPlayback14UpdatePlaybackEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_IS_PLAYING,
-        "VideoPlaybackMgr::IsPlaying",
-        "_ZNK16VideoPlaybackMgr9IsPlayingEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_UPDATE,
-        "VideoPlaybackMgr::Update",
-        "_ZN16VideoPlaybackMgr6UpdateEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_CREATE_DECODER_THREADS,
-        "VideoPlaybackMgr::CreateDecoderThreads",
-        "_ZN16VideoPlaybackMgr20CreateDecoderThreadsEi",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_RELEASE_DECODER_THREADS,
-        "VideoPlaybackMgr::ReleaseDecoderThreads",
-        "_ZN16VideoPlaybackMgr21ReleaseDecoderThreadsEb",
-    },
-    {
         UNITY2K_VIDEOPLAYBACKMGR_CREATE_VIDEO_PLAYBACK_FORMAT,
         "VideoPlaybackMgr::CreateVideoPlayback",
         "_ZN16VideoPlaybackMgr19CreateVideoPlaybackERKN4core12basic_stringIcNS0_20StringStorageDefaultIcEEEE16VideoMediaFormatbPFvPvS6_EPFvS8_ESC_S8_",
@@ -616,39 +291,9 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN16VideoPlaybackMgr19CreateVideoPlaybackERKN4core12basic_stringIcNS0_20StringStorageDefaultIcEEEES6_mm16VideoMediaFormatbbPFvPvS6_EPFvS8_ESC_S8_",
     },
     {
-        UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_START,
-        "VideoPlaybackMgr::DecoderThread::Start",
-        "_ZN16VideoPlaybackMgr13DecoderThread5StartEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_IS_RUNNING,
-        "VideoPlaybackMgr::DecoderThread::IsRunning",
-        "_ZN16VideoPlaybackMgr13DecoderThread9IsRunningEv",
-    },
-    {
         UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_RUN,
         "VideoPlaybackMgr::DecoderThread::Run",
         "_ZN16VideoPlaybackMgr13DecoderThread3RunEv",
-    },
-    {
-        UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_START_THREAD,
-        "VideoPlaybackMgr::DecoderThread::StartThread",
-        "_ZN16VideoPlaybackMgr13DecoderThread11StartThreadEPv",
-    },
-    {
-        UNITY2K_VIDEOCLIPPLAYBACK_DECODER_IS_RUNNING,
-        "VideoClipPlayback::DecoderIsRunning",
-        "_ZNK17VideoClipPlayback16DecoderIsRunningEv",
-    },
-    {
-        UNITY2K_VIDEOCLIPPLAYBACK_UPDATE_PLAYBACK,
-        "VideoClipPlayback::UpdatePlayback",
-        "_ZN17VideoClipPlayback14UpdatePlaybackEv",
-    },
-    {
-        UNITY2K_VIDEOCLIPPLAYBACK_IS_PLAYING,
-        "VideoClipPlayback::IsPlaying",
-        "_ZNK17VideoClipPlayback9IsPlayingEv",
     },
     {
         UNITY2K_VIDEOCLIPPLAYBACK_IS_READY,
@@ -659,16 +304,6 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         UNITY2K_VIDEOCLIPPLAYBACK_EXECUTE_DECODE,
         "VideoClipPlayback::ExecuteDecode",
         "_ZN17VideoClipPlayback13ExecuteDecodeEv",
-    },
-    {
-        UNITY2K_VIDEOCLIPPLAYBACK_PLAY,
-        "VideoClipPlayback::Play",
-        "_ZN17VideoClipPlayback4PlayEv",
-    },
-    {
-        UNITY2K_VIDEOCLIPPLAYBACK_PAUSE,
-        "VideoClipPlayback::Pause",
-        "_ZN17VideoClipPlayback5PauseEv",
     },
     {
         UNITY2K_VIDEOCLIPPLAYBACK_GET_STATUS,
@@ -752,10 +387,6 @@ const static usig_t UNITY_SIGNATURES_64[] = {
         UNITY4_JOBSCHEDULER_WAIT,
         // Signature for Unity 4.6.2f1
         "41 55 49 89 FD 41 54 55 53 48 83 EC 38 39 77 08 0F 8E"
-    },
-    {
-        UNITY5_JOBQUEUE_CREATE_JOB_BATCH,
-        "41 57 41 56 41 55 41 54 53 4D 89 CE 49 89 D7 49 89 F4 49 89 FD BE 01 00 00 00"
     },
     {
         UNITY5_JOBQUEUE_EXEC,
@@ -863,26 +494,6 @@ const static usig_t UNITY_SIGNATURES_64[] = {
         "41 57 41 89 cf 41 56 41 55 41 89 d5 41 54 55 48 89 f5 53 48 89 fb 48 83 ec 78 89 54 24 38"
     },
     {
-        UNITY5_JOBQUEUE_HAS_JOB_COMPLETED,
-        // Signature for Unity 5.4.3f1
-        "53 89 d3 48 83 ec 10 48 85 f6 89 54 24 08 48 89 34 24 ba 01 00 00 00 74"
-    },
-    {
-        UNITY5_JOBQUEUE_HAS_JOB_COMPLETED,
-        // Signature for Unity 2017.4.10f1
-        "48 85 f6 b9 01 00 00 00 74 ?? 53 48 89 f7 89 d3 e8"
-    },
-    {
-        UNITY5_JOBQUEUE_HAS_JOB_ID_COMPLETED,
-        // Signature for Unity 2018.2.21f1/2018.4.2f1/2018.4.12f1
-        "48 85 f6 74 2b 53 48 89 f7 89 d3 e8"
-    },
-    {
-        UNITY2K_JOBQUEUE_COMPLETE_ALL_JOBS,
-        // Signature for Unity 2020
-        "55 41 56 53 49 89 FE 66 0F 1F 84 00 00 00 00 00 49 8B 86 38 01 00 00"
-    },
-    {
         UNITY2K_JOBQUEUE_EXEC,
         // Signature for Unity 2020
         "55 41 57 41 56 41 55 41 54 53 48 83 EC 18 89 CB 49 89 F6 49 89 FD"
@@ -908,11 +519,6 @@ const static usig_t UNITY_SIGNATURES_64[] = {
         "55 41 57 41 56 41 55 41 54 53 48 83 EC 28 48 89 D3 49 89 FE 48 8B 2E 48 85 ED"
     },
     {
-        UNITY2K_JOBQUEUE_SCHEDULE_JOB_MULTIPLE,
-        // Signature for Unity 2020
-        "55 41 57 41 56 41 55 41 54 53 48 83 EC 38 45 89 CD 44 89 C3 48 89 4C 24 18 48 89 D5"
-    },
-    {
         UNITY2K_JOBQUEUE_SCHEDULE_GROUP_INTERNAL,
         // Signature for Unity 2020
         "55 41 57 41 56 41 55 41 54 53 48 83 EC 18 41 89 CC 41 89 D5 49 89 F6 48 89 FB 48 89 F7"
@@ -932,20 +538,8 @@ const static usig_t UNITY_SIGNATURES_64[] = {
         "55 41 57 41 56 41 55 41 54 53 48 81 EC 38 20 00 00 49 89 CC"
     },
     {
-        UNITY6_LANE_GUTS,
-        "55 41 57 41 56 41 55 41 54 53 48 81 EC 88 00 00 00 4C 89 44 24 58 41 89 CD"
-    },
-    {
-        UNITY6_UJOB_ADD,
-        "41 57 41 56 53 48 89 D3 49 89 FE 48 8B 46 20"
-    },
-    {
         UNITY6_UJOB_EXECUTE,
         "55 41 57 41 56 41 55 41 54 53 48 83 EC 48 45 89 C3 48 89 CB"
-    },
-    {
-        UNITY6_UJOB_PARTICIPATE,
-        "55 41 57 41 56 41 55 41 54 53 4C 89 44 24 F8 48 89 4C 24 E8 49 89 F2"
     },
     {
         UNITY6_UJOB_SCHEDULE,
@@ -1090,11 +684,6 @@ const static usig_t UNITY_SIGNATURES_64[] = {
         "55 41 57 41 56 41 55 41 54 53 48 81 ec 98 00 00 00 49 89 ff 48 8b af 58 03 00 00",
     },
     {
-        UNITY2K_PRELOADMANAGER_PEEK,
-        // Signature for Unity 2018.4.2f1/2018.4.12f1
-        "55 48 8d af c0 00 00 00 53 48 89 fb 48 89 ef 48 83 ec 08 e8 ?? ?? ?? ?? 48 83 bb 50 01 00 00 00",
-    },
-    {
         UNITY6_ASYNCREADMANAGER_REQUEST,
         // Signature for Unity 2017.4.10f1/2018.2.21f1/2018.4.2f1/2018.4.12f1
         "41 56 41 55 49 89 f5 41 54 55 48 8d 6f 20 53 48 89 fb 48 89 ef 48 83 ec 40",
@@ -1119,72 +708,8 @@ const static usig_t UNITY_SIGNATURES_64[] = {
         "41 54 49 89 fc 55 48 8d af 50 0a 00 00 53 48 89 ef 48 89 f3 e8",
     },
     {
-        UNITY6_ASYNCREADMANAGER_OPENCOMPLETE_CALLBACK,
-        "48 83 ec 18 48 8b 47 40 48 8b 88 b0 01 00 00 8b 90 b8 01 00 00",
-    },
-    {
-        UNITY6_ASYNCREADMANAGER_READCOMPLETE_CALLBACK,
-        "48 83 ec 18 48 8b 47 40 48 8b 88 18 01 00 00 8b 90 20 01 00 00",
-    },
-    {
-        UNITY6_ASYNCREADMANAGER_CLOSECOMPLETE_CALLBACK,
-        "41 56 53 48 83 ec 18 4c 8b 77 40 49 8b 86 c0 01 00 00",
-    },
-    {
-        UNITY6_ASYNCREADMANAGER_CLOSECACHEDCOMPLETE_CALLBACK,
-        "41 56 53 48 83 ec 18 4c 8b 77 40 49 8b 86 18 01 00 00",
-    },
-    {
-        UNITY6_ASYNCUPLOADMANAGER_ASYNC_READ_SUCCESS,
-        "41 57 41 56 41 55 41 54 53 48 83 ec 50 49 89 f5 49 89 fe 48 8b 46 60 48 85 c0",
-    },
-    {
-        UNITY6_ASYNCUPLOADMANAGER_QUEUE_UPLOAD,
-        "55 41 57 41 56 41 55 41 54 53 50 41 89 ca 49 89 d3 49 89 fe 48 8b bf 38 25 00 00",
-    },
-    {
-        UNITY6_ASYNCUPLOADMANAGER_ASYNC_RESOURCE_UPLOAD,
-        "55 41 57 41 56 41 55 41 54 53 48 83 ec 68 48 89 74 24 38 49 89 fe 48 8b 01 48 89 87 5c 25 00 00",
-    },
-    {
-        UNITY6_ASYNCUPLOADMANAGER_ASYNC_READ_CALLBACK,
-        "55 41 57 41 56 41 55 41 54 53 48 83 ec 38 41 89 f5 48 89 fb 4c 8b 35 ?? ?? ?? ?? 4c 8b 7f 40",
-    },
-    {
-        UNITY6_ASYNCUPLOADMANAGER_SCHEDULE,
-        "55 41 57 41 56 41 55 41 54 53 48 83 ec 58 49 89 fe 83 bf 5c 25 00 00 ff 0f 84 ?? ?? ?? ?? 4d 8b 7e 28 4d 85 ff",
-    },
-    {
-        UNITY6_ASYNCUPLOADMANAGER_CLOSE,
-        "55 41 57 41 56 41 55 41 54 53 48 81 ec a8 00 00 00 49 89 f7 8b 07 85 c0 0f 8e",
-    },
-    {
-        UNITY6_SIGNAL_CALLBACK,
-        "50 89 77 28 48 8b 77 40 ba 01 00 00 00 b8 01 00 00 00",
-    },
-    {
         UNITY6_SYNC_READ,
         "55 41 57 41 56 41 55 41 54 53 48 83 ec 28 49 89 fc 48 8b 2d ?? ?? ?? ?? 48 8d 9d e8 0a 00 00",
-    },
-    {
-        UNITY6_ARCHIVESTORAGECONVERTER_CONSTRUCTOR,
-        "55 41 57 41 56 41 54 53 48 83 ec 10 49 89 fe 48 89 37 0f 57 c0 0f 11 47 08",
-    },
-    {
-        UNITY6_ARCHIVESTORAGECONVERTER_CONSTRUCTOR,
-        "55 41 57 41 56 41 54 53 48 83 ec 10 49 89 d5 48 89 fb 48 89 37 0f 57 c0 0f 11 47 08",
-    },
-    {
-        UNITY6_ARCHIVESTORAGECONVERTER_PROCESS_ACCUMULATED,
-        "55 41 57 41 56 41 55 41 54 53 48 81 ec 38 0d 00 00 48 89 fb 80 7f 48 00 0f 84",
-    },
-    {
-        UNITY6_ARCHIVESTORAGECONVERTER_PROCESS,
-        "55 41 56 53 48 83 ec 10 48 89 d5 48 89 f1 48 89 fb 48 8b 7f 08 48 8b 43 10",
-    },
-    {
-        UNITY6_ASSETBUNDLELOAD_FEEDSTREAM,
-        "41 57 41 56 41 55 41 54 53 48 83 ec 10 83 bf c0 00 00 00 00 75 ?? 49 89 fd 48 83 bf 98 00 00 00 00",
     },
     {
         UNITY6_LOAD_FMOD_SOUND,
