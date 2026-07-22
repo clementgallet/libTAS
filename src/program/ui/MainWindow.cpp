@@ -67,69 +67,49 @@
 #include <features.h> // __GLIBC_PREREQ
 #include <sys/wait.h> // waitpid
 
-/* Check all checkboxes from a list of actions whose associated flag data
- * is present in the value
- */
-#define setCheckboxesFromMask(actionGroup, value)\
-do {\
-    for (auto& action : actionGroup->actions()) {\
-        action->setChecked(value & action->data().toInt());\
-    }\
-} while(false)
+namespace {
 
-/* For each checkbox of the action group that is checked, set the
- * corresponding flag in the value.
- */
-#define setMaskFromCheckboxes(actionGroup, value)\
-do {\
-    value = 0;\
-    for (const auto& action : actionGroup->actions()) {\
-        if (action->isChecked()) {\
-            value |= action->data().toInt();\
-        }\
-    }\
-} while(false)
+void setCheckboxesFromMask(QActionGroup* actionGroup, int value)
+{
+    for (QAction* action : actionGroup->actions()) {
+        action->setChecked(value & action->data().toInt());
+    }
+}
 
-/* Check the radio from a list of actions whose associated data is equal
- * to the value.
- */
-#define setRadioFromList(actionGroup, value)\
-do {\
-    /* Check the last item by default */ \
-    actionGroup->actions().last()->setChecked(true); \
-    for (auto& action : actionGroup->actions()) {\
-        if (value == action->data().toInt()) {\
-            action->setChecked(true);\
-            break;\
-        }\
-    }\
-} while(false)
+int getMaskFromCheckboxes(QActionGroup* actionGroup)
+{
+    int value = 0;
+    for (QAction* action : actionGroup->actions()) {
+        if (action->isChecked()) {
+            value |= action->data().toInt();
+        }
+    }
+    return value;
+}
 
-/* Set the value to the data of the checked radio from the action group. */
-#define setListFromRadio(actionGroup, value)\
-do {\
-    for (const auto& action : actionGroup->actions()) {\
-        if (action->isChecked()) {\
-            value = action->data().toInt();\
-            break;\
-        }\
-    }\
-} while(false)
+void setRadioFromList(QActionGroup* actionGroup, int value)
+{
+    /* Check the last item by default */
+    actionGroup->actions().last()->setChecked(true);
+    for (QAction* action : actionGroup->actions()) {
+        if (value == action->data().toInt()) {
+            action->setChecked(true);
+            break;
+        }
+    }
+}
 
-#define LAMBDABOOLSLOT(parameter) [=, this](bool checked) {\
-    parameter = checked;\
-    context->config.sc_modified = true;\
-}\
+int getValueFromRadio(QActionGroup* actionGroup, int fallback)
+{
+    for (QAction* action : actionGroup->actions()) {
+        if (action->isChecked()) {
+            return action->data().toInt();
+        }
+    }
+    return fallback;
+}
 
-#define LAMBDACHECKBOXSLOT(group, parameter) [=, this](bool) {\
-    setMaskFromCheckboxes(group, parameter);\
-    context->config.sc_modified = true;\
-}\
-
-#define LAMBDARADIOSLOT(group, parameter) [=, this]() {\
-    setListFromRadio(group, parameter);\
-    context->config.sc_modified = true;\
-}\
+} // namespace
 
 MainWindow::MainWindow(Context* c) : QMainWindow(), context(c)
 {
@@ -559,7 +539,10 @@ QAction *MainWindow::addActionCheckable(QActionGroup*& group, const QString& tex
 void MainWindow::createActions()
 {
     slowdownGroup = new QActionGroup(this);
-    connect(slowdownGroup, &QActionGroup::triggered, this, LAMBDARADIOSLOT(slowdownGroup, context->config.sc.speed_divisor));
+    connect(slowdownGroup, &QActionGroup::triggered, this, [this](QAction*) {
+        context->config.sc.speed_divisor = getValueFromRadio(slowdownGroup, context->config.sc.speed_divisor);
+        context->config.sc_modified = true;
+    });
 
     addActionCheckable(slowdownGroup, tr("100% (normal speed)"), 1);
     addActionCheckable(slowdownGroup, tr("50%"), 2);
@@ -568,13 +551,19 @@ void MainWindow::createActions()
 
     fastforwardGroup = new QActionGroup(this);
     fastforwardGroup->setExclusive(false);
-    connect(fastforwardGroup, &QActionGroup::triggered, this, LAMBDACHECKBOXSLOT(fastforwardGroup, context->config.sc.fastforward_mode));
+    connect(fastforwardGroup, &QActionGroup::triggered, this, [this](QAction*) {
+        context->config.sc.fastforward_mode = getMaskFromCheckboxes(fastforwardGroup);
+        context->config.sc_modified = true;
+    });
 
     addActionCheckable(fastforwardGroup, tr("Skipping sleep"), SharedConfig::FF_SLEEP);
     addActionCheckable(fastforwardGroup, tr("Skipping audio mixing"), SharedConfig::FF_MIXING);
 
     fastforwardRenderGroup = new QActionGroup(this);
-    connect(fastforwardRenderGroup, &QActionGroup::triggered, this, LAMBDARADIOSLOT(fastforwardRenderGroup, context->config.sc.fastforward_render));
+    connect(fastforwardRenderGroup, &QActionGroup::triggered, this, [this](QAction*) {
+        context->config.sc.fastforward_render = getValueFromRadio(fastforwardRenderGroup, context->config.sc.fastforward_render);
+        context->config.sc_modified = true;
+    });
 
     addActionCheckable(fastforwardRenderGroup, tr("Skipping no rendering"), SharedConfig::FF_RENDER_ALL);
     addActionCheckable(fastforwardRenderGroup, tr("Skipping most rendering"), SharedConfig::FF_RENDER_SOME);
@@ -662,7 +651,10 @@ void MainWindow::createMovieMenu()
     movieMenu->addSeparator();
 
     movieMenu->addAction(tr("Pause Movie at frame..."), this, &MainWindow::slotPauseMovie);
-    autoRestartAction = movieMenu->addAction(tr("Auto-restart game"), this, LAMBDABOOLSLOT(context->config.auto_restart));
+    autoRestartAction = movieMenu->addAction(tr("Auto-restart game"), this, [this](bool checked) {
+        context->config.auto_restart = checked;
+        context->config.sc_modified = true;
+    });
     autoRestartAction->setCheckable(true);
     autoRestartAction->setToolTip("When checked, the game will automatically restart if closed, except when using the Stop button");
     disabledActionsOnStart.append(autoRestartAction);
@@ -715,7 +707,10 @@ void MainWindow::createToolsMenu()
 
     // toolsMenu->addSeparator();
 
-    // busyloopAction = toolsMenu->addAction(tr("Busy loop detection"), this, LAMBDABOOLSLOT(context->config.sc.busyloop_detection));
+    // busyloopAction = toolsMenu->addAction(tr("Busy loop detection"), this, [this](bool checked) {
+    //     context->config.sc.busyloop_detection = checked;
+    //     context->config.sc_modified = true;
+    // });
     // busyloopAction->setCheckable(true);
     // disabledActionsOnStart.append(busyloopAction);
 
@@ -731,7 +726,10 @@ void MainWindow::createInputMenu()
 
     inputMenu->addAction(tr("Configure mapping..."), this, [this] { windowManager->showInputWindow(); });
 
-    mouseModeAction = inputMenu->addAction(tr("Mouse relative mode"), this, LAMBDABOOLSLOT(context->config.sc.mouse_mode_relative));
+    mouseModeAction = inputMenu->addAction(tr("Mouse relative mode"), this, [this](bool checked) {
+        context->config.sc.mouse_mode_relative = checked;
+        context->config.sc_modified = true;
+    });
     mouseModeAction->setCheckable(true);
 
     inputMenu->addAction(tr("Joystick inputs..."), this, [this] { windowManager->showControllerTabWindow(); });
@@ -1291,13 +1289,13 @@ void MainWindow::applyLaunchTimeSettings()
 
     context->config.sc.initial_framerate_num = fpsNumField->value();
     context->config.sc.initial_framerate_den = fpsDenField->value();
-    if (! context->config.cli_overridden_keys.count("initial_monotonic_time_sec"))
+    if (! context->config.cli_overridden_keys.contains("initial_monotonic_time_sec"))
         context->config.sc.initial_monotonic_time_sec = elapsedTimeSec->value();
-    if (! context->config.cli_overridden_keys.count("initial_monotonic_time_nsec"))
+    if (! context->config.cli_overridden_keys.contains("initial_monotonic_time_nsec"))
         context->config.sc.initial_monotonic_time_nsec = elapsedTimeNsec->value();
-    if (! context->config.cli_overridden_keys.count("initial_time_sec"))
+    if (! context->config.cli_overridden_keys.contains("initial_time_sec"))
         context->config.sc.initial_time_sec = realTimeSec->value();
-    if (! context->config.cli_overridden_keys.count("initial_time_nsec"))
+    if (! context->config.cli_overridden_keys.contains("initial_time_nsec"))
         context->config.sc.initial_time_nsec = realTimeNsec->value();
 }
 

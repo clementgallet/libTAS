@@ -42,10 +42,10 @@ void InputSerialization::setFramerate(unsigned int num, unsigned int den)
     framerate_den = den;
 }
 
-void InputSerialization::writeInputs(std::ostream& stream, const std::vector<AllInputs>& input_list)
+void InputSerialization::writeInputs(std::ostream& stream, std::span<const AllInputs> input_list)
 {
-    for (auto it = input_list.begin(); it != input_list.end(); ++it) {
-        writeFrame(stream, *it);
+    for (const AllInputs& inputs : input_list) {
+        writeFrame(stream, inputs);
     }
 }
 

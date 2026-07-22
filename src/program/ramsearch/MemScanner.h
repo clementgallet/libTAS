@@ -24,6 +24,7 @@
 #include "MemSection.h"
 
 #include <QtCore/QObject>
+#include <atomic>
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -82,7 +83,7 @@ class MemScanner : public QObject {
         MemValueType compare_value;
         MemValueType different_value;
         int alignment;
-        bool is_stopped = false;
+        std::atomic_bool is_stopped = false;
         
     private:
         bool last_scan_was_region = true;

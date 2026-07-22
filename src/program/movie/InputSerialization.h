@@ -23,6 +23,7 @@
 #include "../shared/inputs/AllInputs.h"
 
 #include <fstream>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -36,7 +37,7 @@ void setContext(Context* c);
 void setFramerate(unsigned int num, unsigned int den);
 
 /* Write a list of inputs into the stream */
-void writeInputs(std::ostream& stream, const std::vector<AllInputs>& input_list);
+void writeInputs(std::ostream& stream, std::span<const AllInputs> input_list);
 
 /* Read a list of inputs from a stream */
 void readInputs(std::istream& stream, std::vector<AllInputs>& input_list);

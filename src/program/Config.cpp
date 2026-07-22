@@ -100,17 +100,11 @@ void Config::save(const std::filesystem::path& gamepath) {
         return;
 
     /* Save the gamepath in recent gamepaths */
-    auto it = std::find(recent_gamepaths.begin(), recent_gamepaths.end(), gamepath);
-    if (it != recent_gamepaths.end()) {
-        recent_gamepaths.erase(it);
-    }
+    std::erase(recent_gamepaths, gamepath);
     recent_gamepaths.push_front(gamepath);
 
     /* Save the option in recent options */
-    auto arg_it = std::find(recent_args.begin(), recent_args.end(), gameargs);
-    if (arg_it != recent_args.end()) {
-        recent_args.erase(arg_it);
-    }
+    std::erase(recent_args, gameargs);
     recent_args.push_front(gameargs);
 
     /* Open the general preferences */
