@@ -399,7 +399,7 @@ void syncFileDescriptors()
         bool fdRegistered = (fh.fds[0] == fd) || (fh.fds[1] == fd);
 
         /* Look at existing file descriptor and get symlink */
-        char fd_str[25];
+        char fd_str[26] = {};
         snprintf(fd_str, sizeof(fd_str), "/proc/self/fd/%d", fd);
 
         char buf[1024] = {};
@@ -482,6 +482,24 @@ void syncFileDescriptors()
                     LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "Recreate fd was supposed to be %d but is instead %d...", fd, new_fd);
                     close(new_fd);
                     continue;
+                }
+            }
+            else if (fh.type == FileHandle::FILE_PIPE) {
+                /* TODO: enforce that the second fd is also correct! Also put the correct flag. */
+                int fds[2] = {-1, -1};
+                if (pipe2(fds, O_NONBLOCK) != 0) {
+                    LOG(LL_ERROR, LCF_CHECKPOINT | LCF_FILEIO, "Could not recreate pipe");
+                    continue;                    
+                }
+                if (fds[0] != fh.fds[0] || fds[1] != fh.fds[1]) {
+                    LOG(LL_WARN, LCF_CHECKPOINT | LCF_FILEIO, "Recreate pipe fd was supposed to be (%d, %d) but is instead (%d, %d)...", fh.fds[0], fh.fds[1], fds[0], fds[1]);
+                    close(fds[0]);
+                    close(fds[1]);
+                    continue;
+                }
+                if (fds[1] == (fds[0] + 1)) {
+                    /* The two fds are consecutive, we skip processing the next fd value */
+                    fd++;
                 }
             }
             else {
