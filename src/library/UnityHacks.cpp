@@ -167,10 +167,10 @@ public:
     virtual char* GetDebugName(PreloadManagerOperation* po);
 };
 
-class U5_PreloadManagerOperation
+class U5a_PreloadManagerOperation
 {
 public:
-    virtual ~U5_PreloadManagerOperation();
+    virtual ~U5a_PreloadManagerOperation();
     virtual bool IsDone(PreloadManagerOperation* po);
     virtual float GetProgress(PreloadManagerOperation* po);
     virtual long GetPriority(PreloadManagerOperation* po);
@@ -178,6 +178,25 @@ public:
     virtual bool GetAllowSceneActivation(PreloadManagerOperation* po);
     virtual void SetAllowSceneActivation(PreloadManagerOperation* po, bool sa);
     virtual void Release(PreloadManagerOperation* po);
+    virtual void Perform(PreloadManagerOperation* po);
+    virtual void IntegrateTimeSliced(PreloadManagerOperation* po, int i);
+    virtual void IntegrateMainThread(PreloadManagerOperation* po);
+    virtual bool MustCompleteNextFrame(PreloadManagerOperation* po);
+    virtual bool GetAllowParallelExecution(PreloadManagerOperation* po);
+    virtual char* GetDebugName(PreloadManagerOperation* po);
+};
+
+/* Confirmed: 5.3.7f1 */
+class U5b_PreloadManagerOperation
+{
+public:
+    virtual ~U5b_PreloadManagerOperation();
+    virtual bool IsDone(PreloadManagerOperation* po);
+    virtual float GetProgress(PreloadManagerOperation* po);
+    virtual long GetPriority(PreloadManagerOperation* po);
+    virtual void SetPriority(PreloadManagerOperation* po, int p);
+    virtual bool GetAllowSceneActivation(PreloadManagerOperation* po);
+    virtual void SetAllowSceneActivation(PreloadManagerOperation* po, bool sa);
     virtual void Perform(PreloadManagerOperation* po);
     virtual void IntegrateTimeSliced(PreloadManagerOperation* po, int i);
     virtual void IntegrateMainThread(PreloadManagerOperation* po);
@@ -252,6 +271,7 @@ using VideoPlaybackClockCallback = void (*)(void*, double);
 
 namespace orig {
     void (*UnityVersion_UnityVersion)(UnityVersion* u, const char* s) = nullptr;
+    int (*GetNumericVersion)(const char* s) = nullptr;
 
     void (*U4_JobScheduler_AwakeIdleWorkerThreads)(JobScheduler* t, int x) = nullptr;
     long (*U4_JobScheduler_FetchNextJob)(JobScheduler* t, int* x) = nullptr;
@@ -271,6 +291,7 @@ namespace orig {
     long (*U5_JobQueue_MainEnqueueAll)(JobQueue* t, JobGroup* x, JobGroup* y) = nullptr;
     long (*U5_JobQueue_Pop)(JobQueue* t, JobGroupID x) = nullptr;
     long (*U5_JobQueue_ProcessJobs)(JobQueue* x, void* y) = nullptr;
+    long (*U5_JobQueue_ProcessJobsB)(JobQueue* x, void* y, bool* z) = nullptr;
     void (*U5_JobQueue_ScheduleJob)(JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int a, int b) = nullptr;
     JobGroupID (*U5_JobQueue_ScheduleJobMultipleDependencies)(JobQueue *t, void* func, void* arg, JobGroupID* x, int y) = nullptr;
     JobGroupID (*U5_JobQueue_ScheduleGroup)(JobQueue *t, JobGroup* x, int y) = nullptr;
@@ -425,6 +446,37 @@ static void UnityVersion_UnityVersion(UnityVersion* u, const char* s)
     return orig::UnityVersion_UnityVersion(u, s);
 }
 
+static int GetNumericVersion(const char* s)
+{
+    LOGTRACE(LCF_HACKS, "GetNumericVersion called with version %s", s);
+    int ret = orig::GetNumericVersion(s);
+
+    if (unity_version_int[0] != 0)
+        return ret;
+
+    /* Use this function to determine Unity version only if UnityVersion::UnityVersion() is not available,
+     * and excluse obvious bad values. */
+    if (orig::UnityVersion_UnityVersion)
+        return ret;
+
+    unity_version_int[0] = (ret / 0x1000000) & 0xF;
+    unity_version_int[1] = (ret / 0x100000) & 0xF;
+    unity_version_int[2] = (ret / 0x10000) & 0xF;
+
+    if (unity_version_int[0] < 4) {
+        unity_version_int[0] = 0;
+        return ret;
+    }
+
+    if (unity_version_int[0] == 5 && unity_version_int[1] == 0 && unity_version_int[2] == 0) {
+        unity_version_int[0] = 0;
+        return ret;
+    }
+
+    LOGTRACE(LCF_HACKS, "Store version %d.%d.%d", unity_version_int[0], unity_version_int[1], unity_version_int[2]);
+    return ret;
+}
+
 static int GetUnityVersionMaj()
 {
     if (unity_version_int[0] != 0)
@@ -441,6 +493,13 @@ static int GetUnityVersionMaj()
             unity_version_int[0] = 2018; // TODO!
     }
     return unity_version_int[0];
+}
+
+static int GetUnityVersionMin()
+{
+    if (unity_version_int[0] != 0)
+        return unity_version_int[1];
+    return 0;
 }
 
 static long U4_JobScheduler_FetchNextJob(JobScheduler* t, int* x)
@@ -556,6 +615,31 @@ static long U5_JobQueue_ProcessJobs(JobQueue* t, void* x)
     // }
 
     return orig::U5_JobQueue_ProcessJobs(t, x);
+}
+
+static long U5_JobQueue_ProcessJobsB(JobQueue* t, void* x, bool* y)
+{
+    LOGTRACE_SIMPLE(LCF_HACKS);
+    
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+    thread->unityThread = true;
+    thread->name = "JobWorker";
+
+    // if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS) {
+    //     /* Calling U5_JobQueue_ProcessJobs() in worker threads may call
+    //      * U5_JobQueue_Exec() directly without fetching a job queue with 
+    //      * U5_JobQueue_ExecuteJobFromQueue(), so we wait indefinitively here.
+    //      * To call jobs pushed in this worker thread, we will use the WorkerSteal
+    //      * feature elsewhere.
+    //      */
+    //     if (!ThreadManager::isMainThread()) {
+    //         while (!Global::is_exiting) {
+    //             NATIVECALL(sleep(1));
+    //         }
+    //     }
+    // }
+
+    return orig::U5_JobQueue_ProcessJobsB(t, x, y);
 }
 
 static void U5_JobQueue_ScheduleJob(JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int a, int b)
@@ -1053,8 +1137,13 @@ static bool Helper_PreloadManager_GetAllowParallelExecution(PreloadManagerOperat
         return (reinterpret_cast<U6_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
     if ((GetUnityVersionMaj() >= 2017) && (GetUnityVersionMaj() <= 2021))
         return (reinterpret_cast<U2018_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
-    if (GetUnityVersionMaj() == 5)
-        return (reinterpret_cast<U5_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
+    if (GetUnityVersionMaj() == 5) {
+        /* We need more data for this! */
+        if (GetUnityVersionMin() == 3)
+            return (reinterpret_cast<U5b_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
+        else
+            return (reinterpret_cast<U5a_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
+    }
     if (GetUnityVersionMaj() == 4)
         return true;
 
@@ -1223,6 +1312,13 @@ static void U6_PreloadManager_AddToQueue(PreloadManager* m, PreloadManagerOperat
     }
 }
 
+/* On specific old versions of Unity (e.g. 5.3.7f1: Alwa's Awakening),
+ * PreloadManager::ProcessSingleOperation() is present, but is never actually called!
+ * It looks like it was inlined into PreloadManager::Run(), so only PreloadManager::PrepareProcessingPreloadOperation()
+ * is called directly. This breaks a bit some of the code, because we want to know when the operation has finished processing.
+ * In that case, we change a bit our approach to keep track of stuff. */
+static bool is_process_single_operation_called = false;
+
 static PreloadManagerOperation* U6_PreloadManager_PrepareProcessingPreloadOperation(PreloadManager* m)
 {
     LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
@@ -1235,6 +1331,13 @@ static PreloadManagerOperation* U6_PreloadManager_PrepareProcessingPreloadOperat
             current_pending_non_parallel_operation = current_pending_operation;
     }
     
+    if (!is_process_single_operation_called) {
+        /* See comment above. Copy what is present at the end of PreloadManager::ProcessSingleOperation()
+         * hook here. We prefer less deterministic behavior than a crash or softlock. */
+        current_pending_non_parallel_operation = nullptr;
+        pending_queue_size--;
+    }
+
     return current_pending_operation;
 }
 
@@ -1242,6 +1345,7 @@ static void U6_PreloadManager_ProcessSingleOperation(PreloadManager* m)
 {
     LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     PROFILE_SCOPE("Operation", PROFILER_INFO_UNITY);
+    is_process_single_operation_called = true;
     orig::U6_PreloadManager_ProcessSingleOperation(m);
     current_pending_non_parallel_operation = nullptr;
     pending_queue_size--;
@@ -1646,6 +1750,7 @@ void UnityHacks::patch(int func, uint64_t addr)
     uintptr_t address = static_cast<uintptr_t>(addr);
     switch(func) {
         FUNC_CASE(UNITY_VERSION, UnityVersion_UnityVersion)
+        FUNC_CASE(GET_NUMERIC_VERSION, GetNumericVersion)
 
         FUNC_CASE(UNITY4_JOBSCHEDULER_AWAKE, U4_JobScheduler_AwakeIdleWorkerThreads)
         FUNC_CASE(UNITY4_JOBSCHEDULER_FETCH, U4_JobScheduler_FetchNextJob)
@@ -1665,6 +1770,7 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY5_JOBQUEUE_MAIN_ENQUEUEALL, U5_JobQueue_MainEnqueueAll)
         FUNC_CASE(UNITY5_JOBQUEUE_POP, U5_JobQueue_Pop)
         FUNC_CASE(UNITY5_JOBQUEUE_PROCESS, U5_JobQueue_ProcessJobs)
+        FUNC_CASE(UNITY5_JOBQUEUE_PROCESS_BOOL, U5_JobQueue_ProcessJobsB)
         FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_JOB, U5_JobQueue_ScheduleJob)
         FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_JOB_MULTIPLE, U5_JobQueue_ScheduleJobMultipleDependencies)
         FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_GROUP, U5_JobQueue_ScheduleGroup)

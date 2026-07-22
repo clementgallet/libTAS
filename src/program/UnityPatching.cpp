@@ -51,6 +51,11 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         "_ZN12UnityVersionC2EPKc",
     },
     {
+        GET_NUMERIC_VERSION,
+        "GetNumericVersion",
+        "_Z17GetNumericVersionPKc",
+    },
+    {
         UNITY4_JOBSCHEDULER_AWAKE,
         "JobScheduler::AwakeIdleWorkerThreads",
         "_ZN12JobScheduler22AwakeIdleWorkerThreadsEi",
@@ -134,6 +139,11 @@ const static usymbol_t UNITY_SYMBOLS[] = {
         UNITY5_JOBQUEUE_PROCESS,
         "JobQueue::ProcessJobs",
         "_ZN8JobQueue11ProcessJobsEPv",
+    },
+    {
+        UNITY5_JOBQUEUE_PROCESS_BOOL,
+        "JobQueue::ProcessJobs",
+        "_ZN8JobQueue11ProcessJobsEPvPb",
     },
     {
         UNITY5_JOBQUEUE_SCHEDULE_GROUP,

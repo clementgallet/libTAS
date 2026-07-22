@@ -23,6 +23,7 @@
 /* List of message identification values that is sent from/to the game */
 enum {
     UNITY_VERSION, // UnityVersion::UnityVersion(char const*)
+    GET_NUMERIC_VERSION, // GetNumericVersion()
     UNITY4_JOBSCHEDULER_AWAKE, // JobScheduler::AwakeIdleWorkerThreads(int)
     UNITY4_JOBSCHEDULER_FETCH, // JobScheduler::FetchNextJob(int&)
     UNITY4_JOBSCHEDULER_PROCESS, // JobScheduler::ProcessJob(JobInfo&, int)
@@ -40,6 +41,7 @@ enum {
     UNITY5_JOBQUEUE_MAIN_ENQUEUEALL, // JobQueue::MainEnqueueAll(JobGroup*, JobGroup*)
     UNITY5_JOBQUEUE_POP, // JobQueue::Pop(JobGroupID)
     UNITY5_JOBQUEUE_PROCESS, // JobQueue::ProcessJobs(void*)
+    UNITY5_JOBQUEUE_PROCESS_BOOL, // JobQueue::ProcessJobs(void*, bool*)
     UNITY5_JOBQUEUE_SCHEDULE_GROUP, // JobQueue::ScheduleGroup(JobGroup*, JobQueue::JobQueuePriority)
     UNITY5_JOBQUEUE_SCHEDULE_GROUPS, // JobQueue::ScheduleGroups(JobGroup*, JobGroup*)
     UNITY5_JOBQUEUE_SCHEDULE_JOB, // JobQueue::ScheduleJob(void (*)(void*), void*, JobGroupID, JobQueue::JobQueuePriority)
