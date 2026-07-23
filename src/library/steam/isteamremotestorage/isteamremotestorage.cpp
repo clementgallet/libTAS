@@ -45,7 +45,7 @@ namespace libtas {
 
 DEFINE_ORIG_POINTER(SteamRemoteStorage)
 
-char steamremotestorage[2048] = "/NOTVALID";
+static char steamremotestorage[2048] = "/NOTVALID";
 static const char *steamremotestorage_version = NULL;
 
 void SteamSetRemoteStorageFolder(std::string path)

@@ -35,9 +35,9 @@ case $host in
     ;;
 esac
 
-dnl Prefer C++20, fall back to C++17
+dnl Use C++20
 AC_LANG_PUSH([C++])
-for flag in -std=c++20 -std=c++17; do
+for flag in -std=c++20; do
   AC_MSG_CHECKING([whether $CXX supports $flag])
   save_CXXFLAGS="$CXXFLAGS"
   CXXFLAGS="$CXXFLAGS $flag"

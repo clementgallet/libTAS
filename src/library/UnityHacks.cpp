@@ -167,10 +167,10 @@ public:
     virtual char* GetDebugName(PreloadManagerOperation* po);
 };
 
-class U5_PreloadManagerOperation
+class U5a_PreloadManagerOperation
 {
 public:
-    virtual ~U5_PreloadManagerOperation();
+    virtual ~U5a_PreloadManagerOperation();
     virtual bool IsDone(PreloadManagerOperation* po);
     virtual float GetProgress(PreloadManagerOperation* po);
     virtual long GetPriority(PreloadManagerOperation* po);
@@ -178,6 +178,25 @@ public:
     virtual bool GetAllowSceneActivation(PreloadManagerOperation* po);
     virtual void SetAllowSceneActivation(PreloadManagerOperation* po, bool sa);
     virtual void Release(PreloadManagerOperation* po);
+    virtual void Perform(PreloadManagerOperation* po);
+    virtual void IntegrateTimeSliced(PreloadManagerOperation* po, int i);
+    virtual void IntegrateMainThread(PreloadManagerOperation* po);
+    virtual bool MustCompleteNextFrame(PreloadManagerOperation* po);
+    virtual bool GetAllowParallelExecution(PreloadManagerOperation* po);
+    virtual char* GetDebugName(PreloadManagerOperation* po);
+};
+
+/* Confirmed: 5.3.7f1 */
+class U5b_PreloadManagerOperation
+{
+public:
+    virtual ~U5b_PreloadManagerOperation();
+    virtual bool IsDone(PreloadManagerOperation* po);
+    virtual float GetProgress(PreloadManagerOperation* po);
+    virtual long GetPriority(PreloadManagerOperation* po);
+    virtual void SetPriority(PreloadManagerOperation* po, int p);
+    virtual bool GetAllowSceneActivation(PreloadManagerOperation* po);
+    virtual void SetAllowSceneActivation(PreloadManagerOperation* po, bool sa);
     virtual void Perform(PreloadManagerOperation* po);
     virtual void IntegrateTimeSliced(PreloadManagerOperation* po, int i);
     virtual void IntegrateMainThread(PreloadManagerOperation* po);
@@ -252,59 +271,39 @@ using VideoPlaybackClockCallback = void (*)(void*, double);
 
 namespace orig {
     void (*UnityVersion_UnityVersion)(UnityVersion* u, const char* s) = nullptr;
+    int (*GetNumericVersion)(const char* s) = nullptr;
 
-    void (*U4_JobScheduler_AwakeIdleWorkerThreads)(JobScheduler* t, int x) = nullptr;
     long (*U4_JobScheduler_FetchNextJob)(JobScheduler* t, int* x) = nullptr;
     void (*U4_JobScheduler_ProcessJob)(JobScheduler* t, JobInfo* x, int y) = nullptr;
     int (*U4_JobScheduler_SubmitJob)(JobScheduler* t, int x, void* (*y)(void*), void* z, void* volatile* a) = nullptr;
     void (*U4_JobScheduler_WaitForGroup)(JobScheduler* t, int x) = nullptr;
 
-    void (*U5_BackgroundJobQueue_ExecuteMainThreadJobs)(BackgroundJobQueue *t) = nullptr;
-    void (*U5_BackgroundJobQueue_ScheduleJob)(BackgroundJobQueue* t, void (*x)(void*), void* y) = nullptr;
-    void (*U5_BackgroundJobQueue_ScheduleMainThreadJob)(BackgroundJobQueue* t, void (*x)(void*), void* y) = nullptr;
-    JobGroup* (*U5_JobQueue_CreateJobBatch)(JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int id, JobGroup* a) = nullptr;
-    long (*U5_JobQueue_EnqueueAll)(JobQueue* t, JobGroup* x, JobGroup* y) = nullptr;
-    long (*U5_JobQueue_EnqueueAllInternal)(JobQueue* t, JobGroup* x, JobGroup* y, AtomicQueue* z, int* a) = nullptr;
     long (*U5_JobQueue_Exec)(JobQueue* t, JobInfo* x, long long y, int z) = nullptr;
     long (*U5_JobQueue_ExecuteJobFromQueue)(JobQueue* t) = nullptr;
     bool (*U5_JobQueue_ExecuteOneJob)(JobQueue *t) = nullptr;
-    long (*U5_JobQueue_MainEnqueueAll)(JobQueue* t, JobGroup* x, JobGroup* y) = nullptr;
-    long (*U5_JobQueue_Pop)(JobQueue* t, JobGroupID x) = nullptr;
     long (*U5_JobQueue_ProcessJobs)(JobQueue* x, void* y) = nullptr;
+    long (*U5_JobQueue_ProcessJobsB)(JobQueue* x, void* y, bool* z) = nullptr;
     void (*U5_JobQueue_ScheduleJob)(JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int a, int b) = nullptr;
     JobGroupID (*U5_JobQueue_ScheduleJobMultipleDependencies)(JobQueue *t, void* func, void* arg, JobGroupID* x, int y) = nullptr;
     JobGroupID (*U5_JobQueue_ScheduleGroup)(JobQueue *t, JobGroup* x, int y) = nullptr;
     void (*U5_JobQueue_ScheduleGroups)(JobQueue *t, JobGroup* x, JobGroup* y) = nullptr;
     void (*U5_JobQueue_WaitForJobGroup)(JobQueue* t, JobGroup* x, int y, bool z) = nullptr;
     void (*U5_JobQueue_WaitForJobGroupID)(JobQueue* t, JobGroup* x, int y) = nullptr;
-    bool (*U5_JobQueue_HasJobGroupIDCompleted)(JobQueue* t, JobGroup* x, int y) = nullptr;
 
-
-    void (*U2K_BackgroundJobQueue_ScheduleJobInternal)(BackgroundJobQueue *t, void (*x)(void*), void* y, BackgroundJobQueue_JobFence* z, JobQueue_JobQueuePriority a) = nullptr;
-    void (*U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal)(BackgroundJobQueue *t, void (*x)(void*), void* y) = nullptr;
-    void (*U2K_JobQueue_CompleteAllJobs)(JobQueue *t) = nullptr;
     long (*U2K_JobQueue_Exec)(JobQueue *t, JobInfo* x, long long y, int z, bool a) = nullptr;
     long (*U2K_JobQueue_ExecuteJobFromQueue)(JobQueue *t, bool x) = nullptr;
     long (*U2K_JobQueue_ProcessJobs)(JobQueue_ThreadInfo* x, void* y) = nullptr;
     void (*U2K_JobQueue_ScheduleDependencies)(JobQueue *t, JobGroupID *x, JobInfo *y, JobInfo *z, bool a) = nullptr;
-    long (*U2K_JobQueue_ScheduleJobMultipleDependencies)(JobQueue *t, void (*x)(void*), void* y, JobGroupID* z, int a, MemLabelId b) = nullptr;
     JobGroupID (*U2K_JobQueue_ScheduleGroupInternal)(JobQueue *t, JobGroup* x, int y, bool z) = nullptr;
     void (*U2K_JobQueue_WaitForJobGroup)(JobQueue *t, JobGroup *x, int y) = nullptr;
     void (*U2K_JobQueue_WaitForJobGroupID)(JobQueue *t, JobGroup *x, int y, bool a) = nullptr;
 
     int (*U6_job_completed)(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z, ujob_handle_t a) = nullptr;
-    int (*U6_JobsUtility_CUSTOM_CreateJobReflectionData)(ScriptingBackendNativeObjectPtrOpaque* x, ScriptingBackendNativeObjectPtrOpaque* y, ScriptingBackendNativeObjectPtrOpaque* z, ScriptingBackendNativeObjectPtrOpaque* a, ScriptingBackendNativeObjectPtrOpaque* b) = nullptr;
-    int (*U6_JobsUtility_CUSTOM_Schedule)(JobScheduleParameters* x, JobFence* y) = nullptr;
-    void (*U6_JobQueue_ScheduleGroups)(JobQueue *t, JobBatchHandles* x, int y) = nullptr;
-    bool (*U6_lane_guts)(ujob_control_t* x, ujob_lane_t* y, int z, int a, ujob_dependency_chain const* b) = nullptr;
-    long (*U6_ScheduleBatchJob)(void* x, ujob_handle_t y) = nullptr;
     void (*U6_ujob_execute_job)(ujob_control_t*, ujob_lane_t*, ujob_job_t*, ujob_handle_t, unsigned int) = nullptr;
-    void (*U6_ujob_participate)(ujob_control_t* x, ujob_handle_t y, ujob_job_t* z, int* a, ujob_dependency_chain const* b) = nullptr;
     unsigned long (*U2K_ujob_schedule_job_internal)(ujob_control_t* x, ujob_handle_t y) = nullptr;
     unsigned long (*U6_ujob_schedule_job_internal)(ujob_control_t* x, ujob_handle_t y, unsigned int z) = nullptr;
     ujob_handle_t (*U6_ujob_schedule_parallel_for_internal)(ujob_control_t* x, JobsCallbackFunctions* y, void* z, WorkStealingRange* a, unsigned int b, unsigned long c, ujob_handle_t const* d, long e) = nullptr;
     void (*U6_ujob_wait_for)(ujob_control_t *x, ujob_handle_t y, int z) = nullptr;
-    void (*U6_ujobs_add_to_lane_and_wake_one_thread)(ujob_control_t*, ujob_job_t*, ujob_lane_t*) = nullptr;
     void (*U6_worker_thread_routine)(void* x) = nullptr;
 
     void (*U6_PreloadManager_AddToQueue)(PreloadManager* m, PreloadManagerOperation* o) = nullptr;
@@ -315,8 +314,6 @@ namespace orig {
     long (*U6_PreloadManager_UpdatePreloadingSingleStep)(PreloadManager* m, PreloadManager_UpdatePreloadingFlags f, int i) = nullptr;
     void (*U6_PreloadManager_WaitForAllAsyncOperationsToComplete)(PreloadManager* m) = nullptr;
     long (*U6_PreloadManager_Run)(void* p) = nullptr;
-    PreloadManagerOperation* (*U2K_PreloadManager_PeekIntegrateQueue)(PreloadManager* m) = nullptr;
-    bool (*U2K_PreloadManager_IsLoadingOrQueued)(PreloadManager* m) = nullptr;
 
     void (*U5_AsyncReadManagerThreaded_WaitDone)(AsyncReadManagerThreaded *t, AsyncReadCommand *c) = nullptr;
     void (*U6_AsyncReadManagerThreaded_Request)(AsyncReadManagerThreaded *t, AsyncReadCommand *c) = nullptr;
@@ -334,56 +331,21 @@ namespace orig {
     void (*U6_SignalCallback)(AsyncReadCommand *c, AsyncReadCommand_Status s) = nullptr;
     void (*U6_SyncReadRequest)(AsyncReadCommand* c) = nullptr;
     
-    void (*U6_ArchiveStorageConverter_ArchiveStorageConverter)(ArchiveStorageConverter* c, IArchiveStorageConverterListener* l, bool b) = nullptr;
-    int (*U6_ArchiveStorageConverter_ProcessAccumulatedData)(ArchiveStorageConverter* c) = nullptr;
-    int (*U6_AssetBundleLoadFromStreamAsyncOperation_FeedStream)(AssetBundleLoadFromStreamAsyncOperation *o, void const* x, unsigned long y) = nullptr;
     int (*U6_LoadFMODSound)(SoundHandle_Instance** si, char const* s, unsigned int f, SampleClip* c, unsigned int i, VFS_FileSize fs, FMOD_CREATESOUNDEXINFO* in) = nullptr;
 
     void (*U5_BaseUnityAnalytics_UpdateConfigFromServer)(void* a) = nullptr;
     void (*U2K_BaseUnityConnectClient_UpdateConfigFromServer)(void* a) = nullptr;
 
-    long (*U2K_VideoPlayer_SetSource)(VideoPlayer* t, VideoPlayer_Source source) = nullptr;
-    long (*U2K_VideoPlayer_SetVideoUrl)(VideoPlayer* t, CoreString const& url) = nullptr;
-    long (*U2K_VideoPlayer_SetVideoClip)(VideoPlayer* t, VideoClip* clip) = nullptr;
-    long (*U2K_VideoPlayer_Play)(VideoPlayer* t) = nullptr;
-    long (*U2K_VideoPlayer_Pause)(VideoPlayer* t) = nullptr;
-    void (*U2K_VideoPlayer_Prepare)(VideoPlayer* t) = nullptr;
-    bool (*U2K_VideoPlayer_OnPrepared)(VideoPlayer* t) = nullptr;
-    bool (*U2K_VideoPlayer_IsPrepared)(VideoPlayer* t) = nullptr;
-    void (*U2K_VideoPlayer_AwakeFromLoad)(VideoPlayer* t, AwakeFromLoadMode mode) = nullptr;
-
-    float (*U2K_VideoPlayback_GetPlaybackSpeed)(VideoPlayback* t) = nullptr;
-    void (*U2K_VideoPlayback_SetPlaybackSpeed)(VideoPlayback* t, float speed) = nullptr;
-    void (*U2K_VideoPlayback_StartPlayback)(VideoPlayback* t) = nullptr;
-    void (*U2K_VideoPlayback_PausePlayback)(VideoPlayback* t) = nullptr;
-    void (*U2K_VideoPlayback_StopPlayback)(VideoPlayback* t) = nullptr;
-    bool (*U2K_VideoPlayback_IsPlaybackActive)(VideoPlayback* t) = nullptr;
-    void (*U2K_VideoPlayback_SeekDouble)(VideoPlayback* t, double position, VideoPlaybackSeekCallback callback, void* userdata) = nullptr;
-    void (*U2K_VideoPlayback_SeekLong)(VideoPlayback* t, long position, VideoPlaybackSeekCallback callback, void* userdata) = nullptr;
-    void (*U2K_VideoPlayback_SetReferenceClock)(VideoPlayback* t, VideoReferenceClock* clock, VideoPlaybackClockCallback callback, void* userdata) = nullptr;
-    void (*U2K_VideoPlayback_SyncClock)(VideoPlayback* t) = nullptr;
-    void (*U2K_VideoPlayback_UpdatePlayback)(VideoPlayback* t) = nullptr;
-    bool (*U2K_VideoPlaybackMgr_IsPlaying)(VideoPlaybackMgr* t) = nullptr;
-    void (*U2K_VideoPlaybackMgr_Update)(VideoPlaybackMgr* t) = nullptr;
-    void (*U2K_VideoPlaybackMgr_CreateDecoderThreads)(VideoPlaybackMgr* t, int decoder_threads) = nullptr;
-    void (*U2K_VideoPlaybackMgr_ReleaseDecoderThreads)(VideoPlaybackMgr* t, bool wait) = nullptr;
     VideoPlayback* (*U2K_VideoPlaybackMgr_CreateVideoPlayback_Format)(VideoPlaybackMgr* t, CoreString const& path, VideoMediaFormat format, bool preload, VideoPlaybackErrorCallback error_callback, VideoPlaybackNotifyCallback ready_callback, VideoPlaybackNotifyCallback done_callback, void* userdata) = nullptr;
     VideoPlayback* (*U2K_VideoPlaybackMgr_CreateVideoPlayback_Paths)(VideoPlaybackMgr* t, CoreString const& path, CoreString const& cache_path, unsigned long offset, unsigned long size, VideoMediaFormat format, bool preload, bool streaming, VideoPlaybackErrorCallback error_callback, VideoPlaybackNotifyCallback ready_callback, VideoPlaybackNotifyCallback done_callback, void* userdata) = nullptr;
-    void (*U2K_VideoPlaybackMgr_DecoderThread_Start)(VideoPlaybackMgr_DecoderThread* t) = nullptr;
-    bool (*U2K_VideoPlaybackMgr_DecoderThread_IsRunning)(VideoPlaybackMgr_DecoderThread* t) = nullptr;
     void (*U2K_VideoPlaybackMgr_DecoderThread_Run)(VideoPlaybackMgr_DecoderThread* t) = nullptr;
-    void* (*U2K_VideoPlaybackMgr_DecoderThread_StartThread)(void* userdata) = nullptr;
 
-    bool (*U2K_VideoClipPlayback_DecoderIsRunning)(VideoClipPlayback* t) = nullptr;
-    void* (*U2K_VideoClipPlayback_UpdatePlayback)(VideoClipPlayback* t) = nullptr;
-    bool (*U2K_VideoClipPlayback_IsPlaying)(VideoClipPlayback* t) = nullptr;
     bool (*U2K_VideoClipPlayback_IsReady)(VideoClipPlayback* t) = nullptr;
     void (*U2K_VideoClipPlayback_ExecuteDecode)(VideoClipPlayback* t) = nullptr;
-    void (*U2K_VideoClipPlayback_Play)(VideoClipPlayback* t) = nullptr;
-    void (*U2K_VideoClipPlayback_Pause)(VideoClipPlayback* t) = nullptr;
     int (*U2K_VideoClipPlayback_GetStatus)(VideoClipPlayback* t) = nullptr;
 
     void (*physx_Cm_FanoutTask_RemoveReference)(FanoutTask* ft) = nullptr;
+    void (*physx_Sc_Scene_CollideStep)(void* scene, physx_PxBaseTask* task) = nullptr;
     void (*ScSimulationControllerCallback_updateScBodyAndShapeSim)(ScSimulationControllerCallback *t, physx_PxBaseTask *p) = nullptr;
 }
 
@@ -425,6 +387,37 @@ static void UnityVersion_UnityVersion(UnityVersion* u, const char* s)
     return orig::UnityVersion_UnityVersion(u, s);
 }
 
+static int GetNumericVersion(const char* s)
+{
+    LOGTRACE(LCF_HACKS, "GetNumericVersion called with version %s", s);
+    int ret = orig::GetNumericVersion(s);
+
+    if (unity_version_int[0] != 0)
+        return ret;
+
+    /* Use this function to determine Unity version only if UnityVersion::UnityVersion() is not available,
+     * and excluse obvious bad values. */
+    if (orig::UnityVersion_UnityVersion)
+        return ret;
+
+    unity_version_int[0] = (ret / 0x1000000) & 0xF;
+    unity_version_int[1] = (ret / 0x100000) & 0xF;
+    unity_version_int[2] = (ret / 0x10000) & 0xF;
+
+    if (unity_version_int[0] < 4) {
+        unity_version_int[0] = 0;
+        return ret;
+    }
+
+    if (unity_version_int[0] == 5 && unity_version_int[1] == 0 && unity_version_int[2] == 0) {
+        unity_version_int[0] = 0;
+        return ret;
+    }
+
+    LOGTRACE(LCF_HACKS, "Store version %d.%d.%d", unity_version_int[0], unity_version_int[1], unity_version_int[2]);
+    return ret;
+}
+
 static int GetUnityVersionMaj()
 {
     if (unity_version_int[0] != 0)
@@ -441,6 +434,13 @@ static int GetUnityVersionMaj()
             unity_version_int[0] = 2018; // TODO!
     }
     return unity_version_int[0];
+}
+
+static int GetUnityVersionMin()
+{
+    if (unity_version_int[0] != 0)
+        return unity_version_int[1];
+    return 0;
 }
 
 static long U4_JobScheduler_FetchNextJob(JobScheduler* t, int* x)
@@ -461,8 +461,6 @@ static long U4_JobScheduler_FetchNextJob(JobScheduler* t, int* x)
 UNITY_PASSTHROUGH_VOID(U4_JobScheduler_ProcessJob, (JobScheduler* t, JobInfo* x, int y), (t, x, y))
 
 UNITY_PASSTHROUGH_VOID(U4_JobScheduler_WaitForGroup, (JobScheduler* t, int x), (t, x))
-
-UNITY_PASSTHROUGH_VOID(U4_JobScheduler_AwakeIdleWorkerThreads, (JobScheduler* t, int x), (t, x))
 
 /* We need to wrap the job, to know when it is executed */
 struct U4_Job
@@ -493,18 +491,6 @@ static int U4_JobScheduler_SubmitJob(JobScheduler* t, int x, void* (*y)(void*), 
     return orig::U4_JobScheduler_SubmitJob(t, x, &U4_ExecJob, reinterpret_cast<void*>(j), a);
 }
 
-UNITY_PASSTHROUGH_VOID(U5_BackgroundJobQueue_ExecuteMainThreadJobs, (BackgroundJobQueue *t), (t))
-
-UNITY_PASSTHROUGH_VOID(U5_BackgroundJobQueue_ScheduleJob, (BackgroundJobQueue* t, void (*x)(void*), void* y), (t, x, y))
-
-UNITY_PASSTHROUGH_VOID(U5_BackgroundJobQueue_ScheduleMainThreadJob, (BackgroundJobQueue* t, void (*x)(void*), void* y), (t, x, y))
-
-UNITY_PASSTHROUGH_RET(JobGroup*, U5_JobQueue_CreateJobBatch, (JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int id, JobGroup* a), (t, func, arg, z, id, a))
-
-UNITY_PASSTHROUGH_RET(long, U5_JobQueue_EnqueueAll, (JobQueue* t, JobGroup* x, JobGroup* y), (t, x, y))
-
-UNITY_PASSTHROUGH_RET(long, U5_JobQueue_EnqueueAllInternal, (JobQueue* t, JobGroup* x, JobGroup* y, AtomicQueue* z, int* a), (t, x, y, z, a))
-
 static long U5_JobQueue_Exec(JobQueue* t, JobInfo* x, long long y, int z)
 {
     LOGTRACE(LCF_HACKS, "U5_JobQueue_Exec called with JobInfo %p", x);
@@ -528,10 +514,6 @@ static long U5_JobQueue_ExecuteJobFromQueue(JobQueue* t)
 }
 
 UNITY_PASSTHROUGH_RET(bool, U5_JobQueue_ExecuteOneJob, (JobQueue *t), (t))
-
-UNITY_PASSTHROUGH_RET(long, U5_JobQueue_MainEnqueueAll, (JobQueue* t, JobGroup* x, JobGroup* y), (t, x, y))
-
-UNITY_PASSTHROUGH_RET(long, U5_JobQueue_Pop, (JobQueue* t, JobGroupID x), (t, x))
 
 static long U5_JobQueue_ProcessJobs(JobQueue* t, void* x)
 {
@@ -558,6 +540,31 @@ static long U5_JobQueue_ProcessJobs(JobQueue* t, void* x)
     return orig::U5_JobQueue_ProcessJobs(t, x);
 }
 
+static long U5_JobQueue_ProcessJobsB(JobQueue* t, void* x, bool* y)
+{
+    LOGTRACE_SIMPLE(LCF_HACKS);
+    
+    ThreadInfo* thread = ThreadManager::getCurrentThread();
+    thread->unityThread = true;
+    thread->name = "JobWorker";
+
+    // if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS) {
+    //     /* Calling U5_JobQueue_ProcessJobs() in worker threads may call
+    //      * U5_JobQueue_Exec() directly without fetching a job queue with 
+    //      * U5_JobQueue_ExecuteJobFromQueue(), so we wait indefinitively here.
+    //      * To call jobs pushed in this worker thread, we will use the WorkerSteal
+    //      * feature elsewhere.
+    //      */
+    //     if (!ThreadManager::isMainThread()) {
+    //         while (!Global::is_exiting) {
+    //             NATIVECALL(sleep(1));
+    //         }
+    //     }
+    // }
+
+    return orig::U5_JobQueue_ProcessJobsB(t, x, y);
+}
+
 static void U5_JobQueue_ScheduleJob(JobQueue *t, void (*func)(void*), void* arg, JobGroup* z, int a, int b)
 {
     LOGTRACE(LCF_HACKS, "U5_JobQueue_ScheduleJob called with func %p, arg %p, JobGroup %p, JobGroup tag %d and priority %d", func, arg, z, a, b);
@@ -565,7 +572,7 @@ static void U5_JobQueue_ScheduleJob(JobQueue *t, void (*func)(void*), void* arg,
 }
 
 /* For certain functions that will softlock if we attempt to wait for them, skip them */
-static thread_local bool skip_job_wait = false;
+static thread_local int skip_job_wait = 0;
 
 static JobGroupID U5_JobQueue_ScheduleGroup(JobQueue *t, JobGroup* x, int y)
 {
@@ -577,23 +584,6 @@ static JobGroupID U5_JobQueue_ScheduleGroup(JobQueue *t, JobGroup* x, int y)
     LOG(LL_DEBUG, LCF_HACKS, "    returns JobGroup %p and JobGroup tag %d", j.group, j.tag);
 
     if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS) {
-        /* Try waiting for the job */
-        // if (orig::U5_JobQueue_HasJobGroupIDCompleted && !skip_job_wait) {
-
-        //     bool has_completed = false;
-        //     for (int i = 0; i < 100; i++) {
-        //         if (orig::U5_JobQueue_HasJobGroupIDCompleted(t, j.group, j.tag)) {
-        //             has_completed = true;
-        //             break;
-        //         }
-        //         NATIVECALL(usleep(100));
-        //     }
-        //     if (!has_completed) {
-        //         LOG(LL_WARN, LCF_HACKS, "    We could not wait for job group %p/%d to finish...", j.group, j.tag);
-        //         raise(SIGINT);
-        //     }
-        // }
-        
         if (!skip_job_wait) {
             if (orig::U5_JobQueue_WaitForJobGroup)
                 orig::U5_JobQueue_WaitForJobGroup(t, j.group, j.tag, true);
@@ -616,21 +606,6 @@ static JobGroupID U5_JobQueue_ScheduleJobMultipleDependencies(JobQueue *t, void*
     LOG(LL_DEBUG, LCF_HACKS, "    returns JobGroup %p and JobGroup tag %d", j.group, j.tag);
 
     if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_JOBS) {
-        /* Try waiting for the job */
-        // if (orig::U5_JobQueue_HasJobGroupIDCompleted && !skip_job_wait) {
-
-        //     bool has_completed = false;
-        //     for (int i = 0; i < 100; i++) {
-        //         if (orig::U5_JobQueue_HasJobGroupIDCompleted(t, j.group, j.tag)) {
-        //             has_completed = true;
-        //             break;
-        //         }
-        //         NATIVECALL(usleep(100));
-        //     }
-        //     if (!has_completed)
-        //         LOG(LL_WARN, LCF_HACKS, "    We could not wait for job group %p/%d to finish...", j.group, j.tag);
-        // }
-        
         if (!skip_job_wait) {
             if (orig::U5_JobQueue_WaitForJobGroup)
                 orig::U5_JobQueue_WaitForJobGroup(t, j.group, j.tag, true);
@@ -690,18 +665,6 @@ static void U5_JobQueue_WaitForJobGroupID(JobQueue* t, JobGroup* x, int y)
     return orig::U5_JobQueue_WaitForJobGroupID(t, x, y);
 }
 
-static bool U5_JobQueue_HasJobGroupIDCompleted(JobQueue* t, JobGroup* x, int y)
-{
-    LOGTRACE(LCF_HACKS, "U5_JobQueue_WaitForJobGroupID called with JobGroup %p, JobGroup tag %d", x, y);
-    return orig::U5_JobQueue_HasJobGroupIDCompleted(t, x, y);
-}
-
-UNITY_PASSTHROUGH_VOID(U2K_BackgroundJobQueue_ScheduleJobInternal, (BackgroundJobQueue *t, void (*x)(void*), void* y, BackgroundJobQueue_JobFence* z, JobQueue_JobQueuePriority a), (t, x, y, z, a))
-
-UNITY_PASSTHROUGH_VOID(U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal, (BackgroundJobQueue *t, void (*x)(void*), void* y), (t, x, y))
-
-UNITY_PASSTHROUGH_VOID(U2K_JobQueue_CompleteAllJobs, (JobQueue *t), (t))
-
 static long U2K_JobQueue_Exec(JobQueue *t, JobInfo* x, long long y, int z, bool a)
 {
     LOGTRACE(LCF_HACKS, "U2K_JobQueue_Exec called with JobInfo %p and sync %d", x, a);
@@ -744,8 +707,6 @@ static void U2K_JobQueue_ScheduleDependencies(JobQueue *t, JobGroupID *x, JobInf
     return orig::U2K_JobQueue_ScheduleDependencies(t, x, y, z, a);
 }
 
-UNITY_PASSTHROUGH_RET(long, U2K_JobQueue_ScheduleJobMultipleDependencies, (JobQueue *t, void (*x)(void*), void* y, JobGroupID* z, int a, MemLabelId b), (t, x, y, z, a, b))
-
 static JobGroupID U2K_JobQueue_ScheduleGroupInternal(JobQueue *t, JobGroup *x, int y, bool z)
 {
     LOGTRACE(LCF_HACKS, "U2K_JobQueue_ScheduleGroupInternal called with JobGroup %p, priority %d and sync %d", x, y, z);
@@ -783,26 +744,6 @@ static int U6_job_completed(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z, uj
     return ret;
 }
 
-UNITY_PASSTHROUGH_VOID(U6_JobQueue_ScheduleGroups, (JobQueue *t, JobBatchHandles* x, int y), (t, x, y))
-
-UNITY_PASSTHROUGH_RET(int, U6_JobsUtility_CUSTOM_CreateJobReflectionData, (ScriptingBackendNativeObjectPtrOpaque* x, ScriptingBackendNativeObjectPtrOpaque* y, ScriptingBackendNativeObjectPtrOpaque* z, ScriptingBackendNativeObjectPtrOpaque* a, ScriptingBackendNativeObjectPtrOpaque* b), (x, y, z, a, b))
-
-UNITY_PASSTHROUGH_RET(int, U6_JobsUtility_CUSTOM_Schedule, (JobScheduleParameters* x, JobFence* y), (x, y))
-
-static bool U6_lane_guts(ujob_control_t* x, ujob_lane_t* y, int z, int a, ujob_dependency_chain const* b)
-{
-    // LOGTRACE_SIMPLE(LCF_HACKS);
-    return orig::U6_lane_guts(x, y, z, a, b);
-}
-
-UNITY_PASSTHROUGH_RET(long, U6_ScheduleBatchJob, (void* x, ujob_handle_t y), (x, y))
-
-static void U6_ujobs_add_to_lane_and_wake_one_thread(ujob_control_t* x, ujob_job_t* y, ujob_lane_t* z)
-{
-    // LOGTRACE_SIMPLE(LCF_HACKS);
-    orig::U6_ujobs_add_to_lane_and_wake_one_thread(x, y, z);
-}
-
 static void U6_ujob_execute_job(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z, ujob_handle_t a, unsigned int b)
 {
     LOGTRACE_SIMPLE(LCF_HACKS);
@@ -810,12 +751,6 @@ static void U6_ujob_execute_job(ujob_control_t* x, ujob_lane_t* y, ujob_job_t* z
     th->unityJobCount++;
     PROFILE_SCOPE("Job", PROFILER_INFO_UNITY);
     return orig::U6_ujob_execute_job(x, y, z, a, b);
-}
-
-static void U6_ujob_participate(ujob_control_t* x, ujob_handle_t y, ujob_job_t** z, int* a, ujob_dependency_chain const* b)
-{
-    // LOGTRACE_SIMPLE(LCF_HACKS);
-    orig::U6_ujob_participate(x, y, z, a, b);
 }
 
 static unsigned long U2K_ujob_schedule_job_internal(ujob_control_t* x, ujob_handle_t y)
@@ -1053,8 +988,13 @@ static bool Helper_PreloadManager_GetAllowParallelExecution(PreloadManagerOperat
         return (reinterpret_cast<U6_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
     if ((GetUnityVersionMaj() >= 2017) && (GetUnityVersionMaj() <= 2021))
         return (reinterpret_cast<U2018_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
-    if (GetUnityVersionMaj() == 5)
-        return (reinterpret_cast<U5_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
+    if (GetUnityVersionMaj() == 5) {
+        /* We need more data for this! */
+        if (GetUnityVersionMin() == 3)
+            return (reinterpret_cast<U5b_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
+        else
+            return (reinterpret_cast<U5a_PreloadManagerOperation*>(o))->GetAllowParallelExecution(o);
+    }
     if (GetUnityVersionMaj() == 4)
         return true;
 
@@ -1223,6 +1163,13 @@ static void U6_PreloadManager_AddToQueue(PreloadManager* m, PreloadManagerOperat
     }
 }
 
+/* On specific old versions of Unity (e.g. 5.3.7f1: Alwa's Awakening),
+ * PreloadManager::ProcessSingleOperation() is present, but is never actually called!
+ * It looks like it was inlined into PreloadManager::Run(), so only PreloadManager::PrepareProcessingPreloadOperation()
+ * is called directly. This breaks a bit some of the code, because we want to know when the operation has finished processing.
+ * In that case, we change a bit our approach to keep track of stuff. */
+static bool is_process_single_operation_called = false;
+
 static PreloadManagerOperation* U6_PreloadManager_PrepareProcessingPreloadOperation(PreloadManager* m)
 {
     LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
@@ -1235,6 +1182,13 @@ static PreloadManagerOperation* U6_PreloadManager_PrepareProcessingPreloadOperat
             current_pending_non_parallel_operation = current_pending_operation;
     }
     
+    if (!is_process_single_operation_called) {
+        /* See comment above. Copy what is present at the end of PreloadManager::ProcessSingleOperation()
+         * hook here. We prefer less deterministic behavior than a crash or softlock. */
+        current_pending_non_parallel_operation = nullptr;
+        pending_queue_size--;
+    }
+
     return current_pending_operation;
 }
 
@@ -1242,6 +1196,7 @@ static void U6_PreloadManager_ProcessSingleOperation(PreloadManager* m)
 {
     LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
     PROFILE_SCOPE("Operation", PROFILER_INFO_UNITY);
+    is_process_single_operation_called = true;
     orig::U6_PreloadManager_ProcessSingleOperation(m);
     current_pending_non_parallel_operation = nullptr;
     pending_queue_size--;
@@ -1320,14 +1275,6 @@ static long U6_PreloadManager_Run(void* p)
     return orig::U6_PreloadManager_Run(p);
 }
 
-UNITY_PASSTHROUGH_RET(PreloadManagerOperation*, U2K_PreloadManager_PeekIntegrateQueue, (PreloadManager* m), (m))
-
-UNITY_PASSTHROUGH_RET(bool, U2K_PreloadManager_IsLoadingOrQueued, (PreloadManager* m), (m))
-
-static std::mutex async_read_mutex;
-static std::condition_variable async_read_condition;
-static bool async_read_complete = true;
-
 UNITY_PASSTHROUGH_VOID(U5_AsyncReadManagerThreaded_WaitDone, (AsyncReadManagerThreaded *t, AsyncReadCommand *c), (t, c))
 
 static void U6_AsyncReadManagerThreaded_Request(AsyncReadManagerThreaded *t, AsyncReadCommand *c)
@@ -1337,9 +1284,6 @@ static void U6_AsyncReadManagerThreaded_Request(AsyncReadManagerThreaded *t, Asy
 
     if (!(Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_READS))
         return orig::U6_AsyncReadManagerThreaded_Request(t, c);
-
-    void* complete_callback = *((void**)(c + 0x38));
-    // void* complete_callback_arg = *((void**)(c + 0x40));
 
     /* If possible, we can use this nice helper function that performs a sync
      * read from a command. I didn't experienced any softlock for now. */
@@ -1359,18 +1303,7 @@ static void U6_AsyncReadManagerThreaded_Request(AsyncReadManagerThreaded *t, Asy
         return;
     }
 
-    if (complete_callback != 0) {
-        /* We wait until the complete callback is called. */
-        std::unique_lock<std::mutex> lock(async_read_mutex);
-        async_read_complete = false;
-
-        orig::U6_AsyncReadManagerThreaded_Request(t, c);
-        
-        async_read_condition.wait(lock, [] { return async_read_complete; });
-    }
-    else {
-        orig::U6_AsyncReadManagerThreaded_Request(t, c);
-    }
+    orig::U6_AsyncReadManagerThreaded_Request(t, c);
 }
 
 static void U2K_AsyncReadManagerThreaded_SyncRequest(AsyncReadManagerThreaded *t, AsyncReadCommand *c)
@@ -1381,98 +1314,6 @@ static void U2K_AsyncReadManagerThreaded_SyncRequest(AsyncReadManagerThreaded *t
     return orig::U2K_AsyncReadManagerThreaded_SyncRequest(t, c);
 }
 
-/* These are all AsyncReadCommand complete callback used */
-
-static void U6_AsyncReadManagerManaged_OpenCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-    
-    orig::U6_AsyncReadManagerManaged_OpenCompleteCallback(c, s);
-    
-    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_READS) {
-        std::unique_lock<std::mutex> lock(async_read_mutex);
-        async_read_complete = true;
-        async_read_condition.notify_all();
-    }
-}
-
-static void U6_AsyncReadManagerManaged_ReadCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-
-    orig::U6_AsyncReadManagerManaged_ReadCompleteCallback(c, s);
-
-    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_READS) {
-        std::unique_lock<std::mutex> lock(async_read_mutex);
-        async_read_complete = true;
-        async_read_condition.notify_all();
-    }
-}
-
-static void U6_AsyncReadManagerManaged_CloseCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-
-    orig::U6_AsyncReadManagerManaged_CloseCompleteCallback(c, s);
-
-    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_READS) {
-        std::unique_lock<std::mutex> lock(async_read_mutex);
-        async_read_complete = true;
-        async_read_condition.notify_all();
-    }
-}
-
-static void U6_AsyncReadManagerManaged_CloseCachedFileCompleteCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-
-    orig::U6_AsyncReadManagerManaged_CloseCachedFileCompleteCallback(c, s);
-
-    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_READS) {
-        std::unique_lock<std::mutex> lock(async_read_mutex);
-        async_read_complete = true;
-        async_read_condition.notify_all();
-    }
-}
-
-static void U6_SignalCallback(AsyncReadCommand *c, AsyncReadCommand_Status s)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-    
-    orig::U6_SignalCallback(c, s);
-
-    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_READS) {
-        std::unique_lock<std::mutex> lock(async_read_mutex);
-        async_read_complete = true;
-        async_read_condition.notify_all();
-    }
-}
-
-static void U6_AsyncUploadManager_AsyncReadCallbackStatic(AsyncReadCommand *c, AsyncReadCommand_Status s)
-{
-    LOGTRACE_SIMPLE(LCF_HACKS | LCF_FILEIO);
-
-    if (Global::shared_config.game_specific_sync & SharedConfig::GC_SYNC_UNITY_READS) {
-        std::unique_lock<std::mutex> lock(async_read_mutex);
-        async_read_complete = true;
-        async_read_condition.notify_all();
-    }
-
-    orig::U6_AsyncUploadManager_AsyncReadCallbackStatic(c, s);
-}
-
-/* End of callbacks */
-
-UNITY_PASSTHROUGH_VOID(U6_AsyncUploadManager_AsyncReadSuccess, (AsyncUploadManager *t, AsyncReadCommand *c), (t, c))
-
-UNITY_PASSTHROUGH_RET(Int128, U6_AsyncUploadManager_QueueUploadAsset, (AsyncUploadManager *t, char const* x, VFS_FileSize y, unsigned int z, unsigned int a, AsyncUploadHandler* b, AssetContext *c, unsigned char* d, FileReadFlags e), (t, x, y, z, a, b, c, d, e))
-
-UNITY_PASSTHROUGH_VOID(U6_AsyncUploadManager_AsyncResourceUpload, (AsyncUploadManager *t, GfxDevice *x, int y, AsyncUploadManagerSettings *z), (t, x, y, z))
-
-UNITY_PASSTHROUGH_VOID(U6_AsyncUploadManager_ScheduleAsyncCommandsInternal, (AsyncUploadManager *t), (t))
-
-UNITY_PASSTHROUGH_VOID(U6_AsyncUploadManager_CloseFile, (AsyncUploadManager *t, char* s), (t, s))
-
 static void U6_SyncReadRequest(AsyncReadCommand* c)
 {
     char* filepath = *(char**)c;
@@ -1480,12 +1321,6 @@ static void U6_SyncReadRequest(AsyncReadCommand* c)
     
     return orig::U6_SyncReadRequest(c);
 }
-
-UNITY_PASSTHROUGH_VOID(U6_ArchiveStorageConverter_ArchiveStorageConverter, (ArchiveStorageConverter* c, IArchiveStorageConverterListener* l, bool b), (c, l, b))
-
-UNITY_PASSTHROUGH_RET(int, U6_ArchiveStorageConverter_ProcessAccumulatedData, (ArchiveStorageConverter* c), (c))
-
-UNITY_PASSTHROUGH_RET(int, U6_AssetBundleLoadFromStreamAsyncOperation_FeedStream, (AssetBundleLoadFromStreamAsyncOperation *o, void const* x, unsigned long y), (o, x, y))
 
 static VideoPlayback* U2K_VideoPlaybackMgr_CreateVideoPlayback_Paths(VideoPlaybackMgr* t, CoreString const& path, CoreString const& cache_path, unsigned long offset, unsigned long size, VideoMediaFormat format, bool preload, bool streaming, VideoPlaybackErrorCallback error_callback, VideoPlaybackNotifyCallback ready_callback, VideoPlaybackNotifyCallback done_callback, void* userdata)
 {
@@ -1499,28 +1334,6 @@ static VideoPlayback* U2K_VideoPlaybackMgr_CreateVideoPlayback_Format(VideoPlayb
 {
     LOGTRACE(LCF_HACKS, "U2K_VideoPlaybackMgr_CreateVideoPlayback_Format called with format %d, preload %d", format, preload);
     return orig::U2K_VideoPlaybackMgr_CreateVideoPlayback_Format(t, path, format, preload, error_callback, ready_callback, done_callback, userdata);
-}
-
-static void U2K_VideoPlayback_SetPlaybackSpeed(VideoPlayback* t, float speed)
-{
-    LOGTRACE(LCF_HACKS, "U2K_VideoPlayback_SetPlaybackSpeed called with speed %f", speed);
-    return orig::U2K_VideoPlayback_SetPlaybackSpeed(t, speed);
-}
-
-static float U2K_VideoPlayback_GetPlaybackSpeed(VideoPlayback* t)
-{
-    LOGTRACE(LCF_HACKS, "U2K_VideoPlayback_GetPlaybackSpeed called");
-    float speed = orig::U2K_VideoPlayback_GetPlaybackSpeed(t);
-    LOG(LL_DEBUG, LCF_HACKS, "    returned %f", speed);
-    return speed;
-}
-
-static bool U2K_VideoPlayback_IsPlaybackActive(VideoPlayback* t)
-{
-    LOGTRACE(LCF_HACKS, "U2K_VideoPlayback_IsPlaybackActive called");
-    bool ret = orig::U2K_VideoPlayback_IsPlaybackActive(t);
-    LOG(LL_DEBUG, LCF_HACKS, "    returned %d", ret);
-    return ret;
 }
 
 static bool U2K_VideoClipPlayback_IsReady(VideoPlayback* t)
@@ -1566,38 +1379,6 @@ static void U2K_VideoClipPlayback_ExecuteDecode(VideoPlayback* t)
     return orig::U2K_VideoClipPlayback_ExecuteDecode(t);
 }
 
-UNITY_PASSTHROUGH_RET(long, U2K_VideoPlayer_SetSource, (VideoPlayer* t, VideoPlayer_Source source), (t, source))
-UNITY_PASSTHROUGH_RET(long, U2K_VideoPlayer_SetVideoUrl, (VideoPlayer* t, CoreString const& url), (t, url))
-UNITY_PASSTHROUGH_RET(long, U2K_VideoPlayer_SetVideoClip, (VideoPlayer* t, VideoClip* clip), (t, clip))
-UNITY_PASSTHROUGH_RET(long, U2K_VideoPlayer_Play, (VideoPlayer* t), (t))
-UNITY_PASSTHROUGH_RET(long, U2K_VideoPlayer_Pause, (VideoPlayer* t), (t))
-UNITY_PASSTHROUGH_VOID(U2K_VideoPlayer_Prepare, (VideoPlayer* t), (t))
-UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlayer_OnPrepared, (VideoPlayer* t), (t))
-UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlayer_IsPrepared, (VideoPlayer* t), (t))
-UNITY_PASSTHROUGH_VOID(U2K_VideoPlayer_AwakeFromLoad, (VideoPlayer* t, AwakeFromLoadMode mode), (t, mode))
-
-UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_StartPlayback, (VideoPlayback* t), (t))
-UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_PausePlayback, (VideoPlayback* t), (t))
-UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_StopPlayback, (VideoPlayback* t), (t))
-UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_SeekDouble, (VideoPlayback* t, double position, VideoPlaybackSeekCallback callback, void* userdata), (t, position, callback, userdata))
-UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_SeekLong, (VideoPlayback* t, long position, VideoPlaybackSeekCallback callback, void* userdata), (t, position, callback, userdata))
-UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_SetReferenceClock, (VideoPlayback* t, VideoReferenceClock* clock, VideoPlaybackClockCallback callback, void* userdata), (t, clock, callback, userdata))
-UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_SyncClock, (VideoPlayback* t), (t))
-UNITY_PASSTHROUGH_VOID(U2K_VideoPlayback_UpdatePlayback, (VideoPlayback* t), (t))
-UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlaybackMgr_IsPlaying, (VideoPlaybackMgr* t), (t))
-UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_Update, (VideoPlaybackMgr* t), (t))
-UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_CreateDecoderThreads, (VideoPlaybackMgr* t, int decoder_threads), (t, decoder_threads))
-UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_ReleaseDecoderThreads, (VideoPlaybackMgr* t, bool wait), (t, wait))
-UNITY_PASSTHROUGH_VOID(U2K_VideoPlaybackMgr_DecoderThread_Start, (VideoPlaybackMgr_DecoderThread* t), (t))
-UNITY_PASSTHROUGH_RET(bool, U2K_VideoPlaybackMgr_DecoderThread_IsRunning, (VideoPlaybackMgr_DecoderThread* t), (t))
-UNITY_PASSTHROUGH_RET(void*, U2K_VideoPlaybackMgr_DecoderThread_StartThread, (void* userdata), (userdata))
-
-UNITY_PASSTHROUGH_RET(bool, U2K_VideoClipPlayback_DecoderIsRunning, (VideoClipPlayback* t), (t))
-UNITY_PASSTHROUGH_RET(void*, U2K_VideoClipPlayback_UpdatePlayback, (VideoClipPlayback* t), (t))
-UNITY_PASSTHROUGH_RET(bool, U2K_VideoClipPlayback_IsPlaying, (VideoClipPlayback* t), (t))
-UNITY_PASSTHROUGH_VOID(U2K_VideoClipPlayback_Play, (VideoClipPlayback* t), (t))
-UNITY_PASSTHROUGH_VOID(U2K_VideoClipPlayback_Pause, (VideoClipPlayback* t), (t))
-
 static int U6_LoadFMODSound(SoundHandle_Instance** si, char const* s, unsigned int f, SampleClip* c, unsigned int i, VFS_FileSize fs, FMOD_CREATESOUNDEXINFO* in)
 {
     LOGTRACE(LCF_HACKS | LCF_SOUND, "U6_LoadFMODSound called with file %s and flags %x", s, f);
@@ -1620,17 +1401,25 @@ static void U2K_BaseUnityConnectClient_UpdateConfigFromServer(void* a)
 static void physx_Cm_FanoutTask_RemoveReference(FanoutTask* ft)
 {
     LOGTRACE_SIMPLE(LCF_HACKS);
-    skip_job_wait = true;
+    skip_job_wait++;
     orig::physx_Cm_FanoutTask_RemoveReference(ft);
-    skip_job_wait = false;
+    skip_job_wait--;
+}
+
+static void physx_Sc_Scene_CollideStep(void* scene, physx_PxBaseTask* task)
+{
+    LOGTRACE_SIMPLE(LCF_HACKS);
+    skip_job_wait++;
+    orig::physx_Sc_Scene_CollideStep(scene, task);
+    skip_job_wait--;
 }
 
 static void ScSimulationControllerCallback_updateScBodyAndShapeSim(ScSimulationControllerCallback *t, physx_PxBaseTask *p)
 {
     LOGTRACE_SIMPLE(LCF_HACKS);
-    skip_job_wait = true;
+    skip_job_wait++;
     orig::ScSimulationControllerCallback_updateScBodyAndShapeSim(t, p);
-    skip_job_wait = false;
+    skip_job_wait--;
 }
 
 #define FUNC_CASE(FUNC_ENUM, FUNC_SYMBOL) \
@@ -1646,56 +1435,35 @@ void UnityHacks::patch(int func, uint64_t addr)
     uintptr_t address = static_cast<uintptr_t>(addr);
     switch(func) {
         FUNC_CASE(UNITY_VERSION, UnityVersion_UnityVersion)
+        FUNC_CASE(GET_NUMERIC_VERSION, GetNumericVersion)
 
-        FUNC_CASE(UNITY4_JOBSCHEDULER_AWAKE, U4_JobScheduler_AwakeIdleWorkerThreads)
         FUNC_CASE(UNITY4_JOBSCHEDULER_FETCH, U4_JobScheduler_FetchNextJob)
         FUNC_CASE(UNITY4_JOBSCHEDULER_PROCESS, U4_JobScheduler_ProcessJob)
         FUNC_CASE(UNITY4_JOBSCHEDULER_SUBMIT, U4_JobScheduler_SubmitJob)
         FUNC_CASE(UNITY4_JOBSCHEDULER_WAIT, U4_JobScheduler_WaitForGroup)
 
-        FUNC_CASE(UNITY5_BACKGROUND_JOBQUEUE_EXECUTE, U5_BackgroundJobQueue_ExecuteMainThreadJobs)
-        FUNC_CASE(UNITY5_BACKGROUND_JOBQUEUE_SCHEDULE, U5_BackgroundJobQueue_ScheduleJob)
-        FUNC_CASE(UNITY5_BACKGROUND_JOBQUEUE_SCHEDULE_MAIN, U5_BackgroundJobQueue_ScheduleMainThreadJob)
-        FUNC_CASE(UNITY5_JOBQUEUE_CREATE_JOB_BATCH, U5_JobQueue_CreateJobBatch)
-        FUNC_CASE(UNITY5_JOBQUEUE_ENQUEUEALL, U5_JobQueue_EnqueueAll)
-        FUNC_CASE(UNITY5_JOBQUEUE_ENQUEUEALL_INTERNAL, U5_JobQueue_EnqueueAllInternal)
         FUNC_CASE(UNITY5_JOBQUEUE_EXEC, U5_JobQueue_Exec)
         FUNC_CASE(UNITY5_JOBQUEUE_EXECUTE, U5_JobQueue_ExecuteOneJob)
         FUNC_CASE(UNITY5_JOBQUEUE_EXECUTE_QUEUE, U5_JobQueue_ExecuteJobFromQueue)
-        FUNC_CASE(UNITY5_JOBQUEUE_MAIN_ENQUEUEALL, U5_JobQueue_MainEnqueueAll)
-        FUNC_CASE(UNITY5_JOBQUEUE_POP, U5_JobQueue_Pop)
         FUNC_CASE(UNITY5_JOBQUEUE_PROCESS, U5_JobQueue_ProcessJobs)
+        FUNC_CASE(UNITY5_JOBQUEUE_PROCESS_BOOL, U5_JobQueue_ProcessJobsB)
         FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_JOB, U5_JobQueue_ScheduleJob)
         FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_JOB_MULTIPLE, U5_JobQueue_ScheduleJobMultipleDependencies)
         FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_GROUP, U5_JobQueue_ScheduleGroup)
         FUNC_CASE(UNITY5_JOBQUEUE_SCHEDULE_GROUPS, U5_JobQueue_ScheduleGroups)
         FUNC_CASE(UNITY5_JOBQUEUE_WAIT_JOB_GROUP, U5_JobQueue_WaitForJobGroup)
         FUNC_CASE(UNITY5_JOBQUEUE_WAIT_JOB_GROUP_ID, U5_JobQueue_WaitForJobGroupID)
-        /* Use the same function for both symbols, because they have the same behavior */
-        FUNC_CASE(UNITY5_JOBQUEUE_HAS_JOB_COMPLETED, U5_JobQueue_HasJobGroupIDCompleted)
-        FUNC_CASE(UNITY5_JOBQUEUE_HAS_JOB_ID_COMPLETED, U5_JobQueue_HasJobGroupIDCompleted)
         
-        FUNC_CASE(UNITY2K_BACKGROUND_JOBQUEUE_SCHEDULE, U2K_BackgroundJobQueue_ScheduleJobInternal)
-        FUNC_CASE(UNITY2K_BACKGROUND_JOBQUEUE_SCHEDULE_MAIN, U2K_BackgroundJobQueue_ScheduleMainThreadJobInternal)
-        FUNC_CASE(UNITY2K_JOBQUEUE_COMPLETE_ALL_JOBS, U2K_JobQueue_CompleteAllJobs)
         FUNC_CASE(UNITY2K_JOBQUEUE_EXEC, U2K_JobQueue_Exec)
         FUNC_CASE(UNITY2K_JOBQUEUE_EXECUTE_QUEUE, U2K_JobQueue_ExecuteJobFromQueue)
         FUNC_CASE(UNITY2K_JOBQUEUE_PROCESS, U2K_JobQueue_ProcessJobs)
         FUNC_CASE(UNITY2K_JOBQUEUE_SCHEDULE_DEPENDENCIES, U2K_JobQueue_ScheduleDependencies)
-        FUNC_CASE(UNITY2K_JOBQUEUE_SCHEDULE_JOB_MULTIPLE, U2K_JobQueue_ScheduleJobMultipleDependencies)
         FUNC_CASE(UNITY2K_JOBQUEUE_SCHEDULE_GROUP_INTERNAL, U2K_JobQueue_ScheduleGroupInternal)
         FUNC_CASE(UNITY2K_JOBQUEUE_WAIT_JOB_GROUP, U2K_JobQueue_WaitForJobGroup)
         FUNC_CASE(UNITY2K_JOBQUEUE_WAIT_JOB_GROUP_ID, U2K_JobQueue_WaitForJobGroupID)
 
-        FUNC_CASE(UNITY6_BATCH_JOB, U6_ScheduleBatchJob)
         FUNC_CASE(UNITY6_JOB_COMPLETED, U6_job_completed)
-        FUNC_CASE(UNITY6_JOB_REFLECTION, U6_JobsUtility_CUSTOM_CreateJobReflectionData)
-        FUNC_CASE(UNITY6_JOB_SCHEDULE, U6_JobsUtility_CUSTOM_Schedule)
-        FUNC_CASE(UNITY6_JOBQUEUE_SCHEDULE_GROUPS, U6_JobQueue_ScheduleGroups)
-        FUNC_CASE(UNITY6_LANE_GUTS, U6_lane_guts)
-        FUNC_CASE(UNITY6_UJOB_ADD, U6_ujobs_add_to_lane_and_wake_one_thread)
         FUNC_CASE(UNITY6_UJOB_EXECUTE, U6_ujob_execute_job)
-        FUNC_CASE(UNITY6_UJOB_PARTICIPATE, U6_ujob_participate)
         FUNC_CASE(UNITY2K_UJOB_SCHEDULE, U2K_ujob_schedule_job_internal)
         FUNC_CASE(UNITY6_UJOB_SCHEDULE, U6_ujob_schedule_job_internal)
         FUNC_CASE(UNITY6_UJOB_SCHEDULE_PARALLEL, U6_ujob_schedule_parallel_for_internal)
@@ -1710,77 +1478,26 @@ void UnityHacks::patch(int func, uint64_t addr)
         FUNC_CASE(UNITY6_PRELOADMANAGER_UPDATE_STEP, U6_PreloadManager_UpdatePreloadingSingleStep)
         FUNC_CASE(UNITY6_PRELOADMANAGER_WAIT, U6_PreloadManager_WaitForAllAsyncOperationsToComplete)
         FUNC_CASE(UNITY6_PRELOADMANAGER_RUN, U6_PreloadManager_Run)
-        FUNC_CASE(UNITY2K_PRELOADMANAGER_PEEK, U2K_PreloadManager_PeekIntegrateQueue)
-        FUNC_CASE(UNITY2K_PRELOADMANAGER_IS_LOADING, U2K_PreloadManager_IsLoadingOrQueued)
 
         FUNC_CASE(UNITY6_ASYNCREADMANAGER_REQUEST, U6_AsyncReadManagerThreaded_Request)
         FUNC_CASE(UNITY5_ASYNCREADMANAGER_WAIT_DONE, U5_AsyncReadManagerThreaded_WaitDone)
         FUNC_CASE(UNITY2K_ASYNCREADMANAGER_SYNC_REQUEST, U2K_AsyncReadManagerThreaded_SyncRequest)
-        FUNC_CASE(UNITY6_ASYNCREADMANAGER_OPENCOMPLETE_CALLBACK, U6_AsyncReadManagerManaged_OpenCompleteCallback)
-        FUNC_CASE(UNITY6_ASYNCREADMANAGER_READCOMPLETE_CALLBACK, U6_AsyncReadManagerManaged_ReadCompleteCallback)
-        FUNC_CASE(UNITY6_ASYNCREADMANAGER_CLOSECOMPLETE_CALLBACK, U6_AsyncReadManagerManaged_CloseCompleteCallback)
-        FUNC_CASE(UNITY6_ASYNCREADMANAGER_CLOSECACHEDCOMPLETE_CALLBACK, U6_AsyncReadManagerManaged_CloseCachedFileCompleteCallback)
-        FUNC_CASE(UNITY6_ASYNCUPLOADMANAGER_ASYNC_READ_SUCCESS, U6_AsyncUploadManager_AsyncReadSuccess)
-        FUNC_CASE(UNITY6_ASYNCUPLOADMANAGER_QUEUE_UPLOAD, U6_AsyncUploadManager_QueueUploadAsset)
-        FUNC_CASE(UNITY6_ASYNCUPLOADMANAGER_ASYNC_RESOURCE_UPLOAD, U6_AsyncUploadManager_AsyncResourceUpload)
-        FUNC_CASE(UNITY6_ASYNCUPLOADMANAGER_ASYNC_READ_CALLBACK, U6_AsyncUploadManager_AsyncReadCallbackStatic)
-        FUNC_CASE(UNITY6_ASYNCUPLOADMANAGER_SCHEDULE, U6_AsyncUploadManager_ScheduleAsyncCommandsInternal)
-        FUNC_CASE(UNITY6_ASYNCUPLOADMANAGER_CLOSE, U6_AsyncUploadManager_CloseFile)
-        FUNC_CASE(UNITY6_SIGNAL_CALLBACK, U6_SignalCallback)
         FUNC_CASE(UNITY6_SYNC_READ, U6_SyncReadRequest)
 
-        FUNC_CASE(UNITY6_ARCHIVESTORAGECONVERTER_CONSTRUCTOR, U6_ArchiveStorageConverter_ArchiveStorageConverter)
-        FUNC_CASE(UNITY6_ARCHIVESTORAGECONVERTER_PROCESS_ACCUMULATED, U6_ArchiveStorageConverter_ProcessAccumulatedData)
-        FUNC_CASE(UNITY6_ASSETBUNDLELOAD_FEEDSTREAM, U6_AssetBundleLoadFromStreamAsyncOperation_FeedStream)
-
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_GET_PLAYBACK_SPEED, U2K_VideoPlayback_GetPlaybackSpeed)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_SET_PLAYBACK_SPEED, U2K_VideoPlayback_SetPlaybackSpeed)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_START_PLAYBACK, U2K_VideoPlayback_StartPlayback)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_PAUSE_PLAYBACK, U2K_VideoPlayback_PausePlayback)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_STOP_PLAYBACK, U2K_VideoPlayback_StopPlayback)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_IS_PLAYBACK_ACTIVE, U2K_VideoPlayback_IsPlaybackActive)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_SEEK_DOUBLE, U2K_VideoPlayback_SeekDouble)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_SEEK_LONG, U2K_VideoPlayback_SeekLong)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_SET_REFERENCE_CLOCK, U2K_VideoPlayback_SetReferenceClock)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_SYNC_CLOCK, U2K_VideoPlayback_SyncClock)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACK_UPDATE_PLAYBACK, U2K_VideoPlayback_UpdatePlayback)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_IS_PLAYING, U2K_VideoPlaybackMgr_IsPlaying)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_UPDATE, U2K_VideoPlaybackMgr_Update)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_CREATE_DECODER_THREADS, U2K_VideoPlaybackMgr_CreateDecoderThreads)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_RELEASE_DECODER_THREADS, U2K_VideoPlaybackMgr_ReleaseDecoderThreads)
         FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_CREATE_VIDEO_PLAYBACK_FORMAT, U2K_VideoPlaybackMgr_CreateVideoPlayback_Format)
         FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_CREATE_VIDEO_PLAYBACK_PATHS, U2K_VideoPlaybackMgr_CreateVideoPlayback_Paths)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_START, U2K_VideoPlaybackMgr_DecoderThread_Start)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_IS_RUNNING, U2K_VideoPlaybackMgr_DecoderThread_IsRunning)
         FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_RUN, U2K_VideoPlaybackMgr_DecoderThread_Run)
-        FUNC_CASE(UNITY2K_VIDEOPLAYBACKMGR_DECODERTHREAD_START_THREAD, U2K_VideoPlaybackMgr_DecoderThread_StartThread)
+        FUNC_CASE(UNITY2K_VIDEOCLIPPLAYBACK_IS_READY, U2K_VideoClipPlayback_IsReady)
+        FUNC_CASE(UNITY2K_VIDEOCLIPPLAYBACK_EXECUTE_DECODE, U2K_VideoClipPlayback_ExecuteDecode)
+        FUNC_CASE(UNITY2K_VIDEOCLIPPLAYBACK_GET_STATUS, U2K_VideoClipPlayback_GetStatus)
 
         FUNC_CASE(UNITY6_LOAD_FMOD_SOUND, U6_LoadFMODSound)
         FUNC_CASE(UNITY5_ANALYTICS_UPDATE, U5_BaseUnityAnalytics_UpdateConfigFromServer)
         FUNC_CASE(UNITY2K_CONNECTCLIENT_UPDATE, U2K_BaseUnityConnectClient_UpdateConfigFromServer)
 
-        FUNC_CASE(UNITY2K_VIDEOPLAYER_SET_SOURCE, U2K_VideoPlayer_SetSource)
-        FUNC_CASE(UNITY2K_VIDEOPLAYER_SET_VIDEO_URL, U2K_VideoPlayer_SetVideoUrl)
-        FUNC_CASE(UNITY2K_VIDEOPLAYER_SET_VIDEO_CLIP, U2K_VideoPlayer_SetVideoClip)
-        FUNC_CASE(UNITY2K_VIDEOPLAYER_PLAY, U2K_VideoPlayer_Play)
-        FUNC_CASE(UNITY2K_VIDEOPLAYER_PAUSE, U2K_VideoPlayer_Pause)
-        FUNC_CASE(UNITY2K_VIDEOPLAYER_PREPARE, U2K_VideoPlayer_Prepare)
-        FUNC_CASE(UNITY2K_VIDEOPLAYER_ON_PREPARED, U2K_VideoPlayer_OnPrepared)
-        FUNC_CASE(UNITY2K_VIDEOPLAYER_IS_PREPARED, U2K_VideoPlayer_IsPrepared)
-        FUNC_CASE(UNITY2K_VIDEOPLAYER_AWAKE_FROM_LOAD, U2K_VideoPlayer_AwakeFromLoad)
-
-        FUNC_CASE(UNITY2K_VIDEOCLIPPLAYBACK_DECODER_IS_RUNNING, U2K_VideoClipPlayback_DecoderIsRunning)
-        FUNC_CASE(UNITY2K_VIDEOCLIPPLAYBACK_UPDATE_PLAYBACK, U2K_VideoClipPlayback_UpdatePlayback)
-        FUNC_CASE(UNITY2K_VIDEOCLIPPLAYBACK_IS_PLAYING, U2K_VideoClipPlayback_IsPlaying)
-        FUNC_CASE(UNITY2K_VIDEOCLIPPLAYBACK_IS_READY, U2K_VideoClipPlayback_IsReady)
-        FUNC_CASE(UNITY2K_VIDEOCLIPPLAYBACK_EXECUTE_DECODE, U2K_VideoClipPlayback_ExecuteDecode)
-        FUNC_CASE(UNITY2K_VIDEOCLIPPLAYBACK_PLAY, U2K_VideoClipPlayback_Play)
-        FUNC_CASE(UNITY2K_VIDEOCLIPPLAYBACK_PAUSE, U2K_VideoClipPlayback_Pause)
-        FUNC_CASE(UNITY2K_VIDEOCLIPPLAYBACK_GET_STATUS, U2K_VideoClipPlayback_GetStatus)
-
         FUNC_CASE(PHYSX_CM_FANOUTTASK_REMOVEREFERENCE, physx_Cm_FanoutTask_RemoveReference)
+        FUNC_CASE(PHYSX_SC_SCENE_COLLIDESTEP, physx_Sc_Scene_CollideStep)
         FUNC_CASE(SC_SIMULATION_UPDATE_SC_BODY, ScSimulationControllerCallback_updateScBodyAndShapeSim)
-        
     }
 }
 

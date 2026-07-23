@@ -1,5 +1,5 @@
 /*
-    Copyright 2015-2026 Clément Gallet <clement.gallet@ens-lyon.org>
+    Copyright 2015-2026 Clement Gallet <clement.gallet@ens-lyon.org>
 
     This file is part of libTAS.
 
@@ -15,20 +15,21 @@
 
     You should have received a copy of the GNU General Public License
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
-#include "global.h"
+#ifndef LIBTAS_CHECKPOINT_SAVEFILES_H
+#define LIBTAS_CHECKPOINT_SAVEFILES_H
+
+#include <cstddef>
 
 namespace libtas {
 
-/* We use constinit to make sure these globals are initialized at compile time. If not, 
- * the library constructor could be executed before those globals are initialized,
- * resulting in overwriting the globals with their default values. */
-constinit SharedConfig Global::shared_config;
-constinit GameInfo Global::game_info;
-volatile bool Global::is_inited = false;
-volatile bool Global::is_exiting = false;
-volatile bool Global::is_fork = false;
-bool Global::skipping_draw = false;
+class SaveStateLoading;
+class SaveStateSaving;
+
+void readASavefile(SaveStateLoading& saved_state);
+size_t writeSaveFiles(SaveStateSaving& state);
 
 }
+
+#endif
