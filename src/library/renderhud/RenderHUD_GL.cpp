@@ -26,6 +26,7 @@
 
 #include "../external/imgui/imgui.h"
 #include "../external/imgui/imgui_impl_opengl3.h"
+#include "../external/imgui/imgui_impl_xlib.h"
 
 namespace libtas {
 
@@ -35,6 +36,7 @@ RenderHUD_GL::~RenderHUD_GL() {
 
 void RenderHUD_GL::fini() {
     if (ImGui::GetCurrentContext()) {
+        ImGui_ImplXlib_Shutdown();
         ImGui_ImplOpenGL3_Shutdown();
         ImGui::DestroyContext();
     }
