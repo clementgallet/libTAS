@@ -36,8 +36,6 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(SteamUser)
-
 static char steamuserdir[2048] = "/NOTVALID";
 static const char *steamuser_version = NULL;
 
@@ -99,8 +97,7 @@ struct ISteamUser *SteamUser(void)
     LOGTRACE_SIMPLE(LCF_STEAM);
 
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamUser, "steam_api");
-        return orig::SteamUser();
+        RETURN_NATIVE(SteamUser, (), "steam_api");
     }
 
     static struct ISteamUser *cached_iface = nullptr;
@@ -111,6 +108,23 @@ struct ISteamUser *SteamUser(void)
         LOG(LL_WARN, LCF_STEAM, "ISteamUser: No version specified, defaulting to %s", steamuser_version);
     }
 
+    if (!cached_iface)
+        cached_iface = SteamUser_generic(steamuser_version);
+
+    return cached_iface;
+}
+
+struct ISteamUser *SteamAPI_SteamUser_v023(void)
+{
+    LOGTRACE_SIMPLE(LCF_STEAM);
+
+    if (!Global::shared_config.virtual_steam) {
+        RETURN_NATIVE(SteamAPI_SteamUser_v023, (), "steam_api");
+    }
+
+    static struct ISteamUser *cached_iface = nullptr;
+
+    steamuser_version = STEAMUSER_INTERFACE_VERSION_023;
     if (!cached_iface)
         cached_iface = SteamUser_generic(steamuser_version);
 

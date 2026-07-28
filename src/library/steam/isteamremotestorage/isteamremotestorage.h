@@ -42,6 +42,7 @@ struct ISteamRemoteStorage
 ISteamRemoteStorage *SteamRemoteStorage_generic(const char *version);
 void SteamRemoteStorage_set_version(const char *version);
 OVERRIDE ISteamRemoteStorage *SteamRemoteStorage(void);
+OVERRIDE ISteamRemoteStorage *SteamAPI_SteamRemoteStorage_v016(void);
 
 }
 

@@ -37,6 +37,7 @@ struct ISteamUserStats
 ISteamUserStats *SteamUserStats_generic(const char *version);
 void SteamUserStats_set_version(const char *version);
 OVERRIDE ISteamUserStats *SteamUserStats(void);
+OVERRIDE ISteamUserStats *SteamAPI_SteamUserStats_v013(void);
 
 }
 

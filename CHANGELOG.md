@@ -12,6 +12,7 @@
 * Implement SDL_OpenAudioDeviceStream()
 * Add hooks for Unity 2023
 * Hook another physX function to prevent a softlock
+* Steam: add flat api hooks
 
 ### Changed
 

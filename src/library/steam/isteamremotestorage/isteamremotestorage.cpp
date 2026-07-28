@@ -43,8 +43,6 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(SteamRemoteStorage)
-
 static char steamremotestorage[2048] = "/NOTVALID";
 static const char *steamremotestorage_version = NULL;
 
@@ -114,8 +112,7 @@ struct ISteamRemoteStorage *SteamRemoteStorage(void)
     LOGTRACE_SIMPLE(LCF_STEAM);
 
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamRemoteStorage, "steam_api");
-        return orig::SteamRemoteStorage();
+        RETURN_NATIVE(SteamRemoteStorage, (), "steam_api");
     }
 
     static struct ISteamRemoteStorage *cached_iface = nullptr;
@@ -125,6 +122,23 @@ struct ISteamRemoteStorage *SteamRemoteStorage(void)
         steamremotestorage_version = STEAMREMOTESTORAGE_INTERFACE_VERSION_016;
         LOG(LL_WARN, LCF_STEAM, "ISteamRemoteStorage: No version specified, defaulting to %s", steamremotestorage_version);
     }
+
+    if (!cached_iface)
+        cached_iface = SteamRemoteStorage_generic(steamremotestorage_version);
+
+    return cached_iface;
+}
+
+struct ISteamRemoteStorage *SteamAPI_SteamRemoteStorage_v016(void)
+{
+    LOGTRACE_SIMPLE(LCF_STEAM);
+
+    if (!Global::shared_config.virtual_steam) {
+        RETURN_NATIVE(SteamAPI_SteamRemoteStorage_v016, (), "steam_api");
+    }
+
+    static struct ISteamRemoteStorage *cached_iface = nullptr;
+    steamremotestorage_version = STEAMREMOTESTORAGE_INTERFACE_VERSION_016;
 
     if (!cached_iface)
         cached_iface = SteamRemoteStorage_generic(steamremotestorage_version);

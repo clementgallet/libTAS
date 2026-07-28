@@ -30,6 +30,7 @@ struct ISteamUser
 ISteamUser *SteamUser_generic(const char *version);
 void SteamUser_set_version(const char *version);
 OVERRIDE ISteamUser *SteamUser(void);
+OVERRIDE ISteamUser *SteamAPI_SteamUser_v023(void);
 
 }
 

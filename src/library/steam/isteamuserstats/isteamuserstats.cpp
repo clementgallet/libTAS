@@ -43,8 +43,6 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(SteamUserStats)
-
 static const char *steamuserstats_version = NULL;
 
 struct ISteamUserStats *SteamUserStats_generic(const char *version)
@@ -102,8 +100,7 @@ struct ISteamUserStats *SteamUserStats(void)
     LOGTRACE_SIMPLE(LCF_STEAM);
 
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamUserStats, "steam_api");
-        return orig::SteamUserStats();
+        RETURN_NATIVE(SteamUserStats, (), "steam_api");
     }
 
     static struct ISteamUserStats *cached_iface = nullptr;
@@ -113,6 +110,24 @@ struct ISteamUserStats *SteamUserStats(void)
         steamuserstats_version = STEAMUSERSTATS_INTERFACE_VERSION_013;
         LOG(LL_WARN, LCF_STEAM, "ISteamUserStats: No version specified, defaulting to %s", steamuserstats_version);
     }
+
+    if (!cached_iface)
+        cached_iface = SteamUserStats_generic(steamuserstats_version);
+
+    return cached_iface;
+}
+
+struct ISteamUserStats *SteamAPI_SteamUserStats_v013(void)
+{
+    LOGTRACE_SIMPLE(LCF_STEAM);
+
+    if (!Global::shared_config.virtual_steam) {
+        RETURN_NATIVE(SteamAPI_SteamUserStats_v013, (), "steam_api");
+    }
+
+    static struct ISteamUserStats *cached_iface = nullptr;
+
+    steamuserstats_version = STEAMUSERSTATS_INTERFACE_VERSION_013;
 
     if (!cached_iface)
         cached_iface = SteamUserStats_generic(steamuserstats_version);
