@@ -292,7 +292,7 @@ namespace orig {
 
     long (*U2K_JobQueue_Exec)(JobQueue *t, JobInfo* x, long long y, int z, bool a) = nullptr;
     long (*U2K_JobQueue_ExecuteJobFromQueue)(JobQueue *t, bool x) = nullptr;
-    long (*U2K_JobQueue_ProcessJobs)(JobQueue_ThreadInfo* x, void* y) = nullptr;
+    long (*U2K_JobQueue_ProcessJobs)(JobQueue *t, JobQueue_ThreadInfo* x, void* y) = nullptr;
     void (*U2K_JobQueue_ScheduleDependencies)(JobQueue *t, JobGroupID *x, JobInfo *y, JobInfo *z, bool a) = nullptr;
     JobGroupID (*U2K_JobQueue_ScheduleGroupInternal)(JobQueue *t, JobGroup* x, int y, bool z) = nullptr;
     void (*U2K_JobQueue_WaitForJobGroup)(JobQueue *t, JobGroup *x, int y) = nullptr;
@@ -686,14 +686,14 @@ static long U2K_JobQueue_ExecuteJobFromQueue(JobQueue *t, bool x)
     return orig::U2K_JobQueue_ExecuteJobFromQueue(t, x);
 }
 
-static long U2K_JobQueue_ProcessJobs(JobQueue_ThreadInfo* x, void* y)
+static long U2K_JobQueue_ProcessJobs(JobQueue *t, JobQueue_ThreadInfo* x, void* y)
 {
     LOGTRACE_SIMPLE(LCF_HACKS);
     ThreadInfo* thread = ThreadManager::getCurrentThread();
     thread->unityThread = true;
     thread->name = "JobWorker";
 
-    return orig::U2K_JobQueue_ProcessJobs(x, y);
+    return orig::U2K_JobQueue_ProcessJobs(t, x, y);
 }
 
 static void U2K_JobQueue_ScheduleDependencies(JobQueue *t, JobGroupID *x, JobInfo *y, JobInfo *z, bool a)
