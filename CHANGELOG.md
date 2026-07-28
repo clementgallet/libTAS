@@ -23,6 +23,8 @@
 * Vulkan: switch to immediate present mode if available
 * Buffer writes to savestate page flag file
 * Disable asynchronous processing in FMOD Studio
+* Xevent async options only wait for events pushed during the
+  last frame, not all events 
 
 ### Fixed
 

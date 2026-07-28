@@ -76,9 +76,9 @@ bool XlibEventQueueList::waitForEmpty()
     while (!allEmpty) {
         allEmpty = true;
         for (auto queue: eventQueueList) {
-            allEmpty &= queue->emptied;
-            if (!queue->emptied) {
-                if (++attempts > 10 * 100) {
+            allEmpty &= (queue->size() <= queue->sync_count);
+            if (queue->size() > queue->sync_count) {
+                if (++attempts > 10 * 1000) {
                     LOG(LL_ERROR, LCF_EVENTS, "xevents sync took too long, were asynchronous events incorrectly enabled?");
                     return false;
                 }
@@ -94,7 +94,7 @@ bool XlibEventQueueList::waitForEmpty()
 void XlibEventQueueList::resetEmpty()
 {
     for (auto queue: eventQueueList)
-        queue->emptied = false;
+        queue->sync_count = queue->size();
 }
 
 

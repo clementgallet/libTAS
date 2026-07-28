@@ -69,8 +69,9 @@ class XlibEventQueue
 
         Display* display;
 
-        /* Was the queue emptied? Used for asynchronous events */
-        bool emptied;
+        /* Store how many events are present at the last sync point, to determine if new
+         * events have been all processed. */
+        int sync_count = 0;
 
         /* Mutex for protecting empied and pop() */
         std::recursive_mutex mutex;

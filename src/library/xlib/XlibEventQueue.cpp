@@ -26,7 +26,7 @@
 
 namespace libtas {
 
-XlibEventQueue::XlibEventQueue(Display* d) : display(d), emptied(false), grab_window(0) {}
+XlibEventQueue::XlibEventQueue(Display* d) : display(d), sync_count(0), grab_window(0) {}
 
 void XlibEventQueue::setMask(Window w, long event_mask)
 {
@@ -145,7 +145,6 @@ bool XlibEventQueue::pop(XEvent* event, bool update)
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
     if (eventQueue.size() == 0) {
-        emptied = true;
         return false;
     }
 
@@ -178,7 +177,6 @@ bool XlibEventQueue::pop(XEvent* event, Window w, long event_mask)
         eventQueue.erase(it);
         return true;
     }
-    emptied = true;
     return false;
 }
 
@@ -202,7 +200,6 @@ bool XlibEventQueue::pop(XEvent* event, Window w, int event_type)
         eventQueue.erase(it);
         return true;
     }
-    emptied = true;
     return false;
 }
 
@@ -221,7 +218,6 @@ bool XlibEventQueue::pop(XEvent* event, Bool (*predicate)(Display *, XEvent *, X
             return true;
         }
     }
-    emptied = true;
     return false;
 }
 
@@ -230,8 +226,6 @@ int XlibEventQueue::size()
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
     size_t s = eventQueue.size();
-    if (s == 0)
-        emptied = true;
     return s;
 }
 
