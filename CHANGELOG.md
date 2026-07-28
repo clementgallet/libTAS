@@ -38,6 +38,7 @@
 * Add SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK and SDL_AUDIO_DEVICE_DEFAULT_RECORDING
   values for SDL_GetAudioDeviceFormat()
 * Fix savestate crash on new kernels (fix #745)
+* Remove RTLD_DEEPBIND flag in dlopen to fix symbol preloading
 
 ## [1.4.8] - 2026-05-14
 ### Added
