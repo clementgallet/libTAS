@@ -25,31 +25,11 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(SteamGameServer_Init)
-DEFINE_ORIG_POINTER(SteamGameServer_Shutdown)
-DEFINE_ORIG_POINTER(SteamGameServer_RunCallbacks)
-DEFINE_ORIG_POINTER(SteamGameServer_ReleaseCurrentThreadMemory)
-DEFINE_ORIG_POINTER(SteamGameServer_BSecure)
-DEFINE_ORIG_POINTER(SteamGameServer_GetSteamID)
-DEFINE_ORIG_POINTER(SteamGameServerClient)
-DEFINE_ORIG_POINTER(SteamGameServer)
-DEFINE_ORIG_POINTER(SteamGameServerUtils)
-DEFINE_ORIG_POINTER(SteamGameServerNetworking)
-DEFINE_ORIG_POINTER(SteamGameServerStats)
-DEFINE_ORIG_POINTER(SteamGameServerHTTP)
-DEFINE_ORIG_POINTER(SteamGameServerInventory)
-DEFINE_ORIG_POINTER(SteamGameServerUGC)
-DEFINE_ORIG_POINTER(SteamGameServerApps)
-DEFINE_ORIG_POINTER(SteamGameServer_GetHSteamPipe)
-DEFINE_ORIG_POINTER(SteamGameServer_GetHSteamUser)
-DEFINE_ORIG_POINTER(SteamInternal_GameServer_Init)
-
 bool SteamGameServer_Init( uint32_t unIP, uint16_t usSteamPort, uint16_t usGamePort, uint16_t usQueryPort, EServerMode eServerMode, const char *pchVersionString )
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServer_Init, "steam_api");
-        return orig::SteamGameServer_Init(unIP, usSteamPort, usGamePort, usQueryPort, eServerMode, pchVersionString);
+        RETURN_NATIVE(SteamGameServer_Init, (unIP, usSteamPort, usGamePort, usQueryPort, eServerMode, pchVersionString), "steam_api");
     }
 
     return true;
@@ -59,8 +39,7 @@ void SteamGameServer_Shutdown()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServer_Shutdown, "steam_api");
-        return orig::SteamGameServer_Shutdown();
+        RETURN_NATIVE(SteamGameServer_Shutdown, (), "steam_api");
     }
 }
 
@@ -68,8 +47,7 @@ void SteamGameServer_RunCallbacks()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServer_RunCallbacks, "steam_api");
-        return orig::SteamGameServer_RunCallbacks();
+        RETURN_NATIVE(SteamGameServer_RunCallbacks, (), "steam_api");
     }
 }
 
@@ -77,8 +55,7 @@ void SteamGameServer_ReleaseCurrentThreadMemory()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServer_ReleaseCurrentThreadMemory, "steam_api");
-        return orig::SteamGameServer_ReleaseCurrentThreadMemory();
+        RETURN_NATIVE(SteamGameServer_ReleaseCurrentThreadMemory, (), "steam_api");
     }
 }
 
@@ -86,8 +63,7 @@ bool SteamGameServer_BSecure()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServer_BSecure, "steam_api");
-        return orig::SteamGameServer_BSecure();
+        RETURN_NATIVE(SteamGameServer_BSecure, (), "steam_api");
     }
     return false;
 }
@@ -96,8 +72,7 @@ uint64_t SteamGameServer_GetSteamID()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServer_GetSteamID, "steam_api");
-        return orig::SteamGameServer_GetSteamID();
+        RETURN_NATIVE(SteamGameServer_GetSteamID, (), "steam_api");
     }
     return 0;
 }
@@ -106,8 +81,7 @@ ISteamClient *SteamGameServerClient()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServerClient, "steam_api");
-        return orig::SteamGameServerClient();
+        RETURN_NATIVE(SteamGameServerClient, (), "steam_api");
     }
 
     static ISteamClient steamgameserverclient;
@@ -118,8 +92,7 @@ ISteamGameServer *SteamGameServer()
 {
     LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServer, "steam_api");
-        return orig::SteamGameServer();
+        RETURN_NATIVE(SteamGameServer, (), "steam_api");
     }
 
     static ISteamGameServer steamgameserver;
@@ -130,8 +103,7 @@ ISteamUtils *SteamGameServerUtils()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServerUtils, "steam_api");
-        return orig::SteamGameServerUtils();
+        RETURN_NATIVE(SteamGameServerUtils, (), "steam_api");
     }
 
     static ISteamUtils steamgameserverutils;
@@ -142,8 +114,7 @@ ISteamNetworking *SteamGameServerNetworking()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServerNetworking, "steam_api");
-        return orig::SteamGameServerNetworking();
+        RETURN_NATIVE(SteamGameServerNetworking, (), "steam_api");
     }
 
     static ISteamNetworking steamgameservernetworking;
@@ -154,8 +125,7 @@ ISteamGameServerStats *SteamGameServerStats()
 {
     LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServerStats, "steam_api");
-        return orig::SteamGameServerStats();
+        RETURN_NATIVE(SteamGameServerStats, (), "steam_api");
     }
 
     return nullptr;
@@ -165,8 +135,7 @@ ISteamHTTP *SteamGameServerHTTP()
 {
     LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServerHTTP, "steam_api");
-        return orig::SteamGameServerHTTP();
+        RETURN_NATIVE(SteamGameServerHTTP, (), "steam_api");
     }
 
     static ISteamHTTP steamgameserverhttp;
@@ -177,8 +146,7 @@ ISteamInventory *SteamGameServerInventory()
 {
     LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServerInventory, "steam_api");
-        return orig::SteamGameServerInventory();
+        RETURN_NATIVE(SteamGameServerInventory, (), "steam_api");
     }
 
     return nullptr;
@@ -188,8 +156,7 @@ ISteamUGC *SteamGameServerUGC()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServerUGC, "steam_api");
-        return orig::SteamGameServerUGC();
+        RETURN_NATIVE(SteamGameServerUGC, (), "steam_api");
     }
 
     static ISteamUGC steamgameserverugc;
@@ -200,8 +167,7 @@ ISteamApps *SteamGameServerApps()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServerApps, "steam_api");
-        return orig::SteamGameServerApps();
+        RETURN_NATIVE(SteamGameServerApps, (), "steam_api");
     }
 
     static ISteamApps steamgameserverapps;
@@ -212,8 +178,7 @@ HSteamPipe SteamGameServer_GetHSteamPipe()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServer_GetHSteamPipe, "steam_api");
-        return orig::SteamGameServer_GetHSteamPipe();
+        RETURN_NATIVE(SteamGameServer_GetHSteamPipe, (), "steam_api");
     }
     return 0;
 }
@@ -222,8 +187,7 @@ HSteamUser SteamGameServer_GetHSteamUser()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamGameServer_GetHSteamUser, "steam_api");
-        return orig::SteamGameServer_GetHSteamUser();
+        RETURN_NATIVE(SteamGameServer_GetHSteamUser, (), "steam_api");
     }
     return 0;
 }
@@ -232,8 +196,7 @@ bool SteamInternal_GameServer_Init( uint32_t unIP, uint16_t usPort, uint16_t usG
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamInternal_GameServer_Init, "steam_api");
-        return orig::SteamInternal_GameServer_Init(unIP, usPort, usGamePort, usQueryPort, eServerMode, pchVersionString);
+        RETURN_NATIVE(SteamInternal_GameServer_Init, (unIP, usPort, usGamePort, usQueryPort, eServerMode, pchVersionString), "steam_api");
     }
     return true;
 }

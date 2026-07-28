@@ -288,45 +288,6 @@ static bool SteamGetInterfaceVersion()
     return true;
 }
 
-DEFINE_ORIG_POINTER(SteamAPI_Init)
-DEFINE_ORIG_POINTER(SteamAPI_InitSafe)
-DEFINE_ORIG_POINTER(SteamAPI_Shutdown)
-DEFINE_ORIG_POINTER(SteamAPI_IsSteamRunning)
-DEFINE_ORIG_POINTER(SteamAPI_RestartAppIfNecessary)
-DEFINE_ORIG_POINTER(SteamAPI_RunCallbacks)
-DEFINE_ORIG_POINTER(SteamAPI_RegisterCallback)
-DEFINE_ORIG_POINTER(SteamAPI_UnregisterCallback)
-DEFINE_ORIG_POINTER(SteamAPI_RegisterCallResult)
-DEFINE_ORIG_POINTER(SteamAPI_UnregisterCallResult)
-
-DEFINE_ORIG_POINTER(SteamAPI_ManualDispatch_Init)
-DEFINE_ORIG_POINTER(SteamAPI_ManualDispatch_RunFrame)
-DEFINE_ORIG_POINTER(SteamAPI_ManualDispatch_GetNextCallback)
-DEFINE_ORIG_POINTER(SteamAPI_ManualDispatch_FreeLastCallback)
-DEFINE_ORIG_POINTER(SteamAPI_ManualDispatch_GetAPICallResult)
-
-DEFINE_ORIG_POINTER(SteamController)
-DEFINE_ORIG_POINTER(SteamUtils)
-DEFINE_ORIG_POINTER(SteamApps)
-DEFINE_ORIG_POINTER(SteamFriends)
-DEFINE_ORIG_POINTER(SteamScreenshots)
-DEFINE_ORIG_POINTER(SteamUGC)
-DEFINE_ORIG_POINTER(SteamMatchmaking)
-DEFINE_ORIG_POINTER(SteamNetworking)
-DEFINE_ORIG_POINTER(SteamMatchmakingServers)
-DEFINE_ORIG_POINTER(SteamHTTP)
-DEFINE_ORIG_POINTER(SteamAppList)
-DEFINE_ORIG_POINTER(SteamMusic)
-DEFINE_ORIG_POINTER(SteamMusicRemote)
-DEFINE_ORIG_POINTER(SteamHTMLSurface)
-DEFINE_ORIG_POINTER(SteamInventory)
-DEFINE_ORIG_POINTER(SteamVideo)
-DEFINE_ORIG_POINTER(SteamParentalSettings)
-DEFINE_ORIG_POINTER(SteamNetworkingUtils)
-DEFINE_ORIG_POINTER(SteamNetworkingSockets)
-DEFINE_ORIG_POINTER(SteamNetworkingMessages)
-DEFINE_ORIG_POINTER(SteamInput)
-
 bool SteamAPI_Init()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
@@ -334,8 +295,7 @@ bool SteamAPI_Init()
         SteamGetInterfaceVersion();
         return true;
     }
-    LINK_NAMESPACE(SteamAPI_Init, "steam_api");
-    return orig::SteamAPI_Init();
+    RETURN_NATIVE(SteamAPI_Init, (), "steam_api");
 }
 
 bool SteamAPI_InitSafe()
@@ -345,8 +305,7 @@ bool SteamAPI_InitSafe()
         SteamGetInterfaceVersion();
         return true;
     }
-    LINK_NAMESPACE(SteamAPI_InitSafe, "steam_api");
-    return orig::SteamAPI_InitSafe();
+    RETURN_NATIVE(SteamAPI_InitSafe, (), "steam_api");
 }
 
 void SteamAPI_Shutdown()
@@ -355,8 +314,7 @@ void SteamAPI_Shutdown()
     if (Global::shared_config.virtual_steam)
         return;
     
-    LINK_NAMESPACE(SteamAPI_Shutdown, "steam_api");
-    return orig::SteamAPI_Shutdown();
+    RETURN_NATIVE(SteamAPI_Shutdown, (), "steam_api");
 }
 
 bool SteamAPI_IsSteamRunning()
@@ -365,8 +323,7 @@ bool SteamAPI_IsSteamRunning()
     if (Global::shared_config.virtual_steam)
         return true;
     
-    LINK_NAMESPACE(SteamAPI_IsSteamRunning, "steam_api");
-    return orig::SteamAPI_IsSteamRunning();
+    RETURN_NATIVE(SteamAPI_IsSteamRunning, (), "steam_api");
 }
 
 bool SteamAPI_RestartAppIfNecessary( unsigned int unOwnAppID )
@@ -375,8 +332,7 @@ bool SteamAPI_RestartAppIfNecessary( unsigned int unOwnAppID )
     if (Global::shared_config.virtual_steam)
         return false;
 
-    LINK_NAMESPACE(SteamAPI_RestartAppIfNecessary, "steam_api");
-    return orig::SteamAPI_RestartAppIfNecessary(unOwnAppID);
+    RETURN_NATIVE(SteamAPI_RestartAppIfNecessary, (unOwnAppID), "steam_api");
 }
 
 void SteamAPI_RunCallbacks()
@@ -385,8 +341,7 @@ void SteamAPI_RunCallbacks()
     if (Global::shared_config.virtual_steam)
         return CCallbackManager::Run();
 
-    LINK_NAMESPACE(SteamAPI_RunCallbacks, "steam_api");
-    return orig::SteamAPI_RunCallbacks();
+    RETURN_NATIVE(SteamAPI_RunCallbacks, (), "steam_api");
 }
 
 void SteamAPI_RegisterCallback( CCallbackBase *pCallback, enum steam_callback_type iCallback )
@@ -395,8 +350,7 @@ void SteamAPI_RegisterCallback( CCallbackBase *pCallback, enum steam_callback_ty
     if (Global::shared_config.virtual_steam)
         return CCallbackManager::RegisterCallback(pCallback, iCallback);
 
-    LINK_NAMESPACE(SteamAPI_RegisterCallback, "steam_api");
-    return orig::SteamAPI_RegisterCallback(pCallback, iCallback);
+    RETURN_NATIVE(SteamAPI_RegisterCallback, (pCallback, iCallback), "steam_api");
 }
 
 void SteamAPI_UnregisterCallback( CCallbackBase *pCallback )
@@ -405,8 +359,7 @@ void SteamAPI_UnregisterCallback( CCallbackBase *pCallback )
     if (Global::shared_config.virtual_steam)
         return CCallbackManager::UnregisterCallback(pCallback);
 
-    LINK_NAMESPACE(SteamAPI_UnregisterCallback, "steam_api");
-    return orig::SteamAPI_UnregisterCallback(pCallback);
+    RETURN_NATIVE(SteamAPI_UnregisterCallback, (pCallback), "steam_api");
 }
 
 void SteamAPI_RegisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAPICall )
@@ -415,8 +368,7 @@ void SteamAPI_RegisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAPIC
     if (Global::shared_config.virtual_steam)
         return CCallbackManager::RegisterApiCallResult(pCallback, hAPICall);
 
-    LINK_NAMESPACE(SteamAPI_RegisterCallResult, "steam_api");
-    return orig::SteamAPI_RegisterCallResult(pCallback, hAPICall);
+    RETURN_NATIVE(SteamAPI_RegisterCallResult, (pCallback, hAPICall), "steam_api");
 }
 
 void SteamAPI_UnregisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAPICall )
@@ -425,8 +377,7 @@ void SteamAPI_UnregisterCallResult( CCallbackBase *pCallback, SteamAPICall_t hAP
     if (Global::shared_config.virtual_steam)
         return CCallbackManager::UnregisterApiCallResult(pCallback, hAPICall);
         
-    LINK_NAMESPACE(SteamAPI_UnregisterCallResult, "steam_api");
-    return orig::SteamAPI_UnregisterCallResult(pCallback, hAPICall);
+    RETURN_NATIVE(SteamAPI_UnregisterCallResult, (pCallback, hAPICall), "steam_api");
 }
 
 void SteamAPI_ManualDispatch_Init()
@@ -435,8 +386,7 @@ void SteamAPI_ManualDispatch_Init()
     if (Global::shared_config.virtual_steam)
         return;
         
-    LINK_NAMESPACE(SteamAPI_ManualDispatch_Init, "steam_api");
-    return orig::SteamAPI_ManualDispatch_Init();
+    RETURN_NATIVE(SteamAPI_ManualDispatch_Init, (), "steam_api");
 }
 
 void SteamAPI_ManualDispatch_RunFrame( HSteamPipe hSteamPipe )
@@ -445,8 +395,7 @@ void SteamAPI_ManualDispatch_RunFrame( HSteamPipe hSteamPipe )
     if (Global::shared_config.virtual_steam)
         return;
         
-    LINK_NAMESPACE(SteamAPI_ManualDispatch_RunFrame, "steam_api");
-    return orig::SteamAPI_ManualDispatch_RunFrame(hSteamPipe);
+    RETURN_NATIVE(SteamAPI_ManualDispatch_RunFrame, (hSteamPipe), "steam_api");
 }
 
 bool SteamAPI_ManualDispatch_GetNextCallback( HSteamPipe hSteamPipe, CallbackMsg_t *pCallbackMsg )
@@ -455,8 +404,7 @@ bool SteamAPI_ManualDispatch_GetNextCallback( HSteamPipe hSteamPipe, CallbackMsg
     if (Global::shared_config.virtual_steam)
         return false;
         
-    LINK_NAMESPACE(SteamAPI_ManualDispatch_GetNextCallback, "steam_api");
-    return orig::SteamAPI_ManualDispatch_GetNextCallback(hSteamPipe, pCallbackMsg);
+    RETURN_NATIVE(SteamAPI_ManualDispatch_GetNextCallback, (hSteamPipe, pCallbackMsg), "steam_api");
 }
 
 void SteamAPI_ManualDispatch_FreeLastCallback( HSteamPipe hSteamPipe )
@@ -465,8 +413,7 @@ void SteamAPI_ManualDispatch_FreeLastCallback( HSteamPipe hSteamPipe )
     if (Global::shared_config.virtual_steam)
         return;
         
-    LINK_NAMESPACE(SteamAPI_ManualDispatch_FreeLastCallback, "steam_api");
-    return orig::SteamAPI_ManualDispatch_FreeLastCallback(hSteamPipe);
+    RETURN_NATIVE(SteamAPI_ManualDispatch_FreeLastCallback, (hSteamPipe), "steam_api");
 }
 
 bool SteamAPI_ManualDispatch_GetAPICallResult( HSteamPipe hSteamPipe, SteamAPICall_t hSteamAPICall, void *pCallback, int cubCallback, int iCallbackExpected, bool *pbFailed )
@@ -481,17 +428,15 @@ bool SteamAPI_ManualDispatch_GetAPICallResult( HSteamPipe hSteamPipe, SteamAPICa
 
         return CCallbackManager::ApiCallResultGetOutput(hSteamAPICall, pCallback, cubCallback, static_cast<steam_callback_type>(iCallbackExpected), pbFailed);
     }
-        
-    LINK_NAMESPACE(SteamAPI_ManualDispatch_GetAPICallResult, "steam_api");
-    return orig::SteamAPI_ManualDispatch_GetAPICallResult(hSteamPipe, hSteamAPICall, pCallback, cubCallback, iCallbackExpected, pbFailed);
+    
+    RETURN_NATIVE(SteamAPI_ManualDispatch_GetAPICallResult, (hSteamPipe, hSteamAPICall, pCallback, cubCallback, iCallbackExpected, pbFailed), "steam_api");
 }
 
 ISteamController *SteamController()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamController, "steam_api");
-        return orig::SteamController();
+        RETURN_NATIVE(SteamController, (), "steam_api");
     }
 
     static ISteamController steamcontroller;
@@ -502,8 +447,7 @@ ISteamUtils *SteamUtils()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamUtils, "steam_api");
-        return orig::SteamUtils();
+        RETURN_NATIVE(SteamUtils, (), "steam_api");
     }
 
     static ISteamUtils steamutils;
@@ -514,8 +458,7 @@ ISteamApps *SteamApps()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamApps, "steam_api");
-        return orig::SteamApps();
+        RETURN_NATIVE(SteamApps, (), "steam_api");
     }
 
     static ISteamApps steamapps;
@@ -526,8 +469,7 @@ ISteamFriends *SteamFriends()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamFriends, "steam_api");
-        return orig::SteamFriends();
+        RETURN_NATIVE(SteamFriends, (), "steam_api");
     }
 
     static ISteamFriends steamfriends;
@@ -538,8 +480,7 @@ ISteamScreenshots *SteamScreenshots()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamScreenshots, "steam_api");
-        return orig::SteamScreenshots();
+        RETURN_NATIVE(SteamScreenshots, (), "steam_api");
     }
 
     static ISteamScreenshots steamscreenshots;
@@ -550,8 +491,7 @@ ISteamUGC *SteamUGC()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamUGC, "steam_api");
-        return orig::SteamUGC();
+        RETURN_NATIVE(SteamUGC, (), "steam_api");
     }
 
     static ISteamUGC steamugc;
@@ -562,8 +502,7 @@ ISteamMatchmaking *SteamMatchmaking()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamMatchmaking, "steam_api");
-        return orig::SteamMatchmaking();
+        RETURN_NATIVE(SteamMatchmaking, (), "steam_api");
     }
 
     static ISteamMatchmaking steammatchmaking;
@@ -574,8 +513,7 @@ ISteamNetworking *SteamNetworking()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamNetworking, "steam_api");
-        return orig::SteamNetworking();
+        RETURN_NATIVE(SteamNetworking, (), "steam_api");
     }
 
     static ISteamNetworking steamnetworking;
@@ -586,8 +524,7 @@ ISteamMatchmakingServers *SteamMatchmakingServers()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamMatchmakingServers, "steam_api");
-        return orig::SteamMatchmakingServers();
+        RETURN_NATIVE(SteamMatchmakingServers, (), "steam_api");
     }
 
     static ISteamMatchmakingServers steammatchmakingservers;
@@ -598,8 +535,7 @@ ISteamHTTP *SteamHTTP()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamHTTP, "steam_api");
-        return orig::SteamHTTP();
+        RETURN_NATIVE(SteamHTTP, (), "steam_api");
     }
 
     static ISteamHTTP steamhttp;
@@ -610,8 +546,7 @@ ISteamAppList *SteamAppList()
 {
     LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamAppList, "steam_api");
-        return orig::SteamAppList();
+        RETURN_NATIVE(SteamAppList, (), "steam_api");
     }
 
     return nullptr;
@@ -621,8 +556,7 @@ ISteamMusic *SteamMusic()
 {
     LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamMusic, "steam_api");
-        return orig::SteamMusic();
+        RETURN_NATIVE(SteamMusic, (), "steam_api");
     }
 
     return nullptr;
@@ -632,8 +566,7 @@ ISteamMusicRemote *SteamMusicRemote()
 {
     LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamMusicRemote, "steam_api");
-        return orig::SteamMusicRemote();
+        RETURN_NATIVE(SteamMusicRemote, (), "steam_api");
     }
 
     return nullptr;
@@ -643,8 +576,7 @@ ISteamHTMLSurface *SteamHTMLSurface()
 {
     LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamHTMLSurface, "steam_api");
-        return orig::SteamHTMLSurface();
+        RETURN_NATIVE(SteamHTMLSurface, (), "steam_api");
     }
 
     return nullptr;
@@ -654,8 +586,7 @@ ISteamInventory *SteamInventory()
 {
     LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamInventory, "steam_api");
-        return orig::SteamInventory();
+        RETURN_NATIVE(SteamInventory, (), "steam_api");
     }
 
     return nullptr;
@@ -665,8 +596,7 @@ ISteamVideo *SteamVideo()
 {
     LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamVideo, "steam_api");
-        return orig::SteamVideo();
+        RETURN_NATIVE(SteamVideo, (), "steam_api");
     }
 
     return nullptr;
@@ -676,8 +606,7 @@ ISteamParentalSettings *SteamParentalSettings()
 {
     LOGTRACE_SIMPLE(LCF_STEAM | LCF_TODO);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamParentalSettings, "steam_api");
-        return orig::SteamParentalSettings();
+        RETURN_NATIVE(SteamParentalSettings, (), "steam_api");
     }
 
     return nullptr;
@@ -687,8 +616,7 @@ ISteamNetworkingUtils *SteamNetworkingUtils()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamNetworkingUtils, "steam_api");
-        return orig::SteamNetworkingUtils();
+        RETURN_NATIVE(SteamNetworkingUtils, (), "steam_api");
     }
 
     static ISteamNetworkingUtils steamnetworkingutils;
@@ -699,8 +627,7 @@ ISteamNetworkingSockets *SteamNetworkingSockets()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamNetworkingSockets, "steam_api");
-        return orig::SteamNetworkingSockets();
+        RETURN_NATIVE(SteamNetworkingSockets, (), "steam_api");
     }
 
     static ISteamNetworkingSockets steamnetworkingsockets;
@@ -711,8 +638,7 @@ ISteamNetworkingMessages *SteamNetworkingMessages()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamNetworkingMessages, "steam_api");
-        return orig::SteamNetworkingMessages();
+        RETURN_NATIVE(SteamNetworkingMessages, (), "steam_api");
     }
 
     static ISteamNetworkingMessages steamnetworkingmessages;
@@ -723,8 +649,7 @@ ISteamInput *SteamInput()
 {
     LOGTRACE_SIMPLE(LCF_STEAM);
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamInput, "steam_api");
-        return orig::SteamInput();
+        RETURN_NATIVE(SteamInput, (), "steam_api");
     }
 
     static ISteamInput steaminput;

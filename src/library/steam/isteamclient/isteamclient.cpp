@@ -37,8 +37,6 @@
 
 namespace libtas {
 
-DEFINE_ORIG_POINTER(SteamClient)
-
 static const char *steamclient_version = NULL;
 
 struct ISteamClient *SteamClient_generic(const char *version)
@@ -101,8 +99,7 @@ struct ISteamClient *SteamClient(void)
     LOGTRACE_SIMPLE(LCF_STEAM);
 
     if (!Global::shared_config.virtual_steam) {
-        LINK_NAMESPACE(SteamClient, "steam_api");
-        return orig::SteamClient();
+        RETURN_NATIVE(SteamClient, (), "steam_api");
     }
 
     static struct ISteamClient *cached_iface = nullptr;

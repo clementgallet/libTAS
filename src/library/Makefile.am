@@ -200,6 +200,7 @@ libtas_so_SOURCES = \
     steam/isteamuserstats/isteamuserstats013.cpp \
     steam/isteamutils.cpp \
     steam/steamapi.cpp \
+    steam/steamapi_flat.cpp \
     steam/steamapiinternal.cpp \
     steam/steamgameserver.cpp \
     wine/winehook.cpp \
