@@ -13,6 +13,7 @@
 * Add hooks for Unity 2023
 * Hook another physX function to prevent a softlock
 * Steam: add flat api hooks
+* Add denominator for custom framerate encoding
 
 ### Changed
 

@@ -49,7 +49,8 @@ private:
     QComboBox *audioChoice;
     QSpinBox *audioBitrate;
     QLineEdit *ffmpegOptions;
-    QSpinBox *videoFramerate;
+    QSpinBox *videoFramerateNum;
+    QSpinBox *videoFramerateDen;
     QGroupBox *framerateGroupBox;
 
 private slots:

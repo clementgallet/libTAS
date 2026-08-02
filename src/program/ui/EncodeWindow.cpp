@@ -71,8 +71,12 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent) : QDialog(parent), conte
     audioBitrate->setMaximum(1000000000);
     connect(audioBitrate, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &EncodeWindow::slotUpdate);
 
-    videoFramerate = new QSpinBox();
-    videoFramerate->setMaximum(1000000000);
+    videoFramerateNum = new QSpinBox();
+    videoFramerateNum->setMaximum(1000000000);
+
+    videoFramerateDen = new QSpinBox();
+    videoFramerateDen->setMinimum(1);
+    videoFramerateDen->setMaximum(1000000000);
 
     ffmpegOptions = new QLineEdit();
 
@@ -101,8 +105,11 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent) : QDialog(parent), conte
 
     QHBoxLayout *framerateLayout = new QHBoxLayout;
     framerateLayout->addWidget(new QLabel(tr("Video framerate:")));
-    framerateLayout->addWidget(videoFramerate);
+    framerateLayout->addWidget(videoFramerateNum);
+    framerateLayout->addWidget(new QLabel(tr("/")));
+    framerateLayout->addWidget(videoFramerateDen);
     framerateLayout->setStretch(1, 1);
+    framerateLayout->setStretch(3, 1);
     
     framerateGroupBox->setLayout(framerateLayout);
 
@@ -150,11 +157,15 @@ void EncodeWindow::update_config()
     ffmpegOptions->setText(context->config.ffmpegoptions.c_str());
 
     /* Set video framerate */
-    framerateGroupBox->setChecked(context->config.sc.video_framerate);
-    if (context->config.sc.video_framerate)
-        videoFramerate->setValue(context->config.sc.video_framerate);
-    else
-        videoFramerate->setValue(context->config.sc.initial_framerate_num / context->config.sc.initial_framerate_den);
+    framerateGroupBox->setChecked(context->config.sc.video_framerate_num);
+    if (context->config.sc.video_framerate_num) {
+        videoFramerateNum->setValue(context->config.sc.video_framerate_num);
+        videoFramerateDen->setValue(context->config.sc.video_framerate_den);
+    }
+    else {
+        videoFramerateNum->setValue(context->config.sc.initial_framerate_num);
+        videoFramerateDen->setValue(context->config.sc.initial_framerate_den);
+    }
 
     if (context->config.ffmpegoptions.empty()) {
         slotUpdate();
@@ -224,10 +235,14 @@ void EncodeWindow::slotOk()
     context->config.sc.audio_bitrate = audioBitrate->value();
     context->config.ffmpegoptions = ffmpegOptions->text().toStdString();
 
-    if (framerateGroupBox->isChecked())
-        context->config.sc.video_framerate = videoFramerate->value();
-    else
-        context->config.sc.video_framerate = 0;
+    if (framerateGroupBox->isChecked()) {
+        context->config.sc.video_framerate_num = videoFramerateNum->value();
+        context->config.sc.video_framerate_den = videoFramerateDen->value();
+    }
+    else {
+        context->config.sc.video_framerate_num = 0;
+        context->config.sc.video_framerate_den = 0;
+    }
 
     context->config.sc_modified = true;
 
