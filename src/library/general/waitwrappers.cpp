@@ -111,7 +111,7 @@ int ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout, cons
         return orig::ppoll(fds, nfds, timeout, ss);
     }
 
-    LOGTRACE(LCF_WAIT, "%s call with %d fds and timeout %d.%09d", __func__, nfds, timeout->tv_sec, timeout->tv_nsec);
+    LOGTRACE(LCF_WAIT, "%s call with %d fds and timeout %d.%09d", __func__, nfds, timeout?timeout->tv_sec:-1, timeout?timeout->tv_nsec:0);
     
     int ret = orig::ppoll(fds, nfds, timeout, ss);
 
