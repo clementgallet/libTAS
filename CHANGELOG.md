@@ -14,6 +14,8 @@
 * Hook another physX function to prevent a softlock
 * Steam: add flat api hooks
 * Add denominator for custom framerate encoding
+* Use swscale to resize encode video and prevent video
+  split on resolution change
 
 ### Changed
 

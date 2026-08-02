@@ -17,6 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ScreenCapture.h"
 #include "ScreenCapture_GL.h"
 #include "hook.h"
 #include "logging.h"
@@ -123,9 +124,9 @@ uint64_t ScreenCapture_GL::screenTexture()
     return screenTex;
 }
 
-const char* ScreenCapture_GL::getPixelFormat()
+int ScreenCapture_GL::getPixelFormat()
 {
-    return "RGBA";
+    return ScreenCapture::PIXELFORMAT_RGBA8;
 }
 
 int ScreenCapture_GL::copyScreenToSurface()

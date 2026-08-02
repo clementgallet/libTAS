@@ -109,14 +109,14 @@ public:
     int getSize();
 
     /**
-     * @brief Returns the pixel format string used by the NUT muxer.
+     * @brief Returns the pixel format.
      *
      * Derived backends must provide the pixel format identifier expected by
      * the video encoder.
      *
-     * @return Null-terminated pixel format string
+     * @return Pixel format identifier
      */
-    virtual const char* getPixelFormat() = 0;
+    virtual int getPixelFormat() = 0;
 
     /**
      * @brief Captures the current screen into the backend's internal surface.

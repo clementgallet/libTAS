@@ -17,6 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ScreenCapture.h"
 #include "ScreenCapture_SDL1.h"
 //#include "hook.h"
 #include "sdl/sdldynapi.h"
@@ -83,19 +84,19 @@ void ScreenCapture_SDL1::destroyScreenSurface()
     }
 }
 
-const char* ScreenCapture_SDL1::getPixelFormat()
+int ScreenCapture_SDL1::getPixelFormat()
 {
     switch (screenSDL1Surf->format->Rmask) {
         case 0x000000ff:
-            return "RGBA";
+            return ScreenCapture::PIXELFORMAT_RGBA8;
         case 0x0000ff00:
-            return "ARGB";
+            return ScreenCapture::PIXELFORMAT_ARGB8;
         case 0x00ff0000:
-            return "BGRA";
+            return ScreenCapture::PIXELFORMAT_BGRA8;
         case 0xff000000:
-            return "ABGR";
+            return ScreenCapture::PIXELFORMAT_ABGR8;
     }
-    return "RGBA";
+    return ScreenCapture::PIXELFORMAT_UNKNOWN;
 }
 
 int ScreenCapture_SDL1::copyScreenToSurface()

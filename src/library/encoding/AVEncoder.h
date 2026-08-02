@@ -29,14 +29,22 @@
 namespace libtas {
 
 class NutMuxer;
+class ImageScaling;
 
 class AVEncoder {
     public:
-        /* The constructor sets up the AV dumping into a file.
-         * It sets the pipe to an ffmpeg process, and initialize the muxer
-         * with the proper screen/sound parameters.
-         */
         AVEncoder();
+        ~AVEncoder();
+
+        /* Initialize the encoder.
+         * It sets the pipe to an ffmpeg process, and initialize the muxer
+         * with the proper image/sound parameters.
+         */
+        void init();
+
+        /* Close all allocated objects and close the pipe at the end of an av dump
+         */
+        void fini();
 
         /* Initialize the muxer. Called by the constructor if parameters are
          * available, or later if parameters are not available yet.
@@ -49,9 +57,12 @@ class AVEncoder {
          */
         void encodeOneFrame(bool draw, TimeHolder frametime);
 
-        /* Close all allocated objects and close the pipe at the end of an av dump
+        /* Handle a window resize.
+         * Either the encode is closed and another one is started, or the image scaling
+         * is changed to account for the new source size.
          */
-        ~AVEncoder();
+        void resize(int width, int height);
+
 
         /* Filename of the encode. We use a static array because it can be set
          * very early in the game execution, before objects like std::string
@@ -67,8 +78,10 @@ class AVEncoder {
         FILE *ffmpeg_pipe = nullptr;
         pid_t ffmpeg_pid = -1;
         NutMuxer* nutMuxer = nullptr;
+        ImageScaling* image_scaling = nullptr;
 
         uint8_t* pixels = nullptr;
+        int pixels_size = 0;
 
         int startup_video_frames = 0;
         int startup_audio_frames = 0;

@@ -47,7 +47,7 @@ public:
     void destroyScreenSurface();
 
     /* Get the pixel format as an string used by nut muxer. */
-    const char* getPixelFormat();
+    int getPixelFormat();
 
     /* Copy the current screen to the screen buffer/surface/texture.
      * This surface is optimized for rendering, so it may be stored on GPU. */

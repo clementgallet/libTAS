@@ -94,6 +94,21 @@ public:
      */
     static int getSize();
 
+    enum PixelFormat {
+        PIXELFORMAT_UNKNOWN,
+        PIXELFORMAT_RGBA8,
+        PIXELFORMAT_BGRA8,
+        PIXELFORMAT_ARGB8,
+        PIXELFORMAT_ABGR8,
+        PIXELFORMAT_RGBX8,
+        PIXELFORMAT_BGRX8,
+        PIXELFORMAT_XRGB8,
+        PIXELFORMAT_XBGR8,
+        PIXELFORMAT_RGB24,
+        PIXELFORMAT_BGR24,
+        PIXELFORMAT_RGBA16,
+    };
+
     /**
      * @brief Returns the pixel format identifier used by the video muxer.
      *
@@ -101,7 +116,23 @@ public:
      *
      * @return Null-terminated pixel format string
      */
-    static const char* getPixelFormat();
+    static int getPixelFormat();
+
+    /**
+     * @brief Returns the pixel format identifier used by the video muxer from the given pixel format.
+     *
+     * The returned string is the format name expected by the NUT muxer.
+     *
+     * @return Null-terminated pixel format string
+     */
+    static const char* pixelFormatToFourCC(int pixel_format);
+
+    /**
+     * @brief Returns the depth from the given pixel format.
+     *
+     * @return Depth of the pixel format in bytes per pixel
+     */
+    static int getPixelFormatDepth(int pixel_format);
 
     /**
      * @brief Copies the current screen contents into the internal capture surface.

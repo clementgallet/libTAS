@@ -130,14 +130,68 @@ int ScreenCapture::getSize()
     return 0;
 }
 
-const char* ScreenCapture::getPixelFormat()
+int ScreenCapture::getPixelFormat()
 {
     MYASSERT(inited)
 
     if (impl) {
         return impl->getPixelFormat();
     }
+    return PIXELFORMAT_UNKNOWN;
+}
+
+const char* ScreenCapture::pixelFormatToFourCC(int pixel_format)
+{
+    switch(pixel_format) {
+        case PIXELFORMAT_RGBA8:
+            return "RGBA";
+        case PIXELFORMAT_BGRA8:
+            return "BGRA";
+        case PIXELFORMAT_ARGB8:
+            return "ARGB";
+        case PIXELFORMAT_ABGR8:
+            return "ABGR";
+        case PIXELFORMAT_RGBX8:
+            return "RGB\0";
+        case PIXELFORMAT_BGRX8:
+            return "BGR\0";
+        case PIXELFORMAT_XRGB8:
+            return "\0RGB";
+        case PIXELFORMAT_XBGR8:
+            return "\0BGR";
+        case PIXELFORMAT_RGB24:
+            return "RAW ";
+        case PIXELFORMAT_BGR24:
+            return "24BG";
+        case PIXELFORMAT_RGBA16:
+            return "RBA\x40";
+        default:
+            LOG(LL_ERROR, LCF_DUMP, "  Unsupported pixel format %d", pixel_format);
+    }
     return "";
+}
+
+int ScreenCapture::getPixelFormatDepth(int pixel_format)
+{
+    switch(pixel_format) {
+        case PIXELFORMAT_RGBA8:
+        case PIXELFORMAT_BGRA8:
+        case PIXELFORMAT_ARGB8:
+        case PIXELFORMAT_ABGR8:
+        case PIXELFORMAT_RGBX8:
+        case PIXELFORMAT_BGRX8:
+        case PIXELFORMAT_XRGB8:
+        case PIXELFORMAT_XBGR8:
+            return 4;
+        case PIXELFORMAT_RGB24:
+        case PIXELFORMAT_BGR24:
+            return 3;
+        case PIXELFORMAT_RGBA16:
+            return 8;
+        default:
+            LOG(LL_ERROR, LCF_DUMP, "  Unsupported pixel format %d", pixel_format);
+            return 0;
+    }
 }
 
 int ScreenCapture::copyScreenToSurface()

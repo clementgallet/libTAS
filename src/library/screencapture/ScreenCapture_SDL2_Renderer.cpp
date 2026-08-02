@@ -17,6 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ScreenCapture.h"
 #include "ScreenCapture_SDL2_Renderer.h"
 #include "hook.h"
 #include "logging.h"
@@ -69,45 +70,35 @@ void ScreenCapture_SDL2_Renderer::destroyScreenSurface()
     }
 }
 
-const char* ScreenCapture_SDL2_Renderer::getPixelFormat()
+int ScreenCapture_SDL2_Renderer::getPixelFormat()
 {
     Uint32 sdlpixfmt = ORIG_SDL2_CALL(SDL_GetWindowPixelFormat, (sdl::gameSDLWindow));
     switch (sdlpixfmt) {
         case sdl2::SDL_PIXELFORMAT_RGBA8888:
-            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGBA");
-            return "BGRA";
+            return ScreenCapture::PIXELFORMAT_BGRA8;
         case sdl2::SDL_PIXELFORMAT_BGRA8888:
-            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGRA");
-            return "RGBA";
+            return ScreenCapture::PIXELFORMAT_RGBA8;
         case sdl2::SDL_PIXELFORMAT_ARGB8888:
-            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  ARGB");
-            return "ABGR";
+            return ScreenCapture::PIXELFORMAT_ABGR8;
         case sdl2::SDL_PIXELFORMAT_ABGR8888:
-            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  ABGR");
-            return "ARGB";
+            return ScreenCapture::PIXELFORMAT_ARGB8;
         case sdl2::SDL_PIXELFORMAT_RGB888:
-            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGB888");
-            return "BGR\0";
+            return ScreenCapture::PIXELFORMAT_BGRX8;
         case sdl2::SDL_PIXELFORMAT_RGBX8888:
-            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGBX8888");
-            return "\0BGR";
+            return ScreenCapture::PIXELFORMAT_XBGR8;
         case sdl2::SDL_PIXELFORMAT_BGR888:
-            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGR888");
-            return "RGB\0";
+            return ScreenCapture::PIXELFORMAT_RGBX8;
         case sdl2::SDL_PIXELFORMAT_BGRX8888:
-            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGRX8888");
-            return "\0RGB";
+            return ScreenCapture::PIXELFORMAT_XRGB8;
         case sdl2::SDL_PIXELFORMAT_RGB24:
-            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  RGB24");
-            return "24BG";
+            return ScreenCapture::PIXELFORMAT_BGR24;
         case sdl2::SDL_PIXELFORMAT_BGR24:
-            LOG(LL_DEBUG, LCF_DUMP | LCF_SDL, "  BGR24");
-            return "RAW ";
+            return ScreenCapture::PIXELFORMAT_RGB24;
         default:
             LOG(LL_ERROR, LCF_DUMP | LCF_SDL, "  Unsupported pixel format %d", sdlpixfmt);
     }
 
-    return "RGBA";
+    return ScreenCapture::PIXELFORMAT_UNKNOWN;
 }
 
 int ScreenCapture_SDL2_Renderer::copyScreenToSurface()

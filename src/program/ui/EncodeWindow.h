@@ -51,7 +51,11 @@ private:
     QLineEdit *ffmpegOptions;
     QSpinBox *videoFramerateNum;
     QSpinBox *videoFramerateDen;
+    QSpinBox *videoWidth;
+    QSpinBox *videoHeight;
+    QComboBox *videoFilter;
     QGroupBox *framerateGroupBox;
+    QGroupBox *resizeGroupBox;
 
 private slots:
     void slotBrowseEncodePath();

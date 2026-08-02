@@ -39,6 +39,7 @@ You can download the latest stable version of the software in the [Releases](htt
 * `libcap`
 * `file`
 * `libswresample2` or `libswresample3` or `libswresample4` or `libswresample5` or `libswresample6`, `libasound2`
+* `libswscale5` or `libswscale6` or `libswscale7` or `libswscale8`
 
 Installing with the debian package will install all the required packages as well.
 
@@ -52,7 +53,7 @@ An PKGBUILD is available for Arch Linux on the [AUR](https://aur.archlinux.org/p
 
 You will need to download and install the following to build libTAS:
 
-* Deb: `apt-get install build-essential automake pkg-config libx11-dev libx11-xcb-dev qtbase5-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xkb-dev libxcb-randr0-dev libudev-dev liblua5.4-dev libasound2-dev libavutil-dev libswresample-dev ffmpeg libcap-dev`
+* Deb: `apt-get install build-essential automake pkg-config libx11-dev libx11-xcb-dev qtbase5-dev libxcb1-dev libxcb-keysyms1-dev libxcb-xkb-dev libxcb-randr0-dev libudev-dev liblua5.4-dev libasound2-dev libavutil-dev libswresample-dev libswscale-dev ffmpeg libcap-dev`
 * Arch: `pacman -S base-devel automake pkgconf qt5-base xcb-util-cursor alsa-lib lua ffmpeg libcap`
 
 ### Cloning
@@ -78,9 +79,9 @@ Be careful that you must compile your code in the same arch as the game. If you 
 
 If you have an amd64 system and you want to run both i386 or amd64 games, you can install libTAS 32-bit library together with the amd64 build. To do that, you can build using `./build.sh --with-i386`, which will produce an additional `libtas32.so` (32-bit) library together with amd64 builds of `libTAS` GUI and `libtas.so` library.
 
-You will need the 32-bit version of libraries `libX11`, `libX11-xcb`, `libasound`, `libavutil`, `libswresample`, the 32-bit version of the headers for `libavutil`, `libswresample`. You will also need your compiler to be able to cross-compile, by installing `g++-multilib` if using g++ compiler. When running a game, libTAS will choose automatically the right `libtas.so` library based on the game arch.
+You will need the 32-bit version of libraries `libX11`, `libX11-xcb`, `libasound`, `libavutil`, `libswresample`, the 32-bit version of the headers for `libavutil`, `libswresample` and `libswscale`. You will also need your compiler to be able to cross-compile, by installing `g++-multilib` if using g++ compiler. When running a game, libTAS will choose automatically the right `libtas.so` library based on the game arch.
 
-* Deb: `apt-get install libx11-6:i386 libx11-xcb1:i386 libasound2:i386 libavutil56:i386 libavutil-dev:i386 libswresample-dev:i386 libswresample3:i386`
+* Deb: `apt-get install libx11-6:i386 libx11-xcb1:i386 libasound2:i386 libavutil56:i386 libavutil-dev:i386 libswresample-dev:i386 libswresample3:i386 libswscale-dev:i386 libswscale8:i386`
 
 ## Run
 

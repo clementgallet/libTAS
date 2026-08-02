@@ -17,6 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ScreenCapture.h"
 #include "ScreenCapture_Vulkan.h"
 #include "hook.h"
 #include "logging.h"
@@ -188,7 +189,7 @@ void ScreenCapture_Vulkan::destroyScreenSurface()
     }
 }
 
-const char* ScreenCapture_Vulkan::getPixelFormat()
+int ScreenCapture_Vulkan::getPixelFormat()
 {
     switch(vk::context.colorFormat) {
         case VK_FORMAT_R8G8B8A8_UNORM:
@@ -198,7 +199,7 @@ const char* ScreenCapture_Vulkan::getPixelFormat()
         case VK_FORMAT_R8G8B8A8_UINT:
         case VK_FORMAT_R8G8B8A8_SINT:
         case VK_FORMAT_R8G8B8A8_SRGB:
-            return "RGBA";
+            return ScreenCapture::PIXELFORMAT_RGBA8;
         case VK_FORMAT_B8G8R8A8_UNORM:
         case VK_FORMAT_B8G8R8A8_SNORM:
         case VK_FORMAT_B8G8R8A8_USCALED:
@@ -206,7 +207,7 @@ const char* ScreenCapture_Vulkan::getPixelFormat()
         case VK_FORMAT_B8G8R8A8_UINT:
         case VK_FORMAT_B8G8R8A8_SINT:
         case VK_FORMAT_B8G8R8A8_SRGB:
-            return "BGRA";
+            return ScreenCapture::PIXELFORMAT_BGRA8;
         case VK_FORMAT_A8B8G8R8_UNORM_PACK32:
         case VK_FORMAT_A8B8G8R8_SNORM_PACK32:
         case VK_FORMAT_A8B8G8R8_USCALED_PACK32:
@@ -214,7 +215,7 @@ const char* ScreenCapture_Vulkan::getPixelFormat()
         case VK_FORMAT_A8B8G8R8_UINT_PACK32:
         case VK_FORMAT_A8B8G8R8_SINT_PACK32:
         case VK_FORMAT_A8B8G8R8_SRGB_PACK32:
-            return "ABGR";
+            return ScreenCapture::PIXELFORMAT_ABGR8;
         case VK_FORMAT_R16G16B16A16_UNORM:
         case VK_FORMAT_R16G16B16A16_SNORM:
         case VK_FORMAT_R16G16B16A16_USCALED:
@@ -222,11 +223,11 @@ const char* ScreenCapture_Vulkan::getPixelFormat()
         case VK_FORMAT_R16G16B16A16_UINT:
         case VK_FORMAT_R16G16B16A16_SINT:
         case VK_FORMAT_R16G16B16A16_SFLOAT:
-            return "RBA\x40";
+            return ScreenCapture::PIXELFORMAT_RGBA16;
         default:
             LOG(LL_ERROR, LCF_DUMP | LCF_VULKAN, "  Unsupported pixel format %d", vk::context.colorFormat);
-            return "RGBA";
     }
+    return ScreenCapture::PIXELFORMAT_UNKNOWN;
 }
 
 int ScreenCapture_Vulkan::copyScreenToSurface()

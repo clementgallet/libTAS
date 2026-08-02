@@ -19,6 +19,8 @@
 
 #include "AVEncoder.h"
 #include "NutMuxer.h"
+#include "ImageScaling.h"
+#include "ImageScalingSws.h"
 
 #include "logging.h"
 #include "screencapture/ScreenCapture.h"
@@ -44,8 +46,15 @@ char AVEncoder::ffmpeg_options[4096] = {0};
 
 std::unique_ptr<AVEncoder> avencoder;
 
-
 AVEncoder::AVEncoder() {
+    init();
+}
+
+AVEncoder::~AVEncoder() {
+    fini();
+}
+
+void AVEncoder::init() {
     std::ostringstream commandline;
     commandline << "ffmpeg -xerror -hide_banner -y -f nut -i - ";
     commandline << ffmpeg_options;
@@ -117,9 +126,34 @@ void AVEncoder::initMuxer() {
     int width, height;
     ScreenCapture::getDimensions(width, height);
 
-    const char* pixfmt = ScreenCapture::getPixelFormat();
+    int pixfmt = ScreenCapture::getPixelFormat();
 
-    /* Initialize the muxer with either framerate or video framerate */
+    int encode_width = width;
+    int encode_height = height;
+
+    if (Global::shared_config.video_height) {
+        if (image_scaling) {
+            delete image_scaling;
+            image_scaling = nullptr;
+        }
+
+#ifdef __unix__
+        image_scaling = new ImageScalingSws();
+#endif
+        if (!image_scaling || !image_scaling->isAvailable()) {
+            LOG(LL_ERROR, LCF_DUMP, "The image scaling library is not available. Video will be encoded at the original resolution.");
+            if (image_scaling) {
+                delete image_scaling;
+                image_scaling = nullptr;
+            }
+        }
+        else {
+            image_scaling->init(width, height, pixfmt, Global::shared_config.video_width, Global::shared_config.video_height, Global::shared_config.video_filter);
+            encode_width = Global::shared_config.video_width;
+            encode_height = Global::shared_config.video_height;
+        }
+    }
+
     AudioContext& audiocontext = AudioContext::get();
 
     if (!audiocontext.isInited()) {
@@ -127,13 +161,16 @@ void AVEncoder::initMuxer() {
         audiocontext.initDefaults();
     }
 
-    if (Global::shared_config.video_framerate_num)
-        nutMuxer = new NutMuxer(width, height, Global::shared_config.video_framerate_num, Global::shared_config.video_framerate_den, pixfmt, audiocontext.frequency, audiocontext.bytes_per_sample, audiocontext.channels, ffmpeg_pipe);
-    else
-        nutMuxer = new NutMuxer(width, height, Global::shared_config.initial_framerate_num, Global::shared_config.initial_framerate_den, pixfmt, audiocontext.frequency, audiocontext.bytes_per_sample, audiocontext.channels, ffmpeg_pipe);
+    /* Initialize the muxer with either framerate or video framerate */
+    int encode_framerate_num = Global::shared_config.video_framerate_num ? Global::shared_config.video_framerate_num : Global::shared_config.initial_framerate_num;
+    int encode_framerate_den = Global::shared_config.video_framerate_num ? Global::shared_config.video_framerate_den : Global::shared_config.initial_framerate_den;
+
+    nutMuxer = new NutMuxer(encode_width, encode_height, encode_framerate_num, encode_framerate_den, ScreenCapture::pixelFormatToFourCC(pixfmt), audiocontext.frequency, audiocontext.bytes_per_sample, audiocontext.channels, ffmpeg_pipe);
+
+    pixels_size = encode_width * encode_height * ScreenCapture::getPixelFormatDepth(pixfmt);
 }
 
-void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
+void AVEncoder::encodeOneFrame(bool is_draw_frame, TimeHolder frametime) {
     if (!ffmpeg_pipe)
         return;
     
@@ -141,8 +178,8 @@ void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
     int ret_pid = waitpid(ffmpeg_pid, nullptr, WNOHANG);
     if (ret_pid == ffmpeg_pid) {
         LOG(LL_WARN, LCF_DUMP, "ffmpeg process exited, encoding stopped");
-        NATIVECALL(fclose(ffmpeg_pipe));
-        ffmpeg_pipe = nullptr;
+        ffmpeg_pid = 0;
+        fini();
         return;
     }
 
@@ -167,10 +204,9 @@ void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
             /* Encode startup frames that we skipped */
 
             /* Just getting the size of an image */
-            int size = ScreenCapture::getSize();
-            startup_audio_bytes.resize(size, 0); // reusing the audio samples vector
+            startup_audio_bytes.resize(pixels_size, 0); // reusing the audio samples vector
             for (int i=0; i<startup_video_frames; i++) {
-                nutMuxer->writeVideoFrame(startup_audio_bytes.data(), size);
+                nutMuxer->writeVideoFrame(startup_audio_bytes.data(), pixels_size);
             }
         }
         else {
@@ -206,19 +242,41 @@ void AVEncoder::encodeOneFrame(bool draw, TimeHolder frametime) {
     }
 
     /* Access to the screen pixels, or last screen pixels if not a draw frame */
-    int size = ScreenCapture::getPixelsFromSurface(&pixels, draw);
+    ScreenCapture::getPixelsFromSurface(&pixels, is_draw_frame);
+
+    const uint8_t* pixel_ptr = pixels;
+
+    if (image_scaling && image_scaling->isInited()) {
+        pixel_ptr = image_scaling->convertFrame(pixels);
+    }
 
     for (int f=0; f<frames; f++) {
         LOG(LL_DEBUG, LCF_DUMP, "Encode a video frame");
-        nutMuxer->writeVideoFrame(pixels, size);
+        nutMuxer->writeVideoFrame(pixel_ptr, pixels_size);
     }
 }
 
-AVEncoder::~AVEncoder() {
+void AVEncoder::resize(int width, int height) {
+    if (image_scaling && image_scaling->isInited()) {
+        image_scaling->sourceHasResized(width, height);
+    }
+    else {
+        /* Image scaling is not used, so we must close this encode and start a new one */
+        fini();
+        init();
+    }
+}
+
+void AVEncoder::fini() {
     if (nutMuxer) {
         nutMuxer->finish();
         delete nutMuxer;
         nutMuxer = nullptr;
+    }
+
+    if (image_scaling) {
+        delete image_scaling;
+        image_scaling = nullptr;
     }
 
     if (ffmpeg_pipe) {

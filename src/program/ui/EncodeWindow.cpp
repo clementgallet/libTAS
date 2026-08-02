@@ -78,6 +78,20 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent) : QDialog(parent), conte
     videoFramerateDen->setMinimum(1);
     videoFramerateDen->setMaximum(1000000000);
 
+    videoWidth = new QSpinBox();
+    videoWidth->setMinimum(1);
+    videoWidth->setMaximum(1000000000);
+
+    videoHeight = new QSpinBox();
+    videoHeight->setMinimum(1);
+    videoHeight->setMaximum(1000000000);
+    
+    videoFilter = new QComboBox();
+    videoFilter->addItem("Nearest Neighbor", SharedConfig::VFILTER_POINT);
+    videoFilter->addItem("Bilinear", SharedConfig::VFILTER_BILINEAR);
+    videoFilter->addItem("Bicubic", SharedConfig::VFILTER_BICUBIC);
+    connect(videoFilter, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EncodeWindow::slotUpdate);
+
     ffmpegOptions = new QLineEdit();
 
     QGroupBox *codecGroupBox = new QGroupBox(tr("Encode codec settings"));
@@ -113,6 +127,33 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent) : QDialog(parent), conte
     
     framerateGroupBox->setLayout(framerateLayout);
 
+    resizeGroupBox = new QGroupBox(tr("Custom resolution"));
+    resizeGroupBox->setCheckable(true);
+    resizeGroupBox->setChecked(false);
+
+    QGridLayout *resizeLayout = new QGridLayout;
+    resizeLayout->addWidget(new QLabel(tr("Video width:")), 0, 0);
+    resizeLayout->addWidget(videoWidth, 0, 1);
+    resizeLayout->addWidget(new QLabel(tr("Video height:")), 0, 2);
+    resizeLayout->addWidget(videoHeight, 0, 3);
+    resizeLayout->addWidget(new QLabel(tr("Video filter:")), 1, 0);
+    resizeLayout->addWidget(videoFilter, 1, 1, 1, 3);
+
+    resizeGroupBox->setLayout(resizeLayout);
+
+    encodeCodecLayout->addWidget(new QLabel(tr("Audio codec:")), 1, 0);
+    encodeCodecLayout->addWidget(audioChoice, 1, 1);
+    encodeCodecLayout->addWidget(new QLabel(tr("Audio bitrate (kbps):")), 1, 3);
+    encodeCodecLayout->addWidget(audioBitrate, 1, 4);
+
+    encodeCodecLayout->addWidget(new QLabel(tr("ffmpeg options:")), 2, 0);
+    encodeCodecLayout->addWidget(ffmpegOptions, 2, 1, 1, 4);
+
+    encodeCodecLayout->setColumnMinimumWidth(2, 50);
+    encodeCodecLayout->setColumnStretch(2, 1);
+    codecGroupBox->setLayout(encodeCodecLayout);
+
+
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
     QPushButton* saveDefaultButton = new QPushButton(tr("Save as default"));
@@ -128,6 +169,7 @@ EncodeWindow::EncodeWindow(Context* c, QWidget *parent) : QDialog(parent), conte
     mainLayout->addWidget(encodeFileGroupBox);
     mainLayout->addWidget(codecGroupBox);
     mainLayout->addWidget(framerateGroupBox);
+    mainLayout->addWidget(resizeGroupBox);
     mainLayout->addStretch(1);
     mainLayout->addWidget(buttonBox);
 
@@ -165,6 +207,19 @@ void EncodeWindow::update_config()
     else {
         videoFramerateNum->setValue(context->config.sc.initial_framerate_num);
         videoFramerateDen->setValue(context->config.sc.initial_framerate_den);
+    }
+
+    /* Set video resize */
+    resizeGroupBox->setChecked(context->config.sc.video_width);
+    if (context->config.sc.video_width) {
+        videoWidth->setValue(context->config.sc.video_width);
+        videoHeight->setValue(context->config.sc.video_height);
+        videoFilter->setCurrentIndex(context->config.sc.video_filter);
+    }
+    else {
+        videoWidth->setValue(context->config.sc.screen_width);
+        videoHeight->setValue(context->config.sc.screen_height);
+        videoFilter->setCurrentIndex(0);
     }
 
     if (context->config.ffmpegoptions.empty()) {
@@ -242,6 +297,17 @@ void EncodeWindow::slotOk()
     else {
         context->config.sc.video_framerate_num = 0;
         context->config.sc.video_framerate_den = 0;
+    }
+
+    if (resizeGroupBox->isChecked()) {
+        context->config.sc.video_width = videoWidth->value();
+        context->config.sc.video_height = videoHeight->value();
+        context->config.sc.video_filter = videoFilter->currentIndex();
+    }
+    else {
+        context->config.sc.video_width = 0;
+        context->config.sc.video_height = 0;
+        context->config.sc.video_filter = 0;
     }
 
     context->config.sc_modified = true;

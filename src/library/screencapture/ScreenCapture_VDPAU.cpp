@@ -17,6 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ScreenCapture.h"
 #include "ScreenCapture_VDPAU.h"
 #include "hook.h"
 #include "logging.h"
@@ -72,20 +73,20 @@ void ScreenCapture_VDPAU::destroyScreenSurface()
     }
 }
 
-const char* ScreenCapture_VDPAU::getPixelFormat()
+int ScreenCapture_VDPAU::getPixelFormat()
 {
     VdpRGBAFormat rgba_format;
     unsigned int uw, uh;
     orig::VdpOutputSurfaceGetParameters(vdp::vdpSurface, &rgba_format, &uw, &uh);
     switch (rgba_format) {
         case VDP_RGBA_FORMAT_B8G8R8A8:
-            return "BGRA";
+            return ScreenCapture::PIXELFORMAT_BGRA8;
         case VDP_RGBA_FORMAT_R8G8B8A8:
-            return "RGBA";
+            return ScreenCapture::PIXELFORMAT_RGBA8;
         default:
             LOG(LL_ERROR, LCF_DUMP, "  Unsupported pixel format %d", rgba_format);
     }
-    return "RGBA";
+    return ScreenCapture::PIXELFORMAT_UNKNOWN;
 }
 
 int ScreenCapture_VDPAU::copyScreenToSurface()

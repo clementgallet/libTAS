@@ -100,6 +100,13 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
         VCODEC_RAW,
     };
 
+    /* Video filtering */
+    enum VFilter {
+        VFILTER_POINT,
+        VFILTER_BILINEAR,
+        VFILTER_BICUBIC,
+    };
+
     /* Audio codec */
     enum ACodec {
         ACODEC_AAC,
@@ -111,8 +118,11 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
     /* Encode config */
     int video_codec = VCODEC_X264;
     int video_bitrate = 4000;
-    int video_framerate_num = 60; // used when variable framerate
-    int video_framerate_den = 1; // used when variable framerate
+    int video_framerate_num = 60; // used when custom framerate
+    int video_framerate_den = 1; // used when custom framerate
+    int video_height = 0; // used when custom resolution
+    int video_width = 0; // used when custom resolution
+    int video_filter = VFILTER_POINT;
     int audio_codec = ACODEC_AAC;
     int audio_bitrate = 128;
 

@@ -54,7 +54,7 @@ int Screenshot::save(const std::string& screenshotfile, bool draw) {
     int width, height;
     ScreenCapture::getDimensions(width, height);
 
-    const char* pixfmt = ScreenCapture::getPixelFormat();
+    const char* pixfmt = ScreenCapture::pixelFormatToFourCC(ScreenCapture::getPixelFormat());
 
     /* Initialize the muxer. Audio parameters don't matter here for screenshot */
     std::unique_ptr<NutMuxer> nutMuxer(new NutMuxer(width, height, Global::shared_config.initial_framerate_num, Global::shared_config.initial_framerate_den, pixfmt, 44100, 1, 1, ffmpeg_pipe));

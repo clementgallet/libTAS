@@ -81,6 +81,9 @@ bool Config::applyCliSetting(const std::string& key, const std::string& value)
     else if (key == "video_bitrate")            sc.video_bitrate = intValue;
     else if (key == "video_framerate_num")      sc.video_framerate_num = intValue;
     else if (key == "video_framerate_den")      sc.video_framerate_den = intValue;
+    else if (key == "video_width")              sc.video_width = intValue;
+    else if (key == "video_height")             sc.video_height = intValue;
+    else if (key == "video_filter")             sc.video_filter = intValue;
     else if (key == "audio_codec")              sc.audio_codec = intValue;
     else if (key == "audio_bitrate")            sc.audio_bitrate = intValue;
     else if (key == "savestate_settings")       sc.savestate_settings = intValue;
@@ -239,6 +242,9 @@ void Config::save(const std::filesystem::path& gamepath) {
     settings.setValue("video_bitrate", sc.video_bitrate);
     settings.setValue("video_framerate_num", sc.video_framerate_num);
     settings.setValue("video_framerate_den", sc.video_framerate_den);
+    settings.setValue("video_width", sc.video_width);
+    settings.setValue("video_height", sc.video_height);
+    settings.setValue("video_filter", sc.video_filter);
     settings.setValue("audio_codec", sc.audio_codec);
     settings.setValue("audio_bitrate", sc.audio_bitrate);
     settings.setValue("locale", sc.locale);
@@ -472,6 +478,9 @@ void Config::load(const std::filesystem::path& gamepath) {
     sc.video_bitrate = settings.value("video_bitrate", sc.video_bitrate).toInt();
     sc.video_framerate_num = settings.value("video_framerate_num", sc.video_framerate_num).toInt();
     sc.video_framerate_den = settings.value("video_framerate_den", sc.video_framerate_den).toInt();
+    sc.video_width = settings.value("video_width", sc.video_width).toInt();
+    sc.video_height = settings.value("video_height", sc.video_height).toInt();
+    sc.video_filter = settings.value("video_filter", sc.video_filter).toInt();
     sc.audio_codec = settings.value("audio_codec", sc.audio_codec).toInt();
     sc.audio_bitrate = settings.value("audio_bitrate", sc.audio_bitrate).toInt();
     sc.savestate_settings = settings.value("savestate_settings", sc.savestate_settings).toInt();

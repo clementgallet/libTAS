@@ -17,6 +17,7 @@
     along with libTAS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ScreenCapture.h"
 #include "ScreenCapture_XShm.h"
 #include "hook.h"
 #include "logging.h"
@@ -45,28 +46,28 @@ void ScreenCapture_XShm::initScreenSurface() {}
 
 void ScreenCapture_XShm::destroyScreenSurface() {}
 
-const char* ScreenCapture_XShm::getPixelFormat()
+int ScreenCapture_XShm::getPixelFormat()
 {
     /* Apparently, it will only be RGB or BGR depending on the endianness
      * of the machine. */
 
     if (x11::gameXImage->bits_per_pixel == 24) {
         if (x11::gameXImage->byte_order == LSBFirst)
-            return "24BG";
+            return ScreenCapture::PIXELFORMAT_BGR24;
         else
-            return "RAW ";
+            return ScreenCapture::PIXELFORMAT_RGB24;
     }
     else if (x11::gameXImage->bits_per_pixel == 32) {
         if (x11::gameXImage->byte_order == LSBFirst)
-            return "BGR\0";
+            return ScreenCapture::PIXELFORMAT_BGRX8;
         else
-            return "RGB\0";
+            return ScreenCapture::PIXELFORMAT_RGBX8;
     }
     else {
         LOG(LL_ERROR, LCF_DUMP, "  Unsupported pixel format");
     }
 
-    return "RGBA";
+    return ScreenCapture::PIXELFORMAT_UNKNOWN;
 }
 
 int ScreenCapture_XShm::copyScreenToSurface()

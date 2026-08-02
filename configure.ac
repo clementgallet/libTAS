@@ -119,6 +119,19 @@ AS_IF([test "x$have_libswresample" = "xyes"], [
     AC_SUBST(LIBSWRESAMPLE_CFLAGS)
 ])
 
+AC_SUBST(have_libswscale, no)
+PKG_CHECK_MODULES(LIBSWSCALE, [libswscale], AC_SUBST(have_libswscale, yes), AC_MSG_WARN(Cannot find libswscale using pkg-config))
+
+AS_IF([test "x$have_libswscale" != "xyes"], [
+    AC_CHECK_HEADERS([libswscale/swscale.h], [], [AC_MSG_ERROR(The swscale header is required!)])
+    AC_SEARCH_LIBS([sws_getContext], [swscale], [], [AC_MSG_ERROR(The swscale library is required!)])
+    AC_SUBST(LIBSWSCALE_CFLAGS, "")
+])
+
+AS_IF([test "x$have_libswscale" = "xyes"], [
+    AC_SUBST(LIBSWSCALE_CFLAGS)
+])
+
 LIBRARY_LIBS=$LIBS
 LIBS=
 
