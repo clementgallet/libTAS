@@ -45,24 +45,74 @@ namespace sdl2 {
     ((1 << 28) | ((type) << 24) | ((order) << 20) | ((layout) << 16) | \
      ((bits) << 8) | ((bytes) << 0))
 
-    enum {
+    /** Pixel type. */
+    typedef enum
+    {
+        SDL_PIXELTYPE_UNKNOWN,
+        SDL_PIXELTYPE_INDEX1,
+        SDL_PIXELTYPE_INDEX4,
+        SDL_PIXELTYPE_INDEX8,
+        SDL_PIXELTYPE_PACKED8,
+        SDL_PIXELTYPE_PACKED16,
+        SDL_PIXELTYPE_PACKED32,
+        SDL_PIXELTYPE_ARRAYU8,
+        SDL_PIXELTYPE_ARRAYU16,
+        SDL_PIXELTYPE_ARRAYU32,
+        SDL_PIXELTYPE_ARRAYF16,
+        SDL_PIXELTYPE_ARRAYF32
+    } SDL_PixelType;
 
-        SDL_PIXELTYPE_ARRAYU8 = 4,
-        SDL_PIXELTYPE_PACKED32 = 8,
+    /** Bitmap pixel order, high bit -> low bit. */
+    typedef enum
+    {
+        SDL_BITMAPORDER_NONE,
+        SDL_BITMAPORDER_4321,
+        SDL_BITMAPORDER_1234
+    } SDL_BitmapOrder;
 
-        SDL_ARRAYORDER_RGB = 1,
-        SDL_ARRAYORDER_BGR = 2,
+    /** Packed component order, high bit -> low bit. */
+    typedef enum
+    {
+        SDL_PACKEDORDER_NONE,
+        SDL_PACKEDORDER_XRGB,
+        SDL_PACKEDORDER_RGBX,
+        SDL_PACKEDORDER_ARGB,
+        SDL_PACKEDORDER_RGBA,
+        SDL_PACKEDORDER_XBGR,
+        SDL_PACKEDORDER_BGRX,
+        SDL_PACKEDORDER_ABGR,
+        SDL_PACKEDORDER_BGRA
+    } SDL_PackedOrder;
 
-        SDL_PACKEDORDER_XRGB = 1,
-        SDL_PACKEDORDER_RGBX = 2,
-        SDL_PACKEDORDER_ARGB = 3,
-        SDL_PACKEDORDER_RGBA = 4,
-        SDL_PACKEDORDER_XBGR = 5,
-        SDL_PACKEDORDER_BGRX = 6,
-        SDL_PACKEDORDER_ABGR = 7,
-        SDL_PACKEDORDER_BGRA = 8,
-        SDL_PACKEDLAYOUT_8888 = 1,
+    /** Array component order, low byte -> high byte. */
+    /* !!! FIXME: in 2.1, make these not overlap differently with
+    !!! FIXME:  SDL_PACKEDORDER_*, so we can simplify SDL_ISPIXELFORMAT_ALPHA */
+    typedef enum
+    {
+        SDL_ARRAYORDER_NONE,
+        SDL_ARRAYORDER_RGB,
+        SDL_ARRAYORDER_RGBA,
+        SDL_ARRAYORDER_ARGB,
+        SDL_ARRAYORDER_BGR,
+        SDL_ARRAYORDER_BGRA,
+        SDL_ARRAYORDER_ABGR
+    } SDL_ArrayOrder;
 
+    /** Packed component layout. */
+    typedef enum
+    {
+        SDL_PACKEDLAYOUT_NONE,
+        SDL_PACKEDLAYOUT_332,
+        SDL_PACKEDLAYOUT_4444,
+        SDL_PACKEDLAYOUT_1555,
+        SDL_PACKEDLAYOUT_5551,
+        SDL_PACKEDLAYOUT_565,
+        SDL_PACKEDLAYOUT_8888,
+        SDL_PACKEDLAYOUT_2101010,
+        SDL_PACKEDLAYOUT_1010102
+    } SDL_PackedLayout;
+
+    typedef enum {
         SDL_PIXELFORMAT_RGB24 = SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYU8, SDL_ARRAYORDER_RGB, 0, 24, 3),
         SDL_PIXELFORMAT_BGR24 = SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_ARRAYU8, SDL_ARRAYORDER_BGR, 0, 24, 3),
         SDL_PIXELFORMAT_XRGB8888 = SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_XRGB, SDL_PACKEDLAYOUT_8888, 24, 4),
@@ -87,8 +137,7 @@ namespace sdl2 {
         SDL_PIXELFORMAT_BGRA32 = SDL_PIXELFORMAT_ARGB8888,
         SDL_PIXELFORMAT_ABGR32 = SDL_PIXELFORMAT_RGBA8888,
 #endif
-
-    };
+    } SDL_PixelFormatEnum;
 
     typedef struct SDL_Rect
     {

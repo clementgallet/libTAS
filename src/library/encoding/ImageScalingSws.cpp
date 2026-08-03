@@ -89,9 +89,6 @@ bool ImageScalingSws::isInited()
 
 void ImageScalingSws::init(int src_width, int src_height, int src_pixfmt, int dst_width, int dst_height, int video_filter)
 {
-    if (!sws_context)
-        return;
-
     sws_format = AV_PIX_FMT_NONE;
     switch(src_pixfmt) {
         case ScreenCapture::PIXELFORMAT_RGBA8:
