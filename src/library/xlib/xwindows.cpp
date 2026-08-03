@@ -305,14 +305,14 @@ int XGetWindowProperty(Display *display, Window w, Atom property, long long_offs
 
     if (Global::shared_config.screen_width) {
         if (property == x11_atom(_NET_CURRENT_DESKTOP)) {
-            if (nitems_return && prop_return && *nitems_return > 0) {
+            if (nitems_return && prop_return && (*prop_return) && *nitems_return > 0) {
                 // LOG(LL_DEBUG, LCF_WINDOW, "   current desktop was %d", (*prop_return)[0]);
                 (*prop_return)[0] = 0; // set the current desktop to 0, which is the one we use for fullscreen
             }
         }
 
         if (property == x11_atom(_NET_WORKAREA)) {
-            if (nitems_return && prop_return) {
+            if (nitems_return && prop_return && (*prop_return) && *nitems_return >= 4) {
                 long *rect_data = (long *)*prop_return;
                 // LOG(LL_DEBUG, LCF_WINDOW, "   current desktop w/h %d %d", rect_data[2], rect_data[3]);
                 rect_data[0] = 0; // x
