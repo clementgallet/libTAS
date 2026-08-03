@@ -897,7 +897,7 @@ void SaveStateManager::createNewThreads()
             LOG(LL_DEBUG, LCF_CHECKPOINT | LCF_THREAD, "Recreate thread %llx (%d) ", thread->pthread_id, thread->translated_tid);
 
             if (has_clone3_set_tid) {
-                struct clone_args cargs;
+                struct clone_args cargs = {};
                 cargs.child_tid = reinterpret_cast<uintptr_t>(thread->ptid);
                 cargs.parent_tid = reinterpret_cast<uintptr_t>(thread->ptid);
                 cargs.stack = reinterpret_cast<uintptr_t>(thread->stack_addr);
