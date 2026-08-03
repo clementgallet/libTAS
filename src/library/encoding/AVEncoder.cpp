@@ -224,8 +224,6 @@ void AVEncoder::encodeOneFrame(bool is_draw_frame, TimeHolder frametime) {
     }
 
     /*** Audio ***/
-    LOG(LL_DEBUG, LCF_DUMP, "Encode an audio frame");
-
     nutMuxer->writeAudioFrame(audiocontext.samples_data.data(), audiocontext.samples_byte_size);
 
     /*** Video ***/
@@ -251,7 +249,6 @@ void AVEncoder::encodeOneFrame(bool is_draw_frame, TimeHolder frametime) {
     }
 
     for (int f=0; f<frames; f++) {
-        LOG(LL_DEBUG, LCF_DUMP, "Encode a video frame");
         nutMuxer->writeVideoFrame(pixel_ptr, pixels_size);
     }
 }

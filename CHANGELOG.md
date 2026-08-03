@@ -42,6 +42,7 @@
   values for SDL_GetAudioDeviceFormat()
 * Fix savestate crash on new kernels (fix #745)
 * Remove RTLD_DEEPBIND flag in dlopen to fix symbol preloading
+* Fix audio encoding not providing samples when no mixing
 
 ## [1.4.8] - 2026-05-14
 ### Added

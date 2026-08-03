@@ -291,12 +291,14 @@ void AudioContext::mixAllSources(struct timespec ticks)
         return;
     }
 
-    /* Check if at least one source will output audio samples. If not, we can return immediately. */
+    /* Check if at least one source will output audio samples. If not, and the context is not
+     * inited, we can return immediately. If the context is inited, we still need to allocate the output buffer,
+     * for encoding the right amount of audio samples. */
     bool will_output = false;
     for (const auto& source : sources) {
         will_output |= source->willOutput();
     }
-    if (!will_output) {
+    if (!will_output && !isInited()) {
         samples_byte_size = 0;
         samples_size = 0;
         return;
@@ -304,7 +306,7 @@ void AudioContext::mixAllSources(struct timespec ticks)
 
     /* Now that we will output audio, we must make sure that our output parameters are set */
     if (!isInited()) {
-        initDefaults();
+        initDefaults(); // fills format, channels, frequency, bytes_per_sample
     }
 
     if (bytes_per_sample <= 0 || frequency <= 0) {
@@ -324,6 +326,8 @@ void AudioContext::mixAllSources(struct timespec ticks)
     samples_data.assign(samples_byte_size, AudioBuffer::formatToSilenceByte(format));
 
     if (paused) return;
+
+    if (!will_output) return;
 
     pthread_t mix_thread = ThreadManager::getThreadId();
 

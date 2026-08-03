@@ -302,21 +302,15 @@ void NutMuxer::writeFrame(const uint8_t* payload, unsigned int payloadlen, uint6
 
 void NutMuxer::writeVideoFrame(const uint8_t* video, unsigned int len)
 {
-	LOG(LL_DEBUG, LCF_DUMP, "Write nut video frame");
-	LOG(LL_DEBUG, LCF_DUMP, "Video pts is %f", (double)videopts * avparams.fpsden / avparams.fpsnum);
-
+	LOG(LL_DEBUG, LCF_DUMP, "Write nut video frame with pts %f", (double)videopts * avparams.fpsden / avparams.fpsnum);
 	writeFrame(video, len, videopts, static_cast<uint64_t>(avparams.fpsden), static_cast<uint64_t>(avparams.fpsnum), 0, output);
 	videopts++;
-
 }
 
 void NutMuxer::writeAudioFrame(const uint8_t* samples, unsigned int len)
 {
-	LOG(LL_DEBUG, LCF_DUMP, "Write nut audio frame");
-	LOG(LL_DEBUG, LCF_DUMP, "Audio pts is %f", (double)audiopts / avparams.samplerate);
-
+	LOG(LL_DEBUG, LCF_DUMP, "Write nut audio frame with pts %f", (double)audiopts / avparams.samplerate);
 	writeFrame(samples, len, audiopts, 1, static_cast<uint64_t>(avparams.samplerate), 1, output);
-
 	audiopts += static_cast<uint64_t>(len) / static_cast<uint64_t>(avparams.samplesize);
 }
 
