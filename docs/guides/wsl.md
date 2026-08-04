@@ -77,14 +77,14 @@ For example:
     cd /mnt/d/libTAS
     
 would change the current directory to D:\libTAS on Windows (do pay attention to
-the different pathing style).
+the different pathing style). For paths with spaces, escape the spaces with a
+backslash '\\' or put the whole thing in quotes.
 
-Adjust the command to your path where you've put the .deb file and change your
-current directory to it, then run
+Change directory to where you've put the .deb file, then run
 
     sudo dpkg -i ./libtas_*_amd64.deb
 
-The `*` makes it so that it uses our .deb file regardless of its version, e.g.
+The `*` is a glob, which will be filled in with the correct version, e.g.
 it may be named `libtas_1.4.0_d086878_amd64.deb` and it will still work. Very convenient.
 
 Potentially you will see error messages saying that there are unmet dependencies.
