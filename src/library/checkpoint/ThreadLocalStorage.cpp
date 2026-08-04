@@ -27,21 +27,21 @@
 #include <sys/syscall.h> // SYS_get_thread_area, SYS_set_thread_area
 #include <cstring> // memset
 
-#if defined(__APPLE__) && defined(__MACH__)
-#else
 #ifdef __x86_64__
 #include <asm/prctl.h> // ARCH_GET_FS, ARCH_GET_GS, etc.
 #include <sys/prctl.h>
 #endif
-#endif
 
 namespace libtas {
 
+#if defined(__APPLE__) && defined(__MACH__)
+void ThreadLocalStorage::saveTLSState(ThreadTLSInfo *tlsInfo) {}
+void ThreadLocalStorage::restoreTLSState(ThreadTLSInfo *tlsInfo) {}
+#endif
+
+#ifdef __i386__
 void ThreadLocalStorage::saveTLSState(ThreadTLSInfo *tlsInfo)
 {
-#if defined(__APPLE__) && defined(__MACH__)
-#else
-#ifdef __i386__
     asm volatile ("movw %%fs,%0" : "=m" (tlsInfo->fs));
     asm volatile ("movw %%gs,%0" : "=m" (tlsInfo->gs));
     memset(tlsInfo->gdtentrytls, 0, sizeof tlsInfo->gdtentrytls);
@@ -49,37 +49,52 @@ void ThreadLocalStorage::saveTLSState(ThreadTLSInfo *tlsInfo)
     int i = tlsInfo->gs / 8;
     tlsInfo->gdtentrytls[0].entry_number = i;
     MYASSERT(syscall(SYS_get_thread_area, &(tlsInfo->gdtentrytls[0])) == 0)
-#elif __x86_64__
-    MYASSERT(syscall(SYS_arch_prctl, ARCH_GET_FS, &tlsInfo->fs) == 0)
-    MYASSERT(syscall(SYS_arch_prctl, ARCH_GET_GS, &tlsInfo->gs) == 0)
-#endif
-#endif
 }
 
 void ThreadLocalStorage::restoreTLSState(ThreadTLSInfo *tlsInfo)
 {
-  /* Every architecture needs a register to point to the current
-   * TLS (thread-local storage).  This is where we set it up.
-   */
+    /* Every architecture needs a register to point to the current
+     * TLS (thread-local storage).  This is where we set it up.
+     */
 
-#if defined(__APPLE__) && defined(__MACH__)
-#else
-#ifdef __i386__
-   MYASSERT(syscall(SYS_set_thread_area, &(tlsInfo->gdtentrytls[0])) == 0)
+    MYASSERT(syscall(SYS_set_thread_area, &(tlsInfo->gdtentrytls[0])) == 0)
 
-   /* Finally, if this is i386, we need to set %gs to refer to the segment
-    * descriptor that we're using above.  We restore the original pointer.
-    * For the other architectures (not i386), the kernel call above
-    * already did the equivalent work of setting up thread registers.
-    */
+    /* Finally, if this is i386, we need to set %gs to refer to the segment
+     * descriptor that we're using above.  We restore the original pointer.
+     * For the other architectures (not i386), the kernel call above
+     * already did the equivalent work of setting up thread registers.
+     */
 
-   asm volatile ("movw %0,%%fs" : : "m" (tlsInfo->fs));
-   asm volatile ("movw %0,%%gs" : : "m" (tlsInfo->gs));
-#elif __x86_64__
+    asm volatile ("movw %0,%%fs" : : "m" (tlsInfo->fs));
+    asm volatile ("movw %0,%%gs" : : "m" (tlsInfo->gs));
+}
+#endif
+
+#ifdef __x86_64__
+void ThreadLocalStorage::saveTLSState(ThreadTLSInfo *tlsInfo)
+{
+    MYASSERT(syscall(SYS_arch_prctl, ARCH_GET_FS, &tlsInfo->fs) == 0)
+    MYASSERT(syscall(SYS_arch_prctl, ARCH_GET_GS, &tlsInfo->gs) == 0)
+}
+
+void ThreadLocalStorage::restoreTLSState(ThreadTLSInfo *tlsInfo)
+{
     MYASSERT(syscall(SYS_arch_prctl, ARCH_SET_FS, tlsInfo->fs) == 0)
     MYASSERT(syscall(SYS_arch_prctl, ARCH_SET_GS, tlsInfo->gs) == 0)
-#endif
-#endif
 }
+#endif
+
+#ifdef __aarch64__
+void ThreadLocalStorage::saveTLSState(ThreadTLSInfo *tlsInfo)
+{
+    asm volatile ("mrs %0, tpidr_el0" : "=r" (tlsInfo->tpidr_el0));
+}
+
+void ThreadLocalStorage::restoreTLSState(ThreadTLSInfo *tlsInfo)
+{
+    asm volatile ("msr tpidr_el0, %0" : : "r" (tlsInfo->tpidr_el0));
+}
+
+#endif
 
 }

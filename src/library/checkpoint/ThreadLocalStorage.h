@@ -25,6 +25,7 @@
 #ifdef __i386__
 #include <asm/ldt.h> // struct user_desc
 #endif
+#include <stdint.h>
 
 namespace libtas {
 
@@ -33,7 +34,9 @@ struct ThreadTLSInfo {
     unsigned short fs, gs;  // thread local storage pointers
     struct user_desc gdtentrytls[1];
 #elif __x86_64__
-    unsigned long int fs, gs;  // thread local storage pointers
+    uint64_t fs, gs;  // thread local storage pointers
+#elif __aarch64__
+    uint64_t tpidr_el0;  // thread local storage pointer
 #else
 #error "Unsupported arch"
 #endif

@@ -25,20 +25,11 @@
 #include <cstdint>
 #include <sys/types.h>
 
-// If 32-bit process in 64-bit Linux, then Makefile overrides this address,
-// with correct address for that case.
-# ifdef __x86_64__
-
-/* There's a segment, 7fbfffb000-7fc0000000 rw-p 7fbfffb000 00:00 0;
- * What is it?  It's busy (EBUSY) when we try to unmap it.
- */
-
-// #  define HIGHEST_VA ((VA)0xFFFFFF8000000000)
-// #  define HIGHEST_VA ((VA)0x8000000000)
+# if defined(__x86_64__) || defined(__aarch64__)
 #  define HIGHEST_VA ((void*)0x7f00000000)
-# else // ifdef __x86_64__
+# else
 #  define HIGHEST_VA ((void*)0xC0000000)
-# endif // ifdef __x86_64__
+# endif
 
 // #define DELETED_FILE_SUFFIX " (deleted)"
 

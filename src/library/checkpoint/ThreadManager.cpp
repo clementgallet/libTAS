@@ -215,6 +215,8 @@ int ThreadManager::getTidOffset() {
     /* Offset of `tid` member in the hidden `pthread` structure */
 #ifdef __x86_64__
     offset_tid = 180;
+#elif defined(__aarch64__)
+    offset_tid = 180; // TODO!
 #else
     offset_tid = 26;
 #endif

@@ -77,7 +77,7 @@ bool Area::isSkipped() const
     if (addr >= HIGHEST_VA && addr == (void*)0xffffe000) {
         return true;
     }
-#ifdef __x86_64__
+# if defined(__x86_64__) || defined(__aarch64__)
 
     /* And in 64-bit mode later Red Hat RHEL Linux 2.6.9 releases
     * use 0xffffffffff600000 for VDSO.
@@ -85,7 +85,7 @@ bool Area::isSkipped() const
     if (addr >= HIGHEST_VA && addr == (void*)0xffffffffff600000) {
         return true;
     }
-#endif // ifdef __x86_64__
+# endif // if defined(__x86_64__) || defined(__aarch64__)
 
     if (size == 0) {
         /* Kernel won't let us munmap this.  But we don't need to restore it. */

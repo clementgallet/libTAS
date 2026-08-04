@@ -166,7 +166,7 @@ void SaveStateManager::init()
 
     {
         GlobalNative gn;
-#ifdef __x86_64__
+#if defined(__x86_64__) || defined(__aarch64__)
         /* Detect if clone3 with set tid is supported.
         * Taken from criu <https://criu.org/> source code */
         struct clone_args args = {};
@@ -193,10 +193,10 @@ void SaveStateManager::init()
         else {
             has_clone3_set_tid = true;
         }
-    #elif __i386__
+#elif defined(__i386__)
         /* For now, disable clone3 until proper asm to use it can be written */
         has_clone3_set_tid = false;
-    #endif
+#endif
 
         /* Detect if we can modify */
         int fd = open("/proc/sys/kernel/ns_last_pid", O_RDWR);
@@ -904,11 +904,14 @@ void SaveStateManager::createNewThreads()
                 cargs.stack_size = (reinterpret_cast<uintptr_t>(thread->saved_sp) - 128) - reinterpret_cast<uintptr_t>(thread->stack_addr);
                 cargs.set_tid = reinterpret_cast<uintptr_t>(&thread->translated_tid);
                 cargs.set_tid_size = 1;
-#ifdef __i386__
+#if defined(__i386__)
                 cargs.tls = reinterpret_cast<uintptr_t>(&thread->tlsInfo.gdtentrytls[0]);
                 clone_flags |= CLONE_SETTLS;
-#elif __x86_64__
+#elif defined(__x86_64__)
                 cargs.tls = reinterpret_cast<uintptr_t>(thread->tlsInfo.fs);
+                clone_flags |= CLONE_SETTLS;
+#elif defined(__aarch64__)
+                cargs.tls = thread->tlsInfo.tpidr_el0;
                 clone_flags |= CLONE_SETTLS;
 #endif
                 cargs.flags = clone_flags;
