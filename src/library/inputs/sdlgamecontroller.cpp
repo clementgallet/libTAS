@@ -81,10 +81,25 @@ bool mySDL_GameControllerReportEvents(int index)
         sdl2::SDL_CONTROLLERBUTTONUP
     };
 
+    const int gpevents[] = {
+        sdl3::SDL_EVENT_GAMEPAD_ADDED,
+        sdl3::SDL_EVENT_GAMEPAD_REMOVED,
+        sdl3::SDL_EVENT_GAMEPAD_REMAPPED,
+        sdl3::SDL_EVENT_GAMEPAD_AXIS_MOTION,
+        sdl3::SDL_EVENT_GAMEPAD_BUTTON_DOWN,
+        sdl3::SDL_EVENT_GAMEPAD_BUTTON_UP
+    };
+    
     bool enabled = false;
 
-    for (int e=0; e<6; e++)
-        enabled = enabled || sdlEventQueue.isEnabled(gcevents[e]);
+    if (Global::game_info.joystick & GameInfo::SDL2) {
+        for (int e=0; e<sizeof(gcevents)/sizeof(gcevents[0]); e++)
+            enabled = enabled || sdlEventQueue.isEnabled(gcevents[e]);
+    }
+    if (Global::game_info.joystick & GameInfo::SDL3) {
+        for (int e=0; e<sizeof(gpevents)/sizeof(gpevents[0]); e++)
+            enabled = enabled || sdlEventQueue.isEnabled(gpevents[e]);
+    }
 
     return enabled;
 }

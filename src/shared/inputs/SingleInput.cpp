@@ -21,6 +21,7 @@
 
 #include "../external/SDL1.h"
 #include "../external/SDL2.h"
+#include "../external/SDL3.h"
 
 #ifdef __linux__
 #include <linux/input.h>
@@ -192,6 +193,24 @@ unsigned int SingleInput::toSDL2PointerButton(int button)
     }
 }
 
+unsigned int SingleInput::toSDL3PointerButton(int button)
+{
+    switch (button) {
+        case SingleInput::POINTER_B1:
+            return libtas::sdl3::SDL_BUTTON_LEFT;
+        case SingleInput::POINTER_B2:
+            return libtas::sdl3::SDL_BUTTON_MIDDLE;
+        case SingleInput::POINTER_B3:
+            return libtas::sdl3::SDL_BUTTON_RIGHT;
+        case SingleInput::POINTER_B4:
+            return libtas::sdl3::SDL_BUTTON_X1;
+        case SingleInput::POINTER_B5:
+            return libtas::sdl3::SDL_BUTTON_X2;
+        default:
+            return 0;
+    }
+}
+
 #ifdef __unix__
 unsigned int SingleInput::toXlibPointerMask(int mask)
 {
@@ -245,6 +264,22 @@ unsigned int SingleInput::toSDL2PointerMask(int mask)
     return sdl_mask;
 }
 
+unsigned int SingleInput::toSDL3PointerMask(int mask)
+{
+    unsigned int sdl_mask = 0;
+    if (mask & (1 << SingleInput::POINTER_B1))
+        sdl_mask |= libtas::sdl3::SDL_BUTTON_LMASK;
+    if (mask & (1 << SingleInput::POINTER_B2))
+        sdl_mask |= libtas::sdl3::SDL_BUTTON_MMASK;
+    if (mask & (1 << SingleInput::POINTER_B3))
+        sdl_mask |= libtas::sdl3::SDL_BUTTON_RMASK;
+    if (mask & (1 << SingleInput::POINTER_B4))
+        sdl_mask |= libtas::sdl3::SDL_BUTTON_X1MASK;
+    if (mask & (1 << SingleInput::POINTER_B5))
+        sdl_mask |= libtas::sdl3::SDL_BUTTON_X2MASK;
+
+    return sdl_mask;
+}
 
 int SingleInput::toSDL2Axis(int axis)
 {
@@ -263,6 +298,26 @@ int SingleInput::toSDL2Axis(int axis)
             return libtas::sdl2::SDL_CONTROLLER_AXIS_TRIGGERRIGHT;
         default:
             return libtas::sdl2::SDL_CONTROLLER_AXIS_INVALID;
+    }
+}
+
+int SingleInput::toSDL3Axis(int axis)
+{
+    switch(axis) {
+        case SingleInput::AXIS_LEFTX:
+            return libtas::sdl3::SDL_GAMEPAD_AXIS_LEFTX;
+        case SingleInput::AXIS_LEFTY:
+            return libtas::sdl3::SDL_GAMEPAD_AXIS_LEFTY;
+        case SingleInput::AXIS_RIGHTX:
+            return libtas::sdl3::SDL_GAMEPAD_AXIS_RIGHTX;
+        case SingleInput::AXIS_RIGHTY:
+            return libtas::sdl3::SDL_GAMEPAD_AXIS_RIGHTY;
+        case SingleInput::AXIS_TRIGGERLEFT:
+            return libtas::sdl3::SDL_GAMEPAD_AXIS_LEFT_TRIGGER;
+        case SingleInput::AXIS_TRIGGERRIGHT:
+            return libtas::sdl3::SDL_GAMEPAD_AXIS_RIGHT_TRIGGER;
+        default:
+            return libtas::sdl3::SDL_GAMEPAD_AXIS_INVALID;
     }
 }
 
@@ -301,6 +356,44 @@ int SingleInput::toSDL2Button(int button)
             return libtas::sdl2::SDL_CONTROLLER_BUTTON_DPAD_RIGHT;
         default:
             return libtas::sdl2::SDL_CONTROLLER_BUTTON_INVALID;
+    }
+}
+
+int SingleInput::toSDL3Button(int button)
+{
+    switch(button) {
+        case SingleInput::BUTTON_A:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_SOUTH;
+        case SingleInput::BUTTON_B:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_EAST;
+        case SingleInput::BUTTON_X:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_WEST;
+        case SingleInput::BUTTON_Y:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_NORTH;
+        case SingleInput::BUTTON_BACK:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_BACK;
+        case SingleInput::BUTTON_GUIDE:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_GUIDE;
+        case SingleInput::BUTTON_START:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_START;
+        case SingleInput::BUTTON_LEFTSTICK:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_LEFT_STICK;
+        case SingleInput::BUTTON_RIGHTSTICK:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_RIGHT_STICK;
+        case SingleInput::BUTTON_LEFTSHOULDER:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_LEFT_SHOULDER;
+        case SingleInput::BUTTON_RIGHTSHOULDER:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER;
+        case SingleInput::BUTTON_DPAD_UP:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_DPAD_UP;
+        case SingleInput::BUTTON_DPAD_DOWN:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_DPAD_DOWN;
+        case SingleInput::BUTTON_DPAD_LEFT:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_DPAD_LEFT;
+        case SingleInput::BUTTON_DPAD_RIGHT:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_DPAD_RIGHT;
+        default:
+            return libtas::sdl3::SDL_GAMEPAD_BUTTON_INVALID;
     }
 }
 
