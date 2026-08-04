@@ -16,6 +16,7 @@
 * Add denominator for custom framerate encoding
 * Use swscale to resize encode video and prevent video
   split on resolution change
+* aarch64: add the clone wrappers
 
 ### Changed
 
