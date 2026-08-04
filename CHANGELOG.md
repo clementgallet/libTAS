@@ -18,6 +18,7 @@
   split on resolution change
 * aarch64: add the clone wrappers
 * aarch64: implement TLS save/restore
+* aarch64: disable AVX2 signature search
 
 ### Changed
 
