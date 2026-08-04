@@ -279,7 +279,7 @@ void trackFile(FileHandle &fh)
         LOG(LL_DEBUG, LCF_FILEIO, "Track file %s (fd=%d)", fh.fileName, fh.fds[0]);
 
         if (fdatasync(fh.fds[0]) != 0) {
-            LOG(LL_WARN, LCF_FILEIO, "Could not synchronize file %s (fd=%d) before tracking", fh.fileName, fh.fds[0]);
+            LOG(LL_INFO, LCF_FILEIO, "Could not synchronize file %s (fd=%d) before tracking", fh.fileName, fh.fds[0]);
         }
 
         off_t currentOffset = lseek(fh.fds[0], 0, SEEK_CUR);
@@ -294,9 +294,11 @@ void trackFile(FileHandle &fh)
         fh.size = lseek(fh.fds[0], 0, SEEK_END);
 
         if (fh.size == -1) {
-            LOG(LL_ERROR, LCF_FILEIO, "Could not get size for file %s (fd=%d)", fh.fileName, fh.fds[0]);
+            LOG(LL_DEBUG, LCF_FILEIO, "Could not get size for file %s (fd=%d)", fh.fileName, fh.fds[0]);
+            return;
         }
-        else if (lseek(fh.fds[0], fh.fileOffset, SEEK_SET) == -1) {
+        
+        if (lseek(fh.fds[0], fh.fileOffset, SEEK_SET) == -1) {
             LOG(LL_ERROR, LCF_FILEIO, "Could not restore offset for file %s (fd=%d)", fh.fileName, fh.fds[0]);
             fh.fileOffset = -1;
         }
@@ -317,10 +319,15 @@ void recoverFileOffsets()
             continue;
         }
 
-        off_t current_size = lseek(fh.fds[0], 0, SEEK_END);
-        if (current_size == -1) {
-            LOG(LL_ERROR, LCF_FILEIO, "Error getting size of file %s (fd=%d)", fh.fileName, fh.fds[0]);
+        off_t current_size = -1;
+        if (fh.size != -1) {
+            current_size = lseek(fh.fds[0], 0, SEEK_END);
+
+            if (current_size == -1) {
+                LOG(LL_ERROR, LCF_FILEIO, "Error getting size of file %s (fd=%d)", fh.fileName, fh.fds[0]);
+            }
         }
+
         ssize_t ret = lseek(fh.fds[0], fh.fileOffset, SEEK_SET);
 
         if (current_size != -1 && current_size != fh.size) {
