@@ -78,7 +78,7 @@ FROM debian:12 AS libtas-builder
     RUN cd /root/src && git clone https://github.com/clementgallet/libTAS.git
     WORKDIR /root/src/libTAS
     RUN git fetch --tags && git checkout $LIBTAS_VERSION
-    RUN ./build.sh --with-i386
+    RUN ./build.sh --skip-appimage --with-i386
     RUN cd ./build && make install
 
 
