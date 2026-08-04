@@ -23,6 +23,7 @@
 #include "logging.h"
 #include "global.h"
 #include "GlobalState.h"
+#include "Utils.h"
 
 #include <fcntl.h>
 #include <unistd.h> // getpid()
@@ -74,7 +75,7 @@ int urandom_create_fd()
          * It should be at least 2*page_size, because on Linux a pipe is
          * considered writeable if at least page_size can be written.
          */
-        MYASSERT(fcntl(writefd, F_SETPIPE_SZ, 2*4096) != -1);
+        MYASSERT(fcntl(writefd, F_SETPIPE_SZ, 2*Utils::getPageSize()) != -1);
 
         /* Fill the pipe */
         urandom_handler(0);

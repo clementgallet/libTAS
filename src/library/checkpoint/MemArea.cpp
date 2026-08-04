@@ -146,7 +146,7 @@ bool Area::isUncommitted(int spmfd) const
      * fact that two areas without matching VM_ACCOUNT flag cannot be merged. */
     
     /* Seek at the beginning of the area pagemap */
-    lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(addr) / (4096/8)), SEEK_SET);
+    lseek(spmfd, static_cast<off_t>(reinterpret_cast<uintptr_t>(addr) / (Utils::getPageSize()/8)), SEEK_SET);
     uint64_t page;
     Utils::readAll(spmfd, &page, 8);
     bool page_present = page & (0x1ull << 63);

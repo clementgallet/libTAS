@@ -20,6 +20,7 @@
 */
 
 #include "ReservedMemory.h"
+#include "Utils.h"
 
 #include "logging.h"
 
@@ -41,12 +42,12 @@ void ReservedMemory::init()
         restoreLength = RESTORE_TOTAL_SIZE;
 
         /* Take the next multiplier of page size */
-        restoreLength = ((restoreLength + 4095) / 4096) * 4096;
+        restoreLength = Utils::alignUpToPageSize(restoreLength);
         
-        void* addr = mmap(nullptr, restoreLength + (2 * 4096), PROT_NONE,
+        void* addr = mmap(nullptr, restoreLength + (2 * Utils::getPageSize()), PROT_NONE,
             MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
         MYASSERT(addr != MAP_FAILED)
-        restoreAddr = reinterpret_cast<intptr_t>(addr) + 4096;
+        restoreAddr = reinterpret_cast<intptr_t>(addr) + Utils::getPageSize();
         MYASSERT(mprotect(reinterpret_cast<void*>(restoreAddr), restoreLength, PROT_READ | PROT_WRITE) == 0)
         memset(reinterpret_cast<void*>(restoreAddr), 0, restoreLength);
     }

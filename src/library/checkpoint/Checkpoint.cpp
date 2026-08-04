@@ -105,7 +105,7 @@ struct PagemapCache {
 
 static inline off_t pagemapOffset(const void* addr)
 {
-    return static_cast<off_t>((reinterpret_cast<uintptr_t>(addr) / 4096) * sizeof(uint64_t));
+    return static_cast<off_t>((reinterpret_cast<uintptr_t>(addr) / Utils::getPageSize()) * sizeof(uint64_t));
 }
 
 static size_t loadPagemapWindow(int spmfd, PagemapCache& pagemap_cache, const void* addr, size_t remaining_pages)
@@ -697,7 +697,7 @@ static int reallocateArea(Area *saved_area, Area *current_area)
                 }
                 else {
                     /* Round to upper page size */
-                    size_t aligned_curr_size = static_cast<size_t>(((curr_size + 4095) / 4096) * 4096);
+                    size_t aligned_curr_size = static_cast<size_t>(Utils::alignUpToPageSize(curr_size));
                     
                     if (aligned_curr_size < (saved_area->offset + saved_area->size)) {
                         LOG(LL_WARN, LCF_CHECKPOINT, "File %s was mapped to offset %zu but has a current size of %zd", saved_area->name, saved_area->offset + saved_area->size, curr_size);
@@ -762,7 +762,8 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, PagemapCache &p
      * So, I will call mprotect() on individual memory pages when needed */
 
     /* Number of pages in the area */
-    size_t nb_pages = saved_area.size / 4096;
+    size_t page_size = Utils::getPageSize();
+    size_t nb_pages = saved_area.size / page_size;
 
     /* Stats to print */
     int pagecount_zero_or_file = 0;
@@ -815,7 +816,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, PagemapCache &p
     }
 
     for (size_t page_i = 0; page_i < nb_pages; page_i++) {
-        char* curAddr = static_cast<char*>(saved_area.addr) + page_i * 4096;
+        char* curAddr = static_cast<char*>(saved_area.addr) + page_i * page_size;
         size_t pagemap_i = loadPagemapWindow(spmfd, pagemap_cache, curAddr, nb_pages - page_i);
 
         char flag = saved_area.uncommitted ? Area::NO_PAGE : saved_state.getNextPageFlag();
@@ -832,17 +833,17 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, PagemapCache &p
             LOG(LL_DEBUG, LCF_CHECKPOINT, "    Skip reading guard page at %p(isGuardPage=%d)", curAddr);
             if (!page_guard_region) {
                 LOG(LL_DEBUG, LCF_CHECKPOINT, "    Page was guard page in checkpoint but now isn't");
-                MYASSERT(madvise(curAddr, 4096, MADV_GUARD_INSTALL) == 0);
+                MYASSERT(madvise(curAddr, page_size, MADV_GUARD_INSTALL) == 0);
             }
             continue;
         } else if (page_guard_region) {
             LOG(LL_DEBUG, LCF_CHECKPOINT, "    Page was not a guard page in checkpoint but now is %p", curAddr);
-            MYASSERT(madvise(curAddr, 4096, MADV_GUARD_REMOVE) == 0);
+            MYASSERT(madvise(curAddr, page_size, MADV_GUARD_REMOVE) == 0);
         }
 
         /* Page is not a lightweight guard page, we can turn on read protection */
         if (!(saved_area.prot & PROT_READ)) {
-            MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_READ) == 0)
+            MYASSERT(mprotect(curAddr, page_size, saved_area.prot | PROT_READ) == 0)
         }
 
         /* It seems that static memory is both zero and unmapped, so we still
@@ -855,9 +856,9 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, PagemapCache &p
             if (saved_area.flags & Area::AREA_PRIV) {
                 if (page_present && (!Utils::isZeroPage(static_cast<void*>(curAddr)))) {
                     if (!(saved_area.prot & PROT_WRITE)) {
-                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE) == 0)
+                        MYASSERT(mprotect(curAddr, page_size, saved_area.prot | PROT_WRITE) == 0)
                     }
-                    memset(static_cast<void*>(curAddr), 0, 4096);
+                    memset(static_cast<void*>(curAddr), 0, page_size);
                     pagecount_zero_or_file++;
                 }
                 else {
@@ -868,7 +869,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, PagemapCache &p
                 /* Check for a hole in the shared mapped file (works even for anonymous
                  * mappings, which still have an underlying file) */
                 if (shared_fd != -1) {
-                    off_t current_off = saved_area.offset + page_i*4096;
+                    off_t current_off = saved_area.offset + page_i*page_size;
                     
                     if ((current_off > shared_next_off_data) && (current_off > shared_next_off_hole)) {
                         /* data and hole offsets are obsolete, update both of them */
@@ -896,9 +897,9 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, PagemapCache &p
                          * write mode. */
 
                         if (!(saved_area.prot & PROT_WRITE)) {
-                            MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE) == 0)
+                            MYASSERT(mprotect(curAddr, page_size, saved_area.prot | PROT_WRITE) == 0)
                         }
-                        memset(static_cast<void*>(curAddr), 0, 4096);
+                        memset(static_cast<void*>(curAddr), 0, page_size);
                         pagecount_zero_or_file++;
                     }
                     else if ((current_off == shared_next_off_hole) || (current_off < shared_next_off_data)) {
@@ -927,9 +928,9 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, PagemapCache &p
                 if (soft_dirty ||
                     parent_state.getPageFlag(curAddr) != Area::ZERO_PAGE) {
                     if (!(saved_area.prot & PROT_WRITE)) {
-                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE) == 0)
+                        MYASSERT(mprotect(curAddr, page_size, saved_area.prot | PROT_WRITE) == 0)
                     }
-                    memset(static_cast<void*>(curAddr), 0, 4096);
+                    memset(static_cast<void*>(curAddr), 0, page_size);
                     pagecount_zero_or_file++;
                 }
                 else {
@@ -946,9 +947,9 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, PagemapCache &p
                  * allocation if the page was allocated but never used. */
                 if (!Utils::isZeroPage(static_cast<void*>(curAddr))) {
                     if (!(saved_area.prot & PROT_WRITE)) {
-                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE) == 0)
+                        MYASSERT(mprotect(curAddr, page_size, saved_area.prot | PROT_WRITE) == 0)
                     }
-                    memset(static_cast<void*>(curAddr), 0, 4096);
+                    memset(static_cast<void*>(curAddr), 0, page_size);
                     pagecount_zero_or_file++;
                 }
                 else {
@@ -973,11 +974,11 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, PagemapCache &p
                 
                 if (orig_fd >= 0) {
                     if (!(saved_area.prot & PROT_WRITE)) {
-                        MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE) == 0)
+                        MYASSERT(mprotect(curAddr, page_size, saved_area.prot | PROT_WRITE) == 0)
                     }
                     
-                    lseek(orig_fd, page_i*4096 + saved_area.offset, SEEK_SET);
-                    Utils::readAll(orig_fd, curAddr, 4096);
+                    lseek(orig_fd, page_i*page_size + saved_area.offset, SEEK_SET);
+                    Utils::readAll(orig_fd, curAddr, page_size);
                     pagecount_zero_or_file++;
                 }
             }
@@ -989,7 +990,7 @@ static void readAnArea(SaveStateLoading &saved_state, int spmfd, PagemapCache &p
 
         /* From here, we are sure to write to the page */
         if (!(saved_area.prot & PROT_WRITE)) {
-            MYASSERT(mprotect(curAddr, 4096, saved_area.prot | PROT_WRITE) == 0)
+            MYASSERT(mprotect(curAddr, page_size, saved_area.prot | PROT_WRITE) == 0)
         }
         
         if (flag == Area::BASE_PAGE) {
@@ -1241,7 +1242,8 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, Pagemap
     area.print("Save");
 
     /* Number of pages in the area */
-    size_t nb_pages = area.size / 4096;
+    size_t page_size = Utils::getPageSize();
+    size_t nb_pages = area.size / page_size;
 
     /* Stats to print */
     int pagecount_unmapped = 0;
@@ -1301,7 +1303,7 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, Pagemap
     }
 
     for (size_t page_i = 0; page_i < nb_pages; page_i++) {
-        char* curAddr = static_cast<char*>(area.addr) + page_i * 4096;
+        char* curAddr = static_cast<char*>(area.addr) + page_i * page_size;
         size_t pagemap_i = loadPagemapWindow(spmfd, pagemap_cache, curAddr, nb_pages - page_i);
 
         /* Gather the flag for the current pagemap. */
@@ -1319,7 +1321,7 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, Pagemap
 
         /* Page is not a lightweight guard page, we can turn on read protection */
         if (!(area.prot & PROT_READ)) {
-            MYASSERT(mprotect(curAddr, 4096, area.prot | PROT_READ) == 0)
+            MYASSERT(mprotect(curAddr, page_size, area.prot | PROT_READ) == 0)
         }
 
         if (area.flags & Area::AREA_PRIV) {
@@ -1370,7 +1372,7 @@ static size_t writeAnArea(SaveStateSaving &state, Area &area, int spmfd, Pagemap
             /* Check for a hole in the mapped file (works even for anonymous
              * mappings, which still have an underlying file) */
             if (shared_fd != -1) {
-                off_t current_off = area.offset + page_i*4096;
+                off_t current_off = area.offset + page_i*page_size;
 
                 if ((current_off > shared_next_off_data) && (current_off > shared_next_off_hole)) {
                     /* data and hole offsets are obsolete, update both of them */

@@ -29,8 +29,15 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <unistd.h>
 
-PointerScanModel::PointerScanModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c) {}
+/* Upper bound of possible page size values */
+static const size_t MAX_PAGE_SIZE = 65536;
+
+PointerScanModel::PointerScanModel(Context* c, QObject *parent) : QAbstractTableModel(parent), context(c)
+{
+    page_size = sysconf(_SC_PAGESIZE);
+}
 
 void PointerScanModel::locatePointers()
 {
@@ -61,22 +68,22 @@ void PointerScanModel::locatePointers()
     int game_addr_size = MemAccess::getAddrSize();
     for (const MemSection &section : memory_sections) {
 
-        for (uintptr_t addr = section.addr; addr < section.endaddr; addr += 4096) {
+        for (uintptr_t addr = section.addr; addr < section.endaddr; addr += page_size) {
 
-            /* Read values in chunks of 4096 bytes so we lower the number of calls. */
+            /* Read values in chunks of page_size bytes so we lower the number of calls. */
             
             /* The following code is a bit awkward to support both 32-bit and
              * 64-bit pointers while conforming aliasing rules. A better coder
              * than me may write more elegant code */
-            uint64_t chunk64[4096/sizeof(uint64_t)];
-            uint32_t chunk32[4096/sizeof(uint32_t)];
+            uint64_t chunk64[MAX_PAGE_SIZE/sizeof(uint64_t)];
+            uint32_t chunk32[MAX_PAGE_SIZE/sizeof(uint32_t)];
             int readValues;
 
             if (game_addr_size == 4) {
-                readValues = MemAccess::read(chunk32, reinterpret_cast<void*>(addr), 4096);
+                readValues = MemAccess::read(chunk32, reinterpret_cast<void*>(addr), page_size);
             }
             else {
-                readValues = MemAccess::read(chunk64, reinterpret_cast<void*>(addr), 4096);
+                readValues = MemAccess::read(chunk64, reinterpret_cast<void*>(addr), page_size);
             }
             
             if (readValues < 0) {

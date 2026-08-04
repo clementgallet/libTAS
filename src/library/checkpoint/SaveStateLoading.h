@@ -61,7 +61,12 @@ class SaveStateLoading
     char nextFlag();
     bool validateCompressedLength() const;
 
-    char flags[4096];
+    enum {
+        FLAGS_CHUNK = 4096,
+    };
+
+    const off_t page_size;
+    char flags[FLAGS_CHUNK];
     char current_flag;
     int flag_i;
     int flags_remaining;

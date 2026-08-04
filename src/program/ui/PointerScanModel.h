@@ -70,6 +70,9 @@ private:
     /* File mapping sections */
     std::vector<MemSection> file_mapping_sections;
 
+    /* Page size */
+    size_t page_size;
+    
     /* Recursive call for the pointer chain search */
     void recursiveFind(uintptr_t addr, int level, int offsets[], int max_offset);
 

@@ -69,7 +69,8 @@ class MemScannerThread {
         
         std::filesystem::path addresses_path; // Output file of addresses
         std::filesystem::path values_path; // Output file of values
-        
+
+        size_t page_size; // page size of the system
         volatile bool finished; // indicate if scan is finished, used for progress bar
         int error;
 };

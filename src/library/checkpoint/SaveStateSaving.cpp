@@ -43,6 +43,7 @@ namespace libtas {
 
 SaveStateSaving::SaveStateSaving(int pagemapfd, int pagesfd, int selfpagemapfd)
 {
+    page_size = Utils::getPageSize();
     ss_pagemap_i = 0;
     pm_writebuf_i = 0;
     queued_size = 0;
@@ -142,10 +143,10 @@ size_t SaveStateSaving::queuePageSave(char* addr)
         if (Global::shared_config.savestate_settings & SharedConfig::SS_INCREMENTAL) {
             /* For incremental savestates, not all blocks may be decompressed, so
              * we must compress each block independantly */
-            compressed_size = LZ4_compress_fast(addr, queued_compressed_base_addr + queued_compressed_size + sizeof(int), 4096, queued_compressed_max_size - (queued_compressed_size + sizeof(int)), 1);
+            compressed_size = LZ4_compress_fast(addr, queued_compressed_base_addr + queued_compressed_size + sizeof(int), page_size, queued_compressed_max_size - (queued_compressed_size + sizeof(int)), 1);
         }
         else {
-            compressed_size = LZ4_compress_fast_continue(&lz4s, addr, queued_compressed_base_addr + queued_compressed_size + sizeof(int), 4096, queued_compressed_max_size - (queued_compressed_size + sizeof(int)), 1);
+            compressed_size = LZ4_compress_fast_continue(&lz4s, addr, queued_compressed_base_addr + queued_compressed_size + sizeof(int), page_size, queued_compressed_max_size - (queued_compressed_size + sizeof(int)), 1);
         }
         if (compressed_size) {
             /* Flush the uncompressed buffer if any */
@@ -154,10 +155,10 @@ size_t SaveStateSaving::queuePageSave(char* addr)
             savePageFlag(Area::COMPRESSED_PAGE);
             memcpy(queued_compressed_base_addr + queued_compressed_size, &compressed_size, sizeof(int));
             queued_compressed_size += compressed_size + sizeof(int);
-            queued_target_addr = addr + 4096;
+            queued_target_addr = addr + page_size;
 
             /* Check for remaining size */
-            if ((queued_compressed_max_size - queued_compressed_size) < LZ4_COMPRESSBOUND(4096)) {
+            if ((queued_compressed_max_size - queued_compressed_size) < LZ4_COMPRESSBOUND(page_size)) {
                 returned_size += flushCompressedSave();
             }
             return returned_size;
@@ -175,14 +176,14 @@ size_t SaveStateSaving::queuePageSave(char* addr)
     /* Try to queue the page save, to reduce the number of calls */
     if (queued_size > 0) {
         if (addr == (queued_addr + queued_size)) {
-            queued_size += 4096;
+            queued_size += page_size;
             return 0;
         } else {
             returned_size += flushSave();
         }
     }
     queued_addr = addr;
-    queued_size = 4096;
+    queued_size = page_size;
 
     return returned_size;
 }

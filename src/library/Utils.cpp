@@ -27,7 +27,6 @@
 
 namespace libtas {
 
-// Fails or does entire write (returns count)
 ssize_t Utils::writeAll(int fd, const void *buf, size_t count)
 {
     const char *ptr = (const char *)buf;
@@ -52,10 +51,6 @@ ssize_t Utils::writeAll(int fd, const void *buf, size_t count)
     return num_written;
 }
 
-// Fails, succeeds, or partial read due to EOF (returns num read)
-// return value:
-// -1: unrecoverable error
-// <n>: number of bytes read
 ssize_t Utils::readAll(int fd, void *buf, size_t count)
 {
     ssize_t rc;
@@ -80,17 +75,26 @@ ssize_t Utils::readAll(int fd, void *buf, size_t count)
     return num_read;
 }
 
-/* This function detects if the given page is zero pages or not. There is
- * scope of improving this function using some optimizations.
- *
- * TODO: One can use /proc/self/pagemap to detect if the page is backed by a
- * shared zero page.
- */
+size_t Utils::getPageSize()
+{
+    static const size_t page_size = static_cast<size_t>(sysconf(_SC_PAGESIZE));
+    return page_size;
+}
+
+uintptr_t Utils::alignDownToPageSize(uintptr_t addr)
+{
+    return addr & ~(getPageSize() - 1);
+}
+
+uintptr_t Utils::alignUpToPageSize(uintptr_t addr)
+{
+    return (addr + getPageSize() - 1) & ~(getPageSize() - 1);
+}
+
 bool Utils::isZeroPage(void *addr)
 {
-    static const size_t page_size = 4096;
     long long *buf = (long long *)addr;
-    size_t end = page_size / sizeof(*buf);
+    size_t end = Utils::getPageSize() / sizeof(*buf);
     long long res = 0;
 
     for (size_t i = 0; i + 7 < end; i += 8) {

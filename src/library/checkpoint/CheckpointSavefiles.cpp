@@ -19,6 +19,7 @@
 
 #include "CheckpointSavefiles.h"
 
+#include "Utils.h"
 #include "SaveStateLoading.h"
 #include "SaveStateSaving.h"
 #include "MemArea.h"
@@ -87,9 +88,10 @@ void readASavefile(SaveStateLoading& saved_state)
     bool has_orig_file_mapping = (orig_file_mapped_addr != MAP_FAILED);
     char* orig_file_mapped_begin = has_orig_file_mapping ? static_cast<char*>(orig_file_mapped_addr) : nullptr;
     char* orig_file_mapped_end = has_orig_file_mapping ? (orig_file_mapped_begin + filestat.st_size) : nullptr;
+    off_t page_size = Utils::getPageSize();
 
-    for (;mapped_addr_begin < mapped_addr_end; mapped_addr_begin += 4096) {
-        size_t page_len = (mapped_addr_end - mapped_addr_begin) > 4096 ? 4096 : (mapped_addr_end - mapped_addr_begin);
+    for (;mapped_addr_begin < mapped_addr_end; mapped_addr_begin += page_size) {
+        size_t page_len = (mapped_addr_end - mapped_addr_begin) > page_size ? page_size : (mapped_addr_end - mapped_addr_begin);
 
         char flag = saved_state.getNextPageFlag();
 
@@ -112,7 +114,7 @@ void readASavefile(SaveStateLoading& saved_state)
         }
 
         if (has_orig_file_mapping)
-            orig_file_mapped_begin += 4096;
+            orig_file_mapped_begin += page_size;
     }
 
     saved_state.finishLoad();
@@ -205,6 +207,7 @@ size_t writeSaveFiles(SaveStateSaving& state)
         bool has_orig_file_mapping = (orig_file_mapped_addr != MAP_FAILED);
         char* orig_file_mapped_begin = has_orig_file_mapping ? static_cast<char*>(orig_file_mapped_addr) : nullptr;
         char* orig_file_mapped_end = has_orig_file_mapping ? (orig_file_mapped_begin + orig_file_mapped_size) : nullptr;
+        off_t page_size = Utils::getPageSize();
 
         /* Stats to print */
         int pagecount_full = 0;
@@ -213,8 +216,8 @@ size_t writeSaveFiles(SaveStateSaving& state)
         state.processArea(&area);
         size_t area_size = sizeof(area);
 
-        for (;mapped_addr_begin < mapped_addr_end; mapped_addr_begin += 4096) {
-            size_t page_len = (mapped_addr_end - mapped_addr_begin) > 4096 ? 4096 : (mapped_addr_end - mapped_addr_begin);
+        for (;mapped_addr_begin < mapped_addr_end; mapped_addr_begin += page_size) {
+            size_t page_len = (mapped_addr_end - mapped_addr_begin) > page_size ? page_size : (mapped_addr_end - mapped_addr_begin);
 
             /* Check difference with original file */
             if (has_orig_file_mapping) {
@@ -254,13 +257,13 @@ size_t writeSaveFiles(SaveStateSaving& state)
             }
 
             if (has_orig_file_mapping)
-                orig_file_mapped_begin += 4096;
+                orig_file_mapped_begin += page_size;
         }
 
         area_size += state.finishSave();
 
         /* Add the number of page flags to the total size */
-        area_size += (area.size + 4095) / 4096;
+        area_size += (area.size + page_size - 1) / page_size;
 
         LOG(LL_DEBUG, LCF_CHECKPOINT, "    Pagecount full: %d, file: %d. Size %zu", pagecount_full, pagecount_file, area_size);
 

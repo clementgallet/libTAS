@@ -23,13 +23,34 @@
 #define LIBTAS_UTILS_H
 
 #include <cstddef> // size_t
+#include <cstdint> // uintptr_t
 #include <unistd.h> // ssize_t
 
 namespace libtas {
 namespace Utils
 {
+    /* Fails or does entire write (returns count) */
     ssize_t writeAll(int fd, const void *buf, size_t count);
+    
+    /* Fails, succeeds, or partial read due to EOF (returns num read) 
+     * return value:
+     * -1: unrecoverable error
+     * <n>: number of bytes read */
     ssize_t readAll(int fd, void *buf, size_t count);
+
+    /* Returns the system page size */
+    size_t getPageSize();
+
+    /* Align address to page size */
+    uintptr_t alignDownToPageSize(uintptr_t addr);
+    uintptr_t alignUpToPageSize(uintptr_t addr);
+
+    /* This function detects if the given page is a zero page or not. There is
+     * scope of improving this function using some optimizations.
+     *
+     * TODO: One can use /proc/self/pagemap to detect if the page is backed by a
+     * shared zero page.
+     */
     bool isZeroPage(void *addr);
 }
 }

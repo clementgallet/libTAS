@@ -65,6 +65,9 @@ private:
         PAGEMAP_WRITEBUF = 65536
     };
 
+    /* Page size */
+    size_t page_size;
+
     /* Chunk of savestate pagemap values */
     char ss_pagemaps[PAGEMAP_CHUNK];
 

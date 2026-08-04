@@ -29,14 +29,18 @@
 #include <vector>
 #include <thread>
 #include <filesystem>
+#include <unistd.h>
 
-#define MEMORY_CHUNK_SIZE 1024*1024
-#define OUTPUT_CHUNK_SIZE 4096
-#define MAX_TYPE_SIZE 8
+static const size_t MEMORY_CHUNK_SIZE = 1024*1024;
+static const size_t OUTPUT_CHUNK_SIZE = 4096;
+static const size_t MAX_TYPE_SIZE = 8;
+/* Upper bound of possible page size values */
+static const size_t MAX_PAGE_SIZE = 65536;
 
 MemScannerThread::MemScannerThread(MemScanner& ms, int br, int er, uintptr_t ba, uintptr_t ea, off_t mo, uint64_t mem) : memscanner(ms), beg_region(br), end_region(er), beg_address(ba), end_address(ea), memory_offset(mo), memory_size(mem), error(ENOERROR)
 {
     finished = false;
+    page_size = sysconf(_SC_PAGESIZE);
 }
 
 MemScannerThread::~MemScannerThread()
@@ -86,22 +90,22 @@ void MemScannerThread::first_region_scan()
         }
         
         /* Write data */
-        uint8_t chunk[4096];
+        uint8_t chunk[MAX_PAGE_SIZE];
         
-        for (uintptr_t ca = cur_beg_addr; ca < cur_end_addr; ca += 4096) {
-            int readValues = MemAccess::read(chunk, reinterpret_cast<void*>(ca), 4096);
+        for (uintptr_t ca = cur_beg_addr; ca < cur_end_addr; ca += page_size) {
+            int readValues = MemAccess::read(chunk, reinterpret_cast<void*>(ca), page_size);
             if (readValues < 0) {
                 std::cerr << "Cound not read game process at address " << std::hex << ca << std::endl;
                 ms.print();
             }
-            vfs.write((char*)chunk, 4096);
+            vfs.write((char*)chunk, page_size);
             if (!vfs) {
                 finished = true;
                 error = EOUTPUT;
                 return;
             }
-            new_memory_size += 4096;
-            processed_memory_size += 4096;
+            new_memory_size += page_size;
+            processed_memory_size += page_size;
             
             if (memscanner.is_stopped) {
                 finished = true;
@@ -151,16 +155,16 @@ void MemScannerThread::first_address_scan()
         }
         
         /* Write data */
-        uint8_t chunk[4096+MAX_TYPE_SIZE]; // extra size for unaligned search
+        uint8_t chunk[MAX_PAGE_SIZE+MAX_TYPE_SIZE]; // extra size for unaligned search
         
-        for (uintptr_t ca = cur_beg_addr; ca < cur_end_addr; ca += 4096) {
-            processed_memory_size += 4096;
+        for (uintptr_t ca = cur_beg_addr; ca < cur_end_addr; ca += page_size) {
+            processed_memory_size += page_size;
 
             /* Compute how much extra data we need to read to account for unaligned
              * search, which does not apply for the end of the region */
-            int extra_read = (4096+ca)<cur_end_addr ? memscanner.value_type_size-memscanner.alignment : 0;
+            int extra_read = (page_size+ca)<cur_end_addr ? memscanner.value_type_size-memscanner.alignment : 0;
             
-            int readValues = MemAccess::read(chunk, reinterpret_cast<void*>(ca), 4096+extra_read);
+            int readValues = MemAccess::read(chunk, reinterpret_cast<void*>(ca), page_size+extra_read);
             if (readValues < 0)
                 continue;
             for (int v = 0; v < readValues-(memscanner.value_type_size-memscanner.alignment); v += memscanner.alignment) {
@@ -282,7 +286,7 @@ void MemScannerThread::next_scan_from_region()
                 ms.print();
             }
             
-            for (unsigned int v = 0; v < readValues-(memscanner.value_type_size-memscanner.alignment); v += memscanner.alignment) {
+            for (unsigned int v = 0; v < static_cast<unsigned int>(readValues-(memscanner.value_type_size-memscanner.alignment)); v += memscanner.alignment) {
                 if (((memscanner.compare_type == CompareType::Previous) && 
                     CompareOperations::check_previous(&new_memory[v], &old_memory[v])) ||
                     ((memscanner.compare_type == CompareType::Value) && 
@@ -338,7 +342,7 @@ void MemScannerThread::next_scan_from_address()
     int size_ratio = sizeof(uintptr_t)/memscanner.value_type_size;
 
     std::vector<uint8_t> new_memory;
-    new_memory.resize(4096+memscanner.value_type_size-memscanner.alignment);
+    new_memory.resize(page_size+memscanner.value_type_size-memscanner.alignment);
 
     /* If we compare from previous memory, read and process saved memory by
      * chunks and by region, because all threads access to the same file. */
@@ -420,11 +424,11 @@ void MemScannerThread::next_scan_from_address()
              * need one address in the memory page.
              */
             uintptr_t beg_addr = old_addresses[addr_beg_index];
-            uintptr_t beg_page = beg_addr & 0xfffffffffffff000;
+            uintptr_t beg_page = beg_addr & ~(page_size-1);
             
             int addr_cur_index;
             for (addr_cur_index = addr_beg_index+1; addr_cur_index < addr_end_index; addr_cur_index++) {
-                if ((old_addresses[addr_cur_index] & 0xfffffffffffff000) != beg_page)
+                if ((old_addresses[addr_cur_index] & ~(page_size-1)) != beg_page)
                     break;
             }
             

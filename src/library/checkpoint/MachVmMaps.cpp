@@ -88,7 +88,7 @@ MachVmMaps::MachVmMaps()
                     if (0 == strcmp("__DATA", segment->segname)) {
                         cache_libs[cache_index].addr = _dyld_get_image_vmaddr_slide(i) + segment->vmaddr;
                         /* vmsize is not rounded to the next page size, so we do the math here */
-                        cache_libs[cache_index].size = ((segment->vmsize+4095)/4096)*4096;
+                        cache_libs[cache_index].size = Utils::alignUpToPageSize(segment->vmsize);
                         cache_libs[cache_index].initprot = segment->initprot;
                         cache_libs[cache_index].maxprot = segment->maxprot;
                         cache_libs[cache_index].flags = segment->flags;
@@ -102,7 +102,7 @@ MachVmMaps::MachVmMaps()
                     if (0 == strcmp("__DATA", segment->segname)) {
                         cache_libs[cache_index].addr = _dyld_get_image_vmaddr_slide(i) + segment->vmaddr;
                         /* vmsize is not rounded to the next page size, so we do the math here */
-                        cache_libs[cache_index].size = ((segment->vmsize+4095)/4096)*4096;
+                        cache_libs[cache_index].size = Utils::alignUpToPageSize(segment->vmsize);
                         cache_libs[cache_index].initprot = segment->initprot;
                         cache_libs[cache_index].maxprot = segment->maxprot;
                         cache_libs[cache_index].flags = segment->flags;

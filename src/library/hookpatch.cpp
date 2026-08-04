@@ -18,6 +18,7 @@
  */
 
 #include "hookpatch.h"
+#include "Utils.h"
 #include "general/dlhook.h"
 #include "logging.h"
 #include "GlobalState.h"
@@ -467,7 +468,7 @@ static void* allocate_nearby_segment(void* current_tramp_segment, const void *or
     void* obtained_addr = MAP_FAILED;
     for (uintptr_t addr = first_addr; addr < last_addr; addr += 0x00100000) {
         LOG(LL_DEBUG, LCF_HOOK, "  Try allocating a memory segment in address %llx", addr);
-        obtained_addr = mmap(reinterpret_cast<void*>(addr), 0x1000, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE, 0, 0);
+        obtained_addr = mmap(reinterpret_cast<void*>(addr), Utils::getPageSize(), PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE, 0, 0);
         if (obtained_addr != MAP_FAILED) break;
     }
     
@@ -694,9 +695,9 @@ void overwrite_orig_function(void *orig_fun, void* my_function)
 
     char *pTarget = reinterpret_cast<char *>(orig_fun);
     uintptr_t addrTarget = reinterpret_cast<uintptr_t>(pTarget);
-    uintptr_t alignedBeg = (addrTarget / 4096) * 4096;
-    uintptr_t alignedEnd = ((addrTarget+sizeof(JMP_INSTR)+sizeof(uintptr_t)) / 4096) * 4096;
-    size_t alignedSize = alignedEnd - alignedBeg + 4096;
+    uintptr_t alignedBeg = Utils::alignDownToPageSize(addrTarget);
+    uintptr_t alignedEnd = Utils::alignDownToPageSize(addrTarget+sizeof(JMP_INSTR)+sizeof(uintptr_t));
+    size_t alignedSize = alignedEnd - alignedBeg + Utils::getPageSize();
 
     MYASSERT(mprotect(reinterpret_cast<void*>(alignedBeg), alignedSize, PROT_EXEC | PROT_READ | PROT_WRITE) == 0)
 
