@@ -77,7 +77,7 @@ int InputSerialization::writeFrame(std::ostream& stream, const AllInputs& inputs
         stream << '|' << std::endl;
         return 1;
     }
-    
+
     /* Write keyboard inputs */
     if (inputs.keyboard[0]) {
         stream.put('|');
@@ -145,7 +145,7 @@ int InputSerialization::writeFrame(std::ostream& stream, const AllInputs& inputs
             if (inputs.misc->flags & (1 << SingleInput::FLAG_CONTROLLER4_ADDED_REMOVED)) stream.put('4');
             if (inputs.misc->flags & (1 << SingleInput::FLAG_FOCUS_UNFOCUS)) stream.put('F');
         }
-        
+
         /* Write framerate inputs */
         /* Only store framerate if different from initial framerate */
         if ((inputs.misc->framerate_num && (inputs.misc->framerate_num != framerate_num)) ||
@@ -163,7 +163,7 @@ int InputSerialization::writeFrame(std::ostream& stream, const AllInputs& inputs
             else
             stream << framerate_den;
         }
-        
+
         /* Write realtime inputs */
         if (inputs.misc->realtime_sec) {
             stream.put('|');
@@ -184,7 +184,7 @@ int InputSerialization::readFrame(const std::string& line, AllInputs& inputs)
     int ret = 0;
 
     std::istringstream input_string(line);
-    char d;
+    signed char d;
     input_string >> d;
     if (d != '|')
         return -1;
@@ -246,7 +246,7 @@ int InputSerialization::readFrame(const std::string& line, AllInputs& inputs)
                 ret = readFramerateFrame(input_string, inputs);
                 if (ret < 0)
                     return ret;
-                
+
                 break;
         }
         if (ret < 0)
@@ -360,7 +360,7 @@ int InputSerialization::readFlagFrame(std::istringstream& input_string, AllInput
 {
     if (!inputs.misc)
         inputs.misc.reset(new MiscInputs{});
-    
+
     char d;
     input_string >> d;
     while (input_string && (d != '|')) {
