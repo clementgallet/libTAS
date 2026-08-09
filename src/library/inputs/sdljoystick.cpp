@@ -97,16 +97,28 @@ bool mySDL_JoystickReportEvents(int index)
         sdl2::SDL_JOYDEVICEADDED,
         sdl2::SDL_JOYDEVICEREMOVED
     };
+    const int joyevents3[] = {
+        sdl3::SDL_EVENT_JOYSTICK_AXIS_MOTION,
+        sdl3::SDL_EVENT_JOYSTICK_BUTTON_DOWN,
+        sdl3::SDL_EVENT_JOYSTICK_BUTTON_UP,
+        sdl3::SDL_EVENT_JOYSTICK_HAT_MOTION,
+        sdl3::SDL_EVENT_JOYSTICK_BALL_MOTION,
+        sdl3::SDL_EVENT_JOYSTICK_ADDED,
+        sdl3::SDL_EVENT_JOYSTICK_REMOVED
+    };
 
     bool enabled = false;
     int SDLver = get_sdlversion();
 
     if (SDLver == 1)
-        for (int e=0; e<5; e++)
+        for (int e=0; e<sizeof(joyevents1)/sizeof(joyevents1[0]); e++)
             enabled = enabled || sdlEventQueue.isEnabled(joyevents1[e]);
     if (SDLver == 2)
-        for (int e=0; e<7; e++)
+        for (int e=0; e<sizeof(joyevents2)/sizeof(joyevents2[0]); e++)
             enabled = enabled || sdlEventQueue.isEnabled(joyevents2[e]);
+    if (SDLver == 3)
+        for (int e=0; e<sizeof(joyevents3)/sizeof(joyevents3[0]); e++)
+            enabled = enabled || sdlEventQueue.isEnabled(joyevents3[e]);
 
     return enabled;
 }
