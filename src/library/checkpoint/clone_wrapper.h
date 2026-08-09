@@ -162,7 +162,7 @@
         "stp %5, %6, [x1]                \n"    \
         "mov x0, %1                      \n"    \
         "mov x2, %3                      \n"    \
-        "mov x3, %4                      \n"    \
+        "mov x4, %4                      \n"    \
         "mov x8, #220 /* __NR_clone */   \n"    \
         "svc #0                          \n"    \
                                                 \
@@ -183,7 +183,7 @@
           "r"(ptr_child_tid),                   \
           "r"(clone_restore_fn),                \
           "r"(thread_args)                      \
-        : "x0", "x1", "x2", "x3", "x8", "memory")
+        : "x0", "x1", "x2", "x4", "x8", "memory")
 
 /*
  * Based on sysdeps/unix/sysv/linux/aarch64/clone.S
