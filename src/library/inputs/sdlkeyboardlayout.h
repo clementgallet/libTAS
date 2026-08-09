@@ -29,7 +29,8 @@
 
 namespace libtas {
 
-sdl2::SDL_Scancode GetScanFromKey(sdl2::SDL_Keycode keycode);
+sdl3::SDL_Scancode GetScanFromKey3(sdl3::SDL_Keycode keycode);
+sdl2::SDL_Scancode GetScanFromKey2(sdl2::SDL_Keycode keycode);
 unsigned char GetScanFromKey1(sdl1::SDLKey key);
 
 OVERRIDE int SDL_GetKeyFromScancode(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3);

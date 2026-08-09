@@ -28,199 +28,340 @@
 namespace libtas {
 
 /* The translation tables from an X11 keysym to a SDL keysym */
+static sdl3::SDL_Keycode MISC3_keymap[256];
 static sdl2::SDL_Keycode MISC2_keymap[256];
 static sdl1::SDLKey MISC1_keymap[256];
 
 void X11_InitKeymap(void)
 {
-	int i;
+    int i;
 
-	/* Map the miscellaneous keys */
-	for ( i=0; i<256; ++i )
-		MISC2_keymap[i] = sdl2::SDLK_UNKNOWN;
+    /* SDL 3 */
 
-	/* These X keysyms have 0xFF as the high byte */
-	MISC2_keymap[XK_BackSpace&0xFF] = sdl2::SDLK_BACKSPACE;
-	MISC2_keymap[XK_Tab&0xFF] = sdl2::SDLK_TAB;
-	MISC2_keymap[XK_Clear&0xFF] = sdl2::SDLK_CLEAR;
-	MISC2_keymap[XK_Return&0xFF] = sdl2::SDLK_RETURN;
-	MISC2_keymap[XK_Pause&0xFF] = sdl2::SDLK_PAUSE;
-	MISC2_keymap[XK_Escape&0xFF] = sdl2::SDLK_ESCAPE;
-	MISC2_keymap[XK_Delete&0xFF] = sdl2::SDLK_DELETE;
+    /* Map the miscellaneous keys */
+    for ( i=0; i<256; ++i )
+        MISC3_keymap[i] = sdl3::SDLK_UNKNOWN;
 
-	MISC2_keymap[XK_KP_0&0xFF] = sdl2::SDLK_KP_0;		/* Keypad 0-9 */
-	MISC2_keymap[XK_KP_1&0xFF] = sdl2::SDLK_KP_1;
-	MISC2_keymap[XK_KP_2&0xFF] = sdl2::SDLK_KP_2;
-	MISC2_keymap[XK_KP_3&0xFF] = sdl2::SDLK_KP_3;
-	MISC2_keymap[XK_KP_4&0xFF] = sdl2::SDLK_KP_4;
-	MISC2_keymap[XK_KP_5&0xFF] = sdl2::SDLK_KP_5;
-	MISC2_keymap[XK_KP_6&0xFF] = sdl2::SDLK_KP_6;
-	MISC2_keymap[XK_KP_7&0xFF] = sdl2::SDLK_KP_7;
-	MISC2_keymap[XK_KP_8&0xFF] = sdl2::SDLK_KP_8;
-	MISC2_keymap[XK_KP_9&0xFF] = sdl2::SDLK_KP_9;
-	MISC2_keymap[XK_KP_Insert&0xFF] = sdl2::SDLK_KP_0;
-	MISC2_keymap[XK_KP_End&0xFF] = sdl2::SDLK_KP_1;
-	MISC2_keymap[XK_KP_Down&0xFF] = sdl2::SDLK_KP_2;
-	MISC2_keymap[XK_KP_Page_Down&0xFF] = sdl2::SDLK_KP_3;
-	MISC2_keymap[XK_KP_Left&0xFF] = sdl2::SDLK_KP_4;
-	MISC2_keymap[XK_KP_Begin&0xFF] = sdl2::SDLK_KP_5;
-	MISC2_keymap[XK_KP_Right&0xFF] = sdl2::SDLK_KP_6;
-	MISC2_keymap[XK_KP_Home&0xFF] = sdl2::SDLK_KP_7;
-	MISC2_keymap[XK_KP_Up&0xFF] = sdl2::SDLK_KP_8;
-	MISC2_keymap[XK_KP_Page_Up&0xFF] = sdl2::SDLK_KP_9;
-	MISC2_keymap[XK_KP_Delete&0xFF] = sdl2::SDLK_KP_PERIOD;
-	MISC2_keymap[XK_KP_Decimal&0xFF] = sdl2::SDLK_KP_PERIOD;
-	MISC2_keymap[XK_KP_Divide&0xFF] = sdl2::SDLK_KP_DIVIDE;
-	MISC2_keymap[XK_KP_Multiply&0xFF] = sdl2::SDLK_KP_MULTIPLY;
-	MISC2_keymap[XK_KP_Subtract&0xFF] = sdl2::SDLK_KP_MINUS;
-	MISC2_keymap[XK_KP_Add&0xFF] = sdl2::SDLK_KP_PLUS;
-	MISC2_keymap[XK_KP_Enter&0xFF] = sdl2::SDLK_KP_ENTER;
-	MISC2_keymap[XK_KP_Equal&0xFF] = sdl2::SDLK_KP_EQUALS;
+    /* These X keysyms have 0xFF as the high byte */
+    MISC3_keymap[XK_BackSpace&0xFF] = sdl3::SDLK_BACKSPACE;
+    MISC3_keymap[XK_Tab&0xFF] = sdl3::SDLK_TAB;
+    MISC3_keymap[XK_Clear&0xFF] = sdl3::SDLK_CLEAR;
+    MISC3_keymap[XK_Return&0xFF] = sdl3::SDLK_RETURN;
+    MISC3_keymap[XK_Pause&0xFF] = sdl3::SDLK_PAUSE;
+    MISC3_keymap[XK_Escape&0xFF] = sdl3::SDLK_ESCAPE;
+    MISC3_keymap[XK_Delete&0xFF] = sdl3::SDLK_DELETE;
 
-	MISC2_keymap[XK_Up&0xFF] = sdl2::SDLK_UP;
-	MISC2_keymap[XK_Down&0xFF] = sdl2::SDLK_DOWN;
-	MISC2_keymap[XK_Right&0xFF] = sdl2::SDLK_RIGHT;
-	MISC2_keymap[XK_Left&0xFF] = sdl2::SDLK_LEFT;
-	MISC2_keymap[XK_Insert&0xFF] = sdl2::SDLK_INSERT;
-	MISC2_keymap[XK_Home&0xFF] = sdl2::SDLK_HOME;
-	MISC2_keymap[XK_End&0xFF] = sdl2::SDLK_END;
-	MISC2_keymap[XK_Page_Up&0xFF] = sdl2::SDLK_PAGEUP;
-	MISC2_keymap[XK_Page_Down&0xFF] = sdl2::SDLK_PAGEDOWN;
+    MISC3_keymap[XK_KP_0&0xFF] = sdl3::SDLK_KP_0;        /* Keypad 0-9 */
+    MISC3_keymap[XK_KP_1&0xFF] = sdl3::SDLK_KP_1;
+    MISC3_keymap[XK_KP_2&0xFF] = sdl3::SDLK_KP_2;
+    MISC3_keymap[XK_KP_3&0xFF] = sdl3::SDLK_KP_3;
+    MISC3_keymap[XK_KP_4&0xFF] = sdl3::SDLK_KP_4;
+    MISC3_keymap[XK_KP_5&0xFF] = sdl3::SDLK_KP_5;
+    MISC3_keymap[XK_KP_6&0xFF] = sdl3::SDLK_KP_6;
+    MISC3_keymap[XK_KP_7&0xFF] = sdl3::SDLK_KP_7;
+    MISC3_keymap[XK_KP_8&0xFF] = sdl3::SDLK_KP_8;
+    MISC3_keymap[XK_KP_9&0xFF] = sdl3::SDLK_KP_9;
+    MISC3_keymap[XK_KP_Insert&0xFF] = sdl3::SDLK_KP_0;
+    MISC3_keymap[XK_KP_End&0xFF] = sdl3::SDLK_KP_1;
+    MISC3_keymap[XK_KP_Down&0xFF] = sdl3::SDLK_KP_2;
+    MISC3_keymap[XK_KP_Page_Down&0xFF] = sdl3::SDLK_KP_3;
+    MISC3_keymap[XK_KP_Left&0xFF] = sdl3::SDLK_KP_4;
+    MISC3_keymap[XK_KP_Begin&0xFF] = sdl3::SDLK_KP_5;
+    MISC3_keymap[XK_KP_Right&0xFF] = sdl3::SDLK_KP_6;
+    MISC3_keymap[XK_KP_Home&0xFF] = sdl3::SDLK_KP_7;
+    MISC3_keymap[XK_KP_Up&0xFF] = sdl3::SDLK_KP_8;
+    MISC3_keymap[XK_KP_Page_Up&0xFF] = sdl3::SDLK_KP_9;
+    MISC3_keymap[XK_KP_Delete&0xFF] = sdl3::SDLK_KP_PERIOD;
+    MISC3_keymap[XK_KP_Decimal&0xFF] = sdl3::SDLK_KP_PERIOD;
+    MISC3_keymap[XK_KP_Divide&0xFF] = sdl3::SDLK_KP_DIVIDE;
+    MISC3_keymap[XK_KP_Multiply&0xFF] = sdl3::SDLK_KP_MULTIPLY;
+    MISC3_keymap[XK_KP_Subtract&0xFF] = sdl3::SDLK_KP_MINUS;
+    MISC3_keymap[XK_KP_Add&0xFF] = sdl3::SDLK_KP_PLUS;
+    MISC3_keymap[XK_KP_Enter&0xFF] = sdl3::SDLK_KP_ENTER;
+    MISC3_keymap[XK_KP_Equal&0xFF] = sdl3::SDLK_KP_EQUALS;
 
-	MISC2_keymap[XK_F1&0xFF] = sdl2::SDLK_F1;
-	MISC2_keymap[XK_F2&0xFF] = sdl2::SDLK_F2;
-	MISC2_keymap[XK_F3&0xFF] = sdl2::SDLK_F3;
-	MISC2_keymap[XK_F4&0xFF] = sdl2::SDLK_F4;
-	MISC2_keymap[XK_F5&0xFF] = sdl2::SDLK_F5;
-	MISC2_keymap[XK_F6&0xFF] = sdl2::SDLK_F6;
-	MISC2_keymap[XK_F7&0xFF] = sdl2::SDLK_F7;
-	MISC2_keymap[XK_F8&0xFF] = sdl2::SDLK_F8;
-	MISC2_keymap[XK_F9&0xFF] = sdl2::SDLK_F9;
-	MISC2_keymap[XK_F10&0xFF] = sdl2::SDLK_F10;
-	MISC2_keymap[XK_F11&0xFF] = sdl2::SDLK_F11;
-	MISC2_keymap[XK_F12&0xFF] = sdl2::SDLK_F12;
-	MISC2_keymap[XK_F13&0xFF] = sdl2::SDLK_F13;
-	MISC2_keymap[XK_F14&0xFF] = sdl2::SDLK_F14;
-	MISC2_keymap[XK_F15&0xFF] = sdl2::SDLK_F15;
+    MISC3_keymap[XK_Up&0xFF] = sdl3::SDLK_UP;
+    MISC3_keymap[XK_Down&0xFF] = sdl3::SDLK_DOWN;
+    MISC3_keymap[XK_Right&0xFF] = sdl3::SDLK_RIGHT;
+    MISC3_keymap[XK_Left&0xFF] = sdl3::SDLK_LEFT;
+    MISC3_keymap[XK_Insert&0xFF] = sdl3::SDLK_INSERT;
+    MISC3_keymap[XK_Home&0xFF] = sdl3::SDLK_HOME;
+    MISC3_keymap[XK_End&0xFF] = sdl3::SDLK_END;
+    MISC3_keymap[XK_Page_Up&0xFF] = sdl3::SDLK_PAGEUP;
+    MISC3_keymap[XK_Page_Down&0xFF] = sdl3::SDLK_PAGEDOWN;
 
-	MISC2_keymap[XK_Num_Lock&0xFF] = sdl2::SDLK_NUMLOCKCLEAR;
-	MISC2_keymap[XK_Caps_Lock&0xFF] = sdl2::SDLK_CAPSLOCK;
-	MISC2_keymap[XK_Scroll_Lock&0xFF] = sdl2::SDLK_SCROLLLOCK;
-	MISC2_keymap[XK_Shift_R&0xFF] = sdl2::SDLK_RSHIFT;
-	MISC2_keymap[XK_Shift_L&0xFF] = sdl2::SDLK_LSHIFT;
-	MISC2_keymap[XK_Control_R&0xFF] = sdl2::SDLK_RCTRL;
-	MISC2_keymap[XK_Control_L&0xFF] = sdl2::SDLK_LCTRL;
-	MISC2_keymap[XK_Alt_R&0xFF] = sdl2::SDLK_RALT;
-	MISC2_keymap[XK_Alt_L&0xFF] = sdl2::SDLK_LALT;
-	MISC2_keymap[XK_Meta_R&0xFF] = sdl2::SDLK_RGUI;
-	MISC2_keymap[XK_Meta_L&0xFF] = sdl2::SDLK_LGUI;
-	MISC2_keymap[XK_Super_L&0xFF] = sdl2::SDLK_LGUI; /* Left "Windows" */
-	MISC2_keymap[XK_Super_R&0xFF] = sdl2::SDLK_RGUI; /* Right "Windows" */
-	MISC2_keymap[XK_Mode_switch&0xFF] = sdl2::SDLK_MODE; /* "Alt Gr" key */
-	//MISC2_keymap[XK_Multi_key&0xFF] = SDL2::SDLK_COMPOSE; /* Multi-key compose */
+    MISC3_keymap[XK_F1&0xFF] = sdl3::SDLK_F1;
+    MISC3_keymap[XK_F2&0xFF] = sdl3::SDLK_F2;
+    MISC3_keymap[XK_F3&0xFF] = sdl3::SDLK_F3;
+    MISC3_keymap[XK_F4&0xFF] = sdl3::SDLK_F4;
+    MISC3_keymap[XK_F5&0xFF] = sdl3::SDLK_F5;
+    MISC3_keymap[XK_F6&0xFF] = sdl3::SDLK_F6;
+    MISC3_keymap[XK_F7&0xFF] = sdl3::SDLK_F7;
+    MISC3_keymap[XK_F8&0xFF] = sdl3::SDLK_F8;
+    MISC3_keymap[XK_F9&0xFF] = sdl3::SDLK_F9;
+    MISC3_keymap[XK_F10&0xFF] = sdl3::SDLK_F10;
+    MISC3_keymap[XK_F11&0xFF] = sdl3::SDLK_F11;
+    MISC3_keymap[XK_F12&0xFF] = sdl3::SDLK_F12;
+    MISC3_keymap[XK_F13&0xFF] = sdl3::SDLK_F13;
+    MISC3_keymap[XK_F14&0xFF] = sdl3::SDLK_F14;
+    MISC3_keymap[XK_F15&0xFF] = sdl3::SDLK_F15;
 
-	MISC2_keymap[XK_Help&0xFF] = sdl2::SDLK_HELP;
-	MISC2_keymap[XK_Print&0xFF] = sdl2::SDLK_PRINTSCREEN;
-	MISC2_keymap[XK_Sys_Req&0xFF] = sdl2::SDLK_SYSREQ;
-	MISC2_keymap[XK_Break&0xFF] = sdl2::SDLK_PAUSE;
-	MISC2_keymap[XK_Menu&0xFF] = sdl2::SDLK_MENU;
-	MISC2_keymap[XK_Hyper_R&0xFF] = sdl2::SDLK_MENU;   /* Windows "Menu" key */
+    MISC3_keymap[XK_Num_Lock&0xFF] = sdl3::SDLK_NUMLOCKCLEAR;
+    MISC3_keymap[XK_Caps_Lock&0xFF] = sdl3::SDLK_CAPSLOCK;
+    MISC3_keymap[XK_Scroll_Lock&0xFF] = sdl3::SDLK_SCROLLLOCK;
+    MISC3_keymap[XK_Shift_R&0xFF] = sdl3::SDLK_RSHIFT;
+    MISC3_keymap[XK_Shift_L&0xFF] = sdl3::SDLK_LSHIFT;
+    MISC3_keymap[XK_Control_R&0xFF] = sdl3::SDLK_RCTRL;
+    MISC3_keymap[XK_Control_L&0xFF] = sdl3::SDLK_LCTRL;
+    MISC3_keymap[XK_Alt_R&0xFF] = sdl3::SDLK_RALT;
+    MISC3_keymap[XK_Alt_L&0xFF] = sdl3::SDLK_LALT;
+    MISC3_keymap[XK_Meta_R&0xFF] = sdl3::SDLK_RMETA;
+    MISC3_keymap[XK_Meta_L&0xFF] = sdl3::SDLK_LMETA;
+    MISC3_keymap[XK_Super_L&0xFF] = sdl3::SDLK_LGUI; /* Left "Windows" */
+    MISC3_keymap[XK_Super_R&0xFF] = sdl3::SDLK_RGUI; /* Right "Windows" */
+    MISC3_keymap[XK_Mode_switch&0xFF] = sdl3::SDLK_MODE; /* "Alt Gr" key */
+    MISC3_keymap[XK_Multi_key&0xFF] = sdl3::SDLK_MULTI_KEY_COMPOSE; /* Multi-key compose */
+
+    MISC3_keymap[XK_Help&0xFF] = sdl3::SDLK_HELP;
+    MISC3_keymap[XK_Print&0xFF] = sdl3::SDLK_PRINTSCREEN;
+    MISC3_keymap[XK_Sys_Req&0xFF] = sdl3::SDLK_SYSREQ;
+    MISC3_keymap[XK_Break&0xFF] = sdl3::SDLK_PAUSE;
+    MISC3_keymap[XK_Menu&0xFF] = sdl3::SDLK_MENU;
+    MISC3_keymap[XK_Hyper_L&0xFF] = sdl3::SDLK_LHYPER;
+    MISC3_keymap[XK_Hyper_R&0xFF] = sdl3::SDLK_RHYPER;   /* Windows "Menu" key */
+
+    /* SDL 2 */
+
+    /* Map the miscellaneous keys */
+    for ( i=0; i<256; ++i )
+        MISC2_keymap[i] = sdl2::SDLK_UNKNOWN;
+
+    /* These X keysyms have 0xFF as the high byte */
+    MISC2_keymap[XK_BackSpace&0xFF] = sdl2::SDLK_BACKSPACE;
+    MISC2_keymap[XK_Tab&0xFF] = sdl2::SDLK_TAB;
+    MISC2_keymap[XK_Clear&0xFF] = sdl2::SDLK_CLEAR;
+    MISC2_keymap[XK_Return&0xFF] = sdl2::SDLK_RETURN;
+    MISC2_keymap[XK_Pause&0xFF] = sdl2::SDLK_PAUSE;
+    MISC2_keymap[XK_Escape&0xFF] = sdl2::SDLK_ESCAPE;
+    MISC2_keymap[XK_Delete&0xFF] = sdl2::SDLK_DELETE;
+
+    MISC2_keymap[XK_KP_0&0xFF] = sdl2::SDLK_KP_0;        /* Keypad 0-9 */
+    MISC2_keymap[XK_KP_1&0xFF] = sdl2::SDLK_KP_1;
+    MISC2_keymap[XK_KP_2&0xFF] = sdl2::SDLK_KP_2;
+    MISC2_keymap[XK_KP_3&0xFF] = sdl2::SDLK_KP_3;
+    MISC2_keymap[XK_KP_4&0xFF] = sdl2::SDLK_KP_4;
+    MISC2_keymap[XK_KP_5&0xFF] = sdl2::SDLK_KP_5;
+    MISC2_keymap[XK_KP_6&0xFF] = sdl2::SDLK_KP_6;
+    MISC2_keymap[XK_KP_7&0xFF] = sdl2::SDLK_KP_7;
+    MISC2_keymap[XK_KP_8&0xFF] = sdl2::SDLK_KP_8;
+    MISC2_keymap[XK_KP_9&0xFF] = sdl2::SDLK_KP_9;
+    MISC2_keymap[XK_KP_Insert&0xFF] = sdl2::SDLK_KP_0;
+    MISC2_keymap[XK_KP_End&0xFF] = sdl2::SDLK_KP_1;
+    MISC2_keymap[XK_KP_Down&0xFF] = sdl2::SDLK_KP_2;
+    MISC2_keymap[XK_KP_Page_Down&0xFF] = sdl2::SDLK_KP_3;
+    MISC2_keymap[XK_KP_Left&0xFF] = sdl2::SDLK_KP_4;
+    MISC2_keymap[XK_KP_Begin&0xFF] = sdl2::SDLK_KP_5;
+    MISC2_keymap[XK_KP_Right&0xFF] = sdl2::SDLK_KP_6;
+    MISC2_keymap[XK_KP_Home&0xFF] = sdl2::SDLK_KP_7;
+    MISC2_keymap[XK_KP_Up&0xFF] = sdl2::SDLK_KP_8;
+    MISC2_keymap[XK_KP_Page_Up&0xFF] = sdl2::SDLK_KP_9;
+    MISC2_keymap[XK_KP_Delete&0xFF] = sdl2::SDLK_KP_PERIOD;
+    MISC2_keymap[XK_KP_Decimal&0xFF] = sdl2::SDLK_KP_PERIOD;
+    MISC2_keymap[XK_KP_Divide&0xFF] = sdl2::SDLK_KP_DIVIDE;
+    MISC2_keymap[XK_KP_Multiply&0xFF] = sdl2::SDLK_KP_MULTIPLY;
+    MISC2_keymap[XK_KP_Subtract&0xFF] = sdl2::SDLK_KP_MINUS;
+    MISC2_keymap[XK_KP_Add&0xFF] = sdl2::SDLK_KP_PLUS;
+    MISC2_keymap[XK_KP_Enter&0xFF] = sdl2::SDLK_KP_ENTER;
+    MISC2_keymap[XK_KP_Equal&0xFF] = sdl2::SDLK_KP_EQUALS;
+
+    MISC2_keymap[XK_Up&0xFF] = sdl2::SDLK_UP;
+    MISC2_keymap[XK_Down&0xFF] = sdl2::SDLK_DOWN;
+    MISC2_keymap[XK_Right&0xFF] = sdl2::SDLK_RIGHT;
+    MISC2_keymap[XK_Left&0xFF] = sdl2::SDLK_LEFT;
+    MISC2_keymap[XK_Insert&0xFF] = sdl2::SDLK_INSERT;
+    MISC2_keymap[XK_Home&0xFF] = sdl2::SDLK_HOME;
+    MISC2_keymap[XK_End&0xFF] = sdl2::SDLK_END;
+    MISC2_keymap[XK_Page_Up&0xFF] = sdl2::SDLK_PAGEUP;
+    MISC2_keymap[XK_Page_Down&0xFF] = sdl2::SDLK_PAGEDOWN;
+
+    MISC2_keymap[XK_F1&0xFF] = sdl2::SDLK_F1;
+    MISC2_keymap[XK_F2&0xFF] = sdl2::SDLK_F2;
+    MISC2_keymap[XK_F3&0xFF] = sdl2::SDLK_F3;
+    MISC2_keymap[XK_F4&0xFF] = sdl2::SDLK_F4;
+    MISC2_keymap[XK_F5&0xFF] = sdl2::SDLK_F5;
+    MISC2_keymap[XK_F6&0xFF] = sdl2::SDLK_F6;
+    MISC2_keymap[XK_F7&0xFF] = sdl2::SDLK_F7;
+    MISC2_keymap[XK_F8&0xFF] = sdl2::SDLK_F8;
+    MISC2_keymap[XK_F9&0xFF] = sdl2::SDLK_F9;
+    MISC2_keymap[XK_F10&0xFF] = sdl2::SDLK_F10;
+    MISC2_keymap[XK_F11&0xFF] = sdl2::SDLK_F11;
+    MISC2_keymap[XK_F12&0xFF] = sdl2::SDLK_F12;
+    MISC2_keymap[XK_F13&0xFF] = sdl2::SDLK_F13;
+    MISC2_keymap[XK_F14&0xFF] = sdl2::SDLK_F14;
+    MISC2_keymap[XK_F15&0xFF] = sdl2::SDLK_F15;
+
+    MISC2_keymap[XK_Num_Lock&0xFF] = sdl2::SDLK_NUMLOCKCLEAR;
+    MISC2_keymap[XK_Caps_Lock&0xFF] = sdl2::SDLK_CAPSLOCK;
+    MISC2_keymap[XK_Scroll_Lock&0xFF] = sdl2::SDLK_SCROLLLOCK;
+    MISC2_keymap[XK_Shift_R&0xFF] = sdl2::SDLK_RSHIFT;
+    MISC2_keymap[XK_Shift_L&0xFF] = sdl2::SDLK_LSHIFT;
+    MISC2_keymap[XK_Control_R&0xFF] = sdl2::SDLK_RCTRL;
+    MISC2_keymap[XK_Control_L&0xFF] = sdl2::SDLK_LCTRL;
+    MISC2_keymap[XK_Alt_R&0xFF] = sdl2::SDLK_RALT;
+    MISC2_keymap[XK_Alt_L&0xFF] = sdl2::SDLK_LALT;
+    MISC2_keymap[XK_Meta_R&0xFF] = sdl2::SDLK_RGUI;
+    MISC2_keymap[XK_Meta_L&0xFF] = sdl2::SDLK_LGUI;
+    MISC2_keymap[XK_Super_L&0xFF] = sdl2::SDLK_LGUI; /* Left "Windows" */
+    MISC2_keymap[XK_Super_R&0xFF] = sdl2::SDLK_RGUI; /* Right "Windows" */
+    MISC2_keymap[XK_Mode_switch&0xFF] = sdl2::SDLK_MODE; /* "Alt Gr" key */
+    //MISC2_keymap[XK_Multi_key&0xFF] = SDL2::SDLK_COMPOSE; /* Multi-key compose */
+
+    MISC2_keymap[XK_Help&0xFF] = sdl2::SDLK_HELP;
+    MISC2_keymap[XK_Print&0xFF] = sdl2::SDLK_PRINTSCREEN;
+    MISC2_keymap[XK_Sys_Req&0xFF] = sdl2::SDLK_SYSREQ;
+    MISC2_keymap[XK_Break&0xFF] = sdl2::SDLK_PAUSE;
+    MISC2_keymap[XK_Menu&0xFF] = sdl2::SDLK_MENU;
+    MISC2_keymap[XK_Hyper_R&0xFF] = sdl2::SDLK_MENU;   /* Windows "Menu" key */
 
     /* SDL 1.2 */
 
-	/* Map the miscellaneous keys */
-	for ( i=0; i<256; ++i )
-		MISC1_keymap[i] = sdl1::SDLK_UNKNOWN;
+    /* Map the miscellaneous keys */
+    for ( i=0; i<256; ++i )
+        MISC1_keymap[i] = sdl1::SDLK_UNKNOWN;
 
-	/* These X keysyms have 0xFF as the high byte */
-	MISC1_keymap[XK_BackSpace&0xFF] = sdl1::SDLK_BACKSPACE;
-	MISC1_keymap[XK_Tab&0xFF] = sdl1::SDLK_TAB;
-	MISC1_keymap[XK_Clear&0xFF] = sdl1::SDLK_CLEAR;
-	MISC1_keymap[XK_Return&0xFF] = sdl1::SDLK_RETURN;
-	MISC1_keymap[XK_Pause&0xFF] = sdl1::SDLK_PAUSE;
-	MISC1_keymap[XK_Escape&0xFF] = sdl1::SDLK_ESCAPE;
-	MISC1_keymap[XK_Delete&0xFF] = sdl1::SDLK_DELETE;
+    /* These X keysyms have 0xFF as the high byte */
+    MISC1_keymap[XK_BackSpace&0xFF] = sdl1::SDLK_BACKSPACE;
+    MISC1_keymap[XK_Tab&0xFF] = sdl1::SDLK_TAB;
+    MISC1_keymap[XK_Clear&0xFF] = sdl1::SDLK_CLEAR;
+    MISC1_keymap[XK_Return&0xFF] = sdl1::SDLK_RETURN;
+    MISC1_keymap[XK_Pause&0xFF] = sdl1::SDLK_PAUSE;
+    MISC1_keymap[XK_Escape&0xFF] = sdl1::SDLK_ESCAPE;
+    MISC1_keymap[XK_Delete&0xFF] = sdl1::SDLK_DELETE;
 
-	MISC1_keymap[XK_KP_0&0xFF] = sdl1::SDLK_KP0;		/* Keypad 0-9 */
-	MISC1_keymap[XK_KP_1&0xFF] = sdl1::SDLK_KP1;
-	MISC1_keymap[XK_KP_2&0xFF] = sdl1::SDLK_KP2;
-	MISC1_keymap[XK_KP_3&0xFF] = sdl1::SDLK_KP3;
-	MISC1_keymap[XK_KP_4&0xFF] = sdl1::SDLK_KP4;
-	MISC1_keymap[XK_KP_5&0xFF] = sdl1::SDLK_KP5;
-	MISC1_keymap[XK_KP_6&0xFF] = sdl1::SDLK_KP6;
-	MISC1_keymap[XK_KP_7&0xFF] = sdl1::SDLK_KP7;
-	MISC1_keymap[XK_KP_8&0xFF] = sdl1::SDLK_KP8;
-	MISC1_keymap[XK_KP_9&0xFF] = sdl1::SDLK_KP9;
-	MISC1_keymap[XK_KP_Insert&0xFF] = sdl1::SDLK_KP0;
-	MISC1_keymap[XK_KP_End&0xFF] = sdl1::SDLK_KP1;
-	MISC1_keymap[XK_KP_Down&0xFF] = sdl1::SDLK_KP2;
-	MISC1_keymap[XK_KP_Page_Down&0xFF] = sdl1::SDLK_KP3;
-	MISC1_keymap[XK_KP_Left&0xFF] = sdl1::SDLK_KP4;
-	MISC1_keymap[XK_KP_Begin&0xFF] = sdl1::SDLK_KP5;
-	MISC1_keymap[XK_KP_Right&0xFF] = sdl1::SDLK_KP6;
-	MISC1_keymap[XK_KP_Home&0xFF] = sdl1::SDLK_KP7;
-	MISC1_keymap[XK_KP_Up&0xFF] = sdl1::SDLK_KP8;
-	MISC1_keymap[XK_KP_Page_Up&0xFF] = sdl1::SDLK_KP9;
-	MISC1_keymap[XK_KP_Delete&0xFF] = sdl1::SDLK_KP_PERIOD;
-	MISC1_keymap[XK_KP_Decimal&0xFF] = sdl1::SDLK_KP_PERIOD;
-	MISC1_keymap[XK_KP_Divide&0xFF] = sdl1::SDLK_KP_DIVIDE;
-	MISC1_keymap[XK_KP_Multiply&0xFF] = sdl1::SDLK_KP_MULTIPLY;
-	MISC1_keymap[XK_KP_Subtract&0xFF] = sdl1::SDLK_KP_MINUS;
-	MISC1_keymap[XK_KP_Add&0xFF] = sdl1::SDLK_KP_PLUS;
-	MISC1_keymap[XK_KP_Enter&0xFF] = sdl1::SDLK_KP_ENTER;
-	MISC1_keymap[XK_KP_Equal&0xFF] = sdl1::SDLK_KP_EQUALS;
+    MISC1_keymap[XK_KP_0&0xFF] = sdl1::SDLK_KP0;        /* Keypad 0-9 */
+    MISC1_keymap[XK_KP_1&0xFF] = sdl1::SDLK_KP1;
+    MISC1_keymap[XK_KP_2&0xFF] = sdl1::SDLK_KP2;
+    MISC1_keymap[XK_KP_3&0xFF] = sdl1::SDLK_KP3;
+    MISC1_keymap[XK_KP_4&0xFF] = sdl1::SDLK_KP4;
+    MISC1_keymap[XK_KP_5&0xFF] = sdl1::SDLK_KP5;
+    MISC1_keymap[XK_KP_6&0xFF] = sdl1::SDLK_KP6;
+    MISC1_keymap[XK_KP_7&0xFF] = sdl1::SDLK_KP7;
+    MISC1_keymap[XK_KP_8&0xFF] = sdl1::SDLK_KP8;
+    MISC1_keymap[XK_KP_9&0xFF] = sdl1::SDLK_KP9;
+    MISC1_keymap[XK_KP_Insert&0xFF] = sdl1::SDLK_KP0;
+    MISC1_keymap[XK_KP_End&0xFF] = sdl1::SDLK_KP1;
+    MISC1_keymap[XK_KP_Down&0xFF] = sdl1::SDLK_KP2;
+    MISC1_keymap[XK_KP_Page_Down&0xFF] = sdl1::SDLK_KP3;
+    MISC1_keymap[XK_KP_Left&0xFF] = sdl1::SDLK_KP4;
+    MISC1_keymap[XK_KP_Begin&0xFF] = sdl1::SDLK_KP5;
+    MISC1_keymap[XK_KP_Right&0xFF] = sdl1::SDLK_KP6;
+    MISC1_keymap[XK_KP_Home&0xFF] = sdl1::SDLK_KP7;
+    MISC1_keymap[XK_KP_Up&0xFF] = sdl1::SDLK_KP8;
+    MISC1_keymap[XK_KP_Page_Up&0xFF] = sdl1::SDLK_KP9;
+    MISC1_keymap[XK_KP_Delete&0xFF] = sdl1::SDLK_KP_PERIOD;
+    MISC1_keymap[XK_KP_Decimal&0xFF] = sdl1::SDLK_KP_PERIOD;
+    MISC1_keymap[XK_KP_Divide&0xFF] = sdl1::SDLK_KP_DIVIDE;
+    MISC1_keymap[XK_KP_Multiply&0xFF] = sdl1::SDLK_KP_MULTIPLY;
+    MISC1_keymap[XK_KP_Subtract&0xFF] = sdl1::SDLK_KP_MINUS;
+    MISC1_keymap[XK_KP_Add&0xFF] = sdl1::SDLK_KP_PLUS;
+    MISC1_keymap[XK_KP_Enter&0xFF] = sdl1::SDLK_KP_ENTER;
+    MISC1_keymap[XK_KP_Equal&0xFF] = sdl1::SDLK_KP_EQUALS;
 
-	MISC1_keymap[XK_Up&0xFF] = sdl1::SDLK_UP;
-	MISC1_keymap[XK_Down&0xFF] = sdl1::SDLK_DOWN;
-	MISC1_keymap[XK_Right&0xFF] = sdl1::SDLK_RIGHT;
-	MISC1_keymap[XK_Left&0xFF] = sdl1::SDLK_LEFT;
-	MISC1_keymap[XK_Insert&0xFF] = sdl1::SDLK_INSERT;
-	MISC1_keymap[XK_Home&0xFF] = sdl1::SDLK_HOME;
-	MISC1_keymap[XK_End&0xFF] = sdl1::SDLK_END;
-	MISC1_keymap[XK_Page_Up&0xFF] = sdl1::SDLK_PAGEUP;
-	MISC1_keymap[XK_Page_Down&0xFF] = sdl1::SDLK_PAGEDOWN;
+    MISC1_keymap[XK_Up&0xFF] = sdl1::SDLK_UP;
+    MISC1_keymap[XK_Down&0xFF] = sdl1::SDLK_DOWN;
+    MISC1_keymap[XK_Right&0xFF] = sdl1::SDLK_RIGHT;
+    MISC1_keymap[XK_Left&0xFF] = sdl1::SDLK_LEFT;
+    MISC1_keymap[XK_Insert&0xFF] = sdl1::SDLK_INSERT;
+    MISC1_keymap[XK_Home&0xFF] = sdl1::SDLK_HOME;
+    MISC1_keymap[XK_End&0xFF] = sdl1::SDLK_END;
+    MISC1_keymap[XK_Page_Up&0xFF] = sdl1::SDLK_PAGEUP;
+    MISC1_keymap[XK_Page_Down&0xFF] = sdl1::SDLK_PAGEDOWN;
 
-	MISC1_keymap[XK_F1&0xFF] = sdl1::SDLK_F1;
-	MISC1_keymap[XK_F2&0xFF] = sdl1::SDLK_F2;
-	MISC1_keymap[XK_F3&0xFF] = sdl1::SDLK_F3;
-	MISC1_keymap[XK_F4&0xFF] = sdl1::SDLK_F4;
-	MISC1_keymap[XK_F5&0xFF] = sdl1::SDLK_F5;
-	MISC1_keymap[XK_F6&0xFF] = sdl1::SDLK_F6;
-	MISC1_keymap[XK_F7&0xFF] = sdl1::SDLK_F7;
-	MISC1_keymap[XK_F8&0xFF] = sdl1::SDLK_F8;
-	MISC1_keymap[XK_F9&0xFF] = sdl1::SDLK_F9;
-	MISC1_keymap[XK_F10&0xFF] = sdl1::SDLK_F10;
-	MISC1_keymap[XK_F11&0xFF] = sdl1::SDLK_F11;
-	MISC1_keymap[XK_F12&0xFF] = sdl1::SDLK_F12;
-	MISC1_keymap[XK_F13&0xFF] = sdl1::SDLK_F13;
-	MISC1_keymap[XK_F14&0xFF] = sdl1::SDLK_F14;
-	MISC1_keymap[XK_F15&0xFF] = sdl1::SDLK_F15;
+    MISC1_keymap[XK_F1&0xFF] = sdl1::SDLK_F1;
+    MISC1_keymap[XK_F2&0xFF] = sdl1::SDLK_F2;
+    MISC1_keymap[XK_F3&0xFF] = sdl1::SDLK_F3;
+    MISC1_keymap[XK_F4&0xFF] = sdl1::SDLK_F4;
+    MISC1_keymap[XK_F5&0xFF] = sdl1::SDLK_F5;
+    MISC1_keymap[XK_F6&0xFF] = sdl1::SDLK_F6;
+    MISC1_keymap[XK_F7&0xFF] = sdl1::SDLK_F7;
+    MISC1_keymap[XK_F8&0xFF] = sdl1::SDLK_F8;
+    MISC1_keymap[XK_F9&0xFF] = sdl1::SDLK_F9;
+    MISC1_keymap[XK_F10&0xFF] = sdl1::SDLK_F10;
+    MISC1_keymap[XK_F11&0xFF] = sdl1::SDLK_F11;
+    MISC1_keymap[XK_F12&0xFF] = sdl1::SDLK_F12;
+    MISC1_keymap[XK_F13&0xFF] = sdl1::SDLK_F13;
+    MISC1_keymap[XK_F14&0xFF] = sdl1::SDLK_F14;
+    MISC1_keymap[XK_F15&0xFF] = sdl1::SDLK_F15;
 
-	MISC1_keymap[XK_Num_Lock&0xFF] = sdl1::SDLK_NUMLOCK;
-	MISC1_keymap[XK_Caps_Lock&0xFF] = sdl1::SDLK_CAPSLOCK;
-	MISC1_keymap[XK_Scroll_Lock&0xFF] = sdl1::SDLK_SCROLLOCK;
-	MISC1_keymap[XK_Shift_R&0xFF] = sdl1::SDLK_RSHIFT;
-	MISC1_keymap[XK_Shift_L&0xFF] = sdl1::SDLK_LSHIFT;
-	MISC1_keymap[XK_Control_R&0xFF] = sdl1::SDLK_RCTRL;
-	MISC1_keymap[XK_Control_L&0xFF] = sdl1::SDLK_LCTRL;
-	MISC1_keymap[XK_Alt_R&0xFF] = sdl1::SDLK_RALT;
-	MISC1_keymap[XK_Alt_L&0xFF] = sdl1::SDLK_LALT;
-	MISC1_keymap[XK_Meta_R&0xFF] = sdl1::SDLK_RMETA;
-	MISC1_keymap[XK_Meta_L&0xFF] = sdl1::SDLK_LMETA;
-	MISC1_keymap[XK_Super_L&0xFF] = sdl1::SDLK_LSUPER; /* Left "Windows" */
-	MISC1_keymap[XK_Super_R&0xFF] = sdl1::SDLK_RSUPER; /* Right "Windows */
-	MISC1_keymap[XK_Mode_switch&0xFF] = sdl1::SDLK_MODE; /* "Alt Gr" key */
-	MISC1_keymap[XK_Multi_key&0xFF] = sdl1::SDLK_COMPOSE; /* Multi-key compose */
+    MISC1_keymap[XK_Num_Lock&0xFF] = sdl1::SDLK_NUMLOCK;
+    MISC1_keymap[XK_Caps_Lock&0xFF] = sdl1::SDLK_CAPSLOCK;
+    MISC1_keymap[XK_Scroll_Lock&0xFF] = sdl1::SDLK_SCROLLOCK;
+    MISC1_keymap[XK_Shift_R&0xFF] = sdl1::SDLK_RSHIFT;
+    MISC1_keymap[XK_Shift_L&0xFF] = sdl1::SDLK_LSHIFT;
+    MISC1_keymap[XK_Control_R&0xFF] = sdl1::SDLK_RCTRL;
+    MISC1_keymap[XK_Control_L&0xFF] = sdl1::SDLK_LCTRL;
+    MISC1_keymap[XK_Alt_R&0xFF] = sdl1::SDLK_RALT;
+    MISC1_keymap[XK_Alt_L&0xFF] = sdl1::SDLK_LALT;
+    MISC1_keymap[XK_Meta_R&0xFF] = sdl1::SDLK_RMETA;
+    MISC1_keymap[XK_Meta_L&0xFF] = sdl1::SDLK_LMETA;
+    MISC1_keymap[XK_Super_L&0xFF] = sdl1::SDLK_LSUPER; /* Left "Windows" */
+    MISC1_keymap[XK_Super_R&0xFF] = sdl1::SDLK_RSUPER; /* Right "Windows */
+    MISC1_keymap[XK_Mode_switch&0xFF] = sdl1::SDLK_MODE; /* "Alt Gr" key */
+    MISC1_keymap[XK_Multi_key&0xFF] = sdl1::SDLK_COMPOSE; /* Multi-key compose */
 
-	MISC1_keymap[XK_Help&0xFF] = sdl1::SDLK_HELP;
-	MISC1_keymap[XK_Print&0xFF] = sdl1::SDLK_PRINT;
-	MISC1_keymap[XK_Sys_Req&0xFF] = sdl1::SDLK_SYSREQ;
-	MISC1_keymap[XK_Break&0xFF] = sdl1::SDLK_BREAK;
-	MISC1_keymap[XK_Menu&0xFF] = sdl1::SDLK_MENU;
-	MISC1_keymap[XK_Hyper_R&0xFF] = sdl1::SDLK_MENU;   /* Windows "Menu" key */
+    MISC1_keymap[XK_Help&0xFF] = sdl1::SDLK_HELP;
+    MISC1_keymap[XK_Print&0xFF] = sdl1::SDLK_PRINT;
+    MISC1_keymap[XK_Sys_Req&0xFF] = sdl1::SDLK_SYSREQ;
+    MISC1_keymap[XK_Break&0xFF] = sdl1::SDLK_BREAK;
+    MISC1_keymap[XK_Menu&0xFF] = sdl1::SDLK_MENU;
+    MISC1_keymap[XK_Hyper_R&0xFF] = sdl1::SDLK_MENU;   /* Windows "Menu" key */
 }
 
-/* Get the translated SDL virtual keysym */
+/* Get the translated SDL 3 virtual keysym */
+sdl3::SDL_Keycode X11_TranslateKeysymToSDL3(unsigned int xsym)
+{
+    static int keymap_inited = 0;
+    if (! keymap_inited) {
+        X11_InitKeymap();
+        keymap_inited = 1;
+    }
+
+    sdl3::SDL_Keycode key;
+
+    key = sdl3::SDLK_UNKNOWN;
+    if ( xsym ) {
+        switch (xsym>>8) {
+            case 0x00:    /* Latin 1 */
+                key = static_cast<sdl3::SDL_Keycode>(xsym & 0xFF);
+                break;
+            case 0x01:    /* Latin 2 */
+            case 0x02:    /* Latin 3 */
+            case 0x03:    /* Latin 4 */
+            case 0x04:    /* Katakana */
+            case 0x05:    /* Arabic */
+            case 0x06:    /* Cyrillic */
+            case 0x07:    /* Greek */
+            case 0x08:    /* Technical */
+            case 0x0A:    /* Publishing */
+            case 0x0C:    /* Hebrew */
+            case 0x0D:    /* Thai */
+                /* These are wrong, but it's better than nothing */
+                key = static_cast<sdl3::SDL_Keycode>(xsym & 0xFF);
+                break;
+            case 0xFE:
+                /* Odd keys used in international keyboards */
+                break;
+            case 0xFF:
+                key = MISC3_keymap[xsym&0xFF];
+                break;
+            default:
+                break;
+        }
+    }
+    return key;
+}
+
+/* Get the translated SDL 2 virtual keysym */
 sdl2::SDL_Keycode X11_TranslateKeysymToSDL2(unsigned int xsym)
 {
     static int keymap_inited = 0;
@@ -229,39 +370,39 @@ sdl2::SDL_Keycode X11_TranslateKeysymToSDL2(unsigned int xsym)
         keymap_inited = 1;
     }
 
-	sdl2::SDL_Keycode key;
+    sdl2::SDL_Keycode key;
 
-	key = sdl2::SDLK_UNKNOWN;
-	if ( xsym ) {
-		switch (xsym>>8) {
-		    case 0x00:	/* Latin 1 */
-			    key = static_cast<sdl2::SDL_Keycode>(xsym & 0xFF);
-			    break;
-		    case 0x01:	/* Latin 2 */
-		    case 0x02:	/* Latin 3 */
-		    case 0x03:	/* Latin 4 */
-		    case 0x04:	/* Katakana */
-		    case 0x05:	/* Arabic */
-		    case 0x06:	/* Cyrillic */
-		    case 0x07:	/* Greek */
-		    case 0x08:	/* Technical */
-		    case 0x0A:	/* Publishing */
-		    case 0x0C:	/* Hebrew */
-		    case 0x0D:	/* Thai */
-			    /* These are wrong, but it's better than nothing */
-			    key = static_cast<sdl2::SDL_Keycode>(xsym & 0xFF);
-			    break;
-		    case 0xFE:
+    key = sdl2::SDLK_UNKNOWN;
+    if ( xsym ) {
+        switch (xsym>>8) {
+            case 0x00:    /* Latin 1 */
+                key = static_cast<sdl2::SDL_Keycode>(xsym & 0xFF);
+                break;
+            case 0x01:    /* Latin 2 */
+            case 0x02:    /* Latin 3 */
+            case 0x03:    /* Latin 4 */
+            case 0x04:    /* Katakana */
+            case 0x05:    /* Arabic */
+            case 0x06:    /* Cyrillic */
+            case 0x07:    /* Greek */
+            case 0x08:    /* Technical */
+            case 0x0A:    /* Publishing */
+            case 0x0C:    /* Hebrew */
+            case 0x0D:    /* Thai */
+                /* These are wrong, but it's better than nothing */
+                key = static_cast<sdl2::SDL_Keycode>(xsym & 0xFF);
+                break;
+            case 0xFE:
                 /* Odd keys used in international keyboards */
-			    break;
-		    case 0xFF:
-			    key = MISC2_keymap[xsym&0xFF];
-			    break;
-		    default:
-			    break;
-		}
-	}
-	return key;
+                break;
+            case 0xFF:
+                key = MISC2_keymap[xsym&0xFF];
+                break;
+            default:
+                break;
+        }
+    }
+    return key;
 }
 
 /* Get the translated SDL 1.2 virtual keysym */
@@ -273,45 +414,55 @@ sdl1::SDLKey X11_TranslateKeysymToSDL1(unsigned int xsym)
         keymap_inited = 1;
     }
 
-	sdl1::SDLKey key;
+    sdl1::SDLKey key;
 
-	key = sdl1::SDLK_UNKNOWN;
-	if ( xsym ) {
-		switch (xsym>>8) {
-		    case 0x00:	/* Latin 1 */
-			key = static_cast<sdl1::SDLKey>(xsym & 0xFF);
-			break;
-		    case 0x01:	/* Latin 2 */
-		    case 0x02:	/* Latin 3 */
-		    case 0x03:	/* Latin 4 */
-		    case 0x04:	/* Katakana */
-		    case 0x05:	/* Arabic */
-		    case 0x06:	/* Cyrillic */
-		    case 0x07:	/* Greek */
-		    case 0x08:	/* Technical */
-		    case 0x0A:	/* Publishing */
-		    case 0x0C:	/* Hebrew */
-		    case 0x0D:	/* Thai */
-			/* These are wrong, but it's better than nothing */
-			key = static_cast<sdl1::SDLKey>(xsym & 0xFF);
-			break;
-		    case 0xFE:
-			break;
-		    case 0xFF:
-			key = MISC1_keymap[xsym&0xFF];
-			break;
-		    default:
-			break;
-		}
-	}
-	return key;
+    key = sdl1::SDLK_UNKNOWN;
+    if ( xsym ) {
+        switch (xsym>>8) {
+            case 0x00:    /* Latin 1 */
+            key = static_cast<sdl1::SDLKey>(xsym & 0xFF);
+            break;
+            case 0x01:    /* Latin 2 */
+            case 0x02:    /* Latin 3 */
+            case 0x03:    /* Latin 4 */
+            case 0x04:    /* Katakana */
+            case 0x05:    /* Arabic */
+            case 0x06:    /* Cyrillic */
+            case 0x07:    /* Greek */
+            case 0x08:    /* Technical */
+            case 0x0A:    /* Publishing */
+            case 0x0C:    /* Hebrew */
+            case 0x0D:    /* Thai */
+            /* These are wrong, but it's better than nothing */
+            key = static_cast<sdl1::SDLKey>(xsym & 0xFF);
+            break;
+            case 0xFE:
+            break;
+            case 0xFF:
+            key = MISC1_keymap[xsym&0xFF];
+            break;
+            default:
+            break;
+        }
+    }
+    return key;
+}
+
+void xkeyboardToSDL3keyboard(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard, bool* SDLkeyboard) {
+    memset(SDLkeyboard, 0, sdl3::SDL_NUM_SCANCODES * sizeof(bool));
+    for (int i=0; i<AllInputsFlat::MAXKEYS; i++) {
+        if (Xkeyboard[i]) {
+            sdl3::SDL_Scancode sc = GetScanFromKey3(X11_TranslateKeysymToSDL3(Xkeyboard[i]));
+            SDLkeyboard[sc] = true;
+        }
+    }
 }
 
 void xkeyboardToSDL2keyboard(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard) {
     memset(SDLkeyboard, 0, sdl2::SDL_NUM_SCANCODES);
     for (int i=0; i<AllInputsFlat::MAXKEYS; i++) {
         if (Xkeyboard[i]) {
-            sdl2::SDL_Scancode sc = GetScanFromKey(X11_TranslateKeysymToSDL2(Xkeyboard[i]));
+            sdl2::SDL_Scancode sc = GetScanFromKey2(X11_TranslateKeysymToSDL2(Xkeyboard[i]));
             SDLkeyboard[sc] = 1;
         }
     }
@@ -327,9 +478,14 @@ void xkeyboardToSDL1keyboard(const std::array<unsigned int,AllInputsFlat::MAXKEY
     }
 }
 
+void xkeysymToSDL3(sdl3::SDL_Keycode *key, sdl3::SDL_Scancode *scancode, unsigned int xkeysym) {
+    *key = X11_TranslateKeysymToSDL3(xkeysym);
+    *scancode = GetScanFromKey3(*key);
+}
+
 void xkeysymToSDL2(sdl2::SDL_Keysym *keysym, unsigned int xkeysym) {
     keysym->sym = X11_TranslateKeysymToSDL2(xkeysym);
-    keysym->scancode = GetScanFromKey(keysym->sym);
+    keysym->scancode = GetScanFromKey2(keysym->sym);
     keysym->unused = 0;
 }
 
@@ -342,20 +498,21 @@ void xkeysymToSDL1(sdl1::SDL_keysym *keysym, unsigned int xkeysym) {
 struct ModTranslate {
     unsigned int keysym;
     unsigned int xmod;
-    sdl2::SDL_Keymod sdlmod;
+    sdl2::SDL_Keymod sdl2mod;
+    sdl3::SDL_Keymod sdl3mod;
 };
 
 static std::array<ModTranslate, 10> mod_translate {{
-    {XK_Shift_L, 1<<0 /* ShiftMask */, sdl2::KMOD_LSHIFT},
-    {XK_Shift_R, 1<<0 /* ShiftMask */, sdl2::KMOD_RSHIFT},
-    {XK_Control_L, 1<<2 /* ControlMask */, sdl2::KMOD_LCTRL},
-    {XK_Control_R, 1<<2 /* ControlMask */, sdl2::KMOD_RCTRL},
-    {XK_Meta_L, 1<<6 /* Mod4Mask */, sdl2::KMOD_LGUI},
-    {XK_Meta_R, 1<<6 /* Mod4Mask */, sdl2::KMOD_RGUI},
-    {XK_Alt_L, 1<<3 /* Mod1Mask */, sdl2::KMOD_LALT},
-    {XK_Alt_R, 1<<3 /* Mod1Mask */, sdl2::KMOD_RALT},
-    {XK_Caps_Lock, 1<<1 /* LockMask */, sdl2::KMOD_CAPS},
-    {XK_Shift_Lock, 1<<4 /* Mod2Mask */, sdl2::KMOD_NUM},
+    {XK_Shift_L, 1<<0 /* ShiftMask */, sdl2::KMOD_LSHIFT, sdl3::SDL_KMOD_LSHIFT},
+    {XK_Shift_R, 1<<0 /* ShiftMask */, sdl2::KMOD_RSHIFT, sdl3::SDL_KMOD_RSHIFT},
+    {XK_Control_L, 1<<2 /* ControlMask */, sdl2::KMOD_LCTRL, sdl3::SDL_KMOD_LCTRL},
+    {XK_Control_R, 1<<2 /* ControlMask */, sdl2::KMOD_RCTRL, sdl3::SDL_KMOD_RCTRL},
+    {XK_Meta_L, 1<<6 /* Mod4Mask */, sdl2::KMOD_LGUI, sdl3::SDL_KMOD_LGUI},
+    {XK_Meta_R, 1<<6 /* Mod4Mask */, sdl2::KMOD_RGUI, sdl3::SDL_KMOD_RGUI},
+    {XK_Alt_L, 1<<3 /* Mod1Mask */, sdl2::KMOD_LALT, sdl3::SDL_KMOD_LALT},
+    {XK_Alt_R, 1<<3 /* Mod1Mask */, sdl2::KMOD_RALT, sdl3::SDL_KMOD_RALT},
+    {XK_Caps_Lock, 1<<1 /* LockMask */, sdl2::KMOD_CAPS, sdl3::SDL_KMOD_CAPS},
+    {XK_Shift_Lock, 1<<4 /* Mod2Mask */, sdl2::KMOD_NUM, sdl3::SDL_KMOD_NUM},
 }};
 
 unsigned int xkeyboardToXMod(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard) {
@@ -374,13 +531,13 @@ unsigned int xkeyboardToXMod(const std::array<unsigned int,AllInputsFlat::MAXKEY
     return mod;
 }
 
-sdl2::SDL_Keymod xkeyboardToSDLMod(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard) {
+sdl2::SDL_Keymod xkeyboardToSDL2Mod(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard) {
     unsigned int mod = sdl2::KMOD_NONE; // use int because "bitwise or" promotes to int
     for (int i=0; i<AllInputsFlat::MAXKEYS; i++) {
         if (Xkeyboard[i]) {
             for (int j=0; j<10; j++) {
                 if (Xkeyboard[i] == mod_translate[j].keysym) {
-                    mod |= mod_translate[j].sdlmod;
+                    mod |= mod_translate[j].sdl2mod;
                     break;
                 }
             }
@@ -388,6 +545,22 @@ sdl2::SDL_Keymod xkeyboardToSDLMod(const std::array<unsigned int,AllInputsFlat::
     }
 
     return static_cast<sdl2::SDL_Keymod>(mod);
+}
+
+sdl3::SDL_Keymod xkeyboardToSDL3Mod(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard) {
+    unsigned int mod = sdl3::SDL_KMOD_NONE; // use int because "bitwise or" promotes to int
+    for (int i=0; i<AllInputsFlat::MAXKEYS; i++) {
+        if (Xkeyboard[i]) {
+            for (int j=0; j<10; j++) {
+                if (Xkeyboard[i] == mod_translate[j].keysym) {
+                    mod |= mod_translate[j].sdl3mod;
+                    break;
+                }
+            }
+        }
+    }
+
+    return static_cast<sdl3::SDL_Keymod>(mod);
 }
 
 }

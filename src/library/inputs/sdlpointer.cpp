@@ -91,7 +91,7 @@ sdl3::SDL_MouseButtonFlags sdl3::SDL_GetMouseState(float *x, float *y)
         *y = (float)Inputs::game_ai.pointer.y;
 
     /* Translating pointer mask to SDL pointer state */
-    return SingleInput::toSDL2PointerMask(Inputs::game_ai.pointer.mask);
+    return SingleInput::toSDL3PointerMask(Inputs::game_ai.pointer.mask);
 }
 
 Uint32 SDL_GetGlobalMouseState(std::uintptr_t p1, std::uintptr_t p2)
@@ -164,15 +164,30 @@ Uint32 sdl2::SDL_GetRelativeMouseState(int *x, int *y)
 
 sdl3::SDL_MouseButtonFlags sdl3::SDL_GetRelativeMouseState(float *x, float *y)
 {
-    int intx, inty;
-    int ret = sdl2::SDL_GetRelativeMouseState(&intx, &inty);
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
+
+    static bool first = true;
+    static int oldx = 0;
+    static int oldy = 0;
+
+    /* For the first call, just output zero deltas */
+    if (first) {
+        oldx = Inputs::game_unclipped_pointer.x;
+        oldy = Inputs::game_unclipped_pointer.y;
+        first = false;
+    }
 
     if (x != NULL)
-        *x = (float)intx;
+        *x = Inputs::game_unclipped_pointer.x - oldx;
     if (y != NULL)
-        *y = (float)inty;
+        *y = Inputs::game_unclipped_pointer.y - oldy;
 
-    return ret;
+    /* Updating the old pointer coordinates */
+    oldx = Inputs::game_unclipped_pointer.x;
+    oldy = Inputs::game_unclipped_pointer.y;
+
+    /* Translating pointer mask to SDL pointer state */
+    return SingleInput::toSDL3PointerMask(Inputs::game_ai.pointer.mask);
 }
 
 void SDL_WarpMouseInWindow(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3)
@@ -207,7 +222,7 @@ void sdl2::SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
     /* Update the pointer coordinates */
     Inputs::game_ai.pointer.x = x;
     Inputs::game_ai.pointer.y = y;
-    
+
     if (Global::shared_config.mouse_prevent_warp) {
         return;
     }
@@ -219,9 +234,43 @@ void sdl2::SDL_WarpMouseInWindow(SDL_Window * window, int x, int y)
     NATIVECALL(ORIG_SDL2_CALL(SDL_WarpMouseInWindow, (window, x, y)));    
 }
 
-void sdl3::SDL_WarpMouseInWindow(SDL_Window *window, float x, float y)
+void sdl3::SDL_WarpMouseInWindow(SDL_Window *window, float fx, float fy)
 {
-    return sdl2::SDL_WarpMouseInWindow(window, (int)x, (int)y);
+    /* Only integer pointer coords are supported */
+    int x = fx;
+    int y = fy;
+
+    LOGTRACE(LCF_SDL | LCF_MOUSE, "%s call to pos (%d,%d)", __func__, x, y);
+
+    /* We have to generate an MOUSE_MOTION event. */
+    sdl3::SDL_Event event3;
+    event3.type = sdl3::SDL_EVENT_MOUSE_MOTION;
+    struct timespec time = DeterministicTimer::get().getTicks();
+    event3.motion.timestamp = time.tv_sec * 1000000000LL + time.tv_nsec;
+    event3.motion.windowID = ORIG_SDL3_CALL(SDL_GetWindowID, (sdl::gameSDLWindow));
+    event3.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
+
+    /* Build up mouse state */
+    event3.motion.state = SingleInput::toSDL3PointerMask(Inputs::game_ai.pointer.mask);
+    event3.motion.x = x;
+    event3.motion.y = y;
+    event3.motion.xrel = Inputs::game_ai.pointer.x - x;
+    event3.motion.yrel = Inputs::game_ai.pointer.y - y;
+    sdlEventQueue.insert(&event3);
+
+    /* Update the pointer coordinates */
+    Inputs::game_ai.pointer.x = x;
+    Inputs::game_ai.pointer.y = y;
+
+    if (Global::shared_config.mouse_prevent_warp) {
+        return;
+    }
+
+    /* When warping cursor, real and game cursor position are now synced */
+    Inputs::old_ai.pointer.x = x;
+    Inputs::old_ai.pointer.y = y;
+
+    NATIVECALL(ORIG_SDL3_CALL(SDL_WarpMouseInWindow, (window, x, y)));
 }
 
 int SDL_WarpMouseGlobal(std::uintptr_t p1, std::uintptr_t p2)
@@ -457,7 +506,7 @@ void SDL_SetWindowGrab(SDL_Window * window, SDL_bool grabbed)
     }
 }
 
-void SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed)
+bool SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed)
 {
     LOGTRACE_SIMPLE(LCF_SDL | LCF_MOUSE);
 
@@ -465,7 +514,7 @@ void SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed)
         pointer_grab_sdl_window = window;
         
         int w, h;
-        ORIG_SDL2_CALL(SDL_GetWindowSize, (window, &w, &h));
+        ORIG_SDL23_CALL(SDL_GetWindowSize, (window, &w, &h));
 
         Inputs::pointer_clipping = true;
         Inputs::clipping_x = 0;
@@ -495,6 +544,8 @@ void SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed)
         pointer_grab_sdl_window = nullptr;
         Inputs::pointer_clipping = false;
     }
+
+    return true;
 }
 
 SDL_bool SDL_GetWindowGrab(SDL_Window * window)

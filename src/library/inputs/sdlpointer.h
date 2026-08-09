@@ -622,7 +622,7 @@ OVERRIDE void SDL_SetWindowGrab(SDL_Window * window, SDL_bool grabbed);
  * \sa SDL_SetWindowKeyboardGrab
  * \sa SDL_SetWindowGrab
  */
-OVERRIDE void SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed);
+OVERRIDE bool SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed);
 
 /**
  * Get a window's input grab mode.
