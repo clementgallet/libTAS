@@ -474,7 +474,7 @@ void SDL_SetWindowGrab(SDL_Window * window, SDL_bool grabbed)
         pointer_grab_sdl_window = window;
         
         int w, h;
-        ORIG_SDL23_CALL(SDL_GetWindowSize, (window, &w, &h));
+        ORIG_SDL2_CALL(SDL_GetWindowSize, (window, &w, &h));
 
         Inputs::pointer_clipping = true;
         Inputs::clipping_x = 0;
