@@ -68,7 +68,7 @@ OVERRIDE bool SDL_HasKeyboard(void);
 OVERRIDE sdl3::SDL_KeyboardID * SDL_GetKeyboards(int *count);
 
 
-OVERRIDE const void* SDL_GetKeyboardState(void* p1);
+OVERRIDE const void* SDL_GetKeyboardState(int* numkeys);
 
 /**
  * Get a snapshot of the current state of the keyboard.
