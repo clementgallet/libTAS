@@ -26,6 +26,7 @@
 #include "global.h"
 
 namespace libtas {
+#if defined(__i386__) || defined(__x86_64__)
 
 namespace orig {
 
@@ -86,5 +87,9 @@ void hook_wined3d()
     }
 }
 
-
+#else
+void hook_wined3d()
+{
+}
+#endif
 }
