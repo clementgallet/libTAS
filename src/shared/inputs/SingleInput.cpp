@@ -21,6 +21,7 @@
 
 #include "../external/SDL1.h"
 #include "../external/SDL2.h"
+#include "../external/SDL3.h"
 
 #ifdef __linux__
 #include <linux/input.h>
@@ -192,6 +193,24 @@ unsigned int SingleInput::toSDL2PointerButton(int button)
     }
 }
 
+unsigned int SingleInput::toSDL3PointerButton(int button)
+{
+    switch (button) {
+        case SingleInput::POINTER_B1:
+            return libtas::sdl3::SDL_BUTTON_LEFT;
+        case SingleInput::POINTER_B2:
+            return libtas::sdl3::SDL_BUTTON_MIDDLE;
+        case SingleInput::POINTER_B3:
+            return libtas::sdl3::SDL_BUTTON_RIGHT;
+        case SingleInput::POINTER_B4:
+            return libtas::sdl3::SDL_BUTTON_X1;
+        case SingleInput::POINTER_B5:
+            return libtas::sdl3::SDL_BUTTON_X2;
+        default:
+            return 0;
+    }
+}
+
 #ifdef __unix__
 unsigned int SingleInput::toXlibPointerMask(int mask)
 {
@@ -241,6 +260,23 @@ unsigned int SingleInput::toSDL2PointerMask(int mask)
         sdl_mask |= libtas::sdl2::SDL_BUTTON_X1MASK;
     if (mask & (1 << SingleInput::POINTER_B5))
         sdl_mask |= libtas::sdl2::SDL_BUTTON_X2MASK;
+
+    return sdl_mask;
+}
+
+unsigned int SingleInput::toSDL3PointerMask(int mask)
+{
+    unsigned int sdl_mask = 0;
+    if (mask & (1 << SingleInput::POINTER_B1))
+        sdl_mask |= libtas::sdl3::SDL_BUTTON_LMASK;
+    if (mask & (1 << SingleInput::POINTER_B2))
+        sdl_mask |= libtas::sdl3::SDL_BUTTON_MMASK;
+    if (mask & (1 << SingleInput::POINTER_B3))
+        sdl_mask |= libtas::sdl3::SDL_BUTTON_RMASK;
+    if (mask & (1 << SingleInput::POINTER_B4))
+        sdl_mask |= libtas::sdl3::SDL_BUTTON_X1MASK;
+    if (mask & (1 << SingleInput::POINTER_B5))
+        sdl_mask |= libtas::sdl3::SDL_BUTTON_X2MASK;
 
     return sdl_mask;
 }

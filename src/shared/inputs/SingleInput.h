@@ -156,6 +156,9 @@ public:
     /* Convert a pointer button to a SDL2 pointer button */
     static unsigned int toSDL2PointerButton(int button);
 
+    /* Convert a pointer button to a SDL3 pointer button */
+    static unsigned int toSDL3PointerButton(int button);
+
 #ifdef __unix__
     /* Convert a pointer mask to a Xlib pointer mask */
     static unsigned int toXlibPointerMask(int mask);
@@ -166,6 +169,9 @@ public:
 
     /* Convert a pointer mask to a SDL2 pointer mask */
     static unsigned int toSDL2PointerMask(int mask);
+
+    /* Convert a pointer mask to a SDL3 pointer mask */
+    static unsigned int toSDL3PointerMask(int mask);
 
     /* Convert an axis number to a SDL2 axis number */
     static int toSDL2Axis(int axis);

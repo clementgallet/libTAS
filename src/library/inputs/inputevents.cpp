@@ -42,6 +42,8 @@
 #include "../shared/SharedConfig.h"
 #include "DeterministicTimer.h"
 #include "sdl/SDLEventQueue.h"
+#include "sdl/sdldynapi.h"
+#include "sdl/sdlwindows.h" // sdl::gameSDLWindow
 #include "../external/SDL1.h"
 #include "global.h" // Global::game_info
 #include "GlobalState.h"
@@ -56,12 +58,15 @@
 
 #include <stdlib.h>
 #include "../external/SDL2.h"
+#include "../external/SDL3.h"
 #ifdef __linux__
 #include <linux/joystick.h>
 #include <linux/input.h>
 #endif
 
 namespace libtas {
+
+static std::vector<std::unique_ptr<char[]>> sdl3_text_input_strings = {};
 
 /* Generate one keyreleased event */
 static void generateKeyEvent(int event_key, bool pressed)
@@ -70,6 +75,46 @@ static void generateKeyEvent(int event_key, bool pressed)
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     /* Key was released. Generate event */
+    if (Global::game_info.keyboard & GameInfo::SDL3) {
+        sdl3::SDL_Event event3;
+        event3.type = pressed ? sdl3::SDL_EVENT_KEY_DOWN : sdl3::SDL_EVENT_KEY_UP;
+        event3.key.timestamp = time.tv_sec * 1000000000LL + time.tv_nsec;
+        event3.key.windowID = 1;
+        event3.key.which = 0;
+        event3.key.down = pressed;
+        event3.key.repeat = false;
+
+        xkeysymToSDL3(&event3.key.key, &event3.key.scancode, event_key);
+        event3.key.mod = xkeyboardToSDL3Mod(Inputs::game_ai.keyboard);
+
+        sdlEventQueue.insert(&event3);
+
+        LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event %s with key %d", pressed?"KEY_DOWN":"KEY_UP", event3.key.key);
+
+        /* Generate a text input event if active */
+        if (pressed && sdl::gameSDLWindow) {
+            bool isTextInputActive;
+            NOLOGCALL(isTextInputActive = SDL_TextInputActive(sdl::gameSDLWindow));
+            if (isTextInputActive && ((event3.key.key >> 8) == 0)) {
+                event3.type = sdl3::SDL_EVENT_TEXT_INPUT;
+                event3.text.timestamp = time.tv_sec * 1000000000LL + time.tv_nsec;
+                event3.text.windowID = ORIG_SDL3_CALL(SDL_GetWindowID, (sdl::gameSDLWindow));
+
+                /* SDL keycode is identical to its char number for common chars */
+                auto text = std::make_unique<char[]>(2);
+                text[0] = static_cast<char>(event3.key.key & 0xff);
+                text[1] = '\0';
+                sdl3_text_input_strings.push_back(std::move(text));
+
+                event3.text.text = sdl3_text_input_strings.back().get();
+
+                sdlEventQueue.insert(&event3);
+
+                LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_KEYBOARD, "Generate SDL event TEXT_INPUT with text %s", event3.text.text);
+            }
+        }
+    }
+
     if (Global::game_info.keyboard & GameInfo::SDL2) {
         sdl2::SDL_Event event2;
         event2.type = pressed ? sdl2::SDL_KEYDOWN : sdl2::SDL_KEYUP;
@@ -80,7 +125,7 @@ static void generateKeyEvent(int event_key, bool pressed)
 
         sdl2::SDL_Keysym keysym;
         xkeysymToSDL2(&keysym, event_key);
-        keysym.mod = xkeyboardToSDLMod(Inputs::game_ai.keyboard);
+        keysym.mod = xkeyboardToSDL2Mod(Inputs::game_ai.keyboard);
         event2.key.keysym = keysym;
 
         sdlEventQueue.insert(&event2);
@@ -655,6 +700,25 @@ static void generateMouseMotionEvents(void)
     if ((Inputs::game_ai.pointer.x == Inputs::old_game_ai.pointer.x) && (Inputs::game_ai.pointer.y == Inputs::old_game_ai.pointer.y))
         return;
 
+    if (Global::game_info.mouse & GameInfo::SDL3) {
+        sdl3::SDL_Event event3;
+        event3.type = sdl3::SDL_EVENT_MOUSE_MOTION;
+        event3.motion.timestamp = time.tv_sec * 1000000000LL + time.tv_nsec;
+        event3.motion.windowID = 1;
+        event3.motion.which = 0; // TODO: Mouse instance id. No idea what to put here...
+
+        /* Build up mouse state */
+        event3.motion.state = SingleInput::toSDL3PointerMask(Inputs::game_ai.pointer.mask);
+
+        event3.motion.x = Inputs::game_ai.pointer.x;
+        event3.motion.y = Inputs::game_ai.pointer.y;
+        /* Relative movement is not subject to window clipping */
+        event3.motion.xrel = Inputs::game_unclipped_pointer.x - Inputs::old_game_unclipped_pointer.x;
+        event3.motion.yrel = Inputs::game_unclipped_pointer.y - Inputs::old_game_unclipped_pointer.y;
+        sdlEventQueue.insert(&event3);
+        LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSE_MOTION with new position (%d,%d)", Inputs::game_ai.pointer.x, Inputs::game_ai.pointer.y);
+    }
+
     if (Global::game_info.mouse & GameInfo::SDL2) {
         sdl2::SDL_Event event2;
         event2.type = sdl2::SDL_MOUSEMOTION;
@@ -770,6 +834,27 @@ static void generateMouseButtonEvent(int button, bool pressed)
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
 
     /* Fill the event structure */
+    if (Global::game_info.mouse & GameInfo::SDL3) {
+        sdl3::SDL_Event event3;
+        if (pressed) {
+            event3.type = sdl3::SDL_EVENT_MOUSE_BUTTON_DOWN;
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSE_BUTTON_DOWN with button %d", SingleInput::toSDL3PointerButton(button));
+        }
+        else {
+            event3.type = sdl3::SDL_EVENT_MOUSE_BUTTON_UP;
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSE_BUTTON_UP with button %d", SingleInput::toSDL3PointerButton(button));
+        }
+        event3.button.timestamp = time.tv_sec * 1000000000LL + time.tv_nsec;
+        event3.button.windowID = 1;
+        event3.button.which = 0; // TODO: Same as above...
+        event3.button.button = SingleInput::toSDL3PointerButton(button);
+        event3.button.down = pressed;
+        event3.button.clicks = 1;
+        event3.button.x = Inputs::game_ai.pointer.x;
+        event3.button.y = Inputs::game_ai.pointer.y;
+        sdlEventQueue.insert(&event3);
+    }
+
     if (Global::game_info.mouse & GameInfo::SDL2) {
         sdl2::SDL_Event event2;
         if (pressed) {
@@ -948,6 +1033,23 @@ static void generateMouseButtonEvents(void)
     if (!Inputs::game_ai.pointer.wheel)
         return;
 
+    if (Global::game_info.mouse & GameInfo::SDL3) {
+        sdl3::SDL_Event event3;
+        event3.type = sdl3::SDL_EVENT_MOUSE_WHEEL;
+        event3.wheel.timestamp = time.tv_sec * 1000000000LL + time.tv_nsec;
+        event3.wheel.windowID = 1;
+        event3.wheel.which = 0; // TODO: Mouse instance id. No idea what to put here...
+        event3.wheel.x = 0; // Only vertical wheel is supported
+        event3.wheel.y = Inputs::game_ai.pointer.wheel;
+        event3.wheel.direction = sdl3::SDL_MOUSEWHEEL_FLIPPED;
+        event3.wheel.mouse_x = Inputs::game_ai.pointer.x;
+        event3.wheel.mouse_y = Inputs::game_ai.pointer.y;
+        event3.wheel.integer_x = 0; // Only vertical wheel is supported
+        event3.wheel.integer_y = Inputs::game_ai.pointer.wheel;
+        sdlEventQueue.insert(&event3);
+        LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_MOUSE, "Generate SDL event MOUSE_WHEEL with new value (%d)", Inputs::game_ai.pointer.wheel);
+    }
+
     if (Global::game_info.mouse & GameInfo::SDL2) {
         sdl2::SDL_Event event2;
         event2.type = sdl2::SDL_MOUSEWHEEL;
@@ -974,6 +1076,21 @@ static void generateFocusEvents(void)
     
     struct timespec time = DeterministicTimer::get().getTicks();
     int timestamp = time.tv_sec * 1000 + time.tv_nsec / 1000000;
+
+    if (Global::game_info.keyboard & GameInfo::SDL3) {
+        sdl3::SDL_Event event3;
+        if (win_focused) {
+            event3.type = sdl3::SDL_EVENT_WINDOW_FOCUS_LOST;
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_WINDOW, "Generate SDL event SDL_EVENT_WINDOW_FOCUS_LOST");
+        }
+        else {
+            event3.type = sdl3::SDL_EVENT_WINDOW_FOCUS_GAINED;
+            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_WINDOW, "Generate SDL event SDL_EVENT_WINDOW_FOCUS_GAINED");
+        }
+        event3.window.timestamp = time.tv_sec * 1000000000LL + time.tv_nsec;
+        event3.window.windowID = 1;
+        sdlEventQueue.insert(&event3);
+    }
 
     if (Global::game_info.keyboard & GameInfo::SDL2) {
         sdl2::SDL_Event event2;
@@ -1057,11 +1174,20 @@ static void generateEventList()
 
 void generateInputEvents(void)
 {
+    /* Free SDL3 text input strings if all text input events have been received by the game */
+    if (!sdl3_text_input_strings.empty()) {
+        sdl3::SDL_Event ev;
+        if (sdlEventQueue.pop(&ev, 1, sdl3::SDL_EVENT_TEXT_INPUT, sdl3::SDL_EVENT_TEXT_INPUT, false) == 0) {
+            sdl3_text_input_strings.clear();
+        }
+    }
+
     /* If we have input events, only handle those */
     if (!Inputs::game_ai.events.empty()) {
         generateEventList();
         return;
     }
+
     generateKeyUpEvents();
     generateKeyDownEvents();
     generateControllerAdded();
