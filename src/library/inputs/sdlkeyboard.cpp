@@ -28,7 +28,7 @@
 
 namespace libtas {
 
-static bool SDL3_keyboard[sdl3::SDL_NUM_SCANCODES] = {0};
+static bool SDL3_keyboard[sdl3::SDL_SCANCODE_COUNT] = {0};
 static Uint8 SDL2_keyboard[sdl2::SDL_NUM_SCANCODES] = {0};
 static Uint8 SDL1_keyboard[sdl1::SDLK_LAST] = {0};
 
@@ -78,7 +78,7 @@ const bool* sdl3::SDL_GetKeyboardState( int* numkeys)
     LOGTRACE_SIMPLE(LCF_SDL | LCF_KEYBOARD);
 
     if (numkeys)
-        *numkeys = sdl3::SDL_NUM_SCANCODES;
+        *numkeys = sdl3::SDL_SCANCODE_COUNT;
 
     xkeyboardToSDL3keyboard(Inputs::game_ai.keyboard, SDL3_keyboard);
     return SDL3_keyboard;

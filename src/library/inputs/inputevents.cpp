@@ -1216,21 +1216,6 @@ static void generateFocusEvents(void)
         sdlEventQueue.insert(&event3);
     }
 
-    if (Global::game_info.keyboard & GameInfo::SDL3) {
-        sdl3::SDL_Event event3;
-        if (win_focused) {
-            event3.type = sdl3::SDL_EVENT_WINDOW_FOCUS_LOST;
-            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_WINDOW, "Generate SDL event SDL_EVENT_WINDOW_FOCUS_LOST");
-        }
-        else {
-            event3.type = sdl3::SDL_EVENT_WINDOW_FOCUS_GAINED;
-            LOG(LL_DEBUG, LCF_SDL | LCF_EVENTS | LCF_WINDOW, "Generate SDL event SDL_EVENT_WINDOW_FOCUS_GAINED");
-        }
-        event3.window.timestamp = time.tv_sec * 1000000000LL + time.tv_nsec;
-        event3.window.windowID = 1;
-        sdlEventQueue.insert(&event3);
-    }
-
     if (Global::game_info.keyboard & GameInfo::SDL2) {
         sdl2::SDL_Event event2;
         event2.type = sdl2::SDL_WINDOWEVENT;

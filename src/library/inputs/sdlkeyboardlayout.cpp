@@ -24,7 +24,7 @@
 
 namespace libtas {
 
-static const sdl3::SDL_Keycode SDL3_default_keymap[sdl3::SDL_NUM_SCANCODES] = {
+static const sdl3::SDL_Keycode SDL3_default_keymap[sdl3::SDL_SCANCODE_COUNT] = {
     0, 0, 0, 0,
     'a',
     'b',
@@ -557,7 +557,7 @@ static const sdl1::SDLKey SDL1_default_keymap[SDL1_NUM_SCANCODES] = {
 };
 
 sdl3::SDL_Scancode GetScanFromKey3(sdl3::SDL_Keycode keycode){
-    for (int i=0; i<static_cast<int>(sdl3::SDL_NUM_SCANCODES); i++)
+    for (int i=0; i<static_cast<int>(sdl3::SDL_SCANCODE_COUNT); i++)
         if (SDL3_default_keymap[i] == keycode)
             return static_cast<sdl3::SDL_Scancode>(i);
     return sdl3::SDL_SCANCODE_UNKNOWN;

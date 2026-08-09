@@ -449,7 +449,7 @@ sdl1::SDLKey X11_TranslateKeysymToSDL1(unsigned int xsym)
 }
 
 void xkeyboardToSDL3keyboard(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard, bool* SDLkeyboard) {
-    memset(SDLkeyboard, 0, sdl3::SDL_NUM_SCANCODES * sizeof(bool));
+    memset(SDLkeyboard, 0, sdl3::SDL_SCANCODE_COUNT * sizeof(bool));
     for (int i=0; i<AllInputsFlat::MAXKEYS; i++) {
         if (Xkeyboard[i]) {
             sdl3::SDL_Scancode sc = GetScanFromKey3(X11_TranslateKeysymToSDL3(Xkeyboard[i]));
@@ -459,7 +459,7 @@ void xkeyboardToSDL3keyboard(const std::array<unsigned int,AllInputsFlat::MAXKEY
 }
 
 void xkeyboardToSDL2keyboard(const std::array<unsigned int,AllInputsFlat::MAXKEYS>& Xkeyboard, Uint8* SDLkeyboard) {
-    memset(SDLkeyboard, 0, sdl2::SDL_NUM_SCANCODES);
+    memset(SDLkeyboard, 0, sdl2::SDL_NUM_SCANCODES * sizeof(Uint8));
     for (int i=0; i<AllInputsFlat::MAXKEYS; i++) {
         if (Xkeyboard[i]) {
             sdl2::SDL_Scancode sc = GetScanFromKey2(X11_TranslateKeysymToSDL2(Xkeyboard[i]));

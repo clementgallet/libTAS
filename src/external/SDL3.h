@@ -1235,6 +1235,17 @@ typedef enum SDL_Scancode
 
 } SDL_Scancode;
 
+typedef Uint32 SDL_MouseButtonFlags;
+
+enum
+{
+    SDL_BUTTON_LEFT   = 1,
+    SDL_BUTTON_MIDDLE = 2,
+    SDL_BUTTON_RIGHT  = 3,
+    SDL_BUTTON_X1     = 4,
+    SDL_BUTTON_X2     = 5,
+};
+
 #define SDL_BUTTON_MASK(X)  (1u << ((X)-1))
 enum SDL_MouseButtonFlagsEnum : Uint32
 {
