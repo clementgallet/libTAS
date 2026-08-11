@@ -28,6 +28,7 @@
 #include "../shared/inputs/SingleInput.h"
 
 namespace libtas {
+#if defined(__i386__) || defined(__x86_64__)
 
 typedef struct tagPOINT {
     int32_t x;
@@ -123,5 +124,9 @@ void hook_user32()
     HOOK_PATCH_ORIG(GetAsyncKeyState, "user32.dll.so");
 }
 
-
+#else
+void hook_user32()
+{
+}
+#endif
 }

@@ -153,18 +153,17 @@
 #elif __aarch64__
 
 /* clang-format off */
-#define RUN_CLONE_RESTORE_FN(ret, clone_flags, new_sp, parent_tid,        \
-                 thread_args, clone_restore_fn)            \
+#define RUN_CLONE_RESTORE_FN(ret, clone_flags, new_sp, ptr_parent_tid, ptr_child_tid,   \
+                thread_args, clone_restore_fn)        \
     asm volatile(                              \
         "clone_emul:                     \n"    \
-        "ldr x1, %2                      \n"    \
         "and x1, x1, #~15                \n"    \
         "sub x1, x1, #16                 \n"    \
         "stp %5, %6, [x1]                \n"    \
         "mov x0, %1                      \n"    \
         "mov x2, %3                      \n"    \
-        "mov x3, %4                      \n"    \
-        "mov x8, #220 /* __NR_clone */ \n"    \
+        "mov x4, %4                      \n"    \
+        "mov x8, #220 /* __NR_clone */   \n"    \
         "svc #0                          \n"    \
                                                 \
         "cbz x0, thread_run              \n"    \
@@ -179,12 +178,12 @@
         "clone_end:                      \n"    \
         : "=r"(ret)                             \
         : "r"(clone_flags),                     \
-          "m"(new_sp),                          \
-          "r"(&parent_tid),                     \
-          "r"(&thread_args[i].pid),             \
+          "r"(new_sp),                          \
+          "r"(ptr_parent_tid),                  \
+          "r"(ptr_child_tid),                   \
           "r"(clone_restore_fn),                \
-          "r"(&thread_args[i])                  \
-        : "x0", "x1", "x2", "x3", "x8", "memory")
+          "r"(thread_args)                      \
+        : "x0", "x1", "x2", "x4", "x8", "memory")
 
 /*
  * Based on sysdeps/unix/sysv/linux/aarch64/clone.S

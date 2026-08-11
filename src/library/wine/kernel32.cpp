@@ -29,6 +29,7 @@
 #include <inttypes.h>
 
 namespace libtas {
+#if defined(__i386__) || defined(__x86_64__)
 
 typedef union _LARGE_INTEGER {
     struct {
@@ -124,5 +125,9 @@ void hook_kernel32()
     HOOK_PATCH_ORIG(QueryPerformanceCounter, "kernel32.dll.so");
 }
 
-
+#else
+void hook_kernel32()
+{
+}
+#endif
 }

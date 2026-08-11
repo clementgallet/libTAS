@@ -23,6 +23,7 @@
 #include "logging.h"
 
 namespace libtas {
+#if defined(__i386__) || defined(__x86_64__)
 
 struct winstring {
     unsigned short Length;
@@ -51,5 +52,9 @@ void hook_ntdll()
     HOOK_PATCH_ORIG(LdrGetProcedureAddress, "ntdll.dll.so");
 }
 
-
+#else
+void hook_ntdll()
+{
+}
+#endif
 }
