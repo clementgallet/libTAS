@@ -228,7 +228,7 @@ Uint32 sdl2::SDL_GetRelativeMouseState(int *x, int *y);
  */
 sdl3::SDL_MouseButtonFlags sdl3::SDL_GetRelativeMouseState(float *x, float *y);
 
-OVERRIDE void SDL_WarpMouseInWindow(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3);
+OVERRIDE void SDL_WarpMouseInWindow(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3, float f1, float f2);
 
 /**
  *  \brief Moves the mouse to the given position within the window.
@@ -264,7 +264,7 @@ void sdl2::SDL_WarpMouseInWindow(SDL_Window * window, int x, int y);
  */
 void sdl3::SDL_WarpMouseInWindow(SDL_Window *window, float x, float y);
 
-OVERRIDE int SDL_WarpMouseGlobal(std::uintptr_t p1, std::uintptr_t p2);
+OVERRIDE int SDL_WarpMouseGlobal(std::uintptr_t p1, std::uintptr_t p2, float f1, float f2);
 
 /**
  *  \brief Moves the mouse to the given position in global screen space.
@@ -622,7 +622,7 @@ OVERRIDE void SDL_SetWindowGrab(SDL_Window * window, SDL_bool grabbed);
  * \sa SDL_SetWindowKeyboardGrab
  * \sa SDL_SetWindowGrab
  */
-OVERRIDE void SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed);
+OVERRIDE bool SDL_SetWindowMouseGrab(SDL_Window * window, SDL_bool grabbed);
 
 /**
  * Get a window's input grab mode.

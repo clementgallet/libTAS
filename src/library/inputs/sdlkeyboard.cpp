@@ -28,6 +28,7 @@
 
 namespace libtas {
 
+static bool SDL3_keyboard[sdl3::SDL_SCANCODE_COUNT] = {0};
 static Uint8 SDL2_keyboard[sdl2::SDL_NUM_SCANCODES] = {0};
 static Uint8 SDL1_keyboard[sdl1::SDLK_LAST] = {0};
 
@@ -51,7 +52,17 @@ static Uint8 SDL1_keyboard[sdl1::SDLK_LAST] = {0};
     return ids;
 }
 
-/* Override */ const Uint8* SDL_GetKeyboardState( int* numkeys)
+/* Override */ const void* SDL_GetKeyboardState( int* numkeys)
+{
+    // invoke_sdl2_or_sdl3_from_storage does not work in this case, so it is done manually
+    if (get_sdlversion() == 3) {
+        return static_cast<const void*>(sdl3::SDL_GetKeyboardState(numkeys));
+    } else {
+        return static_cast<const void*>(sdl2::SDL_GetKeyboardState(numkeys));
+    }
+}
+
+const Uint8* sdl2::SDL_GetKeyboardState( int* numkeys)
 {
     LOGTRACE_SIMPLE(LCF_SDL | LCF_KEYBOARD);
 
@@ -60,6 +71,17 @@ static Uint8 SDL1_keyboard[sdl1::SDLK_LAST] = {0};
 
     xkeyboardToSDL2keyboard(Inputs::game_ai.keyboard, SDL2_keyboard);
     return SDL2_keyboard;
+}
+
+const bool* sdl3::SDL_GetKeyboardState( int* numkeys)
+{
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_KEYBOARD);
+
+    if (numkeys)
+        *numkeys = sdl3::SDL_SCANCODE_COUNT;
+
+    xkeyboardToSDL3keyboard(Inputs::game_ai.keyboard, SDL3_keyboard);
+    return SDL3_keyboard;
 }
 
 /* Override */ Uint8* SDL_GetKeyState( int* numkeys)
@@ -79,10 +101,25 @@ static Uint8 SDL1_keyboard[sdl1::SDLK_LAST] = {0};
     return sdl::gameSDLWindow;
 }
 
-/* Override */ sdl2::SDL_Keymod SDL_GetModState(void)
+/* Override */ int SDL_GetModState(void)
+{
+    if (get_sdlversion() == 3) {
+        return sdl3::SDL_GetModState();
+    } else {
+        return sdl2::SDL_GetModState();
+    }
+}
+
+sdl2::SDL_Keymod sdl2::SDL_GetModState(void)
 {
     LOGTRACE_SIMPLE(LCF_SDL | LCF_KEYBOARD);
-    return xkeyboardToSDLMod(Inputs::game_ai.keyboard);
+    return xkeyboardToSDL2Mod(Inputs::game_ai.keyboard);
+}
+
+sdl3::SDL_Keymod sdl3::SDL_GetModState(void)
+{
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_KEYBOARD);
+    return xkeyboardToSDL3Mod(Inputs::game_ai.keyboard);
 }
 
 /* Override */ void SDL_SetModState(sdl2::SDL_Keymod modstate)

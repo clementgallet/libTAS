@@ -64,8 +64,6 @@ typedef Sint64 SDL_FingerID;
 typedef Sint64 SDL_GestureID;
 typedef Uint32 SDL_AudioDeviceID;
 typedef Uint32 SDL_TimerID;
-typedef Sint32 SDL_Keycode;
-typedef Uint16 SDL_Keymod;
 
 typedef void *JavaVM;
 typedef void *PFN_xrGetInstanceProcAddr;
@@ -572,9 +570,305 @@ enum SDL_WindowFlagsEnum : Uint64
     SDL_WINDOW_NOT_FOCUSABLE              = 0x0000000080000000,    /**< window should not be focusable */
 };
 
+typedef Sint32 SDL_Keycode;
+
+enum SDL_KeycodeEnum : Sint32
+{
+    SDLK_EXTENDED_MASK          = (1u << 29),
+    SDLK_SCANCODE_MASK          = (1u << 30),
+    SDLK_UNKNOWN                = 0x00000000u, /**< 0 */
+    SDLK_RETURN                 = 0x0000000du, /**< '\r' */
+    SDLK_ESCAPE                 = 0x0000001bu, /**< '\x1B' */
+    SDLK_BACKSPACE              = 0x00000008u, /**< '\b' */
+    SDLK_TAB                    = 0x00000009u, /**< '\t' */
+    SDLK_SPACE                  = 0x00000020u, /**< ' ' */
+    SDLK_EXCLAIM                = 0x00000021u, /**< '!' */
+    SDLK_DBLAPOSTROPHE          = 0x00000022u, /**< '"' */
+    SDLK_HASH                   = 0x00000023u, /**< '#' */
+    SDLK_DOLLAR                 = 0x00000024u, /**< '$' */
+    SDLK_PERCENT                = 0x00000025u, /**< '%' */
+    SDLK_AMPERSAND              = 0x00000026u, /**< '&' */
+    SDLK_APOSTROPHE             = 0x00000027u, /**< '\'' */
+    SDLK_LEFTPAREN              = 0x00000028u, /**< '(' */
+    SDLK_RIGHTPAREN             = 0x00000029u, /**< ')' */
+    SDLK_ASTERISK               = 0x0000002au, /**< '*' */
+    SDLK_PLUS                   = 0x0000002bu, /**< '+' */
+    SDLK_COMMA                  = 0x0000002cu, /**< ',' */
+    SDLK_MINUS                  = 0x0000002du, /**< '-' */
+    SDLK_PERIOD                 = 0x0000002eu, /**< '.' */
+    SDLK_SLASH                  = 0x0000002fu, /**< '/' */
+    SDLK_0                      = 0x00000030u, /**< '0' */
+    SDLK_1                      = 0x00000031u, /**< '1' */
+    SDLK_2                      = 0x00000032u, /**< '2' */
+    SDLK_3                      = 0x00000033u, /**< '3' */
+    SDLK_4                      = 0x00000034u, /**< '4' */
+    SDLK_5                      = 0x00000035u, /**< '5' */
+    SDLK_6                      = 0x00000036u, /**< '6' */
+    SDLK_7                      = 0x00000037u, /**< '7' */
+    SDLK_8                      = 0x00000038u, /**< '8' */
+    SDLK_9                      = 0x00000039u, /**< '9' */
+    SDLK_COLON                  = 0x0000003au, /**< ':' */
+    SDLK_SEMICOLON              = 0x0000003bu, /**< ';' */
+    SDLK_LESS                   = 0x0000003cu, /**< '<' */
+    SDLK_EQUALS                 = 0x0000003du, /**< '=' */
+    SDLK_GREATER                = 0x0000003eu, /**< '>' */
+    SDLK_QUESTION               = 0x0000003fu, /**< '?' */
+    SDLK_AT                     = 0x00000040u, /**< '@' */
+    SDLK_LEFTBRACKET            = 0x0000005bu, /**< '[' */
+    SDLK_BACKSLASH              = 0x0000005cu, /**< '\\' */
+    SDLK_RIGHTBRACKET           = 0x0000005du, /**< ']' */
+    SDLK_CARET                  = 0x0000005eu, /**< '^' */
+    SDLK_UNDERSCORE             = 0x0000005fu, /**< '_' */
+    SDLK_GRAVE                  = 0x00000060u, /**< '`' */
+    SDLK_A                      = 0x00000061u, /**< 'a' */
+    SDLK_B                      = 0x00000062u, /**< 'b' */
+    SDLK_C                      = 0x00000063u, /**< 'c' */
+    SDLK_D                      = 0x00000064u, /**< 'd' */
+    SDLK_E                      = 0x00000065u, /**< 'e' */
+    SDLK_F                      = 0x00000066u, /**< 'f' */
+    SDLK_G                      = 0x00000067u, /**< 'g' */
+    SDLK_H                      = 0x00000068u, /**< 'h' */
+    SDLK_I                      = 0x00000069u, /**< 'i' */
+    SDLK_J                      = 0x0000006au, /**< 'j' */
+    SDLK_K                      = 0x0000006bu, /**< 'k' */
+    SDLK_L                      = 0x0000006cu, /**< 'l' */
+    SDLK_M                      = 0x0000006du, /**< 'm' */
+    SDLK_N                      = 0x0000006eu, /**< 'n' */
+    SDLK_O                      = 0x0000006fu, /**< 'o' */
+    SDLK_P                      = 0x00000070u, /**< 'p' */
+    SDLK_Q                      = 0x00000071u, /**< 'q' */
+    SDLK_R                      = 0x00000072u, /**< 'r' */
+    SDLK_S                      = 0x00000073u, /**< 's' */
+    SDLK_T                      = 0x00000074u, /**< 't' */
+    SDLK_U                      = 0x00000075u, /**< 'u' */
+    SDLK_V                      = 0x00000076u, /**< 'v' */
+    SDLK_W                      = 0x00000077u, /**< 'w' */
+    SDLK_X                      = 0x00000078u, /**< 'x' */
+    SDLK_Y                      = 0x00000079u, /**< 'y' */
+    SDLK_Z                      = 0x0000007au, /**< 'z' */
+    SDLK_LEFTBRACE              = 0x0000007bu, /**< '{' */
+    SDLK_PIPE                   = 0x0000007cu, /**< '|' */
+    SDLK_RIGHTBRACE             = 0x0000007du, /**< '}' */
+    SDLK_TILDE                  = 0x0000007eu, /**< '~' */
+    SDLK_DELETE                 = 0x0000007fu, /**< '\x7F' */
+    SDLK_PLUSMINUS              = 0x000000b1u, /**< '\xB1' */
+    SDLK_CAPSLOCK               = 0x40000039u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_CAPSLOCK) */
+    SDLK_F1                     = 0x4000003au, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F1) */
+    SDLK_F2                     = 0x4000003bu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F2) */
+    SDLK_F3                     = 0x4000003cu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F3) */
+    SDLK_F4                     = 0x4000003du, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F4) */
+    SDLK_F5                     = 0x4000003eu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F5) */
+    SDLK_F6                     = 0x4000003fu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F6) */
+    SDLK_F7                     = 0x40000040u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F7) */
+    SDLK_F8                     = 0x40000041u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F8) */
+    SDLK_F9                     = 0x40000042u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F9) */
+    SDLK_F10                    = 0x40000043u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F10) */
+    SDLK_F11                    = 0x40000044u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F11) */
+    SDLK_F12                    = 0x40000045u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F12) */
+    SDLK_PRINTSCREEN            = 0x40000046u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_PRINTSCREEN) */
+    SDLK_SCROLLLOCK             = 0x40000047u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_SCROLLLOCK) */
+    SDLK_PAUSE                  = 0x40000048u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_PAUSE) */
+    SDLK_INSERT                 = 0x40000049u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_INSERT) */
+    SDLK_HOME                   = 0x4000004au, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_HOME) */
+    SDLK_PAGEUP                 = 0x4000004bu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_PAGEUP) */
+    SDLK_END                    = 0x4000004du, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_END) */
+    SDLK_PAGEDOWN               = 0x4000004eu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_PAGEDOWN) */
+    SDLK_RIGHT                  = 0x4000004fu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_RIGHT) */
+    SDLK_LEFT                   = 0x40000050u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_LEFT) */
+    SDLK_DOWN                   = 0x40000051u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_DOWN) */
+    SDLK_UP                     = 0x40000052u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_UP) */
+    SDLK_NUMLOCKCLEAR           = 0x40000053u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_NUMLOCKCLEAR) */
+    SDLK_KP_DIVIDE              = 0x40000054u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_DIVIDE) */
+    SDLK_KP_MULTIPLY            = 0x40000055u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_MULTIPLY) */
+    SDLK_KP_MINUS               = 0x40000056u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_MINUS) */
+    SDLK_KP_PLUS                = 0x40000057u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_PLUS) */
+    SDLK_KP_ENTER               = 0x40000058u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_ENTER) */
+    SDLK_KP_1                   = 0x40000059u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_1) */
+    SDLK_KP_2                   = 0x4000005au, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_2) */
+    SDLK_KP_3                   = 0x4000005bu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_3) */
+    SDLK_KP_4                   = 0x4000005cu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_4) */
+    SDLK_KP_5                   = 0x4000005du, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_5) */
+    SDLK_KP_6                   = 0x4000005eu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_6) */
+    SDLK_KP_7                   = 0x4000005fu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_7) */
+    SDLK_KP_8                   = 0x40000060u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_8) */
+    SDLK_KP_9                   = 0x40000061u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_9) */
+    SDLK_KP_0                   = 0x40000062u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_0) */
+    SDLK_KP_PERIOD              = 0x40000063u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_PERIOD) */
+    SDLK_APPLICATION            = 0x40000065u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_APPLICATION) */
+    SDLK_POWER                  = 0x40000066u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_POWER) */
+    SDLK_KP_EQUALS              = 0x40000067u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_EQUALS) */
+    SDLK_F13                    = 0x40000068u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F13) */
+    SDLK_F14                    = 0x40000069u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F14) */
+    SDLK_F15                    = 0x4000006au, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F15) */
+    SDLK_F16                    = 0x4000006bu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F16) */
+    SDLK_F17                    = 0x4000006cu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F17) */
+    SDLK_F18                    = 0x4000006du, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F18) */
+    SDLK_F19                    = 0x4000006eu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F19) */
+    SDLK_F20                    = 0x4000006fu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F20) */
+    SDLK_F21                    = 0x40000070u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F21) */
+    SDLK_F22                    = 0x40000071u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F22) */
+    SDLK_F23                    = 0x40000072u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F23) */
+    SDLK_F24                    = 0x40000073u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_F24) */
+    SDLK_EXECUTE                = 0x40000074u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_EXECUTE) */
+    SDLK_HELP                   = 0x40000075u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_HELP) */
+    SDLK_MENU                   = 0x40000076u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_MENU) */
+    SDLK_SELECT                 = 0x40000077u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_SELECT) */
+    SDLK_STOP                   = 0x40000078u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_STOP) */
+    SDLK_AGAIN                  = 0x40000079u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AGAIN) */
+    SDLK_UNDO                   = 0x4000007au, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_UNDO) */
+    SDLK_CUT                    = 0x4000007bu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_CUT) */
+    SDLK_COPY                   = 0x4000007cu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_COPY) */
+    SDLK_PASTE                  = 0x4000007du, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_PASTE) */
+    SDLK_FIND                   = 0x4000007eu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_FIND) */
+    SDLK_MUTE                   = 0x4000007fu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_MUTE) */
+    SDLK_VOLUMEUP               = 0x40000080u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_VOLUMEUP) */
+    SDLK_VOLUMEDOWN             = 0x40000081u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_VOLUMEDOWN) */
+    SDLK_KP_COMMA               = 0x40000085u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_COMMA) */
+    SDLK_KP_EQUALSAS400         = 0x40000086u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_EQUALSAS400) */
+    SDLK_ALTERASE               = 0x40000099u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_ALTERASE) */
+    SDLK_SYSREQ                 = 0x4000009au, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_SYSREQ) */
+    SDLK_CANCEL                 = 0x4000009bu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_CANCEL) */
+    SDLK_CLEAR                  = 0x4000009cu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_CLEAR) */
+    SDLK_PRIOR                  = 0x4000009du, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_PRIOR) */
+    SDLK_RETURN2                = 0x4000009eu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_RETURN2) */
+    SDLK_SEPARATOR              = 0x4000009fu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_SEPARATOR) */
+    SDLK_OUT                    = 0x400000a0u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_OUT) */
+    SDLK_OPER                   = 0x400000a1u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_OPER) */
+    SDLK_CLEARAGAIN             = 0x400000a2u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_CLEARAGAIN) */
+    SDLK_CRSEL                  = 0x400000a3u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_CRSEL) */
+    SDLK_EXSEL                  = 0x400000a4u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_EXSEL) */
+    SDLK_KP_00                  = 0x400000b0u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_00) */
+    SDLK_KP_000                 = 0x400000b1u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_000) */
+    SDLK_THOUSANDSSEPARATOR     = 0x400000b2u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_THOUSANDSSEPARATOR) */
+    SDLK_DECIMALSEPARATOR       = 0x400000b3u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_DECIMALSEPARATOR) */
+    SDLK_CURRENCYUNIT           = 0x400000b4u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_CURRENCYUNIT) */
+    SDLK_CURRENCYSUBUNIT        = 0x400000b5u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_CURRENCYSUBUNIT) */
+    SDLK_KP_LEFTPAREN           = 0x400000b6u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_LEFTPAREN) */
+    SDLK_KP_RIGHTPAREN          = 0x400000b7u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_RIGHTPAREN) */
+    SDLK_KP_LEFTBRACE           = 0x400000b8u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_LEFTBRACE) */
+    SDLK_KP_RIGHTBRACE          = 0x400000b9u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_RIGHTBRACE) */
+    SDLK_KP_TAB                 = 0x400000bau, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_TAB) */
+    SDLK_KP_BACKSPACE           = 0x400000bbu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_BACKSPACE) */
+    SDLK_KP_A                   = 0x400000bcu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_A) */
+    SDLK_KP_B                   = 0x400000bdu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_B) */
+    SDLK_KP_C                   = 0x400000beu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_C) */
+    SDLK_KP_D                   = 0x400000bfu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_D) */
+    SDLK_KP_E                   = 0x400000c0u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_E) */
+    SDLK_KP_F                   = 0x400000c1u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_F) */
+    SDLK_KP_XOR                 = 0x400000c2u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_XOR) */
+    SDLK_KP_POWER               = 0x400000c3u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_POWER) */
+    SDLK_KP_PERCENT             = 0x400000c4u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_PERCENT) */
+    SDLK_KP_LESS                = 0x400000c5u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_LESS) */
+    SDLK_KP_GREATER             = 0x400000c6u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_GREATER) */
+    SDLK_KP_AMPERSAND           = 0x400000c7u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_AMPERSAND) */
+    SDLK_KP_DBLAMPERSAND        = 0x400000c8u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_DBLAMPERSAND) */
+    SDLK_KP_VERTICALBAR         = 0x400000c9u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_VERTICALBAR) */
+    SDLK_KP_DBLVERTICALBAR      = 0x400000cau, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_DBLVERTICALBAR) */
+    SDLK_KP_COLON               = 0x400000cbu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_COLON) */
+    SDLK_KP_HASH                = 0x400000ccu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_HASH) */
+    SDLK_KP_SPACE               = 0x400000cdu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_SPACE) */
+    SDLK_KP_AT                  = 0x400000ceu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_AT) */
+    SDLK_KP_EXCLAM              = 0x400000cfu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_EXCLAM) */
+    SDLK_KP_MEMSTORE            = 0x400000d0u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_MEMSTORE) */
+    SDLK_KP_MEMRECALL           = 0x400000d1u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_MEMRECALL) */
+    SDLK_KP_MEMCLEAR            = 0x400000d2u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_MEMCLEAR) */
+    SDLK_KP_MEMADD              = 0x400000d3u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_MEMADD) */
+    SDLK_KP_MEMSUBTRACT         = 0x400000d4u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_MEMSUBTRACT) */
+    SDLK_KP_MEMMULTIPLY         = 0x400000d5u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_MEMMULTIPLY) */
+    SDLK_KP_MEMDIVIDE           = 0x400000d6u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_MEMDIVIDE) */
+    SDLK_KP_PLUSMINUS           = 0x400000d7u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_PLUSMINUS) */
+    SDLK_KP_CLEAR               = 0x400000d8u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_CLEAR) */
+    SDLK_KP_CLEARENTRY          = 0x400000d9u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_CLEARENTRY) */
+    SDLK_KP_BINARY              = 0x400000dau, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_BINARY) */
+    SDLK_KP_OCTAL               = 0x400000dbu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_OCTAL) */
+    SDLK_KP_DECIMAL             = 0x400000dcu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_DECIMAL) */
+    SDLK_KP_HEXADECIMAL         = 0x400000ddu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_KP_HEXADECIMAL) */
+    SDLK_LCTRL                  = 0x400000e0u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_LCTRL) */
+    SDLK_LSHIFT                 = 0x400000e1u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_LSHIFT) */
+    SDLK_LALT                   = 0x400000e2u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_LALT) */
+    SDLK_LGUI                   = 0x400000e3u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_LGUI) */
+    SDLK_RCTRL                  = 0x400000e4u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_RCTRL) */
+    SDLK_RSHIFT                 = 0x400000e5u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_RSHIFT) */
+    SDLK_RALT                   = 0x400000e6u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_RALT) */
+    SDLK_RGUI                   = 0x400000e7u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_RGUI) */
+    SDLK_MODE                   = 0x40000101u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_MODE) */
+    SDLK_SLEEP                  = 0x40000102u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_SLEEP) */
+    SDLK_WAKE                   = 0x40000103u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_WAKE) */
+    SDLK_CHANNEL_INCREMENT      = 0x40000104u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_CHANNEL_INCREMENT) */
+    SDLK_CHANNEL_DECREMENT      = 0x40000105u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_CHANNEL_DECREMENT) */
+    SDLK_MEDIA_PLAY             = 0x40000106u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_MEDIA_PLAY) */
+    SDLK_MEDIA_PAUSE            = 0x40000107u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_MEDIA_PAUSE) */
+    SDLK_MEDIA_RECORD           = 0x40000108u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_MEDIA_RECORD) */
+    SDLK_MEDIA_FAST_FORWARD     = 0x40000109u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_MEDIA_FAST_FORWARD) */
+    SDLK_MEDIA_REWIND           = 0x4000010au, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_MEDIA_REWIND) */
+    SDLK_MEDIA_NEXT_TRACK       = 0x4000010bu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_MEDIA_NEXT_TRACK) */
+    SDLK_MEDIA_PREVIOUS_TRACK   = 0x4000010cu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_MEDIA_PREVIOUS_TRACK) */
+    SDLK_MEDIA_STOP             = 0x4000010du, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_MEDIA_STOP) */
+    SDLK_MEDIA_EJECT            = 0x4000010eu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_MEDIA_EJECT) */
+    SDLK_MEDIA_PLAY_PAUSE       = 0x4000010fu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_MEDIA_PLAY_PAUSE) */
+    SDLK_MEDIA_SELECT           = 0x40000110u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_MEDIA_SELECT) */
+    SDLK_AC_NEW                 = 0x40000111u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AC_NEW) */
+    SDLK_AC_OPEN                = 0x40000112u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AC_OPEN) */
+    SDLK_AC_CLOSE               = 0x40000113u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AC_CLOSE) */
+    SDLK_AC_EXIT                = 0x40000114u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AC_EXIT) */
+    SDLK_AC_SAVE                = 0x40000115u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AC_SAVE) */
+    SDLK_AC_PRINT               = 0x40000116u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AC_PRINT) */
+    SDLK_AC_PROPERTIES          = 0x40000117u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AC_PROPERTIES) */
+    SDLK_AC_SEARCH              = 0x40000118u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AC_SEARCH) */
+    SDLK_AC_HOME                = 0x40000119u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AC_HOME) */
+    SDLK_AC_BACK                = 0x4000011au, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AC_BACK) */
+    SDLK_AC_FORWARD             = 0x4000011bu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AC_FORWARD) */
+    SDLK_AC_STOP                = 0x4000011cu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AC_STOP) */
+    SDLK_AC_REFRESH             = 0x4000011du, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AC_REFRESH) */
+    SDLK_AC_BOOKMARKS           = 0x4000011eu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_AC_BOOKMARKS) */
+    SDLK_SOFTLEFT               = 0x4000011fu, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_SOFTLEFT) */
+    SDLK_SOFTRIGHT              = 0x40000120u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_SOFTRIGHT) */
+    SDLK_CALL                   = 0x40000121u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_CALL) */
+    SDLK_ENDCALL                = 0x40000122u, /**< SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_ENDCALL) */
+    SDLK_LEFT_TAB               = 0x20000001u, /**< Extended key Left Tab */
+    SDLK_LEVEL5_SHIFT           = 0x20000002u, /**< Extended key Level 5 Shift */
+    SDLK_MULTI_KEY_COMPOSE      = 0x20000003u, /**< Extended key Multi-key Compose */
+    SDLK_LMETA                  = 0x20000004u, /**< Extended key Left Meta */
+    SDLK_RMETA                  = 0x20000005u, /**< Extended key Right Meta */
+    SDLK_LHYPER                 = 0x20000006u, /**< Extended key Left Hyper */
+    SDLK_RHYPER                 = 0x20000007u, /**< Extended key Right Hyper */
+};
+
+typedef Uint16 SDL_Keymod;
+
+enum SDL_KeymodEnum : Uint16
+{
+    SDL_KMOD_NONE   = 0x0000u, /**< no modifier is applicable. */
+    SDL_KMOD_LSHIFT = 0x0001u, /**< the left Shift key is down. */
+    SDL_KMOD_RSHIFT = 0x0002u, /**< the right Shift key is down. */
+    SDL_KMOD_LEVEL5 = 0x0004u, /**< the Level 5 Shift key is down. */
+    SDL_KMOD_LCTRL  = 0x0040u, /**< the left Ctrl (Control) key is down. */
+    SDL_KMOD_RCTRL  = 0x0080u, /**< the right Ctrl (Control) key is down. */
+    SDL_KMOD_LALT   = 0x0100u, /**< the left Alt key is down. */
+    SDL_KMOD_RALT   = 0x0200u, /**< the right Alt key is down. */
+    SDL_KMOD_LGUI   = 0x0400u, /**< the left GUI key (often the Windows key) is down. */
+    SDL_KMOD_RGUI   = 0x0800u, /**< the right GUI key (often the Windows key) is down. */
+    SDL_KMOD_NUM    = 0x1000u, /**< the Num Lock key (may be located on an extended keypad) is down. */
+    SDL_KMOD_CAPS   = 0x2000u, /**< the Caps Lock key is down. */
+    SDL_KMOD_MODE   = 0x4000u, /**< the !AltGr key is down. */
+    SDL_KMOD_SCROLL = 0x8000u, /**< the Scroll Lock key is down. */
+    SDL_KMOD_CTRL   = (SDL_KMOD_LCTRL | SDL_KMOD_RCTRL),   /**< Any Ctrl key is down. */
+    SDL_KMOD_SHIFT  = (SDL_KMOD_LSHIFT | SDL_KMOD_RSHIFT), /**< Any Shift key is down. */
+    SDL_KMOD_ALT    = (SDL_KMOD_LALT | SDL_KMOD_RALT),     /**< Any Alt key is down. */
+    SDL_KMOD_GUI    = (SDL_KMOD_LGUI | SDL_KMOD_RGUI),     /**< Any GUI key is down. */
+};
+
 typedef enum SDL_Scancode
 {
     SDL_SCANCODE_UNKNOWN = 0,
+
+    /**
+     *  \name Usage page 0x07
+     *
+     *  These values are from usage page 0x07 (USB keyboard page).
+     */
+    /* @{ */
+
     SDL_SCANCODE_A = 4,
     SDL_SCANCODE_B = 5,
     SDL_SCANCODE_C = 6,
@@ -601,6 +895,7 @@ typedef enum SDL_Scancode
     SDL_SCANCODE_X = 27,
     SDL_SCANCODE_Y = 28,
     SDL_SCANCODE_Z = 29,
+
     SDL_SCANCODE_1 = 30,
     SDL_SCANCODE_2 = 31,
     SDL_SCANCODE_3 = 32,
@@ -611,24 +906,68 @@ typedef enum SDL_Scancode
     SDL_SCANCODE_8 = 37,
     SDL_SCANCODE_9 = 38,
     SDL_SCANCODE_0 = 39,
+
     SDL_SCANCODE_RETURN = 40,
     SDL_SCANCODE_ESCAPE = 41,
     SDL_SCANCODE_BACKSPACE = 42,
     SDL_SCANCODE_TAB = 43,
     SDL_SCANCODE_SPACE = 44,
+
     SDL_SCANCODE_MINUS = 45,
     SDL_SCANCODE_EQUALS = 46,
     SDL_SCANCODE_LEFTBRACKET = 47,
     SDL_SCANCODE_RIGHTBRACKET = 48,
-    SDL_SCANCODE_BACKSLASH = 49,
-    SDL_SCANCODE_NONUSHASH = 50,
+    SDL_SCANCODE_BACKSLASH = 49, /**< Located at the lower left of the return
+                                  *   key on ISO keyboards and at the right end
+                                  *   of the QWERTY row on ANSI keyboards.
+                                  *   Produces REVERSE SOLIDUS (backslash) and
+                                  *   VERTICAL LINE in a US layout, REVERSE
+                                  *   SOLIDUS and VERTICAL LINE in a UK Mac
+                                  *   layout, NUMBER SIGN and TILDE in a UK
+                                  *   Windows layout, DOLLAR SIGN and POUND SIGN
+                                  *   in a Swiss German layout, NUMBER SIGN and
+                                  *   APOSTROPHE in a German layout, GRAVE
+                                  *   ACCENT and POUND SIGN in a French Mac
+                                  *   layout, and ASTERISK and MICRO SIGN in a
+                                  *   French Windows layout.
+                                  */
+    SDL_SCANCODE_NONUSHASH = 50, /**< ISO USB keyboards actually use this code
+                                  *   instead of 49 for the same key, but all
+                                  *   OSes I've seen treat the two codes
+                                  *   identically. So, as an implementor, unless
+                                  *   your keyboard generates both of those
+                                  *   codes and your OS treats them differently,
+                                  *   you should generate SDL_SCANCODE_BACKSLASH
+                                  *   instead of this code. As a user, you
+                                  *   should not rely on this code because SDL
+                                  *   will never generate it with most (all?)
+                                  *   keyboards.
+                                  */
     SDL_SCANCODE_SEMICOLON = 51,
     SDL_SCANCODE_APOSTROPHE = 52,
-    SDL_SCANCODE_GRAVE = 53,
+    SDL_SCANCODE_GRAVE = 53, /**< Located in the top left corner (on both ANSI
+                              *   and ISO keyboards). Produces GRAVE ACCENT and
+                              *   TILDE in a US Windows layout and in US and UK
+                              *   Mac layouts on ANSI keyboards, GRAVE ACCENT
+                              *   and NOT SIGN in a UK Windows layout, SECTION
+                              *   SIGN and PLUS-MINUS SIGN in US and UK Mac
+                              *   layouts on ISO keyboards, SECTION SIGN and
+                              *   DEGREE SIGN in a Swiss German layout (Mac:
+                              *   only on ISO keyboards), CIRCUMFLEX ACCENT and
+                              *   DEGREE SIGN in a German layout (Mac: only on
+                              *   ISO keyboards), SUPERSCRIPT TWO and TILDE in a
+                              *   French Windows layout, COMMERCIAL AT and
+                              *   NUMBER SIGN in a French Mac layout on ISO
+                              *   keyboards, and LESS-THAN SIGN and GREATER-THAN
+                              *   SIGN in a Swiss German, German, or French Mac
+                              *   layout on ANSI keyboards.
+                              */
     SDL_SCANCODE_COMMA = 54,
     SDL_SCANCODE_PERIOD = 55,
     SDL_SCANCODE_SLASH = 56,
+
     SDL_SCANCODE_CAPSLOCK = 57,
+
     SDL_SCANCODE_F1 = 58,
     SDL_SCANCODE_F2 = 59,
     SDL_SCANCODE_F3 = 60,
@@ -641,18 +980,281 @@ typedef enum SDL_Scancode
     SDL_SCANCODE_F10 = 67,
     SDL_SCANCODE_F11 = 68,
     SDL_SCANCODE_F12 = 69,
-    SDL_NUM_SCANCODES = 512
+
+    SDL_SCANCODE_PRINTSCREEN = 70,
+    SDL_SCANCODE_SCROLLLOCK = 71,
+    SDL_SCANCODE_PAUSE = 72,
+    SDL_SCANCODE_INSERT = 73, /**< insert on PC, help on some Mac keyboards (but
+                                   does send code 73, not 117) */
+    SDL_SCANCODE_HOME = 74,
+    SDL_SCANCODE_PAGEUP = 75,
+    SDL_SCANCODE_DELETE = 76,
+    SDL_SCANCODE_END = 77,
+    SDL_SCANCODE_PAGEDOWN = 78,
+    SDL_SCANCODE_RIGHT = 79,
+    SDL_SCANCODE_LEFT = 80,
+    SDL_SCANCODE_DOWN = 81,
+    SDL_SCANCODE_UP = 82,
+
+    SDL_SCANCODE_NUMLOCKCLEAR = 83, /**< num lock on PC, clear on Mac keyboards
+                                     */
+    SDL_SCANCODE_KP_DIVIDE = 84,
+    SDL_SCANCODE_KP_MULTIPLY = 85,
+    SDL_SCANCODE_KP_MINUS = 86,
+    SDL_SCANCODE_KP_PLUS = 87,
+    SDL_SCANCODE_KP_ENTER = 88,
+    SDL_SCANCODE_KP_1 = 89,
+    SDL_SCANCODE_KP_2 = 90,
+    SDL_SCANCODE_KP_3 = 91,
+    SDL_SCANCODE_KP_4 = 92,
+    SDL_SCANCODE_KP_5 = 93,
+    SDL_SCANCODE_KP_6 = 94,
+    SDL_SCANCODE_KP_7 = 95,
+    SDL_SCANCODE_KP_8 = 96,
+    SDL_SCANCODE_KP_9 = 97,
+    SDL_SCANCODE_KP_0 = 98,
+    SDL_SCANCODE_KP_PERIOD = 99,
+
+    SDL_SCANCODE_NONUSBACKSLASH = 100, /**< This is the additional key that ISO
+                                        *   keyboards have over ANSI ones,
+                                        *   located between left shift and Y.
+                                        *   Produces GRAVE ACCENT and TILDE in a
+                                        *   US or UK Mac layout, REVERSE SOLIDUS
+                                        *   (backslash) and VERTICAL LINE in a
+                                        *   US or UK Windows layout, and
+                                        *   LESS-THAN SIGN and GREATER-THAN SIGN
+                                        *   in a Swiss German, German, or French
+                                        *   layout. */
+    SDL_SCANCODE_APPLICATION = 101, /**< windows contextual menu, compose */
+    SDL_SCANCODE_POWER = 102, /**< The USB document says this is a status flag,
+                               *   not a physical key - but some Mac keyboards
+                               *   do have a power key. */
+    SDL_SCANCODE_KP_EQUALS = 103,
+    SDL_SCANCODE_F13 = 104,
+    SDL_SCANCODE_F14 = 105,
+    SDL_SCANCODE_F15 = 106,
+    SDL_SCANCODE_F16 = 107,
+    SDL_SCANCODE_F17 = 108,
+    SDL_SCANCODE_F18 = 109,
+    SDL_SCANCODE_F19 = 110,
+    SDL_SCANCODE_F20 = 111,
+    SDL_SCANCODE_F21 = 112,
+    SDL_SCANCODE_F22 = 113,
+    SDL_SCANCODE_F23 = 114,
+    SDL_SCANCODE_F24 = 115,
+    SDL_SCANCODE_EXECUTE = 116,
+    SDL_SCANCODE_HELP = 117,    /**< AL Integrated Help Center */
+    SDL_SCANCODE_MENU = 118,    /**< Menu (show menu) */
+    SDL_SCANCODE_SELECT = 119,
+    SDL_SCANCODE_STOP = 120,    /**< AC Stop */
+    SDL_SCANCODE_AGAIN = 121,   /**< AC Redo/Repeat */
+    SDL_SCANCODE_UNDO = 122,    /**< AC Undo */
+    SDL_SCANCODE_CUT = 123,     /**< AC Cut */
+    SDL_SCANCODE_COPY = 124,    /**< AC Copy */
+    SDL_SCANCODE_PASTE = 125,   /**< AC Paste */
+    SDL_SCANCODE_FIND = 126,    /**< AC Find */
+    SDL_SCANCODE_MUTE = 127,
+    SDL_SCANCODE_VOLUMEUP = 128,
+    SDL_SCANCODE_VOLUMEDOWN = 129,
+/* not sure whether there's a reason to enable these */
+/*     SDL_SCANCODE_LOCKINGCAPSLOCK = 130,  */
+/*     SDL_SCANCODE_LOCKINGNUMLOCK = 131, */
+/*     SDL_SCANCODE_LOCKINGSCROLLLOCK = 132, */
+    SDL_SCANCODE_KP_COMMA = 133,
+    SDL_SCANCODE_KP_EQUALSAS400 = 134,
+
+    SDL_SCANCODE_INTERNATIONAL1 = 135, /**< used on Asian keyboards, see
+                                            footnotes in USB doc */
+    SDL_SCANCODE_INTERNATIONAL2 = 136,
+    SDL_SCANCODE_INTERNATIONAL3 = 137, /**< Yen */
+    SDL_SCANCODE_INTERNATIONAL4 = 138,
+    SDL_SCANCODE_INTERNATIONAL5 = 139,
+    SDL_SCANCODE_INTERNATIONAL6 = 140,
+    SDL_SCANCODE_INTERNATIONAL7 = 141,
+    SDL_SCANCODE_INTERNATIONAL8 = 142,
+    SDL_SCANCODE_INTERNATIONAL9 = 143,
+    SDL_SCANCODE_LANG1 = 144, /**< Hangul/English toggle */
+    SDL_SCANCODE_LANG2 = 145, /**< Hanja conversion */
+    SDL_SCANCODE_LANG3 = 146, /**< Katakana */
+    SDL_SCANCODE_LANG4 = 147, /**< Hiragana */
+    SDL_SCANCODE_LANG5 = 148, /**< Zenkaku/Hankaku */
+    SDL_SCANCODE_LANG6 = 149, /**< reserved */
+    SDL_SCANCODE_LANG7 = 150, /**< reserved */
+    SDL_SCANCODE_LANG8 = 151, /**< reserved */
+    SDL_SCANCODE_LANG9 = 152, /**< reserved */
+
+    SDL_SCANCODE_ALTERASE = 153,    /**< Erase-Eaze */
+    SDL_SCANCODE_SYSREQ = 154,
+    SDL_SCANCODE_CANCEL = 155,      /**< AC Cancel */
+    SDL_SCANCODE_CLEAR = 156,
+    SDL_SCANCODE_PRIOR = 157,
+    SDL_SCANCODE_RETURN2 = 158,
+    SDL_SCANCODE_SEPARATOR = 159,
+    SDL_SCANCODE_OUT = 160,
+    SDL_SCANCODE_OPER = 161,
+    SDL_SCANCODE_CLEARAGAIN = 162,
+    SDL_SCANCODE_CRSEL = 163,
+    SDL_SCANCODE_EXSEL = 164,
+
+    SDL_SCANCODE_KP_00 = 176,
+    SDL_SCANCODE_KP_000 = 177,
+    SDL_SCANCODE_THOUSANDSSEPARATOR = 178,
+    SDL_SCANCODE_DECIMALSEPARATOR = 179,
+    SDL_SCANCODE_CURRENCYUNIT = 180,
+    SDL_SCANCODE_CURRENCYSUBUNIT = 181,
+    SDL_SCANCODE_KP_LEFTPAREN = 182,
+    SDL_SCANCODE_KP_RIGHTPAREN = 183,
+    SDL_SCANCODE_KP_LEFTBRACE = 184,
+    SDL_SCANCODE_KP_RIGHTBRACE = 185,
+    SDL_SCANCODE_KP_TAB = 186,
+    SDL_SCANCODE_KP_BACKSPACE = 187,
+    SDL_SCANCODE_KP_A = 188,
+    SDL_SCANCODE_KP_B = 189,
+    SDL_SCANCODE_KP_C = 190,
+    SDL_SCANCODE_KP_D = 191,
+    SDL_SCANCODE_KP_E = 192,
+    SDL_SCANCODE_KP_F = 193,
+    SDL_SCANCODE_KP_XOR = 194,
+    SDL_SCANCODE_KP_POWER = 195,
+    SDL_SCANCODE_KP_PERCENT = 196,
+    SDL_SCANCODE_KP_LESS = 197,
+    SDL_SCANCODE_KP_GREATER = 198,
+    SDL_SCANCODE_KP_AMPERSAND = 199,
+    SDL_SCANCODE_KP_DBLAMPERSAND = 200,
+    SDL_SCANCODE_KP_VERTICALBAR = 201,
+    SDL_SCANCODE_KP_DBLVERTICALBAR = 202,
+    SDL_SCANCODE_KP_COLON = 203,
+    SDL_SCANCODE_KP_HASH = 204,
+    SDL_SCANCODE_KP_SPACE = 205,
+    SDL_SCANCODE_KP_AT = 206,
+    SDL_SCANCODE_KP_EXCLAM = 207,
+    SDL_SCANCODE_KP_MEMSTORE = 208,
+    SDL_SCANCODE_KP_MEMRECALL = 209,
+    SDL_SCANCODE_KP_MEMCLEAR = 210,
+    SDL_SCANCODE_KP_MEMADD = 211,
+    SDL_SCANCODE_KP_MEMSUBTRACT = 212,
+    SDL_SCANCODE_KP_MEMMULTIPLY = 213,
+    SDL_SCANCODE_KP_MEMDIVIDE = 214,
+    SDL_SCANCODE_KP_PLUSMINUS = 215,
+    SDL_SCANCODE_KP_CLEAR = 216,
+    SDL_SCANCODE_KP_CLEARENTRY = 217,
+    SDL_SCANCODE_KP_BINARY = 218,
+    SDL_SCANCODE_KP_OCTAL = 219,
+    SDL_SCANCODE_KP_DECIMAL = 220,
+    SDL_SCANCODE_KP_HEXADECIMAL = 221,
+
+    SDL_SCANCODE_LCTRL = 224,
+    SDL_SCANCODE_LSHIFT = 225,
+    SDL_SCANCODE_LALT = 226, /**< alt, option */
+    SDL_SCANCODE_LGUI = 227, /**< windows, command (apple), meta */
+    SDL_SCANCODE_RCTRL = 228,
+    SDL_SCANCODE_RSHIFT = 229,
+    SDL_SCANCODE_RALT = 230, /**< alt gr, option */
+    SDL_SCANCODE_RGUI = 231, /**< windows, command (apple), meta */
+
+    SDL_SCANCODE_MODE = 257,    /**< I'm not sure if this is really not covered
+                                 *   by any of the above, but since there's a
+                                 *   special SDL_KMOD_MODE for it I'm adding it here
+                                 */
+
+    /* @} *//* Usage page 0x07 */
+
+    /**
+     *  \name Usage page 0x0C
+     *
+     *  These values are mapped from usage page 0x0C (USB consumer page).
+     *
+     *  There are way more keys in the spec than we can represent in the
+     *  current scancode range, so pick the ones that commonly come up in
+     *  real world usage.
+     */
+    /* @{ */
+
+    SDL_SCANCODE_SLEEP = 258,                   /**< Sleep */
+    SDL_SCANCODE_WAKE = 259,                    /**< Wake */
+
+    SDL_SCANCODE_CHANNEL_INCREMENT = 260,       /**< Channel Increment */
+    SDL_SCANCODE_CHANNEL_DECREMENT = 261,       /**< Channel Decrement */
+
+    SDL_SCANCODE_MEDIA_PLAY = 262,          /**< Play */
+    SDL_SCANCODE_MEDIA_PAUSE = 263,         /**< Pause */
+    SDL_SCANCODE_MEDIA_RECORD = 264,        /**< Record */
+    SDL_SCANCODE_MEDIA_FAST_FORWARD = 265,  /**< Fast Forward */
+    SDL_SCANCODE_MEDIA_REWIND = 266,        /**< Rewind */
+    SDL_SCANCODE_MEDIA_NEXT_TRACK = 267,    /**< Next Track */
+    SDL_SCANCODE_MEDIA_PREVIOUS_TRACK = 268, /**< Previous Track */
+    SDL_SCANCODE_MEDIA_STOP = 269,          /**< Stop */
+    SDL_SCANCODE_MEDIA_EJECT = 270,         /**< Eject */
+    SDL_SCANCODE_MEDIA_PLAY_PAUSE = 271,    /**< Play / Pause */
+    SDL_SCANCODE_MEDIA_SELECT = 272,        /* Media Select */
+
+    SDL_SCANCODE_AC_NEW = 273,              /**< AC New */
+    SDL_SCANCODE_AC_OPEN = 274,             /**< AC Open */
+    SDL_SCANCODE_AC_CLOSE = 275,            /**< AC Close */
+    SDL_SCANCODE_AC_EXIT = 276,             /**< AC Exit */
+    SDL_SCANCODE_AC_SAVE = 277,             /**< AC Save */
+    SDL_SCANCODE_AC_PRINT = 278,            /**< AC Print */
+    SDL_SCANCODE_AC_PROPERTIES = 279,       /**< AC Properties */
+
+    SDL_SCANCODE_AC_SEARCH = 280,           /**< AC Search */
+    SDL_SCANCODE_AC_HOME = 281,             /**< AC Home */
+    SDL_SCANCODE_AC_BACK = 282,             /**< AC Back */
+    SDL_SCANCODE_AC_FORWARD = 283,          /**< AC Forward */
+    SDL_SCANCODE_AC_STOP = 284,             /**< AC Stop */
+    SDL_SCANCODE_AC_REFRESH = 285,          /**< AC Refresh */
+    SDL_SCANCODE_AC_BOOKMARKS = 286,        /**< AC Bookmarks */
+
+    /* @} *//* Usage page 0x0C */
+
+
+    /**
+     *  \name Mobile keys
+     *
+     *  These are values that are often used on mobile phones.
+     */
+    /* @{ */
+
+    SDL_SCANCODE_SOFTLEFT = 287, /**< Usually situated below the display on phones and
+                                      used as a multi-function feature key for selecting
+                                      a software defined function shown on the bottom left
+                                      of the display. */
+    SDL_SCANCODE_SOFTRIGHT = 288, /**< Usually situated below the display on phones and
+                                       used as a multi-function feature key for selecting
+                                       a software defined function shown on the bottom right
+                                       of the display. */
+    SDL_SCANCODE_CALL = 289, /**< Used for accepting phone calls. */
+    SDL_SCANCODE_ENDCALL = 290, /**< Used for rejecting phone calls. */
+
+    /* @} *//* Mobile keys */
+
+    /* Add any other keys here. */
+
+    SDL_SCANCODE_RESERVED = 400,    /**< 400-500 reserved for dynamic keycodes */
+
+    SDL_SCANCODE_COUNT = 512 /**< not a key, just marks the number of scancodes for array bounds */
+
 } SDL_Scancode;
 
-typedef struct SDL_Keysym
-{
-    SDL_Scancode scancode;
-    SDL_Keycode sym;
-    Uint16 mod;
-    Uint32 unused;
-} SDL_Keysym;
-
 typedef Uint32 SDL_MouseButtonFlags;
+
+enum
+{
+    SDL_BUTTON_LEFT   = 1,
+    SDL_BUTTON_MIDDLE = 2,
+    SDL_BUTTON_RIGHT  = 3,
+    SDL_BUTTON_X1     = 4,
+    SDL_BUTTON_X2     = 5,
+};
+
+#define SDL_BUTTON_MASK(X)  (1u << ((X)-1))
+enum SDL_MouseButtonFlagsEnum : Uint32
+{
+    SDL_BUTTON_LMASK  = SDL_BUTTON_MASK(SDL_BUTTON_LEFT),
+    SDL_BUTTON_MMASK  = SDL_BUTTON_MASK(SDL_BUTTON_MIDDLE),
+    SDL_BUTTON_RMASK  = SDL_BUTTON_MASK(SDL_BUTTON_RIGHT),
+    SDL_BUTTON_X1MASK = SDL_BUTTON_MASK(SDL_BUTTON_X1),
+    SDL_BUTTON_X2MASK = SDL_BUTTON_MASK(SDL_BUTTON_X2),
+};
 
 /**
  * Pen input flags, as reported by various pen events' `pen_state` field.
