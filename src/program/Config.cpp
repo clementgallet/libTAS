@@ -55,6 +55,7 @@ bool Config::applyCliSetting(const std::string& key, const std::string& value)
     else if (key == "mouse_support")            sc.mouse_support = boolValue;
     else if (key == "mouse_mode_relative")      sc.mouse_mode_relative = boolValue;
     else if (key == "mouse_prevent_warp")       sc.mouse_prevent_warp = boolValue;
+    else if (key == "mouse_ignore_window_coords") sc.mouse_ignore_window_coords = boolValue;
     else if (key == "nb_controllers")           sc.nb_controllers = intValue;
     else if (key == "screen_width")             sc.screen_width = intValue;
     else if (key == "screen_height")            sc.screen_height = intValue;
@@ -226,6 +227,7 @@ void Config::save(const std::filesystem::path& gamepath) {
     settings.setValue("mouse_support", sc.mouse_support);
     settings.setValue("mouse_mode_relative", sc.mouse_mode_relative);
     settings.setValue("mouse_prevent_warp", sc.mouse_prevent_warp);
+    settings.setValue("mouse_ignore_window_coords", sc.mouse_ignore_window_coords);
     settings.setValue("nb_controllers", sc.nb_controllers);
     settings.setValue("screen_width", sc.screen_width);
     settings.setValue("screen_height", sc.screen_height);
@@ -453,6 +455,7 @@ void Config::load(const std::filesystem::path& gamepath) {
     sc.mouse_support = settings.value("mouse_support", sc.mouse_support).toBool();
     sc.mouse_mode_relative = settings.value("mouse_mode_relative", sc.mouse_mode_relative).toBool();
     sc.mouse_prevent_warp = settings.value("mouse_prevent_warp", sc.mouse_prevent_warp).toBool();
+    sc.mouse_ignore_window_coords = settings.value("mouse_ignore_window_coords", sc.mouse_ignore_window_coords).toBool();
     sc.nb_controllers = settings.value("nb_controllers", sc.nb_controllers).toInt();
     sc.screen_width = settings.value("screen_width", sc.screen_width).toInt();
     sc.screen_height = settings.value("screen_height", sc.screen_height).toInt();
