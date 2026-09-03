@@ -60,25 +60,25 @@ bool RenderHUD::init()
     if (!ImGui::GetCurrentContext()) {
         if (!XlibGameWindow::get())
             return false;
-        
+
         /* TODO: select one display? */
         for (int i=0; i<GAMEDISPLAYNUM; i++) {
             if (x11::gameDisplays[i]) {
                 ImGui::CreateContext();
                 ImPlot::CreateContext();
                 GlobalNative gn;
-                
+
                 ImGuiIO& io = ImGui::GetIO();
-                LuaDraw::LuaText::regular_font = io.Fonts->AddFontFromMemoryCompressedTTF(Roboto_compressed_data, Roboto_compressed_size, 16.0f);
-                LuaDraw::LuaText::monospace_font = io.Fonts->AddFontFromMemoryCompressedTTF(ProggyClean_compressed_data, ProggyClean_compressed_size, 16.0f);
+                LuaDraw::LuaText::regular_font = io.Fonts->AddFontFromMemoryCompressedTTF(Roboto_compressed_data, Roboto_compressed_size, Global::shared_config.osd_font_size);
+                LuaDraw::LuaText::monospace_font = io.Fonts->AddFontFromMemoryCompressedTTF(ProggyClean_compressed_data, ProggyClean_compressed_size, Global::shared_config.osd_font_size);
 
                 /* Disable config file */
                 io.IniFilename = NULL;
-                
+
                 ImGui_ImplXlib_Init(x11::gameDisplays[i], XlibGameWindow::get());
                 return true;
             }
-        }        
+        }
     }
     return false;
 }
@@ -131,11 +131,11 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
     static bool show_audio = false;
     static bool show_unity = false;
     static bool show_demo = false;
-    
+
     /* If encoding, we disable game detach feature for now */
     if (Global::shared_config.av_dumping)
         show_game_window = false;
-    
+
     int w = 0, h = 0;
     ScreenCapture::getDimensions(w, h);
 
@@ -147,25 +147,25 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         /* Remove padding so that the texture is aligned with the window */
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_Once);
-        
+
         /* Enforce aspect ratio */
         float aspect_ratio = (float)w / (float)h;
         ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, FLT_MAX), aspectRatioCallback, (void*)&aspect_ratio);
         if (ImGui::Begin("Game window", &show_game_window, ImGuiWindowFlags_NoScrollbar)) {
             ImVec2 pos = ImGui::GetCursorScreenPos();
             ImVec2 avail_size = ImGui::GetContentRegionAvail();
-            
+
             game_window_x = pos.x;
             game_window_y = pos.y;
             game_window_scale = avail_size.x / static_cast<float>(w);
-            
+
             ImGui::GetWindowDrawList()->AddImage(
-                ImTextureRef(ScreenCapture::screenTexture()), 
-                ImVec2(game_window_x, game_window_y), 
-                ImVec2(game_window_x + avail_size.x, game_window_y + avail_size.y), 
-                ImVec2(0, invertedOrigin()?1:0), 
+                ImTextureRef(ScreenCapture::screenTexture()),
+                ImVec2(game_window_x, game_window_y),
+                ImVec2(game_window_x + avail_size.x, game_window_y + avail_size.y),
+                ImVec2(0, invertedOrigin()?1:0),
                 ImVec2(1, invertedOrigin()?0:1)
-            );                
+            );
 
             /* Show lua on top of the game window */
             if (show_lua)
@@ -179,7 +179,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         game_window_x = 0.0f;
         game_window_y = 0.0f;
         game_window_scale = 1.0f;
-        
+
         /* Show lua in background */
         if (show_lua)
             LuaDraw::draw(ImGui::GetBackgroundDrawList(), ImVec2(0, 0), 1.0f);
@@ -188,7 +188,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
     if (Global::shared_config.osd) {
         ImGui::PushStyleColor(ImGuiCol_MenuBarBg, ImVec4(0.14f, 0.14f, 0.14f, 0.50f));
         ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.14f, 0.14f, 0.14f, 0.50f));
-        
+
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("Display")) {
                 ImGui::MenuItem("Detach game window", nullptr, &show_game_window, supportsGameWindow());
@@ -210,7 +210,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
                 ImGui::MenuItem("Demo", nullptr, &show_demo);
                 ImGui::EndMenu();
             }
-            
+
             ImGui::Separator();
             float fps = FPSMonitor::tickRedraw();
             ImGui::Text("FPS: %2.1f", fps);
@@ -218,7 +218,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         }
 		ImGui::PopStyleColor(2);
     }
-    
+
     if (supportsGameWindow()) {
         if (show_game_window && !old_show_game_window) {
             setWindowResizable(true);
@@ -236,16 +236,16 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
         }
     }
     old_show_game_window = show_game_window;
-    
+
     if (show_file)
         FileDebug::draw(framecount, &show_file);
-    
+
     if (show_framecount)
         FrameWindow::draw(framecount, nondraw_framecount, &show_framecount);
 
     if (show_inputs)
         InputsWindow::draw(ai, preview_ai, &show_inputs);
-        
+
     if (show_messages)
         MessageWindow::draw();
     else
@@ -256,7 +256,7 @@ void RenderHUD::drawAll(uint64_t framecount, uint64_t nondraw_framecount, const 
 
     if (show_crosshair)
         Crosshair::draw(ai);
-        
+
     if (show_log)
         LogWindow::draw(&show_log);
 
@@ -285,11 +285,11 @@ bool RenderHUD::doRender()
 {
     if (framesBeforeIdle > 0)
         return true;
-        
+
     /* Idling with 100ms steps between renders */
     static const TimeHolder stepTime{0, 100000000};
     static TimeHolder lastTime{}; // -> member, update on render
-    
+
     if (lastTime.tv_sec == 0) {
         lastTime = TimeHolder::now();
         return true;
@@ -310,14 +310,14 @@ void RenderHUD::setWindowResizable(bool resizable)
     for (int i=0; i<GAMEDISPLAYNUM; i++) {
         if (x11::gameDisplays[i]) {
             GlobalNative gn;
-            
+
             XSizeHints *xsh;
             xsh = XAllocSizeHints();
             xsh->flags = resizable ? PMinSize : PMinSize | PMaxSize;
 
             int w = 0, h = 0;
             ScreenCapture::getDimensions(w, h);
-            
+
             xsh->min_width = w;
             xsh->min_height = h;
 
@@ -325,7 +325,7 @@ void RenderHUD::setWindowResizable(bool resizable)
                 xsh->max_width = w;
                 xsh->max_height = h;
             }
-            
+
             XSetWMNormalHints(x11::gameDisplays[i], XlibGameWindow::get(), xsh);
             XFree(xsh);
             return;
@@ -338,18 +338,18 @@ bool RenderHUD::renderGameWindow()
 {
     if (!supportsGameWindow())
         return false;
-        
-    return show_game_window;    
+
+    return show_game_window;
 }
 
 void RenderHUD::scaleMouseInputs(MouseInputs* mi)
 {
     if (!Global::shared_config.mouse_support)
         return;
-        
+
     if (!show_game_window)
         return;
-    
+
     if (mi->mode == SingleInput::POINTER_MODE_ABSOLUTE) {
         mi->x = static_cast<int>((static_cast<float>(mi->x) - game_window_x) / game_window_scale);
         mi->y = static_cast<int>((static_cast<float>(mi->y) - game_window_y) / game_window_scale);

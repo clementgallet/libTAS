@@ -232,7 +232,7 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
         SLEEP_MAIN,
         SLEEP_ALWAYS,
     };
-    
+
     /* How are we handling sleeps */
     int sleep_handling = SLEEP_MAIN;
 
@@ -298,6 +298,9 @@ struct __attribute__((packed, aligned(8))) SharedConfig {
 
     /* Display OSD in the video encode */
     bool osd_encode = false;
+
+    /* Font size for OSD */
+    double osd_font_size = 16.0;
 
     /* Use a backup of savefiles in memory, which leaves the original
      * savefiles unmodified and save the content in savestates */
