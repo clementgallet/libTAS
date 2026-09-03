@@ -27,15 +27,17 @@
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QFormLayout>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSpinBox>
+#include <QtWidgets/QDoubleSpinBox>
 
 VideoPane::VideoPane(Context* c) : context(c)
 {
     initLayout();
-    loadConfig();    
+    loadConfig();
     initSignals();
     initToolTips();
 }
@@ -82,15 +84,20 @@ void VideoPane::initLayout()
     screenLayout->addWidget(heightField, 2, 2);
 
     QGroupBox* osdBox = new QGroupBox(tr("On-screen display"));
-    QVBoxLayout* osdLayout = new QVBoxLayout;
+    QFormLayout* osdLayout = new QFormLayout;
     osdBox->setLayout(osdLayout);
+    osdLayout->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
 
     osdMenuBox = new QCheckBox(tr("Main Menu"));
     osdEncodeBox = new QCheckBox(tr("OSD on video encode"));
 
-    osdLayout->addWidget(osdMenuBox);
-    osdLayout->addWidget(osdEncodeBox);
-    
+    osdLayout->addRow(osdMenuBox);
+    osdLayout->addRow(osdEncodeBox);
+
+    fontSize = new QDoubleSpinBox();
+    fontSize->setRange(0.1, 144.0);
+    osdLayout->addRow(new QLabel(tr("Font size:")), fontSize);
+
     renderingBox = new QGroupBox(tr("Rendering"));
     QVBoxLayout* renderingLayout = new QVBoxLayout;
     renderingBox->setLayout(renderingLayout);
@@ -138,6 +145,7 @@ void VideoPane::initSignals()
     });
     connect(osdMenuBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
     connect(osdEncodeBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
+    connect(fontSize, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &VideoPane::saveConfig);
 
     connect(rendSoftBox, &QAbstractButton::clicked, this, &VideoPane::saveConfig);
     connect(rendQualityChoice, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &VideoPane::saveConfig);
@@ -188,9 +196,11 @@ void VideoPane::loadConfig()
             screenCommonChoice->setCurrentIndex(index);
         }
     }
-    
+
     osdMenuBox->setChecked(context->config.sc.osd);
     osdEncodeBox->setChecked(context->config.sc.osd_encode);
+
+    fontSize->setValue(context->config.sc.osd_font_size);
 
     rendSoftBox->setChecked(context->config.sc.opengl_soft);
     rendQualityChoice->setCurrentIndex(rendQualityChoice->findData(context->config.sc.opengl_quality));
@@ -211,9 +221,11 @@ void VideoPane::saveConfig()
         context->config.sc.screen_width = widthField->value();
         context->config.sc.screen_height = heightField->value();
     }
-    
+
     context->config.sc.osd = osdMenuBox->isChecked();
     context->config.sc.osd_encode = osdEncodeBox->isChecked();
+
+    context->config.sc.osd_font_size = fontSize->value();
 
     context->config.sc.opengl_soft = rendSoftBox->isChecked();
     context->config.sc.opengl_quality = rendQualityChoice->itemData(rendQualityChoice->currentIndex()).toInt();
