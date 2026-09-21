@@ -20,6 +20,7 @@
 * aarch64: implement TLS save/restore
 * aarch64: disable AVX2 signature search
 * Add input events for SDL3
+* Propagate xlib events to parent when not interested
 
 ### Changed
 

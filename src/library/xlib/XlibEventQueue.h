@@ -86,6 +86,9 @@ class XlibEventQueue
         /* Does a type belong to an event mask?*/
         bool isTypeOfMask(int type, long event_mask);
         
+        /* Get the parent window of a given window */
+        Window getParentWindow(Window w);
+        
         Window grab_window;
         unsigned int grab_event_mask;
         bool grab_owner_events;

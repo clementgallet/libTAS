@@ -113,16 +113,24 @@ int XlibEventQueue::insert(XEvent* event)
      * so we are always returning those events */
 
     if (event->type != ConfigureNotify) {
-        auto mask = eventMasks.find(event->xany.window);
-        if (mask != eventMasks.end()) {
-            if (!isTypeOfMask(event->type, mask->second))
-            return 0;            
-        }
-        else {
+
+        LOG(LL_DEBUG, LCF_EVENTS, "Check mask of window %d", event->xany.window);
+        /* Find the window in the hierarchy that is interested in this event */
+        while (event->xany.window != 0) {
+            auto mask = eventMasks.find(event->xany.window);
+            if (mask != eventMasks.end() && isTypeOfMask(event->type, mask->second)) {
+                break;
+            }
             /* Check unmaskable events */
-            if (!isTypeOfMask(event->type, 0))
+            else if (isTypeOfMask(event->type, 0)) {
+                break;
+            }
+            event->xany.window = getParentWindow(event->xany.window);
+            LOG(LL_DEBUG, LCF_EVENTS, "Check parent window %d", event->xany.window);
+        }
+        if (!event->xany.window)
             return 0;
-        }        
+        LOG(LL_DEBUG, LCF_EVENTS, "Found interested window %d", event->xany.window);
     }
 
     /* Check the size of the queue */
@@ -301,5 +309,18 @@ bool XlibEventQueue::isTypeOfMask(int type, long event_mask)
     return true;
 }
 
+Window XlibEventQueue::getParentWindow(Window w)
+{
+    Window parent_return = 0;
+    Window *children_return = nullptr;
+    unsigned int nchildren_return = 0;
+    Window root_window;
+    if (!XQueryTree(display, w, &root_window, &parent_return, &children_return, &nchildren_return)) {
+        return 0;
+    }
+    if (children_return) XFree(children_return);
 
+    return (parent_return != DefaultRootWindow(display)) ? parent_return : 0;
 }
+
+} // namespace libtas
