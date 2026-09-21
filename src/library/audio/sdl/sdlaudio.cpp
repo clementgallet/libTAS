@@ -1090,6 +1090,19 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
     mutex.lock();
 }
 
+/* Override */ bool SDL_LockAudioStream(SDL_AudioStream *stream)
+{
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
+
+    if (!stream)
+        return false;
+
+    /* There is no per-source mutex currently */
+    // AudioSource* source = reinterpret_cast<AudioSource*>(stream);
+    mutex.lock();
+    return true;
+}
+
 /* Override */ void SDL_UnlockAudio(void)
 {
     LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
@@ -1102,6 +1115,19 @@ static int getDeviceFromStream(SDL_AudioStream *stream)
     if (ThreadManager::getThreadId() == AudioContext::get().audio_thread)
         return;
     mutex.unlock();
+}
+
+/* Override */ bool SDL_UnlockAudioStream(SDL_AudioStream *stream)
+{
+    LOGTRACE_SIMPLE(LCF_SDL | LCF_SOUND);
+
+    if (!stream)
+        return false;
+
+    /* There is no per-source mutex currently */
+    // AudioSource* source = reinterpret_cast<AudioSource*>(stream);
+    mutex.unlock();
+    return true;
 }
 
 /* Override */ bool SDL_SetAudioStreamGetCallback(SDL_AudioStream *stream, SDL_AudioStreamCallback callback, void *userdata)

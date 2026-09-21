@@ -1422,8 +1422,56 @@ OVERRIDE bool SDL_AudioStreamDevicePaused(SDL_AudioStream *stream);
 /* @{ */
 OVERRIDE void SDL_LockAudio(void);
 OVERRIDE void SDL_LockAudioDevice(sdl2::SDL_AudioDeviceID dev);
+
+/**
+ * Lock an audio stream for serialized access.
+ *
+ * Each SDL_AudioStream has an internal mutex it uses to protect its data
+ * structures from threading conflicts. This function allows an app to lock
+ * that mutex, which could be useful if registering callbacks on this stream.
+ *
+ * One does not need to lock a stream to use in it most cases, as the stream
+ * manages this lock internally. However, this lock is held during callbacks,
+ * which may run from arbitrary threads at any time, so if an app needs to
+ * protect shared data during those callbacks, locking the stream guarantees
+ * that the callback is not running while the lock is held.
+ *
+ * As this is just a wrapper over SDL_LockMutex for an internal lock; it has
+ * all the same attributes (recursive locks are allowed, etc).
+ *
+ * \param stream the audio stream to lock.
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
+ *
+ * \threadsafety It is safe to call this function from any thread.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_UnlockAudioStream
+ */
+OVERRIDE bool SDL_LockAudioStream(SDL_AudioStream *stream);
+
 OVERRIDE void SDL_UnlockAudio(void);
 OVERRIDE void SDL_UnlockAudioDevice(sdl2::SDL_AudioDeviceID dev);
+
+/**
+ * Unlock an audio stream for serialized access.
+ *
+ * This unlocks an audio stream after a call to SDL_LockAudioStream.
+ *
+ * \param stream the audio stream to unlock.
+ * \returns true on success or false on failure; call SDL_GetError() for more
+ *          information.
+ *
+ * \threadsafety You should only call this from the same thread that
+ *               previously called SDL_LockAudioStream.
+ *
+ * \since This function is available since SDL 3.2.0.
+ *
+ * \sa SDL_LockAudioStream
+ */
+OVERRIDE bool SDL_UnlockAudioStream(SDL_AudioStream *stream);
+
 /* @} *//* Audio lock functions */
 
 /**
