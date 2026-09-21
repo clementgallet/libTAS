@@ -110,7 +110,7 @@ int SDL_RenderSetLogicalSize(SDL_Renderer * renderer, int w, int h)
     /* Don't let the game have logical size that differs from screen size,
      * so we resize the window instead.
      */
-    if (sdl::gameSDLWindow) {
+    if (sdl::gameSDLWindow && w > 0 && h > 0) {
         libtas::sdl2::SDL_SetWindowSize(sdl::gameSDLWindow, w, h);
     }
     logical_w = w;

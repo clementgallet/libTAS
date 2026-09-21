@@ -49,6 +49,7 @@
 * Remove RTLD_DEEPBIND flag in dlopen to fix symbol preloading
 * Fix audio encoding not providing samples when no mixing
 * Don't assume a 4K page size
+* Fix SDL_RenderSetLogicalSize being called with 0s
 
 ## [1.4.8] - 2026-05-14
 ### Added
