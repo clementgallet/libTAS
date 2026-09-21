@@ -138,6 +138,11 @@ void ScreenCapture_Impl::resize(int w, int h)
     }
 #endif
 
+    /* Don't resize if same coordinates */
+    if (width == w && height == h) {
+        return;
+    }
+
     destroyScreenSurface();
 
     width = w;
