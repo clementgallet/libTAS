@@ -65,9 +65,12 @@ So, the procedure is the following:
       `il2cpp` folder inside the game `Data` directory.
     - **versions 5.1.0 - 2018**: This [source archive](https://discussions.unity.com/t/unity-on-linux-release-notes-and-known-issues/595006)
     - **versions 4**: This [source archive](https://discussions.unity.com/t/early-unity-versions-downloads/927331)
-* Extract the archive and grab the runtime, which should be located inside
-  `Data/PlaybackEngines/linuxstandalonesupport/Variations/`. You will be interested in
-  `linux[32|64]_[withgfx|player]_development_[mono|il2cpp]` directory.
+* Extract the archive and grab the runtime, which should be located depending on 
+  which source you used:
+    - from the official archive, you need to decompress `TargetSupport.pkg.tmp/Payload`,
+      then the runtime is located in `TargetSupport.pkg.tmp/Payload_dir/Variations/`.
+    - from the older sources: `Data/PlaybackEngines/linuxstandalonesupport/Variations/`.
+  You will be interested in `linux[32|64]_[withgfx|player]_development_[mono|il2cpp]` directory.
 * For newer Unity versions (~2019+), copy file `UnityPlayer_s.debug` to the game
   directory. This will be used by libTAS to find symbols (**do not rename**). For
   old Unity versions, copy `LinuxPlayer` executable to the game directory and
