@@ -190,8 +190,15 @@ sdl3::SDL_MouseButtonFlags sdl3::SDL_GetRelativeMouseState(float *x, float *y)
     return SingleInput::toSDL3PointerMask(Inputs::game_ai.pointer.mask);
 }
 
-void SDL_WarpMouseInWindow(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3)
+void SDL_WarpMouseInWindow(std::uintptr_t p1, std::uintptr_t p2, std::uintptr_t p3, float f1, float f2)
 {
+#if defined(__x86_64__) || defined(__aarch64__)
+    if (get_sdlversion() == 3) {
+        memcpy(&p2, &f1, sizeof(float));
+        memcpy(&p3, &f2, sizeof(float));
+    }
+#endif
+
     const std::uintptr_t storage[] = {p1, p2, p3};
 
     invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_WarpMouseInWindow,
@@ -273,8 +280,15 @@ void sdl3::SDL_WarpMouseInWindow(SDL_Window *window, float fx, float fy)
     NATIVECALL(ORIG_SDL3_CALL(SDL_WarpMouseInWindow, (window, x, y)));
 }
 
-int SDL_WarpMouseGlobal(std::uintptr_t p1, std::uintptr_t p2)
+int SDL_WarpMouseGlobal(std::uintptr_t p1, std::uintptr_t p2, float f1, float f2)
 {
+#if defined(__x86_64__) || defined(__aarch64__)
+    if (get_sdlversion() == 3) {
+        memcpy(&p1, &f1, sizeof(float));
+        memcpy(&p2, &f2, sizeof(float));
+    }
+#endif
+
     const std::uintptr_t storage[] = {p1, p2};
 
     return invoke_sdl2_or_sdl3_from_storage(&sdl2::SDL_WarpMouseGlobal,

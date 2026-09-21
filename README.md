@@ -39,7 +39,7 @@ You can download the latest stable version of the software in the [Releases](htt
 * `libcap`
 * `file`
 * `libswresample2` or `libswresample3` or `libswresample4` or `libswresample5` or `libswresample6`, `libasound2`
-* `libswscale5` or `libswscale6` or `libswscale7` or `libswscale8`
+* `libswscale6` or `libswscale7` or `libswscale8` or `libswscale9`
 
 Installing with the debian package will install all the required packages as well.
 

@@ -585,13 +585,15 @@ int SDL_SetWindowFullscreen(std::uintptr_t p1, std::uintptr_t p2)
     }
     else {
         /* Change the window size to monitor size */
+        sdl3::SDL_DisplayID display_id;
+        NATIVECALL(display_id = libtas::sdl3::SDL_GetPrimaryDisplay());
         const sdl3::SDL_DisplayMode* dm;
-        NATIVECALL(dm = libtas::sdl3::SDL_GetCurrentDisplayMode(0));
+        NATIVECALL(dm = libtas::sdl3::SDL_GetCurrentDisplayMode(display_id));
         w = dm->w;
         h = dm->h;
     }
 
-    NATIVECALL(libtas::sdl2::SDL_SetWindowSize(window, w, h));
+    NATIVECALL(libtas::sdl3::SDL_SetWindowSize(window, w, h));
     ScreenCapture::resize(w, h);
     return 0; // success
 }
