@@ -48,6 +48,7 @@ void GameEventsXcb::init()
 
     last_pressed_key = 0;
     next_event = nullptr;
+    top_level_windows.clear();
 }
 
 void GameEventsXcb::registerGameWindow(uint32_t gameWindow)
@@ -62,20 +63,45 @@ void GameEventsXcb::registerGameWindow(uint32_t gameWindow)
             std::cerr << "error in xcb_change_window_attributes: " << error->error_code << std::endl;
         }
 
-        /* Also get parent window of game window for focus */
-        xcb_query_tree_cookie_t qt_cookie = xcb_query_tree(context->conn, context->game_window);
+        /* Also get top-level window of game window for focus */
+        top_level_game_window = getTopLevelWindow(context->game_window);
+    }
+}
+
+uint32_t GameEventsXcb::getTopLevelWindow(uint32_t window)
+{
+    /* Unfortunately, we cannot cache the top-level window reliably because the window hierarchy may change dynamically */
+    // if (top_level_windows.find(window) != top_level_windows.end()) {
+    //     return top_level_windows[window];
+    // }
+
+    uint32_t top_level_window = window;
+    xcb_generic_error_t *error = nullptr;
+    while (top_level_window != 0) {
+        xcb_query_tree_cookie_t qt_cookie = xcb_query_tree(context->conn, top_level_window);
         xcb_query_tree_reply_t *reply = xcb_query_tree_reply(context->conn, qt_cookie, &error);
 
         if (error) {
             std::cerr << "Could not get xcb_query_tree, X error" << error->error_code << std::endl;
-            return;
+            return 0;
         }
-        else {
-            parent_game_window = reply->parent;
+
+        if (!reply) {
+            std::cerr << "No reply from xcb_query_tree" << std::endl;
+            return 0;
         }
-        if (reply)
+
+        if (reply->parent == 0 || reply->parent == reply->root) {
             free(reply);
+            top_level_windows[window] = top_level_window;
+            return top_level_window;
+        }
+
+        top_level_window = reply->parent;
+        free(reply);
     }
+
+    return 0;
 }
 
 GameEventsXcb::EventType GameEventsXcb::nextEvent(struct HotKey &hk)
@@ -205,7 +231,7 @@ GameEventsXcb::EventType GameEventsXcb::nextEvent(struct HotKey &hk)
 
 bool GameEventsXcb::haveFocus()
 {
-    xcb_window_t window;
+    xcb_window_t focus_window;
 
     xcb_generic_error_t* error;
     xcb_get_input_focus_cookie_t focus_cookie = xcb_get_input_focus(context->conn);
@@ -214,8 +240,8 @@ bool GameEventsXcb::haveFocus()
         std::cerr << "Could not get focussed window, X error" << error->error_code << std::endl;
     }
 
-    window = focus_reply->focus;
+    focus_window = focus_reply->focus;
     free(focus_reply);
 
-    return (window == context->game_window) || (window == parent_game_window);
+    return (getTopLevelWindow(focus_window) == getTopLevelWindow(context->game_window));
 }

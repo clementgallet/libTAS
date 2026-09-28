@@ -52,10 +52,17 @@ private:
     xcb_keycode_t last_pressed_key;
     std::unique_ptr<xcb_generic_event_t> next_event;
 
-    /* parent window of game window */
-    xcb_window_t parent_game_window = 0;
+    /* top-level window of game window */
+    xcb_window_t top_level_game_window = 0;
 
     EventType nextEvent(struct HotKey &hk);
+
+    /* Get the top-level window for a given window */
+    uint32_t getTopLevelWindow(uint32_t window);
+
+    /* Cache of top-level windows for each window */
+    std::unordered_map<xcb_window_t, xcb_window_t> top_level_windows;
+
 };
 
 #endif

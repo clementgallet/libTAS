@@ -34,7 +34,8 @@
 * Buffer writes to savestate page flag file
 * Disable asynchronous processing in FMOD Studio
 * Xevent async options only wait for events pushed during the
-  last frame, not all events 
+  last frame, not all events
+* Use common top-window to detect when game window has focus
 
 ### Fixed
 
