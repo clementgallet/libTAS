@@ -338,12 +338,19 @@ static KeySym keycodeToKeysym(KeyCode keycode, bool shifted)
 /* Override */ KeySym *XGetKeyboardMapping(Display *display, KeyCode first_keycode, int keycode_count, int *keysyms_per_keycode_return)
 {
     LOGTRACE(LCF_KEYBOARD, "%s called with keycode_count %d", __func__, keycode_count);
-    *keysyms_per_keycode_return = 2;
+
+    if (!keysyms_per_keycode_return || keycode_count <= 0) {
+        return nullptr;
+    }
+
+    *keysyms_per_keycode_return = 4;
     KeySym *keysyms = static_cast<KeySym*>(malloc(keycode_count*(*keysyms_per_keycode_return)*sizeof(KeySym)));
     for (int c=0; c<keycode_count; c++) {
         KeyCode keycode = c + first_keycode;
         keysyms[2*c] = keycodeToKeysym(keycode, false);
         keysyms[2*c+1] = keycodeToKeysym(keycode, true);
+        keysyms[2*c+2] = keycodeToKeysym(keycode, false);
+        keysyms[2*c+3] = keycodeToKeysym(keycode, true);
     }
     return keysyms;
 }
