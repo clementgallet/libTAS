@@ -67,6 +67,15 @@ class XlibEventQueue
         /* Ungrab pointer  */
         void ungrabPointer();
 
+        /* Mimick a keyboard focus by redirecting key/focus events to the focused window */
+        void setInputFocus(Window window);
+
+        /* Clear keyboard focus */
+        void clearInputFocus();
+
+        /* Return the current input focus window, if any */
+        Window getInputFocus() const;
+
         Display* display;
 
         /* Store how many events are present at the last sync point, to determine if new
@@ -92,6 +101,7 @@ class XlibEventQueue
         Window grab_window;
         unsigned int grab_event_mask;
         bool grab_owner_events;
+        Window focus_window;
 };
 
 }

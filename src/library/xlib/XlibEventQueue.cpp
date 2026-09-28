@@ -26,7 +26,7 @@
 
 namespace libtas {
 
-XlibEventQueue::XlibEventQueue(Display* d) : display(d), sync_count(0), grab_window(0) {}
+XlibEventQueue::XlibEventQueue(Display* d) : display(d), sync_count(0), grab_window(0), grab_event_mask(0), grab_owner_events(false), focus_window(0) {}
 
 void XlibEventQueue::setMask(Window w, long event_mask)
 {
@@ -71,6 +71,24 @@ void XlibEventQueue::setMask(Window w, long event_mask)
 int XlibEventQueue::insert(XEvent* event)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
+
+    /* Redirect events to the currently focused keyboard window, mirroring
+     * XSetInputFocus semantics for the emulated event queue. */
+    if ((focus_window != 0) &&
+        ((event->type == KeyPress) || (event->type == KeyRelease) ||
+         (event->type == FocusIn) || (event->type == FocusOut) ||
+         (event->type == KeymapNotify))) {
+        if (event->type == FocusIn || event->type == FocusOut) {
+            event->xfocus.window = focus_window;
+        }
+        else if (event->type == KeyPress || event->type == KeyRelease) {
+            event->xkey.window = focus_window;
+        }
+        else {
+            event->xkey.window = focus_window;
+        }
+        event->xany.window = focus_window;
+    }
 
     /* Check if pointer event and pointer is grabbed */
     if ((grab_window != 0) &&
@@ -247,6 +265,31 @@ void XlibEventQueue::grabPointer(Window window, unsigned int event_mask, bool ow
 void XlibEventQueue::ungrabPointer()
 {
     grab_window = 0;
+}
+
+void XlibEventQueue::setInputFocus(Window window)
+{
+    focus_window = window;
+
+    long event_mask = eventMasks[window];
+    if (event_mask & FocusChangeMask) {
+        XEvent ev;
+        ev.type = FocusIn;
+        ev.xfocus.window = window;
+
+        LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE | LCF_KEYBOARD, "   Inserting a FocusIn event");
+        insert(&ev);
+    }
+}
+
+void XlibEventQueue::clearInputFocus()
+{
+    focus_window = 0;
+}
+
+Window XlibEventQueue::getInputFocus() const
+{
+    return focus_window;
 }
 
 bool XlibEventQueue::isTypeOfMask(int type, long event_mask)

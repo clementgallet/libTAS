@@ -23,6 +23,7 @@
 
 #include "logging.h"
 #include "xlib/XlibGameWindow.h"
+#include "xlib/XlibEventQueueList.h"
 #include "GlobalState.h"
 #include "../shared/inputs/AllInputsFlat.h"
 
@@ -79,19 +80,35 @@ namespace libtas {
 
 /* Override */ int XGetInputFocus(Display* display, Window* focus_return, int* revert_to_return)
 {
-    RETURN_IF_NATIVE(XGetInputFocus, (display, focus_return, revert_to_return), nullptr);
-
     LOGTRACE_SIMPLE(LCF_KEYBOARD);
-    /* Returing the game Xlib window */
-    if (focus_return && XlibGameWindow::get()) {
-        *focus_return = XlibGameWindow::get();
+
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    Window focused = (queue) ? queue->getInputFocus() : None;
+
+    if (focus_return) {
+        *focus_return = (focused != None) ? focused : XlibGameWindow::get();
     }
+    if (revert_to_return)
+        *revert_to_return = RevertToNone;
+
     return 0;
 }
 
 /* Override */ int XSetInputFocus(Display* display, Window focus, int revert_to, Time time)
 {
     LOGTRACE(LCF_KEYBOARD, "%s called with window %d", __func__, focus);
+
+    /* Emulate focus changes in the queue, the same way pointer grabs are
+     * redirected to the grabbed window. */
+    std::shared_ptr<XlibEventQueue> queue = xlibEventQueueList.getQueue(display);
+    if (!queue)
+        return 0;
+
+    if (focus == None)
+        queue->clearInputFocus();
+    else
+        queue->setInputFocus(focus);
+
     return 0;
 }
 
