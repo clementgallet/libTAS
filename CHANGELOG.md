@@ -54,6 +54,7 @@
 * Don't assume a 4K page size
 * Fix SDL_RenderSetLogicalSize being called with 0s
 * Set the mode for Xlib focus events (#156)
+* Feed the game window to ImGui on every frame, as it may have changed
 
 ## [1.4.8] - 2026-05-14
 ### Added

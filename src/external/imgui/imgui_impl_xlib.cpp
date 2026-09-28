@@ -468,6 +468,55 @@ bool ImGui_ImplXlib_ProcessEvent(XEvent* event)
     return false;
 }
 
+static void ImGui_ImplXlib_SelectEvents()
+{
+    ImGui_ImplXlib_Data* bd = ImGui_ImplXlib_GetBackendData();
+
+    // Select keyboard/focus events
+    XWindowAttributes xwa;
+    XGetWindowAttributes(bd->Dpy, bd->Win, &xwa);
+    XSelectInput(bd->Dpy, bd->Win, xwa.your_event_mask | KeyPressMask | KeyReleaseMask | FocusChangeMask | StructureNotifyMask);
+
+    // Setup XInput for mouse inputs
+    int xi2_opcode, xi2_event, xi2_error;
+    Bool ret = XQueryExtension(bd->Dpy, "XInputExtension", &xi2_opcode, &xi2_event, &xi2_error);
+
+    IM_ASSERT(ret == True && "Could not load XInputExtension!");
+
+    bd->Xi2Opcode = xi2_opcode;
+
+    int orig_num_eventmask;
+    XIEventMask* orig_eventmask = XIGetSelectedEvents(bd->Dpy, bd->Win, &orig_num_eventmask);
+
+    XIEventMask xi2_eventmask = {};
+    static unsigned char xi2_mask[XIMaskLen(XI_LASTEVENT)] = {};
+
+    if (orig_eventmask) {
+        for (int mask_i = 0; mask_i < orig_num_eventmask; mask_i++) {
+            if (orig_eventmask[mask_i].deviceid != XIAllMasterDevices)
+                continue;
+    
+            for (int ei = 0; (ei>>3) < orig_eventmask[mask_i].mask_len; ei++) {
+                if (XIMaskIsSet(orig_eventmask[mask_i].mask, ei)) {
+                    XISetMask(xi2_mask, ei);
+                }
+            }
+        }
+        
+        XFree(orig_eventmask);
+    }
+
+    XISetMask(xi2_mask, XI_Motion);
+    XISetMask(xi2_mask, XI_ButtonPress);
+    XISetMask(xi2_mask, XI_ButtonRelease);
+
+    xi2_eventmask.deviceid = XIAllMasterDevices;
+    xi2_eventmask.mask_len = sizeof(xi2_mask);
+    xi2_eventmask.mask = xi2_mask;
+
+    XISelectEvents(bd->Dpy, bd->Win, &xi2_eventmask, 1);
+}
+
 bool ImGui_ImplXlib_Init(Display* display, Window window)
 {
     ImGuiIO& io = ImGui::GetIO();
@@ -501,49 +550,7 @@ bool ImGui_ImplXlib_Init(Display* display, Window window)
         bd->XA_MIME[i] = XInternAtom(bd->Dpy, text_mime_types[i-1], 0);
     }
 
-    // Select keyboard/focus events
-    XWindowAttributes xwa;
-    XGetWindowAttributes(display, window, &xwa);
-    XSelectInput(display, window, xwa.your_event_mask | KeyPressMask | KeyReleaseMask | FocusChangeMask | StructureNotifyMask);
-
-    // Setup XInput for mouse inputs
-    int xi2_opcode, xi2_event, xi2_error;
-    Bool ret = XQueryExtension(display, "XInputExtension", &xi2_opcode, &xi2_event, &xi2_error);
-
-    IM_ASSERT(ret == True && "Could not load XInputExtension!");
-
-    bd->Xi2Opcode = xi2_opcode;
-
-    int orig_num_eventmask;
-    XIEventMask* orig_eventmask = XIGetSelectedEvents(display, window, &orig_num_eventmask);
-
-    XIEventMask xi2_eventmask = {};
-    static unsigned char xi2_mask[XIMaskLen(XI_LASTEVENT)] = {};
-
-    if (orig_eventmask) {
-        for (int mask_i = 0; mask_i < orig_num_eventmask; mask_i++) {
-            if (orig_eventmask[mask_i].deviceid != XIAllMasterDevices)
-                continue;
-    
-            for (int ei = 0; (ei>>3) < orig_eventmask[mask_i].mask_len; ei++) {
-                if (XIMaskIsSet(orig_eventmask[mask_i].mask, ei)) {
-                    XISetMask(xi2_mask, ei);
-                }
-            }
-        }
-        
-        XFree(orig_eventmask);
-    }
-
-    XISetMask(xi2_mask, XI_Motion);
-    XISetMask(xi2_mask, XI_ButtonPress);
-    XISetMask(xi2_mask, XI_ButtonRelease);
-
-    xi2_eventmask.deviceid = XIAllMasterDevices;
-    xi2_eventmask.mask_len = sizeof(xi2_mask);
-    xi2_eventmask.mask = xi2_mask;
-
-    XISelectEvents(display, window, &xi2_eventmask, 1);
+    ImGui_ImplXlib_SelectEvents();
 
     // Setup XIM
 #ifdef X_HAVE_UTF8_STRING
@@ -639,18 +646,18 @@ static void ImGui_ImplXlib_UpdateMouseCursor()
     }
 }
 
-void ImGui_ImplXlib_NewFrame()
+void ImGui_ImplXlib_NewFrame(Window win, int w, int h)
 {
     ImGui_ImplXlib_Data* bd = ImGui_ImplXlib_GetBackendData();
     IM_ASSERT(bd != nullptr && "Did you call ImGui_ImplXlib_Init()?");
     ImGuiIO& io = ImGui::GetIO();
 
-    // Setup display size (every frame to accommodate for window resizing)
-    int x, y;
-    unsigned int w = 0, h = 0, border_width, depth;
-    Window root;
-    XGetGeometry(bd->Dpy, bd->Win, &root, &x, &y, &w, &h, &border_width, &depth);
+    if (bd->Win != win) {
+        bd->Win = win;
+        ImGui_ImplXlib_SelectEvents();
+    }
 
+    // Setup display size (every frame to accommodate for window resizing)
     io.DisplaySize = ImVec2((float)w, (float)h);
 
     // Setup time step

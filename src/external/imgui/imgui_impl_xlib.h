@@ -30,7 +30,7 @@
 
 IMGUI_IMPL_API bool     ImGui_ImplXlib_Init(Display* d, Window w);
 IMGUI_IMPL_API void     ImGui_ImplXlib_Shutdown();
-IMGUI_IMPL_API void     ImGui_ImplXlib_NewFrame();
+IMGUI_IMPL_API void     ImGui_ImplXlib_NewFrame(Window win, int w, int h);
 IMGUI_IMPL_API bool     ImGui_ImplXlib_ProcessEvent(XEvent* event);
 
 #endif // #ifndef IMGUI_DISABLE

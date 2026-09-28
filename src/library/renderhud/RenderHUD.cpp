@@ -91,8 +91,10 @@ void RenderHUD::newFrame()
     if (framesBeforeIdle > 0)
         framesBeforeIdle--;
 
+    int w = 0, h = 0;
+    ScreenCapture::getDimensions(w, h);
     GlobalNative gn;
-    ImGui_ImplXlib_NewFrame();
+    ImGui_ImplXlib_NewFrame(XlibGameWindow::get(), w, h);
     ImGui::NewFrame();
 }
 
