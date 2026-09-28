@@ -60,6 +60,7 @@ void XlibEventQueue::setMask(Window w, long event_mask)
         XEvent ev;
         ev.type = FocusIn;
         ev.xfocus.window = w;
+        ev.xfocus.mode = grab_window ? NotifyWhileGrabbed : NotifyNormal;
 
         LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE | LCF_KEYBOARD, "   Inserting a FocusIn event");
         insert(&ev);
@@ -276,6 +277,7 @@ void XlibEventQueue::setInputFocus(Window window)
         XEvent ev;
         ev.type = FocusIn;
         ev.xfocus.window = window;
+        ev.xfocus.mode = grab_window ? NotifyWhileGrabbed : NotifyNormal;
 
         LOG(LL_DEBUG, LCF_EVENTS | LCF_MOUSE | LCF_KEYBOARD, "   Inserting a FocusIn event");
         insert(&ev);

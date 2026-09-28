@@ -53,6 +53,7 @@
 * Fix audio encoding not providing samples when no mixing
 * Don't assume a 4K page size
 * Fix SDL_RenderSetLogicalSize being called with 0s
+* Set the mode for Xlib focus events (#156)
 
 ## [1.4.8] - 2026-05-14
 ### Added
