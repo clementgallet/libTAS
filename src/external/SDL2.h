@@ -1667,6 +1667,29 @@ namespace sdl2 {
         SDL_BUTTON_X2MASK = SDL_BUTTON(SDL_BUTTON_X2)
     };
 
+    typedef struct SDL_Point
+    {
+        int x;
+        int y;
+    } SDL_Point;
+
+    typedef struct SDL_Vertex
+    {
+        SDL_FPoint position;
+        SDL_Color color;
+        SDL_FPoint tex_coord;
+    } SDL_Vertex;
+
+    typedef struct SDL_RendererInfo
+    {
+        const char *name;
+        Uint32 flags;
+        Uint32 num_texture_formats;
+        Uint32 texture_formats[16];
+        int max_texture_width;
+        int max_texture_height;
+    } SDL_RendererInfo;
+
 // #ifdef __cplusplus
 // extern "C" {
 // #endif
