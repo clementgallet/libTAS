@@ -53,6 +53,9 @@ namespace Runtime {
 
     /* Pause or resume the movie */
     int playPause(lua_State *L);
+
+    /* Stop the game cleanly*/
+    int quit(lua_State *L);
 }
 }
 

@@ -23,6 +23,7 @@
 * Propagate xlib events to parent when not interested
 * Add SDL3 SDL_Un/LockAudioStream hooks
 * Implement XSetInputFocus()
+* lua function to trigger the game shutdown
 
 ### Changed
 
