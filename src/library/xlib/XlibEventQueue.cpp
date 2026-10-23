@@ -131,12 +131,13 @@ int XlibEventQueue::insert(XEvent* event)
      * so that current window can receive ConfigureNotify events, but I'm lazy,
      * so we are always returning those events */
 
+    Window window = event->xany.window;
     if (event->type != ConfigureNotify) {
 
         LOG(LL_DEBUG, LCF_EVENTS, "Check mask of window %d", event->xany.window);
         /* Find the window in the hierarchy that is interested in this event */
-        while (event->xany.window != 0) {
-            auto mask = eventMasks.find(event->xany.window);
+        while (window != 0) {
+            auto mask = eventMasks.find(window);
             if (mask != eventMasks.end() && isTypeOfMask(event->type, mask->second)) {
                 break;
             }
@@ -144,12 +145,13 @@ int XlibEventQueue::insert(XEvent* event)
             else if (isTypeOfMask(event->type, 0)) {
                 break;
             }
-            event->xany.window = getParentWindow(event->xany.window);
-            LOG(LL_DEBUG, LCF_EVENTS, "Check parent window %d", event->xany.window);
+            window = getParentWindow(window);
+            LOG(LL_DEBUG, LCF_EVENTS, "Check parent window %d", window);
         }
-        if (!event->xany.window)
+        if (!window)
             return 0;
-        LOG(LL_DEBUG, LCF_EVENTS, "Found interested window %d", event->xany.window);
+
+        LOG(LL_DEBUG, LCF_EVENTS, "Found interested window %d", window);
     }
 
     /* Check the size of the queue */
@@ -158,11 +160,13 @@ int XlibEventQueue::insert(XEvent* event)
         return -1;
     }
 
+    XEvent queued = *event;
+    queued.xany.window = window;
     /* Specify the display */
-    event->xany.display = display;
+    queued.xany.display = display;
 
     /* Push the event at the beginning of the queue */
-    eventQueue.push_front(*event);
+    eventQueue.push_front(queued);
 
     return 1;
 }
