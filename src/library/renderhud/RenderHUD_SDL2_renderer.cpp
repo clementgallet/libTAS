@@ -29,11 +29,13 @@
 
 #include "../external/imgui/imgui.h"
 #include "../external/imgui/imgui_impl_sdlrenderer2.h"
+#include "../external/imgui/imgui_impl_xlib.h"
 
 namespace libtas {
 
 RenderHUD_SDL2_renderer::~RenderHUD_SDL2_renderer()
 {
+    ImGui_ImplXlib_Shutdown();
     ImGui_ImplSDLRenderer2_Shutdown();
     ImGui::DestroyContext();
 }
