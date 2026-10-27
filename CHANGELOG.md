@@ -24,6 +24,7 @@
 * Add SDL3 SDL_Un/LockAudioStream hooks
 * Implement XSetInputFocus()
 * lua function to trigger the game shutdown
+* Register threads whose creation was not intercepted
 
 ### Changed
 

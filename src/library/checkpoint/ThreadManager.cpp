@@ -268,6 +268,22 @@ void ThreadManager::initThreadFromChild(ThreadInfo* thread)
     SaveStateManager::initThreadFromChild(thread);
 }
 
+ThreadInfo* ThreadManager::appendExistingThread()
+{
+    /* Double-check if the thread already exists in the list */
+    ThreadInfo* existing = getThread(getThreadId());
+    if (existing) {
+        LOG(LL_WARN, LCF_THREAD, "Thread %d already exists, returning existing thread.", existing->real_tid);
+        return existing;
+    }
+
+    ThreadInfo* thread = new ThreadInfo;
+    initThreadFromParent(thread, nullptr, nullptr, nullptr);
+    initThreadFromChild(thread);
+    LOG(LL_DEBUG, LCF_THREAD, "Thread %d creation was not intercepted, appending existing thread.", thread->real_tid);
+    return thread;
+}
+
 void ThreadManager::setGlobalState(ThreadInfo* thread)
 {
     /* If a thread that is in native state is creating another thread, we
@@ -392,6 +408,8 @@ bool ThreadManager::updateState(ThreadInfo *th, ThreadInfo::ThreadState newval, 
 
 ThreadInfo *ThreadManager::getCurrentThread()
 {
+    if (!current_thread)
+        current_thread = appendExistingThread();
     return current_thread;
 }
 

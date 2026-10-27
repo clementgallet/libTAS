@@ -76,6 +76,9 @@ int getTidOffset();
 /* Finish the initialization of the ThreadInfo struct by the child thread */
 void initThreadFromChild(ThreadInfo* thread);
 
+/* In case a thread already exists because it was not created through pthread_create, it must be appended to the thread list */
+ThreadInfo* appendExistingThread();
+
 /* Set the global state based on thread state */
 void setGlobalState(ThreadInfo* thread);
 
