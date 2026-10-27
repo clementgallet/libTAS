@@ -216,6 +216,8 @@ VkResult vkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInf
     std::vector<const char*> extensions;
     bool foundSwapchainMaintenance1Ext = false;
     bool foundSwapchainMaintenance1Khr = false;
+    bool foundSurfaceMaintenance1Ext = false;
+    bool foundSurfaceMaintenance1Khr = false;
 
     LINK_VK_POINTER(EnumerateDeviceExtensionProperties);
     if (vkProcs.EnumerateDeviceExtensionProperties) {
@@ -226,17 +228,23 @@ VkResult vkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInf
         for (const auto& ext : available) {
             if (strcmp(ext.extensionName, "VK_EXT_swapchain_maintenance1") == 0) foundSwapchainMaintenance1Ext = true;
             if (strcmp(ext.extensionName, "VK_KHR_swapchain_maintenance1") == 0) foundSwapchainMaintenance1Khr = true;
+            if (strcmp(ext.extensionName, "VK_EXT_surface_maintenance1") == 0) foundSurfaceMaintenance1Ext = true;
+            if (strcmp(ext.extensionName, "VK_KHR_surface_maintenance1") == 0) foundSurfaceMaintenance1Khr = true;
         }
     }
 
     VkDeviceCreateInfo patchedCreateInfo = *pCreateInfo;
-    if (foundSwapchainMaintenance1Ext || foundSwapchainMaintenance1Khr) {
+    if ((foundSwapchainMaintenance1Ext && foundSurfaceMaintenance1Ext) ||
+        (foundSwapchainMaintenance1Khr && foundSurfaceMaintenance1Khr)) {
         const char* maintenance1Extension = foundSwapchainMaintenance1Ext
             ? "VK_EXT_swapchain_maintenance1"
             : "VK_KHR_swapchain_maintenance1";
-        LOG(LL_DEBUG, LCF_WINDOW | LCF_VULKAN, "Enabling %s", maintenance1Extension);
+        const char* maintenance1Dependency = foundSwapchainMaintenance1Ext
+            ? "VK_EXT_surface_maintenance1"
+            : "VK_KHR_surface_maintenance1";
         for (uint32_t i = 0; i < pCreateInfo->enabledExtensionCount; i++)
             extensions.push_back(pCreateInfo->ppEnabledExtensionNames[i]);
+
         /* Only add if game didn't already request them */
         bool gameHasSwapchainMaintenance1 = false;
         for (const char* ext : extensions) {
@@ -244,8 +252,22 @@ VkResult vkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInf
                 gameHasSwapchainMaintenance1 = true;
             }
         }
-        if (!gameHasSwapchainMaintenance1)
+        if (!gameHasSwapchainMaintenance1) {
+            LOG(LL_DEBUG, LCF_WINDOW | LCF_VULKAN, "Enabling %s", maintenance1Extension);
             extensions.push_back(maintenance1Extension);
+        }
+
+        /* Only add dependency if game didn't already request them */
+        bool gameHasSurfaceMaintenance1 = false;
+        for (const char* ext : extensions) {
+            if (strcmp(ext, "VK_EXT_surface_maintenance1") == 0 || strcmp(ext, "VK_KHR_surface_maintenance1") == 0) {
+                gameHasSurfaceMaintenance1 = true;
+            }
+        }
+        if (!gameHasSurfaceMaintenance1) {
+            LOG(LL_DEBUG, LCF_WINDOW | LCF_VULKAN, "Enabling %s", maintenance1Dependency);
+            extensions.push_back(maintenance1Dependency);
+        }
         patchedCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
         patchedCreateInfo.ppEnabledExtensionNames = extensions.data();
         vk::context.hasSwapchainMaintenance1 = true;
