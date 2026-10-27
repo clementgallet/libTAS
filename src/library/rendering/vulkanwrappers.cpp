@@ -266,23 +266,6 @@ VkResult vkCreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInf
 
         /* Get memory properties of physical device */
         vkProcs.GetPhysicalDeviceMemoryProperties(physicalDevice, &vk::context.deviceMemoryProperties);
-
-        /* Create the descriptor pool that will create descriptor sets for the
-         * font texture and game window texture */
-        {
-            VkDescriptorPoolSize pool_sizes[] =
-            {
-                { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2 },
-            };
-            VkDescriptorPoolCreateInfo pool_info = {};
-            pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-            pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-            pool_info.maxSets = 2;
-            pool_info.poolSizeCount = 1;
-            pool_info.pPoolSizes = pool_sizes;
-            VkResult err = vkProcs.CreateDescriptorPool(vk::context.device, &pool_info, vk::context.allocator, &vk::context.descriptorPool);
-            VKCHECKERROR(err);
-        }
     }
     
     return res;
@@ -294,11 +277,6 @@ void vkDestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
         return vkProcs.DestroyDevice(device, pAllocator);
 
     LOGTRACE_SIMPLE(LCF_WINDOW | LCF_VULKAN);
-
-    if (vk::context.descriptorPool) {
-        vkProcs.DestroyDescriptorPool(device, vk::context.descriptorPool, pAllocator);
-        vk::context.descriptorPool = VK_NULL_HANDLE;
-    }
 
     /* Stop the screen capture */
     ScreenCapture::fini();

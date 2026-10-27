@@ -59,7 +59,6 @@ struct Vulkan_Context
     VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
     VkQueue graphicsQueue;
     uint32_t queueFamily;
-    VkDescriptorPool descriptorPool;
     VkFormat colorFormat;
     int                 width;
     int                 height;

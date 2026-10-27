@@ -52,7 +52,7 @@ void RenderHUD_Vulkan::init() {
     init_info.QueueFamily = vk::context.queueFamily;
     init_info.Queue = vk::context.graphicsQueue;
     init_info.PipelineCache = VK_NULL_HANDLE;
-    init_info.DescriptorPool = vk::context.descriptorPool;
+    init_info.DescriptorPoolSize = 8;
     init_info.PipelineInfoMain.RenderPass = vk::context.renderPass;
     init_info.PipelineInfoMain.Subpass = 0;
     init_info.MinImageCount = vk::context.imageCount;
