@@ -27,6 +27,7 @@ class QComboBox;
 class QCheckBox;
 class QRadioButton;
 class QSpinBox;
+class QDoubleSpinBox;
 class ToolTipCheckBox;
 class ToolTipComboBox;
 class QGroupBox;
@@ -46,19 +47,20 @@ private:
     void initToolTips();
 
     void showEvent(QShowEvent *event) override;
-    
+
     QGroupBox* screenBox;
     QGroupBox* renderingBox;
-    
+
     QRadioButton* screenNativeRadio;
     QRadioButton* screenCommonRadio;
     QRadioButton* screenCustomRadio;
     QComboBox* screenCommonChoice;
     QSpinBox* widthField;
     QSpinBox* heightField;
-    
+
     QCheckBox* osdMenuBox;
     QCheckBox* osdEncodeBox;
+    QDoubleSpinBox* fontSize;
 
     ToolTipCheckBox* rendSoftBox;
     ToolTipComboBox* rendQualityChoice;
