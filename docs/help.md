@@ -13,3 +13,4 @@ get help from the [Discord server](https://discord.gg/3MBVAzU).
 * [Moviefile format](../guides/format)
 * [Unity support](../guides/unity)
 * [Tech details](../guides/how)
+* [Sources of randomness](../guides/rng)
