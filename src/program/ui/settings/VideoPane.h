@@ -57,6 +57,7 @@ private:
     QSpinBox* widthField;
     QSpinBox* heightField;
     
+    QCheckBox* osdLuaBox;
     QCheckBox* osdMenuBox;
     QCheckBox* osdEncodeBox;
 
