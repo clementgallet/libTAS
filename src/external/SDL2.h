@@ -36,6 +36,10 @@
 
 #include "SDL_common.h"
 
+#if defined(__linux__) && !defined(__LINUX__)
+#define __LINUX__ 1
+#endif
+
 namespace libtas {
 
 namespace sdl2 {
