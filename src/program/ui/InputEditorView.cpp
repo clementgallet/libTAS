@@ -29,6 +29,8 @@
 
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QHeaderView>
+#include <QtWidgets/QStyle>
+#include <QtWidgets/QStyleOptionViewItem>
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QMessageBox>
@@ -37,6 +39,7 @@
 #include <QShortcut>
 
 #include <stdint.h>
+#include <algorithm>
 
 InputEditorView::InputEditorView(Context* c, MovieFile *m, QWidget *parent) : QTableView(parent), context(c), movie(m)
 {
@@ -119,6 +122,10 @@ InputEditorView::InputEditorView(Context* c, MovieFile *m, QWidget *parent) : QT
 
     QShortcut* saveShortcut = new QShortcut(QKeySequence("Ctrl+S"), this);
     connect(saveShortcut, &QShortcut::activated, this, &InputEditorView::saveMovieRequested);
+
+    /* The view can be created after the movie was loaded, so the columns were
+     * not resized by the signal of the model */
+    resizeAllColumns();
 }
 
 KeyPressedDialog *InputEditorView::ensureKeyDialog()
@@ -241,10 +248,21 @@ void InputEditorView::resizeAllColumns()
     horizontalHeader()->resizeSection(InputEditorModel::COLUMN_FRAME, 80);
     horizontalHeader()->resizeSection(inputEditorModel->columnCount() - 1, 20);
 
-    /* Set analog columns to be resizable by users.
-     * Increase the other columns by a small amount, because even if it's
-     * supposed to take the same place as the header, sometimes it considers
-     * that it doesn't have enough space. */
+    /* Cells of non-analog inputs show the label of the input when set. We
+     * compute the size needed by the label in a cell, because the rows used
+     * to resize to contents may not contain the input, and a cell needs more
+     * space than the header for the same text. */
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    QStyleOptionViewItem option;
+    initViewItemOption(&option);
+#else
+    QStyleOptionViewItem option = viewOptions();
+#endif
+    option.features |= QStyleOptionViewItem::HasDisplay;
+    option.displayAlignment = Qt::AlignCenter;
+    int gridWidth = showGrid() ? 1 : 0;
+
+    /* Set analog columns to be resizable by users. */
     for (int c = InputEditorModel::COLUMN_SPECIAL_SIZE; c < inputEditorModel->columnCount()-1; c++) {
         if (inputEditorModel->isInputAnalog(c)) {
             horizontalHeader()->setSectionResizeMode(c, QHeaderView::Interactive);
@@ -252,7 +270,10 @@ void InputEditorView::resizeAllColumns()
         else {
             resizeColumnToContents(c);
             int size = horizontalHeader()->sectionSize(c);
-            horizontalHeader()->resizeSection(c, size + 2);
+
+            option.text = inputEditorModel->headerData(c, Qt::Horizontal, Qt::DisplayRole).toString();
+            QSize cellSize = style()->sizeFromContents(QStyle::CT_ItemViewItem, &option, QSize(), this);
+            horizontalHeader()->resizeSection(c, std::max(size, cellSize.width() + gridWidth));
         }
     }
 }
